@@ -29,7 +29,18 @@ const router = createRouter({
         {
           path: 'consulta/nueva',
           name: 'consulta-nueva',
-          component: () => import('@/features/dashboard/views/consulta/NuevaView.vue'),
+          component: () =>
+            import('@/features/dashboard/views/consulta/nueva/NuevaView.vue'),
+          meta: { fullBleed: true, hideTopbar: true },
+        },
+        {
+          path: 'consulta/nueva/exito',
+          name: 'consulta-nueva-exito',
+          component: () =>
+            import(
+              '@/features/dashboard/views/consulta/nueva/exito/ConsultaGuardada.vue'
+            ),
+          meta: { fullBleed: true, hideTopbar: true },
         },
         {
           path: 'consulta/historial',

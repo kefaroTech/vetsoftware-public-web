@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find C:\\\\Users\\\\orlan\\\\OneDrive\\\\Documentos\\\\Proyectos\\\\VetSoftware *)"
+      "Bash(find C:\\\\Users\\\\orlan\\\\OneDrive\\\\Documentos\\\\Proyectos\\\\VetSoftware *)",
+      "Bash(npx vue-tsc *)",
+      "Bash(npm run *)",
+      "Read(//c/Users/orlan/OneDrive/Documentos/Proyectos/VetSoftware/src/main/java/com/vetsoftware/app/auth/infrastructure/web/**)",
+      "Read(//c/Users/orlan/OneDrive/Documentos/Proyectos/VetSoftware/src/main/java/com/vetsoftware/app/**)",
+      "mcp__ide__getDiagnostics",
+      "Bash(npx eslint *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

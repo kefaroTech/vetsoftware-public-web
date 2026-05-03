@@ -1,14 +1,20 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import AppSidebar from '../components/sidebar/AppSidebar.vue'
 import AppTopbar from '../components/topbar/AppTopbar.vue'
+
+const route = useRoute()
+const fullBleed = computed(() => Boolean(route.meta.fullBleed))
+const hideTopbar = computed(() => Boolean(route.meta.hideTopbar))
 </script>
 
 <template>
   <div class="app-shell">
     <AppSidebar />
     <div class="app-main">
-      <AppTopbar />
-      <main class="app-content">
+      <AppTopbar v-if="!hideTopbar" />
+      <main class="app-content" :class="{ fullbleed: fullBleed }">
         <RouterView />
       </main>
     </div>
@@ -35,5 +41,11 @@ import AppTopbar from '../components/topbar/AppTopbar.vue'
   flex: 1;
   padding: 36px 48px;
   overflow: auto;
+}
+.app-content.fullbleed {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 </style>
