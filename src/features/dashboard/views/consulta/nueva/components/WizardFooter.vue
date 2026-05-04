@@ -57,11 +57,17 @@ defineEmits<{ back: []; next: [] }>()
 .footer {
   border-top: 1px solid var(--warm-200);
   background: var(--warm-50);
-  padding: 14px 48px;
+  padding: 14px clamp(16px, 4vw, 56px);
   display: flex;
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
+  flex-wrap: wrap;
+}
+@media (max-width: 720px) {
+  .footer {
+    padding: 12px 16px;
+  }
 }
 .extra {
   display: flex;

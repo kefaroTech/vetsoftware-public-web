@@ -21,17 +21,17 @@ export interface OwnerDraft {
 
 export interface PetDraft {
   name: string
-  code: string
+  chipNumber: string
   specieId: string
   breedId: string
-  gender: 'F' | 'M' | ''
-  color: string
+  gender: 'MALE' | 'FEMALE' | ''
+  colorId: string
   bod: string
-  animalType: 'pet' | 'farm' | 'exotic' | ''
+  animalType: 'SERVICE' | 'SUPPORT' | 'NONE'
   weight: string
-  weightType: 'kg' | 'g' | 'lb'
+  weightType: 'GRAMS' | 'POUNDS' | 'KILOGRAMS'
   size: string
-  reproductiveState: 'sterilized' | 'unsterilized' | 'unknown' | ''
+  reproductiveState: 'STERILIZED' | 'NO_STERILIZED' | 'UNKNOWN' | ''
 }
 
 export interface ConsultationDraft {
@@ -163,15 +163,15 @@ export function useNuevaConsultaDraft() {
   function startCreatingPet() {
     state.petCreating = {
       name: '',
-      code: '',
+      chipNumber: '',
       specieId: '',
       breedId: '',
       gender: '',
-      color: '',
+      colorId: '',
       bod: '',
-      animalType: 'pet',
+      animalType: 'NONE',
       weight: '',
-      weightType: 'kg',
+      weightType: 'KILOGRAMS',
       size: '',
       reproductiveState: '',
     }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Plus, PawPrint } from 'lucide-vue-next'
+import { Plus, PawPrint, TriangleAlert, Loader } from 'lucide-vue-next'
 import ContentWrap from '../components/ContentWrap.vue'
 import PageHeading from '../components/PageHeading.vue'
 import OwnerHeader from '../components/OwnerHeader.vue'
@@ -9,11 +9,21 @@ import PetCard from '../components/PetCard.vue'
 import PetForm from '../components/PetForm.vue'
 import DeceasedConfirmDialog from '../components/DeceasedConfirmDialog.vue'
 import { mockAnimals, petsForOwner } from '../data/owners'
-import { species, breeds } from '../data/species'
 import { useNuevaConsultaDraft } from '../composables/useNuevaConsultaDraft'
-import type { Animal, ReproductiveState, Gender, AnimalType } from '@/types/domain'
+import { animalApi } from '../api/animal.api'
+import {
+  buildCreateAnimalRequest,
+  mapAnimalResponse,
+} from '../api/animal.mapper'
+import { useAuth } from '@/features/auth/composables/useAuth'
+import { getProblemDetailMessage } from '@/services/http/http.client'
+import type { Animal } from '@/types/domain'
 
 const draft = useNuevaConsultaDraft()
+const { companyId } = useAuth()
+const petFormRef = ref<{ validate: () => boolean } | null>(null)
+const submitError = ref<string | null>(null)
+const submitting = ref(false)
 
 const owner = computed(() => draft.state.owner)
 
@@ -47,53 +57,47 @@ function confirmDeceased() {
 
 function startCreate() {
   draft.startCreatingPet()
+  submitError.value = null
 }
 
 function backToList() {
   draft.cancelCreatingPet()
+  submitError.value = null
 }
 
-function submit(): boolean {
+async function submit(): Promise<boolean> {
   const p = draft.state.petCreating
   const o = owner.value
   if (!p || !o) return false
-  if (
-    !p.name.trim() ||
-    !p.specieId ||
-    !p.breedId ||
-    !p.gender ||
-    !p.bod ||
-    !p.weight.trim() ||
-    !p.reproductiveState
-  ) {
+  if (petFormRef.value && !petFormRef.value.validate()) {
+    submitError.value = 'Revisa los campos marcados antes de continuar.'
+    return false
+  }
+  if (companyId.value == null) {
+    submitError.value =
+      'No se pudo identificar la empresa actual. Vuelve a iniciar sesión.'
     return false
   }
 
-  const sp = species.find((s) => s.id === p.specieId)!
-  const br = breeds.find((b) => b.id === p.breedId)!
-  const id = `ani_new_${Date.now()}`
-  const code = p.code.trim() || `VTR-${String(Date.now()).slice(-4)}`
-  const newPet: Animal = {
-    id,
-    code,
-    name: p.name.trim(),
-    specie: sp,
-    breed: br,
-    gender: p.gender as Gender,
-    bod: p.bod,
-    color: p.color.trim() || undefined,
-    weight: Number(p.weight),
-    weightType: p.weightType,
-    size: p.size ? Number(p.size) : undefined,
-    animalType: (p.animalType || 'pet') as AnimalType,
-    reproductiveState: p.reproductiveState as ReproductiveState,
-    deceased: false,
-    ownerId: o.id,
+  submitting.value = true
+  submitError.value = null
+  try {
+    const payload = buildCreateAnimalRequest(p, o.id, companyId.value)
+    const created = await animalApi.create(payload)
+    const newPet = mapAnimalResponse(created)
+    mockAnimals.unshift(newPet)
+    if (!o.pets.includes(newPet.id)) o.pets = [...o.pets, newPet.id]
+    draft.setPet(newPet)
+    return true
+  } catch (e: unknown) {
+    submitError.value = getProblemDetailMessage(
+      e,
+      'No se pudo registrar la mascota. Intenta nuevamente.',
+    )
+    return false
+  } finally {
+    submitting.value = false
   }
-  mockAnimals.unshift(newPet)
-  o.pets = [...o.pets, id]
-  draft.setPet(newPet)
-  return true
 }
 
 defineExpose({ submit })
@@ -109,6 +113,14 @@ function editOwner() {
 
 <template>
   <ContentWrap>
+    <div v-if="submitError" class="banner danger" role="alert">
+      <TriangleAlert :size="16" :stroke-width="1.7" />
+      <span>{{ submitError }}</span>
+      <button type="button" class="banner-x" @click="submitError = null">
+        ×
+      </button>
+    </div>
+
     <OwnerHeader
       v-if="owner"
       :owner="owner"
@@ -183,7 +195,11 @@ function editOwner() {
           ← Ver mascotas existentes
         </button>
       </div>
-      <PetForm v-model="draft.state.petCreating" />
+      <PetForm ref="petFormRef" v-model="draft.state.petCreating" />
+      <div v-if="submitting" class="submitting">
+        <Loader :size="14" :stroke-width="1.6" class="spin" />
+        <span>Guardando mascota…</span>
+      </div>
     </template>
 
     <DeceasedConfirmDialog
@@ -196,6 +212,47 @@ function editOwner() {
 </template>
 
 <style scoped>
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  position: relative;
+}
+.banner.danger {
+  background: oklch(94% 0.06 25);
+  border: 1px solid oklch(85% 0.10 25);
+  color: oklch(35% 0.15 25);
+}
+.banner-x {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+  font-family: inherit;
+}
+.submitting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--warm-600);
+  padding: 28px 20px 0;
+}
+.spin {
+  animation: spin 0.85s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

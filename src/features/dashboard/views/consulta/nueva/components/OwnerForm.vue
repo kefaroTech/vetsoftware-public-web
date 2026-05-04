@@ -297,7 +297,7 @@ defineExpose({ validate })
 .form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 .geo-error {
   display: flex;
@@ -312,22 +312,28 @@ defineExpose({ validate })
 }
 .grid-2 {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 28px;
 }
 .grid-3 {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px 28px;
+  margin-bottom: 22px;
 }
 .full-row {
   display: block;
 }
-@media (max-width: 720px) {
+@media (max-width: 980px) {
+  .grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
   .grid-2,
   .grid-3 {
     grid-template-columns: 1fr;
+    gap: 18px;
   }
 }
 </style>

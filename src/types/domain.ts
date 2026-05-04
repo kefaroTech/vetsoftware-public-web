@@ -26,13 +26,13 @@ export interface Breed {
   specieId: string
 }
 
-export type Gender = 'F' | 'M'
+export type Gender = 'MALE' | 'FEMALE'
 
-export type WeightUnit = 'kg' | 'g' | 'lb'
+export type WeightUnit = 'GRAMS' | 'POUNDS' | 'KILOGRAMS'
 
-export type AnimalType = 'pet' | 'farm' | 'exotic'
+export type AnimalType = 'SERVICE' | 'SUPPORT' | 'NONE'
 
-export type ReproductiveState = 'sterilized' | 'unsterilized' | 'unknown'
+export type ReproductiveState = 'STERILIZED' | 'NO_STERILIZED' | 'UNKNOWN'
 
 export interface Owner {
   id: string

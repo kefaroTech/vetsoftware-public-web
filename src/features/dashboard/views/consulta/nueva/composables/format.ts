@@ -47,17 +47,26 @@ export function initials(name: string): string {
     .toUpperCase()
 }
 
-export function genderLabel(g: 'F' | 'M' | string): string {
-  if (g === 'F') return 'Hembra'
-  if (g === 'M') return 'Macho'
+export function genderLabel(g: 'MALE' | 'FEMALE' | string): string {
+  if (g === 'FEMALE') return 'Hembra'
+  if (g === 'MALE') return 'Macho'
   return '—'
 }
 
 export function reproductiveLabel(
-  r: 'sterilized' | 'unsterilized' | 'unknown' | string,
+  r: 'STERILIZED' | 'NO_STERILIZED' | 'UNKNOWN' | string,
 ): string {
-  if (r === 'sterilized') return 'Esterilizada'
-  if (r === 'unsterilized') return 'No esterilizada'
-  if (r === 'unknown') return 'Desconocido'
+  if (r === 'STERILIZED') return 'Esterilizada'
+  if (r === 'NO_STERILIZED') return 'No esterilizada'
+  if (r === 'UNKNOWN') return 'Desconocido'
   return '—'
+}
+
+export function weightUnitLabel(
+  u: 'GRAMS' | 'POUNDS' | 'KILOGRAMS' | string,
+): string {
+  if (u === 'KILOGRAMS') return 'kg'
+  if (u === 'GRAMS') return 'g'
+  if (u === 'POUNDS') return 'lb'
+  return ''
 }

@@ -125,6 +125,15 @@ defineEmits<{ navigate: [step: 1 | 2 | 3 | 4] }>()
   background: var(--warm-200);
   min-width: 24px;
 }
+@media (max-width: 560px) {
+  .item:not(.current) .label {
+    display: none;
+  }
+  .sep {
+    margin: 0 10px;
+    min-width: 12px;
+  }
+}
 .sep.done {
   background: var(--amatista-700);
   opacity: 0.4;

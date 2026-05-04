@@ -38,16 +38,16 @@ defineProps<{
   overflow: hidden;
 }
 .head {
-  padding: 16px 20px;
+  padding: 18px 28px;
   border-bottom: 1px solid var(--warm-200);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 .icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   background: var(--warm-150);
   color: var(--warm-600);
   display: grid;
@@ -64,7 +64,7 @@ defineProps<{
 }
 .title {
   margin: 0;
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 500;
   color: var(--warm-900);
   letter-spacing: -0.005em;
@@ -78,6 +78,14 @@ defineProps<{
   flex-shrink: 0;
 }
 .body.padded {
-  padding: 20px;
+  padding: 26px 28px;
+}
+@media (max-width: 720px) {
+  .head {
+    padding: 14px 18px;
+  }
+  .body.padded {
+    padding: 20px 18px;
+  }
 }
 </style>

@@ -79,6 +79,7 @@ const nextDisabled = computed(() => {
         p.name.trim() &&
         p.specieId &&
         p.breedId &&
+        p.colorId &&
         p.gender &&
         p.bod &&
         p.weight.trim() &&
@@ -315,7 +316,7 @@ onUnmounted(() => {
 }
 .topbar {
   height: 60px;
-  padding: 0 28px;
+  padding: 0 clamp(14px, 3vw, 32px);
   background: var(--warm-50);
   border-bottom: 1px solid var(--warm-200);
   display: flex;
@@ -383,10 +384,20 @@ onUnmounted(() => {
   color: var(--warm-900);
 }
 .stepper-row {
-  padding: 20px 48px 16px;
+  padding: 20px clamp(16px, 4vw, 56px) 16px;
   background: var(--warm-50);
   border-bottom: 1px solid var(--warm-200);
   flex-shrink: 0;
+}
+@media (max-width: 720px) {
+  .topbar .brand {
+    font-size: 18px;
+  }
+  .topbar .back span,
+  .topbar .cancel span,
+  .topbar .badge {
+    display: none;
+  }
 }
 .content {
   flex: 1;

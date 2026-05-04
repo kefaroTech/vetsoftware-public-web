@@ -2,7 +2,7 @@
 import { PawPrint, Check } from 'lucide-vue-next'
 import type { Animal } from '@/types/domain'
 import BaseChip from '@/features/dashboard/components/ui/BaseChip.vue'
-import { calcAge, genderLabel } from '../composables/format'
+import { calcAge, genderLabel, weightUnitLabel } from '../composables/format'
 
 defineProps<{
   pet: Animal
@@ -45,7 +45,7 @@ defineEmits<{ select: [] }>()
       </div>
       <div>
         <div class="lab">Peso</div>
-        <div class="val">{{ pet.weight }} {{ pet.weightType }}</div>
+        <div class="val">{{ pet.weight }} {{ weightUnitLabel(pet.weightType) }}</div>
       </div>
       <div>
         <div class="lab">Última consulta</div>

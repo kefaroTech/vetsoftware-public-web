@@ -17,6 +17,7 @@ import {
   calcAge,
   genderLabel,
   reproductiveLabel,
+  weightUnitLabel,
 } from '../composables/format'
 
 const draft = useNuevaConsultaDraft()
@@ -38,7 +39,7 @@ const ownerLocation = computed(() => {
 const petData = computed(() => {
   const p = pet.value
   if (!p) return ''
-  return `${genderLabel(p.gender)} · ${calcAge(p.bod)} · ${p.weight} ${p.weightType} · ${reproductiveLabel(p.reproductiveState)}`
+  return `${genderLabel(p.gender)} · ${calcAge(p.bod)} · ${p.weight} ${weightUnitLabel(p.weightType)} · ${reproductiveLabel(p.reproductiveState)}`
 })
 
 const dateAndType = computed(() => {
