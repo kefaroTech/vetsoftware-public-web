@@ -5,11 +5,11 @@ import {
   User,
   ArrowRight,
   TriangleAlert,
-  Loader,
 } from 'lucide-vue-next'
 import ContentWrap from '../components/ContentWrap.vue'
 import PageHeading from '../components/PageHeading.vue'
 import SectionCard from '@/features/dashboard/components/ui/SectionCard.vue'
+import PawLoader from '@/components/ui/PawLoader.vue'
 import OwnerSearchInput from '../components/OwnerSearchInput.vue'
 import OwnerResultRow from '../components/OwnerResultRow.vue'
 import OwnerSummaryCard from '../components/OwnerSummaryCard.vue'
@@ -156,7 +156,7 @@ const selectedOwner = computed<Owner | null>(() => draft.state.owner)
         </div>
 
         <div v-else-if="loading" class="loading">
-          <Loader :size="18" :stroke-width="1.6" class="spin" />
+          <PawLoader :size="22" :glow="false" :speed="900" />
           <span>Buscando…</span>
         </div>
 
@@ -215,10 +215,6 @@ const selectedOwner = computed<Owner | null>(() => draft.state.owner)
         subtitle="Completa los datos. Podrás editarlos después desde su ficha."
       />
       <OwnerForm ref="ownerFormRef" v-model="draft.state.ownerCreating" />
-      <div v-if="submitting" class="submitting">
-        <Loader :size="14" :stroke-width="1.6" class="spin" />
-        <span>Guardando propietario…</span>
-      </div>
     </template>
   </ContentWrap>
 </template>
@@ -350,8 +346,7 @@ const selectedOwner = computed<Owner | null>(() => draft.state.owner)
   margin-bottom: 14px;
 }
 .loading,
-.search-error,
-.submitting {
+.search-error {
   padding: 28px 20px;
   display: flex;
   align-items: center;
@@ -362,16 +357,5 @@ const selectedOwner = computed<Owner | null>(() => draft.state.owner)
 }
 .search-error {
   color: oklch(45% 0.15 25);
-}
-.submitting {
-  margin-top: 16px;
-}
-.spin {
-  animation: spin 0.85s linear infinite;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 </style>

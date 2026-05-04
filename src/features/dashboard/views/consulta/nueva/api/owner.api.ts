@@ -49,6 +49,7 @@ export const ownerApi = {
   async search(query: string): Promise<OwnerResponse[]> {
     const { data } = await http.get<OwnerResponse[]>('/owners/search', {
       params: { q: query },
+      skipGlobalLoader: true,
     })
     return data
   },

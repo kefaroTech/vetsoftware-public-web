@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { Plus, PawPrint, TriangleAlert, Loader } from 'lucide-vue-next'
+import { computed, ref, toRef } from 'vue'
+import { Plus, PawPrint, TriangleAlert } from 'lucide-vue-next'
 import ContentWrap from '../components/ContentWrap.vue'
 import PageHeading from '../components/PageHeading.vue'
 import OwnerHeader from '../components/OwnerHeader.vue'
@@ -8,8 +8,8 @@ import SectionCard from '@/features/dashboard/components/ui/SectionCard.vue'
 import PetCard from '../components/PetCard.vue'
 import PetForm from '../components/PetForm.vue'
 import DeceasedConfirmDialog from '../components/DeceasedConfirmDialog.vue'
-import { mockAnimals, petsForOwner } from '../data/owners'
 import { useNuevaConsultaDraft } from '../composables/useNuevaConsultaDraft'
+import { useAnimalsByOwner } from '../composables/useAnimalsByOwner'
 import { animalApi } from '../api/animal.api'
 import {
   buildCreateAnimalRequest,
@@ -23,15 +23,21 @@ const draft = useNuevaConsultaDraft()
 const { companyId } = useAuth()
 const petFormRef = ref<{ validate: () => boolean } | null>(null)
 const submitError = ref<string | null>(null)
-const submitting = ref(false)
 
 const owner = computed(() => draft.state.owner)
+const ownerIdRef = toRef(() => draft.state.owner?.id ?? '')
 
-const pets = computed<Animal[]>(() => {
-  if (!owner.value) return []
-  const all = petsForOwner(owner.value.id)
-  return [...all].sort((a, b) => Number(a.deceased) - Number(b.deceased))
-})
+const {
+  list: ownerAnimals,
+  error: petsError,
+  addPet,
+} = useAnimalsByOwner(ownerIdRef)
+
+const pets = computed<Animal[]>(() =>
+  [...ownerAnimals.value].sort(
+    (a, b) => Number(a.deceased) - Number(b.deceased),
+  ),
+)
 
 type Mode = 'list' | 'empty' | 'creating'
 const mode = computed<Mode>(() => {
@@ -79,13 +85,12 @@ async function submit(): Promise<boolean> {
     return false
   }
 
-  submitting.value = true
   submitError.value = null
   try {
     const payload = buildCreateAnimalRequest(p, o.id, companyId.value)
     const created = await animalApi.create(payload)
     const newPet = mapAnimalResponse(created)
-    mockAnimals.unshift(newPet)
+    addPet(newPet)
     if (!o.pets.includes(newPet.id)) o.pets = [...o.pets, newPet.id]
     draft.setPet(newPet)
     return true
@@ -95,8 +100,6 @@ async function submit(): Promise<boolean> {
       'No se pudo registrar la mascota. Intenta nuevamente.',
     )
     return false
-  } finally {
-    submitting.value = false
   }
 }
 
@@ -113,10 +116,15 @@ function editOwner() {
 
 <template>
   <ContentWrap>
-    <div v-if="submitError" class="banner danger" role="alert">
+    <div v-if="submitError || petsError" class="banner danger" role="alert">
       <TriangleAlert :size="16" :stroke-width="1.7" />
-      <span>{{ submitError }}</span>
-      <button type="button" class="banner-x" @click="submitError = null">
+      <span>{{ submitError ?? petsError }}</span>
+      <button
+        v-if="submitError"
+        type="button"
+        class="banner-x"
+        @click="submitError = null"
+      >
         ×
       </button>
     </div>
@@ -196,10 +204,6 @@ function editOwner() {
         </button>
       </div>
       <PetForm ref="petFormRef" v-model="draft.state.petCreating" />
-      <div v-if="submitting" class="submitting">
-        <Loader :size="14" :stroke-width="1.6" class="spin" />
-        <span>Guardando mascota…</span>
-      </div>
     </template>
 
     <DeceasedConfirmDialog
@@ -237,21 +241,6 @@ function editOwner() {
   line-height: 1;
   padding: 0 4px;
   font-family: inherit;
-}
-.submitting {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--warm-600);
-  padding: 28px 20px 0;
-}
-.spin {
-  animation: spin 0.85s linear infinite;
-}
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 .grid {
   display: grid;

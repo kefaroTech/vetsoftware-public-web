@@ -153,6 +153,60 @@ componentes.
   (`useAnimalColors`). Catálogo global, cache module-scoped.
 - **Países / Estados / Ciudades**: cargados desde el backend (`useGeoCascade`).
 
+## Loader global (Huella latiendo)
+
+**Es el único loader del proyecto.** No hay spinners genéricos, ni de
+lucide, ni `<v-progress-*>`, ni rotaciones CSS sueltas. Cualquier estado
+de carga — HTTP, transición, cómputo bloqueante — debe rutearse al
+`PageLoader` global o usar `PawLoader` directamente para casos inline
+acotados (búsqueda incremental, etc).
+
+**Componentes** en `src/components/ui/`:
+- `PawLoader.vue` — la huella amatista que palpita (SVG inline + filtro
+  glow). Props: `size`, `color`, `glow`, `speed`, `label`. Respeta
+  `prefers-reduced-motion`.
+- `PageLoader.vue` — overlay full-screen `position: fixed; inset: 0` con
+  fondo `rgba(15, 7, 30, 0.72)` + `backdrop-filter: blur(4px)`,
+  z-index 2000, cursor `wait`. Renderiza `<PawLoader :size="192"
+  color="#ffffff" />` centrado. Sin Teleport — vive dentro del `<v-app>`
+  y el z-index 2000 es suficiente para sobreponerse a contenido normal
+  sin colisionar con dialogs de Vuetify.
+
+**Trigger automático:** los interceptors de axios en
+`src/services/http/http.client.ts` llaman `pushLoader()` en request y
+`popLoader()` en response (éxito o error). Cuando `pending > 0` y supera
+el delay, `visible` pasa a `true` y el `PageLoader` montado en `App.vue`
+aparece.
+
+**Timings** (`useGlobalLoader.ts`):
+- `SHOW_DELAY_MS = 200` — requests < 200ms nunca lo disparan.
+- `MIN_VISIBLE_MS = 300` — una vez visible, queda ≥300ms para evitar
+  parpadeo.
+
+**Opt-out por request** (sólo casos donde bloquear sería invasivo —
+búsqueda con debounce, polling, validaciones live):
+
+```ts
+http.get('/owners/search', { params: { q }, skipGlobalLoader: true })
+```
+
+`skipGlobalLoader` está extendido en `AxiosRequestConfig` vía module
+augmentation. Por defecto déjalo OFF (loader activo). Hoy sólo lo usa
+`ownerApi.search()`.
+
+**Uso programático** (transiciones no-HTTP):
+
+```ts
+import { pushLoader, popLoader } from '@/composables/useGlobalLoader'
+pushLoader()
+try { await doSomething() } finally { popLoader() }
+```
+
+**`PawLoader` inline** (cuando el global no aplica, ej. el opt-out de
+search): `<PawLoader :size="22" :glow="false" :speed="900" />`. Tamaños
+sugeridos por contexto en
+`docs/design/design_handoff_loader/README.md`.
+
 ## Persistencia de entidades (creación)
 
 - **Owner**: `POST /api/v1/owners` (`ownerApi.create` + `mapOwnerResponse`),

@@ -1,5 +1,12 @@
 import axios, { AxiosError } from 'axios'
 import type { ProblemDetail } from '@/types/api.types'
+import { popLoader, pushLoader } from '@/composables/useGlobalLoader'
+
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    skipGlobalLoader?: boolean
+  }
+}
 
 export const AUTH_STORAGE_KEY = 'vetsoft.auth'
 
@@ -20,12 +27,17 @@ http.interceptors.request.use((config) => {
       localStorage.removeItem(AUTH_STORAGE_KEY)
     }
   }
+  if (!config.skipGlobalLoader) pushLoader()
   return config
 })
 
 http.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (!response.config.skipGlobalLoader) popLoader()
+    return response
+  },
   (error: AxiosError) => {
+    if (!error.config?.skipGlobalLoader) popLoader()
     const status = error.response?.status
     const url = error.config?.url ?? ''
     const isLoginCall = url.includes('/auth/login/')

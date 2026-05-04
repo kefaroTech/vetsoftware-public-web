@@ -45,9 +45,8 @@ defineEmits<{ back: []; next: [] }>()
         :disabled="nextDisabled || nextLoading"
         @click="$emit('next')"
       >
-        <span v-if="nextLoading" class="spinner" />
         <span>{{ nextLabel }}</span>
-        <ArrowRight v-if="!nextLoading" :size="13" :stroke-width="1.8" />
+        <ArrowRight :size="13" :stroke-width="1.8" />
       </button>
     </div>
   </footer>
@@ -120,18 +119,5 @@ defineEmits<{ back: []; next: [] }>()
   background: var(--warm-150);
   color: var(--warm-500);
   cursor: not-allowed;
-}
-.spinner {
-  width: 13px;
-  height: 13px;
-  border: 1.6px solid currentColor;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 </style>

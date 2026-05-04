@@ -81,4 +81,11 @@ export const animalApi = {
     const { data } = await http.get<AnimalResponse>(`/animals/${id}`)
     return data
   },
+
+  async listByOwner(ownerId: number): Promise<AnimalResponse[]> {
+    const { data } = await http.get<AnimalResponse[]>(
+      `/animals/by-owner/${ownerId}`,
+    )
+    return data
+  },
 }
