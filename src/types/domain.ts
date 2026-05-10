@@ -1,3 +1,23 @@
+export type EmployeeStatus = 'ACTIVE' | 'INACTIVE'
+
+export interface EmployeeRole {
+  id: number
+  name: string
+  code: string
+}
+
+export interface Employee {
+  id: number
+  employeeCode: string
+  name: string
+  email: string
+  status: EmployeeStatus
+  companyId: number
+  createdDate: string
+  roles: EmployeeRole[]
+  initials: string
+}
+
 export interface Country {
   id: string
   name: string

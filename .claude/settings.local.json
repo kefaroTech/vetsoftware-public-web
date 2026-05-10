@@ -11,7 +11,8 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\orlan\\\\OneDrive\\\\Documentos\\\\Proyectos\\\\VetSoftware\\\\src\\\\main\\\\java\\\\com\\\\vetsoftware\\\\app\\\\infrastructure\\\\web\" -Filter \"*Controller.java\")",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "Bash(git commit *)"
     ]
   }
 }

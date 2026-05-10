@@ -57,6 +57,11 @@ const router = createRouter({
           name: 'consulta-hospital',
           component: () => import('@/features/dashboard/views/consulta/HospitalView.vue'),
         },
+        {
+          path: 'empleados',
+          name: 'empleados',
+          component: () => import('@/features/employees/views/EmpleadosView.vue'),
+        },
       ],
     },
     {

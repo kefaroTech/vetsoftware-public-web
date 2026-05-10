@@ -12,6 +12,7 @@ import {
   Package,
   Receipt,
   BarChart3,
+  Users,
 } from 'lucide-vue-next'
 import SidebarBrand from './SidebarBrand.vue'
 import SidebarNavItem from './SidebarNavItem.vue'
@@ -106,6 +107,14 @@ const upcomingItems = [
         :active="route.name === item.to.name"
       />
     </div>
+
+    <div class="section-label">ADMINISTRACIÓN</div>
+    <SidebarNavItem
+      label="Empleados"
+      :icon="Users"
+      :active="route.name === 'empleados'"
+      @click="router.push({ name: 'empleados' })"
+    />
 
     <div class="section-label">PRÓXIMAMENTE</div>
     <SidebarNavItem
