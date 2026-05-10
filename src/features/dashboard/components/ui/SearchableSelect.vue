@@ -1,0 +1,477 @@
+<script setup lang="ts">
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { ChevronDown, Plus, Search } from 'lucide-vue-next'
+
+interface Option {
+  value: string
+  label: string
+  hint?: string
+}
+
+const props = withDefaults(
+  defineProps<{
+    modelValue?: string | null
+    options: Option[]
+    placeholder?: string
+    disabled?: boolean
+    loading?: boolean
+    invalid?: boolean
+    onCreate?: (opt: { name: string; description: string }) => Promise<{
+      value: string
+      label: string
+      hint?: string
+    } | void> | void
+    createLabel?: string
+  }>(),
+  {
+    placeholder: 'Selecciona una opción',
+    createLabel: 'Crear nuevo',
+  },
+)
+
+const emit = defineEmits<{
+  'update:modelValue': [value: string]
+  blur: []
+}>()
+
+const root = ref<HTMLElement | null>(null)
+const searchInput = ref<HTMLInputElement | null>(null)
+const newNameInput = ref<HTMLInputElement | null>(null)
+
+const open = ref(false)
+const q = ref('')
+const creating = ref(false)
+const newName = ref('')
+const newHint = ref('')
+const submitting = ref(false)
+const createError = ref<string | null>(null)
+
+const selected = computed(() =>
+  props.options.find((o) => o.value === props.modelValue),
+)
+
+const filtered = computed(() => {
+  if (!q.value.trim()) return props.options
+  const needle = q.value.trim().toLowerCase()
+  return props.options.filter((o) =>
+    `${o.label} ${o.hint ?? ''}`.toLowerCase().includes(needle),
+  )
+})
+
+const showCreate = computed(() => !!props.onCreate && !creating.value)
+
+function toggle() {
+  if (props.disabled) return
+  open.value ? close() : openPanel()
+}
+
+function openPanel() {
+  open.value = true
+  nextTick(() => searchInput.value?.focus())
+}
+
+function close() {
+  open.value = false
+  creating.value = false
+  q.value = ''
+  newName.value = ''
+  newHint.value = ''
+  createError.value = null
+}
+
+function pick(opt: Option) {
+  emit('update:modelValue', opt.value)
+  close()
+  emit('blur')
+}
+
+function startCreate() {
+  newName.value = q.value.trim()
+  newHint.value = ''
+  createError.value = null
+  creating.value = true
+  nextTick(() => newNameInput.value?.focus())
+}
+
+async function confirmCreate() {
+  const name = newName.value.trim()
+  if (!name || submitting.value) return
+  submitting.value = true
+  createError.value = null
+  try {
+    const created = await props.onCreate?.({
+      name,
+      description: newHint.value.trim(),
+    })
+    if (created && typeof created === 'object' && 'value' in created) {
+      emit('update:modelValue', created.value)
+    } else {
+      // Fallback: si onCreate no retorna value, intentar buscar por nombre en options
+      // tras refresh externo. El consumidor debe encargarse de re-seleccionar si hace falta.
+    }
+    close()
+    emit('blur')
+  } catch {
+    createError.value = 'No se pudo crear. Intenta de nuevo.'
+  } finally {
+    submitting.value = false
+  }
+}
+
+function cancelCreate() {
+  creating.value = false
+  newName.value = ''
+  newHint.value = ''
+  createError.value = null
+  nextTick(() => searchInput.value?.focus())
+}
+
+function onDocClick(e: MouseEvent) {
+  if (!open.value) return
+  if (root.value && !root.value.contains(e.target as Node)) {
+    close()
+    emit('blur')
+  }
+}
+
+watch(
+  () => props.modelValue,
+  () => {
+    // Mantener cerrado al cambiar externamente
+  },
+)
+
+onMounted(() => document.addEventListener('mousedown', onDocClick))
+onBeforeUnmount(() => document.removeEventListener('mousedown', onDocClick))
+</script>
+
+<template>
+  <div ref="root" class="ss" :class="{ disabled, invalid, open }">
+    <button
+      type="button"
+      class="trigger"
+      :disabled="disabled"
+      :aria-expanded="open"
+      :aria-invalid="invalid || undefined"
+      @click="toggle"
+    >
+      <span :class="['value', { placeholder: !selected }]">
+        {{ loading ? 'Cargando…' : selected?.label ?? placeholder }}
+      </span>
+      <ChevronDown :size="13" :stroke-width="1.8" class="caret" />
+    </button>
+
+    <div v-if="open" class="panel">
+      <template v-if="!creating">
+        <div class="search-wrap">
+          <Search :size="13" :stroke-width="1.7" class="search-icon" />
+          <input
+            ref="searchInput"
+            v-model="q"
+            type="text"
+            class="search-input"
+            placeholder="Buscar…"
+            @keydown.escape.prevent="close"
+          />
+        </div>
+        <div class="list">
+          <div v-if="filtered.length === 0" class="empty">Sin coincidencias</div>
+          <button
+            v-for="o in filtered"
+            :key="o.value"
+            type="button"
+            class="item"
+            :class="{ selected: o.value === modelValue }"
+            @mousedown.prevent="pick(o)"
+          >
+            <span class="item-label">{{ o.label }}</span>
+            <span v-if="o.hint" class="item-hint">{{ o.hint }}</span>
+          </button>
+        </div>
+        <button
+          v-if="showCreate"
+          type="button"
+          class="create"
+          @mousedown.prevent="startCreate"
+        >
+          <Plus :size="13" :stroke-width="1.8" />
+          <template v-if="q.trim()">
+            <span>Crear <strong>"{{ q.trim() }}"</strong></span>
+          </template>
+          <template v-else>
+            <span>{{ createLabel }}</span>
+          </template>
+        </button>
+      </template>
+
+      <div v-else class="form" @mousedown.stop>
+        <div class="form-title">{{ createLabel }}</div>
+        <input
+          ref="newNameInput"
+          v-model="newName"
+          type="text"
+          class="form-input"
+          placeholder="Nombre"
+          :disabled="submitting"
+          @keydown.enter.prevent="confirmCreate"
+          @keydown.escape.prevent="cancelCreate"
+        />
+        <input
+          v-model="newHint"
+          type="text"
+          class="form-input"
+          placeholder="Descripción (opcional)"
+          :disabled="submitting"
+          @keydown.enter.prevent="confirmCreate"
+          @keydown.escape.prevent="cancelCreate"
+        />
+        <div v-if="createError" class="form-error">{{ createError }}</div>
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn-ghost"
+            :disabled="submitting"
+            @click="cancelCreate"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            :disabled="!newName.trim() || submitting"
+            @click="confirmCreate"
+          >
+            {{ submitting ? 'Creando…' : 'Crear y seleccionar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.ss {
+  position: relative;
+  font-family: var(--font-sans);
+}
+.trigger {
+  width: 100%;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--warm-800);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ss.open .trigger,
+.trigger:focus-visible {
+  outline: none;
+  border-color: var(--amatista-500);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--amatista-500) 18%, transparent);
+}
+.ss.disabled .trigger {
+  background: var(--warm-100);
+  color: var(--warm-500);
+  cursor: not-allowed;
+}
+.ss.invalid .trigger {
+  border-color: oklch(60% 0.20 25);
+  background: oklch(98.5% 0.02 25);
+  animation: shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+.ss.invalid.open .trigger {
+  box-shadow: 0 0 0 3px oklch(92% 0.06 25);
+}
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-3px); }
+  40%, 60% { transform: translateX(3px); }
+}
+.value {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.value.placeholder {
+  color: var(--warm-400);
+}
+.caret {
+  color: var(--warm-500);
+  flex-shrink: 0;
+}
+.panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(40, 20, 80, 0.14);
+  z-index: 50;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.search-wrap {
+  position: relative;
+  border-bottom: 1px solid var(--warm-200);
+}
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--warm-500);
+}
+.search-input {
+  width: 100%;
+  padding: 10px 12px 10px 32px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--warm-900);
+}
+.list {
+  max-height: 240px;
+  overflow: auto;
+  padding: 4px;
+}
+.empty {
+  padding: 14px 12px;
+  font-size: 12.5px;
+  color: var(--warm-500);
+  text-align: center;
+}
+.item {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+}
+.item:hover {
+  background: var(--warm-100);
+}
+.item.selected {
+  background: var(--amatista-100);
+}
+.item-label {
+  font-size: 13px;
+  color: var(--warm-900);
+  font-weight: 500;
+}
+.item-hint {
+  font-size: 11.5px;
+  color: var(--warm-500);
+}
+.create {
+  border-top: 1px solid var(--warm-200);
+  padding: 10px 14px;
+  background: transparent;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--amatista-700);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+  text-align: left;
+}
+.create:hover {
+  background: var(--amatista-50);
+}
+.create strong {
+  font-weight: 600;
+}
+.form {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.form-title {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--warm-700);
+  margin-bottom: 2px;
+}
+.form-input {
+  background: var(--warm-100);
+  border: 1px solid var(--warm-200);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--warm-900);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.form-input:focus {
+  border-color: var(--amatista-500);
+  background: var(--warm-50);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--amatista-500) 18%, transparent);
+}
+.form-error {
+  font-size: 12px;
+  color: oklch(50% 0.18 25);
+}
+.form-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+.btn-ghost,
+.btn-primary {
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 7px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.btn-ghost {
+  background: transparent;
+  border-color: var(--warm-200);
+  color: var(--warm-700);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--warm-100);
+}
+.btn-primary {
+  background: var(--amatista-700);
+  color: white;
+}
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+.btn-primary:disabled,
+.btn-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+</style>

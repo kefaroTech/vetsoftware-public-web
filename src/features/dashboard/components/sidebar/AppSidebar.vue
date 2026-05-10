@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   FileText,
   FilePlus,
@@ -18,8 +18,12 @@ import SidebarNavItem from './SidebarNavItem.vue'
 import SidebarSubItem from './SidebarSubItem.vue'
 import SidebarUserCard from './SidebarUserCard.vue'
 import { mockUser } from '../../data/mock'
+import { useNuevaConsultaDraft } from '../../views/consulta/nueva/composables/useNuevaConsultaDraft'
+import { showResumeOrNewDialog } from '@/composables/useConsultaResumeGuard'
 
 const route = useRoute()
+const router = useRouter()
+const draft = useNuevaConsultaDraft()
 
 const consultaSubRoutes = [
   'consulta-nueva',
@@ -35,11 +39,31 @@ const isConsultaActive = computed(() =>
 const consultaOpen = ref(true)
 
 const subItems = [
-  { label: 'Nueva consulta', icon: FilePlus, to: { name: 'consulta-nueva' as const } },
   { label: 'Historial clínico', icon: History, to: { name: 'consulta-historial' as const } },
   { label: 'Plan de vacunación', icon: Syringe, to: { name: 'consulta-vacunacion' as const } },
   { label: 'Hospitalización', icon: PawPrint, to: { name: 'consulta-hospital' as const } },
 ]
+
+function goNuevaConsulta() {
+  if (draft.state.owner) {
+    showResumeOrNewDialog({
+      ownerName: draft.state.owner.name,
+      petName: draft.state.pet?.name,
+      step: draft.state.step,
+      onContinue: () =>
+        router.push({
+          name: 'consulta-nueva',
+          query: { paso: String(draft.state.step) },
+        }),
+      onCreateNew: () => {
+        draft.reset()
+        router.push({ name: 'consulta-nueva', query: { paso: '1' } })
+      },
+    })
+    return
+  }
+  router.push({ name: 'consulta-nueva' })
+}
 
 const upcomingItems = [
   { label: 'Pacientes', icon: User },
@@ -64,6 +88,15 @@ const upcomingItems = [
       @click="consultaOpen = !consultaOpen"
     />
     <div v-if="consultaOpen" class="sub-list">
+      <button
+        type="button"
+        class="sub-item-btn"
+        :class="{ active: route.name === 'consulta-nueva' }"
+        @click="goNuevaConsulta"
+      >
+        <FilePlus :size="14" :stroke-width="1.5" />
+        <span>Nueva consulta</span>
+      </button>
       <SidebarSubItem
         v-for="item in subItems"
         :key="item.label"
@@ -124,5 +157,29 @@ const upcomingItems = [
   gap: 1px;
   padding-left: 28px;
   margin-top: 2px;
+}
+.sub-item-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: oklch(82% 0.04 var(--hue) / 0.72);
+  background: transparent;
+  border: none;
+  font-weight: 400;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease;
+}
+.sub-item-btn:hover:not(.active) {
+  background: oklch(70% 0.04 var(--hue) / 0.08);
+}
+.sub-item-btn.active {
+  background: oklch(50% 0.10 var(--hue) / 0.25);
+  color: oklch(95% 0.02 var(--hue));
+  font-weight: 500;
 }
 </style>

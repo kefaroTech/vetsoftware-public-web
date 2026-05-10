@@ -1,10 +1,30 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { Plus } from 'lucide-vue-next'
+import { useNuevaConsultaDraft } from '@/features/dashboard/views/consulta/nueva/composables/useNuevaConsultaDraft'
+import { showResumeOrNewDialog } from '@/composables/useConsultaResumeGuard'
 
 const router = useRouter()
+const draft = useNuevaConsultaDraft()
 
 function goNueva() {
+  if (draft.state.owner) {
+    showResumeOrNewDialog({
+      ownerName: draft.state.owner.name,
+      petName: draft.state.pet?.name,
+      step: draft.state.step,
+      onContinue: () =>
+        router.push({
+          name: 'consulta-nueva',
+          query: { paso: String(draft.state.step) },
+        }),
+      onCreateNew: () => {
+        draft.reset()
+        router.push({ name: 'consulta-nueva', query: { paso: '1' } })
+      },
+    })
+    return
+  }
   router.push({ name: 'consulta-nueva' })
 }
 

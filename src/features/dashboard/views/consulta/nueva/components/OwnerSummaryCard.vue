@@ -98,13 +98,18 @@ function formatLocation(owner: Owner): string {
 }
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(16px, 1vw + 8px, 24px) clamp(20px, 3cqi + 8px, 56px);
 }
 .row {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
+}
+@container (max-width: 520px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }
 .ic {
   width: 28px;

@@ -10,14 +10,28 @@ import PasoMascota from './pasos/PasoMascota.vue'
 import PasoConsulta from './pasos/PasoConsulta.vue'
 import PasoResumen from './pasos/PasoResumen.vue'
 import { useNuevaConsultaDraft, type WizardStep } from './composables/useNuevaConsultaDraft'
+import { showResumeOrNewDialog } from '@/composables/useConsultaResumeGuard'
+import { consultationApi } from './api/consultation.api'
+import { prescriptionApi } from './api/prescription.api'
+import { medicamentPrescriptionApi } from './api/medicamentPrescription.api'
+import { laboratoryTestApi } from './api/laboratoryTest.api'
+import { diagnosticImagingApi } from './api/diagnosticImaging.api'
+import { vaccinationApi } from './api/vaccination.api'
+import { hospitalizationApi } from './api/hospitalization.api'
+import { dewormingApi } from './api/deworming.api'
+import { surgeryApi } from './api/surgery.api'
+import { useAuth } from '@/features/auth/composables/useAuth'
+import { getProblemDetailMessage } from '@/services/http/http.client'
 
 const router = useRouter()
 const route = useRoute()
 const draft = useNuevaConsultaDraft()
+const auth = useAuth()
 
 const discardOpen = ref(false)
 const saving = ref(false)
 const submittingStep = ref(false)
+const saveError = ref<string | null>(null)
 const pasoRef = ref<{
   validate?: () => boolean
   submit?: () => Promise<boolean> | boolean
@@ -136,29 +150,169 @@ async function handleBack() {
   goStep((step.value - 1) as WizardStep)
 }
 
+async function persistConsultationItems(consultationId: number, animalId: number, companyId: number) {
+  const s = draft.state
+
+  // Recetas: cabecera + medicamentos en cascada
+  for (const p of s.prescriptions) {
+    const created = await prescriptionApi.create({
+      date: p.date,
+      diagnosis: p.diagnosis,
+      observations: p.observations,
+      animalId,
+      consultationId,
+      companyId,
+    })
+    for (const m of p.medicaments) {
+      await medicamentPrescriptionApi.create({
+        name: m.name,
+        presentation: m.presentation,
+        quantity: m.quantity,
+        posology: m.posology,
+        prescriptionId: created.id,
+      })
+    }
+  }
+
+  for (const t of s.laboratoryTests) {
+    await laboratoryTestApi.create({
+      date: t.date,
+      testTypeId: Number(t.testTypeId),
+      quantity: t.quantity,
+      diagnosis: t.diagnosis,
+      animalId,
+      consultationId,
+      companyId,
+    })
+  }
+
+  for (const i of s.diagnosticImagings) {
+    await diagnosticImagingApi.create({
+      date: i.date,
+      diagnosticImagingTypeId: Number(i.diagnosticImagingTypeId),
+      clinicalSigns: i.clinicalSigns,
+      studyType: i.studyType,
+      diagnosis: i.diagnosis,
+      observations: i.observations,
+      animalId,
+      consultationId,
+      companyId,
+    })
+  }
+
+  for (const v of s.vaccinations) {
+    await vaccinationApi.create({
+      date: v.date,
+      vaccinationTypeId: Number(v.vaccinationTypeId),
+      lot: v.lot,
+      notes: v.notes,
+      nextVaccination: v.nextVaccination || null,
+      animalId,
+      consultationId,
+      companyId,
+    })
+  }
+
+  for (const h of s.hospitalizations) {
+    await hospitalizationApi.create({
+      date: h.date,
+      startDate: h.startDate,
+      endDate: h.endDate || null,
+      type: h.type,
+      reasonLeaving: h.reasonLeaving || null,
+      reason: h.reason,
+      observations: h.observations,
+      animalId,
+      consultationId,
+      companyId,
+    })
+  }
+
+  for (const d of s.dewormings) {
+    await dewormingApi.create({
+      date: d.date,
+      lastDeworming: d.lastDeworming || null,
+      type: d.type,
+      product: d.product,
+      dosage: d.dosage,
+      nextControl: d.nextControl || null,
+      observations: d.observations,
+      animalId,
+      consultationId,
+      companyId,
+    })
+  }
+
+  for (const sg of s.surgeries) {
+    await surgeryApi.create({
+      date: sg.date,
+      surgeryTypeId: Number(sg.surgeryTypeId),
+      description: sg.description,
+      medicament: sg.medicament,
+      observations: sg.observations,
+      complications: sg.complications,
+      animalId,
+      consultationId,
+      companyId,
+    })
+  }
+}
+
 async function saveConsultation(keepOwner = false) {
-  saving.value = true
-  await new Promise((r) => setTimeout(r, 800))
-  saving.value = false
-  const owner = draft.state.owner
+  saveError.value = null
   const pet = draft.state.pet
+  const owner = draft.state.owner
   const consultationType = draft.state.consultationType
-  const date = draft.state.consultation.date
-  if (keepOwner) {
-    draft.resetKeepingOwner()
-    pushStepToQuery(2)
+  const cDraft = draft.state.consultation
+  const companyId = auth.companyId.value
+
+  if (!pet || !consultationType || !companyId) {
+    saveError.value = 'Faltan datos para guardar la consulta.'
     return
   }
-  draft.reset()
-  router.push({
-    name: 'consulta-nueva-exito',
-    state: {
-      ownerName: owner?.name ?? '',
-      petName: pet?.name ?? '',
-      consultationType: consultationType?.name ?? '',
-      date,
-    },
-  })
+
+  saving.value = true
+  try {
+    // 1. Crear consulta — diagnosis/therapeuticPlan/diagnosisPlan son @NotBlank en backend
+    const consultation = await consultationApi.create({
+      date: cDraft.date,
+      consultationTypeId: Number(consultationType.id),
+      anamnesis: cDraft.anamnesis.trim(),
+      diagnosis: cDraft.diagnosis.trim() || '-',
+      therapeuticPlan: cDraft.therapeuticPlan.trim() || '-',
+      diagnosisPlan: cDraft.diagnosticPlan.trim() || '-',
+      nextControl: cDraft.nextControlDate || null,
+      animalId: Number(pet.id),
+    })
+
+    // 2. Crear todos los items vinculados
+    await persistConsultationItems(consultation.id, Number(pet.id), companyId)
+
+    // 3. Reset y navegación
+    const date = cDraft.date
+    if (keepOwner) {
+      draft.resetKeepingOwner()
+      pushStepToQuery(2)
+      return
+    }
+    draft.reset()
+    router.push({
+      name: 'consulta-nueva-exito',
+      state: {
+        ownerName: owner?.name ?? '',
+        petName: pet.name,
+        consultationType: consultationType.name,
+        date,
+      },
+    })
+  } catch (e) {
+    saveError.value = getProblemDetailMessage(
+      e,
+      'No se pudo guardar la consulta. Intenta de nuevo.',
+    )
+  } finally {
+    saving.value = false
+  }
 }
 
 function handleSaveAndCreateAnother() {
@@ -168,6 +322,10 @@ function handleSaveAndCreateAnother() {
 function attemptCancel() {
   if (draft.isEmpty.value) {
     confirmCancel()
+    return
+  }
+  if (draft.state.owner) {
+    promptResumeOrRestart()
     return
   }
   discardOpen.value = true
@@ -184,7 +342,28 @@ function goHome() {
     router.push({ name: 'home' })
     return
   }
+  if (draft.state.owner) {
+    promptResumeOrRestart()
+    return
+  }
   discardOpen.value = true
+}
+
+function promptResumeOrRestart() {
+  const owner = draft.state.owner
+  if (!owner) return
+  showResumeOrNewDialog({
+    ownerName: owner.name,
+    petName: draft.state.pet?.name,
+    step: draft.state.step,
+    onContinue: () => {
+      // El usuario decide quedarse en la consulta actual; no salimos.
+    },
+    onCreateNew: () => {
+      draft.reset()
+      pushStepToQuery(1)
+    },
+  })
 }
 
 function onKey(e: KeyboardEvent) {
@@ -253,6 +432,11 @@ onUnmounted(() => {
         @edit-step="goStep"
       />
     </main>
+
+    <div v-if="saveError && step === 4" class="save-error">
+      <X :size="14" :stroke-width="1.7" />
+      <span>{{ saveError }}</span>
+    </div>
 
     <WizardFooter
       :show-back="step > 1"
@@ -404,6 +588,16 @@ onUnmounted(() => {
   overflow: auto;
   display: flex;
   flex-direction: column;
+}
+.save-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  padding: 12px 18px;
+  background: oklch(94% 0.06 25);
+  border-top: 1px solid oklch(85% 0.10 25);
+  color: oklch(35% 0.15 25);
 }
 .discard-extra {
   background: transparent;

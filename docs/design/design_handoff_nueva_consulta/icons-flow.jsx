@@ -18,8 +18,18 @@ const IconFlask = (p) => <Icon {...p}><path d="M9 3h6"/><path d="M10 3v7L4 20a2 
 const IconScan = (p) => <Icon {...p}><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M21 7V5a2 2 0 0 0-2-2h-2"/><path d="M3 17v2a2 2 0 0 0 2 2h2"/><path d="M21 17v2a2 2 0 0 0-2 2h-2"/><path d="M7 12h10"/></Icon>;
 const IconSparkles = (p) => <Icon {...p}><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path d="M19 14l1 2 2 1-2 1-1 2-1-2-2-1 2-1z"/></Icon>;
 const IconTrash = (p) => <Icon {...p}><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></Icon>;
+const IconBed = (p) => <Icon {...p}><path d="M3 18V8"/><path d="M3 12h18v6"/><path d="M21 18v-4a2 2 0 0 0-2-2"/><circle cx="8" cy="11" r="2.5"/></Icon>;
+const IconShield = (p) => <Icon {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></Icon>;
+const IconScalpel = (p) => <Icon {...p}><path d="M14 4l6 6-9 9-6-6z"/><path d="M14 4l-3 3"/><path d="M3 21l2-2"/></Icon>;
+const IconClipboard = (p) => <Icon {...p}><rect x="6" y="4" width="12" height="18" rx="2"/><path d="M9 4V2h6v2"/><path d="M9 10h6"/><path d="M9 14h6"/><path d="M9 18h4"/></Icon>;
+const IconNotes = (p) => <Icon {...p}><path d="M4 5h16"/><path d="M4 10h16"/><path d="M4 15h10"/><path d="M4 20h7"/></Icon>;
+const IconBeaker = (p) => <Icon {...p}><path d="M9 3h6"/><path d="M10 3v6L4.5 19A2 2 0 0 0 6.3 22h11.4a2 2 0 0 0 1.8-3L14 9V3"/><path d="M7 14h10"/></Icon>;
+const IconImage = (p) => <Icon {...p}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></Icon>;
+const IconBug = (p) => <Icon {...p}><rect x="8" y="6" width="8" height="14" rx="4"/><path d="M12 2v4"/><path d="M5 9l3 1"/><path d="M19 9l-3 1"/><path d="M5 15l3 0"/><path d="M19 15l-3 0"/><path d="M5 21l3-2"/><path d="M19 21l-3-2"/></Icon>;
+const IconBolt = (p) => <Icon {...p}><path d="M13 2L3 14h8l-1 8 10-12h-8z"/></Icon>;
 
-Object.assign(window, {
+Object.assign(window, { IconBed, IconShield, IconScalpel,
+  IconClipboard, IconNotes, IconBeaker, IconImage, IconBug, IconBolt,
   IconArrowLeft, IconCheck, IconX, IconUser, IconPhone, IconMail, IconId,
   IconMapPin, IconCalendar, IconScale, IconAlert, IconEdit, IconCheckCircle,
   IconStethoscope, IconPill, IconFlask, IconScan, IconSparkles, IconTrash,

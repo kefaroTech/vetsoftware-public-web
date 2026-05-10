@@ -9,7 +9,9 @@
       "mcp__ide__getDiagnostics",
       "Bash(npx eslint *)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\orlan\\\\OneDrive\\\\Documentos\\\\Proyectos\\\\VetSoftware\\\\src\\\\main\\\\java\\\\com\\\\vetsoftware\\\\app\\\\infrastructure\\\\web\" -Filter \"*Controller.java\")",
+      "Bash(Select-Object Name)"
     ]
   }
 }

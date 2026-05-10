@@ -21,9 +21,22 @@ Cada feature vive en `src/features/<feature>/` y agrupa por subcarpetas:
 - `data/` — datos mock locales (sólo para desarrollo, se reemplazan por API)
 
 Las primitivas UI compartidas (`BaseInput`, `BaseField`, `BaseSelect`,
-`BaseTextarea`, `DateInput`, `SegmentedRadio`, `SectionCard`, `BaseChip`) viven
-en `src/features/dashboard/components/ui/` y son la base obligatoria para
-formularios.
+`BaseTextarea`, `DateInput`, `SegmentedRadio`, `SectionCard`, `BaseChip`,
+`ModalShell`, `SearchableSelect`) viven en
+`src/features/dashboard/components/ui/` y son la base obligatoria para
+formularios y modales.
+
+- **`ModalShell`** — base para modales con header (icono+título+subtítulo+✕),
+  body scrolleable, footer con `footer-left` (contador) y `footer-actions`
+  (botones). Maneja Escape, click-out, focus inicial. Usalo para cualquier
+  modal nuevo en lugar de reinventar el overlay.
+- **`SearchableSelect`** — select con búsqueda inline + creación inline (prop
+  `onCreate` async que retorna `{value, label, hint?}` y auto-selecciona).
+  Es la base obligatoria para dropdowns con catálogos creables (tipos de
+  examen/vacuna/imagen/cirugía).
+- **`DateInput`** — wrapper de `@vuepic/vue-datepicker` con locale `es` y
+  formato `dd MMM yyyy`. La API pública (`v-model`, `:invalid`, `placeholder`,
+  `min`, `max`) se mantuvo idéntica al DateInput nativo anterior.
 
 ## Convención de validación de formularios
 
@@ -120,8 +133,9 @@ Patrón de referencia: `useGeoCascade.ts` y `useSpecies.ts`.
 
 ## UI / Layout
 
-- El layout del wizard usa `ContentWrap` (max-width 1080px, padding responsive
-  con `clamp`).
+- El layout del wizard usa `ContentWrap` (max-width 1280px, padding 24px
+  vertical / 28px horizontal según handoff). En móvil (≤720px) el padding
+  baja a 20/16.
 - Las tarjetas usan `SectionCard` (padding interno 26/28px, head 18/28px).
 - Los formularios usan grids `repeat(N, minmax(0, 1fr))` con `gap: 22px 28px`
   y breakpoints en 980px (3→2 cols) y 640px (→ 1 col).
@@ -151,7 +165,70 @@ componentes.
   especie se resetea `breedId` y se recarga el catálogo.
 - **Colores de animal**: cargados desde `GET /api/v1/animal-colors`
   (`useAnimalColors`). Catálogo global, cache module-scoped.
+- **Tipos de consulta**: cargados desde `GET /api/v1/consultation-types`
+  (`useConsultationTypes`). Catálogo global, cache module-scoped. Usado en
+  el paso 3 del wizard (`PasoConsulta`) — al cambiar el `typeId` el watch
+  hidrata `state.consultationType` con `{id, name}` resolviendo contra la
+  lista cargada (también re-resuelve cuando la lista llega tarde).
+- **Catálogos creables del paso 3** (consumidos por modales de acciones
+  rápidas): `useTestTypes` (`/laboratory-test-types`), `useDiagnosticImagingTypes`
+  (`/diagnostic-imaging-types/available`), `useVaccinationTypes` (`/vaccination-types/available`),
+  `useSurgeryTypes` (`/surgery-types/available`). Todos generados por el factory
+  `createCatalog<T>` en `composables/useCatalog.ts` — cada uno cachea
+  module-scoped y soporta `create({name, description})` que pushea al cache
+  y permite la auto-selección desde `SearchableSelect`.
 - **Países / Estados / Ciudades**: cargados desde el backend (`useGeoCascade`).
+
+## Modales de acciones rápidas (paso 3)
+
+Los 7 modales viven en `src/features/dashboard/views/consulta/nueva/modals/`:
+`RecetaModal`, `LabTestModal`, `ImagingModal`, `VaccinationModal`,
+`HospitalizationModal`, `DewormingModal`, `SurgeryModal`. Cada uno:
+
+- Usa `ModalShell` + `BaseField` + primitivos del wizard (`BaseInput`,
+  `BaseSelect`, `BaseTextarea`, `DateInput`, `SearchableSelect`).
+- Recibe `open: boolean` + `pet: Animal | null` y emite `save` (con el
+  item construido alineado a tipos de `domain.ts`) y `close`.
+- Validación reactiva con `submitted` flag — se valida al hacer click en
+  Guardar; antes no se muestran errores. Patrón distinto al de
+  `OwnerForm`/`PetForm` (touched-on-blur) pero más natural en modales.
+- El `PasoConsulta.vue` los monta todos y los conecta al draft vía los
+  métodos `addPrescription / addLaboratoryTest / ...` de
+  `useNuevaConsultaDraft`.
+
+`QuickActionsCard` recibe `:counts` (Record<ActionKind, number>) y emite
+`@select(kind)`. Las tiles muestran badge con count cuando >0 y se resaltan
+con borde amatista.
+
+## Persistencia de la consulta completa
+
+`NuevaView.saveConsultation()` ejecuta cascada de POST en orden:
+
+1. `POST /consultations` con `{date, consultationTypeId, anamnesis,
+   diagnosis, therapeuticPlan, diagnosisPlan, nextControl, animalId}` →
+   devuelve `consultationId`. Los campos `@NotBlank` del backend
+   (diagnosis, therapeuticPlan, diagnosisPlan) se mandan como `'-'` cuando
+   están vacíos en el draft (la UX dice que solo tipo + anamnesis son
+   obligatorios pero el back es más estricto).
+2. Por cada item del draft, POST a su endpoint con `{...item, animalId,
+   consultationId, companyId}`. `companyId` sale del JWT vía
+   `useAuth().companyId`.
+3. Receta es cascada interna: `POST /prescriptions` → con el
+   `prescriptionId` retornado, `POST /medicament-prescriptions` por cada
+   medicamento.
+
+No hay rollback cross-endpoint. Si un POST de item falla, `saveError` se
+muestra arriba del footer y el usuario puede reintentar — la consulta
+puede quedar parcialmente persistida.
+
+## Banner "Consulta en curso"
+
+`src/components/ui/ConsultaActiveBanner.vue` montado en `App.vue`. Visible
+cuando `draft.state.owner` existe y la ruta actual NO es del wizard
+(`consulta-nueva` ni `consulta-nueva-exito`). CTA "Volver a la consulta"
+navega a `?paso={state.step}`. ✕ lo oculta para esa sesión sin tocar el
+draft. El dismiss se resetea automáticamente al volver al wizard o al
+cambiar de propietario.
 
 ## Loader global (Huella latiendo)
 

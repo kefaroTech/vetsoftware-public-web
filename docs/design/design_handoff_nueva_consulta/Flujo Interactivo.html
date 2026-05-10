@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Flujo · Nueva Consulta</title>
+<title>Flujo Interactivo · Nueva Consulta</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  html, body { margin:0; padding:0; background:#f0eee9; font-family: 'Geist', sans-serif; }
+  html, body { margin:0; padding:0; background:#f0eee9; font-family: 'Geist', sans-serif; height:100%; overflow:hidden; }
   * { box-sizing: border-box; }
   :root {
     --hue: 300;
@@ -32,6 +32,8 @@
     --warm-800: oklch(25% 0.012 60);
     --warm-900: oklch(16% 0.012 60);
   }
+  @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+  input::placeholder, textarea::placeholder { color: var(--warm-500); opacity:1; }
 </style>
 </head>
 <body>
@@ -39,13 +41,15 @@
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
-<script type="text/babel" src="design-canvas.jsx"></script>
 <script type="text/babel" src="icons.jsx"></script>
 <script type="text/babel" src="icons-flow.jsx"></script>
 <script type="text/babel" src="flow-shell.jsx"></script>
-<script type="text/babel" src="step1-owner.jsx"></script>
-<script type="text/babel" src="step2-pet.jsx"></script>
-<script type="text/babel" src="step3-4-states.jsx"></script>
-<script type="text/babel" src="flow-app.jsx"></script>
+<script type="text/babel" src="receta-modal.jsx"></script>
+<script type="text/babel" src="quick-action-modals.jsx"></script>
+<script type="text/babel" src="flow-interactive.jsx"></script>
+<script type="text/babel" src="flow-interactive-steps.jsx"></script>
+<script type="text/babel">
+  ReactDOM.createRoot(document.getElementById('root')).render(<InteractiveWizard />);
+</script>
 </body>
 </html>

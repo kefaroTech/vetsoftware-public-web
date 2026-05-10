@@ -319,9 +319,9 @@ function PageHeading({ title, subtitle }) {
   );
 }
 
-function ContentWrap({ children, maxWidth = 880 }) {
+function ContentWrap({ children, maxWidth = 1280 }) {
   return (
-    <div style={{ flex: 1, padding: '32px 48px', overflow: 'auto' }}>
+    <div style={{ flex: 1, padding: '24px 28px', overflow: 'auto' }}>
       <div style={{ maxWidth, margin: '0 auto', width: '100%' }}>
         {children}
       </div>

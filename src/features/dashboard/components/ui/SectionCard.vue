@@ -36,9 +36,10 @@ defineProps<{
   border: 1px solid var(--warm-200);
   border-radius: 14px;
   overflow: hidden;
+  container-type: inline-size;
 }
 .head {
-  padding: 18px 28px;
+  padding: clamp(16px, 1.6cqi + 6px, 24px) clamp(20px, 4cqi, 52px);
   border-bottom: 1px solid var(--warm-200);
   display: flex;
   align-items: center;
@@ -78,14 +79,6 @@ defineProps<{
   flex-shrink: 0;
 }
 .body.padded {
-  padding: 26px 28px;
-}
-@media (max-width: 720px) {
-  .head {
-    padding: 14px 18px;
-  }
-  .body.padded {
-    padding: 20px 18px;
-  }
+  padding: clamp(22px, 2.2cqi + 8px, 36px) clamp(20px, 4cqi, 56px);
 }
 </style>

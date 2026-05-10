@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import {
   Stethoscope,
   ClipboardList,
@@ -7,6 +7,7 @@ import {
   Pill,
   FlaskConical,
   Calendar,
+  Sparkles,
 } from 'lucide-vue-next'
 import ContentWrap from '../components/ContentWrap.vue'
 import PageHeading from '../components/PageHeading.vue'
@@ -18,29 +19,110 @@ import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
 import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
 import QuickActionsCard from '../components/QuickActionsCard.vue'
-import { consultationTypes } from '../data/consultationTypes'
-import { useNuevaConsultaDraft } from '../composables/useNuevaConsultaDraft'
+import { useConsultationTypes } from '../composables/useConsultationTypes'
+import {
+  useNuevaConsultaDraft,
+  type ActionKind,
+} from '../composables/useNuevaConsultaDraft'
+import RecetaModal from '../modals/RecetaModal.vue'
+import LabTestModal from '../modals/LabTestModal.vue'
+import ImagingModal from '../modals/ImagingModal.vue'
+import VaccinationModal from '../modals/VaccinationModal.vue'
+import HospitalizationModal from '../modals/HospitalizationModal.vue'
+import DewormingModal from '../modals/DewormingModal.vue'
+import SurgeryModal from '../modals/SurgeryModal.vue'
+import type {
+  Deworming,
+  DiagnosticImaging,
+  Hospitalization,
+  LaboratoryTest,
+  Prescription,
+  Surgery,
+  Vaccination,
+} from '@/types/domain'
 
 const draft = useNuevaConsultaDraft()
 const c = computed(() => draft.state.consultation)
 
-const typeOptions = consultationTypes.map((t) => ({
-  value: t.id,
-  label: t.name,
+const open = reactive<Record<ActionKind, boolean>>({
+  receta: false,
+  lab: false,
+  imaging: false,
+  vaccination: false,
+  hospitalization: false,
+  deworming: false,
+  surgery: false,
+})
+
+const counts = computed<Record<ActionKind, number>>(() => ({
+  receta: draft.state.prescriptions.length,
+  lab: draft.state.laboratoryTests.length,
+  imaging: draft.state.diagnosticImagings.length,
+  vaccination: draft.state.vaccinations.length,
+  hospitalization: draft.state.hospitalizations.length,
+  deworming: draft.state.dewormings.length,
+  surgery: draft.state.surgeries.length,
 }))
 
+function onSelectAction(kind: ActionKind) {
+  open[kind] = true
+}
+
+function onSavePrescription(p: Prescription) {
+  draft.addPrescription(p)
+  open.receta = false
+}
+function onSaveLabTests(items: LaboratoryTest[]) {
+  items.forEach((t) => draft.addLaboratoryTest(t))
+  open.lab = false
+}
+function onSaveImaging(item: DiagnosticImaging) {
+  draft.addDiagnosticImaging(item)
+  open.imaging = false
+}
+function onSaveVaccinations(items: Vaccination[]) {
+  items.forEach((v) => draft.addVaccination(v))
+  open.vaccination = false
+}
+function onSaveHospitalization(item: Hospitalization) {
+  draft.addHospitalization(item)
+  open.hospitalization = false
+}
+function onSaveDeworming(item: Deworming) {
+  draft.addDeworming(item)
+  open.deworming = false
+}
+function onSaveSurgery(item: Surgery) {
+  draft.addSurgery(item)
+  open.surgery = false
+}
+
+const {
+  list: consultationTypesList,
+  options: typeOptions,
+  loading: loadingTypes,
+  error: typesError,
+  findById: findConsultationTypeById,
+} = useConsultationTypes()
+
 watch(
-  () => c.value.typeId,
-  (id) => {
-    const found = consultationTypes.find((t) => t.id === id) ?? null
-    draft.state.consultationType = found
+  [() => c.value.typeId, consultationTypesList],
+  ([id]) => {
+    if (!id) {
+      draft.state.consultationType = null
+      return
+    }
+    const found = findConsultationTypeById(id)
+    if (found) {
+      draft.state.consultationType = { id: String(found.id), name: found.name }
+    }
   },
   { immediate: true },
 )
 </script>
 
 <template>
-  <ContentWrap :max-width="920">
+  <ContentWrap>
     <ContextHeader
       v-if="draft.state.owner && draft.state.pet"
       :owner="draft.state.owner"
@@ -50,6 +132,11 @@ watch(
       title="Datos de la consulta"
       subtitle="Solo el tipo y la anamnesis son obligatorios. Lo demás puedes completarlo durante la atención."
     />
+
+    <div v-if="typesError" class="catalog-error">
+      <TriangleAlert :size="13" :stroke-width="1.7" />
+      <span>{{ typesError }}</span>
+    </div>
 
     <div class="stack">
       <SectionCard accent :icon="Stethoscope" title="Información general">
@@ -65,7 +152,8 @@ watch(
                 :id="id"
                 v-model="c.typeId"
                 :options="typeOptions"
-                placeholder="Selecciona un tipo"
+                :placeholder="loadingTypes ? 'Cargando…' : 'Selecciona un tipo'"
+                :disabled="loadingTypes"
               />
             </template>
           </BaseField>
@@ -140,31 +228,112 @@ watch(
         </div>
       </SectionCard>
 
-      <QuickActionsCard />
+      <QuickActionsCard :counts="counts" @select="onSelectAction" />
+
+      <div v-if="draft.actionsCount.value > 0" class="actions-banner">
+        <Sparkles :size="14" :stroke-width="1.7" />
+        <span>
+          <strong>{{ draft.actionsCount.value }}</strong> acción{{
+            draft.actionsCount.value === 1 ? '' : 'es'
+          }}
+          generada{{ draft.actionsCount.value === 1 ? '' : 's' }} · se guardarán
+          al confirmar la consulta.
+        </span>
+      </div>
     </div>
   </ContentWrap>
+
+  <RecetaModal
+    :open="open.receta"
+    :pet="draft.state.pet"
+    @save="onSavePrescription"
+    @close="open.receta = false"
+  />
+  <LabTestModal
+    :open="open.lab"
+    :pet="draft.state.pet"
+    @save="onSaveLabTests"
+    @close="open.lab = false"
+  />
+  <ImagingModal
+    :open="open.imaging"
+    :pet="draft.state.pet"
+    @save="onSaveImaging"
+    @close="open.imaging = false"
+  />
+  <VaccinationModal
+    :open="open.vaccination"
+    :pet="draft.state.pet"
+    @save="onSaveVaccinations"
+    @close="open.vaccination = false"
+  />
+  <HospitalizationModal
+    :open="open.hospitalization"
+    :pet="draft.state.pet"
+    @save="onSaveHospitalization"
+    @close="open.hospitalization = false"
+  />
+  <DewormingModal
+    :open="open.deworming"
+    :pet="draft.state.pet"
+    @save="onSaveDeworming"
+    @close="open.deworming = false"
+  />
+  <SurgeryModal
+    :open="open.surgery"
+    :pet="draft.state.pet"
+    @save="onSaveSurgery"
+    @close="open.surgery = false"
+  />
 </template>
 
 <style scoped>
+.catalog-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  padding: 10px 14px;
+  background: oklch(94% 0.06 25);
+  border: 1px solid oklch(85% 0.10 25);
+  color: oklch(35% 0.15 25);
+  border-radius: 10px;
+  margin-bottom: 14px;
+}
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: clamp(12px, 0.8vw + 6px, 22px);
 }
 .grid-1-2 {
   display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  gap: clamp(14px, 1.2vw + 4px, 28px);
 }
 .planes {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: clamp(12px, 1vw + 4px, 22px);
 }
 @media (max-width: 880px) {
   .grid-1-2,
   .planes {
     grid-template-columns: 1fr;
   }
+}
+.actions-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--amatista-50);
+  border: 1px solid var(--amatista-200);
+  color: var(--amatista-700);
+  border-radius: 10px;
+  font-size: 12.5px;
+  margin-top: 4px;
+}
+.actions-banner strong {
+  font-weight: 600;
 }
 </style>

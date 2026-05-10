@@ -85,3 +85,105 @@ export interface Consultation {
   animalId: string
   createdBy?: string
 }
+
+// ─── Items vinculados a la consulta ────────────────────────────────
+
+export type HospitalizationType = 'OUTPATIENT' | 'HOSPITALIZATION'
+export type ReasonLeaving =
+  | 'MEDICAL_DISCHARGE'
+  | 'HOME_TREATMENT'
+  | 'TRANSFER'
+  | 'TUTOR_WISH'
+  | 'ADMIN'
+  | 'DEATH'
+  | 'EUTHANASIA'
+export type DewormingType = 'INTERNAL' | 'EXTERNAL' | 'MIX' | 'OTHER'
+
+export interface MedicamentPrescription {
+  name: string
+  presentation: string
+  quantity: number
+  posology: string
+}
+
+export interface Prescription {
+  date: string
+  diagnosis: string
+  observations: string
+  medicaments: MedicamentPrescription[]
+}
+
+export interface LaboratoryTest {
+  date: string
+  testTypeId: string
+  quantity: number
+  diagnosis: string
+}
+
+export interface DiagnosticImaging {
+  date: string
+  diagnosticImagingTypeId: string
+  studyType: string
+  clinicalSigns: string
+  diagnosis: string
+  observations: string
+}
+
+export interface Vaccination {
+  date: string
+  vaccinationTypeId: string
+  lot: string
+  notes: string
+  nextVaccination: string
+}
+
+export interface Hospitalization {
+  date: string
+  startDate: string
+  endDate: string
+  type: HospitalizationType
+  reasonLeaving: ReasonLeaving | ''
+  reason: string
+  observations: string
+}
+
+export interface Deworming {
+  date: string
+  lastDeworming: string
+  type: DewormingType
+  product: string
+  dosage: string
+  nextControl: string
+  observations: string
+}
+
+export interface Surgery {
+  date: string
+  surgeryTypeId: string
+  description: string
+  medicament: string
+  observations: string
+  complications: string
+}
+
+// Catálogos creables inline
+export interface TestType {
+  id: string
+  name: string
+  description?: string
+}
+export interface DiagnosticImagingType {
+  id: string
+  name: string
+  description?: string
+}
+export interface VaccinationType {
+  id: string
+  name: string
+  description?: string
+}
+export interface SurgeryType {
+  id: string
+  name: string
+  description?: string
+}
