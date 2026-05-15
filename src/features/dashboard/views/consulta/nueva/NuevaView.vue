@@ -153,29 +153,40 @@ async function handleBack() {
 async function persistConsultationItems(consultationId: number, animalId: number, companyId: number) {
   const s = draft.state
 
-  // Recetas: cabecera + medicamentos en cascada
-  for (const p of s.prescriptions) {
-    const created = await prescriptionApi.create({
-      date: p.date,
-      diagnosis: p.diagnosis,
-      observations: p.observations,
-      animalId,
-      consultationId,
-      companyId,
-    })
-    for (const m of p.medicaments) {
-      await medicamentPrescriptionApi.create({
+  // Recetas: cabecera + medicamentos en cascada. Items con savedId se saltan.
+  for (let i = 0; i < s.prescriptions.length; i++) {
+    const p = s.prescriptions[i]
+    let prescriptionId = p.savedId
+    if (!prescriptionId) {
+      const created = await prescriptionApi.create({
+        date: p.date,
+        diagnosis: p.diagnosis,
+        observations: p.observations,
+        animalId,
+        consultationId,
+        companyId,
+      })
+      prescriptionId = created.id
+      draft.markPrescriptionSaved(i, prescriptionId)
+    }
+    for (let j = 0; j < p.medicaments.length; j++) {
+      const m = p.medicaments[j]
+      if (m.savedId) continue
+      const createdMed = await medicamentPrescriptionApi.create({
         name: m.name,
         presentation: m.presentation,
         quantity: m.quantity,
         posology: m.posology,
-        prescriptionId: created.id,
+        prescriptionId,
       })
+      draft.markMedicamentSaved(i, j, createdMed.id)
     }
   }
 
-  for (const t of s.laboratoryTests) {
-    await laboratoryTestApi.create({
+  for (let i = 0; i < s.laboratoryTests.length; i++) {
+    const t = s.laboratoryTests[i]
+    if (t.savedId) continue
+    const created = await laboratoryTestApi.create({
       date: t.date,
       testTypeId: Number(t.testTypeId),
       quantity: t.quantity,
@@ -184,24 +195,30 @@ async function persistConsultationItems(consultationId: number, animalId: number
       consultationId,
       companyId,
     })
+    draft.markLaboratoryTestSaved(i, created.id)
   }
 
-  for (const i of s.diagnosticImagings) {
-    await diagnosticImagingApi.create({
-      date: i.date,
-      diagnosticImagingTypeId: Number(i.diagnosticImagingTypeId),
-      clinicalSigns: i.clinicalSigns,
-      studyType: i.studyType,
-      diagnosis: i.diagnosis,
-      observations: i.observations,
+  for (let i = 0; i < s.diagnosticImagings.length; i++) {
+    const img = s.diagnosticImagings[i]
+    if (img.savedId) continue
+    const created = await diagnosticImagingApi.create({
+      date: img.date,
+      diagnosticImagingTypeId: Number(img.diagnosticImagingTypeId),
+      clinicalSigns: img.clinicalSigns,
+      studyType: img.studyType,
+      diagnosis: img.diagnosis,
+      observations: img.observations,
       animalId,
       consultationId,
       companyId,
     })
+    draft.markDiagnosticImagingSaved(i, created.id)
   }
 
-  for (const v of s.vaccinations) {
-    await vaccinationApi.create({
+  for (let i = 0; i < s.vaccinations.length; i++) {
+    const v = s.vaccinations[i]
+    if (v.savedId) continue
+    const created = await vaccinationApi.create({
       date: v.date,
       vaccinationTypeId: Number(v.vaccinationTypeId),
       lot: v.lot,
@@ -211,10 +228,13 @@ async function persistConsultationItems(consultationId: number, animalId: number
       consultationId,
       companyId,
     })
+    draft.markVaccinationSaved(i, created.id)
   }
 
-  for (const h of s.hospitalizations) {
-    await hospitalizationApi.create({
+  for (let i = 0; i < s.hospitalizations.length; i++) {
+    const h = s.hospitalizations[i]
+    if (h.savedId) continue
+    const created = await hospitalizationApi.create({
       date: h.date,
       startDate: h.startDate,
       endDate: h.endDate || null,
@@ -226,10 +246,13 @@ async function persistConsultationItems(consultationId: number, animalId: number
       consultationId,
       companyId,
     })
+    draft.markHospitalizationSaved(i, created.id)
   }
 
-  for (const d of s.dewormings) {
-    await dewormingApi.create({
+  for (let i = 0; i < s.dewormings.length; i++) {
+    const d = s.dewormings[i]
+    if (d.savedId) continue
+    const created = await dewormingApi.create({
       date: d.date,
       lastDeworming: d.lastDeworming || null,
       type: d.type,
@@ -241,10 +264,13 @@ async function persistConsultationItems(consultationId: number, animalId: number
       consultationId,
       companyId,
     })
+    draft.markDewormingSaved(i, created.id)
   }
 
-  for (const sg of s.surgeries) {
-    await surgeryApi.create({
+  for (let i = 0; i < s.surgeries.length; i++) {
+    const sg = s.surgeries[i]
+    if (sg.savedId) continue
+    const created = await surgeryApi.create({
       date: sg.date,
       surgeryTypeId: Number(sg.surgeryTypeId),
       description: sg.description,
@@ -255,6 +281,7 @@ async function persistConsultationItems(consultationId: number, animalId: number
       consultationId,
       companyId,
     })
+    draft.markSurgerySaved(i, created.id)
   }
 }
 
@@ -273,20 +300,28 @@ async function saveConsultation(keepOwner = false) {
 
   saving.value = true
   try {
-    // 1. Crear consulta — diagnosis/therapeuticPlan/diagnosisPlan son @NotBlank en backend
-    const consultation = await consultationApi.create({
-      date: cDraft.date,
-      consultationTypeId: Number(consultationType.id),
-      anamnesis: cDraft.anamnesis.trim(),
-      diagnosis: cDraft.diagnosis.trim() || '-',
-      therapeuticPlan: cDraft.therapeuticPlan.trim() || '-',
-      diagnosisPlan: cDraft.diagnosticPlan.trim() || '-',
-      nextControl: cDraft.nextControlDate || null,
-      animalId: Number(pet.id),
-    })
+    // 1. Crear o reutilizar consulta. Si un intento anterior creó la
+    //    consulta pero falló al guardar items, reutilizamos el id para
+    //    no duplicarla — diagnosis/therapeuticPlan/diagnosisPlan son
+    //    @NotBlank en backend, por eso van como '-' cuando vacíos.
+    let consultationId = draft.state.consultationCreatedId
+    if (!consultationId) {
+      const consultation = await consultationApi.create({
+        date: cDraft.date,
+        consultationTypeId: Number(consultationType.id),
+        anamnesis: cDraft.anamnesis.trim(),
+        diagnosis: cDraft.diagnosis.trim() || '-',
+        therapeuticPlan: cDraft.therapeuticPlan.trim() || '-',
+        diagnosisPlan: cDraft.diagnosticPlan.trim() || '-',
+        nextControl: cDraft.nextControlDate || null,
+        animalId: Number(pet.id),
+      })
+      consultationId = consultation.id
+      draft.markConsultationCreated(consultationId)
+    }
 
-    // 2. Crear todos los items vinculados
-    await persistConsultationItems(consultation.id, Number(pet.id), companyId)
+    // 2. Crear los items vinculados que no se hayan guardado aún
+    await persistConsultationItems(consultationId, Number(pet.id), companyId)
 
     // 3. Reset y navegación
     const date = cDraft.date

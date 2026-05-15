@@ -6,6 +6,7 @@ import {
   Stethoscope,
   Pencil,
   TriangleAlert,
+  RefreshCw,
 } from 'lucide-vue-next'
 import ContentWrap from '../components/ContentWrap.vue'
 import PageHeading from '../components/PageHeading.vue'
@@ -64,6 +65,15 @@ const optionalEmpty = computed(() => {
       title="Revisa antes de guardar"
       subtitle="Verifica que todo esté correcto. Puedes editar cualquier sección antes de confirmar."
     />
+
+    <div v-if="draft.hasPartialSave.value" class="resume-banner">
+      <RefreshCw :size="16" :stroke-width="1.7" />
+      <span>
+        Hay datos de un intento anterior ya guardados en servidor. Al pulsar
+        <strong>Guardar consulta</strong> solo se enviarán los registros que
+        falten — los ya guardados no se duplicarán.
+      </span>
+    </div>
 
     <div class="stack">
       <SectionCard accent :icon="User" title="Propietario">
@@ -199,5 +209,25 @@ const optionalEmpty = computed(() => {
 .warning :deep(svg) {
   flex-shrink: 0;
   margin-top: 1px;
+}
+.resume-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: var(--amatista-50);
+  border: 1px solid var(--amatista-200);
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: var(--amatista-700);
+  line-height: 1.55;
+}
+.resume-banner :deep(svg) {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.resume-banner strong {
+  font-weight: 600;
 }
 </style>

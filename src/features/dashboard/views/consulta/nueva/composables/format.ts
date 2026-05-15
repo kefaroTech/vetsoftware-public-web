@@ -27,6 +27,14 @@ export function formatDateLong(iso: string | null | undefined): string {
   return `${d} de ${meses[m - 1]}, ${y}`
 }
 
+export function formatDateShort(iso: string | null | undefined): string {
+  if (!iso) return ''
+  const [y, m, d] = iso.split('-').map(Number)
+  if (!y || !m || !d) return iso
+  const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+  return `${d} ${meses[m - 1]} ${y}`
+}
+
 export function calcAge(bodIso: string | null | undefined): string {
   if (!bodIso) return '—'
   const bod = new Date(bodIso)

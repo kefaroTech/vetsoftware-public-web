@@ -17,7 +17,7 @@ async function load(): Promise<RoleResponse[]> {
   if (loaded) return cache.value
   if (!inFlight) {
     inFlight = rolesApi
-      .listAll()
+      .listByCompany()
       .then((list) => {
         cache.value = list
         loaded = true

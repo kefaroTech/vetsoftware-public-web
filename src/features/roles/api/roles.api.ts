@@ -6,8 +6,8 @@ import type {
 } from '../types'
 
 export const rolesApi = {
-  async listAll(): Promise<RoleResponse[]> {
-    const { data } = await http.get<RoleResponse[]>('/roles')
+  async listByCompany(): Promise<RoleResponse[]> {
+    const { data } = await http.get<RoleResponse[]>('/roles/by-company')
     return data
   },
 

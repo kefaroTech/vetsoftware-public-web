@@ -246,43 +246,64 @@ watch(
   <RecetaModal
     :open="open.receta"
     :pet="draft.state.pet"
+    :existing="draft.state.prescriptions"
     @save="onSavePrescription"
+    @remove-existing="draft.removePrescription"
+    @update-existing="draft.updatePrescription"
     @close="open.receta = false"
   />
   <LabTestModal
     :open="open.lab"
     :pet="draft.state.pet"
+    :existing="draft.state.laboratoryTests"
     @save="onSaveLabTests"
+    @remove-existing="draft.removeLaboratoryTest"
+    @update-existing="draft.updateLaboratoryTest"
     @close="open.lab = false"
   />
   <ImagingModal
     :open="open.imaging"
     :pet="draft.state.pet"
+    :existing="draft.state.diagnosticImagings"
     @save="onSaveImaging"
+    @remove-existing="draft.removeDiagnosticImaging"
+    @update-existing="draft.updateDiagnosticImaging"
     @close="open.imaging = false"
   />
   <VaccinationModal
     :open="open.vaccination"
     :pet="draft.state.pet"
+    :existing="draft.state.vaccinations"
     @save="onSaveVaccinations"
+    @remove-existing="draft.removeVaccination"
+    @update-existing="draft.updateVaccination"
     @close="open.vaccination = false"
   />
   <HospitalizationModal
     :open="open.hospitalization"
     :pet="draft.state.pet"
+    :existing="draft.state.hospitalizations"
     @save="onSaveHospitalization"
+    @remove-existing="draft.removeHospitalization"
+    @update-existing="draft.updateHospitalization"
     @close="open.hospitalization = false"
   />
   <DewormingModal
     :open="open.deworming"
     :pet="draft.state.pet"
+    :existing="draft.state.dewormings"
     @save="onSaveDeworming"
+    @remove-existing="draft.removeDeworming"
+    @update-existing="draft.updateDeworming"
     @close="open.deworming = false"
   />
   <SurgeryModal
     :open="open.surgery"
     :pet="draft.state.pet"
+    :existing="draft.state.surgeries"
     @save="onSaveSurgery"
+    @remove-existing="draft.removeSurgery"
+    @update-existing="draft.updateSurgery"
     @close="open.surgery = false"
   />
 </template>

@@ -7,6 +7,7 @@ import type {
   DiagnosticImaging,
   Hospitalization,
   LaboratoryTest,
+  MedicamentPrescription,
   Owner,
   Prescription,
   Surgery,
@@ -52,6 +53,18 @@ export interface ConsultationDraft {
   nextControlNotes: string
 }
 
+export type MedicamentDraftItem = MedicamentPrescription & { savedId?: number }
+export type PrescriptionDraftItem = Omit<Prescription, 'medicaments'> & {
+  savedId?: number
+  medicaments: MedicamentDraftItem[]
+}
+export type LaboratoryTestDraftItem = LaboratoryTest & { savedId?: number }
+export type DiagnosticImagingDraftItem = DiagnosticImaging & { savedId?: number }
+export type VaccinationDraftItem = Vaccination & { savedId?: number }
+export type HospitalizationDraftItem = Hospitalization & { savedId?: number }
+export type DewormingDraftItem = Deworming & { savedId?: number }
+export type SurgeryDraftItem = Surgery & { savedId?: number }
+
 export interface NuevaConsultaDraft {
   step: WizardStep
   owner: Owner | null
@@ -60,13 +73,14 @@ export interface NuevaConsultaDraft {
   petCreating: PetDraft | null
   consultation: ConsultationDraft
   consultationType: ConsultationType | null
-  prescriptions: Prescription[]
-  laboratoryTests: LaboratoryTest[]
-  diagnosticImagings: DiagnosticImaging[]
-  vaccinations: Vaccination[]
-  hospitalizations: Hospitalization[]
-  dewormings: Deworming[]
-  surgeries: Surgery[]
+  consultationCreatedId?: number
+  prescriptions: PrescriptionDraftItem[]
+  laboratoryTests: LaboratoryTestDraftItem[]
+  diagnosticImagings: DiagnosticImagingDraftItem[]
+  vaccinations: VaccinationDraftItem[]
+  hospitalizations: HospitalizationDraftItem[]
+  dewormings: DewormingDraftItem[]
+  surgeries: SurgeryDraftItem[]
 }
 
 export type ActionKind =
@@ -110,6 +124,7 @@ function defaultDraft(): NuevaConsultaDraft {
     petCreating: null,
     consultation: emptyConsultation(),
     consultationType: null,
+    consultationCreatedId: undefined,
     prescriptions: [],
     laboratoryTests: [],
     diagnosticImagings: [],
@@ -260,6 +275,21 @@ export function useNuevaConsultaDraft() {
       state.surgeries.length,
   )
 
+  const hasPartialSave = computed<boolean>(() => {
+    if (state.consultationCreatedId) return true
+    if (state.prescriptions.some((p) => p.savedId || p.medicaments.some((m) => m.savedId))) {
+      return true
+    }
+    return (
+      state.laboratoryTests.some((t) => t.savedId) ||
+      state.diagnosticImagings.some((i) => i.savedId) ||
+      state.vaccinations.some((v) => v.savedId) ||
+      state.hospitalizations.some((h) => h.savedId) ||
+      state.dewormings.some((d) => d.savedId) ||
+      state.surgeries.some((s) => s.savedId)
+    )
+  })
+
   function addPrescription(p: Prescription) {
     state.prescriptions.push(p)
   }
@@ -303,6 +333,85 @@ export function useNuevaConsultaDraft() {
     state.surgeries.splice(idx, 1)
   }
 
+  function updatePrescription(index: number, p: Prescription) {
+    const prev = state.prescriptions[index]
+    if (!prev) return
+    state.prescriptions[index] = {
+      ...p,
+      savedId: prev.savedId,
+      medicaments: p.medicaments.map((m, j) => ({
+        ...m,
+        savedId: prev.medicaments[j]?.savedId,
+      })),
+    }
+  }
+  function updateLaboratoryTest(index: number, t: LaboratoryTest) {
+    const prev = state.laboratoryTests[index]
+    if (!prev) return
+    state.laboratoryTests[index] = { ...t, savedId: prev.savedId }
+  }
+  function updateDiagnosticImaging(index: number, i: DiagnosticImaging) {
+    const prev = state.diagnosticImagings[index]
+    if (!prev) return
+    state.diagnosticImagings[index] = { ...i, savedId: prev.savedId }
+  }
+  function updateVaccination(index: number, v: Vaccination) {
+    const prev = state.vaccinations[index]
+    if (!prev) return
+    state.vaccinations[index] = { ...v, savedId: prev.savedId }
+  }
+  function updateHospitalization(index: number, h: Hospitalization) {
+    const prev = state.hospitalizations[index]
+    if (!prev) return
+    state.hospitalizations[index] = { ...h, savedId: prev.savedId }
+  }
+  function updateDeworming(index: number, d: Deworming) {
+    const prev = state.dewormings[index]
+    if (!prev) return
+    state.dewormings[index] = { ...d, savedId: prev.savedId }
+  }
+  function updateSurgery(index: number, s: Surgery) {
+    const prev = state.surgeries[index]
+    if (!prev) return
+    state.surgeries[index] = { ...s, savedId: prev.savedId }
+  }
+
+  function markConsultationCreated(id: number) {
+    state.consultationCreatedId = id
+  }
+  function markPrescriptionSaved(index: number, id: number) {
+    const p = state.prescriptions[index]
+    if (p) p.savedId = id
+  }
+  function markMedicamentSaved(prescriptionIndex: number, medicamentIndex: number, id: number) {
+    const med = state.prescriptions[prescriptionIndex]?.medicaments[medicamentIndex]
+    if (med) med.savedId = id
+  }
+  function markLaboratoryTestSaved(index: number, id: number) {
+    const t = state.laboratoryTests[index]
+    if (t) t.savedId = id
+  }
+  function markDiagnosticImagingSaved(index: number, id: number) {
+    const i = state.diagnosticImagings[index]
+    if (i) i.savedId = id
+  }
+  function markVaccinationSaved(index: number, id: number) {
+    const v = state.vaccinations[index]
+    if (v) v.savedId = id
+  }
+  function markHospitalizationSaved(index: number, id: number) {
+    const h = state.hospitalizations[index]
+    if (h) h.savedId = id
+  }
+  function markDewormingSaved(index: number, id: number) {
+    const d = state.dewormings[index]
+    if (d) d.savedId = id
+  }
+  function markSurgerySaved(index: number, id: number) {
+    const s = state.surgeries[index]
+    if (s) s.savedId = id
+  }
+
   return {
     state,
     setStep,
@@ -317,6 +426,7 @@ export function useNuevaConsultaDraft() {
     resetKeepingOwner,
     isEmpty,
     actionsCount,
+    hasPartialSave,
     addPrescription,
     removePrescription,
     addLaboratoryTest,
@@ -331,6 +441,22 @@ export function useNuevaConsultaDraft() {
     removeDeworming,
     addSurgery,
     removeSurgery,
+    updatePrescription,
+    updateLaboratoryTest,
+    updateDiagnosticImaging,
+    updateVaccination,
+    updateHospitalization,
+    updateDeworming,
+    updateSurgery,
+    markConsultationCreated,
+    markPrescriptionSaved,
+    markMedicamentSaved,
+    markLaboratoryTestSaved,
+    markDiagnosticImagingSaved,
+    markVaccinationSaved,
+    markHospitalizationSaved,
+    markDewormingSaved,
+    markSurgerySaved,
   }
 }
 

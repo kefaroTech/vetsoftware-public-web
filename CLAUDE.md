@@ -217,9 +217,24 @@ con borde amatista.
    `prescriptionId` retornado, `POST /medicament-prescriptions` por cada
    medicamento.
 
-No hay rollback cross-endpoint. Si un POST de item falla, `saveError` se
-muestra arriba del footer y el usuario puede reintentar — la consulta
-puede quedar parcialmente persistida.
+No hay rollback cross-endpoint. Si un POST falla, `saveError` se muestra y
+el usuario puede reintentar. El reintento es idempotente desde el cliente:
+el draft persiste `consultationCreatedId` (top-level) y un `savedId` por
+cada item / medicamento creado con éxito. Al volver a apretar **Guardar
+consulta** se salta lo ya guardado y solo se POSTea lo que falta — la
+consulta no se duplica ni los items previos tampoco.
+
+En el paso 4 (`PasoResumen`) se muestra un banner amatista cuando
+`draft.hasPartialSave` es true (hay marcadores de un intento anterior)
+para avisar al usuario antes de reintentar.
+
+Los marcadores se limpian solos en `draft.reset()` y `resetKeepingOwner()`
+porque `defaultDraft()` no los incluye (son campos opcionales).
+
+Limitaciones aceptadas: no se llaman DELETE para limpiar huérfanos al
+cancelar; si el `POST /consultations` succede en el servidor pero la
+respuesta se pierde en transporte, el retry duplicará la consulta
+(necesitaría idempotency-key en el backend).
 
 ## Banner "Consulta en curso"
 

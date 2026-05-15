@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { BedDouble } from 'lucide-vue-next'
+import { BedDouble, X, Pencil } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
@@ -12,16 +12,20 @@ import type {
   HospitalizationType,
   ReasonLeaving,
 } from '@/types/domain'
-import { todayISO, formatDateLong } from '../composables/format'
+import type { HospitalizationDraftItem } from '../composables/useNuevaConsultaDraft'
+import { todayISO, formatDateLong, formatDateShort } from '../composables/format'
 
 const props = defineProps<{
   open: boolean
   pet: Animal | null
+  existing: HospitalizationDraftItem[]
 }>()
 
 const emit = defineEmits<{
   save: [item: Hospitalization]
   close: []
+  'remove-existing': [index: number]
+  'update-existing': [index: number, item: Hospitalization]
 }>()
 
 const typeOptions = [
@@ -50,24 +54,51 @@ const draft = reactive({
   observations: '',
 })
 const submitted = ref(false)
+const editingIndex = ref<number | null>(null)
+
+function resetDraft() {
+  Object.assign(draft, {
+    date: todayISO(),
+    startDate: todayISO(),
+    endDate: '',
+    type: 'HOSPITALIZATION',
+    reasonLeaving: '',
+    reason: '',
+    observations: '',
+  })
+  submitted.value = false
+}
 
 watch(
   () => props.open,
   (open) => {
     if (open) {
-      Object.assign(draft, {
-        date: todayISO(),
-        startDate: todayISO(),
-        endDate: '',
-        type: 'HOSPITALIZATION',
-        reasonLeaving: '',
-        reason: '',
-        observations: '',
-      })
-      submitted.value = false
+      resetDraft()
+      editingIndex.value = null
     }
   },
 )
+
+function startEditing(idx: number) {
+  const item = props.existing[idx]
+  if (!item) return
+  Object.assign(draft, {
+    date: item.date,
+    startDate: item.startDate,
+    endDate: item.endDate,
+    type: item.type,
+    reasonLeaving: item.reasonLeaving,
+    reason: item.reason,
+    observations: item.observations,
+  })
+  editingIndex.value = idx
+  submitted.value = false
+}
+
+function cancelEditing() {
+  editingIndex.value = null
+  resetDraft()
+}
 
 const subtitle = computed(() => {
   const p = props.pet
@@ -94,6 +125,10 @@ function err<K extends keyof typeof errors.value>(k: K): string | undefined {
   return errors.value[k] ?? undefined
 }
 
+function typeLabel(t: HospitalizationType): string {
+  return typeOptions.find((o) => o.value === t)?.label ?? t
+}
+
 function save() {
   submitted.value = true
   if (!valid.value) return
@@ -106,7 +141,13 @@ function save() {
     reason: draft.reason.trim(),
     observations: draft.observations.trim(),
   }
-  emit('save', item)
+  if (editingIndex.value !== null) {
+    emit('update-existing', editingIndex.value, item)
+    editingIndex.value = null
+    resetDraft()
+  } else {
+    emit('save', item)
+  }
 }
 </script>
 
@@ -120,6 +161,56 @@ function save() {
     @close="emit('close')"
   >
     <template #body>
+      <section v-if="props.existing.length > 0" class="existing-section">
+        <h4 class="existing-title">Ya agregadas ({{ props.existing.length }})</h4>
+        <ul class="existing-list">
+          <li
+            v-for="(item, idx) in props.existing"
+            :key="idx"
+            class="existing-card"
+          >
+            <div class="existing-summary">
+              <div class="existing-main">
+                {{ formatDateShort(item.startDate) }} · {{ typeLabel(item.type) }}
+              </div>
+              <div class="existing-sub">{{ item.reason }}</div>
+            </div>
+            <span v-if="item.savedId" class="saved-chip">✓ Guardado</span>
+            <template v-else>
+              <button
+                type="button"
+                class="edit-existing"
+                :class="{ active: editingIndex === idx }"
+                aria-label="Editar hospitalización"
+                :disabled="editingIndex !== null && editingIndex !== idx"
+                @click="
+                  editingIndex === idx ? cancelEditing() : startEditing(idx)
+                "
+              >
+                <Pencil :size="14" :stroke-width="1.7" />
+              </button>
+              <button
+                type="button"
+                class="remove-existing"
+                aria-label="Eliminar hospitalización"
+                :disabled="editingIndex !== null"
+                @click="emit('remove-existing', idx)"
+              >
+                <X :size="14" :stroke-width="1.7" />
+              </button>
+            </template>
+          </li>
+        </ul>
+      </section>
+
+      <div v-if="editingIndex !== null" class="editing-banner">
+        <Pencil :size="14" :stroke-width="1.7" />
+        <span>Editando hospitalización #{{ editingIndex + 1 }}</span>
+        <button type="button" class="editing-cancel" @click="cancelEditing">
+          Cancelar
+        </button>
+      </div>
+
       <div class="grid-2">
         <BaseField label="Tipo" required :error="err('type')">
           <template #default="{ id }">
@@ -185,7 +276,8 @@ function save() {
     </template>
 
     <template #footer-left>
-      <span>1 hospitalización · Se vinculará a la consulta</span>
+      <span v-if="editingIndex !== null">Editando hospitalización existente</span>
+      <span v-else>1 hospitalización · Se vinculará a la consulta</span>
     </template>
     <template #footer-actions>
       <button type="button" class="btn-ghost" @click="emit('close')">
@@ -197,7 +289,7 @@ function save() {
         :disabled="submitted && !valid"
         @click="save"
       >
-        Guardar
+        {{ editingIndex !== null ? 'Guardar cambios' : 'Guardar' }}
       </button>
     </template>
   </ModalShell>
@@ -245,5 +337,143 @@ function save() {
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+.existing-section {
+  margin-bottom: 22px;
+  padding: 14px 16px;
+  background: var(--amatista-50);
+  border: 1px solid var(--amatista-200);
+  border-radius: 12px;
+}
+.existing-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--amatista-700);
+  margin: 0 0 10px;
+}
+.existing-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.existing-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 10px;
+}
+.existing-summary {
+  min-width: 0;
+  flex: 1;
+}
+.existing-main {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--warm-900);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.existing-sub {
+  font-size: 13px;
+  color: var(--warm-600);
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.saved-chip {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: oklch(94% 0.06 150);
+  color: oklch(40% 0.15 150);
+  border: 1px solid oklch(85% 0.10 150);
+  white-space: nowrap;
+}
+.remove-existing {
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--warm-600);
+  flex-shrink: 0;
+}
+.remove-existing:hover:not(:disabled) {
+  background: oklch(94% 0.06 25);
+  border-color: oklch(85% 0.10 25);
+  color: oklch(35% 0.15 25);
+}
+.remove-existing:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.edit-existing {
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--warm-600);
+  flex-shrink: 0;
+}
+.edit-existing:hover:not(:disabled) {
+  background: var(--amatista-50);
+  border-color: var(--amatista-500);
+  color: var(--amatista-700);
+}
+.edit-existing.active {
+  background: var(--amatista-700);
+  border-color: var(--amatista-700);
+  color: white;
+}
+.edit-existing:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.editing-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  background: var(--amatista-700);
+  color: white;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.editing-banner span {
+  flex: 1;
+}
+.editing-cancel {
+  background: rgba(255, 255, 255, 0.18);
+  border: none;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+}
+.editing-cancel:hover {
+  background: rgba(255, 255, 255, 0.28);
 }
 </style>
