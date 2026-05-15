@@ -5,7 +5,6 @@ import RoleCard from '../components/RoleCard.vue'
 import AddRoleCard from '../components/AddRoleCard.vue'
 import EditPermissionsModal from '../components/EditPermissionsModal.vue'
 import { useRoles } from '../composables/useRoles'
-import { useRolePermissionsByRole } from '../composables/useRolePermissionsByRole'
 import { usePermissionsCatalog } from '../composables/usePermissionsCatalog'
 import { useSubModulesCatalog } from '../composables/useSubModulesCatalog'
 import { useModulesCatalog } from '../composables/useModulesCatalog'
@@ -16,10 +15,17 @@ useModulesCatalog()
 const subModules = useSubModulesCatalog()
 const permissionsCatalog = usePermissionsCatalog()
 const roles = useRoles()
-const rolePermissions = useRolePermissionsByRole()
 
 const modalOpen = ref(false)
 const editingRole = ref<RoleResponse | null>(null)
+
+function isSystemRole(role: RoleResponse): boolean {
+  return role.code === 'ADMIN'
+}
+
+const editingReadOnly = computed(
+  () => editingRole.value !== null && isSystemRole(editingRole.value),
+)
 
 function openCreate() {
   editingRole.value = null
@@ -36,11 +42,10 @@ function close() {
   editingRole.value = null
 }
 
-function subModulesUsedByRole(roleId: number): SubModuleResponse[] {
-  const permIds = rolePermissions.permissionIdsOf(roleId)
+function subModulesUsedByRole(role: RoleResponse): SubModuleResponse[] {
   const subIds = new Set<number>()
-  for (const pid of permIds) {
-    const p = permissionsCatalog.byId.value.get(pid)
+  for (const rp of role.permissions) {
+    const p = permissionsCatalog.byId.value.get(rp.id)
     if (p) subIds.add(p.subModule.id)
   }
   const result: SubModuleResponse[] = []
@@ -56,16 +61,10 @@ const orderedRoles = computed(() =>
   [...roles.list.value].sort((a, b) => a.name.localeCompare(b.name)),
 )
 const isLoading = computed(
-  () =>
-    roles.loading.value ||
-    rolePermissions.loading.value ||
-    permissionsCatalog.loading.value,
+  () => roles.loading.value || permissionsCatalog.loading.value,
 )
 const hasError = computed(
-  () =>
-    roles.error.value ??
-    rolePermissions.error.value ??
-    permissionsCatalog.error.value,
+  () => roles.error.value ?? permissionsCatalog.error.value,
 )
 </script>
 
@@ -98,10 +97,11 @@ const hasError = computed(
         :role="role"
         :active="roles.isActive(role.id)"
         :color="pickRoleColor(role)"
-        :permission-count="rolePermissions.permissionIdsOf(role.id).length"
-        :sub-modules="subModulesUsedByRole(role.id)"
+        :permission-count="role.permissions.length"
+        :sub-modules="subModulesUsedByRole(role)"
         :total-catalog-permissions="totalCatalogPermissions"
-        @toggle-active="(v) => roles.setActive(role.id, v)"
+        :read-only="isSystemRole(role)"
+        @toggle-active="(v) => isSystemRole(role) ? null : roles.setActive(role.id, v)"
         @edit="openEdit(role)"
       />
       <div
@@ -116,6 +116,7 @@ const hasError = computed(
       :open="modalOpen"
       :role="editingRole"
       :color="editingRole ? pickRoleColor(editingRole) : 'amatista'"
+      :read-only="editingReadOnly"
       @close="close"
       @saved="close"
     />

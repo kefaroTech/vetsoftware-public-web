@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Shield, Sparkles, ArrowRight } from 'lucide-vue-next'
+import { Shield, Sparkles, ArrowRight, Lock } from 'lucide-vue-next'
 import SwitchToggle from './SwitchToggle.vue'
 import StatusPill from './StatusPill.vue'
 import { ROLE_COLORS } from '../constants/roleColors'
@@ -13,6 +13,7 @@ const props = defineProps<{
   permissionCount: number
   subModules: SubModuleResponse[]
   totalCatalogPermissions: number
+  readOnly?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -48,11 +49,17 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
       <SwitchToggle
         :model-value="active"
         :aria-label="`Activar ${role.name}`"
+        :disabled="readOnly"
         @update:model-value="(v) => emit('toggle-active', v)"
       />
     </div>
 
-    <div v-if="isAdmin" class="admin-badge">
+    <div v-if="readOnly" class="readonly-badge" :title="`Rol del sistema · solo lectura`">
+      <Lock :size="12" :stroke-width="1.8" />
+      <span>Rol del sistema · solo lectura</span>
+    </div>
+
+    <div v-if="isAdmin && !readOnly" class="admin-badge">
       <Sparkles :size="12" :stroke-width="1.8" />
       <span>Acceso total al sistema</span>
     </div>
@@ -76,7 +83,7 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
     <div v-else class="chips-empty">Sin permisos asignados</div>
 
     <button type="button" class="edit-btn" @click="emit('edit')">
-      <span>Editar permisos</span>
+      <span>{{ readOnly ? 'Ver permisos' : 'Editar permisos' }}</span>
       <ArrowRight :size="14" :stroke-width="1.8" />
     </button>
   </article>
@@ -147,6 +154,19 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   background: var(--amatista-50);
   border: 1px solid var(--amatista-200);
   color: var(--amatista-700);
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 500;
+}
+.readonly-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 4px 10px;
+  background: var(--warm-100);
+  border: 1px solid var(--warm-300);
+  color: var(--warm-700);
   border-radius: 7px;
   font-size: 11.5px;
   font-weight: 500;

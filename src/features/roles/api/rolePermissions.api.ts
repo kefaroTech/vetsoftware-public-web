@@ -5,11 +5,6 @@ import type {
 } from '../types'
 
 export const rolePermissionsApi = {
-  async listAll(): Promise<RolePermissionResponse[]> {
-    const { data } = await http.get<RolePermissionResponse[]>('/role-permissions')
-    return data
-  },
-
   async create(
     payload: CreateRolePermissionRequest,
   ): Promise<RolePermissionResponse> {

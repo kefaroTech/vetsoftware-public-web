@@ -10,7 +10,7 @@ async function load(): Promise<PermissionResponse[]> {
   if (loaded) return cache.value
   if (!inFlight) {
     inFlight = permissionsApi
-      .listAll()
+      .listByCompany()
       .then((list) => {
         cache.value = list
         loaded = true

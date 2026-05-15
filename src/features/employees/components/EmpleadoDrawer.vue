@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { X, Key, Pencil, Power, Check } from 'lucide-vue-next'
 import type { Employee } from '@/types/domain'
 import { colorsForCode } from '../constants/employee-roles'
@@ -7,7 +7,6 @@ import EmployeeAvatar from './EmployeeAvatar.vue'
 import RolePill from './RolePill.vue'
 import StatusPill from './StatusPill.vue'
 import DrawerTabDatos from './DrawerTabDatos.vue'
-import DrawerTabRol from './DrawerTabRol.vue'
 
 const props = defineProps<{
   employee: Employee | null
@@ -20,9 +19,6 @@ const emit = defineEmits<{
   deactivate: [employee: Employee]
   activate: [employee: Employee]
 }>()
-
-type Tab = 'datos' | 'rol'
-const tab = ref<Tab>('datos')
 
 const open = computed(() => props.employee !== null)
 const headerTokens = computed(() => {
@@ -47,13 +43,6 @@ function onKey(e: KeyboardEvent) {
 
 onMounted(() => window.addEventListener('keydown', onKey))
 onUnmounted(() => window.removeEventListener('keydown', onKey))
-
-watch(
-  () => props.employee?.id,
-  () => {
-    tab.value = 'datos'
-  },
-)
 </script>
 
 <template>
@@ -104,26 +93,8 @@ watch(
             </div>
           </header>
 
-          <nav class="tabs">
-            <button
-              type="button"
-              :class="['tab', { active: tab === 'datos' }]"
-              @click="tab = 'datos'"
-            >
-              Datos básicos
-            </button>
-            <button
-              type="button"
-              :class="['tab', { active: tab === 'rol' }]"
-              @click="tab = 'rol'"
-            >
-              Rol & permisos
-            </button>
-          </nav>
-
           <div class="body">
-            <DrawerTabDatos v-if="tab === 'datos'" :employee="employee" />
-            <DrawerTabRol v-else :employee="employee" />
+            <DrawerTabDatos :employee="employee" />
           </div>
 
           <footer class="foot">
@@ -269,29 +240,6 @@ watch(
   font-size: 12.5px;
   color: var(--warm-500);
   font-style: italic;
-}
-
-.tabs {
-  display: flex;
-  gap: 22px;
-  padding: 0 26px;
-  border-bottom: 1px solid var(--warm-200);
-}
-.tab {
-  padding: 10px 2px;
-  font-size: 13.5px;
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--warm-500);
-  font-family: inherit;
-  cursor: pointer;
-  margin-bottom: -1px;
-}
-.tab.active {
-  color: var(--warm-900);
-  font-weight: 500;
-  border-bottom-color: var(--amatista-700);
 }
 
 .body {

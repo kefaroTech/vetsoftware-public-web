@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { Shield, X, Search } from 'lucide-vue-next'
+import { Shield, X, Search, Lock } from 'lucide-vue-next'
 import SwitchToggle from './SwitchToggle.vue'
 import RolePill from './RolePill.vue'
 import SubModuleAccordion from './SubModuleAccordion.vue'
@@ -9,7 +9,6 @@ import { usePermissionsCatalog } from '../composables/usePermissionsCatalog'
 import { useSubModulesCatalog } from '../composables/useSubModulesCatalog'
 import { useModulesCatalog } from '../composables/useModulesCatalog'
 import { useRoles } from '../composables/useRoles'
-import { useRolePermissionsByRole } from '../composables/useRolePermissionsByRole'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import type { RoleColor, RoleResponse } from '../types'
 
@@ -17,6 +16,7 @@ const props = defineProps<{
   open: boolean
   role: RoleResponse | null
   color?: RoleColor
+  readOnly?: boolean
 }>()
 
 const emit = defineEmits<{ close: []; saved: [] }>()
@@ -25,7 +25,6 @@ const permissionsCatalog = usePermissionsCatalog()
 const subModulesCatalog = useSubModulesCatalog()
 const modulesCatalog = useModulesCatalog()
 const roles = useRoles()
-const rolePermissions = useRolePermissionsByRole()
 
 const draftName = ref('')
 const draftPermissionIds = ref<Set<number>>(new Set())
@@ -141,7 +140,7 @@ function init() {
   search.value = ''
   if (props.role) {
     draftName.value = props.role.name
-    draftPermissionIds.value = rolePermissions.permissionIdsSetOf(props.role.id)
+    draftPermissionIds.value = new Set(props.role.permissions.map((p) => p.id))
     draftActive.value = roles.isActive(props.role.id)
   } else {
     draftName.value = ''
@@ -156,13 +155,10 @@ watch(() => props.open, (open) => {
 })
 
 watch(
-  [
-    () => props.role?.id,
-    () => rolePermissions.list.value.length,
-  ],
+  () => props.role?.id,
   () => {
     if (props.open && props.role) {
-      draftPermissionIds.value = rolePermissions.permissionIdsSetOf(props.role.id)
+      draftPermissionIds.value = new Set(props.role.permissions.map((p) => p.id))
     }
   },
 )
@@ -231,6 +227,7 @@ onMounted(() => window.addEventListener('keydown', onKey))
 onUnmounted(() => window.removeEventListener('keydown', onKey))
 
 async function save() {
+  if (props.readOnly) return
   if (!draftName.value.trim()) {
     submitError.value = 'El nombre del rol es obligatorio.'
     return
@@ -239,7 +236,7 @@ async function save() {
   submitError.value = null
   try {
     if (props.role) {
-      const currentIds = rolePermissions.permissionIdsSetOf(props.role.id)
+      const currentIds = new Set(props.role.permissions.map((p) => p.id))
       await roles.updateNameAndPermissions({
         role: props.role,
         name: draftName.value,
@@ -296,7 +293,9 @@ async function save() {
                 <Shield :size="22" :stroke-width="1.7" />
               </div>
               <div class="head-content">
-                <div class="kicker">{{ isCreate ? 'Crear rol' : 'Editar rol' }}</div>
+                <div class="kicker">
+                  {{ readOnly ? 'Ver rol' : isCreate ? 'Crear rol' : 'Editar rol' }}
+                </div>
                 <input
                   v-model="draftName"
                   type="text"
@@ -304,6 +303,7 @@ async function save() {
                   placeholder="Nombre del rol"
                   spellcheck="false"
                   autocomplete="off"
+                  :readonly="readOnly"
                 />
                 <div class="head-meta">
                   <RolePill
@@ -314,6 +314,7 @@ async function save() {
                   <span class="sep" />
                   <SwitchToggle
                     v-model="draftActive"
+                    :disabled="readOnly"
                     :aria-label="draftActive ? 'Desactivar rol' : 'Activar rol'"
                   />
                   <span class="active-text">{{ draftActive ? 'Activo' : 'Inactivo' }}</span>
@@ -321,6 +322,13 @@ async function save() {
               </div>
             </div>
           </header>
+
+          <div v-if="readOnly" class="readonly-banner">
+            <Lock :size="14" :stroke-width="1.8" />
+            <span>
+              Este es un rol del sistema. Sus permisos y datos pueden consultarse pero no modificarse.
+            </span>
+          </div>
 
           <div class="toolbar">
             <div class="search">
@@ -364,6 +372,7 @@ async function save() {
                   :selected="draftPermissionIds"
                   :expanded="expandedSubModules.has(s.subModuleId)"
                   :highlight="search.trim() || undefined"
+                  :read-only="readOnly"
                   @toggle-expand="toggleExpand(s.subModuleId)"
                   @toggle-sub="toggleSub(s.subModuleId)"
                   @toggle-permission="togglePermission"
@@ -388,9 +397,10 @@ async function save() {
                 :disabled="saving"
                 @click="emit('close')"
               >
-                Cancelar
+                {{ readOnly ? 'Cerrar' : 'Cancelar' }}
               </button>
               <button
+                v-if="!readOnly"
                 type="button"
                 class="btn primary"
                 :disabled="saving"
@@ -511,6 +521,23 @@ async function save() {
 }
 .name-input::placeholder {
   color: var(--warm-400);
+}
+.name-input:read-only {
+  cursor: default;
+}
+.readonly-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 26px;
+  background: var(--warm-100);
+  border-bottom: 1px solid var(--warm-200);
+  color: var(--warm-700);
+  font-size: 12.5px;
+}
+.readonly-banner :deep(svg) {
+  flex-shrink: 0;
+  color: var(--warm-600);
 }
 .head-meta {
   display: flex;

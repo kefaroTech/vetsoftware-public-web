@@ -54,11 +54,19 @@ export interface PermissionResponse {
   createdDate?: string
 }
 
+export interface RolePermissionSummary {
+  rolePermissionId: number
+  id: number
+  name: string
+  code: string
+}
+
 export interface RoleResponse {
   id: number
   name: string
   code: string
   company: CompanyRef
+  permissions: RolePermissionSummary[]
   createdDate?: string
 }
 

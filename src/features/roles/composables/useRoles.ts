@@ -1,7 +1,6 @@
 import { onMounted, ref } from 'vue'
 import { rolesApi } from '../api/roles.api'
 import { rolePermissionsApi } from '../api/rolePermissions.api'
-import { useRolePermissionsByRole } from './useRolePermissionsByRole'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import type {
   CreateRoleRequest,
@@ -50,7 +49,6 @@ export function useRoles() {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const { companyId } = useAuth()
-  const rolePermissions = useRolePermissionsByRole()
 
   function isActive(roleId: number): boolean {
     return !inactiveIds.value.has(roleId)
@@ -98,8 +96,7 @@ export function useRoles() {
         rolePermissionsApi.create({ roleId: created.id, permissionId: pid }),
       ),
     )
-    cache.value = [...cache.value, created]
-    await rolePermissions.forceRefresh()
+    await forceRefresh()
     return created
   }
 
@@ -112,14 +109,15 @@ export function useRoles() {
     const { role, name, nextPermissionIds, currentPermissionIds } = input
     const trimmedName = name.trim()
 
+    let nameChanged = false
     if (trimmedName !== role.name) {
       const payload: UpdateRoleRequest = {
         name: trimmedName,
         code: role.code,
         companyId: role.company.id,
       }
-      const updated = await rolesApi.update(role.id, payload)
-      cache.value = cache.value.map((r) => (r.id === role.id ? updated : r))
+      await rolesApi.update(role.id, payload)
+      nameChanged = true
     }
 
     const toAdd: number[] = []
@@ -136,20 +134,19 @@ export function useRoles() {
         rolePermissionsApi.create({ roleId: role.id, permissionId: pid }),
       ),
       ...toRemove
-        .map((pid) => rolePermissions.rolePermissionEntryOf(role.id, pid)?.id)
+        .map((pid) => role.permissions.find((p) => p.id === pid)?.rolePermissionId)
         .filter((id): id is number => typeof id === 'number')
         .map((id) => rolePermissionsApi.remove(id)),
     ])
 
-    if (toAdd.length > 0 || toRemove.length > 0) {
-      await rolePermissions.forceRefresh()
+    if (nameChanged || toAdd.length > 0 || toRemove.length > 0) {
+      await forceRefresh()
     }
   }
 
   async function remove(roleId: number): Promise<void> {
     await rolesApi.remove(roleId)
     cache.value = cache.value.filter((r) => r.id !== roleId)
-    await rolePermissions.forceRefresh()
   }
 
   onMounted(() => {

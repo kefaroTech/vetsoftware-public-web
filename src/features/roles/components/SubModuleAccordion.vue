@@ -10,6 +10,7 @@ const props = defineProps<{
   selected: Set<number>
   expanded: boolean
   highlight?: string
+  readOnly?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -51,6 +52,7 @@ function isHighlighted(text: string): boolean {
       <span class="cb-wrap" @click.stop>
         <TristateCheckbox
           :value="tristate"
+          :disabled="readOnly"
           :aria-label="`Toggle todos los permisos de ${subModule.name}`"
           @toggle="emit('toggle-sub')"
         />
@@ -68,6 +70,7 @@ function isHighlighted(text: string): boolean {
           <input
             type="checkbox"
             :checked="selected.has(p.id)"
+            :disabled="readOnly"
             class="native"
             @change="emit('toggle-permission', p.id)"
           />
