@@ -13,6 +13,7 @@ import {
   Receipt,
   BarChart3,
   Users,
+  ShieldCheck,
 } from 'lucide-vue-next'
 import SidebarBrand from './SidebarBrand.vue'
 import SidebarNavItem from './SidebarNavItem.vue'
@@ -114,6 +115,12 @@ const upcomingItems = [
       :icon="Users"
       :active="route.name === 'empleados'"
       @click="router.push({ name: 'empleados' })"
+    />
+    <SidebarNavItem
+      label="Roles y permisos"
+      :icon="ShieldCheck"
+      :active="route.name === 'roles'"
+      @click="router.push({ name: 'roles' })"
     />
 
     <div class="section-label">PRÓXIMAMENTE</div>

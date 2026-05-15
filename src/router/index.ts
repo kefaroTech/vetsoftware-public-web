@@ -62,6 +62,11 @@ const router = createRouter({
           name: 'empleados',
           component: () => import('@/features/employees/views/EmpleadosView.vue'),
         },
+        {
+          path: 'roles',
+          name: 'roles',
+          component: () => import('@/features/roles/views/RolesView.vue'),
+        },
       ],
     },
     {
