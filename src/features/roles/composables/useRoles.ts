@@ -32,6 +32,12 @@ async function load(): Promise<RoleResponse[]> {
 
 const inactiveIds = ref<Set<number>>(new Set())
 
+function setsEqual<T>(a: Set<T>, b: Set<T>): boolean {
+  if (a.size !== b.size) return false
+  for (const v of a) if (!b.has(v)) return false
+  return true
+}
+
 function makeRoleCode(name: string): string {
   const base = name
     .trim()
@@ -91,11 +97,11 @@ export function useRoles() {
       companyId: cid,
     }
     const created = await rolesApi.create(payload)
-    await Promise.all(
-      input.permissionIds.map((pid) =>
-        rolePermissionsApi.create({ roleId: created.id, permissionId: pid }),
-      ),
-    )
+    if (input.permissionIds.length > 0) {
+      await rolePermissionsApi.syncByRole(created.id, {
+        permissionIds: input.permissionIds,
+      })
+    }
     await forceRefresh()
     return created
   }
@@ -120,26 +126,14 @@ export function useRoles() {
       nameChanged = true
     }
 
-    const toAdd: number[] = []
-    const toRemove: number[] = []
-    for (const pid of nextPermissionIds) {
-      if (!currentPermissionIds.has(pid)) toAdd.push(pid)
-    }
-    for (const pid of currentPermissionIds) {
-      if (!nextPermissionIds.has(pid)) toRemove.push(pid)
+    const permissionsChanged = !setsEqual(currentPermissionIds, nextPermissionIds)
+    if (permissionsChanged) {
+      await rolePermissionsApi.syncByRole(role.id, {
+        permissionIds: [...nextPermissionIds],
+      })
     }
 
-    await Promise.all([
-      ...toAdd.map((pid) =>
-        rolePermissionsApi.create({ roleId: role.id, permissionId: pid }),
-      ),
-      ...toRemove
-        .map((pid) => role.permissions.find((p) => p.id === pid)?.rolePermissionId)
-        .filter((id): id is number => typeof id === 'number')
-        .map((id) => rolePermissionsApi.remove(id)),
-    ])
-
-    if (nameChanged || toAdd.length > 0 || toRemove.length > 0) {
+    if (nameChanged || permissionsChanged) {
       await forceRefresh()
     }
   }

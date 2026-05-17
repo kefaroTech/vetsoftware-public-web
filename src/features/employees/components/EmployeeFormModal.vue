@@ -2,9 +2,11 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { UserPlus, Pencil } from 'lucide-vue-next'
 import type { Employee, EmployeeStatus } from '@/types/domain'
+import { useRoles } from '@/features/roles/composables/useRoles'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
+import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import SegmentedRadio from '@/features/dashboard/components/ui/SegmentedRadio.vue'
 
 const props = defineProps<{
@@ -24,11 +26,17 @@ export interface EmployeeFormData {
   email: string
   status: EmployeeStatus
   password: string
+  roleId: number | null
 }
 
-type FieldKey = 'employeeCode' | 'name' | 'email' | 'password'
+type FieldKey = 'employeeCode' | 'name' | 'email' | 'password' | 'roleId'
 
 const isEditing = computed(() => props.initial !== null)
+
+const { list: roles } = useRoles()
+const roleOptions = computed(() =>
+  roles.value.map((r) => ({ value: String(r.id), label: r.name })),
+)
 
 const draft = ref<EmployeeFormData>({
   employeeCode: '',
@@ -36,6 +44,7 @@ const draft = ref<EmployeeFormData>({
   email: '',
   status: 'ACTIVE',
   password: '',
+  roleId: null,
 })
 
 const touched = reactive<Record<FieldKey, boolean>>({
@@ -43,6 +52,7 @@ const touched = reactive<Record<FieldKey, boolean>>({
   name: false,
   email: false,
   password: false,
+  roleId: false,
 })
 
 function reset() {
@@ -53,6 +63,7 @@ function reset() {
       email: props.initial.email,
       status: props.initial.status,
       password: '',
+      roleId: null,
     }
   } else {
     draft.value = {
@@ -61,12 +72,14 @@ function reset() {
       email: '',
       status: 'ACTIVE',
       password: '',
+      roleId: null,
     }
   }
   touched.employeeCode = false
   touched.name = false
   touched.email = false
   touched.password = false
+  touched.roleId = false
   banner.value = false
 }
 
@@ -99,6 +112,8 @@ const errors = computed(() => {
     if (!pw) e.password = 'La contraseña es requerida'
     else if (pw.length < 8) e.password = 'Mínimo 8 caracteres'
     else if (pw.length > 100) e.password = 'Máximo 100 caracteres'
+
+    if (draft.value.roleId == null) e.roleId = 'Selecciona un rol'
   }
 
   return e
@@ -129,6 +144,13 @@ const statusOptions = [
   { value: 'ACTIVE', label: 'Activo' },
   { value: 'INACTIVE', label: 'Inactivo' },
 ]
+
+const selectedRoleId = computed<string>({
+  get: () => (draft.value.roleId != null ? String(draft.value.roleId) : ''),
+  set: (v) => {
+    draft.value.roleId = v ? Number(v) : null
+  },
+})
 
 const titleText = computed(() => (isEditing.value ? 'Editar empleado' : 'Nuevo empleado'))
 const subtitleText = computed(() =>
@@ -201,7 +223,22 @@ const subtitleText = computed(() =>
           />
         </BaseField>
 
-        <BaseField label="Estado" required>
+        <BaseField
+          v-if="!isEditing"
+          label="Rol"
+          required
+          :error="err('roleId')"
+        >
+          <BaseSelect
+            v-model="selectedRoleId"
+            :options="roleOptions"
+            placeholder="Selecciona un rol"
+            :invalid="!!err('roleId')"
+            @blur="markTouched('roleId')"
+          />
+        </BaseField>
+
+        <BaseField v-if="isEditing" label="Estado" required>
           <SegmentedRadio v-model="draft.status" :options="statusOptions" />
         </BaseField>
       </div>

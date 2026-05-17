@@ -90,6 +90,10 @@ export interface CreateRolePermissionRequest {
   permissionId: number
 }
 
+export interface SyncRolePermissionsRequest {
+  permissionIds: number[]
+}
+
 export interface RoleDraft {
   id?: number
   name: string

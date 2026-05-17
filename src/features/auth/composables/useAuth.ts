@@ -58,8 +58,10 @@ export function useAuth() {
   }
 
   function logout() {
-    localStorage.removeItem(AUTH_STORAGE_KEY)
+    try { localStorage.clear() } catch { /* ignore */ }
+    try { sessionStorage.clear() } catch { /* ignore */ }
     session.value = null
+    window.location.assign('/login')
   }
 
   return {

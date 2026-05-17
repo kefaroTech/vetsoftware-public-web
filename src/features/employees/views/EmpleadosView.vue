@@ -10,6 +10,7 @@ import EmployeeFormModal, {
   type EmployeeFormData,
 } from '../components/EmployeeFormModal.vue'
 import ConfirmDeactivateDialog from '../components/ConfirmDeactivateDialog.vue'
+import { employeeRolesApi } from '../api/employeeRoles.api'
 
 const { companyId } = useAuth()
 const { employees, loading, error, fetchAll, create, update, setStatus } = useEmployees()
@@ -69,14 +70,20 @@ async function handleSubmit(data: EmployeeFormData) {
         submitError.value = 'No se pudo determinar la empresa actual.'
         return
       }
+      if (data.roleId == null) {
+        submitError.value = 'Selecciona un rol para el empleado.'
+        return
+      }
       const created = await create({
         employeeCode: data.employeeCode.trim(),
         password: data.password,
         name: data.name.trim(),
         email: data.email.trim(),
-        status: data.status,
+        status: 'ACTIVE',
         companyId: cid,
       })
+      await employeeRolesApi.create({ employeeId: created.id, roleId: data.roleId })
+      await fetchAll(true)
       selectedId.value = created.id
     }
     formOpen.value = false

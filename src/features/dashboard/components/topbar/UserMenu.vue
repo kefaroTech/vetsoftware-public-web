@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuth } from '@/features/auth/composables/useAuth'
 
 const props = defineProps<{
@@ -8,7 +7,6 @@ const props = defineProps<{
   lastName: string
 }>()
 
-const router = useRouter()
 const { logout } = useAuth()
 
 const open = ref(false)
@@ -20,7 +18,6 @@ const initials = computed(() =>
 function handleLogout() {
   open.value = false
   logout()
-  router.push({ name: 'login' })
 }
 </script>
 
