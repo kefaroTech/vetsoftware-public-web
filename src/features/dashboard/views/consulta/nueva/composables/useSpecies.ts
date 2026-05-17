@@ -6,28 +6,25 @@ export interface SpecieOption {
   label: string
 }
 
-const cache = ref<SpecieResponse[] | null>(null)
 let inFlight: Promise<SpecieResponse[]> | null = null
 
 async function load(): Promise<SpecieResponse[]> {
-  if (cache.value) return cache.value
-  if (!inFlight) {
-    inFlight = speciesApi
-      .listAll()
-      .then((list) => {
-        cache.value = list
-        return list
-      })
-      .catch((e) => {
-        inFlight = null
-        throw e
-      })
-  }
+  if (inFlight) return inFlight
+  inFlight = speciesApi
+    .listAll()
+    .then((list) => {
+      inFlight = null
+      return list
+    })
+    .catch((e) => {
+      inFlight = null
+      throw e
+    })
   return inFlight
 }
 
 export function useSpecies() {
-  const list = ref<SpecieResponse[]>(cache.value ?? [])
+  const list = ref<SpecieResponse[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -52,7 +49,7 @@ export function useSpecies() {
   }
 
   onMounted(() => {
-    if (list.value.length === 0) refresh()
+    refresh()
   })
 
   return { list, options, loading, error, findById, refresh }

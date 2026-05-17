@@ -3,24 +3,21 @@ import { modulesApi } from '../api/modules.api'
 import type { ModuleResponse } from '../types'
 
 const cache = ref<ModuleResponse[]>([])
-let loaded = false
 let inFlight: Promise<ModuleResponse[]> | null = null
 
 async function load(): Promise<ModuleResponse[]> {
-  if (loaded) return cache.value
-  if (!inFlight) {
-    inFlight = modulesApi
-      .listAll()
-      .then((list) => {
-        cache.value = list
-        loaded = true
-        return list
-      })
-      .catch((e) => {
-        inFlight = null
-        throw e
-      })
-  }
+  if (inFlight) return inFlight
+  inFlight = modulesApi
+    .listAll()
+    .then((list) => {
+      cache.value = list
+      inFlight = null
+      return list
+    })
+    .catch((e) => {
+      inFlight = null
+      throw e
+    })
   return inFlight
 }
 
@@ -47,13 +44,11 @@ export function useModulesCatalog() {
   }
 
   async function forceRefresh() {
-    loaded = false
-    inFlight = null
     await refresh()
   }
 
   onMounted(() => {
-    if (!loaded) refresh()
+    refresh()
   })
 
   return { list: cache, byId, loading, error, refresh, forceRefresh }

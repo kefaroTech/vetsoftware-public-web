@@ -6,58 +6,71 @@ export interface GeoOption {
   label: string
 }
 
-const countriesCache = ref<GeoOption[] | null>(null)
 let countriesPromise: Promise<GeoOption[]> | null = null
-const statesCache = new Map<string, GeoOption[]>()
-const citiesCache = new Map<string, GeoOption[]>()
+const statesInFlight = new Map<string, Promise<GeoOption[]>>()
+const citiesInFlight = new Map<string, Promise<GeoOption[]>>()
 
 async function loadCountries(): Promise<GeoOption[]> {
-  if (countriesCache.value) return countriesCache.value
-  if (!countriesPromise) {
-    countriesPromise = countryApi
-      .listAll()
-      .then((list) =>
-        list.map((c) => ({ value: String(c.id), label: c.name })),
-      )
-      .then((opts) => {
-        countriesCache.value = opts
-        return opts
-      })
-      .catch((e) => {
-        countriesPromise = null
-        throw e
-      })
-  }
+  if (countriesPromise) return countriesPromise
+  countriesPromise = countryApi
+    .listAll()
+    .then((list) =>
+      list.map((c) => ({ value: String(c.id), label: c.name })),
+    )
+    .then((opts) => {
+      countriesPromise = null
+      return opts
+    })
+    .catch((e) => {
+      countriesPromise = null
+      throw e
+    })
   return countriesPromise
 }
 
 async function loadStates(countryId: string): Promise<GeoOption[]> {
-  const cached = statesCache.get(countryId)
-  if (cached) return cached
+  const pending = statesInFlight.get(countryId)
+  if (pending) return pending
   const id = Number(countryId)
   if (!Number.isFinite(id)) return []
-  const list = await stateApi.listByCountry(id)
-  const opts = list.map((s) => ({ value: String(s.id), label: s.name }))
-  statesCache.set(countryId, opts)
-  return opts
+  const promise = stateApi
+    .listByCountry(id)
+    .then((list) => {
+      statesInFlight.delete(countryId)
+      return list.map((s) => ({ value: String(s.id), label: s.name }))
+    })
+    .catch((e) => {
+      statesInFlight.delete(countryId)
+      throw e
+    })
+  statesInFlight.set(countryId, promise)
+  return promise
 }
 
 async function loadCities(stateId: string): Promise<GeoOption[]> {
-  const cached = citiesCache.get(stateId)
-  if (cached) return cached
+  const pending = citiesInFlight.get(stateId)
+  if (pending) return pending
   const id = Number(stateId)
   if (!Number.isFinite(id)) return []
-  const list = await cityApi.listByState(id)
-  const opts = list.map((c) => ({ value: String(c.id), label: c.name }))
-  citiesCache.set(stateId, opts)
-  return opts
+  const promise = cityApi
+    .listByState(id)
+    .then((list) => {
+      citiesInFlight.delete(stateId)
+      return list.map((c) => ({ value: String(c.id), label: c.name }))
+    })
+    .catch((e) => {
+      citiesInFlight.delete(stateId)
+      throw e
+    })
+  citiesInFlight.set(stateId, promise)
+  return promise
 }
 
 export function useGeoCascade(
   countryId: Ref<string>,
   stateId: Ref<string>,
 ) {
-  const countryOptions = ref<GeoOption[]>(countriesCache.value ?? [])
+  const countryOptions = ref<GeoOption[]>([])
   const stateOptions = ref<GeoOption[]>([])
   const cityOptions = ref<GeoOption[]>([])
   const loadingCountries = ref(false)
@@ -66,15 +79,13 @@ export function useGeoCascade(
   const error = ref<string | null>(null)
 
   onMounted(async () => {
-    if (countryOptions.value.length === 0) {
-      loadingCountries.value = true
-      try {
-        countryOptions.value = await loadCountries()
-      } catch {
-        error.value = 'No se pudo cargar la lista de países'
-      } finally {
-        loadingCountries.value = false
-      }
+    loadingCountries.value = true
+    try {
+      countryOptions.value = await loadCountries()
+    } catch {
+      error.value = 'No se pudo cargar la lista de países'
+    } finally {
+      loadingCountries.value = false
     }
     if (countryId.value) {
       await refreshStates(countryId.value)

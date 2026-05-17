@@ -9,24 +9,21 @@ import type {
 } from '../types'
 
 const cache = ref<RoleResponse[]>([])
-let loaded = false
 let inFlight: Promise<RoleResponse[]> | null = null
 
 async function load(): Promise<RoleResponse[]> {
-  if (loaded) return cache.value
-  if (!inFlight) {
-    inFlight = rolesApi
-      .listByCompany()
-      .then((list) => {
-        cache.value = list
-        loaded = true
-        return list
-      })
-      .catch((e) => {
-        inFlight = null
-        throw e
-      })
-  }
+  if (inFlight) return inFlight
+  inFlight = rolesApi
+    .listByCompany()
+    .then((list) => {
+      cache.value = list
+      inFlight = null
+      return list
+    })
+    .catch((e) => {
+      inFlight = null
+      throw e
+    })
   return inFlight
 }
 
@@ -80,8 +77,6 @@ export function useRoles() {
   }
 
   async function forceRefresh() {
-    loaded = false
-    inFlight = null
     await refresh()
   }
 
@@ -144,7 +139,7 @@ export function useRoles() {
   }
 
   onMounted(() => {
-    if (!loaded) refresh()
+    refresh()
   })
 
   return {

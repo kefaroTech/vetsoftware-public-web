@@ -9,28 +9,25 @@ export interface ConsultationTypeOption {
   label: string
 }
 
-const cache = ref<ConsultationTypeResponse[] | null>(null)
 let inFlight: Promise<ConsultationTypeResponse[]> | null = null
 
 async function load(): Promise<ConsultationTypeResponse[]> {
-  if (cache.value) return cache.value
-  if (!inFlight) {
-    inFlight = consultationTypeApi
-      .listAll()
-      .then((list) => {
-        cache.value = list
-        return list
-      })
-      .catch((e) => {
-        inFlight = null
-        throw e
-      })
-  }
+  if (inFlight) return inFlight
+  inFlight = consultationTypeApi
+    .listAll()
+    .then((list) => {
+      inFlight = null
+      return list
+    })
+    .catch((e) => {
+      inFlight = null
+      throw e
+    })
   return inFlight
 }
 
 export function useConsultationTypes() {
-  const list = ref<ConsultationTypeResponse[]>(cache.value ?? [])
+  const list = ref<ConsultationTypeResponse[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -55,7 +52,7 @@ export function useConsultationTypes() {
   }
 
   onMounted(() => {
-    if (list.value.length === 0) refresh()
+    refresh()
   })
 
   return { list, options, loading, error, findById, refresh }

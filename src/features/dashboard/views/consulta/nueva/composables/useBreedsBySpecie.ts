@@ -6,12 +6,9 @@ export interface BreedOption {
   label: string
 }
 
-const cache = new Map<string, BreedResponse[]>()
 const inFlight = new Map<string, Promise<BreedResponse[]>>()
 
 async function load(specieId: string): Promise<BreedResponse[]> {
-  const cached = cache.get(specieId)
-  if (cached) return cached
   const pending = inFlight.get(specieId)
   if (pending) return pending
   const id = Number(specieId)
@@ -19,7 +16,6 @@ async function load(specieId: string): Promise<BreedResponse[]> {
   const promise = breedApi
     .listBySpecie(id)
     .then((list) => {
-      cache.set(specieId, list)
       inFlight.delete(specieId)
       return list
     })

@@ -3,24 +3,21 @@ import { permissionsApi } from '../api/permissions.api'
 import type { PermissionResponse } from '../types'
 
 const cache = ref<PermissionResponse[]>([])
-let loaded = false
 let inFlight: Promise<PermissionResponse[]> | null = null
 
 async function load(): Promise<PermissionResponse[]> {
-  if (loaded) return cache.value
-  if (!inFlight) {
-    inFlight = permissionsApi
-      .listByCompany()
-      .then((list) => {
-        cache.value = list
-        loaded = true
-        return list
-      })
-      .catch((e) => {
-        inFlight = null
-        throw e
-      })
-  }
+  if (inFlight) return inFlight
+  inFlight = permissionsApi
+    .listByCompany()
+    .then((list) => {
+      cache.value = list
+      inFlight = null
+      return list
+    })
+    .catch((e) => {
+      inFlight = null
+      throw e
+    })
   return inFlight
 }
 
@@ -57,13 +54,11 @@ export function usePermissionsCatalog() {
   }
 
   async function forceRefresh() {
-    loaded = false
-    inFlight = null
     await refresh()
   }
 
   onMounted(() => {
-    if (!loaded) refresh()
+    refresh()
   })
 
   return { list: cache, bySubModule, byId, loading, error, refresh, forceRefresh }

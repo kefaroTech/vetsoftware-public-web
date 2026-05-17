@@ -3,24 +3,21 @@ import { subModulesApi } from '../api/subModules.api'
 import type { SubModuleResponse } from '../types'
 
 const cache = ref<SubModuleResponse[]>([])
-let loaded = false
 let inFlight: Promise<SubModuleResponse[]> | null = null
 
 async function load(): Promise<SubModuleResponse[]> {
-  if (loaded) return cache.value
-  if (!inFlight) {
-    inFlight = subModulesApi
-      .listAll()
-      .then((list) => {
-        cache.value = list
-        loaded = true
-        return list
-      })
-      .catch((e) => {
-        inFlight = null
-        throw e
-      })
-  }
+  if (inFlight) return inFlight
+  inFlight = subModulesApi
+    .listAll()
+    .then((list) => {
+      cache.value = list
+      inFlight = null
+      return list
+    })
+    .catch((e) => {
+      inFlight = null
+      throw e
+    })
   return inFlight
 }
 
@@ -57,13 +54,11 @@ export function useSubModulesCatalog() {
   }
 
   async function forceRefresh() {
-    loaded = false
-    inFlight = null
     await refresh()
   }
 
   onMounted(() => {
-    if (!loaded) refresh()
+    refresh()
   })
 
   return { list: cache, byId, byModule, loading, error, refresh, forceRefresh }

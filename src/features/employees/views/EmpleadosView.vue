@@ -88,7 +88,7 @@ async function handleSubmit(data: EmployeeFormData) {
         companyId: cid,
       })
       await employeeRolesApi.create({ employeeId: created.id, roleId: data.roleId })
-      await fetchAll(true)
+      await fetchAll()
       selectedId.value = created.id
     }
     formOpen.value = false

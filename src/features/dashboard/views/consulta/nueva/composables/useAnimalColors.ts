@@ -6,28 +6,25 @@ export interface AnimalColorOption {
   label: string
 }
 
-const cache = ref<AnimalColorResponse[] | null>(null)
 let inFlight: Promise<AnimalColorResponse[]> | null = null
 
 async function load(): Promise<AnimalColorResponse[]> {
-  if (cache.value) return cache.value
-  if (!inFlight) {
-    inFlight = animalColorApi
-      .listAll()
-      .then((list) => {
-        cache.value = list
-        return list
-      })
-      .catch((e) => {
-        inFlight = null
-        throw e
-      })
-  }
+  if (inFlight) return inFlight
+  inFlight = animalColorApi
+    .listAll()
+    .then((list) => {
+      inFlight = null
+      return list
+    })
+    .catch((e) => {
+      inFlight = null
+      throw e
+    })
   return inFlight
 }
 
 export function useAnimalColors() {
-  const list = ref<AnimalColorResponse[]>(cache.value ?? [])
+  const list = ref<AnimalColorResponse[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -52,7 +49,7 @@ export function useAnimalColors() {
   }
 
   onMounted(() => {
-    if (list.value.length === 0) refresh()
+    refresh()
   })
 
   return { list, options, loading, error, findById, refresh }

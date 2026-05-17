@@ -23,28 +23,25 @@ interface CatalogConfig<T extends CatalogItem> {
  * Cada catálogo tiene su propia cache module-scoped (no compartida entre instancias).
  */
 export function createCatalog<T extends CatalogItem>(config: CatalogConfig<T>) {
-  const cache = ref<T[] | null>(null) as Ref<T[] | null>
   let inFlight: Promise<T[]> | null = null
 
   async function load(): Promise<T[]> {
-    if (cache.value) return cache.value
-    if (!inFlight) {
-      inFlight = config
-        .fetcher()
-        .then((list) => {
-          cache.value = list
-          return list
-        })
-        .catch((e) => {
-          inFlight = null
-          throw e
-        })
-    }
+    if (inFlight) return inFlight
+    inFlight = config
+      .fetcher()
+      .then((list) => {
+        inFlight = null
+        return list
+      })
+      .catch((e) => {
+        inFlight = null
+        throw e
+      })
     return inFlight
   }
 
   return function useCatalog() {
-    const list = ref<T[]>(cache.value ?? []) as Ref<T[]>
+    const list = ref<T[]>([]) as Ref<T[]>
     const loading = ref(false)
     const error = ref<string | null>(null)
 
@@ -76,8 +73,7 @@ export function createCatalog<T extends CatalogItem>(config: CatalogConfig<T>) {
         name: data.name,
         description: data.description ?? '',
       })
-      cache.value = [...(cache.value ?? []), created]
-      list.value = cache.value
+      list.value = [...list.value, created]
       return created
     }
 
@@ -86,7 +82,7 @@ export function createCatalog<T extends CatalogItem>(config: CatalogConfig<T>) {
     }
 
     onMounted(() => {
-      if (list.value.length === 0) refresh()
+      refresh()
     })
 
     return { list, options, loading, error, findById, refresh, create }

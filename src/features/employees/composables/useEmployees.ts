@@ -8,7 +8,6 @@ import {
 import { mapEmployeeResponse } from '../api/employee.mapper'
 
 const cache = ref<Employee[]>([])
-const loaded = ref(false)
 const loading = ref(false)
 const error = ref<string | null>(null)
 let inFlight: Promise<void> | null = null
@@ -16,8 +15,7 @@ let inFlight: Promise<void> | null = null
 export function useEmployees() {
   const employees = computed<Employee[]>(() => cache.value)
 
-  async function fetchAll(force = false): Promise<void> {
-    if (!force && loaded.value) return
+  async function fetchAll(): Promise<void> {
     if (inFlight) return inFlight
     loading.value = true
     error.value = null
@@ -25,7 +23,6 @@ export function useEmployees() {
       try {
         const list = await employeeApi.listByCompany()
         cache.value = list.map(mapEmployeeResponse)
-        loaded.value = true
       } catch (e) {
         error.value = e instanceof Error ? e.message : 'Error al cargar empleados'
         throw e
