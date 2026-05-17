@@ -19,6 +19,7 @@ const permissionsCatalog = usePermissionsCatalog()
 const roles = useRoles()
 const { can } = useAuthorization()
 const canCreateRole = can(PERMISSIONS.ROLE_PERMISSIONS_CREATE)
+const canUpdateRole = can(PERMISSIONS.ROLE_PERMISSIONS_UPDATE)
 
 const modalOpen = ref(false)
 const editingRole = ref<RoleResponse | null>(null)
@@ -27,9 +28,10 @@ function isSystemRole(role: RoleResponse): boolean {
   return role.code === 'ADMIN'
 }
 
-const editingReadOnly = computed(
-  () => editingRole.value !== null && isSystemRole(editingRole.value),
-)
+const editingReadOnly = computed(() => {
+  if (!canUpdateRole.value) return true
+  return editingRole.value !== null && isSystemRole(editingRole.value)
+})
 
 function openCreate() {
   editingRole.value = null
@@ -109,8 +111,8 @@ const hasError = computed(
         :permission-count="role.permissions.length"
         :sub-modules="subModulesUsedByRole(role)"
         :total-catalog-permissions="totalCatalogPermissions"
-        :read-only="isSystemRole(role)"
-        @toggle-active="(v) => isSystemRole(role) ? null : roles.setActive(role.id, v)"
+        :read-only="isSystemRole(role) || !canUpdateRole"
+        @toggle-active="(v) => (isSystemRole(role) || !canUpdateRole) ? null : roles.setActive(role.id, v)"
         @edit="openEdit(role)"
       />
       <div

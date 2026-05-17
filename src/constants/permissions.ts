@@ -9,6 +9,7 @@ export const PERMISSIONS = {
   ROLE_READ: 'role.read',
   ROLE_PERMISSIONS_CREATE: 'rolePermissions.create',
   ROLE_PERMISSIONS_READ: 'rolePermissions.read',
+  ROLE_PERMISSIONS_UPDATE: 'rolePermissions.update',
 
   ANIMAL_CREATE: 'animal.create',
   ANIMAL_READ: 'animal.read',
