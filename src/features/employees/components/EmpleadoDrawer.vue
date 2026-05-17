@@ -11,6 +11,7 @@ import DrawerTabDatos from './DrawerTabDatos.vue'
 const props = defineProps<{
   employee: Employee | null
   busy?: boolean
+  canUpdate?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -107,13 +108,19 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               <Key :size="14" :stroke-width="1.7" />
               Restablecer contraseña
             </button>
-            <button type="button" class="ghost" :disabled="busy" @click="emit('edit', employee)">
+            <button
+              v-if="canUpdate"
+              type="button"
+              class="ghost"
+              :disabled="busy"
+              @click="emit('edit', employee)"
+            >
               <Pencil :size="14" :stroke-width="1.7" />
               Editar
             </button>
             <div class="spacer" />
             <button
-              v-if="employee.status === 'ACTIVE'"
+              v-if="canUpdate && employee.status === 'ACTIVE'"
               type="button"
               class="danger"
               :disabled="busy"
@@ -123,7 +130,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               Desactivar
             </button>
             <button
-              v-else
+              v-else-if="canUpdate && employee.status !== 'ACTIVE'"
               type="button"
               class="primary"
               :disabled="busy"

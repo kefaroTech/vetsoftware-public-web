@@ -10,11 +10,15 @@ import { useSubModulesCatalog } from '../composables/useSubModulesCatalog'
 import { useModulesCatalog } from '../composables/useModulesCatalog'
 import { pickRoleColor } from '../constants/roleColors'
 import type { RoleResponse, SubModuleResponse } from '../types'
+import { useAuthorization } from '@/features/auth/composables/useAuthorization'
+import { PERMISSIONS } from '@/constants/permissions'
 
 useModulesCatalog()
 const subModules = useSubModulesCatalog()
 const permissionsCatalog = usePermissionsCatalog()
 const roles = useRoles()
+const { can } = useAuthorization()
+const canCreateRole = can(PERMISSIONS.ROLE_PERMISSIONS_CREATE)
 
 const modalOpen = ref(false)
 const editingRole = ref<RoleResponse | null>(null)
@@ -80,7 +84,12 @@ const hasError = computed(
             y mantené el control fino sobre quién accede a qué.
           </p>
         </div>
-        <button type="button" class="create-btn" @click="openCreate">
+        <button
+          v-if="canCreateRole"
+          type="button"
+          class="create-btn"
+          @click="openCreate"
+        >
           <Plus :size="16" :stroke-width="1.8" />
           <span>Crear rol</span>
         </button>
@@ -90,7 +99,7 @@ const hasError = computed(
     <div v-if="hasError" class="banner-error">{{ hasError }}</div>
 
     <div class="grid">
-      <AddRoleCard @click="openCreate" />
+      <AddRoleCard v-if="canCreateRole" @click="openCreate" />
       <RoleCard
         v-for="role in orderedRoles"
         :key="role.id"

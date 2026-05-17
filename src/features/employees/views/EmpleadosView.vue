@@ -11,9 +11,14 @@ import EmployeeFormModal, {
 } from '../components/EmployeeFormModal.vue'
 import ConfirmDeactivateDialog from '../components/ConfirmDeactivateDialog.vue'
 import { employeeRolesApi } from '../api/employeeRoles.api'
+import { useAuthorization } from '@/features/auth/composables/useAuthorization'
+import { PERMISSIONS } from '@/constants/permissions'
 
 const { companyId } = useAuth()
 const { employees, loading, error, fetchAll, create, update, setStatus } = useEmployees()
+const { can } = useAuthorization()
+const canCreate = can(PERMISSIONS.EMPLOYEE_CREATE)
+const canUpdate = can(PERMISSIONS.EMPLOYEE_UPDATE)
 
 const query = ref('')
 const selectedId = ref<number | null>(null)
@@ -133,7 +138,7 @@ async function handleActivate(employee: Employee) {
         <h1 class="title">Empleados</h1>
         <div class="lead">Gestiona el equipo de la clínica, sus roles y accesos.</div>
       </div>
-      <button type="button" class="cta" :disabled="busy" @click="openCreate">
+      <button v-if="canCreate" type="button" class="cta" :disabled="busy" @click="openCreate">
         <Plus :size="16" :stroke-width="1.8" />
         Nuevo empleado
       </button>
@@ -154,6 +159,7 @@ async function handleActivate(employee: Employee) {
     <EmpleadoDrawer
       :employee="selected"
       :busy="busy"
+      :can-update="canUpdate"
       @close="closeDrawer"
       @edit="openEdit"
       @deactivate="askDeactivate"

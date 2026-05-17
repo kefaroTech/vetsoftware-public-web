@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import { AUTH_STORAGE_KEY } from '@/services/http/http.client'
-import type { AuthSession } from '../types'
+import { authApi } from '../api/auth.api'
+import type { AuthSession, MeResponse } from '../types'
 
 interface JwtClaims {
   sub?: string
@@ -46,29 +47,72 @@ function loadInitial(): AuthSession | null {
 }
 
 const session = ref<AuthSession | null>(loadInitial())
+const me = ref<MeResponse | null>(null)
+const bootLoading = ref(false)
+let bootInFlight: Promise<void> | null = null
 
 const claims = computed<JwtClaims | null>(() =>
   session.value ? decodeJwt(session.value.token) : null,
 )
 
+async function fetchMe(): Promise<void> {
+  try {
+    me.value = await authApi.me()
+  } catch {
+    me.value = null
+    throw new Error('No se pudo cargar el perfil del usuario')
+  }
+}
+
 export function useAuth() {
-  function login(next: AuthSession) {
+  async function login(next: AuthSession) {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(next))
     session.value = next
+    try {
+      await fetchMe()
+    } catch {
+      // si falla /me con un token recién emitido, dejamos al user navegar — el http
+      // interceptor de 401 lo sacará si el token resulta inválido en otras llamadas.
+    }
   }
 
   function logout() {
     try { localStorage.clear() } catch { /* ignore */ }
     try { sessionStorage.clear() } catch { /* ignore */ }
     session.value = null
+    me.value = null
     window.location.assign('/login')
+  }
+
+  async function refreshMe(): Promise<void> {
+    if (!session.value) return
+    if (bootInFlight) return bootInFlight
+    bootLoading.value = true
+    bootInFlight = fetchMe()
+      .catch(() => {
+        // token inválido o backend caído: forzar logout limpio
+        try { localStorage.clear() } catch { /* ignore */ }
+        try { sessionStorage.clear() } catch { /* ignore */ }
+        session.value = null
+        me.value = null
+      })
+      .finally(() => {
+        bootLoading.value = false
+        bootInFlight = null
+      })
+    return bootInFlight
   }
 
   return {
     session: computed(() => session.value),
     isAuthenticated: computed(() => session.value !== null),
-    companyId: computed<number | null>(() => claims.value?.companyId ?? null),
+    me: computed(() => me.value),
+    bootLoading: computed(() => bootLoading.value),
+    companyId: computed<number | null>(
+      () => me.value?.companyId ?? claims.value?.companyId ?? null,
+    ),
     subjectId: computed<number | null>(() => {
+      if (me.value) return me.value.id
       const sub = claims.value?.sub
       if (sub == null) return null
       const n = Number(sub)
@@ -76,6 +120,7 @@ export function useAuth() {
     }),
     login,
     logout,
+    refreshMe,
   }
 }
 
@@ -84,5 +129,9 @@ export function getToken(): string | null {
 }
 
 export function getCurrentCompanyId(): number | null {
-  return claims.value?.companyId ?? null
+  return me.value?.companyId ?? claims.value?.companyId ?? null
+}
+
+export function getCurrentPermissions(): string[] {
+  return me.value?.permissions ?? []
 }

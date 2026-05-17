@@ -22,10 +22,13 @@ import SidebarUserCard from './SidebarUserCard.vue'
 import { mockUser } from '../../data/mock'
 import { useNuevaConsultaDraft } from '../../views/consulta/nueva/composables/useNuevaConsultaDraft'
 import { showResumeOrNewDialog } from '@/composables/useConsultaResumeGuard'
+import { useAuthorization } from '@/features/auth/composables/useAuthorization'
+import { PERMISSIONS } from '@/constants/permissions'
 
 const route = useRoute()
 const router = useRouter()
 const draft = useNuevaConsultaDraft()
+const { can } = useAuthorization()
 
 const consultaSubRoutes = [
   'consulta-nueva',
@@ -40,11 +43,19 @@ const isConsultaActive = computed(() =>
 
 const consultaOpen = ref(true)
 
-const subItems = [
-  { label: 'Historial clínico', icon: History, to: { name: 'consulta-historial' as const } },
-  { label: 'Plan de vacunación', icon: Syringe, to: { name: 'consulta-vacunacion' as const } },
-  { label: 'Hospitalización', icon: PawPrint, to: { name: 'consulta-hospital' as const } },
-]
+const canCreateConsultation = can(PERMISSIONS.CONSULTATION_CREATE)
+const canVaccination = can(PERMISSIONS.VACCINATION_CREATE)
+const canHospital = can(PERMISSIONS.HOSPITALIZATION_CREATE)
+const canEmployees = can(PERMISSIONS.EMPLOYEE_READ)
+const canRoles = can(PERMISSIONS.ROLE_PERMISSIONS_READ)
+
+const subItems = computed(() => [
+  { label: 'Historial clínico', icon: History, to: { name: 'consulta-historial' as const }, show: true },
+  { label: 'Plan de vacunación', icon: Syringe, to: { name: 'consulta-vacunacion' as const }, show: canVaccination.value },
+  { label: 'Hospitalización', icon: PawPrint, to: { name: 'consulta-hospital' as const }, show: canHospital.value },
+].filter((item) => item.show))
+
+const showAdminSection = computed(() => canEmployees.value || canRoles.value)
 
 function goNuevaConsulta() {
   if (draft.state.owner) {
@@ -91,6 +102,7 @@ const upcomingItems = [
     />
     <div v-if="consultaOpen" class="sub-list">
       <button
+        v-if="canCreateConsultation"
         type="button"
         class="sub-item-btn"
         :class="{ active: route.name === 'consulta-nueva' }"
@@ -109,19 +121,23 @@ const upcomingItems = [
       />
     </div>
 
-    <div class="section-label">ADMINISTRACIÓN</div>
-    <SidebarNavItem
-      label="Empleados"
-      :icon="Users"
-      :active="route.name === 'empleados'"
-      @click="router.push({ name: 'empleados' })"
-    />
-    <SidebarNavItem
-      label="Roles y permisos"
-      :icon="ShieldCheck"
-      :active="route.name === 'roles'"
-      @click="router.push({ name: 'roles' })"
-    />
+    <template v-if="showAdminSection">
+      <div class="section-label">ADMINISTRACIÓN</div>
+      <SidebarNavItem
+        v-if="canEmployees"
+        label="Empleados"
+        :icon="Users"
+        :active="route.name === 'empleados'"
+        @click="router.push({ name: 'empleados' })"
+      />
+      <SidebarNavItem
+        v-if="canRoles"
+        label="Roles y permisos"
+        :icon="ShieldCheck"
+        :active="route.name === 'roles'"
+        @click="router.push({ name: 'roles' })"
+      />
+    </template>
 
     <div class="section-label">PRÓXIMAMENTE</div>
     <SidebarNavItem

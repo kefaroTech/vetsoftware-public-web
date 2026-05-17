@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from '@/features/auth/composables/useAuth'
+import { useAuthorization } from '@/features/auth/composables/useAuthorization'
+import { PERMISSIONS } from '@/constants/permissions'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -31,7 +33,7 @@ const router = createRouter({
           name: 'consulta-nueva',
           component: () =>
             import('@/features/dashboard/views/consulta/nueva/NuevaView.vue'),
-          meta: { fullBleed: true, hideTopbar: true },
+          meta: { fullBleed: true, hideTopbar: true, permission: PERMISSIONS.CONSULTATION_CREATE },
         },
         {
           path: 'consulta/nueva/exito',
@@ -40,7 +42,7 @@ const router = createRouter({
             import(
               '@/features/dashboard/views/consulta/nueva/exito/ConsultaGuardada.vue'
             ),
-          meta: { fullBleed: true, hideTopbar: true },
+          meta: { fullBleed: true, hideTopbar: true, permission: PERMISSIONS.CONSULTATION_CREATE },
         },
         {
           path: 'consulta/historial',
@@ -51,21 +53,25 @@ const router = createRouter({
           path: 'consulta/vacunacion',
           name: 'consulta-vacunacion',
           component: () => import('@/features/dashboard/views/consulta/VacunacionView.vue'),
+          meta: { permission: PERMISSIONS.VACCINATION_CREATE },
         },
         {
           path: 'consulta/hospital',
           name: 'consulta-hospital',
           component: () => import('@/features/dashboard/views/consulta/HospitalView.vue'),
+          meta: { permission: PERMISSIONS.HOSPITALIZATION_CREATE },
         },
         {
           path: 'empleados',
           name: 'empleados',
           component: () => import('@/features/employees/views/EmpleadosView.vue'),
+          meta: { permission: PERMISSIONS.EMPLOYEE_READ },
         },
         {
           path: 'roles',
           name: 'roles',
           component: () => import('@/features/roles/views/RolesView.vue'),
+          meta: { permission: PERMISSIONS.ROLE_PERMISSIONS_READ },
         },
       ],
     },
@@ -76,12 +82,31 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to) => {
-  const { isAuthenticated } = useAuth()
+router.beforeEach(async (to) => {
+  const { isAuthenticated, refreshMe } = useAuth()
+  if (isAuthenticated.value) {
+    await refreshMe()
+  }
+
   if (to.meta.requiresAuth && !isAuthenticated.value) {
     return { name: 'login' }
   }
   if (to.meta.guestOnly && isAuthenticated.value) {
+    return { name: 'home' }
+  }
+
+  const { permissions, isAdmin } = useAuthorization()
+  const required = to.meta.permission as string | undefined
+  const requiredAny = to.meta.permissionsAny as string[] | undefined
+
+  if (required && !isAdmin.value && !permissions.value.includes(required)) {
+    return { name: 'home' }
+  }
+  if (
+    requiredAny &&
+    !isAdmin.value &&
+    !requiredAny.some((p) => permissions.value.includes(p))
+  ) {
     return { name: 'home' }
   }
   return true

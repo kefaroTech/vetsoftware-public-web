@@ -14,3 +14,12 @@ export interface AuthSession {
   token: string
   type: AuthSubjectType
 }
+
+export interface MeResponse {
+  id: number
+  type: AuthSubjectType
+  companyId: number | null
+  name: string
+  employeeCode: string
+  permissions: string[]
+}
