@@ -14,6 +14,23 @@ export interface CreateHospitalizationPayload {
   companyId: number
 }
 
+export interface HospitalizationAnimalSummary {
+  id: number
+  name: string
+  code: string
+}
+
+export interface HospitalizationConsultationSummary {
+  id: number
+  date: string
+}
+
+export interface HospitalizationCompanySummary {
+  id: number
+  name: string
+  identifier: string
+}
+
 export interface HospitalizationResponse {
   id: number
   date: string
@@ -23,6 +40,9 @@ export interface HospitalizationResponse {
   reasonLeaving: ReasonLeaving | null
   reason: string
   observations: string
+  animal: HospitalizationAnimalSummary
+  consultation: HospitalizationConsultationSummary | null
+  company: HospitalizationCompanySummary
   createdDate: string
 }
 
@@ -34,6 +54,11 @@ export const hospitalizationApi = {
       '/hospitalizations',
       payload,
     )
+    return data
+  },
+
+  async listAll(): Promise<HospitalizationResponse[]> {
+    const { data } = await http.get<HospitalizationResponse[]>('/hospitalizations')
     return data
   },
 }

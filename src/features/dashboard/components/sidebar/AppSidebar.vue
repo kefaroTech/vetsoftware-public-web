@@ -6,7 +6,6 @@ import {
   FilePlus,
   History,
   Syringe,
-  PawPrint,
   User,
   Calendar,
   Package,
@@ -14,6 +13,12 @@ import {
   BarChart3,
   Users,
   ShieldCheck,
+  Stethoscope,
+  Beaker,
+  ScanLine,
+  BedDouble,
+  Bug,
+  Scissors,
 } from 'lucide-vue-next'
 import SidebarBrand from './SidebarBrand.vue'
 import SidebarNavItem from './SidebarNavItem.vue'
@@ -42,19 +47,45 @@ const isConsultaActive = computed(() =>
 )
 
 const consultaOpen = ref(true)
+const accionesOpen = ref(true)
 
 const canCreateConsultation = can(PERMISSIONS.CONSULTATION_CREATE)
 const canVaccination = can(PERMISSIONS.VACCINATION_CREATE)
 const canHospital = can(PERMISSIONS.HOSPITALIZATION_CREATE)
+const canLabTest = can(PERMISSIONS.LABORATORY_TEST_CREATE)
+const canImaging = can(PERMISSIONS.DIAGNOSTIC_IMAGING_CREATE)
+const canDeworming = can(PERMISSIONS.DEWORMING_CREATE)
+const canSurgery = can(PERMISSIONS.SURGERY_CREATE)
 const canEmployees = can(PERMISSIONS.EMPLOYEE_READ)
 const canRoles = can(PERMISSIONS.ROLE_PERMISSIONS_READ)
 
 const subItems = computed(() => [
   { label: 'Historial clínico', icon: History, to: { name: 'consulta-historial' as const }, show: true },
-  { label: 'Plan de vacunación', icon: Syringe, to: { name: 'consulta-vacunacion' as const }, show: canVaccination.value },
-  { label: 'Hospitalización', icon: PawPrint, to: { name: 'consulta-hospital' as const }, show: canHospital.value },
 ].filter((item) => item.show))
 
+const accionesSubRoutes = [
+  'acciones-laboratorio',
+  'acciones-imagen',
+  'acciones-vacunacion',
+  'acciones-hospitalizacion',
+  'acciones-desparasitacion',
+  'acciones-cirugia',
+] as const
+
+const isAccionesActive = computed(() =>
+  accionesSubRoutes.some((name) => route.name === name),
+)
+
+const accionesItems = computed(() => [
+  { label: 'Laboratorio', icon: Beaker, to: { name: 'acciones-laboratorio' as const }, show: canLabTest.value },
+  { label: 'Imagen diagnóstica', icon: ScanLine, to: { name: 'acciones-imagen' as const }, show: canImaging.value },
+  { label: 'Vacunación', icon: Syringe, to: { name: 'acciones-vacunacion' as const }, show: canVaccination.value },
+  { label: 'Hospitalización', icon: BedDouble, to: { name: 'acciones-hospitalizacion' as const }, show: canHospital.value },
+  { label: 'Desparasitación', icon: Bug, to: { name: 'acciones-desparasitacion' as const }, show: canDeworming.value },
+  { label: 'Cirugía', icon: Scissors, to: { name: 'acciones-cirugia' as const }, show: canSurgery.value },
+].filter((item) => item.show))
+
+const showAccionesSection = computed(() => accionesItems.value.length > 0)
 const showAdminSection = computed(() => canEmployees.value || canRoles.value)
 
 function goNuevaConsulta() {
@@ -120,6 +151,28 @@ const upcomingItems = [
         :active="route.name === item.to.name"
       />
     </div>
+
+    <template v-if="showAccionesSection">
+      <div class="section-label">ACCIONES CLÍNICAS</div>
+      <SidebarNavItem
+        label="Procedimientos"
+        :icon="Stethoscope"
+        :active="isAccionesActive"
+        expandable
+        :expanded="accionesOpen"
+        @click="accionesOpen = !accionesOpen"
+      />
+      <div v-if="accionesOpen" class="sub-list">
+        <SidebarSubItem
+          v-for="item in accionesItems"
+          :key="item.label"
+          :label="item.label"
+          :icon="item.icon"
+          :to="item.to"
+          :active="route.name === item.to.name"
+        />
+      </div>
+    </template>
 
     <template v-if="showAdminSection">
       <div class="section-label">ADMINISTRACIÓN</div>

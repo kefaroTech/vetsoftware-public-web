@@ -62,6 +62,42 @@ const router = createRouter({
           meta: { permission: PERMISSIONS.HOSPITALIZATION_CREATE },
         },
         {
+          path: 'acciones/laboratorio',
+          name: 'acciones-laboratorio',
+          component: () => import('@/features/acciones/views/LabListView.vue'),
+          meta: { permission: PERMISSIONS.LABORATORY_TEST_CREATE },
+        },
+        {
+          path: 'acciones/imagen',
+          name: 'acciones-imagen',
+          component: () => import('@/features/acciones/views/ImagingListView.vue'),
+          meta: { permission: PERMISSIONS.DIAGNOSTIC_IMAGING_CREATE },
+        },
+        {
+          path: 'acciones/vacunacion',
+          name: 'acciones-vacunacion',
+          component: () => import('@/features/acciones/views/VaccineListView.vue'),
+          meta: { permission: PERMISSIONS.VACCINATION_CREATE },
+        },
+        {
+          path: 'acciones/hospitalizacion',
+          name: 'acciones-hospitalizacion',
+          component: () => import('@/features/acciones/views/HospListView.vue'),
+          meta: { permission: PERMISSIONS.HOSPITALIZATION_CREATE },
+        },
+        {
+          path: 'acciones/desparasitacion',
+          name: 'acciones-desparasitacion',
+          component: () => import('@/features/acciones/views/DewormListView.vue'),
+          meta: { permission: PERMISSIONS.DEWORMING_CREATE },
+        },
+        {
+          path: 'acciones/cirugia',
+          name: 'acciones-cirugia',
+          component: () => import('@/features/acciones/views/SurgeryListView.vue'),
+          meta: { permission: PERMISSIONS.SURGERY_CREATE },
+        },
+        {
           path: 'empleados',
           name: 'empleados',
           component: () => import('@/features/employees/views/EmpleadosView.vue'),

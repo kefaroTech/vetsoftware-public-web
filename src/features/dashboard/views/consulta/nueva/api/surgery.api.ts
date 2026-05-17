@@ -12,19 +12,50 @@ export interface CreateSurgeryPayload {
   companyId: number
 }
 
+export interface SurgeryTypeSummary {
+  id: number
+  name: string
+}
+
+export interface SurgeryAnimalSummary {
+  id: number
+  name: string
+  code: string
+}
+
+export interface SurgeryConsultationSummary {
+  id: number
+  date: string
+}
+
+export interface SurgeryCompanySummary {
+  id: number
+  name: string
+  identifier: string
+}
+
 export interface SurgeryResponse {
   id: number
   date: string
+  surgeryType: SurgeryTypeSummary
   description: string
   medicament: string
   observations: string
   complications: string
+  animal: SurgeryAnimalSummary
+  consultation: SurgeryConsultationSummary | null
+  company: SurgeryCompanySummary
   createdDate: string
 }
 
 export const surgeryApi = {
   async create(payload: CreateSurgeryPayload): Promise<SurgeryResponse> {
     const { data } = await http.post<SurgeryResponse>('/surgeries', payload)
+    return data
+  },
+
+  async listAll(): Promise<SurgeryResponse[]> {
+    const { data } = await http.get<SurgeryResponse[]>('/surgeries')
     return data
   },
 }

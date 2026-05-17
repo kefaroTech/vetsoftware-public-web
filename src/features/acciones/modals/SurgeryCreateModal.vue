@@ -1,0 +1,196 @@
+<script setup lang="ts">
+import { computed, reactive, ref, watch } from 'vue'
+import { Scissors } from 'lucide-vue-next'
+import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
+import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
+import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
+import SearchableSelect from '@/features/dashboard/components/ui/SearchableSelect.vue'
+import PatientCascadePicker from '../components/PatientCascadePicker.vue'
+import { useAuth } from '@/features/auth/composables/useAuth'
+import { useSurgeryTypes } from '@/features/dashboard/views/consulta/nueva/composables/useSurgeryTypes'
+import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
+import {
+  surgeryApi,
+  type SurgeryResponse,
+} from '@/features/dashboard/views/consulta/nueva/api/surgery.api'
+
+const props = defineProps<{ open: boolean }>()
+const emit = defineEmits<{
+  close: []
+  created: [item: SurgeryResponse]
+}>()
+
+const { companyId } = useAuth()
+const {
+  options: typeOptions,
+  loading: loadingTypes,
+  error: typesError,
+  create: createType,
+} = useSurgeryTypes()
+
+const patientId = ref<number | null>(null)
+const draft = reactive({
+  date: todayISO(),
+  surgeryTypeId: '',
+  description: '',
+  medicament: '',
+  observations: '',
+  complications: '',
+})
+const submitted = ref(false)
+const saving = ref(false)
+const saveError = ref<string | null>(null)
+
+function reset() {
+  patientId.value = null
+  draft.date = todayISO()
+  draft.surgeryTypeId = ''
+  draft.description = ''
+  draft.medicament = ''
+  draft.observations = ''
+  draft.complications = ''
+  submitted.value = false
+  saveError.value = null
+}
+
+watch(() => props.open, (open) => { if (open) reset() })
+
+const errors = computed(() => ({
+  patient: patientId.value == null ? 'Selecciona un paciente' : null,
+  surgeryTypeId: !draft.surgeryTypeId ? 'Selecciona el tipo de cirugía' : null,
+  description: !draft.description.trim() ? 'Describe el procedimiento' : null,
+}))
+
+const valid = computed(
+  () =>
+    !errors.value.patient && !errors.value.surgeryTypeId && !errors.value.description,
+)
+
+function err(field: keyof typeof errors.value): string | undefined {
+  return submitted.value ? errors.value[field] ?? undefined : undefined
+}
+
+async function onCreateType(data: { name: string; description: string }) {
+  const created = await createType(data)
+  return {
+    value: String(created.id),
+    label: created.name,
+    hint: created.description ?? undefined,
+  }
+}
+
+async function save() {
+  submitted.value = true
+  if (!valid.value || saving.value) return
+  const cid = companyId.value
+  const pid = patientId.value
+  if (cid == null || pid == null) {
+    saveError.value = 'Faltan datos para guardar.'
+    return
+  }
+  saving.value = true
+  saveError.value = null
+  try {
+    const created = await surgeryApi.create({
+      date: draft.date,
+      surgeryTypeId: Number(draft.surgeryTypeId),
+      description: draft.description.trim(),
+      medicament: draft.medicament.trim(),
+      observations: draft.observations.trim(),
+      complications: draft.complications.trim(),
+      animalId: pid,
+      consultationId: null,
+      companyId: cid,
+    })
+    emit('created', created)
+    emit('close')
+  } catch (e) {
+    saveError.value =
+      e instanceof Error ? e.message : 'No se pudo guardar la cirugía'
+  } finally {
+    saving.value = false
+  }
+}
+</script>
+
+<template>
+  <ModalShell
+    :open="open"
+    :icon="Scissors"
+    title="Nueva cirugía"
+    subtitle="Registra una cirugía independiente de una consulta"
+    :width="820"
+    @close="emit('close')"
+  >
+    <template #body>
+      <div v-if="typesError" class="banner error">{{ typesError }}</div>
+      <div v-if="saveError" class="banner error">{{ saveError }}</div>
+
+      <BaseField label="Paciente" required :error="err('patient')">
+        <PatientCascadePicker v-model="patientId" :invalid="!!err('patient')" />
+      </BaseField>
+
+      <div class="grid">
+        <BaseField label="Fecha" required>
+          <DateInput v-model="draft.date" />
+        </BaseField>
+        <BaseField label="Tipo de cirugía" required :error="err('surgeryTypeId')">
+          <SearchableSelect
+            v-model="draft.surgeryTypeId"
+            :options="typeOptions"
+            :loading="loadingTypes"
+            :invalid="!!err('surgeryTypeId')"
+            placeholder="Selecciona o crea"
+            :on-create="onCreateType"
+            create-label="Crear tipo de cirugía"
+          />
+        </BaseField>
+        <BaseField label="Descripción del procedimiento" required :error="err('description')" class="full">
+          <BaseTextarea
+            v-model="draft.description"
+            :rows="2"
+            :invalid="!!err('description')"
+          />
+        </BaseField>
+        <BaseField label="Medicamentos" class="full">
+          <BaseTextarea v-model="draft.medicament" :rows="2" />
+        </BaseField>
+        <BaseField label="Observaciones" class="full">
+          <BaseTextarea v-model="draft.observations" :rows="2" />
+        </BaseField>
+        <BaseField label="Complicaciones" class="full">
+          <BaseTextarea v-model="draft.complications" :rows="2" />
+        </BaseField>
+      </div>
+    </template>
+
+    <template #footer-actions>
+      <button type="button" class="btn-ghost" :disabled="saving" @click="emit('close')">
+        Cancelar
+      </button>
+      <button type="button" class="btn-primary" :disabled="saving" @click="save">
+        {{ saving ? 'Guardando…' : 'Guardar cirugía' }}
+      </button>
+    </template>
+  </ModalShell>
+</template>
+
+<style scoped>
+.banner.error {
+  background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25);
+  color: oklch(40% 0.18 25); border-radius: 8px; padding: 8px 12px;
+  font-size: 12.5px; margin-bottom: 12px;
+}
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; margin-top: 14px; }
+.grid .full { grid-column: 1 / -1; }
+.btn-ghost, .btn-primary {
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  padding: 8px 14px; border-radius: 9px; cursor: pointer; border: 1px solid transparent;
+}
+.btn-ghost { background: transparent; border-color: var(--warm-200); color: var(--warm-700); }
+.btn-ghost:hover:not(:disabled) { background: var(--warm-100); }
+.btn-primary { background: var(--amatista-700); color: white; }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.05); }
+.btn-primary:disabled, .btn-ghost:disabled { opacity: 0.55; cursor: not-allowed; }
+</style>
