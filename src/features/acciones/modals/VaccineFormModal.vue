@@ -20,10 +20,11 @@ import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/a
 const props = defineProps<{
   open: boolean
   preSelectedAnimal?: AnimalResponse | null
+  initial?: VaccinationResponse | null
 }>()
 const emit = defineEmits<{
   close: []
-  created: [item: VaccinationResponse]
+  saved: [item: VaccinationResponse]
 }>()
 
 const { companyId } = useAuth()
@@ -41,6 +42,8 @@ function plusOneYear(iso: string): string {
   return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`
 }
 
+const isEdit = computed(() => props.initial != null)
+
 const patientId = ref<number | null>(null)
 const draft = reactive({
   date: todayISO(),
@@ -54,13 +57,22 @@ const saving = ref(false)
 const saveError = ref<string | null>(null)
 
 function reset() {
-  patientId.value = props.preSelectedAnimal?.id ?? null
-  const today = todayISO()
-  draft.date = today
-  draft.typeId = ''
-  draft.lot = ''
-  draft.notes = ''
-  draft.nextVaccination = plusOneYear(today)
+  if (props.initial) {
+    patientId.value = props.initial.animal.id
+    draft.date = props.initial.date
+    draft.typeId = String(props.initial.vaccinationType.id)
+    draft.lot = props.initial.lot
+    draft.notes = props.initial.notes
+    draft.nextVaccination = props.initial.nextVaccination ?? ''
+  } else {
+    patientId.value = props.preSelectedAnimal?.id ?? null
+    const today = todayISO()
+    draft.date = today
+    draft.typeId = ''
+    draft.lot = ''
+    draft.notes = ''
+    draft.nextVaccination = plusOneYear(today)
+  }
   submitted.value = false
   saveError.value = null
 }
@@ -106,18 +118,21 @@ async function save() {
   }
   saving.value = true
   saveError.value = null
+  const payload = {
+    date: draft.date,
+    vaccinationTypeId: Number(draft.typeId),
+    lot: draft.lot.trim(),
+    notes: draft.notes.trim(),
+    nextVaccination: draft.nextVaccination || null,
+    animalId: pid,
+    consultationId: props.initial?.consultation?.id ?? null,
+    companyId: cid,
+  }
   try {
-    const created = await vaccinationApi.create({
-      date: draft.date,
-      vaccinationTypeId: Number(draft.typeId),
-      lot: draft.lot.trim(),
-      notes: draft.notes.trim(),
-      nextVaccination: draft.nextVaccination || null,
-      animalId: pid,
-      consultationId: null,
-      companyId: cid,
-    })
-    emit('created', created)
+    const result = props.initial
+      ? await vaccinationApi.update(props.initial.id, payload)
+      : await vaccinationApi.create(payload)
+    emit('saved', result)
     emit('close')
   } catch (e) {
     saveError.value =
@@ -132,8 +147,8 @@ async function save() {
   <ModalShell
     :open="open"
     :icon="Syringe"
-    title="Nueva vacunación"
-    subtitle="Registra una aplicación independiente de una consulta"
+    :title="isEdit ? 'Editar vacunación' : 'Nueva vacunación'"
+    :subtitle="isEdit ? 'Modifica los datos de la aplicación' : 'Registra una aplicación independiente de una consulta'"
     :width="820"
     @close="emit('close')"
   >
@@ -141,10 +156,17 @@ async function save() {
       <div v-if="typesError" class="banner error">{{ typesError }}</div>
       <div v-if="saveError" class="banner error">{{ saveError }}</div>
 
-      <BaseField v-if="!preSelectedAnimal" label="Paciente" required :error="err('patient')">
+      <BaseField v-if="!preSelectedAnimal && !isEdit" label="Paciente" required :error="err('patient')">
         <PatientCascadePicker v-model="patientId" :invalid="!!err('patient')" />
       </BaseField>
-      <div v-else class="patient-fixed">
+      <div v-else-if="isEdit && initial" class="patient-fixed">
+        <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
+        <div class="info">
+          <div class="name">{{ initial.animal.name }}</div>
+          <div class="meta">{{ initial.animal.code }}</div>
+        </div>
+      </div>
+      <div v-else-if="preSelectedAnimal" class="patient-fixed">
         <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
         <div class="info">
           <div class="name">{{ preSelectedAnimal.name }}</div>
@@ -187,7 +209,7 @@ async function save() {
         Cancelar
       </button>
       <button type="button" class="btn-primary" :disabled="saving" @click="save">
-        {{ saving ? 'Guardando…' : 'Guardar vacunación' }}
+        {{ saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Guardar vacunación' }}
       </button>
     </template>
   </ModalShell>

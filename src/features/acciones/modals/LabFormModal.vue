@@ -20,10 +20,11 @@ import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/a
 const props = defineProps<{
   open: boolean
   preSelectedAnimal?: AnimalResponse | null
+  initial?: LaboratoryTestResponse | null
 }>()
 const emit = defineEmits<{
   close: []
-  created: [item: LaboratoryTestResponse]
+  saved: [item: LaboratoryTestResponse]
 }>()
 
 const { companyId } = useAuth()
@@ -44,6 +45,8 @@ function emptyRow(): TestRow {
   return { testTypeId: '', quantity: '1', diagnosis: '' }
 }
 
+const isEdit = computed(() => props.initial != null)
+
 const patientId = ref<number | null>(null)
 const draft = reactive({
   date: todayISO(),
@@ -54,9 +57,21 @@ const saving = ref(false)
 const saveError = ref<string | null>(null)
 
 function reset() {
-  patientId.value = props.preSelectedAnimal?.id ?? null
-  draft.date = todayISO()
-  draft.rows = [emptyRow()]
+  if (props.initial) {
+    patientId.value = props.initial.animal.id
+    draft.date = props.initial.date
+    draft.rows = [
+      {
+        testTypeId: String(props.initial.testType.id),
+        quantity: String(props.initial.quantity),
+        diagnosis: props.initial.diagnosis,
+      },
+    ]
+  } else {
+    patientId.value = props.preSelectedAnimal?.id ?? null
+    draft.date = todayISO()
+    draft.rows = [emptyRow()]
+  }
   submitted.value = false
   saveError.value = null
 }
@@ -121,18 +136,31 @@ async function save() {
   saving.value = true
   saveError.value = null
   try {
-    let lastCreated: LaboratoryTestResponse | null = null
-    for (const r of draft.rows) {
-      lastCreated = await laboratoryTestApi.create({
+    if (props.initial) {
+      const r = draft.rows[0]!
+      const updated = await laboratoryTestApi.update(props.initial.id, {
         date: draft.date,
         testTypeId: Number(r.testTypeId),
         quantity: Number(r.quantity),
         diagnosis: r.diagnosis.trim(),
         animalId: pid,
-        consultationId: null,
+        consultationId: props.initial.consultation?.id ?? null,
         companyId: cid,
       })
-      if (lastCreated) emit('created', lastCreated)
+      emit('saved', updated)
+    } else {
+      for (const r of draft.rows) {
+        const created = await laboratoryTestApi.create({
+          date: draft.date,
+          testTypeId: Number(r.testTypeId),
+          quantity: Number(r.quantity),
+          diagnosis: r.diagnosis.trim(),
+          animalId: pid,
+          consultationId: null,
+          companyId: cid,
+        })
+        emit('saved', created)
+      }
     }
     emit('close')
   } catch (e) {
@@ -148,8 +176,8 @@ async function save() {
   <ModalShell
     :open="open"
     :icon="Beaker"
-    title="Nueva solicitud de laboratorio"
-    subtitle="Crea una solicitud independiente de una consulta"
+    :title="isEdit ? 'Editar examen de laboratorio' : 'Nueva solicitud de laboratorio'"
+    :subtitle="isEdit ? 'Modifica los datos del examen' : 'Crea una solicitud independiente de una consulta'"
     :width="900"
     @close="emit('close')"
   >
@@ -157,13 +185,20 @@ async function save() {
       <div v-if="typesError" class="banner error">{{ typesError }}</div>
       <div v-if="saveError" class="banner error">{{ saveError }}</div>
 
-      <BaseField v-if="!preSelectedAnimal" label="Paciente" required :error="err('patient')">
+      <BaseField v-if="!preSelectedAnimal && !isEdit" label="Paciente" required :error="err('patient')">
         <PatientCascadePicker
           v-model="patientId"
           :invalid="!!err('patient')"
         />
       </BaseField>
-      <div v-else class="patient-fixed">
+      <div v-else-if="isEdit && initial" class="patient-fixed">
+        <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
+        <div class="info">
+          <div class="name">{{ initial.animal.name }}</div>
+          <div class="meta">{{ initial.animal.code }}</div>
+        </div>
+      </div>
+      <div v-else-if="preSelectedAnimal" class="patient-fixed">
         <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
         <div class="info">
           <div class="name">{{ preSelectedAnimal.name }}</div>
@@ -183,7 +218,7 @@ async function save() {
           <div class="row-head">
             <span class="row-num">Examen #{{ i + 1 }}</span>
             <button
-              v-if="draft.rows.length > 1"
+              v-if="!isEdit && draft.rows.length > 1"
               type="button"
               class="remove"
               aria-label="Quitar"
@@ -224,7 +259,7 @@ async function save() {
         </div>
       </div>
 
-      <button type="button" class="add-row" @click="addRow">
+      <button v-if="!isEdit" type="button" class="add-row" @click="addRow">
         <Plus :size="14" :stroke-width="1.8" /> Agregar otro examen
       </button>
     </template>
@@ -234,7 +269,7 @@ async function save() {
         Cancelar
       </button>
       <button type="button" class="btn-primary" :disabled="saving" @click="save">
-        {{ saving ? 'Guardando…' : 'Guardar solicitud' }}
+        {{ saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Guardar solicitud' }}
       </button>
     </template>
   </ModalShell>

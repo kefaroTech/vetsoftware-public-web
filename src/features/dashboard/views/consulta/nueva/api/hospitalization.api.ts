@@ -68,4 +68,19 @@ export const hospitalizationApi = {
     )
     return data
   },
+
+  async update(
+    id: number,
+    payload: CreateHospitalizationPayload,
+  ): Promise<HospitalizationResponse> {
+    const { data } = await http.put<HospitalizationResponse>(
+      `/hospitalizations/${id}`,
+      payload,
+    )
+    return data
+  },
+
+  async remove(id: number): Promise<void> {
+    await http.delete(`/hospitalizations/${id}`)
+  },
 }

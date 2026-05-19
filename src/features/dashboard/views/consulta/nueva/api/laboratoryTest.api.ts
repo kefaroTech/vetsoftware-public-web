@@ -64,4 +64,19 @@ export const laboratoryTestApi = {
     )
     return data
   },
+
+  async update(
+    id: number,
+    payload: CreateLaboratoryTestPayload,
+  ): Promise<LaboratoryTestResponse> {
+    const { data } = await http.put<LaboratoryTestResponse>(
+      `/laboratory-tests/${id}`,
+      payload,
+    )
+    return data
+  },
+
+  async remove(id: number): Promise<void> {
+    await http.delete(`/laboratory-tests/${id}`)
+  },
 }

@@ -1,54 +1,51 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { BedDouble, PawPrint } from 'lucide-vue-next'
+import { Bug, PawPrint } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
+import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
 import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
-import SegmentedRadio from '@/features/dashboard/components/ui/SegmentedRadio.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import {
-  hospitalizationApi,
-  type HospitalizationResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
+  dewormingApi,
+  type DewormingResponse,
+} from '@/features/dashboard/views/consulta/nueva/api/deworming.api'
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
-import type { HospitalizationType, ReasonLeaving } from '@/types/domain'
+import type { DewormingType } from '@/types/domain'
 
 const props = defineProps<{
   open: boolean
   preSelectedAnimal?: AnimalResponse | null
+  initial?: DewormingResponse | null
 }>()
 const emit = defineEmits<{
   close: []
-  created: [item: HospitalizationResponse]
+  saved: [item: DewormingResponse]
 }>()
 
 const { companyId } = useAuth()
 
 const typeOptions = [
-  { value: 'HOSPITALIZATION', label: 'Hospitalización' },
-  { value: 'OUTPATIENT', label: 'Ambulatoria' },
+  { value: 'INTERNAL', label: 'Interna' },
+  { value: 'EXTERNAL', label: 'Externa' },
+  { value: 'MIX', label: 'Mixta' },
+  { value: 'OTHER', label: 'Otra' },
 ]
-const reasonLeavingOptions = [
-  { value: 'MEDICAL_DISCHARGE', label: 'Alta médica' },
-  { value: 'HOME_TREATMENT', label: 'Tratamiento en casa' },
-  { value: 'TRANSFER', label: 'Traslado' },
-  { value: 'TUTOR_WISH', label: 'Deseo del tutor' },
-  { value: 'DEATH', label: 'Fallecimiento' },
-  { value: 'EUTHANASIA', label: 'Eutanasia' },
-]
+
+const isEdit = computed(() => props.initial != null)
 
 const patientId = ref<number | null>(null)
 const draft = reactive({
   date: todayISO(),
-  startDate: todayISO(),
-  endDate: '',
-  type: 'HOSPITALIZATION' as HospitalizationType,
-  reasonLeaving: '' as ReasonLeaving | '',
-  reason: '',
+  lastDeworming: '',
+  type: 'INTERNAL' as DewormingType,
+  product: '',
+  dosage: '',
+  nextControl: '',
   observations: '',
 })
 const submitted = ref(false)
@@ -56,15 +53,25 @@ const saving = ref(false)
 const saveError = ref<string | null>(null)
 
 function reset() {
-  patientId.value = props.preSelectedAnimal?.id ?? null
-  const today = todayISO()
-  draft.date = today
-  draft.startDate = today
-  draft.endDate = ''
-  draft.type = 'HOSPITALIZATION'
-  draft.reasonLeaving = ''
-  draft.reason = ''
-  draft.observations = ''
+  if (props.initial) {
+    patientId.value = props.initial.animal.id
+    draft.date = props.initial.date
+    draft.lastDeworming = props.initial.lastDeworming ?? ''
+    draft.type = props.initial.type
+    draft.product = props.initial.product
+    draft.dosage = props.initial.dosage
+    draft.nextControl = props.initial.nextControl ?? ''
+    draft.observations = props.initial.observations
+  } else {
+    patientId.value = props.preSelectedAnimal?.id ?? null
+    draft.date = todayISO()
+    draft.lastDeworming = ''
+    draft.type = 'INTERNAL'
+    draft.product = ''
+    draft.dosage = ''
+    draft.nextControl = ''
+    draft.observations = ''
+  }
   submitted.value = false
   saveError.value = null
 }
@@ -73,10 +80,13 @@ watch(() => props.open, (open) => { if (open) reset() })
 
 const errors = computed(() => ({
   patient: patientId.value == null ? 'Selecciona un paciente' : null,
-  reason: !draft.reason.trim() ? 'Indica la razón de ingreso' : null,
+  product: !draft.product.trim() ? 'Indica el producto' : null,
+  dosage: !draft.dosage.trim() ? 'Indica la dosis' : null,
 }))
 
-const valid = computed(() => !errors.value.patient && !errors.value.reason)
+const valid = computed(
+  () => !errors.value.patient && !errors.value.product && !errors.value.dosage,
+)
 
 function err(field: keyof typeof errors.value): string | undefined {
   return submitted.value ? errors.value[field] ?? undefined : undefined
@@ -93,24 +103,27 @@ async function save() {
   }
   saving.value = true
   saveError.value = null
+  const payload = {
+    date: draft.date,
+    lastDeworming: draft.lastDeworming || null,
+    type: draft.type,
+    product: draft.product.trim(),
+    dosage: draft.dosage.trim(),
+    nextControl: draft.nextControl || null,
+    observations: draft.observations.trim(),
+    animalId: pid,
+    consultationId: props.initial?.consultation?.id ?? null,
+    companyId: cid,
+  }
   try {
-    const created = await hospitalizationApi.create({
-      date: draft.date,
-      startDate: draft.startDate,
-      endDate: draft.endDate || null,
-      type: draft.type,
-      reasonLeaving: (draft.reasonLeaving || null) as ReasonLeaving | null,
-      reason: draft.reason.trim(),
-      observations: draft.observations.trim(),
-      animalId: pid,
-      consultationId: null,
-      companyId: cid,
-    })
-    emit('created', created)
+    const result = props.initial
+      ? await dewormingApi.update(props.initial.id, payload)
+      : await dewormingApi.create(payload)
+    emit('saved', result)
     emit('close')
   } catch (e) {
     saveError.value =
-      e instanceof Error ? e.message : 'No se pudo guardar la hospitalización'
+      e instanceof Error ? e.message : 'No se pudo guardar la desparasitación'
   } finally {
     saving.value = false
   }
@@ -120,19 +133,26 @@ async function save() {
 <template>
   <ModalShell
     :open="open"
-    :icon="BedDouble"
-    title="Nueva hospitalización"
-    subtitle="Registra un ingreso independiente de una consulta"
+    :icon="Bug"
+    :title="isEdit ? 'Editar desparasitación' : 'Nueva desparasitación'"
+    :subtitle="isEdit ? 'Modifica los datos del registro' : 'Registra una desparasitación independiente de una consulta'"
     :width="820"
     @close="emit('close')"
   >
     <template #body>
       <div v-if="saveError" class="banner error">{{ saveError }}</div>
 
-      <BaseField v-if="!preSelectedAnimal" label="Paciente" required :error="err('patient')">
+      <BaseField v-if="!preSelectedAnimal && !isEdit" label="Paciente" required :error="err('patient')">
         <PatientCascadePicker v-model="patientId" :invalid="!!err('patient')" />
       </BaseField>
-      <div v-else class="patient-fixed">
+      <div v-else-if="isEdit && initial" class="patient-fixed">
+        <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
+        <div class="info">
+          <div class="name">{{ initial.animal.name }}</div>
+          <div class="meta">{{ initial.animal.code }}</div>
+        </div>
+      </div>
+      <div v-else-if="preSelectedAnimal" class="patient-fixed">
         <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
         <div class="info">
           <div class="name">{{ preSelectedAnimal.name }}</div>
@@ -144,31 +164,27 @@ async function save() {
       </div>
 
       <div class="grid">
-        <BaseField label="Tipo" required class="full">
-          <SegmentedRadio v-model="draft.type" :options="typeOptions" />
-        </BaseField>
-        <BaseField label="Fecha de registro" required>
+        <BaseField label="Fecha" required>
           <DateInput v-model="draft.date" />
         </BaseField>
-        <BaseField label="Inicio" required>
-          <DateInput v-model="draft.startDate" />
+        <BaseField label="Tipo" required>
+          <BaseSelect v-model="draft.type" :options="typeOptions" />
         </BaseField>
-        <BaseField label="Fin">
-          <DateInput v-model="draft.endDate" />
+        <BaseField label="Producto" required :error="err('product')">
+          <BaseInput v-model="draft.product" :invalid="!!err('product')" />
         </BaseField>
-        <BaseField label="Motivo de alta">
-          <BaseSelect
-            v-model="draft.reasonLeaving"
-            :options="reasonLeavingOptions"
-            placeholder="Sin alta aún"
+        <BaseField label="Dosis" required :error="err('dosage')">
+          <BaseInput
+            v-model="draft.dosage"
+            :invalid="!!err('dosage')"
+            placeholder="Ej. 1 ml/10 kg"
           />
         </BaseField>
-        <BaseField label="Razón de ingreso" required :error="err('reason')" class="full">
-          <BaseTextarea
-            v-model="draft.reason"
-            :rows="2"
-            :invalid="!!err('reason')"
-          />
+        <BaseField label="Última desparasitación">
+          <DateInput v-model="draft.lastDeworming" />
+        </BaseField>
+        <BaseField label="Próximo control">
+          <DateInput v-model="draft.nextControl" />
         </BaseField>
         <BaseField label="Observaciones" class="full">
           <BaseTextarea v-model="draft.observations" :rows="2" />
@@ -181,7 +197,7 @@ async function save() {
         Cancelar
       </button>
       <button type="button" class="btn-primary" :disabled="saving" @click="save">
-        {{ saving ? 'Guardando…' : 'Guardar hospitalización' }}
+        {{ saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Guardar desparasitación' }}
       </button>
     </template>
   </ModalShell>
@@ -221,10 +237,7 @@ async function save() {
   color: var(--warm-500);
   margin-top: 2px;
 }
-.grid {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 16px; margin-top: 14px;
-}
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; margin-top: 14px; }
 .grid .full { grid-column: 1 / -1; }
 .btn-ghost, .btn-primary {
   font-family: inherit; font-size: 13px; font-weight: 500;

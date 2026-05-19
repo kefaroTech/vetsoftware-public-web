@@ -72,4 +72,19 @@ export const diagnosticImagingApi = {
     )
     return data
   },
+
+  async update(
+    id: number,
+    payload: CreateDiagnosticImagingPayload,
+  ): Promise<DiagnosticImagingResponse> {
+    const { data } = await http.put<DiagnosticImagingResponse>(
+      `/diagnostic-imagings/${id}`,
+      payload,
+    )
+    return data
+  },
+
+  async remove(id: number): Promise<void> {
+    await http.delete(`/diagnostic-imagings/${id}`)
+  },
 }

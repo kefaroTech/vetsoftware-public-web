@@ -65,4 +65,16 @@ export const surgeryApi = {
     )
     return data
   },
+
+  async update(
+    id: number,
+    payload: CreateSurgeryPayload,
+  ): Promise<SurgeryResponse> {
+    const { data } = await http.put<SurgeryResponse>(`/surgeries/${id}`, payload)
+    return data
+  },
+
+  async remove(id: number): Promise<void> {
+    await http.delete(`/surgeries/${id}`)
+  },
 }

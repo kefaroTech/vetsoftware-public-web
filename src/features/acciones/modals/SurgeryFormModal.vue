@@ -1,63 +1,72 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { Bug, PawPrint } from 'lucide-vue-next'
+import { PawPrint, Scissors } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
 import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
+import SearchableSelect from '@/features/dashboard/components/ui/SearchableSelect.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
+import { useSurgeryTypes } from '@/features/dashboard/views/consulta/nueva/composables/useSurgeryTypes'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import {
-  dewormingApi,
-  type DewormingResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/deworming.api'
+  surgeryApi,
+  type SurgeryResponse,
+} from '@/features/dashboard/views/consulta/nueva/api/surgery.api'
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
-import type { DewormingType } from '@/types/domain'
 
 const props = defineProps<{
   open: boolean
   preSelectedAnimal?: AnimalResponse | null
+  initial?: SurgeryResponse | null
 }>()
 const emit = defineEmits<{
   close: []
-  created: [item: DewormingResponse]
+  saved: [item: SurgeryResponse]
 }>()
 
 const { companyId } = useAuth()
+const {
+  options: typeOptions,
+  loading: loadingTypes,
+  error: typesError,
+  create: createType,
+} = useSurgeryTypes()
 
-const typeOptions = [
-  { value: 'INTERNAL', label: 'Interna' },
-  { value: 'EXTERNAL', label: 'Externa' },
-  { value: 'MIX', label: 'Mixta' },
-  { value: 'OTHER', label: 'Otra' },
-]
+const isEdit = computed(() => props.initial != null)
 
 const patientId = ref<number | null>(null)
 const draft = reactive({
   date: todayISO(),
-  lastDeworming: '',
-  type: 'INTERNAL' as DewormingType,
-  product: '',
-  dosage: '',
-  nextControl: '',
+  surgeryTypeId: '',
+  description: '',
+  medicament: '',
   observations: '',
+  complications: '',
 })
 const submitted = ref(false)
 const saving = ref(false)
 const saveError = ref<string | null>(null)
 
 function reset() {
-  patientId.value = props.preSelectedAnimal?.id ?? null
-  draft.date = todayISO()
-  draft.lastDeworming = ''
-  draft.type = 'INTERNAL'
-  draft.product = ''
-  draft.dosage = ''
-  draft.nextControl = ''
-  draft.observations = ''
+  if (props.initial) {
+    patientId.value = props.initial.animal.id
+    draft.date = props.initial.date
+    draft.surgeryTypeId = String(props.initial.surgeryType.id)
+    draft.description = props.initial.description
+    draft.medicament = props.initial.medicament
+    draft.observations = props.initial.observations
+    draft.complications = props.initial.complications
+  } else {
+    patientId.value = props.preSelectedAnimal?.id ?? null
+    draft.date = todayISO()
+    draft.surgeryTypeId = ''
+    draft.description = ''
+    draft.medicament = ''
+    draft.observations = ''
+    draft.complications = ''
+  }
   submitted.value = false
   saveError.value = null
 }
@@ -66,16 +75,26 @@ watch(() => props.open, (open) => { if (open) reset() })
 
 const errors = computed(() => ({
   patient: patientId.value == null ? 'Selecciona un paciente' : null,
-  product: !draft.product.trim() ? 'Indica el producto' : null,
-  dosage: !draft.dosage.trim() ? 'Indica la dosis' : null,
+  surgeryTypeId: !draft.surgeryTypeId ? 'Selecciona el tipo de cirugía' : null,
+  description: !draft.description.trim() ? 'Describe el procedimiento' : null,
 }))
 
 const valid = computed(
-  () => !errors.value.patient && !errors.value.product && !errors.value.dosage,
+  () =>
+    !errors.value.patient && !errors.value.surgeryTypeId && !errors.value.description,
 )
 
 function err(field: keyof typeof errors.value): string | undefined {
   return submitted.value ? errors.value[field] ?? undefined : undefined
+}
+
+async function onCreateType(data: { name: string; description: string }) {
+  const created = await createType(data)
+  return {
+    value: String(created.id),
+    label: created.name,
+    hint: created.description ?? undefined,
+  }
 }
 
 async function save() {
@@ -89,24 +108,26 @@ async function save() {
   }
   saving.value = true
   saveError.value = null
+  const payload = {
+    date: draft.date,
+    surgeryTypeId: Number(draft.surgeryTypeId),
+    description: draft.description.trim(),
+    medicament: draft.medicament.trim(),
+    observations: draft.observations.trim(),
+    complications: draft.complications.trim(),
+    animalId: pid,
+    consultationId: props.initial?.consultation?.id ?? null,
+    companyId: cid,
+  }
   try {
-    const created = await dewormingApi.create({
-      date: draft.date,
-      lastDeworming: draft.lastDeworming || null,
-      type: draft.type,
-      product: draft.product.trim(),
-      dosage: draft.dosage.trim(),
-      nextControl: draft.nextControl || null,
-      observations: draft.observations.trim(),
-      animalId: pid,
-      consultationId: null,
-      companyId: cid,
-    })
-    emit('created', created)
+    const result = props.initial
+      ? await surgeryApi.update(props.initial.id, payload)
+      : await surgeryApi.create(payload)
+    emit('saved', result)
     emit('close')
   } catch (e) {
     saveError.value =
-      e instanceof Error ? e.message : 'No se pudo guardar la desparasitación'
+      e instanceof Error ? e.message : 'No se pudo guardar la cirugía'
   } finally {
     saving.value = false
   }
@@ -116,19 +137,27 @@ async function save() {
 <template>
   <ModalShell
     :open="open"
-    :icon="Bug"
-    title="Nueva desparasitación"
-    subtitle="Registra una desparasitación independiente de una consulta"
+    :icon="Scissors"
+    :title="isEdit ? 'Editar cirugía' : 'Nueva cirugía'"
+    :subtitle="isEdit ? 'Modifica los datos del procedimiento' : 'Registra una cirugía independiente de una consulta'"
     :width="820"
     @close="emit('close')"
   >
     <template #body>
+      <div v-if="typesError" class="banner error">{{ typesError }}</div>
       <div v-if="saveError" class="banner error">{{ saveError }}</div>
 
-      <BaseField v-if="!preSelectedAnimal" label="Paciente" required :error="err('patient')">
+      <BaseField v-if="!preSelectedAnimal && !isEdit" label="Paciente" required :error="err('patient')">
         <PatientCascadePicker v-model="patientId" :invalid="!!err('patient')" />
       </BaseField>
-      <div v-else class="patient-fixed">
+      <div v-else-if="isEdit && initial" class="patient-fixed">
+        <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
+        <div class="info">
+          <div class="name">{{ initial.animal.name }}</div>
+          <div class="meta">{{ initial.animal.code }}</div>
+        </div>
+      </div>
+      <div v-else-if="preSelectedAnimal" class="patient-fixed">
         <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
         <div class="info">
           <div class="name">{{ preSelectedAnimal.name }}</div>
@@ -143,27 +172,32 @@ async function save() {
         <BaseField label="Fecha" required>
           <DateInput v-model="draft.date" />
         </BaseField>
-        <BaseField label="Tipo" required>
-          <BaseSelect v-model="draft.type" :options="typeOptions" />
-        </BaseField>
-        <BaseField label="Producto" required :error="err('product')">
-          <BaseInput v-model="draft.product" :invalid="!!err('product')" />
-        </BaseField>
-        <BaseField label="Dosis" required :error="err('dosage')">
-          <BaseInput
-            v-model="draft.dosage"
-            :invalid="!!err('dosage')"
-            placeholder="Ej. 1 ml/10 kg"
+        <BaseField label="Tipo de cirugía" required :error="err('surgeryTypeId')">
+          <SearchableSelect
+            v-model="draft.surgeryTypeId"
+            :options="typeOptions"
+            :loading="loadingTypes"
+            :invalid="!!err('surgeryTypeId')"
+            placeholder="Selecciona o crea"
+            :on-create="onCreateType"
+            create-label="Crear tipo de cirugía"
           />
         </BaseField>
-        <BaseField label="Última desparasitación">
-          <DateInput v-model="draft.lastDeworming" />
+        <BaseField label="Descripción del procedimiento" required :error="err('description')" class="full">
+          <BaseTextarea
+            v-model="draft.description"
+            :rows="2"
+            :invalid="!!err('description')"
+          />
         </BaseField>
-        <BaseField label="Próximo control">
-          <DateInput v-model="draft.nextControl" />
+        <BaseField label="Medicamentos" class="full">
+          <BaseTextarea v-model="draft.medicament" :rows="2" />
         </BaseField>
         <BaseField label="Observaciones" class="full">
           <BaseTextarea v-model="draft.observations" :rows="2" />
+        </BaseField>
+        <BaseField label="Complicaciones" class="full">
+          <BaseTextarea v-model="draft.complications" :rows="2" />
         </BaseField>
       </div>
     </template>
@@ -173,7 +207,7 @@ async function save() {
         Cancelar
       </button>
       <button type="button" class="btn-primary" :disabled="saving" @click="save">
-        {{ saving ? 'Guardando…' : 'Guardar desparasitación' }}
+        {{ saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Guardar cirugía' }}
       </button>
     </template>
   </ModalShell>

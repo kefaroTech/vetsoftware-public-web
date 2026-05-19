@@ -63,4 +63,19 @@ export const vaccinationApi = {
     )
     return data
   },
+
+  async update(
+    id: number,
+    payload: CreateVaccinationPayload,
+  ): Promise<VaccinationResponse> {
+    const { data } = await http.put<VaccinationResponse>(
+      `/vaccinations/${id}`,
+      payload,
+    )
+    return data
+  },
+
+  async remove(id: number): Promise<void> {
+    await http.delete(`/vaccinations/${id}`)
+  },
 }

@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Plus } from 'lucide-vue-next'
+import { Pencil, Plus, Trash2 } from 'lucide-vue-next'
 import ListBody from '../components/ListBody.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import OwnerAnimalBreadcrumb from '../components/OwnerAnimalBreadcrumb.vue'
-import VaccineCreateModal from '../modals/VaccineCreateModal.vue'
+import VaccineFormModal from '../modals/VaccineFormModal.vue'
+import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import {
@@ -17,6 +18,8 @@ import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/compo
 
 const { can } = useAuthorization()
 const canCreate = can(PERMISSIONS.VACCINATION_CREATE)
+const canUpdate = can(PERMISSIONS.VACCINATION_UPDATE)
+const canDelete = can(PERMISSIONS.VACCINATION_DELETE)
 
 const selection = ref<{ owner: Owner; animal: AnimalResponse } | null>(null)
 const patientId = ref<number | null>(null)
@@ -24,6 +27,9 @@ const items = ref<VaccinationResponse[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const modalOpen = ref(false)
+const editing = ref<VaccinationResponse | null>(null)
+const deleting = ref<VaccinationResponse | null>(null)
+const deletingBusy = ref(false)
 
 async function onSelect(info: { owner: Owner; animal: AnimalResponse } | null) {
   if (!info) return
@@ -48,8 +54,31 @@ function onReset() {
   error.value = null
 }
 
-function onCreated(item: VaccinationResponse) {
-  items.value = [item, ...items.value]
+function onSaved(item: VaccinationResponse) {
+  const idx = items.value.findIndex((i) => i.id === item.id)
+  if (idx >= 0) items.value.splice(idx, 1, item)
+  else items.value = [item, ...items.value]
+}
+
+function onFormClose() {
+  modalOpen.value = false
+  editing.value = null
+}
+
+async function onConfirmDelete() {
+  const target = deleting.value
+  if (!target) return
+  deletingBusy.value = true
+  error.value = null
+  try {
+    await vaccinationApi.remove(target.id)
+    items.value = items.value.filter((i) => i.id !== target.id)
+    deleting.value = null
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'No se pudo eliminar'
+  } finally {
+    deletingBusy.value = false
+  }
 }
 
 function searchFn(item: VaccinationResponse, q: string) {
@@ -105,6 +134,7 @@ function searchFn(item: VaccinationResponse, q: string) {
             <th>Vacuna</th>
             <th>Lote</th>
             <th>Próxima</th>
+            <th v-if="canUpdate || canDelete" class="actions-col">Acciones</th>
           </tr>
         </template>
         <template #row="{ item }">
@@ -113,16 +143,46 @@ function searchFn(item: VaccinationResponse, q: string) {
             <td>{{ item.vaccinationType.name }}</td>
             <td class="mono">{{ item.lot }}</td>
             <td>{{ item.nextVaccination ? formatDateShort(item.nextVaccination) : '—' }}</td>
+            <td v-if="canUpdate || canDelete" class="actions">
+              <button
+                v-if="canUpdate"
+                type="button"
+                class="icon-btn"
+                title="Editar"
+                @click="editing = item"
+              >
+                <Pencil :size="15" :stroke-width="1.7" />
+              </button>
+              <button
+                v-if="canDelete"
+                type="button"
+                class="icon-btn danger"
+                title="Eliminar"
+                @click="deleting = item"
+              >
+                <Trash2 :size="15" :stroke-width="1.7" />
+              </button>
+            </td>
           </tr>
         </template>
       </ListBody>
     </template>
 
-    <VaccineCreateModal
-      :open="modalOpen"
+    <VaccineFormModal
+      :open="modalOpen || editing !== null"
       :pre-selected-animal="selection?.animal ?? null"
-      @close="modalOpen = false"
-      @created="onCreated"
+      :initial="editing"
+      @close="onFormClose"
+      @saved="onSaved"
+    />
+
+    <ConfirmDeleteDialog
+      :open="deleting !== null"
+      title="Eliminar vacunación"
+      :message="deleting ? `Se eliminará la aplicación de ${deleting.vaccinationType.name}. Esta acción no se puede deshacer.` : ''"
+      :busy="deletingBusy"
+      @cancel="deleting = null"
+      @confirm="onConfirmDelete"
     />
   </div>
 </template>
@@ -143,4 +203,13 @@ function searchFn(item: VaccinationResponse, q: string) {
 }
 .banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
 .mono { font-family: var(--font-mono, monospace); font-size: 12.5px; }
+.actions-col { width: 88px; text-align: right; }
+.actions { display: flex; gap: 6px; justify-content: flex-end; }
+.icon-btn {
+  display: grid; place-items: center; width: 28px; height: 28px;
+  border-radius: 7px; border: 1px solid var(--warm-200);
+  background: transparent; color: var(--warm-700); cursor: pointer;
+}
+.icon-btn:hover { background: var(--warm-100); }
+.icon-btn.danger:hover { background: oklch(95% 0.06 25); color: oklch(40% 0.18 25); border-color: oklch(85% 0.12 25); }
 </style>

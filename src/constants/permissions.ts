@@ -29,11 +29,23 @@ export const PERMISSIONS = {
   MEDICAMENT_PRESCRIPTION_CREATE: 'medicamentPrescription.create',
 
   VACCINATION_CREATE: 'vaccination.create',
+  VACCINATION_UPDATE: 'vaccination.update',
+  VACCINATION_DELETE: 'vaccination.delete',
   HOSPITALIZATION_CREATE: 'hospitalization.create',
+  HOSPITALIZATION_UPDATE: 'hospitalization.update',
+  HOSPITALIZATION_DELETE: 'hospitalization.delete',
   DEWORMING_CREATE: 'deworming.create',
+  DEWORMING_UPDATE: 'deworming.update',
+  DEWORMING_DELETE: 'deworming.delete',
   DIAGNOSTIC_IMAGING_CREATE: 'diagnosticimaging.create',
+  DIAGNOSTIC_IMAGING_UPDATE: 'diagnosticimaging.update',
+  DIAGNOSTIC_IMAGING_DELETE: 'diagnosticimaging.delete',
   LABORATORY_TEST_CREATE: 'laboratoryTest.create',
+  LABORATORY_TEST_UPDATE: 'laboratoryTest.update',
+  LABORATORY_TEST_DELETE: 'laboratoryTest.delete',
   SURGERY_CREATE: 'surgery.create',
+  SURGERY_UPDATE: 'surgery.update',
+  SURGERY_DELETE: 'surgery.delete',
 } as const
 
 export type PermissionCode = typeof PERMISSIONS[keyof typeof PERMISSIONS]

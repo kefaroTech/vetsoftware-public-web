@@ -63,4 +63,16 @@ export const dewormingApi = {
     )
     return data
   },
+
+  async update(
+    id: number,
+    payload: CreateDewormingPayload,
+  ): Promise<DewormingResponse> {
+    const { data } = await http.put<DewormingResponse>(`/dewormings/${id}`, payload)
+    return data
+  },
+
+  async remove(id: number): Promise<void> {
+    await http.delete(`/dewormings/${id}`)
+  },
 }

@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Plus } from 'lucide-vue-next'
+import { Pencil, Plus, Trash2 } from 'lucide-vue-next'
 import ListBody from '../components/ListBody.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import OwnerAnimalBreadcrumb from '../components/OwnerAnimalBreadcrumb.vue'
-import ImagingCreateModal from '../modals/ImagingCreateModal.vue'
+import ImagingFormModal from '../modals/ImagingFormModal.vue'
+import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import {
@@ -17,6 +18,8 @@ import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/compo
 
 const { can } = useAuthorization()
 const canCreate = can(PERMISSIONS.DIAGNOSTIC_IMAGING_CREATE)
+const canUpdate = can(PERMISSIONS.DIAGNOSTIC_IMAGING_UPDATE)
+const canDelete = can(PERMISSIONS.DIAGNOSTIC_IMAGING_DELETE)
 
 const selection = ref<{ owner: Owner; animal: AnimalResponse } | null>(null)
 const patientId = ref<number | null>(null)
@@ -24,6 +27,9 @@ const items = ref<DiagnosticImagingResponse[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const modalOpen = ref(false)
+const editing = ref<DiagnosticImagingResponse | null>(null)
+const deleting = ref<DiagnosticImagingResponse | null>(null)
+const deletingBusy = ref(false)
 
 async function onSelect(info: { owner: Owner; animal: AnimalResponse } | null) {
   if (!info) return
@@ -47,8 +53,31 @@ function onReset() {
   error.value = null
 }
 
-function onCreated(item: DiagnosticImagingResponse) {
-  items.value = [item, ...items.value]
+function onSaved(item: DiagnosticImagingResponse) {
+  const idx = items.value.findIndex((i) => i.id === item.id)
+  if (idx >= 0) items.value.splice(idx, 1, item)
+  else items.value = [item, ...items.value]
+}
+
+function onFormClose() {
+  modalOpen.value = false
+  editing.value = null
+}
+
+async function onConfirmDelete() {
+  const target = deleting.value
+  if (!target) return
+  deletingBusy.value = true
+  error.value = null
+  try {
+    await diagnosticImagingApi.remove(target.id)
+    items.value = items.value.filter((i) => i.id !== target.id)
+    deleting.value = null
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'No se pudo eliminar'
+  } finally {
+    deletingBusy.value = false
+  }
 }
 
 function searchFn(item: DiagnosticImagingResponse, q: string) {
@@ -104,6 +133,7 @@ function searchFn(item: DiagnosticImagingResponse, q: string) {
             <th>Tipo</th>
             <th>Región</th>
             <th>Diagnóstico</th>
+            <th v-if="canUpdate || canDelete" class="actions-col">Acciones</th>
           </tr>
         </template>
         <template #row="{ item }">
@@ -112,16 +142,46 @@ function searchFn(item: DiagnosticImagingResponse, q: string) {
             <td>{{ item.diagnosticImagingType.name }}</td>
             <td>{{ item.studyType || '—' }}</td>
             <td class="ellipsis">{{ item.diagnosis || '—' }}</td>
+            <td v-if="canUpdate || canDelete" class="actions">
+              <button
+                v-if="canUpdate"
+                type="button"
+                class="icon-btn"
+                title="Editar"
+                @click="editing = item"
+              >
+                <Pencil :size="15" :stroke-width="1.7" />
+              </button>
+              <button
+                v-if="canDelete"
+                type="button"
+                class="icon-btn danger"
+                title="Eliminar"
+                @click="deleting = item"
+              >
+                <Trash2 :size="15" :stroke-width="1.7" />
+              </button>
+            </td>
           </tr>
         </template>
       </ListBody>
     </template>
 
-    <ImagingCreateModal
-      :open="modalOpen"
+    <ImagingFormModal
+      :open="modalOpen || editing !== null"
       :pre-selected-animal="selection?.animal ?? null"
-      @close="modalOpen = false"
-      @created="onCreated"
+      :initial="editing"
+      @close="onFormClose"
+      @saved="onSaved"
+    />
+
+    <ConfirmDeleteDialog
+      :open="deleting !== null"
+      title="Eliminar estudio"
+      :message="deleting ? `Se eliminará el estudio de ${deleting.diagnosticImagingType.name}. Esta acción no se puede deshacer.` : ''"
+      :busy="deletingBusy"
+      @cancel="deleting = null"
+      @confirm="onConfirmDelete"
     />
   </div>
 </template>
@@ -142,4 +202,13 @@ function searchFn(item: DiagnosticImagingResponse, q: string) {
 }
 .banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
 .ellipsis { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.actions-col { width: 88px; text-align: right; }
+.actions { display: flex; gap: 6px; justify-content: flex-end; }
+.icon-btn {
+  display: grid; place-items: center; width: 28px; height: 28px;
+  border-radius: 7px; border: 1px solid var(--warm-200);
+  background: transparent; color: var(--warm-700); cursor: pointer;
+}
+.icon-btn:hover { background: var(--warm-100); }
+.icon-btn.danger:hover { background: oklch(95% 0.06 25); color: oklch(40% 0.18 25); border-color: oklch(85% 0.12 25); }
 </style>
