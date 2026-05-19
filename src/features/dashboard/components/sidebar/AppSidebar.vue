@@ -38,6 +38,8 @@ const { can } = useAuthorization()
 const consultaSubRoutes = [
   'consulta-nueva',
   'consulta-historial',
+  'consulta-historial-pet',
+  'consulta-historial-detail',
   'consulta-vacunacion',
   'consulta-hospital',
 ] as const
@@ -59,8 +61,20 @@ const canSurgery = can(PERMISSIONS.SURGERY_CREATE)
 const canEmployees = can(PERMISSIONS.EMPLOYEE_READ)
 const canRoles = can(PERMISSIONS.ROLE_PERMISSIONS_READ)
 
+const historialActiveRoutes = [
+  'consulta-historial',
+  'consulta-historial-pet',
+  'consulta-historial-detail',
+]
+
 const subItems = computed(() => [
-  { label: 'Historial clínico', icon: History, to: { name: 'consulta-historial' as const }, show: true },
+  {
+    label: 'Historial clínico',
+    icon: History,
+    to: { name: 'consulta-historial' as const },
+    activeRoutes: historialActiveRoutes,
+    show: true,
+  },
 ].filter((item) => item.show))
 
 const accionesSubRoutes = [
@@ -148,7 +162,7 @@ const upcomingItems = [
         :label="item.label"
         :icon="item.icon"
         :to="item.to"
-        :active="route.name === item.to.name"
+        :active="item.activeRoutes.includes(String(route.name))"
       />
     </div>
 

@@ -1,0 +1,210 @@
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue'
+import { ChevronRight, Search } from 'lucide-vue-next'
+import PawLoader from '@/components/ui/PawLoader.vue'
+import { useOwnerSearch } from '@/features/dashboard/views/consulta/nueva/composables/useOwnerSearch'
+import { initialsFromName } from '../composables/format'
+import type { Owner } from '@/types/domain'
+
+const emit = defineEmits<{ (e: 'select', owner: Owner): void }>()
+
+const query = ref('')
+const { results, loading, error, reset } = useOwnerSearch(query)
+
+const hasQuery = computed(() => query.value.trim().length > 0)
+
+watch(query, (q) => {
+  if (!q.trim()) reset()
+})
+</script>
+
+<template>
+  <div class="owner-search">
+    <div class="search-box">
+      <Search :size="16" :stroke-width="1.7" class="search-icon" />
+      <input
+        v-model="query"
+        type="text"
+        autofocus
+        placeholder="Buscar por nombre, documento, email o teléfono…"
+        class="search-input"
+      />
+      <span v-if="loading" class="loader-inline">
+        <PawLoader :size="22" :glow="false" :speed="900" />
+      </span>
+    </div>
+
+    <div v-if="error" class="status error">{{ error }}</div>
+
+    <div v-if="hasQuery" class="results">
+      <div
+        v-if="!loading && results.length === 0 && !error"
+        class="status empty"
+      >
+        Sin coincidencias para "<strong>{{ query }}</strong>"
+      </div>
+
+      <button
+        v-for="(o, i) in results"
+        :key="o.id"
+        type="button"
+        class="result-row"
+        :class="{ striped: i % 2 === 1 }"
+        @click="emit('select', o)"
+      >
+        <div class="avatar">{{ initialsFromName(o.name) }}</div>
+        <div class="info">
+          <div class="name">{{ o.name }}</div>
+          <div class="meta">
+            <span>{{ o.document }}</span>
+            <template v-if="o.phone">
+              <span class="dot">·</span>
+              <span>{{ o.phone }}</span>
+            </template>
+            <template v-if="o.email">
+              <span class="dot">·</span>
+              <span>{{ o.email }}</span>
+            </template>
+          </div>
+        </div>
+        <ChevronRight :size="16" :stroke-width="1.6" class="chev" />
+      </button>
+    </div>
+
+    <div v-else class="hint">
+      Empieza a escribir para buscar al propietario.
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.owner-search {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.search-icon {
+  color: var(--warm-500);
+  flex-shrink: 0;
+}
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--warm-900);
+  min-width: 0;
+}
+.search-input::placeholder {
+  color: var(--warm-400);
+}
+.loader-inline {
+  display: inline-flex;
+}
+
+.results {
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.result-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--warm-150);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s ease;
+}
+.result-row:last-child {
+  border-bottom: none;
+}
+.result-row.striped {
+  background: oklch(98% 0.005 60);
+}
+.result-row:hover {
+  background: var(--amatista-50);
+}
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: var(--amatista-100);
+  color: var(--amatista-700);
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.info {
+  flex: 1;
+  min-width: 0;
+}
+.name {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--warm-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.meta {
+  font-size: 12px;
+  color: var(--warm-500);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.meta .dot {
+  color: var(--warm-300);
+}
+.chev {
+  color: var(--warm-400);
+  flex-shrink: 0;
+}
+
+.status {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--warm-500);
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 12px;
+  font-size: 13.5px;
+}
+.status.error {
+  color: oklch(48% 0.18 25);
+  background: oklch(97% 0.02 25);
+  border-color: oklch(85% 0.06 25);
+}
+
+.hint {
+  font-size: 13.5px;
+  color: var(--warm-500);
+  text-align: center;
+  padding: 28px 20px;
+  background: var(--warm-50);
+  border: 1px dashed var(--warm-200);
+  border-radius: 12px;
+}
+</style>

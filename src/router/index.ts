@@ -46,8 +46,31 @@ const router = createRouter({
         },
         {
           path: 'consulta/historial',
-          name: 'consulta-historial',
-          component: () => import('@/features/dashboard/views/consulta/HistorialView.vue'),
+          component: () =>
+            import('@/features/historia-clinica/views/HistoriaClinicaView.vue'),
+          meta: { fullBleed: true, hideTopbar: true },
+          children: [
+            {
+              path: '',
+              name: 'consulta-historial',
+              component: () =>
+                import('@/features/historia-clinica/views/OwnerStep.vue'),
+            },
+            {
+              path: ':ownerId/mascotas',
+              name: 'consulta-historial-pet',
+              component: () =>
+                import('@/features/historia-clinica/views/PetStep.vue'),
+              props: true,
+            },
+            {
+              path: ':ownerId/mascotas/:petId',
+              name: 'consulta-historial-detail',
+              component: () =>
+                import('@/features/historia-clinica/views/HistoryStep.vue'),
+              props: true,
+            },
+          ],
         },
         {
           path: 'consulta/vacunacion',
