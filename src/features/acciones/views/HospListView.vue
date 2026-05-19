@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { Plus } from 'lucide-vue-next'
 import ListBody from '../components/ListBody.vue'
 import StatusPill from '../components/StatusPill.vue'
+import PatientCascadePicker from '../components/PatientCascadePicker.vue'
+import OwnerAnimalBreadcrumb from '../components/OwnerAnimalBreadcrumb.vue'
 import HospCreateModal from '../modals/HospCreateModal.vue'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
@@ -10,37 +12,48 @@ import {
   hospitalizationApi,
   type HospitalizationResponse,
 } from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import type { Owner } from '@/types/domain'
 import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
 
 const { can } = useAuthorization()
 const canCreate = can(PERMISSIONS.HOSPITALIZATION_CREATE)
 
+const selection = ref<{ owner: Owner; animal: AnimalResponse } | null>(null)
+const patientId = ref<number | null>(null)
 const items = ref<HospitalizationResponse[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const modalOpen = ref(false)
 
-onMounted(async () => {
+async function onSelect(info: { owner: Owner; animal: AnimalResponse } | null) {
+  if (!info) return
+  selection.value = info
   loading.value = true
+  error.value = null
+  items.value = []
   try {
-    items.value = await hospitalizationApi.listAll()
+    items.value = await hospitalizationApi.listByAnimal(info.animal.id)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'No se pudieron cargar las hospitalizaciones'
   } finally {
     loading.value = false
   }
-})
+}
+
+function onReset() {
+  selection.value = null
+  patientId.value = null
+  items.value = []
+  error.value = null
+}
 
 function onCreated(item: HospitalizationResponse) {
   items.value = [item, ...items.value]
 }
 
 function searchFn(item: HospitalizationResponse, q: string) {
-  return (
-    item.animal.name.toLowerCase().includes(q) ||
-    item.animal.code.toLowerCase().includes(q) ||
-    item.reason.toLowerCase().includes(q)
-  )
+  return item.reason.toLowerCase().includes(q)
 }
 
 function typeLabel(type: HospitalizationResponse['type']): string {
@@ -60,53 +73,69 @@ function isActive(item: HospitalizationResponse): boolean {
         <h1 class="title">Hospitalizaciones</h1>
         <div class="lead">Ingresos hospitalarios y ambulatorios independientes de una consulta.</div>
       </div>
-      <button v-if="canCreate" type="button" class="cta" @click="modalOpen = true">
+      <button
+        v-if="canCreate && selection"
+        type="button"
+        class="cta"
+        @click="modalOpen = true"
+      >
         <Plus :size="16" :stroke-width="1.8" /> Nueva hospitalización
       </button>
     </div>
 
     <div v-if="error" class="banner error">{{ error }}</div>
 
-    <ListBody
-      :items="items"
-      :loading="loading"
-      :search-fn="searchFn"
-      placeholder="Buscar paciente o razón…"
-      empty-text="Aún no hay hospitalizaciones registradas."
-    >
-      <template #header>
-        <tr>
-          <th>Inicio</th>
-          <th>Paciente</th>
-          <th>Tipo</th>
-          <th>Razón</th>
-          <th>Estado</th>
-        </tr>
-      </template>
-      <template #row="{ item }">
-        <tr>
-          <td>{{ formatDateShort(item.startDate) }}</td>
-          <td>
-            <div class="patient">
-              <span class="name">{{ item.animal.name }}</span>
-              <span class="code">{{ item.animal.code }}</span>
-            </div>
-          </td>
-          <td>{{ typeLabel(item.type) }}</td>
-          <td class="ellipsis">{{ item.reason }}</td>
-          <td>
-            <StatusPill
-              v-if="isActive(item)"
-              label="Activa"
-              tone="warn"
-            />
-            <StatusPill v-else label="Cerrada" tone="success" />
-          </td>
-        </tr>
-      </template>
-    </ListBody>
+    <PatientCascadePicker
+      v-if="!selection"
+      v-model="patientId"
+      @update:selection="onSelect"
+    />
 
-    <HospCreateModal :open="modalOpen" @close="modalOpen = false" @created="onCreated" />
+    <template v-else>
+      <OwnerAnimalBreadcrumb
+        :owner="selection.owner"
+        :animal="selection.animal"
+        @reset="onReset"
+      />
+      <ListBody
+        :items="items"
+        :loading="loading"
+        :search-fn="searchFn"
+        placeholder="Buscar razón…"
+        empty-text="Este paciente aún no tiene hospitalizaciones registradas."
+      >
+        <template #header>
+          <tr>
+            <th>Inicio</th>
+            <th>Tipo</th>
+            <th>Razón</th>
+            <th>Estado</th>
+          </tr>
+        </template>
+        <template #row="{ item }">
+          <tr>
+            <td>{{ formatDateShort(item.startDate) }}</td>
+            <td>{{ typeLabel(item.type) }}</td>
+            <td class="ellipsis">{{ item.reason }}</td>
+            <td>
+              <StatusPill
+                v-if="isActive(item)"
+                label="Activa"
+                tone="warn"
+              />
+              <StatusPill v-else label="Cerrada" tone="success" />
+            </td>
+          </tr>
+        </template>
+      </ListBody>
+    </template>
+
+    <HospCreateModal
+      :open="modalOpen"
+      :pre-selected-animal="selection?.animal ?? null"
+      @close="modalOpen = false"
+      @created="onCreated"
+    />
   </div>
 </template>
 
@@ -125,8 +154,5 @@ function isActive(item: HospitalizationResponse): boolean {
   white-space: nowrap;
 }
 .banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
-.patient { display: flex; flex-direction: column; }
-.patient .name { font-weight: 500; color: var(--warm-900); }
-.patient .code { font-size: 11.5px; color: var(--warm-500); font-family: var(--font-mono, monospace); }
 .ellipsis { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 </style>

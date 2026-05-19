@@ -61,4 +61,11 @@ export const hospitalizationApi = {
     const { data } = await http.get<HospitalizationResponse[]>('/hospitalizations')
     return data
   },
+
+  async listByAnimal(animalId: number): Promise<HospitalizationResponse[]> {
+    const { data } = await http.get<HospitalizationResponse[]>(
+      `/hospitalizations/by-animal/${animalId}`,
+    )
+    return data
+  },
 }

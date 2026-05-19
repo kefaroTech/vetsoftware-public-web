@@ -65,4 +65,11 @@ export const diagnosticImagingApi = {
     )
     return data
   },
+
+  async listByAnimal(animalId: number): Promise<DiagnosticImagingResponse[]> {
+    const { data } = await http.get<DiagnosticImagingResponse[]>(
+      `/diagnostic-imagings/by-animal/${animalId}`,
+    )
+    return data
+  },
 }

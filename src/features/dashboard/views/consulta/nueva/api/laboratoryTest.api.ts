@@ -57,4 +57,11 @@ export const laboratoryTestApi = {
     const { data } = await http.get<LaboratoryTestResponse[]>('/laboratory-tests')
     return data
   },
+
+  async listByAnimal(animalId: number): Promise<LaboratoryTestResponse[]> {
+    const { data } = await http.get<LaboratoryTestResponse[]>(
+      `/laboratory-tests/by-animal/${animalId}`,
+    )
+    return data
+  },
 }

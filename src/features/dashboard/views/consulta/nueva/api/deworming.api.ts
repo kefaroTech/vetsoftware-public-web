@@ -56,4 +56,11 @@ export const dewormingApi = {
     const { data } = await http.get<DewormingResponse[]>('/dewormings')
     return data
   },
+
+  async listByAnimal(animalId: number): Promise<DewormingResponse[]> {
+    const { data } = await http.get<DewormingResponse[]>(
+      `/dewormings/by-animal/${animalId}`,
+    )
+    return data
+  },
 }

@@ -56,4 +56,11 @@ export const vaccinationApi = {
     const { data } = await http.get<VaccinationResponse[]>('/vaccinations')
     return data
   },
+
+  async listByAnimal(animalId: number): Promise<VaccinationResponse[]> {
+    const { data } = await http.get<VaccinationResponse[]>(
+      `/vaccinations/by-animal/${animalId}`,
+    )
+    return data
+  },
 }

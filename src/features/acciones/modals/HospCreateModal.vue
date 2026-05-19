@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { BedDouble } from 'lucide-vue-next'
+import { BedDouble, PawPrint } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
@@ -14,9 +14,13 @@ import {
   hospitalizationApi,
   type HospitalizationResponse,
 } from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
 import type { HospitalizationType, ReasonLeaving } from '@/types/domain'
 
-const props = defineProps<{ open: boolean }>()
+const props = defineProps<{
+  open: boolean
+  preSelectedAnimal?: AnimalResponse | null
+}>()
 const emit = defineEmits<{
   close: []
   created: [item: HospitalizationResponse]
@@ -52,7 +56,7 @@ const saving = ref(false)
 const saveError = ref<string | null>(null)
 
 function reset() {
-  patientId.value = null
+  patientId.value = props.preSelectedAnimal?.id ?? null
   const today = todayISO()
   draft.date = today
   draft.startDate = today
@@ -125,9 +129,19 @@ async function save() {
     <template #body>
       <div v-if="saveError" class="banner error">{{ saveError }}</div>
 
-      <BaseField label="Paciente" required :error="err('patient')">
+      <BaseField v-if="!preSelectedAnimal" label="Paciente" required :error="err('patient')">
         <PatientCascadePicker v-model="patientId" :invalid="!!err('patient')" />
       </BaseField>
+      <div v-else class="patient-fixed">
+        <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
+        <div class="info">
+          <div class="name">{{ preSelectedAnimal.name }}</div>
+          <div class="meta">
+            {{ preSelectedAnimal.specie.name }} · {{ preSelectedAnimal.breed.name }}
+            <span v-if="preSelectedAnimal.owner"> · {{ preSelectedAnimal.owner.name }}</span>
+          </div>
+        </div>
+      </div>
 
       <div class="grid">
         <BaseField label="Tipo" required class="full">
@@ -178,6 +192,34 @@ async function save() {
   background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25);
   color: oklch(40% 0.18 25); border-radius: 8px; padding: 8px 12px;
   font-size: 12.5px; margin-bottom: 12px;
+}
+.patient-fixed {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--warm-100);
+  border: 1px solid var(--warm-200);
+  border-radius: 9px;
+  padding: 10px 12px;
+}
+.patient-fixed .paw {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--amatista-100);
+  color: var(--amatista-700);
+  display: grid;
+  place-items: center;
+}
+.patient-fixed .name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--warm-900);
+}
+.patient-fixed .meta {
+  font-size: 11.5px;
+  color: var(--warm-500);
+  margin-top: 2px;
 }
 .grid {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));

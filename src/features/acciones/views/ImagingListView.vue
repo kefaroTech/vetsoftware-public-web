@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { Plus } from 'lucide-vue-next'
 import ListBody from '../components/ListBody.vue'
+import PatientCascadePicker from '../components/PatientCascadePicker.vue'
+import OwnerAnimalBreadcrumb from '../components/OwnerAnimalBreadcrumb.vue'
 import ImagingCreateModal from '../modals/ImagingCreateModal.vue'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
@@ -9,26 +11,41 @@ import {
   diagnosticImagingApi,
   type DiagnosticImagingResponse,
 } from '@/features/dashboard/views/consulta/nueva/api/diagnosticImaging.api'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import type { Owner } from '@/types/domain'
 import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
 
 const { can } = useAuthorization()
 const canCreate = can(PERMISSIONS.DIAGNOSTIC_IMAGING_CREATE)
 
+const selection = ref<{ owner: Owner; animal: AnimalResponse } | null>(null)
+const patientId = ref<number | null>(null)
 const items = ref<DiagnosticImagingResponse[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const modalOpen = ref(false)
 
-onMounted(async () => {
+async function onSelect(info: { owner: Owner; animal: AnimalResponse } | null) {
+  if (!info) return
+  selection.value = info
   loading.value = true
+  error.value = null
+  items.value = []
   try {
-    items.value = await diagnosticImagingApi.listAll()
+    items.value = await diagnosticImagingApi.listByAnimal(info.animal.id)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'No se pudieron cargar los estudios'
   } finally {
     loading.value = false
   }
-})
+}
+
+function onReset() {
+  selection.value = null
+  patientId.value = null
+  items.value = []
+  error.value = null
+}
 
 function onCreated(item: DiagnosticImagingResponse) {
   items.value = [item, ...items.value]
@@ -36,8 +53,6 @@ function onCreated(item: DiagnosticImagingResponse) {
 
 function searchFn(item: DiagnosticImagingResponse, q: string) {
   return (
-    item.animal.name.toLowerCase().includes(q) ||
-    item.animal.code.toLowerCase().includes(q) ||
     item.diagnosticImagingType.name.toLowerCase().includes(q) ||
     (item.studyType ?? '').toLowerCase().includes(q)
   )
@@ -52,46 +67,62 @@ function searchFn(item: DiagnosticImagingResponse, q: string) {
         <h1 class="title">Imagen diagnóstica</h1>
         <div class="lead">Estudios de imagen independientes de una consulta.</div>
       </div>
-      <button v-if="canCreate" type="button" class="cta" @click="modalOpen = true">
+      <button
+        v-if="canCreate && selection"
+        type="button"
+        class="cta"
+        @click="modalOpen = true"
+      >
         <Plus :size="16" :stroke-width="1.8" /> Nuevo estudio
       </button>
     </div>
 
     <div v-if="error" class="banner error">{{ error }}</div>
 
-    <ListBody
-      :items="items"
-      :loading="loading"
-      :search-fn="searchFn"
-      placeholder="Buscar paciente, tipo o región…"
-      empty-text="Aún no hay estudios registrados."
-    >
-      <template #header>
-        <tr>
-          <th>Fecha</th>
-          <th>Paciente</th>
-          <th>Tipo</th>
-          <th>Región</th>
-          <th>Diagnóstico</th>
-        </tr>
-      </template>
-      <template #row="{ item }">
-        <tr>
-          <td>{{ formatDateShort(item.date) }}</td>
-          <td>
-            <div class="patient">
-              <span class="name">{{ item.animal.name }}</span>
-              <span class="code">{{ item.animal.code }}</span>
-            </div>
-          </td>
-          <td>{{ item.diagnosticImagingType.name }}</td>
-          <td>{{ item.studyType || '—' }}</td>
-          <td class="ellipsis">{{ item.diagnosis || '—' }}</td>
-        </tr>
-      </template>
-    </ListBody>
+    <PatientCascadePicker
+      v-if="!selection"
+      v-model="patientId"
+      @update:selection="onSelect"
+    />
 
-    <ImagingCreateModal :open="modalOpen" @close="modalOpen = false" @created="onCreated" />
+    <template v-else>
+      <OwnerAnimalBreadcrumb
+        :owner="selection.owner"
+        :animal="selection.animal"
+        @reset="onReset"
+      />
+      <ListBody
+        :items="items"
+        :loading="loading"
+        :search-fn="searchFn"
+        placeholder="Buscar tipo o región…"
+        empty-text="Este paciente aún no tiene estudios registrados."
+      >
+        <template #header>
+          <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Región</th>
+            <th>Diagnóstico</th>
+          </tr>
+        </template>
+        <template #row="{ item }">
+          <tr>
+            <td>{{ formatDateShort(item.date) }}</td>
+            <td>{{ item.diagnosticImagingType.name }}</td>
+            <td>{{ item.studyType || '—' }}</td>
+            <td class="ellipsis">{{ item.diagnosis || '—' }}</td>
+          </tr>
+        </template>
+      </ListBody>
+    </template>
+
+    <ImagingCreateModal
+      :open="modalOpen"
+      :pre-selected-animal="selection?.animal ?? null"
+      @close="modalOpen = false"
+      @created="onCreated"
+    />
   </div>
 </template>
 
@@ -110,8 +141,5 @@ function searchFn(item: DiagnosticImagingResponse, q: string) {
   white-space: nowrap;
 }
 .banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
-.patient { display: flex; flex-direction: column; }
-.patient .name { font-weight: 500; color: var(--warm-900); }
-.patient .code { font-size: 11.5px; color: var(--warm-500); font-family: var(--font-mono, monospace); }
 .ellipsis { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 </style>

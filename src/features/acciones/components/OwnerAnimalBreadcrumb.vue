@@ -1,0 +1,98 @@
+<script setup lang="ts">
+import { User, PawPrint, ChevronRight, X } from 'lucide-vue-next'
+import type { Owner } from '@/types/domain'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+
+defineProps<{
+  owner: Owner
+  animal: AnimalResponse
+}>()
+
+defineEmits<{ reset: [] }>()
+</script>
+
+<template>
+  <div class="breadcrumb">
+    <div class="crumb">
+      <div class="badge"><User :size="13" :stroke-width="1.7" /></div>
+      <span class="name">{{ owner.name }}</span>
+      <span class="meta">{{ owner.document }}</span>
+    </div>
+    <ChevronRight :size="14" :stroke-width="1.6" class="sep" />
+    <div class="crumb">
+      <div class="badge paw"><PawPrint :size="13" :stroke-width="1.7" /></div>
+      <span class="name">{{ animal.name }}</span>
+      <span class="meta">{{ animal.specie.name }} · {{ animal.breed.name }}</span>
+    </div>
+    <button type="button" class="reset" @click="$emit('reset')">
+      <X :size="12" :stroke-width="1.8" />
+      Cambiar
+    </button>
+  </div>
+</template>
+
+<style scoped>
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: var(--warm-100);
+  border: 1px solid var(--warm-200);
+  border-radius: 10px;
+  margin-bottom: 14px;
+  font-family: var(--font-sans);
+}
+.crumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.badge {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--amatista-100);
+  color: var(--amatista-700);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.badge.paw {
+  border-radius: 7px;
+}
+.name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--warm-900);
+}
+.meta {
+  font-size: 11.5px;
+  color: var(--warm-500);
+}
+.sep {
+  color: var(--warm-400);
+}
+.reset {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  border-radius: 7px;
+  padding: 4px 8px;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--warm-700);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.reset:hover {
+  background: var(--warm-50);
+  border-color: var(--warm-300);
+  color: var(--warm-900);
+}
+</style>

@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { Plus } from 'lucide-vue-next'
 import ListBody from '../components/ListBody.vue'
+import PatientCascadePicker from '../components/PatientCascadePicker.vue'
+import OwnerAnimalBreadcrumb from '../components/OwnerAnimalBreadcrumb.vue'
 import DewormCreateModal from '../modals/DewormCreateModal.vue'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
@@ -9,37 +11,48 @@ import {
   dewormingApi,
   type DewormingResponse,
 } from '@/features/dashboard/views/consulta/nueva/api/deworming.api'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import type { Owner } from '@/types/domain'
 import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
 
 const { can } = useAuthorization()
 const canCreate = can(PERMISSIONS.DEWORMING_CREATE)
 
+const selection = ref<{ owner: Owner; animal: AnimalResponse } | null>(null)
+const patientId = ref<number | null>(null)
 const items = ref<DewormingResponse[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const modalOpen = ref(false)
 
-onMounted(async () => {
+async function onSelect(info: { owner: Owner; animal: AnimalResponse } | null) {
+  if (!info) return
+  selection.value = info
   loading.value = true
+  error.value = null
+  items.value = []
   try {
-    items.value = await dewormingApi.listAll()
+    items.value = await dewormingApi.listByAnimal(info.animal.id)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'No se pudieron cargar las desparasitaciones'
   } finally {
     loading.value = false
   }
-})
+}
+
+function onReset() {
+  selection.value = null
+  patientId.value = null
+  items.value = []
+  error.value = null
+}
 
 function onCreated(item: DewormingResponse) {
   items.value = [item, ...items.value]
 }
 
 function searchFn(item: DewormingResponse, q: string) {
-  return (
-    item.animal.name.toLowerCase().includes(q) ||
-    item.animal.code.toLowerCase().includes(q) ||
-    item.product.toLowerCase().includes(q)
-  )
+  return item.product.toLowerCase().includes(q)
 }
 
 function typeLabel(t: DewormingResponse['type']): string {
@@ -65,48 +78,64 @@ function typeLabel(t: DewormingResponse['type']): string {
         <h1 class="title">Desparasitaciones</h1>
         <div class="lead">Tratamientos antiparasitarios independientes de una consulta.</div>
       </div>
-      <button v-if="canCreate" type="button" class="cta" @click="modalOpen = true">
+      <button
+        v-if="canCreate && selection"
+        type="button"
+        class="cta"
+        @click="modalOpen = true"
+      >
         <Plus :size="16" :stroke-width="1.8" /> Nueva desparasitación
       </button>
     </div>
 
     <div v-if="error" class="banner error">{{ error }}</div>
 
-    <ListBody
-      :items="items"
-      :loading="loading"
-      :search-fn="searchFn"
-      placeholder="Buscar paciente o producto…"
-      empty-text="Aún no hay desparasitaciones registradas."
-    >
-      <template #header>
-        <tr>
-          <th>Fecha</th>
-          <th>Paciente</th>
-          <th>Tipo</th>
-          <th>Producto</th>
-          <th>Dosis</th>
-          <th>Próximo</th>
-        </tr>
-      </template>
-      <template #row="{ item }">
-        <tr>
-          <td>{{ formatDateShort(item.date) }}</td>
-          <td>
-            <div class="patient">
-              <span class="name">{{ item.animal.name }}</span>
-              <span class="code">{{ item.animal.code }}</span>
-            </div>
-          </td>
-          <td>{{ typeLabel(item.type) }}</td>
-          <td>{{ item.product }}</td>
-          <td>{{ item.dosage }}</td>
-          <td>{{ item.nextControl ? formatDateShort(item.nextControl) : '—' }}</td>
-        </tr>
-      </template>
-    </ListBody>
+    <PatientCascadePicker
+      v-if="!selection"
+      v-model="patientId"
+      @update:selection="onSelect"
+    />
 
-    <DewormCreateModal :open="modalOpen" @close="modalOpen = false" @created="onCreated" />
+    <template v-else>
+      <OwnerAnimalBreadcrumb
+        :owner="selection.owner"
+        :animal="selection.animal"
+        @reset="onReset"
+      />
+      <ListBody
+        :items="items"
+        :loading="loading"
+        :search-fn="searchFn"
+        placeholder="Buscar producto…"
+        empty-text="Este paciente aún no tiene desparasitaciones registradas."
+      >
+        <template #header>
+          <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Producto</th>
+            <th>Dosis</th>
+            <th>Próximo</th>
+          </tr>
+        </template>
+        <template #row="{ item }">
+          <tr>
+            <td>{{ formatDateShort(item.date) }}</td>
+            <td>{{ typeLabel(item.type) }}</td>
+            <td>{{ item.product }}</td>
+            <td>{{ item.dosage }}</td>
+            <td>{{ item.nextControl ? formatDateShort(item.nextControl) : '—' }}</td>
+          </tr>
+        </template>
+      </ListBody>
+    </template>
+
+    <DewormCreateModal
+      :open="modalOpen"
+      :pre-selected-animal="selection?.animal ?? null"
+      @close="modalOpen = false"
+      @created="onCreated"
+    />
   </div>
 </template>
 
@@ -125,7 +154,4 @@ function typeLabel(t: DewormingResponse['type']): string {
   white-space: nowrap;
 }
 .banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
-.patient { display: flex; flex-direction: column; }
-.patient .name { font-weight: 500; color: var(--warm-900); }
-.patient .code { font-size: 11.5px; color: var(--warm-500); font-family: var(--font-mono, monospace); }
 </style>

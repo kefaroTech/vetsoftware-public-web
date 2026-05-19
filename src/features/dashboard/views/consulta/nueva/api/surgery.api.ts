@@ -58,4 +58,11 @@ export const surgeryApi = {
     const { data } = await http.get<SurgeryResponse[]>('/surgeries')
     return data
   },
+
+  async listByAnimal(animalId: number): Promise<SurgeryResponse[]> {
+    const { data } = await http.get<SurgeryResponse[]>(
+      `/surgeries/by-animal/${animalId}`,
+    )
+    return data
+  },
 }

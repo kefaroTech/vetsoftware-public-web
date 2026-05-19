@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { Syringe } from 'lucide-vue-next'
+import { Syringe, PawPrint } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
@@ -15,8 +15,12 @@ import {
   vaccinationApi,
   type VaccinationResponse,
 } from '@/features/dashboard/views/consulta/nueva/api/vaccination.api'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
 
-const props = defineProps<{ open: boolean }>()
+const props = defineProps<{
+  open: boolean
+  preSelectedAnimal?: AnimalResponse | null
+}>()
 const emit = defineEmits<{
   close: []
   created: [item: VaccinationResponse]
@@ -50,7 +54,7 @@ const saving = ref(false)
 const saveError = ref<string | null>(null)
 
 function reset() {
-  patientId.value = null
+  patientId.value = props.preSelectedAnimal?.id ?? null
   const today = todayISO()
   draft.date = today
   draft.typeId = ''
@@ -137,9 +141,19 @@ async function save() {
       <div v-if="typesError" class="banner error">{{ typesError }}</div>
       <div v-if="saveError" class="banner error">{{ saveError }}</div>
 
-      <BaseField label="Paciente" required :error="err('patient')">
+      <BaseField v-if="!preSelectedAnimal" label="Paciente" required :error="err('patient')">
         <PatientCascadePicker v-model="patientId" :invalid="!!err('patient')" />
       </BaseField>
+      <div v-else class="patient-fixed">
+        <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
+        <div class="info">
+          <div class="name">{{ preSelectedAnimal.name }}</div>
+          <div class="meta">
+            {{ preSelectedAnimal.specie.name }} · {{ preSelectedAnimal.breed.name }}
+            <span v-if="preSelectedAnimal.owner"> · {{ preSelectedAnimal.owner.name }}</span>
+          </div>
+        </div>
+      </div>
 
       <div class="grid">
         <BaseField label="Fecha de aplicación" required>
@@ -188,6 +202,34 @@ async function save() {
   padding: 8px 12px;
   font-size: 12.5px;
   margin-bottom: 12px;
+}
+.patient-fixed {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--warm-100);
+  border: 1px solid var(--warm-200);
+  border-radius: 9px;
+  padding: 10px 12px;
+}
+.patient-fixed .paw {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--amatista-100);
+  color: var(--amatista-700);
+  display: grid;
+  place-items: center;
+}
+.patient-fixed .name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--warm-900);
+}
+.patient-fixed .meta {
+  font-size: 11.5px;
+  color: var(--warm-500);
+  margin-top: 2px;
 }
 .grid {
   display: grid;
