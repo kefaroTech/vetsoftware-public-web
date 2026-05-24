@@ -121,11 +121,11 @@ async function submit() {
 </script>
 
 <template>
-  <v-card class="pa-6 mx-auto" max-width="720">
-    <v-card-title class="text-h5 mb-2">Crear cuenta</v-card-title>
-    <v-card-subtitle class="mb-4">
+  <v-card class="vet-auth-card mx-auto" max-width="720" :elevation="0">
+    <h1 class="vet-auth-title">Crear cuenta</h1>
+    <p class="vet-auth-sub">
       Registra tu empresa y tu primer usuario administrador.
-    </v-card-subtitle>
+    </p>
 
     <v-alert v-if="submitError" type="error" variant="tonal" class="mb-4" closable>
       {{ submitError }}
@@ -247,11 +247,84 @@ async function submit() {
         color="primary"
         size="large"
         block
-        class="mt-6"
+        class="mt-6 vet-auth-submit"
         :loading="submitting"
       >
         Crear cuenta
       </v-btn>
+
+      <div class="vet-auth-footer text-body-2 mt-6 text-center">
+        ¿Ya tienes cuenta?
+        <RouterLink :to="{ name: 'login' }">Inicia sesión</RouterLink>
+      </div>
     </v-form>
   </v-card>
 </template>
+
+<style scoped>
+.vet-auth-card {
+  border: 1px solid var(--warm-200) !important;
+  border-radius: 16px !important;
+  padding: 36px !important;
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(50, 20, 80, 0.04),
+    0 12px 40px -16px oklch(40% 0.18 var(--hue) / 0.18) !important;
+}
+
+.vet-auth-title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--warm-900);
+  line-height: 1.1;
+}
+
+.vet-auth-sub {
+  margin: 4px 0 24px;
+  color: var(--warm-600);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.vet-auth-submit {
+  background: linear-gradient(135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 9px !important;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 500;
+  box-shadow:
+    0 1px 2px rgba(50, 20, 80, 0.08),
+    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.4) !important;
+  transition: filter 0.15s ease;
+}
+.vet-auth-submit:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.vet-auth-footer {
+  color: var(--warm-600);
+}
+.vet-auth-footer :deep(a) {
+  color: var(--amatista-700);
+  text-decoration: none;
+  font-weight: 500;
+}
+.vet-auth-footer :deep(a:hover) {
+  color: var(--amatista-600);
+  text-decoration: underline;
+}
+
+/* Focus ring amatista para los inputs */
+.v-text-field :deep(.v-field--focused),
+.v-select :deep(.v-field--focused) {
+  box-shadow: 0 0 0 3px var(--amatista-50);
+  border-radius: 4px;
+}
+</style>

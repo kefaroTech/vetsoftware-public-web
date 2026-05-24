@@ -8,14 +8,14 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'signup',
-      component: () => import('@/features/registration/views/SignupView.vue'),
+      name: 'login',
+      component: () => import('@/features/auth/views/LoginView.vue'),
       meta: { guestOnly: true },
     },
     {
-      path: '/login',
-      name: 'login',
-      component: () => import('@/features/auth/views/LoginView.vue'),
+      path: '/signup',
+      name: 'signup',
+      component: () => import('@/features/registration/views/SignupView.vue'),
       meta: { guestOnly: true },
     },
     {
@@ -136,7 +136,7 @@ const router = createRouter({
     },
     {
       path: '/:pathMatch(.*)*',
-      redirect: { name: 'signup' },
+      redirect: { name: 'login' },
     },
   ],
 })

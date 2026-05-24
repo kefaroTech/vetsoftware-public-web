@@ -83,10 +83,43 @@ async function submit() {
       color="primary"
       size="large"
       block
-      class="mt-4"
+      class="mt-4 vet-auth-submit"
       :loading="submitting"
     >
       Iniciar sesión
     </v-btn>
   </v-form>
 </template>
+
+<style scoped>
+.vet-auth-submit {
+  background: linear-gradient(135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 9px !important;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 500;
+  box-shadow:
+    0 1px 2px rgba(50, 20, 80, 0.08),
+    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.4) !important;
+  transition: filter 0.15s ease;
+}
+.vet-auth-submit:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+/* Focus ring amatista en los inputs de Vuetify dentro del form */
+.v-text-field :deep(.v-field--focused) .v-field__outline__start,
+.v-text-field :deep(.v-field--focused) .v-field__outline__end,
+.v-text-field :deep(.v-field--focused) .v-field__outline__notch::before,
+.v-text-field :deep(.v-field--focused) .v-field__outline__notch::after {
+  color: var(--amatista-500);
+}
+.v-text-field :deep(.v-field--focused) {
+  box-shadow: 0 0 0 3px var(--amatista-50);
+  border-radius: 4px;
+}
+</style>
