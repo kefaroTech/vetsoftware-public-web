@@ -48,8 +48,8 @@ const isConsultaActive = computed(() =>
   consultaSubRoutes.some((name) => route.name === name),
 )
 
-const consultaOpen = ref(true)
-const accionesOpen = ref(true)
+const consultaOpen = ref(false)
+const accionesOpen = ref(false)
 
 const canCreateConsultation = can(PERMISSIONS.CONSULTATION_CREATE)
 const canVaccination = can(PERMISSIONS.VACCINATION_CREATE)
