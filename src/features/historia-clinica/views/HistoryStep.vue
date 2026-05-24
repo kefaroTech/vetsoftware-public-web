@@ -7,6 +7,7 @@ import MonthTimelineGroup from '../components/MonthTimelineGroup.vue'
 import EventDetailModal from '../components/EventDetailModal.vue'
 import { useHistoriaSelection } from '../composables/useHistoriaSelection'
 import { useClinicalHistory } from '../composables/useClinicalHistory'
+import { useClinicalHistoryExport } from '../composables/useClinicalHistoryExport'
 import { EVENT_TYPES, EVENT_TYPE_DETAILABLE, TYPE_COLORS } from '../constants/eventTypes'
 import { ownerApi } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
 import { mapOwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.mapper'
@@ -138,6 +139,17 @@ function closeEventDetail() {
   detailModalOpen.value = false
 }
 
+const { exporting, error: exportError, exportPdf } = useClinicalHistoryExport()
+
+async function onExport() {
+  if (!state.pet) return
+  const animalId = Number(state.pet.id)
+  if (!Number.isFinite(animalId)) return
+  await exportPdf(animalId, {
+    types: filter.value !== 'ALL' ? [filter.value] : undefined,
+  })
+}
+
 function goNuevaConsulta() {
   if (!canCreateConsultation.value || !state.owner || !state.pet) return
   const ownerSnapshot = state.owner
@@ -202,9 +214,14 @@ function goNuevaConsulta() {
           </div>
         </div>
         <div class="actions">
-          <button type="button" class="btn-ghost" disabled>
+          <button
+            type="button"
+            class="btn-ghost"
+            :disabled="exporting || !state.pet"
+            @click="onExport"
+          >
             <FileDown :size="14" :stroke-width="1.7" />
-            Exportar PDF
+            {{ exporting ? 'Generando…' : 'Exportar PDF' }}
           </button>
           <button
             v-if="canCreateConsultation"
@@ -216,6 +233,10 @@ function goNuevaConsulta() {
             Nueva consulta
           </button>
         </div>
+      </div>
+
+      <div v-if="exportError" class="banner error export-error">
+        {{ exportError }}
       </div>
     </header>
 
@@ -496,6 +517,10 @@ function goNuevaConsulta() {
   background: oklch(97% 0.02 25);
   color: oklch(48% 0.18 25);
   border: 1px solid oklch(85% 0.06 25);
+}
+.export-error {
+  margin-top: 12px;
+  margin-bottom: 0;
 }
 .empty-card {
   padding: 50px 20px;
