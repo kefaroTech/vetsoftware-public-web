@@ -334,7 +334,7 @@ function goNuevaConsulta() {
   flex-direction: column;
 }
 .patient-head {
-  padding: 24px 36px;
+  padding: 28px 36px 24px;
   background: linear-gradient(180deg, var(--amatista-50), var(--warm-50));
   border-bottom: 1px solid var(--warm-200);
 }
@@ -360,9 +360,9 @@ function goNuevaConsulta() {
   gap: 18px;
 }
 .avatar {
-  width: 72px;
-  height: 72px;
-  border-radius: 18px;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
   background: var(--amatista-200);
   color: var(--amatista-700);
   display: grid;
@@ -371,6 +371,7 @@ function goNuevaConsulta() {
   font-size: 22px;
   flex-shrink: 0;
   font-family: 'Instrument Serif', serif;
+  box-shadow: 0 4px 12px -6px oklch(40% 0.18 var(--hue) / 0.3);
 }
 .patient-body {
   flex: 1;
@@ -378,12 +379,12 @@ function goNuevaConsulta() {
 }
 .patient-name {
   font-family: 'Instrument Serif', serif;
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 400;
   letter-spacing: -0.015em;
   color: var(--warm-900);
   margin: 0;
-  line-height: 1.1;
+  line-height: 1.05;
 }
 .pills {
   display: flex;

@@ -59,7 +59,7 @@ defineEmits<{
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 12px 15px 12px 18px;
+  padding: 14px 16px 14px 18px;
   border-bottom: 1px solid var(--warm-150);
   background: transparent;
   border-left: 3px solid transparent;

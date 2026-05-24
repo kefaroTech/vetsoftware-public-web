@@ -21,7 +21,7 @@ defineEmits<{ click: [] }>()
   align-items: center;
   justify-content: center;
   gap: 10px;
-  min-height: 240px;
+  min-height: 256px;
   padding: 24px;
   background: transparent;
   border: 1.5px dashed var(--warm-300);
