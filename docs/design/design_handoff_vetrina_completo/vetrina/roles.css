@@ -1,0 +1,512 @@
+/* Roles & Permissions — page, cards, modal */
+
+.vet-roles-page {
+  display: flex; flex-direction: column;
+  gap: 24px;
+  max-width: 1320px;
+  margin: 0 auto;
+  font-family: var(--font-sans);
+  color: var(--warm-900);
+}
+.vet-roles-page-head {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.vet-roles-page-kicker {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--warm-500);
+  font-weight: 500;
+}
+.vet-roles-title-row {
+  display: flex; align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px; flex-wrap: wrap;
+}
+.vet-roles-page-title {
+  margin: 0; font-family: var(--font-serif);
+  font-size: 36px; font-weight: 400;
+  letter-spacing: -0.015em;
+  color: var(--warm-900); line-height: 1.1;
+}
+.vet-roles-page-subtitle {
+  margin: 6px 0 0;
+  font-size: 13.5px; color: var(--warm-600);
+  max-width: 540px; line-height: 1.5;
+}
+.vet-roles-create-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px;
+  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  color: #fff; border: none; border-radius: 9px;
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08), 0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.5);
+}
+.vet-roles-create-btn:hover { filter: brightness(1.05); }
+
+.vet-roles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 14px;
+}
+
+/* ==== AddRoleCard ==== */
+.vet-add-role-card {
+  background: transparent;
+  border: 1.5px dashed var(--warm-300);
+  border-radius: 14px;
+  padding: 22px 18px;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px;
+  min-height: 230px;
+  color: var(--warm-600);
+  transition: border-color 0.15s, background 0.15s;
+}
+.vet-add-role-card:hover {
+  border-color: var(--amatista-500);
+  background: var(--amatista-50);
+}
+.vet-add-role-ic {
+  width: 46px; height: 46px; border-radius: 13px;
+  background: var(--amatista-100);
+  color: var(--amatista-700);
+  display: grid; place-items: center;
+}
+.vet-add-role-title {
+  font-size: 14px; font-weight: 500;
+  color: var(--warm-900);
+}
+.vet-add-role-sub {
+  font-size: 12px; text-align: center;
+  max-width: 200px; line-height: 1.45;
+  color: var(--warm-500);
+}
+
+/* ==== RoleCard ==== */
+.vet-role-card {
+  display: flex; flex-direction: column; gap: 12px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 14px;
+  padding: 18px;
+  transition: opacity 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.vet-role-card:hover {
+  border-color: var(--warm-300);
+  box-shadow: 0 4px 14px -8px rgba(20, 15, 30, 0.18);
+}
+.vet-role-card.inactive {
+  opacity: 0.65;
+  border-color: var(--warm-150);
+}
+.vet-role-head {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 10px;
+}
+.vet-role-head-left {
+  display: flex; align-items: center; gap: 12px;
+  min-width: 0; flex: 1;
+}
+.vet-role-avatar {
+  width: 40px; height: 40px; border-radius: 11px;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.vet-role-name {
+  margin: 0; font-family: var(--font-serif);
+  font-size: 17px; font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--warm-900); line-height: 1.15;
+  word-break: break-word;
+}
+.vet-role-admin-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  align-self: flex-start;
+  padding: 4px 10px;
+  background: var(--amatista-50);
+  border: 1px solid var(--amatista-200);
+  color: var(--amatista-700);
+  border-radius: 7px;
+  font-size: 11.5px; font-weight: 500;
+}
+.vet-role-readonly-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  align-self: flex-start;
+  padding: 4px 10px;
+  background: var(--warm-100);
+  border: 1px solid var(--warm-300);
+  color: var(--warm-700);
+  border-radius: 7px;
+  font-size: 11.5px; font-weight: 500;
+}
+.vet-role-stats {
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  align-items: center; gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--warm-150);
+  border-bottom: 1px solid var(--warm-150);
+}
+.vet-role-stat { display: flex; flex-direction: column; gap: 1px; align-items: flex-start; }
+.vet-role-stat-num {
+  font-family: var(--font-serif);
+  font-size: 26px; line-height: 1;
+  color: var(--warm-900);
+  letter-spacing: -0.02em;
+}
+.vet-role-stat-label {
+  font-size: 11px; color: var(--warm-500);
+  letter-spacing: 0.02em;
+}
+.vet-role-divider {
+  width: 1px; height: 30px; background: var(--warm-200);
+}
+.vet-role-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.vet-role-chip {
+  font-size: 11px;
+  padding: 2px 8px; border-radius: 6px;
+  background: var(--warm-150);
+  color: var(--warm-700);
+  white-space: nowrap;
+}
+.vet-role-chip.more {
+  background: var(--warm-200);
+  font-weight: 500;
+}
+.vet-role-chips-empty {
+  font-size: 12px; color: var(--warm-500);
+  font-style: italic;
+}
+.vet-role-edit-btn {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  background: var(--amatista-50);
+  border: 1px solid var(--amatista-200);
+  color: var(--amatista-700);
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 12.5px; font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.vet-role-edit-btn:hover {
+  background: var(--amatista-100);
+  border-color: var(--amatista-300);
+}
+
+/* ==== Switch ==== */
+.vet-switch {
+  width: 32px; height: 18px;
+  border-radius: 999px;
+  border: none;
+  background: var(--warm-300);
+  padding: 2px;
+  cursor: pointer; position: relative;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+.vet-switch.on { background: var(--amatista-600); }
+.vet-switch.disabled { opacity: 0.5; cursor: not-allowed; }
+.vet-switch-dot {
+  display: block;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transform: translateX(0);
+  transition: transform 0.15s ease;
+}
+.vet-switch.on .vet-switch-dot { transform: translateX(14px); }
+
+/* ==== Tristate ==== */
+.vet-tristate {
+  width: 16px; height: 16px;
+  border: 1.5px solid var(--warm-400);
+  border-radius: 4px;
+  background: var(--warm-50);
+  display: grid; place-items: center;
+  cursor: pointer; padding: 0;
+  flex-shrink: 0;
+  color: white;
+  transition: background 0.12s, border-color 0.12s;
+}
+.vet-tristate:hover:not(.disabled) { border-color: var(--amatista-500); }
+.vet-tristate.partial,
+.vet-tristate.full {
+  background: var(--amatista-600);
+  border-color: var(--amatista-600);
+}
+.vet-tristate.disabled { opacity: 0.5; cursor: not-allowed; }
+.vet-tristate-dash {
+  width: 8px; height: 2px;
+  background: white;
+  border-radius: 1px;
+}
+
+/* ==== RolePill (roles flavor) ==== */
+.vet-roles-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  border-radius: 999px;
+  font-weight: 500; white-space: nowrap;
+  border: 1px solid transparent;
+}
+.vet-roles-pill.size-md { padding: 3px 10px; font-size: 12px; }
+.vet-roles-pill.size-lg { padding: 5px 12px; font-size: 13px; }
+.vet-roles-pill-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+}
+
+.vet-roles-status-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 9px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ==== EditPermissionsModal ==== */
+.vet-roles-overlay {
+  position: fixed; inset: 0;
+  background: oklch(15% 0.05 var(--hue) / 0.45);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  display: grid; place-items: center;
+  z-index: 1500; font-family: var(--font-sans);
+  padding: 24px;
+}
+.vet-roles-card {
+  width: 100%; max-width: 1100px;
+  max-height: calc(100vh - 48px);
+  background: var(--warm-50);
+  border-radius: 16px;
+  box-shadow: 0 30px 80px oklch(15% 0.05 var(--hue) / 0.35);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.vet-roles-head {
+  position: relative;
+  padding: 22px 26px 18px;
+  border-bottom: 1px solid var(--warm-200);
+}
+.vet-roles-close {
+  position: absolute; top: 14px; right: 14px;
+  width: 32px; height: 32px;
+  background: transparent; border: none;
+  color: var(--warm-700);
+  border-radius: 8px;
+  display: grid; place-items: center;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.vet-roles-close:hover { background: rgba(255, 255, 255, 0.6); }
+
+.vet-roles-avatar {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.vet-roles-kicker {
+  font-size: 11.5px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--warm-500);
+  margin-bottom: 4px; font-weight: 500;
+}
+.vet-roles-name-input {
+  width: 100%;
+  font-family: var(--font-serif);
+  font-size: 28px; font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--warm-900);
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px dashed transparent;
+  padding: 2px 0;
+  outline: none; line-height: 1.1;
+}
+.vet-roles-name-input:focus { border-bottom-color: var(--amatista-300); }
+.vet-roles-name-input::placeholder { color: var(--warm-400); }
+.vet-roles-name-input:read-only { cursor: default; }
+
+.vet-roles-head-meta {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 10px; flex-wrap: wrap;
+}
+.vet-roles-head-sep {
+  width: 1px; height: 18px; background: var(--warm-300);
+}
+.vet-roles-head-active-text {
+  font-size: 12.5px; color: var(--warm-700);
+  font-weight: 500;
+}
+
+.vet-roles-readonly-banner {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 26px;
+  background: var(--warm-100);
+  border-bottom: 1px solid var(--warm-200);
+  color: var(--warm-700);
+  font-size: 12.5px;
+}
+
+.vet-roles-toolbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 26px;
+  border-bottom: 1px solid var(--warm-200);
+  background: var(--warm-50);
+  position: sticky; top: 0; z-index: 1;
+}
+.vet-roles-search {
+  flex: 1;
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px;
+  background: var(--warm-100);
+  border: 1px solid var(--warm-200);
+  border-radius: 7px;
+  min-width: 180px;
+}
+.vet-roles-search input {
+  flex: 1; background: transparent;
+  border: none; outline: none;
+  font-family: inherit; font-size: 13px;
+  color: var(--warm-900);
+}
+.vet-roles-ghost-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--warm-700);
+  font-family: inherit; font-size: 12.5px; font-weight: 500;
+  padding: 6px 10px; border-radius: 7px;
+  cursor: pointer; white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.vet-roles-ghost-btn:hover {
+  background: var(--warm-100); color: var(--warm-900);
+}
+.vet-roles-bar {
+  width: 1px; height: 22px; background: var(--warm-200);
+}
+.vet-roles-counter {
+  font-size: 12px; font-weight: 500;
+  padding: 3px 10px; border-radius: 999px;
+  background: var(--amatista-100);
+  color: var(--amatista-700);
+  white-space: nowrap;
+}
+
+.vet-roles-body {
+  flex: 1; overflow: auto;
+  padding: 18px 26px;
+  display: flex; flex-direction: column; gap: 18px;
+}
+.vet-roles-empty {
+  font-size: 13px; color: var(--warm-500);
+  padding: 32px 0; text-align: center;
+}
+.vet-roles-module-group {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.vet-roles-module-label {
+  font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--warm-500); font-weight: 600;
+}
+.vet-roles-subs { display: flex; flex-direction: column; gap: 6px; }
+
+.vet-roles-foot {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 26px;
+  border-top: 1px solid var(--warm-200);
+  background: var(--warm-100);
+}
+.vet-roles-foot-ghost {
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--warm-300);
+  color: var(--warm-700);
+}
+.vet-roles-foot-ghost:hover { background: var(--warm-150); }
+.vet-roles-foot-primary {
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer; border: none;
+  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08), 0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.5);
+}
+.vet-roles-foot-primary:hover { filter: brightness(1.05); }
+
+/* ==== Accordion ==== */
+.vet-acc {
+  border: 1px solid var(--warm-200);
+  border-radius: 10px;
+  background: var(--warm-50);
+  overflow: hidden;
+}
+.vet-acc.open { border-color: var(--amatista-200); }
+.vet-acc-row {
+  width: 100%;
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 14px;
+  background: transparent; border: none;
+  font-family: inherit;
+  cursor: pointer; text-align: left;
+}
+.vet-acc-row:hover { background: var(--warm-100); }
+.vet-acc-name {
+  font-size: 13.5px; font-weight: 500;
+  color: var(--warm-900); line-height: 1.2;
+}
+.vet-acc-name.hl {
+  background: oklch(96% 0.08 80);
+  border-radius: 3px;
+  padding: 0 3px; margin: 0 -3px;
+}
+.vet-acc-count {
+  font-size: 11.5px; color: var(--warm-500);
+}
+.vet-acc-status {
+  font-size: 11px; font-weight: 500;
+  padding: 3px 8px; border-radius: 999px;
+  white-space: nowrap; flex-shrink: 0;
+}
+.vet-acc-status.empty {
+  background: var(--warm-200); color: var(--warm-600);
+}
+.vet-acc-status.partial {
+  background: var(--amatista-100); color: var(--amatista-700);
+}
+.vet-acc-status.full {
+  background: var(--amatista-200); color: var(--amatista-700);
+}
+.vet-acc-perms {
+  list-style: none; margin: 0;
+  padding: 0 16px 10px 44px;
+}
+.vet-acc-perm-row { border-bottom: 1px solid var(--warm-150); }
+.vet-acc-perm-row:last-child { border-bottom: none; }
+.vet-acc-perm-label {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 0;
+  cursor: pointer;
+  font-size: 13px; color: var(--warm-700);
+  user-select: none;
+}
+.vet-acc-perm-label:hover .vet-acc-perm-name { color: var(--warm-900); }
+.vet-acc-perm-native {
+  width: 14px; height: 14px;
+  accent-color: var(--amatista-600);
+  cursor: pointer; flex-shrink: 0;
+}
+.vet-acc-perm-name { flex: 1; }
+.vet-acc-perm-name.hl {
+  background: oklch(96% 0.08 80);
+  border-radius: 3px;
+  padding: 0 3px; margin: 0 -3px;
+}
