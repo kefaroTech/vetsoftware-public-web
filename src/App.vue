@@ -2,6 +2,7 @@
 import { RouterView } from 'vue-router'
 import PageLoader from '@/components/ui/PageLoader.vue'
 import ConsultaActiveBanner from '@/components/ui/ConsultaActiveBanner.vue'
+import ToastStack from '@/components/ui/ToastStack.vue'
 import ResumeOrNewConsultaDialog from '@/features/dashboard/views/consulta/nueva/components/ResumeOrNewConsultaDialog.vue'
 import { useConsultaResumeGuard } from '@/composables/useConsultaResumeGuard'
 
@@ -13,6 +14,7 @@ const guard = useConsultaResumeGuard()
     <RouterView />
     <ConsultaActiveBanner />
     <PageLoader />
+    <ToastStack />
     <ResumeOrNewConsultaDialog
       :open="guard.state.open"
       :owner-name="guard.state.ownerName"

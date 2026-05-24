@@ -12,12 +12,15 @@ import { pickRoleColor } from '../constants/roleColors'
 import type { RoleResponse, SubModuleResponse } from '../types'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
+import PageHeader from '@/components/ui/PageHeader.vue'
+import { useToast } from '@/composables/useToast'
 
 useModulesCatalog()
 const subModules = useSubModulesCatalog()
 const permissionsCatalog = usePermissionsCatalog()
 const roles = useRoles()
 const { can } = useAuthorization()
+const toast = useToast()
 const canCreateRole = can(PERMISSIONS.ROLE_PERMISSIONS_CREATE)
 const canUpdateRole = can(PERMISSIONS.ROLE_PERMISSIONS_UPDATE)
 
@@ -48,6 +51,28 @@ function close() {
   editingRole.value = null
 }
 
+function onSaved() {
+  const wasEditing = editingRole.value
+  if (wasEditing) {
+    toast.success('Rol actualizado', 'Los cambios se guardaron.')
+  } else {
+    // Resolver el rol recién creado (es el más reciente con ese nombre, pero
+    // como no tenemos referencia directa, mostramos un copy genérico).
+    toast.success('Rol creado', 'El rol ya está disponible.')
+  }
+  close()
+}
+
+function onToggleActive(role: RoleResponse, active: boolean) {
+  if (isSystemRole(role) || !canUpdateRole.value) return
+  roles.setActive(role.id, active)
+  if (active) {
+    toast.info('Rol activado', `${role.name} vuelve a estar disponible.`)
+  } else {
+    toast.info('Rol desactivado', `${role.name} dejó de estar disponible.`)
+  }
+}
+
 function subModulesUsedByRole(role: RoleResponse): SubModuleResponse[] {
   const subIds = new Set<number>()
   for (const rp of role.permissions) {
@@ -76,16 +101,12 @@ const hasError = computed(
 
 <template>
   <section class="roles-page">
-    <header class="page-head">
-      <div class="kicker">Administración · Acceso</div>
-      <div class="title-row">
-        <div>
-          <h1 class="title">Roles y permisos</h1>
-          <p class="subtitle">
-            Definí qué puede hacer cada miembro del equipo. Agrupá permisos por sub-módulo
-            y mantené el control fino sobre quién accede a qué.
-          </p>
-        </div>
+    <PageHeader
+      kicker="Administración · Acceso"
+      title="Roles y permisos"
+      lead="Definí qué puede hacer cada miembro del equipo. Agrupá permisos por sub-módulo y mantené el control fino sobre quién accede a qué."
+    >
+      <template #action>
         <button
           v-if="canCreateRole"
           type="button"
@@ -95,8 +116,8 @@ const hasError = computed(
           <Plus :size="16" :stroke-width="1.8" />
           <span>Crear rol</span>
         </button>
-      </div>
-    </header>
+      </template>
+    </PageHeader>
 
     <div v-if="hasError" class="banner-error">{{ hasError }}</div>
 
@@ -112,7 +133,7 @@ const hasError = computed(
         :sub-modules="subModulesUsedByRole(role)"
         :total-catalog-permissions="totalCatalogPermissions"
         :read-only="isSystemRole(role) || !canUpdateRole"
-        @toggle-active="(v) => (isSystemRole(role) || !canUpdateRole) ? null : roles.setActive(role.id, v)"
+        @toggle-active="(v: boolean) => onToggleActive(role, v)"
         @edit="openEdit(role)"
       />
       <div
@@ -129,7 +150,7 @@ const hasError = computed(
       :color="editingRole ? pickRoleColor(editingRole) : 'amatista'"
       :read-only="editingReadOnly"
       @close="close"
-      @saved="close"
+      @saved="onSaved"
     />
   </section>
 </template>
@@ -141,41 +162,6 @@ const hasError = computed(
   gap: 24px;
   max-width: 1320px;
   margin: 0 auto;
-}
-.page-head {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.kicker {
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--warm-500);
-  font-weight: 500;
-}
-.title-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-.title {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: 36px;
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  color: var(--warm-900);
-  line-height: 1.1;
-}
-.subtitle {
-  margin: 6px 0 0;
-  font-size: 13.5px;
-  color: var(--warm-600);
-  max-width: 540px;
-  line-height: 1.5;
 }
 .create-btn {
   display: inline-flex;
@@ -226,16 +212,6 @@ const hasError = computed(
 }
 
 @media (max-width: 768px) {
-  .title {
-    font-size: 28px;
-  }
-  .subtitle {
-    font-size: 13px;
-  }
-  .title-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
   .create-btn {
     align-self: flex-start;
   }

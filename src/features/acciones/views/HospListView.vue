@@ -7,6 +7,8 @@ import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import OwnerAnimalBreadcrumb from '../components/OwnerAnimalBreadcrumb.vue'
 import HospFormModal from '../modals/HospFormModal.vue'
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
+import { useToast } from '@/composables/useToast'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import {
@@ -18,6 +20,7 @@ import type { Owner } from '@/types/domain'
 import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
 
 const { can } = useAuthorization()
+const toast = useToast()
 const canCreate = can(PERMISSIONS.HOSPITALIZATION_CREATE)
 const canUpdate = can(PERMISSIONS.HOSPITALIZATION_UPDATE)
 const canDelete = can(PERMISSIONS.HOSPITALIZATION_DELETE)
@@ -56,8 +59,13 @@ function onReset() {
 
 function onSaved(item: HospitalizationResponse) {
   const idx = items.value.findIndex((i) => i.id === item.id)
-  if (idx >= 0) items.value.splice(idx, 1, item)
+  const wasEdit = idx >= 0
+  if (wasEdit) items.value.splice(idx, 1, item)
   else items.value = [item, ...items.value]
+  toast.success(
+    'Hospitalización guardada',
+    wasEdit ? 'Los cambios se guardaron.' : 'Se añadió correctamente al paciente.',
+  )
 }
 
 function onFormClose() {
@@ -74,8 +82,11 @@ async function onConfirmDelete() {
     await hospitalizationApi.remove(target.id)
     items.value = items.value.filter((i) => i.id !== target.id)
     deleting.value = null
+    toast.info('Registro eliminado', 'El registro fue removido.')
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'No se pudo eliminar'
+    const msg = e instanceof Error ? e.message : 'No se pudo eliminar'
+    error.value = msg
+    toast.error('Ocurrió un error', msg)
   } finally {
     deletingBusy.value = false
   }
@@ -96,21 +107,22 @@ function isActive(item: HospitalizationResponse): boolean {
 
 <template>
   <div class="page">
-    <div class="header">
-      <div>
-        <div class="kicker">Acciones clínicas</div>
-        <h1 class="title">Hospitalizaciones</h1>
-        <div class="lead">Ingresos hospitalarios y ambulatorios independientes de una consulta.</div>
-      </div>
-      <button
-        v-if="canCreate && selection"
-        type="button"
-        class="cta"
-        @click="modalOpen = true"
-      >
-        <Plus :size="16" :stroke-width="1.8" /> Nueva hospitalización
-      </button>
-    </div>
+    <PageHeader
+      kicker="Acciones clínicas"
+      title="Hospitalizaciones"
+      lead="Ingresos hospitalarios y ambulatorios independientes de una consulta."
+    >
+      <template #action>
+        <button
+          v-if="canCreate && selection"
+          type="button"
+          class="cta"
+          @click="modalOpen = true"
+        >
+          <Plus :size="16" :stroke-width="1.8" /> Nueva hospitalización
+        </button>
+      </template>
+    </PageHeader>
 
     <div v-if="error" class="banner error">{{ error }}</div>
 
@@ -201,10 +213,6 @@ function isActive(item: HospitalizationResponse): boolean {
 
 <style scoped>
 .page { font-family: var(--font-sans); color: var(--warm-900); }
-.header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
-.kicker { font-size: 12px; color: var(--warm-500); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
-.title { margin: 0; font-family: var(--font-serif); font-size: 38px; line-height: 1.05; font-weight: 400; letter-spacing: -0.015em; color: var(--warm-900); }
-.lead { font-size: 14px; color: var(--warm-600); margin-top: 6px; }
 .cta {
   display: flex; align-items: center; gap: 8px; padding: 10px 16px;
   font-size: 13.5px; font-weight: 500;

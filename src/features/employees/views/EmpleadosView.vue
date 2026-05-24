@@ -13,10 +13,13 @@ import ConfirmDeactivateDialog from '../components/ConfirmDeactivateDialog.vue'
 import { employeeRolesApi } from '../api/employeeRoles.api'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
+import PageHeader from '@/components/ui/PageHeader.vue'
+import { useToast } from '@/composables/useToast'
 
 const { companyId } = useAuth()
 const { employees, loading, error, fetchAll, create, update, setStatus } = useEmployees()
 const { can } = useAuthorization()
+const toast = useToast()
 const canCreate = can(PERMISSIONS.EMPLOYEE_CREATE)
 const canUpdate = can(PERMISSIONS.EMPLOYEE_UPDATE)
 
@@ -69,6 +72,7 @@ async function handleSubmit(data: EmployeeFormData) {
         status: data.status,
       })
       selectedId.value = updated.id
+      toast.success('Empleado actualizado', updated.name)
     } else {
       const cid = companyId.value
       if (cid == null) {
@@ -90,10 +94,13 @@ async function handleSubmit(data: EmployeeFormData) {
       await employeeRolesApi.create({ employeeId: created.id, roleId: data.roleId })
       await fetchAll()
       selectedId.value = created.id
+      toast.success('Empleado creado', created.name)
     }
     formOpen.value = false
   } catch (e) {
-    submitError.value = e instanceof Error ? e.message : 'No se pudo guardar el empleado'
+    const msg = e instanceof Error ? e.message : 'No se pudo guardar el empleado'
+    submitError.value = msg
+    toast.error('Ocurrió un error', msg)
   } finally {
     busy.value = false
   }
@@ -110,8 +117,11 @@ async function confirmDeactivate() {
   try {
     await setStatus(target, 'INACTIVE')
     deactivateTarget.value = null
+    toast.info('Empleado desactivado', 'No podrá iniciar sesión hasta reactivarlo.')
   } catch (e) {
-    submitError.value = e instanceof Error ? e.message : 'No se pudo desactivar al empleado'
+    const msg = e instanceof Error ? e.message : 'No se pudo desactivar al empleado'
+    submitError.value = msg
+    toast.error('Ocurrió un error', msg)
   } finally {
     busy.value = false
   }
@@ -122,8 +132,11 @@ async function handleActivate(employee: Employee) {
   busy.value = true
   try {
     await setStatus(employee, 'ACTIVE')
+    toast.success('Empleado activado', `${employee.name} puede iniciar sesión de nuevo.`)
   } catch (e) {
-    submitError.value = e instanceof Error ? e.message : 'No se pudo reactivar al empleado'
+    const msg = e instanceof Error ? e.message : 'No se pudo reactivar al empleado'
+    submitError.value = msg
+    toast.error('Ocurrió un error', msg)
   } finally {
     busy.value = false
   }
@@ -132,17 +145,18 @@ async function handleActivate(employee: Employee) {
 
 <template>
   <div class="page">
-    <div class="header">
-      <div>
-        <div class="kicker">Administración · Equipo</div>
-        <h1 class="title">Empleados</h1>
-        <div class="lead">Gestiona el equipo de la clínica, sus roles y accesos.</div>
-      </div>
-      <button v-if="canCreate" type="button" class="cta" :disabled="busy" @click="openCreate">
-        <Plus :size="16" :stroke-width="1.8" />
-        Nuevo empleado
-      </button>
-    </div>
+    <PageHeader
+      kicker="Administración · Equipo"
+      title="Empleados"
+      lead="Gestiona el equipo de la clínica, sus roles y accesos."
+    >
+      <template #action>
+        <button v-if="canCreate" type="button" class="cta" :disabled="busy" @click="openCreate">
+          <Plus :size="16" :stroke-width="1.8" />
+          Nuevo empleado
+        </button>
+      </template>
+    </PageHeader>
 
     <div v-if="error" class="banner error">{{ error }}</div>
     <div v-if="submitError" class="banner error">{{ submitError }}</div>
@@ -188,34 +202,6 @@ async function handleActivate(employee: Employee) {
 .page {
   font-family: var(--font-sans);
   color: var(--warm-900);
-}
-.header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 24px;
-}
-.kicker {
-  font-size: 12px;
-  color: var(--warm-500);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-.title {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: 38px;
-  line-height: 1.05;
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  color: var(--warm-900);
-}
-.lead {
-  font-size: 14px;
-  color: var(--warm-600);
-  margin-top: 6px;
 }
 .cta {
   display: flex;
