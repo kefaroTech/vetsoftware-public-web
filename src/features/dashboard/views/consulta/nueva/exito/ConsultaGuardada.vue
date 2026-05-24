@@ -87,12 +87,12 @@ function createAnother() {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: oklch(92% 0.06 145);
-  color: oklch(45% 0.15 145);
+  background: linear-gradient(135deg, oklch(58% 0.16 145), oklch(48% 0.18 150));
+  color: white;
   display: grid;
   place-items: center;
   margin: 0 auto 20px;
-  box-shadow: 0 8px 32px -8px oklch(50% 0.15 145 / 0.4);
+  box-shadow: 0 12px 32px -8px oklch(50% 0.18 145 / 0.45);
 }
 .title {
   margin: 0 0 8px;

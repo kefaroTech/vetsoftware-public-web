@@ -150,7 +150,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .drawer-root {
   position: fixed;
   inset: 0;
-  background: oklch(20% 0.05 var(--hue) / 0.35);
+  background: rgba(20, 15, 30, 0.55);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
   z-index: 1400;
