@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import EventCard from './EventCard.vue'
 import { formatMonthLabel } from '../composables/format'
-import { EVENT_TYPE_ROUTE } from '../constants/eventTypes'
+import { EVENT_TYPE_DETAILABLE } from '../constants/eventTypes'
 import type { ClinicalEvent } from '../types/historia'
 
 interface Props {
@@ -17,8 +17,46 @@ const countLabel = computed(() =>
   props.events.length === 1 ? '1 evento' : `${props.events.length} eventos`,
 )
 
+interface TimelineNode {
+  parent: ClinicalEvent
+  children: ClinicalEvent[]
+}
+
+const nodes = computed<TimelineNode[]>(() => {
+  const consultationIds = new Set<number>()
+  for (const ev of props.events) {
+    if (ev.eventType === 'CONSULTATION') consultationIds.add(ev.sourceId)
+  }
+  const childrenByParent = new Map<number, ClinicalEvent[]>()
+  for (const ev of props.events) {
+    if (
+      ev.eventType !== 'CONSULTATION' &&
+      ev.consultationId != null &&
+      consultationIds.has(ev.consultationId)
+    ) {
+      const arr = childrenByParent.get(ev.consultationId) ?? []
+      arr.push(ev)
+      childrenByParent.set(ev.consultationId, arr)
+    }
+  }
+  const result: TimelineNode[] = []
+  for (const ev of props.events) {
+    if (ev.eventType === 'CONSULTATION') {
+      result.push({ parent: ev, children: childrenByParent.get(ev.sourceId) ?? [] })
+    } else if (
+      ev.consultationId != null &&
+      consultationIds.has(ev.consultationId)
+    ) {
+      // skip — already nested under its parent consultation
+    } else {
+      result.push({ parent: ev, children: [] })
+    }
+  }
+  return result
+})
+
 function isNavigable(eventType: ClinicalEvent['eventType']): boolean {
-  return Boolean(EVENT_TYPE_ROUTE[eventType])
+  return EVENT_TYPE_DETAILABLE.has(eventType)
 }
 </script>
 
@@ -31,13 +69,26 @@ function isNavigable(eventType: ClinicalEvent['eventType']): boolean {
     </header>
     <div class="timeline">
       <div class="rail" aria-hidden="true" />
-      <EventCard
-        v-for="(ev, idx) in events"
-        :key="`${ev.eventType}-${ev.sourceId}-${idx}`"
-        :event="ev"
-        :navigable="isNavigable(ev.eventType)"
-        @select="emit('select', $event)"
-      />
+      <template
+        v-for="(node, idx) in nodes"
+        :key="`${node.parent.eventType}-${node.parent.sourceId}-${idx}`"
+      >
+        <EventCard
+          :event="node.parent"
+          :navigable="isNavigable(node.parent.eventType)"
+          @select="emit('select', $event)"
+        />
+        <div v-if="node.children.length > 0" class="children">
+          <EventCard
+            v-for="child in node.children"
+            :key="`${child.eventType}-${child.sourceId}`"
+            :event="child"
+            :navigable="isNavigable(child.eventType)"
+            :nested="true"
+            @select="emit('select', $event)"
+          />
+        </div>
+      </template>
     </div>
   </section>
 </template>
@@ -80,5 +131,12 @@ function isNavigable(eventType: ClinicalEvent['eventType']): boolean {
   width: 2px;
   background: var(--warm-200);
   border-radius: 1px;
+}
+.children {
+  position: relative;
+  margin: -4px 0 14px 32px;
+  padding-top: 4px;
+  padding-left: 18px;
+  border-left: 2px solid var(--warm-200);
 }
 </style>

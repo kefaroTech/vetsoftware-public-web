@@ -64,6 +64,11 @@ export const dewormingApi = {
     return data
   },
 
+  async findById(id: number): Promise<DewormingResponse> {
+    const { data } = await http.get<DewormingResponse>(`/dewormings/${id}`)
+    return data
+  },
+
   async update(
     id: number,
     payload: CreateDewormingPayload,

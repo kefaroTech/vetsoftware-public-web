@@ -73,6 +73,13 @@ export const diagnosticImagingApi = {
     return data
   },
 
+  async findById(id: number): Promise<DiagnosticImagingResponse> {
+    const { data } = await http.get<DiagnosticImagingResponse>(
+      `/diagnostic-imagings/${id}`,
+    )
+    return data
+  },
+
   async update(
     id: number,
     payload: CreateDiagnosticImagingPayload,

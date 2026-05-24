@@ -17,6 +17,7 @@ async function load(animalId: number): Promise<ClinicalEvent[]> {
         sourceId: r.sourceId,
         eventType: r.eventType,
         eventDate: r.eventDate,
+        consultationId: r.consultationId,
         summary: r.summary ?? '',
       })),
     )

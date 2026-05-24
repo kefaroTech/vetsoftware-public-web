@@ -66,6 +66,11 @@ export const surgeryApi = {
     return data
   },
 
+  async findById(id: number): Promise<SurgeryResponse> {
+    const { data } = await http.get<SurgeryResponse>(`/surgeries/${id}`)
+    return data
+  },
+
   async update(
     id: number,
     payload: CreateSurgeryPayload,

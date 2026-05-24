@@ -64,6 +64,11 @@ export const vaccinationApi = {
     return data
   },
 
+  async findById(id: number): Promise<VaccinationResponse> {
+    const { data } = await http.get<VaccinationResponse>(`/vaccinations/${id}`)
+    return data
+  },
+
   async update(
     id: number,
     payload: CreateVaccinationPayload,

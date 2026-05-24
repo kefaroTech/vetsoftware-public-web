@@ -65,6 +65,13 @@ export const laboratoryTestApi = {
     return data
   },
 
+  async findById(id: number): Promise<LaboratoryTestResponse> {
+    const { data } = await http.get<LaboratoryTestResponse>(
+      `/laboratory-tests/${id}`,
+    )
+    return data
+  },
+
   async update(
     id: number,
     payload: CreateLaboratoryTestPayload,

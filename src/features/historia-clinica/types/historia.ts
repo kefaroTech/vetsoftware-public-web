@@ -15,6 +15,7 @@ export interface ClinicalEventResponse {
   sourceId: number
   eventType: ClinicalEventType
   eventDate: string // ISO yyyy-MM-dd
+  consultationId: number | null
   summary: string | null
 }
 
@@ -22,6 +23,7 @@ export interface ClinicalEvent {
   sourceId: number
   eventType: ClinicalEventType
   eventDate: string
+  consultationId: number | null
   summary: string
 }
 

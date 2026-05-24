@@ -9,8 +9,9 @@ import type { ClinicalEvent } from '../types/historia'
 interface Props {
   event: ClinicalEvent
   navigable: boolean
+  nested?: boolean
 }
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), { nested: false })
 const emit = defineEmits<{ (e: 'select', event: ClinicalEvent): void }>()
 
 const meta = computed(() => EVENT_TYPES[props.event.eventType])
@@ -23,7 +24,7 @@ function handleClick() {
 </script>
 
 <template>
-  <div class="event-row">
+  <div class="event-row" :class="{ nested }">
     <div
       class="bullet"
       :style="{ background: tokens.bg, color: tokens.fg }"
@@ -126,5 +127,34 @@ function handleClick() {
   color: var(--warm-400);
   align-self: center;
   flex-shrink: 0;
+}
+
+/* Nested (child of a consultation) — sits inside .children, branched off */
+.event-row.nested {
+  margin-bottom: 6px;
+}
+.event-row.nested::before {
+  content: '';
+  position: absolute;
+  left: -18px;
+  top: 22px;
+  width: 14px;
+  height: 2px;
+  background: var(--warm-200);
+}
+.event-row.nested .bullet {
+  left: -10px;
+  top: 11px;
+  width: 22px;
+  height: 22px;
+  font-size: 11px;
+  border-width: 2px;
+}
+.event-row.nested .card {
+  padding: 9px 13px;
+  background: var(--warm-50);
+}
+.event-row.nested .summary {
+  font-size: 13px;
 }
 </style>

@@ -83,16 +83,14 @@ export const TYPE_COLORS: Record<EventTypeColor, EventTypeColorTokens> = {
   },
 }
 
-/**
- * Mapeo evento → ruta nombrada para navegar al "detalle" (vistas existentes en
- * el feature `acciones`). Los tipos sin ruta listada hoy (CONSULTATION,
- * PRESCRIPTION, SPA) no son navegables — el click queda como no-op visual.
- */
-export const EVENT_TYPE_ROUTE: Partial<Record<ClinicalEventType, string>> = {
-  SURGERY: 'acciones-cirugia',
-  VACCINATION: 'acciones-vacunacion',
-  DEWORMING: 'acciones-desparasitacion',
-  HOSPITALIZATION: 'acciones-hospitalizacion',
-  LABORATORY_TEST: 'acciones-laboratorio',
-  DIAGNOSTIC_IMAGING: 'acciones-imagen',
-}
+export const EVENT_TYPE_DETAILABLE: ReadonlySet<ClinicalEventType> = new Set<
+  ClinicalEventType
+>([
+  'SURGERY',
+  'VACCINATION',
+  'DEWORMING',
+  'HOSPITALIZATION',
+  'LABORATORY_TEST',
+  'DIAGNOSTIC_IMAGING',
+  'PRESCRIPTION',
+])

@@ -4,9 +4,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, FileDown, Plus, Search } from 'lucide-vue-next'
 import PawLoader from '@/components/ui/PawLoader.vue'
 import MonthTimelineGroup from '../components/MonthTimelineGroup.vue'
+import EventDetailModal from '../components/EventDetailModal.vue'
 import { useHistoriaSelection } from '../composables/useHistoriaSelection'
 import { useClinicalHistory } from '../composables/useClinicalHistory'
-import { EVENT_TYPES, EVENT_TYPE_ROUTE, TYPE_COLORS } from '../constants/eventTypes'
+import { EVENT_TYPES, EVENT_TYPE_DETAILABLE, TYPE_COLORS } from '../constants/eventTypes'
 import { ownerApi } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
 import { mapOwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.mapper'
 import { animalApi } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
@@ -124,16 +125,17 @@ function tokensFor(type: ClinicalEventType) {
   return TYPE_COLORS[EVENT_TYPES[type].color]
 }
 
+const detailModalOpen = ref(false)
+const selectedEvent = ref<ClinicalEvent | null>(null)
+
 function openEvent(ev: ClinicalEvent) {
-  const target = EVENT_TYPE_ROUTE[ev.eventType]
-  if (!target) return
-  router.push({
-    name: target,
-    query: {
-      animalId: state.pet?.id ?? '',
-      sourceId: String(ev.sourceId),
-    },
-  })
+  if (!EVENT_TYPE_DETAILABLE.has(ev.eventType)) return
+  selectedEvent.value = ev
+  detailModalOpen.value = true
+}
+
+function closeEventDetail() {
+  detailModalOpen.value = false
 }
 
 function goNuevaConsulta() {
@@ -285,6 +287,12 @@ function goNuevaConsulta() {
         @select="openEvent"
       />
     </div>
+
+    <EventDetailModal
+      :open="detailModalOpen"
+      :event="selectedEvent"
+      @close="closeEventDetail"
+    />
   </div>
 </template>
 
