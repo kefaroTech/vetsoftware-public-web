@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { PawPrint, Check } from 'lucide-vue-next'
+import { Check } from 'lucide-vue-next'
 import type { Animal } from '@/types/domain'
 import BaseChip from '@/features/dashboard/components/ui/BaseChip.vue'
-import { calcAge, genderLabel, weightUnitLabel } from '../composables/format'
+import { calcAge, genderLabel, initials, weightUnitLabel } from '../composables/format'
 
 defineProps<{
   pet: Animal
@@ -23,9 +23,7 @@ defineEmits<{ select: [] }>()
       <Check :size="12" :stroke-width="2" />
     </span>
     <div class="head">
-      <div class="avatar">
-        <PawPrint :size="22" :stroke-width="1.6" />
-      </div>
+      <div class="avatar">{{ initials(pet.name) }}</div>
       <div class="meta">
         <div class="name">
           <span>{{ pet.name }}</span>
@@ -109,6 +107,9 @@ defineEmits<{ select: [] }>()
   display: grid;
   place-items: center;
   flex-shrink: 0;
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 500;
 }
 .meta {
   min-width: 0;
