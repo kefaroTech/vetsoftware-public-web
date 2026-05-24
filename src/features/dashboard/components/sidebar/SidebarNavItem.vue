@@ -69,9 +69,11 @@ defineEmits<{
   background: oklch(70% 0.04 var(--hue) / 0.08);
 }
 .nav-item.active {
-  background: oklch(45% 0.16 var(--hue) / 0.4);
+  background: oklch(48% 0.16 var(--hue) / 0.55);
   color: oklch(98% 0.01 var(--hue));
-  box-shadow: inset 0 0 0 1px oklch(70% 0.14 var(--hue) / 0.3);
+  box-shadow:
+    inset 0 0 0 1px oklch(75% 0.14 var(--hue) / 0.35),
+    inset 3px 0 0 oklch(80% 0.18 var(--hue));
   font-weight: 500;
 }
 .nav-item.disabled {
