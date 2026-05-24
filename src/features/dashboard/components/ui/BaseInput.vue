@@ -56,13 +56,13 @@ defineEmits<{
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   font-size: 13.5px;
   cursor: text;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .input:focus-within {
-  border-color: var(--amatista-700);
+  border-color: var(--amatista-500);
   box-shadow: 0 0 0 3px var(--amatista-50);
 }
 .input.disabled {

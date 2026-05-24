@@ -29,7 +29,7 @@ defineEmits<{ 'update:modelValue': [value: string] }>()
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   font-family: inherit;
   font-size: 13.5px;
   line-height: 1.55;
@@ -40,7 +40,7 @@ defineEmits<{ 'update:modelValue': [value: string] }>()
 }
 .textarea:focus {
   outline: none;
-  border-color: var(--amatista-700);
+  border-color: var(--amatista-500);
   box-shadow: 0 0 0 3px var(--amatista-50);
 }
 .textarea::placeholder {

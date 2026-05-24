@@ -39,7 +39,7 @@ defineProps<{
   container-type: inline-size;
 }
 .head {
-  padding: clamp(16px, 1.6cqi + 6px, 24px) clamp(20px, 4cqi, 52px);
+  padding: 20px clamp(22px, 2vw + 12px, 36px);
   border-bottom: 1px solid var(--warm-200);
   display: flex;
   align-items: center;
@@ -79,6 +79,6 @@ defineProps<{
   flex-shrink: 0;
 }
 .body.padded {
-  padding: clamp(22px, 2.2cqi + 8px, 36px) clamp(20px, 4cqi, 56px);
+  padding: clamp(22px, 2vw + 12px, 36px) clamp(22px, 2vw + 12px, 36px);
 }
 </style>

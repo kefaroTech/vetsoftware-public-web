@@ -11,3 +11,17 @@ body,
     Roboto,
     sans-serif;
 }
+
+/* Focus rings unificados en TODOS los inputs (handoff §8) */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--amatista-500);
+  box-shadow: 0 0 0 3px var(--amatista-50);
+}
+
+.v-field--focused .v-field__outline {
+  --v-field-border-opacity: 1;
+  color: var(--amatista-500);
+}

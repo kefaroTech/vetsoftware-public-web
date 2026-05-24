@@ -13,7 +13,7 @@ withDefaults(defineProps<{ maxWidth?: number }>(), { maxWidth: 1280 })
 <style scoped>
 .wrap {
   flex: 1;
-  padding: clamp(16px, 1.5vw + 8px, 32px) clamp(16px, 2vw + 12px, 48px);
+  padding: 28px clamp(20px, 3vw + 8px, 56px);
 }
 .inner {
   margin: 0 auto;
