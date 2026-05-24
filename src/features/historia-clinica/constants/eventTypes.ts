@@ -86,6 +86,7 @@ export const TYPE_COLORS: Record<EventTypeColor, EventTypeColorTokens> = {
 export const EVENT_TYPE_DETAILABLE: ReadonlySet<ClinicalEventType> = new Set<
   ClinicalEventType
 >([
+  'CONSULTATION',
   'SURGERY',
   'VACCINATION',
   'DEWORMING',

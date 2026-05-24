@@ -34,6 +34,10 @@ import {
   prescriptionApi,
   type PrescriptionResponse,
 } from '@/features/dashboard/views/consulta/nueva/api/prescription.api'
+import {
+  consultationApi,
+  type ConsultationResponse,
+} from '@/features/dashboard/views/consulta/nueva/api/consultation.api'
 
 import VaccinationDetail from './detail/VaccinationDetail.vue'
 import LaboratoryTestDetail from './detail/LaboratoryTestDetail.vue'
@@ -42,11 +46,16 @@ import DewormingDetail from './detail/DewormingDetail.vue'
 import HospitalizationDetail from './detail/HospitalizationDetail.vue'
 import DiagnosticImagingDetail from './detail/DiagnosticImagingDetail.vue'
 import PrescriptionDetail from './detail/PrescriptionDetail.vue'
+import ConsultationDetail from './detail/ConsultationDetail.vue'
 
-const props = defineProps<{
-  open: boolean
-  event: ClinicalEvent | null
-}>()
+const props = withDefaults(
+  defineProps<{
+    open: boolean
+    event: ClinicalEvent | null
+    children?: ClinicalEvent[]
+  }>(),
+  { children: () => [] },
+)
 const emit = defineEmits<{ close: [] }>()
 
 type Payload =
@@ -57,6 +66,7 @@ type Payload =
   | { type: 'HOSPITALIZATION'; data: HospitalizationResponse }
   | { type: 'DIAGNOSTIC_IMAGING'; data: DiagnosticImagingResponse }
   | { type: 'PRESCRIPTION'; data: PrescriptionResponse }
+  | { type: 'CONSULTATION'; data: ConsultationResponse }
 
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -100,6 +110,12 @@ async function fetchEvent(ev: ClinicalEvent) {
         payload.value = {
           type: 'PRESCRIPTION',
           data: await prescriptionApi.findById(id),
+        }
+        break
+      case 'CONSULTATION':
+        payload.value = {
+          type: 'CONSULTATION',
+          data: await consultationApi.findById(id),
         }
         break
       default:
@@ -174,6 +190,11 @@ const subtitle = computed(() => {
         <PrescriptionDetail
           v-else-if="payload.type === 'PRESCRIPTION'"
           :data="payload.data"
+        />
+        <ConsultationDetail
+          v-else-if="payload.type === 'CONSULTATION'"
+          :data="payload.data"
+          :children="props.children"
         />
       </template>
     </template>

@@ -139,6 +139,14 @@ function closeEventDetail() {
   detailModalOpen.value = false
 }
 
+const selectedEventChildren = computed<ClinicalEvent[]>(() => {
+  const ev = selectedEvent.value
+  if (!ev || ev.eventType !== 'CONSULTATION') return []
+  return eventsSorted.value.filter(
+    (e) => e.eventType !== 'CONSULTATION' && e.consultationId === ev.sourceId,
+  )
+})
+
 const { exporting, error: exportError, exportPdf } = useClinicalHistoryExport()
 
 async function onExport() {
@@ -312,6 +320,7 @@ function goNuevaConsulta() {
     <EventDetailModal
       :open="detailModalOpen"
       :event="selectedEvent"
+      :children="selectedEventChildren"
       @close="closeEventDetail"
     />
   </div>
