@@ -41,6 +41,25 @@ const VET_ACCIONES_SURG = [
   { id: 603, animalId: '1004', date: '2026-05-08', surgeryType: { name: 'OVH' }, description: 'Esterilización electiva línea media.', medicament: 'Acepromacina + propofol + isofluorano.', observations: '35 min sin complicaciones.', complications: 'Ninguna.' },
 ];
 
+// Spa
+const VET_SPA_TYPES = [
+  { id: '1', name: 'Baño completo' },
+  { id: '2', name: 'Baño medicado' },
+  { id: '3', name: 'Corte de pelo' },
+  { id: '4', name: 'Limpieza de oídos' },
+  { id: '5', name: 'Corte de uñas' },
+  { id: '6', name: 'Peinado y desenredado' },
+  { id: '7', name: 'Estética completa' },
+];
+
+const VET_ACCIONES_SPA = [
+  { id: 701, animalId: '1001', date: '2026-04-22', spaType: { name: 'Baño completo' }, reason: 'Mantenimiento mensual.', details: 'Shampoo hipoalergénico, secado a baja temperatura.', observations: 'Comportamiento tranquilo. Pelaje en buen estado.' },
+  { id: 702, animalId: '1003', date: '2026-05-10', spaType: { name: 'Estética completa' }, reason: 'Corte de raza Labrador.', details: 'Baño + corte sanitario + uñas + oídos.', observations: 'Sin novedades.' },
+  { id: 703, animalId: '1002', date: '2026-03-18', spaType: { name: 'Baño medicado' }, reason: 'Dermatitis leve.', details: 'Shampoo con clorhexidina al 4%. 2 aplicaciones consecutivas.', observations: 'Mejora visible tras la segunda aplicación.' },
+  { id: 704, animalId: '1007', date: '2026-05-21', spaType: { name: 'Corte de pelo' }, reason: 'Verano — reducir pelaje.', details: 'Corte tipo escolar, sin afeitar.', observations: 'Tranquila durante el proceso.' },
+  { id: 705, animalId: '1006', date: '2026-02-04', spaType: { name: 'Limpieza de oídos' }, reason: 'Acumulación de cerumen.', details: 'Limpieza con solución otológica enzimática.', observations: 'Próximo control en 1 mes.' },
+];
+
 // Helpers para localizar owner / pet a partir del animalId
 function vetFindPetAnywhere(animalId) {
   for (const ownerId of Object.keys(VET_MOCK_PETS)) {
@@ -56,5 +75,6 @@ function vetFindPetAnywhere(animalId) {
 Object.assign(window, {
   VET_ACCIONES_LAB, VET_ACCIONES_IMAGING, VET_ACCIONES_VAC,
   VET_ACCIONES_HOSP, VET_ACCIONES_DEWORM, VET_ACCIONES_SURG,
+  VET_ACCIONES_SPA, VET_SPA_TYPES,
   vetFindPetAnywhere,
 });

@@ -10,7 +10,7 @@
    VetNuevaView, VetConsultaGuardadaView, VetConsultaActiveBanner,
    VetConsultaVacunacionView, VetConsultaHospitalView,
    VetLabListViewC, VetImagingListViewC, VetVaccineListViewC,
-   VetHospListViewC, VetDewormListViewC, VetSurgeryListViewC,
+   VetHospListViewC, VetDewormListViewC, VetSurgeryListViewC, VetSpaListViewC,
    VetEmpleadosView, VetRolesView */
 
 function VetRoutedScreen() {
@@ -46,6 +46,7 @@ function VetRoutedScreen() {
       case 'acciones-hospitalizacion':   return <VetHospListViewC />;
       case 'acciones-desparasitacion':   return <VetDewormListViewC />;
       case 'acciones-cirugia':           return <VetSurgeryListViewC />;
+      case 'acciones-spa':               return <VetSpaListViewC />;
       case 'empleados':                  return <VetEmpleadosView />;
       case 'roles':                      return <VetRolesView />;
       default:                           return <VetHomeView />;

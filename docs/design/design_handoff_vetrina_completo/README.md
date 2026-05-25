@@ -2,10 +2,12 @@
 
 ## Resumen
 
-Esta carpeta contiene un **prototipo HTML interactivo** (`Vetrina App.html` + carpeta `vetrina/`) que recrea **toda la app actual** y le aplica un pase de polish visual. El objetivo de este handoff es que Claude Code lleve esas mejoras al **codebase Vue 3 + Vuetify + TypeScript existente** (la carpeta `src/`) — sin reemplazar la arquitectura, solo refinando estilos, espaciado, consistencia de patrones y añadiendo un sistema de toasts.
+Esta carpeta contiene un **prototipo HTML interactivo** (`Vetrina App.html` + carpeta `vetrina/`) que recrea **toda la app actual** y le aplica un pase de polish visual. El objetivo de este handoff es que Claude Code lleve esas mejoras al **codebase Vue 3 + Vuetify + TypeScript existente** (la carpeta `src/`) — sin reemplazar la arquitectura, solo refinando estilos, espaciado, consistencia de patrones, añadiendo un sistema de toasts e implementando un nuevo flujo de **Spa**.
 
 > El HTML es **referencia visual y de comportamiento**, no código a copiar tal cual.
 > El trabajo final vive en `src/features/...` siguiendo los patrones Vue 3 + Vuetify ya establecidos.
+
+> **Nuevo en esta versión**: flujo completo de **Spa** (acción clínica adicional) — ver §14 al final del documento.
 
 ---
 
@@ -334,3 +336,136 @@ box-shadow:
 - `vetrina/polish.css` — **archivo más importante**: contiene todas las reglas CSS de polish a portar a los `.vue` files correspondientes
 
 Cuando Claude Code lea el polish.css, debe extraer las reglas y aplicarlas a los archivos Vue indicados en cada sección comentada (`/* ---------- N. NOMBRE ---------- */`).
+
+---
+
+## 🆕 §14. Nuevo flujo: Spa
+
+El modelo de datos del backend incluye las entidades `Spa` y `SpaType` que aún no están implementadas en el frontend Vue. Este prototipo añade el flujo completo como referencia. Debe implementarse en Vue siguiendo el mismo patrón que las otras 6 vistas de `src/features/acciones/`.
+
+### Entidad
+
+```ts
+// src/types/domain.ts — añadir:
+export interface SpaType {
+  id: string
+  name: string
+  description?: string
+}
+
+export interface Spa {
+  date: string
+  spaTypeId: string
+  reason: string
+  details: string
+  observations: string
+  // animal, company, consultation? — según el modelo
+}
+```
+
+> **Nota del modelo**: a diferencia de las otras acciones, `Spa` **no está vinculado a una Consultation** (no aparece `Spa --> Consultation` en el diagrama). Es una acción standalone como `DayCare`. Mantén esto al diseñar la API.
+
+### Archivos a crear en `src/features/acciones/`
+
+```
+src/features/acciones/
+├── views/
+│   └── SpaListView.vue              ← Lista con cascada de paciente
+├── modals/
+│   └── SpaFormModal.vue             ← Form crear/editar
+├── api/
+│   ├── spa.api.ts                   ← CRUD endpoints
+│   └── spaType.api.ts               ← Catálogo de tipos
+└── composables/
+    └── useSpaTypes.ts               ← Catálogo cacheable
+```
+
+### Ruta nueva en `src/router/index.ts`
+
+```ts
+{
+  path: 'acciones/spa',
+  name: 'acciones-spa',
+  component: () => import('@/features/acciones/views/SpaListView.vue'),
+  meta: { permission: PERMISSIONS.SPA_CREATE }, // crear el permiso correspondiente
+},
+```
+
+### Sidebar — agregar item
+
+**Archivo**: `src/features/dashboard/components/sidebar/AppSidebar.vue`
+
+Añadir al array `accionesItems` (después de Cirugía):
+
+```ts
+{
+  label: 'Spa',
+  icon: Sparkles, // import { Sparkles } from 'lucide-vue-next'
+  to: { name: 'acciones-spa' as const },
+  show: canSpa.value,
+},
+```
+
+Y añadir el permiso `canSpa = can(PERMISSIONS.SPA_CREATE)` arriba con los otros.
+
+### Form fields del modal
+
+Según el modelo `Spa`:
+
+| Campo | Tipo | Required | Notas |
+|---|---|---|---|
+| `date` | Date | ✓ | Default = hoy |
+| `spaType` | Select | ✓ | Catálogo `SpaType` (Baño completo, Baño medicado, Corte de pelo, Limpieza de oídos, Corte de uñas, Peinado, Estética completa) |
+| `reason` | Input | – | "Mantenimiento mensual", "Dermatitis", etc. |
+| `details` | Textarea | – | Productos, técnica, tiempos |
+| `observations` | Textarea | – | Comportamiento del paciente, recomendaciones |
+
+### Tabla — columnas
+
+| Columna | Source |
+|---|---|
+| Fecha | `formatDateShort(date)` |
+| Servicio | `spaType.name` |
+| Motivo | `reason` (truncar con ellipsis) |
+| Detalles | `details` (truncar con ellipsis) |
+| Acciones | Editar + Eliminar |
+
+### Búsqueda
+
+Filtrar por: `spaType.name`, `reason`, `details`.
+
+### Mocks de referencia
+
+Ver `vetrina/data-acciones.jsx` (constantes `VET_SPA_TYPES` y `VET_ACCIONES_SPA`) para ejemplos de datos realistas.
+
+### Permisos a añadir
+
+En `src/constants/permissions.ts`:
+```ts
+SPA_CREATE: 'spa.create',
+SPA_UPDATE: 'spa.update',
+SPA_DELETE: 'spa.delete',
+```
+
+Y registrarlos en el catálogo de `BasePermission` del backend con el sub-módulo correspondiente (probablemente uno nuevo "Spa" bajo el módulo "Clínica").
+
+### Integración con Historia Clínica
+
+El `ClinicalEventType` ya tiene la entrada `SPA` en `src/features/historia-clinica/constants/eventTypes.ts`:
+```ts
+SPA: { label: 'Spa', color: 'gray', icon: '🛁' },
+```
+
+Solo falta:
+1. Añadir el handler en `EventDetailModal.vue` para fetcher `spaApi.findById()` cuando `eventType === 'SPA'`.
+2. Crear `SpaDetail.vue` en `src/features/historia-clinica/components/detail/` siguiendo el patrón de los otros.
+3. Añadir `SPA` al `EVENT_TYPE_DETAILABLE` set.
+
+Campos del detail (mismo formato que los otros):
+```vue
+<DetailField label="Tipo de servicio" :value="data.spaType.name" />
+<DetailField label="Fecha" :value="formatEventDate(data.date)" />
+<DetailField label="Motivo" :value="data.reason" span="full" />
+<DetailField label="Detalles" :value="data.details" span="full" />
+<DetailField label="Observaciones" :value="data.observations" span="full" />
+```

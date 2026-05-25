@@ -276,6 +276,13 @@ const VetIcons = {
       <line x1="12" y1="15" x2="12" y2="3" />
     </VetIcon>
   ),
+  Sparkles: (p) => (
+    <VetIcon {...p}>
+      <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" />
+      <path d="M19 17l.9 2.4L22 20l-2.1.6L19 23l-.9-2.4L16 20l2.1-.6z" />
+      <path d="M5 4l.7 1.9L7 6l-1.3.4L5 8l-.7-1.6L3 6l1.3-.1z" />
+    </VetIcon>
+  ),
 };
 
 window.VetIcons = VetIcons;

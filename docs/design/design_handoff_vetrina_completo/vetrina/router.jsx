@@ -22,6 +22,7 @@ const VET_ROUTES = [
   { name: 'acciones-hospitalizacion',     path: '/dashboard/acciones/hospitalizacion', meta: { requiresAuth: true } },
   { name: 'acciones-desparasitacion',     path: '/dashboard/acciones/desparasitacion', meta: { requiresAuth: true } },
   { name: 'acciones-cirugia',             path: '/dashboard/acciones/cirugia',      meta: { requiresAuth: true } },
+  { name: 'acciones-spa',                 path: '/dashboard/acciones/spa',          meta: { requiresAuth: true } },
   { name: 'empleados',                    path: '/dashboard/empleados',             meta: { requiresAuth: true } },
   { name: 'roles',                        path: '/dashboard/roles',                 meta: { requiresAuth: true } },
 ];

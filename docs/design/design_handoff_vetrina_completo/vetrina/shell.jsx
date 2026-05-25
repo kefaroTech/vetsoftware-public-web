@@ -101,6 +101,7 @@ function VetAppSidebar() {
     { label: 'Hospitalización',     Icon: VetIcons.BedDouble, name: 'acciones-hospitalizacion' },
     { label: 'Desparasitación',     Icon: VetIcons.Bug,       name: 'acciones-desparasitacion' },
     { label: 'Cirugía',             Icon: VetIcons.Scissors,  name: 'acciones-cirugia' },
+    { label: 'Spa',                 Icon: VetIcons.Sparkles,  name: 'acciones-spa' },
   ];
 
   const upcomingItems = [

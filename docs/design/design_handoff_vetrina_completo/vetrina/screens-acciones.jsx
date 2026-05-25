@@ -4,6 +4,7 @@
    VET_VACCINATION_TYPES, VET_LAB_TYPES, VET_IMAGING_TYPES, VET_SURGERY_TYPES,
    VET_ACCIONES_LAB, VET_ACCIONES_IMAGING, VET_ACCIONES_VAC,
    VET_ACCIONES_HOSP, VET_ACCIONES_DEWORM, VET_ACCIONES_SURG,
+   VET_ACCIONES_SPA, VET_SPA_TYPES,
    vetTodayISO, vetFormatDateShort,
    useVetToast */
 
@@ -636,6 +637,50 @@ function VetSurgeryFormModal({ open, initial, onClose, onSave, animal }) {
   );
 }
 
+function VetSpaFormModal({ open, initial, onClose, onSave, animal }) {
+  const [d, setD] = React.useState({ date: vetTodayISO(), spaTypeId: '', reason: '', details: '', observations: '' });
+  React.useEffect(() => {
+    if (!open) return;
+    if (initial) {
+      const tt = VET_SPA_TYPES.find((t) => t.name === initial.spaType?.name);
+      setD({ date: initial.date, spaTypeId: tt?.id ?? '', reason: initial.reason, details: initial.details, observations: initial.observations });
+    } else {
+      setD({ date: vetTodayISO(), spaTypeId: '', reason: '', details: '', observations: '' });
+    }
+  }, [open, initial]);
+  const u = (p) => setD((x) => ({ ...x, ...p }));
+  return (
+    <VetAccionFormModal
+      open={open} onClose={onClose} onSave={onSave}
+      title="Nuevo servicio de Spa"
+      icon={VetIcons.Sparkles} animal={animal} initial={initial}
+      canSave={!!d.spaTypeId}
+      makeRecord={() => {
+        const tt = VET_SPA_TYPES.find((t) => String(t.id) === String(d.spaTypeId));
+        return { ...d, spaType: { name: tt?.name ?? '—' }, animalId: animal?.id };
+      }}
+    >
+      <div className="vet-form-grid-2">
+        <VetBaseField label="Fecha" required>
+          {({ id }) => <VetDateInput id={id} value={d.date} onChange={(v) => u({ date: v })} />}
+        </VetBaseField>
+        <VetBaseField label="Tipo de servicio" required>
+          {({ id }) => <VetBaseSelect id={id} value={d.spaTypeId} onChange={(v) => u({ spaTypeId: v })} options={VET_SPA_TYPES} />}
+        </VetBaseField>
+      </div>
+      <VetBaseField label="Motivo">
+        {({ id }) => <VetBaseInput id={id} value={d.reason} onChange={(v) => u({ reason: v })} placeholder="Ej. Mantenimiento mensual" />}
+      </VetBaseField>
+      <VetBaseField label="Detalles del servicio">
+        {({ id }) => <VetBaseTextarea id={id} value={d.details} onChange={(v) => u({ details: v })} rows={2} placeholder="Productos usados, técnica, tiempos…" />}
+      </VetBaseField>
+      <VetBaseField label="Observaciones">
+        {({ id }) => <VetBaseTextarea id={id} value={d.observations} onChange={(v) => u({ observations: v })} rows={2} placeholder="Comportamiento del paciente, recomendaciones…" />}
+      </VetBaseField>
+    </VetAccionFormModal>
+  );
+}
+
 // ============================================================================
 // 6 concrete list views — using the generic list view
 // ============================================================================
@@ -814,7 +859,34 @@ function VetSurgeryListViewC() {
   );
 }
 
+function VetSpaListViewC() {
+  const s = useVetAccionesState(VET_ACCIONES_SPA, "Servicio de spa");
+  return (
+    <VetAccionesListView
+      kicker="Acciones clínicas"
+      title="Spa y estética"
+      lead="Baños, cortes, limpieza de oídos y otros servicios de bienestar."
+      items={s.items} addRecord={s.add} removeRecord={s.remove}
+      columns={[{ label: 'Fecha' }, { label: 'Servicio' }, { label: 'Motivo' }, { label: 'Detalles' }]}
+      renderRow={(item, actions) => (
+        <tr key={item.id}>
+          <td>{vetFormatDateShort(item.date)}</td>
+          <td>{item.spaType.name}</td>
+          <td className="vet-cell-ellipsis">{item.reason || '—'}</td>
+          <td className="vet-cell-ellipsis">{item.details || '—'}</td>
+          <VetRowActions {...actions} />
+        </tr>
+      )}
+      searchFn={(item, q) => item.spaType.name.toLowerCase().includes(q) || (item.reason ?? '').toLowerCase().includes(q) || (item.details ?? '').toLowerCase().includes(q)}
+      placeholder="Buscar servicio, motivo o detalles…"
+      emptyText="Este paciente aún no tiene servicios de spa registrados."
+      ModalForm={VetSpaFormModal}
+    />
+  );
+}
+
 Object.assign(window, {
   VetLabListViewC, VetImagingListViewC, VetVaccineListViewC,
   VetHospListViewC, VetDewormListViewC, VetSurgeryListViewC,
+  VetSpaListViewC,
 });
