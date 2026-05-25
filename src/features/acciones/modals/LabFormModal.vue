@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { Beaker, PawPrint, Plus, X } from 'lucide-vue-next'
+import { Beaker, Check, PawPrint, Plus, X } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
@@ -50,16 +50,27 @@ const isEdit = computed(() => props.initial != null)
 const patientId = ref<number | null>(null)
 const draft = reactive({
   date: todayISO(),
+  sampleCollected: false,
   rows: [emptyRow()] as TestRow[],
 })
 const submitted = ref(false)
 const saving = ref(false)
 const saveError = ref<string | null>(null)
 
+// Solo mostrar el toggle cuando aplica: en create siempre, en edit solo si el
+// status actual sigue en alguno de los dos PENDIENTE*. Si el examen ya está
+// COMPLETADO o CANCELADO, no degradar via este checkbox.
+const showSampleCollected = computed(() => {
+  if (!isEdit.value) return true
+  const s = props.initial?.status
+  return s === 'PENDIENTE' || s === 'PENDIENTE_POR_PROCESAR'
+})
+
 function reset() {
   if (props.initial) {
     patientId.value = props.initial.animal.id
     draft.date = props.initial.date
+    draft.sampleCollected = props.initial.status === 'PENDIENTE_POR_PROCESAR'
     draft.rows = [
       {
         testTypeId: String(props.initial.testType.id),
@@ -70,6 +81,7 @@ function reset() {
   } else {
     patientId.value = props.preSelectedAnimal?.id ?? null
     draft.date = todayISO()
+    draft.sampleCollected = false
     draft.rows = [emptyRow()]
   }
   submitted.value = false
@@ -138,7 +150,7 @@ async function save() {
   try {
     if (props.initial) {
       const r = draft.rows[0]!
-      const updated = await laboratoryTestApi.update(props.initial.id, {
+      let updated = await laboratoryTestApi.update(props.initial.id, {
         date: draft.date,
         testTypeId: Number(r.testTypeId),
         quantity: Number(r.quantity),
@@ -147,14 +159,26 @@ async function save() {
         consultationId: props.initial.consultation?.id ?? null,
         companyId: cid,
       })
+      // Si el checkbox aplica y cambió respecto al status actual, dispara el
+      // cambio via PATCH /status (el PUT no acepta status en este endpoint).
+      if (showSampleCollected.value) {
+        const desired = draft.sampleCollected
+          ? 'PENDIENTE_POR_PROCESAR'
+          : 'PENDIENTE'
+        if (desired !== props.initial.status) {
+          updated = await laboratoryTestApi.changeStatus(props.initial.id, desired)
+        }
+      }
       emit('saved', updated)
     } else {
+      const status = draft.sampleCollected ? 'PENDIENTE_POR_PROCESAR' : 'PENDIENTE'
       for (const r of draft.rows) {
         const created = await laboratoryTestApi.create({
           date: draft.date,
           testTypeId: Number(r.testTypeId),
           quantity: Number(r.quantity),
           diagnosis: r.diagnosis.trim(),
+          status,
           animalId: pid,
           consultationId: null,
           companyId: cid,
@@ -262,6 +286,29 @@ async function save() {
       <button v-if="!isEdit" type="button" class="add-row" @click="addRow">
         <Plus :size="14" :stroke-width="1.8" /> Agregar otro examen
       </button>
+
+      <label
+        v-if="showSampleCollected"
+        class="sample-collected"
+        :class="{ checked: draft.sampleCollected }"
+      >
+        <span class="cb-box" :class="{ checked: draft.sampleCollected }">
+          <Check v-if="draft.sampleCollected" :size="12" :stroke-width="3" />
+        </span>
+        <input
+          v-model="draft.sampleCollected"
+          type="checkbox"
+          class="sr-only"
+        />
+        <div>
+          <div class="title">La muestra ya fue recolectada</div>
+          <div class="desc">
+            Marca esta opción si la muestra está tomada y solo falta procesarla en
+            laboratorio. El estado pasará a
+            <strong>Pendiente por procesar</strong>.
+          </div>
+        </div>
+      </label>
     </template>
 
     <template #footer-actions>
@@ -409,5 +456,72 @@ async function save() {
 .btn-ghost:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+.sample-collected {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--warm-100);
+  border: 1.5px solid var(--warm-200);
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 12px;
+  position: relative;
+  transition: border-color 0.15s ease, background 0.12s ease;
+}
+.sample-collected:hover {
+  border-color: var(--amatista-300);
+}
+.sample-collected.checked {
+  background: linear-gradient(135deg, oklch(95% 0.06 80), oklch(96% 0.02 var(--hue)));
+  border-color: oklch(70% 0.13 75);
+}
+.cb-box {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid var(--warm-300);
+  background: var(--warm-50);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: white;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.sample-collected:hover .cb-box:not(.checked) {
+  border-color: var(--amatista-400);
+}
+.cb-box.checked {
+  background: oklch(58% 0.16 75);
+  border-color: oklch(58% 0.16 75);
+}
+.sample-collected .title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--warm-900);
+  line-height: 1.3;
+}
+.sample-collected .desc {
+  font-size: 12px;
+  color: var(--warm-600);
+  margin-top: 3px;
+  line-height: 1.5;
+}
+.sample-collected .desc strong {
+  color: oklch(40% 0.13 75);
+  font-weight: 600;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>

@@ -5,6 +5,7 @@ import ListBody from '../components/ListBody.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import OwnerAnimalBreadcrumb from '../components/OwnerAnimalBreadcrumb.vue'
 import LabFormModal from '../modals/LabFormModal.vue'
+import LabStatusPill from '../components/LabStatusPill.vue'
 import AccionDetailModal, { type DetailFieldDef } from '../modals/AccionDetailModal.vue'
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
@@ -36,11 +37,19 @@ const deleting = ref<LaboratoryTestResponse | null>(null)
 const deletingBusy = ref(false)
 const viewing = ref<LaboratoryTestResponse | null>(null)
 
+const STATUS_LABEL: Record<LaboratoryTestResponse['status'], string> = {
+  PENDIENTE: 'Pendiente',
+  PENDIENTE_POR_PROCESAR: 'Pendiente por procesar',
+  COMPLETADO: 'Completado',
+  CANCELADO: 'Cancelado',
+}
+
 function detailFields(item: LaboratoryTestResponse): DetailFieldDef[] {
   return [
     { label: 'Fecha', value: formatDateShort(item.date) },
     { label: 'Tipo de examen', value: item.testType.name },
     { label: 'Cantidad', value: item.quantity },
+    { label: 'Estado', value: STATUS_LABEL[item.status] },
     { label: 'Diagnóstico / motivo', value: item.diagnosis, span: 'full' },
   ]
 }
@@ -170,6 +179,7 @@ function searchFn(item: LaboratoryTestResponse, q: string) {
             <th>Tipo</th>
             <th>Cantidad</th>
             <th>Diagnóstico</th>
+            <th>Estado</th>
             <th v-if="canUpdate || canDelete" class="actions-col">Acciones</th>
           </tr>
         </template>
@@ -179,6 +189,7 @@ function searchFn(item: LaboratoryTestResponse, q: string) {
             <td>{{ item.testType.name }}</td>
             <td>{{ item.quantity }}</td>
             <td class="ellipsis">{{ item.diagnosis }}</td>
+            <td><LabStatusPill :status="item.status" /></td>
             <td v-if="canUpdate || canDelete" class="actions">
               <button
                 v-if="canUpdate"

@@ -415,14 +415,20 @@ function VetAccionFormModal({ open, onClose, onSave, title, icon, accent = 'amat
 // ============================================================================
 
 function VetLabFormModal({ open, initial, onClose, onSave, animal }) {
-  const [d, setD] = React.useState({ date: vetTodayISO(), testTypeId: '', quantity: 1, diagnosis: '' });
+  const [d, setD] = React.useState({ date: vetTodayISO(), testTypeId: '', quantity: 1, diagnosis: '', sampleCollected: false });
   React.useEffect(() => {
     if (!open) return;
     if (initial) {
       const tt = VET_LAB_TYPES.find((t) => t.name === initial.testType?.name);
-      setD({ date: initial.date, testTypeId: tt?.id ?? '', quantity: initial.quantity, diagnosis: initial.diagnosis });
+      setD({
+        date: initial.date,
+        testTypeId: tt?.id ?? '',
+        quantity: initial.quantity,
+        diagnosis: initial.diagnosis,
+        sampleCollected: initial.status === 'PENDIENTE_POR_PROCESAR' || initial.status === 'COMPLETADO',
+      });
     } else {
-      setD({ date: vetTodayISO(), testTypeId: '', quantity: 1, diagnosis: '' });
+      setD({ date: vetTodayISO(), testTypeId: '', quantity: 1, diagnosis: '', sampleCollected: false });
     }
   }, [open, initial]);
   const u = (p) => setD((x) => ({ ...x, ...p }));
@@ -434,7 +440,17 @@ function VetLabFormModal({ open, initial, onClose, onSave, animal }) {
       canSave={!!d.testTypeId}
       makeRecord={() => {
         const tt = VET_LAB_TYPES.find((t) => String(t.id) === String(d.testTypeId));
-        return { ...d, quantity: Number(d.quantity) || 1, testType: { name: tt?.name ?? '—' }, animalId: animal?.id };
+        const status = initial?.status === 'COMPLETADO' || initial?.status === 'CANCELADO'
+          ? initial.status
+          : (d.sampleCollected ? 'PENDIENTE_POR_PROCESAR' : 'PENDIENTE');
+        const { sampleCollected, ...rest } = d;
+        return {
+          ...rest,
+          quantity: Number(d.quantity) || 1,
+          testType: { name: tt?.name ?? '—' },
+          status,
+          animalId: animal?.id,
+        };
       }}
     >
       <div className="vet-form-grid-2">
@@ -451,6 +467,25 @@ function VetLabFormModal({ open, initial, onClose, onSave, animal }) {
       <VetBaseField label="Diagnóstico / motivo">
         {({ id }) => <VetBaseTextarea id={id} value={d.diagnosis} onChange={(v) => u({ diagnosis: v })} rows={2} />}
       </VetBaseField>
+
+      <label className={'vet-sample-collected' + (d.sampleCollected ? ' checked' : '')}>
+        <span className={'vet-sample-collected-box' + (d.sampleCollected ? ' checked' : '')}>
+          {d.sampleCollected && <VetIcons.Check size={12} strokeWidth={3} />}
+        </span>
+        <input
+          type="checkbox"
+          checked={d.sampleCollected}
+          onChange={(e) => u({ sampleCollected: e.target.checked })}
+          style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
+        />
+        <div>
+          <div className="vet-sample-collected-title">La muestra ya fue recolectada</div>
+          <div className="vet-sample-collected-desc">
+            Marca esta opción si la muestra está tomada y solo falta procesarla en laboratorio.
+            El estado pasará a <strong>Pendiente por procesar</strong>.
+          </div>
+        </div>
+      </label>
     </VetAccionFormModal>
   );
 }
@@ -762,6 +797,30 @@ function useVetAccionesState(initial, label = 'Registro') {
   return { items, add, remove };
 }
 
+// Lab test status labels & colors
+const VET_LAB_STATUS_LABEL = {
+  PENDIENTE: 'Pendiente',
+  PENDIENTE_POR_PROCESAR: 'Pendiente por procesar',
+  COMPLETADO: 'Completado',
+  CANCELADO: 'Cancelado',
+};
+const VET_LAB_STATUS_TONE = {
+  PENDIENTE:              { bg: 'var(--warm-200)',        fg: 'var(--warm-700)',     dot: 'var(--warm-500)' },
+  PENDIENTE_POR_PROCESAR: { bg: 'oklch(94% 0.07 80)',     fg: 'oklch(45% 0.13 70)',  dot: 'oklch(65% 0.15 75)' },
+  COMPLETADO:             { bg: 'oklch(94% 0.06 150)',    fg: 'oklch(40% 0.13 150)', dot: 'oklch(55% 0.15 150)' },
+  CANCELADO:              { bg: 'oklch(94% 0.05 25)',     fg: 'oklch(48% 0.18 25)',  dot: 'oklch(60% 0.18 25)' },
+};
+
+function VetLabStatusPill({ status }) {
+  const t = VET_LAB_STATUS_TONE[status] ?? VET_LAB_STATUS_TONE.PENDIENTE;
+  return (
+    <span className="vet-lab-status-pill" style={{ background: t.bg, color: t.fg }}>
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: t.dot, flexShrink: 0 }} />
+      {VET_LAB_STATUS_LABEL[status] ?? status}
+    </span>
+  );
+}
+
 function VetLabListViewC() {
   const s = useVetAccionesState(VET_ACCIONES_LAB, "Examen");
   return (
@@ -771,7 +830,7 @@ function VetLabListViewC() {
       lead="Crea y consulta solicitudes de examen sin pasar por una consulta."
       items={s.items} addRecord={s.add} removeRecord={s.remove}
       columns={[
-        { label: 'Fecha' }, { label: 'Tipo' }, { label: 'Cantidad' }, { label: 'Diagnóstico' },
+        { label: 'Fecha' }, { label: 'Tipo' }, { label: 'Cantidad' }, { label: 'Diagnóstico' }, { label: 'Estado' },
       ]}
       renderRow={(item, actions) => (
         <tr key={item.id} className="vet-list-row-clickable" onClick={actions.onView}>
@@ -779,6 +838,7 @@ function VetLabListViewC() {
           <td>{item.testType.name}</td>
           <td>{item.quantity}</td>
           <td className="vet-cell-ellipsis">{item.diagnosis}</td>
+          <td><VetLabStatusPill status={item.status || 'PENDIENTE'} /></td>
           <VetRowActions {...actions} />
         </tr>
       )}
@@ -792,6 +852,7 @@ function VetLabListViewC() {
         { label: 'Fecha', value: vetFormatDateShort(it.date) },
         { label: 'Tipo de examen', value: it.testType?.name },
         { label: 'Cantidad', value: it.quantity },
+        { label: 'Estado', value: <VetLabStatusPill status={it.status || 'PENDIENTE'} /> },
         { label: 'Diagnóstico / motivo', value: it.diagnosis, span: 'full' },
       ]}
     />

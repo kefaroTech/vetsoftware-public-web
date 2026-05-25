@@ -4,10 +4,10 @@
 // Mock data para las 6 vistas de Acciones Clínicas (listados standalone)
 
 const VET_ACCIONES_LAB = [
-  { id: 101, animalId: '1001', date: '2025-11-04', testType: { name: 'Hemograma + química' }, quantity: 1, diagnosis: 'Eosinofilia leve. Resto normal.' },
-  { id: 102, animalId: '1005', date: '2026-05-23', testType: { name: 'Panel geriátrico + uroanálisis' }, quantity: 1, diagnosis: 'Creatinina 1.6 mg/dL.' },
-  { id: 103, animalId: '1001', date: '2024-12-02', testType: { name: 'Coprológico' }, quantity: 2, diagnosis: 'Negativo.' },
-  { id: 104, animalId: '1003', date: '2025-03-12', testType: { name: 'Hemograma completo' }, quantity: 1, diagnosis: 'Normal.' },
+  { id: 101, animalId: '1001', date: '2025-11-04', testType: { name: 'Hemograma + química' }, quantity: 1, diagnosis: 'Eosinofilia leve. Resto normal.', status: 'COMPLETADO' },
+  { id: 102, animalId: '1005', date: '2026-05-23', testType: { name: 'Panel geriátrico + uroanálisis' }, quantity: 1, diagnosis: 'Creatinina 1.6 mg/dL.', status: 'PENDIENTE_POR_PROCESAR' },
+  { id: 103, animalId: '1001', date: '2024-12-02', testType: { name: 'Coprológico' }, quantity: 2, diagnosis: 'Negativo.', status: 'COMPLETADO' },
+  { id: 104, animalId: '1003', date: '2025-03-12', testType: { name: 'Hemograma completo' }, quantity: 1, diagnosis: 'Normal.', status: 'PENDIENTE' },
 ];
 
 const VET_ACCIONES_IMAGING = [

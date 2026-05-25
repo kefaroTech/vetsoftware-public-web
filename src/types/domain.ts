@@ -134,11 +134,18 @@ export interface Prescription {
   medicaments: MedicamentPrescription[]
 }
 
+export type LaboratoryTestStatus =
+  | 'PENDIENTE'
+  | 'PENDIENTE_POR_PROCESAR'
+  | 'COMPLETADO'
+  | 'CANCELADO'
+
 export interface LaboratoryTest {
   date: string
   testTypeId: string
   quantity: number
   diagnosis: string
+  status: LaboratoryTestStatus
 }
 
 export interface DiagnosticImaging {

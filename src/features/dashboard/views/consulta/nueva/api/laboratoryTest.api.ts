@@ -1,10 +1,12 @@
 import { http } from '@/services/http/http.client'
+import type { LaboratoryTestStatus } from '@/types/domain'
 
 export interface CreateLaboratoryTestPayload {
   date: string
   testTypeId: number
   quantity: number
   diagnosis: string
+  status?: LaboratoryTestStatus
   animalId: number
   consultationId: number | null
   companyId: number
@@ -38,6 +40,7 @@ export interface LaboratoryTestResponse {
   testType: LaboratoryTestTypeSummary
   quantity: number
   diagnosis: string
+  status: LaboratoryTestStatus
   animal: LaboratoryTestAnimalSummary
   consultation: LaboratoryTestConsultationSummary | null
   company: LaboratoryTestCompanySummary
@@ -85,5 +88,16 @@ export const laboratoryTestApi = {
 
   async remove(id: number): Promise<void> {
     await http.delete(`/laboratory-tests/${id}`)
+  },
+
+  async changeStatus(
+    id: number,
+    status: LaboratoryTestStatus,
+  ): Promise<LaboratoryTestResponse> {
+    const { data } = await http.patch<LaboratoryTestResponse>(
+      `/laboratory-tests/${id}/status`,
+      { status },
+    )
+    return data
   },
 }

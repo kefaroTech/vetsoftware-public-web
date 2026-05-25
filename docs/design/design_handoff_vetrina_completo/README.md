@@ -588,3 +588,128 @@ const label = newRoles.length === 1
   : `${emp.name} ahora tiene ${newRoles.length} roles: ${newRoles.map((r) => r.name).join(', ')}.`
 toast.success('Roles actualizados', label)
 ```
+
+---
+
+## 🆕 §17. Laboratory test — status con checkbox "Muestra recolectada"
+
+Hoy `LaboratoryTestStatus` solo tiene `PENDIENTE / COMPLETADO / CANCELADO`. Hay que añadir un estado intermedio para el caso real en que la muestra ya está tomada pero aún no fue procesada por el laboratorio.
+
+### Backend — añadir valor al enum
+
+```java
+public enum LaboratoryTestStatus {
+  PENDIENTE,
+  PENDIENTE_POR_PROCESAR,  // ← NUEVO: muestra recolectada, esperando procesamiento
+  COMPLETADO,
+  CANCELADO
+}
+```
+
+Y migración Liquibase / Flyway para añadir el valor al enum existente en BD si aplica.
+
+### Frontend Vue — cambios
+
+**Archivo principal**: `src/features/acciones/modals/LabFormModal.vue`
+
+Añadir un checkbox tipo card seleccionable debajo del campo "Diagnóstico":
+
+```vue
+<label class="sample-collected" :class="{ checked: form.sampleCollected }">
+  <span class="cb-box" :class="{ checked: form.sampleCollected }">
+    <Check v-if="form.sampleCollected" :size="12" :stroke-width="3" />
+  </span>
+  <input type="checkbox" v-model="form.sampleCollected" class="sr-only" />
+  <div>
+    <div class="title">La muestra ya fue recolectada</div>
+    <div class="desc">
+      Marca esta opción si la muestra está tomada y solo falta procesarla en laboratorio.
+      El estado pasará a <strong>Pendiente por procesar</strong>.
+    </div>
+  </div>
+</label>
+```
+
+Al crear:
+```ts
+const status = form.sampleCollected
+  ? 'PENDIENTE_POR_PROCESAR'
+  : 'PENDIENTE'
+await laboratoryTestApi.create({ ..., status })
+```
+
+Al editar: si el examen ya está `COMPLETADO` o `CANCELADO`, NO degradar el status — el toggle solo afecta cuando el estado actual es uno de los dos `PENDIENTE*`.
+
+### Tabla de laboratorio (`LabListView.vue`)
+
+Añadir columna "Estado" después de "Diagnóstico":
+
+```vue
+<th>Estado</th>
+...
+<td><LabStatusPill :status="item.status" /></td>
+```
+
+### Componente `LabStatusPill.vue` (nuevo)
+
+```vue
+<script setup lang="ts">
+import type { LaboratoryTestStatus } from '@/types/domain'
+defineProps<{ status: LaboratoryTestStatus }>()
+
+const STATUS_LABEL: Record<LaboratoryTestStatus, string> = {
+  PENDIENTE:              'Pendiente',
+  PENDIENTE_POR_PROCESAR: 'Pendiente por procesar',
+  COMPLETADO:             'Completado',
+  CANCELADO:              'Cancelado',
+}
+const STATUS_TONE: Record<LaboratoryTestStatus, { bg: string; fg: string; dot: string }> = {
+  PENDIENTE:              { bg: 'var(--warm-200)',     fg: 'var(--warm-700)',     dot: 'var(--warm-500)' },
+  PENDIENTE_POR_PROCESAR: { bg: 'oklch(94% 0.07 80)',  fg: 'oklch(45% 0.13 70)',  dot: 'oklch(65% 0.15 75)' },
+  COMPLETADO:             { bg: 'oklch(94% 0.06 150)', fg: 'oklch(40% 0.13 150)', dot: 'oklch(55% 0.15 150)' },
+  CANCELADO:              { bg: 'oklch(94% 0.05 25)',  fg: 'oklch(48% 0.18 25)',  dot: 'oklch(60% 0.18 25)' },
+}
+</script>
+
+<template>
+  <span class="pill" :style="{ background: STATUS_TONE[status].bg, color: STATUS_TONE[status].fg }">
+    <span class="dot" :style="{ background: STATUS_TONE[status].dot }" />
+    {{ STATUS_LABEL[status] }}
+  </span>
+</template>
+```
+
+### Detail modal (read-only)
+
+Incluir el campo "Estado" en `detailFields` con el pill renderizado en el value slot:
+
+```ts
+{ label: 'Estado', value: () => <LabStatusPill :status="item.status" /> }
+```
+
+### CSS de la card
+
+Ver `vetrina/polish.css` §32 (selector `.vet-sample-collected`). Notable:
+- Hover: borde `var(--amatista-300)`
+- Checked: gradiente `linear-gradient(135deg, oklch(95% 0.06 80), oklch(96% 0.02 var(--hue)))` + borde ámbar `oklch(70% 0.13 75)`
+- Checkbox 18×18 ámbar relleno cuando checked
+
+### TypeScript types
+
+En `src/types/domain.ts`:
+
+```ts
+export type LaboratoryTestStatus =
+  | 'PENDIENTE'
+  | 'PENDIENTE_POR_PROCESAR'
+  | 'COMPLETADO'
+  | 'CANCELADO'
+
+export interface LaboratoryTest {
+  date: string
+  testTypeId: string
+  quantity: number
+  diagnosis: string
+  status: LaboratoryTestStatus   // ← añadir
+}
+```

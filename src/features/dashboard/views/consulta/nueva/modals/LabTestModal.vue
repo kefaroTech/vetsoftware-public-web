@@ -141,6 +141,7 @@ function save() {
     testTypeId: t.testTypeId,
     quantity: Number(t.quantity),
     diagnosis: t.diagnosis.trim(),
+    status: 'PENDIENTE',
   }))
   if (editingIndex.value !== null) {
     const first = items[0]
