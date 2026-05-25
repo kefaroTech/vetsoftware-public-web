@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Pencil, Plus, Trash2 } from 'lucide-vue-next'
+import { BedDouble, Pencil, Plus, Trash2 } from 'lucide-vue-next'
 import ListBody from '../components/ListBody.vue'
 import StatusPill from '../components/StatusPill.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import OwnerAnimalBreadcrumb from '../components/OwnerAnimalBreadcrumb.vue'
 import HospFormModal from '../modals/HospFormModal.vue'
+import AccionDetailModal, { type DetailFieldDef } from '../modals/AccionDetailModal.vue'
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { useToast } from '@/composables/useToast'
@@ -34,6 +35,36 @@ const modalOpen = ref(false)
 const editing = ref<HospitalizationResponse | null>(null)
 const deleting = ref<HospitalizationResponse | null>(null)
 const deletingBusy = ref(false)
+const viewing = ref<HospitalizationResponse | null>(null)
+
+function reasonLeavingLabel(r: HospitalizationResponse['reasonLeaving']): string | null {
+  if (!r) return null
+  return String(r).toLowerCase().replace(/_/g, ' ')
+}
+
+function detailFields(item: HospitalizationResponse): DetailFieldDef[] {
+  return [
+    { label: 'Tipo', value: typeLabel(item.type) },
+    { label: 'Inicio', value: formatDateShort(item.startDate) },
+    { label: 'Fin', value: item.endDate ? formatDateShort(item.endDate) : null },
+    { label: 'Motivo de egreso', value: reasonLeavingLabel(item.reasonLeaving) },
+    { label: 'Motivo', value: item.reason, span: 'full' },
+    { label: 'Observaciones', value: item.observations, span: 'full' },
+  ]
+}
+
+function onRowClick(item: HospitalizationResponse) {
+  viewing.value = item
+}
+function closeViewing() {
+  viewing.value = null
+}
+function editFromViewing() {
+  if (viewing.value) {
+    editing.value = viewing.value
+    viewing.value = null
+  }
+}
 
 async function onSelect(info: { owner: Owner; animal: AnimalResponse } | null) {
   if (!info) return
@@ -155,7 +186,7 @@ function isActive(item: HospitalizationResponse): boolean {
           </tr>
         </template>
         <template #row="{ item }">
-          <tr>
+          <tr class="clickable-row" @click="onRowClick(item)">
             <td>{{ formatDateShort(item.startDate) }}</td>
             <td>{{ typeLabel(item.type) }}</td>
             <td class="ellipsis">{{ item.reason }}</td>
@@ -173,7 +204,7 @@ function isActive(item: HospitalizationResponse): boolean {
                 type="button"
                 class="icon-btn"
                 title="Editar"
-                @click="editing = item"
+                @click.stop="editing = item"
               >
                 <Pencil :size="15" :stroke-width="1.7" />
               </button>
@@ -182,7 +213,7 @@ function isActive(item: HospitalizationResponse): boolean {
                 type="button"
                 class="icon-btn danger"
                 title="Eliminar"
-                @click="deleting = item"
+                @click.stop="deleting = item"
               >
                 <Trash2 :size="15" :stroke-width="1.7" />
               </button>
@@ -208,6 +239,16 @@ function isActive(item: HospitalizationResponse): boolean {
       @cancel="deleting = null"
       @confirm="onConfirmDelete"
     />
+
+    <AccionDetailModal
+      :open="viewing !== null"
+      title="Detalle de la hospitalización"
+      :icon="BedDouble"
+      :fields="viewing ? detailFields(viewing) : []"
+      :can-edit="canUpdate"
+      @close="closeViewing"
+      @edit="editFromViewing"
+    />
   </div>
 </template>
 
@@ -232,4 +273,6 @@ function isActive(item: HospitalizationResponse): boolean {
 }
 .icon-btn:hover { background: var(--warm-100); }
 .icon-btn.danger:hover { background: oklch(95% 0.06 25); color: oklch(40% 0.18 25); border-color: oklch(85% 0.12 25); }
+.clickable-row { cursor: pointer; transition: background 0.12s ease; }
+.clickable-row:hover td { background: var(--amatista-50); }
 </style>

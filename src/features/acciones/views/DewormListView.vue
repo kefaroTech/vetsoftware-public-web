@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Pencil, Plus, Trash2 } from 'lucide-vue-next'
+import { Bug, Pencil, Plus, Trash2 } from 'lucide-vue-next'
 import ListBody from '../components/ListBody.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import OwnerAnimalBreadcrumb from '../components/OwnerAnimalBreadcrumb.vue'
 import DewormFormModal from '../modals/DewormFormModal.vue'
+import AccionDetailModal, { type DetailFieldDef } from '../modals/AccionDetailModal.vue'
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { useToast } from '@/composables/useToast'
@@ -33,6 +34,38 @@ const modalOpen = ref(false)
 const editing = ref<DewormingResponse | null>(null)
 const deleting = ref<DewormingResponse | null>(null)
 const deletingBusy = ref(false)
+const viewing = ref<DewormingResponse | null>(null)
+
+function detailFields(item: DewormingResponse): DetailFieldDef[] {
+  return [
+    { label: 'Fecha', value: formatDateShort(item.date) },
+    { label: 'Tipo', value: typeLabel(item.type) },
+    { label: 'Producto', value: item.product },
+    { label: 'Dosis', value: item.dosage },
+    {
+      label: 'Última desparasitación',
+      value: item.lastDeworming ? formatDateShort(item.lastDeworming) : null,
+    },
+    {
+      label: 'Próximo control',
+      value: item.nextControl ? formatDateShort(item.nextControl) : null,
+    },
+    { label: 'Observaciones', value: item.observations, span: 'full' },
+  ]
+}
+
+function onRowClick(item: DewormingResponse) {
+  viewing.value = item
+}
+function closeViewing() {
+  viewing.value = null
+}
+function editFromViewing() {
+  if (viewing.value) {
+    editing.value = viewing.value
+    viewing.value = null
+  }
+}
 
 async function onSelect(info: { owner: Owner; animal: AnimalResponse } | null) {
   if (!info) return
@@ -161,7 +194,7 @@ function typeLabel(t: DewormingResponse['type']): string {
           </tr>
         </template>
         <template #row="{ item }">
-          <tr>
+          <tr class="clickable-row" @click="onRowClick(item)">
             <td>{{ formatDateShort(item.date) }}</td>
             <td>{{ typeLabel(item.type) }}</td>
             <td>{{ item.product }}</td>
@@ -173,7 +206,7 @@ function typeLabel(t: DewormingResponse['type']): string {
                 type="button"
                 class="icon-btn"
                 title="Editar"
-                @click="editing = item"
+                @click.stop="editing = item"
               >
                 <Pencil :size="15" :stroke-width="1.7" />
               </button>
@@ -182,7 +215,7 @@ function typeLabel(t: DewormingResponse['type']): string {
                 type="button"
                 class="icon-btn danger"
                 title="Eliminar"
-                @click="deleting = item"
+                @click.stop="deleting = item"
               >
                 <Trash2 :size="15" :stroke-width="1.7" />
               </button>
@@ -208,6 +241,16 @@ function typeLabel(t: DewormingResponse['type']): string {
       @cancel="deleting = null"
       @confirm="onConfirmDelete"
     />
+
+    <AccionDetailModal
+      :open="viewing !== null"
+      title="Detalle de la desparasitación"
+      :icon="Bug"
+      :fields="viewing ? detailFields(viewing) : []"
+      :can-edit="canUpdate"
+      @close="closeViewing"
+      @edit="editFromViewing"
+    />
   </div>
 </template>
 
@@ -231,4 +274,6 @@ function typeLabel(t: DewormingResponse['type']): string {
 }
 .icon-btn:hover { background: var(--warm-100); }
 .icon-btn.danger:hover { background: oklch(95% 0.06 25); color: oklch(40% 0.18 25); border-color: oklch(85% 0.12 25); }
+.clickable-row { cursor: pointer; transition: background 0.12s ease; }
+.clickable-row:hover td { background: var(--amatista-50); }
 </style>

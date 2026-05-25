@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Pencil, Plus, Trash2 } from 'lucide-vue-next'
+import { Pencil, Plus, Sparkles, Trash2 } from 'lucide-vue-next'
 import ListBody from '../components/ListBody.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import OwnerAnimalBreadcrumb from '../components/OwnerAnimalBreadcrumb.vue'
 import SpaFormModal from '../modals/SpaFormModal.vue'
+import AccionDetailModal, { type DetailFieldDef } from '../modals/AccionDetailModal.vue'
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { useToast } from '@/composables/useToast'
@@ -33,6 +34,30 @@ const modalOpen = ref(false)
 const editing = ref<SpaResponse | null>(null)
 const deleting = ref<SpaResponse | null>(null)
 const deletingBusy = ref(false)
+const viewing = ref<SpaResponse | null>(null)
+
+function detailFields(item: SpaResponse): DetailFieldDef[] {
+  return [
+    { label: 'Fecha', value: formatDateShort(item.date) },
+    { label: 'Tipo de servicio', value: item.spaType.name },
+    { label: 'Motivo', value: item.reason, span: 'full' },
+    { label: 'Detalles del servicio', value: item.details, span: 'full' },
+    { label: 'Observaciones', value: item.observations, span: 'full' },
+  ]
+}
+
+function onRowClick(item: SpaResponse) {
+  viewing.value = item
+}
+function closeViewing() {
+  viewing.value = null
+}
+function editFromViewing() {
+  if (viewing.value) {
+    editing.value = viewing.value
+    viewing.value = null
+  }
+}
 
 async function onSelect(info: { owner: Owner; animal: AnimalResponse } | null) {
   if (!info) return
@@ -151,7 +176,7 @@ function searchFn(item: SpaResponse, q: string) {
           </tr>
         </template>
         <template #row="{ item }">
-          <tr>
+          <tr class="clickable-row" @click="onRowClick(item)">
             <td>{{ formatDateShort(item.date) }}</td>
             <td>{{ item.spaType.name }}</td>
             <td class="truncate">{{ item.reason || '—' }}</td>
@@ -162,7 +187,7 @@ function searchFn(item: SpaResponse, q: string) {
                 type="button"
                 class="icon-btn"
                 title="Editar"
-                @click="editing = item"
+                @click.stop="editing = item"
               >
                 <Pencil :size="15" :stroke-width="1.7" />
               </button>
@@ -171,7 +196,7 @@ function searchFn(item: SpaResponse, q: string) {
                 type="button"
                 class="icon-btn danger"
                 title="Eliminar"
-                @click="deleting = item"
+                @click.stop="deleting = item"
               >
                 <Trash2 :size="15" :stroke-width="1.7" />
               </button>
@@ -197,6 +222,16 @@ function searchFn(item: SpaResponse, q: string) {
       @cancel="deleting = null"
       @confirm="onConfirmDelete"
     />
+
+    <AccionDetailModal
+      :open="viewing !== null"
+      title="Detalle del servicio de spa"
+      :icon="Sparkles"
+      :fields="viewing ? detailFields(viewing) : []"
+      :can-edit="canUpdate"
+      @close="closeViewing"
+      @edit="editFromViewing"
+    />
   </div>
 </template>
 
@@ -221,4 +256,6 @@ function searchFn(item: SpaResponse, q: string) {
 }
 .icon-btn:hover { background: var(--warm-100); }
 .icon-btn.danger:hover { background: oklch(95% 0.06 25); color: oklch(40% 0.18 25); border-color: oklch(85% 0.12 25); }
+.clickable-row { cursor: pointer; transition: background 0.12s ease; }
+.clickable-row:hover td { background: var(--amatista-50); }
 </style>
