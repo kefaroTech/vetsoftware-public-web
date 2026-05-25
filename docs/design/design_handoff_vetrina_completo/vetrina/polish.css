@@ -469,3 +469,263 @@
 .vet-picker {
   padding: 16px 18px !important;
 }
+
+/* ---------- 29. CLICKABLE ROWS + DETAIL MODAL ---------- */
+
+.vet-list-table tbody tr.vet-list-row-clickable {
+  cursor: pointer;
+}
+.vet-list-table tbody tr.vet-list-row-clickable:hover {
+  background: var(--amatista-50) !important;
+}
+
+/* Read-only detail modal — grid de fields */
+.vet-action-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 28px;
+}
+.vet-action-detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.vet-action-detail-span-2 { grid-column: span 2; }
+.vet-action-detail-span-full { grid-column: 1 / -1; }
+.vet-action-detail-label {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--warm-500);
+  font-weight: 500;
+}
+.vet-action-detail-value {
+  font-size: 14px;
+  color: var(--warm-900);
+  line-height: 1.55;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 560px) {
+  .vet-action-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- 30. CHANGE ROLE MODAL ---------- */
+
+.vet-change-role-body {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.vet-change-role-employee {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--warm-100);
+  border-radius: 11px;
+}
+.vet-change-role-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--warm-900);
+  line-height: 1.2;
+}
+.vet-change-role-code {
+  font-size: 12px;
+  color: var(--warm-500);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vet-change-role-current {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vet-change-role-label-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.vet-change-role-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--warm-500);
+  font-weight: 600;
+}
+.vet-change-role-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vet-change-role-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--warm-50);
+  border: 1.5px solid var(--warm-200);
+  border-radius: 11px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.12s ease;
+}
+.vet-change-role-option:hover {
+  border-color: var(--amatista-300);
+  background: var(--amatista-50);
+}
+.vet-change-role-option.selected {
+  border-color: var(--amatista-600);
+  background: linear-gradient(135deg, var(--amatista-50), oklch(96% 0.02 var(--hue)));
+}
+.vet-change-role-option-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 7px;
+  flex-shrink: 0;
+}
+.vet-change-role-option-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--warm-900);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vet-change-role-current-badge {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  background: var(--warm-200);
+  color: var(--warm-600);
+  border-radius: 4px;
+  font-weight: 500;
+}
+.vet-change-role-option-desc {
+  font-size: 12px;
+  color: var(--warm-600);
+  margin-top: 4px;
+  line-height: 1.45;
+}
+.vet-change-role-option-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  color: var(--amatista-700);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.vet-change-role-option.selected .vet-change-role-option-check {
+  background: var(--amatista-700);
+  color: white;
+}
+.vet-change-role-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: oklch(95% 0.05 80);
+  border: 1px solid oklch(85% 0.08 80);
+  color: oklch(35% 0.10 80);
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.vet-change-role-warning :first-child {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.vet-change-role-warning strong {
+  color: oklch(28% 0.12 80);
+  font-weight: 600;
+}
+
+/* ---------- 31. CHANGE ROLE MODAL — MULTI-SELECT EXTENSIONS ---------- */
+
+/* Reposition the existing option to use checkbox instead of right-side check */
+.vet-change-role-option-check {
+  display: none; /* hidden — replaced by checkbox on the left */
+}
+
+.vet-change-role-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid var(--warm-300);
+  background: var(--warm-50);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: white;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.vet-change-role-option:hover .vet-change-role-checkbox:not(.checked) {
+  border-color: var(--amatista-400);
+}
+.vet-change-role-checkbox.checked {
+  background: var(--amatista-700);
+  border-color: var(--amatista-700);
+}
+
+.vet-change-role-count {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  background: var(--amatista-100);
+  color: var(--amatista-700);
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.vet-change-role-hint {
+  font-size: 12px;
+  color: var(--warm-500);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.vet-change-role-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: oklch(95% 0.06 25);
+  border: 1px solid oklch(85% 0.10 25);
+  color: oklch(40% 0.18 25);
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.vet-change-role-error :first-child {
+  background: oklch(55% 0.18 25);
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  padding: 3px;
+  flex-shrink: 0;
+}
+
+/* Override warning layout: now flex column with title */
+.vet-change-role-warning {
+  align-items: flex-start;
+}
+.vet-change-role-warning > :first-child {
+  margin-top: 3px;
+}

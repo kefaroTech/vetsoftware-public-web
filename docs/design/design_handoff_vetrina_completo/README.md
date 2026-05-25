@@ -469,3 +469,122 @@ Campos del detail (mismo formato que los otros):
 <DetailField label="Detalles" :value="data.details" span="full" />
 <DetailField label="Observaciones" :value="data.observations" span="full" />
 ```
+
+---
+
+## 🆕 §15. Detail modal en filas de Acciones clínicas (read-only)
+
+Click sobre una fila de cualquier tabla de Acciones (`LabListView`, `ImagingListView`, `VaccineListView`, `HospListView`, `DewormListView`, `SurgeryListView`, `SpaListView`) debe abrir un **modal de detalle en solo lectura** con todos los campos del registro.
+
+### UX
+
+- Hover de fila: cursor pointer + background `var(--amatista-50)`
+- Click sobre la fila → abre modal de detalle
+- Click sobre los botones Editar/Eliminar → **NO** dispara el detalle (`event.stopPropagation()`)
+- Modal incluye botón "Editar" en el footer que cierra el detalle y abre el modal de edición existente
+
+### Plan en Vue
+
+1. Crear `src/features/acciones/modals/AccionDetailModal.vue` genérico que reciba `fields: { label, value, span? }[]` y use `ModalShell` + `DetailField` ya existentes en `historia-clinica`.
+2. En cada `*ListView.vue` (7 archivos):
+   - Añadir `viewing = ref<T | null>(null)` junto a `editing`
+   - Añadir `@click="viewing = item"` en cada `<tr>`
+   - `@click.stop` en los botones Editar/Eliminar
+   - Renderizar `<AccionDetailModal :open="viewing !== null" :fields="fields(viewing)" @edit="editing = viewing; viewing = null" @close="viewing = null" />`
+3. CSS scoped:
+```css
+tbody tr { cursor: pointer; transition: background 0.12s ease; }
+tbody tr:hover { background: var(--amatista-50); }
+```
+
+### Mapeo de fields por tipo
+
+Ver `vetrina/screens-acciones.jsx` (cada list view tiene `detailFields={(it) => [...]}` con la lista exacta para ese tipo).
+
+---
+
+## 🆕 §16. Empleados — multi-rol con validación mínima de 1
+
+El modelo de datos ya soporta múltiples roles por empleado (tabla `EmployeeRole`), pero la UI actual del frontend Vue solo permite asignar 1 rol al crear. Hay que extenderla para que:
+
+- Un empleado pueda tener **uno o más roles** simultáneamente
+- **Nunca pueda quedarse sin rol** (mínimo 1 obligatorio)
+- Exista un modal dedicado **"Cambiar rol"** accesible desde el drawer del empleado
+
+### Backend (ya disponible)
+
+```ts
+// EmployeeRole join table — ya existe en el modelo
+class EmployeeRole {
+  -employee: Employee
+  -role: Role
+}
+```
+
+Endpoints a usar:
+- `POST /employee-roles { employeeId, roleId }` — añadir
+- `DELETE /employee-roles?employeeId=...&roleId=...` — quitar
+- Al cambiar, calcular el diff cliente-side (roles a añadir / a quitar) y enviar las llamadas correspondientes en paralelo.
+
+### UX del modal "Cambiar rol"
+
+Estructura (ver `vetrina/screens-empleados.jsx` función `VetChangeRoleModal`):
+
+1. **Header**: icono ShieldCheck + título "Cambiar roles" + subtítulo `Modificar los roles asignados a {{ employee.name }}`
+
+2. **Identidad card**: avatar 48px + nombre + código + email, fondo `var(--warm-100)` radius 11px
+
+3. **Roles actuales** (label uppercase + pill counter "X roles"):
+   - Stack horizontal de `RolePill size="lg"` con todos los roles actuales
+
+4. **Asignar roles** (label uppercase + pill counter "X seleccionados"):
+   - Hint debajo: "Un empleado puede tener varios roles. Debe tener al menos uno."
+   - Lista vertical de **cards seleccionables tipo checkbox**:
+     - Cuadrado checkbox (18×18px, radius 5px, border `var(--warm-300)`) a la izquierda
+     - Dot coloreado del rol (8px)
+     - Nombre del rol + badge "actual" (si ya estaba asignado)
+     - Descripción del rol (12px gris)
+   - Hover: borde amatista-300
+   - Selected: borde amatista-600 + gradiente sutil amatista-50 + checkbox relleno
+
+5. **Banner rojo** (solo si `selectedRoleIds.length === 0`):
+   > ✕ "Un empleado no puede quedarse sin rol. Selecciona al menos uno."
+
+6. **Banner ámbar** "Resumen de cambios" (solo si hay diferencias):
+   ```
+   🔔 Resumen de cambios
+   + Añade: Veterinario/a, Recepcionista
+   − Quita: Asistente veterinario
+   ```
+
+7. **Footer**: Cancelar · **Guardar cambios** (deshabilitado si sin selección o sin cambios)
+
+### Validación
+
+```ts
+const canSave = computed(() =>
+  selectedRoleIds.value.size > 0 &&            // al menos 1
+  hasChanges.value                              // diff respecto al estado actual
+)
+```
+
+### Tabla y drawer
+
+Ya renderizan correctamente múltiples roles via `employee.roles.map((r) => <RolePill ...>)`. No requieren cambios.
+
+### Avatar coloring
+
+Como hay múltiples roles posibles, usar el color del **primer rol** (`employee.roles[0]?.code`) para teñir el avatar. Si quieres más adelante puedes mostrar un avatar segmentado o el color del "rol principal" si el modelo lo expusiera.
+
+### Componente sugerido en Vue
+
+`src/features/employees/components/ChangeRolesModal.vue` — recibe `:employee` y emite `@confirm="(roleIds: number[]) => ..."`. El listener en `EmpleadosView.vue` calcula el diff vs `employee.roles` actual y dispara los `create/delete` correspondientes a `/employee-roles`.
+
+### Toast adaptativo al guardar
+
+```ts
+const label = newRoles.length === 1
+  ? `${emp.name} ahora es ${newRoles[0].name}.`
+  : `${emp.name} ahora tiene ${newRoles.length} roles: ${newRoles.map((r) => r.name).join(', ')}.`
+toast.success('Roles actualizados', label)
+```

@@ -235,10 +235,11 @@ function VetListBody({ items, columns, renderRow, emptyText = 'No hay registros 
 // Generic ActionsListView
 // ============================================================================
 
-function VetAccionesListView({ kicker, title, lead, items, addRecord, removeRecord, columns, renderRow, searchFn, placeholder, emptyText, ModalForm }) {
+function VetAccionesListView({ kicker, title, lead, items, addRecord, removeRecord, columns, renderRow, detailFields, detailTitle, detailIcon, searchFn, placeholder, emptyText, ModalForm }) {
   const [selection, setSelection] = React.useState(null);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [editing, setEditing] = React.useState(null);
+  const [viewing, setViewing] = React.useState(null);
 
   const filtered = selection
     ? items.filter((it) => it.animalId === selection.animal.id)
@@ -282,7 +283,8 @@ function VetAccionesListView({ kicker, title, lead, items, addRecord, removeReco
             items={filtered}
             columns={columns}
             renderRow={(item) => renderRow(item, {
-              onEdit: () => { setEditing(item); setModalOpen(true); },
+              onView:   () => setViewing(item),
+              onEdit:   () => { setEditing(item); setModalOpen(true); },
               onDelete: () => removeRecord(item.id),
             })}
             searchFn={searchFn}
@@ -299,7 +301,65 @@ function VetAccionesListView({ kicker, title, lead, items, addRecord, removeReco
         onSave={onSaved}
         animal={selection?.animal}
       />
+
+      <VetAccionDetailModal
+        open={!!viewing}
+        item={viewing}
+        title={detailTitle}
+        icon={detailIcon}
+        fields={viewing && detailFields ? detailFields(viewing) : []}
+        animal={selection?.animal}
+        onClose={() => setViewing(null)}
+        onEdit={() => {
+          setEditing(viewing);
+          setViewing(null);
+          setModalOpen(true);
+        }}
+      />
     </div>
+  );
+}
+
+// ============================================================================
+// VetAccionDetailModal — Read-only detail view
+// ============================================================================
+
+function VetAccionDetailModal({ open, item, title, icon, fields, animal, onClose, onEdit }) {
+  if (!open || !item) return null;
+  return (
+    <VetModalShell
+      open={open}
+      onClose={onClose}
+      title={title || 'Detalle'}
+      subtitle={animal ? `Paciente: ${animal.name}` : null}
+      icon={icon}
+      width={640}
+      footerLeft={item.date ? `Registrado el ${vetFormatDateShort(item.date)}` : null}
+      footerActions={
+        <>
+          <button type="button" className="vet-btn-ghost-modal" onClick={onClose}>Cerrar</button>
+          {onEdit && (
+            <button type="button" className="vet-btn-primary-modal" onClick={onEdit}>
+              <VetIcons.Edit size={13} strokeWidth={1.8} style={{ marginRight: 6 }} />
+              Editar
+            </button>
+          )}
+        </>
+      }
+    >
+      <div className="vet-action-detail-grid">
+        {fields.map((f, i) => (
+          <div key={i} className={`vet-action-detail-field vet-action-detail-span-${f.span || 1}`}>
+            <div className="vet-action-detail-label">{f.label}</div>
+            <div className="vet-action-detail-value">
+              {f.value === null || f.value === undefined || f.value === ''
+                ? <em style={{ color: 'var(--warm-400)', fontStyle: 'italic', fontWeight: 400 }}>Sin completar</em>
+                : f.value}
+            </div>
+          </div>
+        ))}
+      </div>
+    </VetModalShell>
   );
 }
 
@@ -311,10 +371,10 @@ function VetRowActions({ onEdit, onDelete }) {
   return (
     <td style={{ textAlign: 'right' }}>
       <div className="vet-row-actions">
-        <button type="button" className="vet-row-icon-btn" onClick={onEdit} title="Editar">
+        <button type="button" className="vet-row-icon-btn" onClick={(e) => { e.stopPropagation(); onEdit(); }} title="Editar">
           <VetIcons.Edit size={15} strokeWidth={1.7} />
         </button>
-        <button type="button" className="vet-row-icon-btn danger" onClick={onDelete} title="Eliminar">
+        <button type="button" className="vet-row-icon-btn danger" onClick={(e) => { e.stopPropagation(); onDelete(); }} title="Eliminar">
           <VetIcons.Trash size={15} strokeWidth={1.7} />
         </button>
       </div>
@@ -714,7 +774,7 @@ function VetLabListViewC() {
         { label: 'Fecha' }, { label: 'Tipo' }, { label: 'Cantidad' }, { label: 'Diagnóstico' },
       ]}
       renderRow={(item, actions) => (
-        <tr key={item.id}>
+        <tr key={item.id} className="vet-list-row-clickable" onClick={actions.onView}>
           <td>{vetFormatDateShort(item.date)}</td>
           <td>{item.testType.name}</td>
           <td>{item.quantity}</td>
@@ -726,6 +786,14 @@ function VetLabListViewC() {
       placeholder="Buscar tipo o diagnóstico…"
       emptyText="Este paciente aún no tiene solicitudes de laboratorio."
       ModalForm={VetLabFormModal}
+      detailTitle="Detalle del examen"
+      detailIcon={VetIcons.Beaker}
+      detailFields={(it) => [
+        { label: 'Fecha', value: vetFormatDateShort(it.date) },
+        { label: 'Tipo de examen', value: it.testType?.name },
+        { label: 'Cantidad', value: it.quantity },
+        { label: 'Diagnóstico / motivo', value: it.diagnosis, span: 'full' },
+      ]}
     />
   );
 }
@@ -740,7 +808,7 @@ function VetImagingListViewC() {
       items={s.items} addRecord={s.add} removeRecord={s.remove}
       columns={[{ label: 'Fecha' }, { label: 'Tipo' }, { label: 'Estudio' }, { label: 'Diagnóstico' }]}
       renderRow={(item, actions) => (
-        <tr key={item.id}>
+        <tr key={item.id} className="vet-list-row-clickable" onClick={actions.onView}>
           <td>{vetFormatDateShort(item.date)}</td>
           <td>{item.diagnosticImagingType.name}</td>
           <td>{item.studyType || '—'}</td>
@@ -752,6 +820,16 @@ function VetImagingListViewC() {
       placeholder="Buscar tipo o diagnóstico…"
       emptyText="Este paciente aún no tiene estudios de imagen."
       ModalForm={VetImagingFormModal}
+      detailTitle="Detalle del estudio de imagen"
+      detailIcon={VetIcons.ScanLine}
+      detailFields={(it) => [
+        { label: 'Fecha', value: vetFormatDateShort(it.date) },
+        { label: 'Tipo de imagen', value: it.diagnosticImagingType?.name },
+        { label: 'Tipo de estudio', value: it.studyType, span: 'full' },
+        { label: 'Signos clínicos', value: it.clinicalSigns, span: 'full' },
+        { label: 'Diagnóstico', value: it.diagnosis, span: 'full' },
+        { label: 'Observaciones', value: it.observations, span: 'full' },
+      ]}
     />
   );
 }
@@ -766,7 +844,7 @@ function VetVaccineListViewC() {
       items={s.items} addRecord={s.add} removeRecord={s.remove}
       columns={[{ label: 'Fecha' }, { label: 'Tipo' }, { label: 'Lote' }, { label: 'Próxima' }]}
       renderRow={(item, actions) => (
-        <tr key={item.id}>
+        <tr key={item.id} className="vet-list-row-clickable" onClick={actions.onView}>
           <td>{vetFormatDateShort(item.date)}</td>
           <td>{item.vaccinationType.name}</td>
           <td><code style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{item.lot || '—'}</code></td>
@@ -778,6 +856,15 @@ function VetVaccineListViewC() {
       placeholder="Buscar tipo o lote…"
       emptyText="Este paciente aún no tiene vacunas registradas."
       ModalForm={VetVaccineFormModal}
+      detailTitle="Detalle de la vacunación"
+      detailIcon={VetIcons.Syringe}
+      detailFields={(it) => [
+        { label: 'Fecha', value: vetFormatDateShort(it.date) },
+        { label: 'Tipo de vacuna', value: it.vaccinationType?.name },
+        { label: 'Lote', value: it.lot },
+        { label: 'Próxima vacunación', value: it.nextVaccination ? vetFormatDateShort(it.nextVaccination) : null },
+        { label: 'Notas', value: it.notes, span: 'full' },
+      ]}
     />
   );
 }
@@ -792,7 +879,7 @@ function VetHospListViewC() {
       items={s.items} addRecord={s.add} removeRecord={s.remove}
       columns={[{ label: 'Inicio' }, { label: 'Fin' }, { label: 'Tipo' }, { label: 'Motivo' }]}
       renderRow={(item, actions) => (
-        <tr key={item.id}>
+        <tr key={item.id} className="vet-list-row-clickable" onClick={actions.onView}>
           <td>{vetFormatDateShort(item.startDate)}</td>
           <td>{item.endDate ? vetFormatDateShort(item.endDate) : <em style={{ color: 'var(--warm-400)' }}>en curso</em>}</td>
           <td>{HOSP_TYPE_LABEL[item.type]}</td>
@@ -804,6 +891,16 @@ function VetHospListViewC() {
       placeholder="Buscar motivo…"
       emptyText="Este paciente aún no ha sido hospitalizado."
       ModalForm={VetHospFormModal}
+      detailTitle="Detalle de la hospitalización"
+      detailIcon={VetIcons.BedDouble}
+      detailFields={(it) => [
+        { label: 'Tipo', value: HOSP_TYPE_LABEL[it.type] },
+        { label: 'Inicio', value: vetFormatDateShort(it.startDate) },
+        { label: 'Fin', value: it.endDate ? vetFormatDateShort(it.endDate) : null },
+        { label: 'Motivo de egreso', value: it.reasonLeaving ? it.reasonLeaving.replace(/_/g, ' ').toLowerCase() : null },
+        { label: 'Motivo', value: it.reason, span: 'full' },
+        { label: 'Observaciones', value: it.observations, span: 'full' },
+      ]}
     />
   );
 }
@@ -818,7 +915,7 @@ function VetDewormListViewC() {
       items={s.items} addRecord={s.add} removeRecord={s.remove}
       columns={[{ label: 'Fecha' }, { label: 'Tipo' }, { label: 'Producto' }, { label: 'Próximo' }]}
       renderRow={(item, actions) => (
-        <tr key={item.id}>
+        <tr key={item.id} className="vet-list-row-clickable" onClick={actions.onView}>
           <td>{vetFormatDateShort(item.date)}</td>
           <td>{DEWORM_TYPE_LABEL[item.type]}</td>
           <td>{item.product}</td>
@@ -830,6 +927,17 @@ function VetDewormListViewC() {
       placeholder="Buscar producto…"
       emptyText="Este paciente aún no tiene desparasitaciones registradas."
       ModalForm={VetDewormFormModal}
+      detailTitle="Detalle de la desparasitación"
+      detailIcon={VetIcons.Bug}
+      detailFields={(it) => [
+        { label: 'Fecha', value: vetFormatDateShort(it.date) },
+        { label: 'Tipo', value: DEWORM_TYPE_LABEL[it.type] },
+        { label: 'Producto', value: it.product },
+        { label: 'Dosis', value: it.dosage },
+        { label: 'Última desparasitación', value: it.lastDeworming ? vetFormatDateShort(it.lastDeworming) : null },
+        { label: 'Próximo control', value: it.nextControl ? vetFormatDateShort(it.nextControl) : null },
+        { label: 'Observaciones', value: it.observations, span: 'full' },
+      ]}
     />
   );
 }
@@ -844,7 +952,7 @@ function VetSurgeryListViewC() {
       items={s.items} addRecord={s.add} removeRecord={s.remove}
       columns={[{ label: 'Fecha' }, { label: 'Tipo' }, { label: 'Descripción' }]}
       renderRow={(item, actions) => (
-        <tr key={item.id}>
+        <tr key={item.id} className="vet-list-row-clickable" onClick={actions.onView}>
           <td>{vetFormatDateShort(item.date)}</td>
           <td>{item.surgeryType.name}</td>
           <td className="vet-cell-ellipsis">{item.description}</td>
@@ -855,6 +963,16 @@ function VetSurgeryListViewC() {
       placeholder="Buscar tipo o descripción…"
       emptyText="Este paciente aún no tiene cirugías registradas."
       ModalForm={VetSurgeryFormModal}
+      detailTitle="Detalle de la cirugía"
+      detailIcon={VetIcons.Scissors}
+      detailFields={(it) => [
+        { label: 'Fecha', value: vetFormatDateShort(it.date) },
+        { label: 'Tipo de cirugía', value: it.surgeryType?.name },
+        { label: 'Descripción', value: it.description, span: 'full' },
+        { label: 'Medicamento / anestesia', value: it.medicament, span: 'full' },
+        { label: 'Observaciones', value: it.observations, span: 'full' },
+        { label: 'Complicaciones', value: it.complications, span: 'full' },
+      ]}
     />
   );
 }
@@ -869,7 +987,7 @@ function VetSpaListViewC() {
       items={s.items} addRecord={s.add} removeRecord={s.remove}
       columns={[{ label: 'Fecha' }, { label: 'Servicio' }, { label: 'Motivo' }, { label: 'Detalles' }]}
       renderRow={(item, actions) => (
-        <tr key={item.id}>
+        <tr key={item.id} className="vet-list-row-clickable" onClick={actions.onView}>
           <td>{vetFormatDateShort(item.date)}</td>
           <td>{item.spaType.name}</td>
           <td className="vet-cell-ellipsis">{item.reason || '—'}</td>
@@ -881,6 +999,15 @@ function VetSpaListViewC() {
       placeholder="Buscar servicio, motivo o detalles…"
       emptyText="Este paciente aún no tiene servicios de spa registrados."
       ModalForm={VetSpaFormModal}
+      detailTitle="Detalle del servicio de spa"
+      detailIcon={VetIcons.Sparkles}
+      detailFields={(it) => [
+        { label: 'Fecha', value: vetFormatDateShort(it.date) },
+        { label: 'Tipo de servicio', value: it.spaType?.name },
+        { label: 'Motivo', value: it.reason, span: 'full' },
+        { label: 'Detalles del servicio', value: it.details, span: 'full' },
+        { label: 'Observaciones', value: it.observations, span: 'full' },
+      ]}
     />
   );
 }

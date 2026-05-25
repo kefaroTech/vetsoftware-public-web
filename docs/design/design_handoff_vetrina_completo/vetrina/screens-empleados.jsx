@@ -15,12 +15,33 @@ function useVetEmployeesState() {
   const [formOpen, setFormOpen] = React.useState(false);
   const [formInitial, setFormInitial] = React.useState(null);
   const [deactivateTarget, setDeactivateTarget] = React.useState(null);
+  const [roleChangeTarget, setRoleChangeTarget] = React.useState(null);
 
   function selectEmployee(id) { setSelectedId(id); }
   function closeDrawer() { setSelectedId(null); }
 
   function openCreate() { setFormInitial(null); setFormOpen(true); }
   function openEdit(emp) { setFormInitial(emp); setFormOpen(true); }
+  function openChangeRole(emp) { setRoleChangeTarget(emp); }
+  function closeChangeRole() { setRoleChangeTarget(null); }
+
+  function changeRole(emp, newRoleIds) {
+    const ids = Array.isArray(newRoleIds) ? newRoleIds : [newRoleIds];
+    if (ids.length === 0) return; // safeguard: no employee without roles
+    const newRoles = ids
+      .map((id) => VET_ROLES_CATALOG.find((r) => r.id === Number(id)))
+      .filter(Boolean)
+      .map((r) => ({ id: r.id, name: r.name, code: r.code }));
+    if (newRoles.length === 0) return;
+    setEmployees((arr) => arr.map((e) =>
+      e.id === emp.id ? { ...e, roles: newRoles } : e
+    ));
+    setRoleChangeTarget(null);
+    const label = newRoles.length === 1
+      ? `${emp.name} ahora es ${newRoles[0].name}.`
+      : `${emp.name} ahora tiene ${newRoles.length} roles: ${newRoles.map((r) => r.name).join(', ')}.`;
+    toast.success('Roles actualizados', label);
+  }
 
   function saveEmployee(data) {
     if (formInitial) {
@@ -66,6 +87,7 @@ function useVetEmployeesState() {
     formOpen, formInitial, openCreate, openEdit, saveEmployee, closeForm: () => setFormOpen(false),
     deactivateTarget, askDeactivate: setDeactivateTarget, cancelDeactivate: () => setDeactivateTarget(null),
     setStatus,
+    roleChangeTarget, openChangeRole, closeChangeRole, changeRole,
   };
 }
 
@@ -245,7 +267,7 @@ function VetEmpleadoRow({ employee, selected, zebra, onSelect }) {
 // EmpleadoDrawer
 // ============================================================================
 
-function VetEmpleadoDrawer({ employee, onClose, onEdit, onDeactivate, onActivate }) {
+function VetEmpleadoDrawer({ employee, onClose, onEdit, onChangeRole, onDeactivate, onActivate }) {
   React.useEffect(() => {
     if (!employee) return;
     const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
@@ -299,6 +321,10 @@ function VetEmpleadoDrawer({ employee, onClose, onEdit, onDeactivate, onActivate
           <button type="button" className="vet-drawer-ghost" onClick={() => onEdit(employee)}>
             <VetIcons.Edit size={14} strokeWidth={1.7} />
             Editar
+          </button>
+          <button type="button" className="vet-drawer-ghost" onClick={() => onChangeRole(employee)}>
+            <VetIcons.ShieldCheck size={14} strokeWidth={1.7} />
+            Cambiar rol
           </button>
           <div style={{ flex: 1 }} />
           {employee.status === 'ACTIVE' ? (
@@ -502,6 +528,177 @@ function VetEmployeeFormModal({ open, initial, onClose, onSubmit }) {
 }
 
 // ============================================================================
+// ChangeRoleModal — dedicated modal for changing employee role
+// ============================================================================
+
+function VetChangeRoleModal({ open, employee, onClose, onConfirm }) {
+  const [selectedRoleIds, setSelectedRoleIds] = React.useState(new Set());
+
+  React.useEffect(() => {
+    if (open && employee) {
+      setSelectedRoleIds(new Set(employee.roles.map((r) => r.id)));
+    }
+  }, [open, employee]);
+
+  if (!open || !employee) return null;
+
+  const currentIds = new Set(employee.roles.map((r) => r.id));
+  const hasChanges =
+    selectedRoleIds.size !== currentIds.size ||
+    [...selectedRoleIds].some((id) => !currentIds.has(id));
+  const hasAtLeastOne = selectedRoleIds.size > 0;
+  const canSave = hasAtLeastOne && hasChanges;
+
+  function toggleRole(roleId) {
+    const next = new Set(selectedRoleIds);
+    if (next.has(roleId)) next.delete(roleId);
+    else next.add(roleId);
+    setSelectedRoleIds(next);
+  }
+
+  function describeChanges() {
+    const adds = [...selectedRoleIds].filter((id) => !currentIds.has(id));
+    const removes = [...currentIds].filter((id) => !selectedRoleIds.has(id));
+    const addNames = adds.map((id) => VET_ROLES_CATALOG.find((r) => r.id === id)?.name).filter(Boolean);
+    const removeNames = removes.map((id) => VET_ROLES_CATALOG.find((r) => r.id === id)?.name).filter(Boolean);
+    return { addNames, removeNames };
+  }
+  const { addNames, removeNames } = describeChanges();
+
+  return (
+    <VetModalShell
+      open={open}
+      onClose={onClose}
+      title="Cambiar roles"
+      subtitle={`Modificar los roles asignados a ${employee.name}`}
+      icon={VetIcons.ShieldCheck}
+      accent="amatista"
+      width={560}
+      footerActions={
+        <>
+          <button type="button" className="vet-drawer-ghost" onClick={onClose}>Cancelar</button>
+          <button
+            type="button"
+            className="vet-emp-modal-primary"
+            disabled={!canSave}
+            onClick={() => onConfirm(employee, Array.from(selectedRoleIds))}
+            style={!canSave ? { opacity: 0.5, cursor: 'not-allowed' } : null}
+          >
+            Guardar cambios
+          </button>
+        </>
+      }
+    >
+      <div className="vet-change-role-body">
+        <div className="vet-change-role-employee">
+          <VetEmployeeAvatar
+            initials={employee.initials} size={48}
+            active={employee.status === 'ACTIVE'}
+            roleCode={employee.roles[0]?.code ?? ''}
+          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="vet-change-role-name">{employee.name}</div>
+            <div className="vet-change-role-code">{employee.employeeCode} · {employee.email}</div>
+          </div>
+        </div>
+
+        <div className="vet-change-role-current">
+          <div className="vet-change-role-label-line">
+            <span className="vet-change-role-label">Roles actuales</span>
+            <span className="vet-change-role-count">
+              {employee.roles.length} {employee.roles.length === 1 ? 'rol' : 'roles'}
+            </span>
+          </div>
+          {employee.roles.length > 0 ? (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {employee.roles.map((r) => (
+                <VetRolePill key={r.id} name={r.name} code={r.code} size="lg" />
+              ))}
+            </div>
+          ) : (
+            <span style={{ fontSize: 13, color: 'var(--warm-500)', fontStyle: 'italic' }}>
+              Sin rol asignado
+            </span>
+          )}
+        </div>
+
+        <div>
+          <div className="vet-change-role-label-line">
+            <span className="vet-change-role-label">Asignar roles</span>
+            <span className="vet-change-role-count">
+              {selectedRoleIds.size} {selectedRoleIds.size === 1 ? 'seleccionado' : 'seleccionados'}
+            </span>
+          </div>
+          <div className="vet-change-role-hint">
+            Un empleado puede tener varios roles. Debe tener al menos uno.
+          </div>
+          <div className="vet-change-role-options">
+            {VET_ROLES_CATALOG.map((role) => {
+              const tokens = vetColorsForCode(role.code);
+              const isSelected = selectedRoleIds.has(role.id);
+              const isCurrent = currentIds.has(role.id);
+              return (
+                <button
+                  key={role.id}
+                  type="button"
+                  className={'vet-change-role-option' + (isSelected ? ' selected' : '')}
+                  onClick={() => toggleRole(role.id)}
+                >
+                  <span
+                    className={'vet-change-role-checkbox' + (isSelected ? ' checked' : '')}
+                  >
+                    {isSelected && <VetIcons.Check size={11} strokeWidth={3} />}
+                  </span>
+                  <span
+                    className="vet-change-role-option-dot"
+                    style={{ background: tokens.dot }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="vet-change-role-option-name">
+                      {role.name}
+                      {isCurrent && (
+                        <span className="vet-change-role-current-badge">actual</span>
+                      )}
+                    </div>
+                    <div className="vet-change-role-option-desc">{role.description}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {!hasAtLeastOne && (
+          <div className="vet-change-role-error">
+            <VetIcons.X size={13} strokeWidth={2} />
+            <span>Un empleado no puede quedarse sin rol. Selecciona al menos uno.</span>
+          </div>
+        )}
+
+        {canSave && (addNames.length > 0 || removeNames.length > 0) && (
+          <div className="vet-change-role-warning">
+            <VetIcons.Bell size={13} strokeWidth={1.7} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 500, marginBottom: 4 }}>Resumen de cambios</div>
+              {addNames.length > 0 && (
+                <div>
+                  <span style={{ color: 'oklch(45% 0.13 145)', fontWeight: 600 }}>+ Añade:</span> {addNames.join(', ')}
+                </div>
+              )}
+              {removeNames.length > 0 && (
+                <div style={{ marginTop: 2 }}>
+                  <span style={{ color: 'oklch(48% 0.18 25)', fontWeight: 600 }}>− Quita:</span> {removeNames.join(', ')}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </VetModalShell>
+  );
+}
+
+// ============================================================================
 // ConfirmDeactivateDialog
 // ============================================================================
 
@@ -568,8 +765,16 @@ function VetEmpleadosView() {
         employee={s.selected}
         onClose={s.closeDrawer}
         onEdit={s.openEdit}
+        onChangeRole={s.openChangeRole}
         onDeactivate={(emp) => s.askDeactivate(emp)}
         onActivate={(emp) => s.setStatus(emp, 'ACTIVE')}
+      />
+
+      <VetChangeRoleModal
+        open={!!s.roleChangeTarget}
+        employee={s.roleChangeTarget}
+        onClose={s.closeChangeRole}
+        onConfirm={s.changeRole}
       />
 
       <VetEmployeeFormModal
