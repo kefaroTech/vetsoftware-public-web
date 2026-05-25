@@ -71,7 +71,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               <EmployeeAvatar
                 :initials="employee.initials"
                 :size="64"
-                :active="employee.status === 'ACTIVE'"
+                :active="employee.enabled"
                 :role-code="employee.roles[0]?.code ?? ''"
               />
               <div class="head-info">
@@ -88,7 +88,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
                     />
                   </template>
                   <span v-else class="no-role">Sin rol asignado</span>
-                  <StatusPill :active="employee.status === 'ACTIVE'" size="lg" />
+                  <StatusPill :active="employee.enabled" size="lg" />
                 </div>
               </div>
             </div>
@@ -120,7 +120,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
             </button>
             <div class="spacer" />
             <button
-              v-if="canUpdate && employee.status === 'ACTIVE'"
+              v-if="canUpdate && employee.enabled"
               type="button"
               class="danger"
               :disabled="busy"
@@ -130,7 +130,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               Desactivar
             </button>
             <button
-              v-else-if="canUpdate && employee.status !== 'ACTIVE'"
+              v-else-if="canUpdate && !employee.enabled"
               type="button"
               class="primary"
               :disabled="busy"

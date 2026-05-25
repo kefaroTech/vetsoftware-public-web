@@ -11,7 +11,7 @@ export interface Employee {
   employeeCode: string
   name: string
   email: string
-  status: EmployeeStatus
+  enabled: boolean
   companyId: number
   createdDate: string
   roles: EmployeeRole[]

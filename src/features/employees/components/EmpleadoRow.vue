@@ -20,14 +20,14 @@ defineEmits<{
   <button
     type="button"
     class="row"
-    :class="{ selected, zebra, inactive: employee.status === 'INACTIVE' }"
+    :class="{ selected, zebra, inactive: !employee.enabled }"
     @click="$emit('select', employee.id)"
   >
     <div class="cell avatar-cell">
       <EmployeeAvatar
         :initials="employee.initials"
         :size="36"
-        :active="employee.status === 'ACTIVE'"
+        :active="employee.enabled"
         :role-code="employee.roles[0]?.code ?? ''"
       />
     </div>
@@ -45,7 +45,7 @@ defineEmits<{
       <div class="email">{{ employee.email }}</div>
     </div>
     <div class="cell status-cell">
-      <StatusPill :active="employee.status === 'ACTIVE'" />
+      <StatusPill :active="employee.enabled" />
     </div>
     <div class="cell chev-cell">
       <ChevronRight :size="16" :stroke-width="1.6" />

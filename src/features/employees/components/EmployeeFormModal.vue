@@ -61,7 +61,7 @@ function reset() {
       employeeCode: props.initial.employeeCode,
       name: props.initial.name,
       email: props.initial.email,
-      status: props.initial.status,
+      status: props.initial.enabled ? 'ACTIVE' : 'INACTIVE',
       password: '',
       roleId: null,
     }

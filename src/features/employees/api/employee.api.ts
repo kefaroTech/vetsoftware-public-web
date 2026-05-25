@@ -17,7 +17,7 @@ export interface EmployeeResponse {
   employeeCode: string
   name: string
   email: string
-  status: 'ACTIVE' | 'INACTIVE'
+  enabled: boolean
   company: EmployeeCompanySummary
   roles: EmployeeRoleSummary[]
   createdDate: string
