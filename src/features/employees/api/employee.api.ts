@@ -7,6 +7,7 @@ export interface EmployeeCompanySummary {
 }
 
 export interface EmployeeRoleSummary {
+  employeeRoleId: number
   id: number
   name: string
   code: string
@@ -67,5 +68,14 @@ export const employeeApi = {
 
   async remove(id: number): Promise<void> {
     await http.delete(`/employees/${id}`)
+  },
+
+  async deactivate(id: number): Promise<void> {
+    await http.delete(`/employees/${id}`)
+  },
+
+  async reactivate(id: number): Promise<EmployeeResponse> {
+    const { data } = await http.patch<EmployeeResponse>(`/employees/${id}/enable`)
+    return data
   },
 }

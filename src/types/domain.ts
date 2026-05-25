@@ -1,6 +1,7 @@
 export type EmployeeStatus = 'ACTIVE' | 'INACTIVE'
 
 export interface EmployeeRole {
+  employeeRoleId: number
   id: number
   name: string
   code: string

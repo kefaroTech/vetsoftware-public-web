@@ -18,6 +18,7 @@ export function mapEmployeeResponse(r: EmployeeResponse): Employee {
     companyId: r.company.id,
     createdDate: r.createdDate,
     roles: (r.roles ?? []).map((role) => ({
+      employeeRoleId: role.employeeRoleId,
       id: role.id,
       name: role.name,
       code: role.code,

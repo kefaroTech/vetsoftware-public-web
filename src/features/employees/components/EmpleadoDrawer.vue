@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
-import { X, Key, Pencil, Power, Check } from 'lucide-vue-next'
+import { X, Key, Pencil, Power, Check, Lock, ShieldCheck } from 'lucide-vue-next'
 import type { Employee } from '@/types/domain'
 import { colorsForCode } from '../constants/employee-roles'
 import EmployeeAvatar from './EmployeeAvatar.vue'
@@ -14,9 +14,14 @@ const props = defineProps<{
   canUpdate?: boolean
 }>()
 
+const isAdmin = computed(
+  () => props.employee?.roles.some((r) => r.code === 'ADMIN') ?? false,
+)
+
 const emit = defineEmits<{
   close: []
   edit: [employee: Employee]
+  'change-roles': [employee: Employee]
   deactivate: [employee: Employee]
   activate: [employee: Employee]
 }>()
@@ -118,9 +123,27 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               <Pencil :size="14" :stroke-width="1.7" />
               Editar
             </button>
-            <div class="spacer" />
             <button
-              v-if="canUpdate && employee.enabled"
+              v-if="canUpdate"
+              type="button"
+              class="ghost"
+              :disabled="busy"
+              @click="emit('change-roles', employee)"
+            >
+              <ShieldCheck :size="14" :stroke-width="1.7" />
+              Cambiar roles
+            </button>
+            <div class="spacer" />
+            <span
+              v-if="canUpdate && employee.enabled && isAdmin"
+              class="admin-lock"
+              title="Los empleados con rol ADMIN no pueden ser desactivados"
+            >
+              <Lock :size="12" :stroke-width="1.8" />
+              ADMIN protegido
+            </span>
+            <button
+              v-else-if="canUpdate && employee.enabled"
               type="button"
               class="danger"
               :disabled="busy"
@@ -317,5 +340,17 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .primary:disabled {
   cursor: not-allowed;
   opacity: 0.7;
+}
+.admin-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--warm-100);
+  border: 1px solid var(--warm-300);
+  color: var(--warm-700);
+  border-radius: 7px;
 }
 </style>

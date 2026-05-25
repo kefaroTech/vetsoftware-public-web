@@ -6,8 +6,8 @@ import { useRoles } from '@/features/roles/composables/useRoles'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import SegmentedRadio from '@/features/dashboard/components/ui/SegmentedRadio.vue'
+import RoleSelectorGrid from './RoleSelectorGrid.vue'
 
 const props = defineProps<{
   open: boolean
@@ -26,17 +26,14 @@ export interface EmployeeFormData {
   email: string
   status: EmployeeStatus
   password: string
-  roleId: number | null
+  roleIds: number[]
 }
 
-type FieldKey = 'employeeCode' | 'name' | 'email' | 'password' | 'roleId'
+type FieldKey = 'employeeCode' | 'name' | 'email' | 'password' | 'roles'
 
 const isEditing = computed(() => props.initial !== null)
 
 const { list: roles } = useRoles()
-const roleOptions = computed(() =>
-  roles.value.map((r) => ({ value: String(r.id), label: r.name })),
-)
 
 const draft = ref<EmployeeFormData>({
   employeeCode: '',
@@ -44,15 +41,17 @@ const draft = ref<EmployeeFormData>({
   email: '',
   status: 'ACTIVE',
   password: '',
-  roleId: null,
+  roleIds: [],
 })
+
+const selectedRoleIds = ref<Set<number>>(new Set())
 
 const touched = reactive<Record<FieldKey, boolean>>({
   employeeCode: false,
   name: false,
   email: false,
   password: false,
-  roleId: false,
+  roles: false,
 })
 
 function reset() {
@@ -63,8 +62,9 @@ function reset() {
       email: props.initial.email,
       status: props.initial.enabled ? 'ACTIVE' : 'INACTIVE',
       password: '',
-      roleId: null,
+      roleIds: [],
     }
+    selectedRoleIds.value = new Set()
   } else {
     draft.value = {
       employeeCode: '',
@@ -72,14 +72,15 @@ function reset() {
       email: '',
       status: 'ACTIVE',
       password: '',
-      roleId: null,
+      roleIds: [],
     }
+    selectedRoleIds.value = new Set()
   }
   touched.employeeCode = false
   touched.name = false
   touched.email = false
   touched.password = false
-  touched.roleId = false
+  touched.roles = false
   banner.value = false
 }
 
@@ -113,7 +114,7 @@ const errors = computed(() => {
     else if (pw.length < 8) e.password = 'Mínimo 8 caracteres'
     else if (pw.length > 100) e.password = 'Máximo 100 caracteres'
 
-    if (draft.value.roleId == null) e.roleId = 'Selecciona un rol'
+    if (selectedRoleIds.value.size === 0) e.roles = 'Selecciona al menos un rol'
   }
 
   return e
@@ -137,7 +138,10 @@ function submit() {
     return
   }
   banner.value = false
-  emit('submit', { ...draft.value })
+  emit('submit', {
+    ...draft.value,
+    roleIds: [...selectedRoleIds.value],
+  })
 }
 
 const statusOptions = [
@@ -145,12 +149,10 @@ const statusOptions = [
   { value: 'INACTIVE', label: 'Inactivo' },
 ]
 
-const selectedRoleId = computed<string>({
-  get: () => (draft.value.roleId != null ? String(draft.value.roleId) : ''),
-  set: (v) => {
-    draft.value.roleId = v ? Number(v) : null
-  },
-})
+function onSelectedIdsUpdate(next: Set<number>) {
+  selectedRoleIds.value = next
+  markTouched('roles')
+}
 
 const titleText = computed(() => (isEditing.value ? 'Editar empleado' : 'Nuevo empleado'))
 const subtitleText = computed(() =>
@@ -167,7 +169,7 @@ const subtitleText = computed(() =>
     :subtitle="subtitleText"
     :icon="isEditing ? Pencil : UserPlus"
     accent="amatista"
-    :width="560"
+    :width="640"
     @close="emit('close')"
   >
     <template #body>
@@ -225,16 +227,15 @@ const subtitleText = computed(() =>
 
         <BaseField
           v-if="!isEditing"
-          label="Rol"
+          label="Roles"
           required
-          :error="err('roleId')"
+          hint="Un empleado puede tener varios roles. Debe tener al menos uno."
+          :error="err('roles')"
         >
-          <BaseSelect
-            v-model="selectedRoleId"
-            :options="roleOptions"
-            placeholder="Selecciona un rol"
-            :invalid="!!err('roleId')"
-            @blur="markTouched('roleId')"
+          <RoleSelectorGrid
+            :available-roles="roles"
+            :selected-ids="selectedRoleIds"
+            @update:selected-ids="onSelectedIdsUpdate"
           />
         </BaseField>
 
