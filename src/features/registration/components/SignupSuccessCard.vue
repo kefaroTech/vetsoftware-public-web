@@ -68,5 +68,3 @@
   filter: brightness(1.05);
 }
 </style>
-</content>
-</invoke>

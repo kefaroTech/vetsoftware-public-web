@@ -24,5 +24,3 @@ const stage = ref<'form' | 'success'>('form')
   min-height: 100vh;
 }
 </style>
-</content>
-</invoke>

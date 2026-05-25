@@ -71,5 +71,3 @@ import LoginForm from '../components/LoginForm.vue'
   text-decoration: underline;
 }
 </style>
-</content>
-</invoke>
