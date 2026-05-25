@@ -50,13 +50,22 @@ export function useEmployees() {
     return mapped
   }
 
-  async function setStatus(employee: Employee, status: 'ACTIVE' | 'INACTIVE'): Promise<Employee> {
-    return update(employee.id, {
-      employeeCode: employee.employeeCode,
-      name: employee.name,
-      email: employee.email,
-      status,
-    })
+  async function deactivate(id: number): Promise<void> {
+    await employeeApi.deactivate(id)
+    cache.value = cache.value.map((e) =>
+      e.id === id ? { ...e, enabled: false } : e,
+    )
+  }
+
+  async function reactivate(id: number): Promise<Employee> {
+    const updated = await employeeApi.reactivate(id)
+    const mapped = mapEmployeeResponse(updated)
+    // PATCH /employees/{id}/enable devuelve EmployeeDto.from(employee) sin roles
+    // (List.of()); preservamos los roles ya cargados en cache.
+    cache.value = cache.value.map((e) =>
+      e.id === id ? { ...mapped, roles: e.roles } : e,
+    )
+    return mapped
   }
 
   return {
@@ -66,6 +75,7 @@ export function useEmployees() {
     fetchAll,
     create,
     update,
-    setStatus,
+    deactivate,
+    reactivate,
   }
 }

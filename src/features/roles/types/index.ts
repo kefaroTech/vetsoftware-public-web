@@ -67,6 +67,7 @@ export interface RoleResponse {
   code: string
   company: CompanyRef
   permissions: RolePermissionSummary[]
+  enabled: boolean
   createdDate?: string
 }
 

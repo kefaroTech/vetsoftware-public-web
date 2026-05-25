@@ -4,6 +4,7 @@ import { Plus } from 'lucide-vue-next'
 import RoleCard from '../components/RoleCard.vue'
 import AddRoleCard from '../components/AddRoleCard.vue'
 import EditPermissionsModal from '../components/EditPermissionsModal.vue'
+import ConfirmDeactivateRoleDialog from '../components/ConfirmDeactivateRoleDialog.vue'
 import { useRoles } from '../composables/useRoles'
 import { usePermissionsCatalog } from '../composables/usePermissionsCatalog'
 import { useSubModulesCatalog } from '../composables/useSubModulesCatalog'
@@ -14,6 +15,7 @@ import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { useToast } from '@/composables/useToast'
+import { getProblemDetailMessage } from '@/services/http/http.client'
 
 useModulesCatalog()
 const subModules = useSubModulesCatalog()
@@ -26,6 +28,8 @@ const canUpdateRole = can(PERMISSIONS.ROLE_PERMISSIONS_UPDATE)
 
 const modalOpen = ref(false)
 const editingRole = ref<RoleResponse | null>(null)
+const deactivateTarget = ref<RoleResponse | null>(null)
+const busy = ref(false)
 
 function isSystemRole(role: RoleResponse): boolean {
   return role.code === 'ADMIN'
@@ -63,13 +67,34 @@ function onSaved() {
   close()
 }
 
-function onToggleActive(role: RoleResponse, active: boolean) {
+async function onToggleActive(role: RoleResponse, active: boolean) {
   if (isSystemRole(role) || !canUpdateRole.value) return
-  roles.setActive(role.id, active)
-  if (active) {
+  if (!active) {
+    deactivateTarget.value = role
+    return
+  }
+  try {
+    await roles.setActive(role.id, true)
     toast.info('Rol activado', `${role.name} vuelve a estar disponible.`)
-  } else {
-    toast.info('Rol desactivado', `${role.name} dejó de estar disponible.`)
+  } catch (e) {
+    const msg = getProblemDetailMessage(e, 'No se pudo activar el rol')
+    toast.error('Ocurrió un error', msg)
+  }
+}
+
+async function confirmDeactivate() {
+  const target = deactivateTarget.value
+  if (!target || busy.value) return
+  busy.value = true
+  try {
+    await roles.setActive(target.id, false)
+    toast.info('Rol desactivado', `${target.name} dejó de estar disponible.`)
+    deactivateTarget.value = null
+  } catch (e) {
+    const msg = getProblemDetailMessage(e, 'No se pudo desactivar el rol')
+    toast.error('Ocurrió un error', msg)
+  } finally {
+    busy.value = false
   }
 }
 
@@ -151,6 +176,14 @@ const hasError = computed(
       :read-only="editingReadOnly"
       @close="close"
       @saved="onSaved"
+    />
+
+    <ConfirmDeactivateRoleDialog
+      :open="deactivateTarget !== null"
+      :role="deactivateTarget"
+      :busy="busy"
+      @cancel="deactivateTarget = null"
+      @confirm="confirmDeactivate"
     />
   </section>
 </template>

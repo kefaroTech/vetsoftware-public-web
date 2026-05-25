@@ -29,4 +29,13 @@ export const rolesApi = {
   async remove(id: number): Promise<void> {
     await http.delete(`/roles/${id}`)
   },
+
+  async deactivate(id: number): Promise<void> {
+    await http.delete(`/roles/${id}`)
+  },
+
+  async reactivate(id: number): Promise<RoleResponse> {
+    const { data } = await http.patch<RoleResponse>(`/roles/${id}/enable`)
+    return data
+  },
 }

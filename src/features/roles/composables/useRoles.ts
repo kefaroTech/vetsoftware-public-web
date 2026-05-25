@@ -27,8 +27,6 @@ async function load(): Promise<RoleResponse[]> {
   return inFlight
 }
 
-const inactiveIds = ref<Set<number>>(new Set())
-
 function setsEqual<T>(a: Set<T>, b: Set<T>): boolean {
   if (a.size !== b.size) return false
   for (const v of a) if (!b.has(v)) return false
@@ -54,14 +52,19 @@ export function useRoles() {
   const { companyId } = useAuth()
 
   function isActive(roleId: number): boolean {
-    return !inactiveIds.value.has(roleId)
+    return cache.value.find((r) => r.id === roleId)?.enabled ?? true
   }
 
-  function setActive(roleId: number, active: boolean) {
-    const next = new Set(inactiveIds.value)
-    if (active) next.delete(roleId)
-    else next.add(roleId)
-    inactiveIds.value = next
+  async function setActive(roleId: number, active: boolean): Promise<void> {
+    if (active) {
+      const updated = await rolesApi.reactivate(roleId)
+      cache.value = cache.value.map((r) => (r.id === roleId ? updated : r))
+    } else {
+      await rolesApi.deactivate(roleId)
+      cache.value = cache.value.map((r) =>
+        r.id === roleId ? { ...r, enabled: false } : r,
+      )
+    }
   }
 
   async function refresh() {
