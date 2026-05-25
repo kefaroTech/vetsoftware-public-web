@@ -15,8 +15,10 @@ async function load(animalId: number): Promise<ClinicalEvent[]> {
     .then((rows) =>
       rows.map<ClinicalEvent>((r) => ({
         sourceId: r.sourceId,
+        animalId: r.animalId,
         eventType: r.eventType,
         eventDate: r.eventDate,
+        endDate: r.endDate,
         consultationId: r.consultationId,
         summary: r.summary ?? '',
       })),

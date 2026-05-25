@@ -49,6 +49,8 @@ export const PERMISSIONS = {
   SPA_CREATE: 'spa.create',
   SPA_UPDATE: 'spa.update',
   SPA_DELETE: 'spa.delete',
+
+  AGENDA_READ: 'agenda.read',
 } as const
 
 export type PermissionCode = typeof PERMISSIONS[keyof typeof PERMISSIONS]

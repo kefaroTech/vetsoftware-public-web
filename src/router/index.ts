@@ -29,6 +29,11 @@ const router = createRouter({
           component: () => import('@/features/dashboard/views/HomeView.vue'),
         },
         {
+          path: 'agenda',
+          name: 'agenda',
+          component: () => import('@/features/agenda/views/AgendaView.vue'),
+        },
+        {
           path: 'consulta/nueva',
           name: 'consulta-nueva',
           component: () =>

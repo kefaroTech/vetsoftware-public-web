@@ -713,3 +713,317 @@ export interface LaboratoryTest {
   status: LaboratoryTestStatus   // ← añadir
 }
 ```
+
+---
+
+## 🆕 §18. Agenda — vista calendario (mes / semana / día)
+
+Vista global tipo calendario que **agrega todos los eventos clínicos del sistema** (consultas, cirugías, vacunaciones, exámenes de laboratorio, imagen Dx, desparasitaciones, spa, hospitalizaciones multi-día) en una sola interfaz cronológica. Reemplaza al item "Agenda" del sidebar que hoy es placeholder "Pronto".
+
+### Stack y dependencias
+
+Implementar 100% con la stack ya disponible — **no añadir dependencias nuevas**:
+
+| Cosa | Decisión |
+|---|---|
+| Framework | Vue 3.5 Composition API + `<script setup lang="ts">` |
+| Routing | `vue-router` (ya en uso) |
+| Iconos | `lucide-vue-next` (`Calendar`, `ChevronLeft`, `ChevronRight`, `ArrowLeft`, `Plus`, `X`) |
+| Date input | `@vuepic/vue-datepicker` solo si añades un date picker explícito (el grid es propio) |
+| Date math | Helpers locales (sin `date-fns`/`dayjs`). Ver `vetrina/screens-agenda.jsx` funciones `vetParseISO`, `vetStartOfMonth`, `vetStartOfWeek`, `vetAddDays`, `vetSameDay` — copy-paste a `composables/dateUtils.ts`. |
+| HTTP | `axios` para los endpoints de agregación (ver §"API") |
+| Estilos | CSS scoped en cada componente Vue, usando los tokens existentes (`var(--amatista-*)`, `var(--warm-*)`, `var(--font-serif)`) |
+| Vuetify | Solo si lo necesitas para `v-btn` u otros primitives. El grid del calendario es CSS Grid nativo, no usa Vuetify. |
+
+### Ruta nueva en `src/router/index.ts`
+
+```ts
+{
+  path: 'agenda',
+  name: 'agenda',
+  component: () => import('@/features/agenda/views/AgendaView.vue'),
+  meta: { permission: PERMISSIONS.AGENDA_READ }, // o sin permiso si todos los empleados deben verla
+},
+```
+
+### Sidebar — mover "Agenda" de "Próximamente" a "TRABAJO"
+
+**Archivo**: `src/features/dashboard/components/sidebar/AppSidebar.vue`
+
+1. Quitar `{ label: 'Agenda', icon: Calendar }` del array `upcomingItems`.
+2. Añadir un `<SidebarNavItem>` activo en la sección "TRABAJO" después de "Consulta":
+
+```vue
+<SidebarNavItem
+  label="Agenda"
+  :icon="Calendar"
+  :active="route.name === 'agenda'"
+  @click="router.push({ name: 'agenda' })"
+/>
+```
+
+### Estructura de archivos en `src/features/agenda/`
+
+```
+src/features/agenda/
+├── views/
+│   └── AgendaView.vue                ← shell + state (cursor, view, filter)
+├── components/
+│   ├── AgendaToolbar.vue             ← Hoy / flechas / cursor label / toggle Mes·Semana·Día
+│   ├── AgendaFilters.vue             ← filter chips por tipo de evento
+│   ├── AgendaMonthView.vue           ← grid 7×6
+│   ├── AgendaWeekView.vue            ← 7 columnas full-height
+│   ├── AgendaDayView.vue             ← lista detallada
+│   ├── AgendaEventChip.vue           ← chip individual (densa o normal)
+│   └── AgendaEventDetailModal.vue    ← popover con detalle del evento
+├── composables/
+│   ├── useAgendaEvents.ts            ← agrega y memoiza eventos de todas las fuentes
+│   └── dateUtils.ts                  ← startOfMonth, startOfWeek, addDays, sameDay, iso helpers
+├── api/
+│   └── agenda.api.ts                 ← endpoint(s) de agregación (ver §"API")
+└── types/
+    └── agenda.ts                     ← AgendaEvent interface
+```
+
+### Tipo de evento unificado
+
+```ts
+// src/features/agenda/types/agenda.ts
+import type { ClinicalEventType } from '@/features/historia-clinica/types/historia'
+
+export interface AgendaEvent {
+  id: string                          // p.ej. "consultation-9001" o "hosp-401"
+  type: ClinicalEventType             // reutiliza el enum de historia
+  date: string                        // ISO yyyy-MM-dd
+  endDate: string | null              // solo para hospitalización (multi-día)
+  title: string
+  subtitle: string
+  pet: { id: string; name: string; specie: { name: string }; breed: { name: string } } | null
+  owner: { id: string; name: string; phone: string } | null
+}
+```
+
+### API — opciones
+
+**Opción A — endpoint dedicado de agregación** (preferida si el backend lo permite):
+```
+GET /agenda?from=2026-05-01&to=2026-05-31
+→ AgendaEvent[]
+```
+
+**Opción B — agregación client-side** (más sencilla con APIs existentes):
+- En `useAgendaEvents.ts` llamar en paralelo a:
+  - `consultationApi.listInRange({ from, to })`
+  - `vaccinationApi.listInRange(...)`
+  - `surgeryApi.listInRange(...)`
+  - `laboratoryTestApi.listInRange(...)`
+  - `diagnosticImagingApi.listInRange(...)`
+  - `dewormingApi.listInRange(...)`
+  - `hospitalizationApi.listInRange(...)`
+  - `spaApi.listInRange(...)` (cuando se cree)
+- Mapearlos a `AgendaEvent[]` con la función `vetBuildAgendaEvents` adaptada (ver prototipo).
+
+> Recomendación: implementar Opción A si tienes acceso al backend. Es más eficiente y permite paginación/filtros server-side. Opción B es buena solución intermedia mientras se desarrolla el endpoint dedicado.
+
+### AgendaView.vue (esqueleto)
+
+```vue
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { Plus } from 'lucide-vue-next'
+import AgendaToolbar from '../components/AgendaToolbar.vue'
+import AgendaFilters from '../components/AgendaFilters.vue'
+import AgendaMonthView from '../components/AgendaMonthView.vue'
+import AgendaWeekView from '../components/AgendaWeekView.vue'
+import AgendaDayView from '../components/AgendaDayView.vue'
+import AgendaEventDetailModal from '../components/AgendaEventDetailModal.vue'
+import { useAgendaEvents } from '../composables/useAgendaEvents'
+import type { AgendaEvent } from '../types/agenda'
+import type { ClinicalEventType } from '@/features/historia-clinica/types/historia'
+
+type ViewMode = 'month' | 'week' | 'day'
+
+const view = ref<ViewMode>('month')
+const previousView = ref<ViewMode | null>(null)
+const cursor = ref(new Date())
+const filter = ref<ClinicalEventType | 'ALL'>('ALL')
+const selectedEvent = ref<AgendaEvent | null>(null)
+
+const { events: allEvents, loading, error } = useAgendaEvents(cursor)
+
+const filteredEvents = computed(() =>
+  filter.value === 'ALL'
+    ? allEvents.value
+    : allEvents.value.filter((ev) => ev.type === filter.value),
+)
+
+function goToDay(day: Date) {
+  cursor.value = day
+  previousView.value = view.value
+  view.value = 'day'
+}
+function setViewDirect(v: ViewMode) {
+  if (v !== 'day') previousView.value = null
+  view.value = v
+}
+function goBack() {
+  if (previousView.value) {
+    view.value = previousView.value
+    previousView.value = null
+  }
+}
+</script>
+
+<template>
+  <div class="agenda-page">
+    <header class="agenda-header">
+      <div>
+        <div class="kicker">Calendario · Equipo</div>
+        <h1 class="title">Agenda</h1>
+        <p class="lead">
+          Vista cronológica de consultas, cirugías, hospitalizaciones, vacunaciones,
+          exámenes y spa.
+        </p>
+      </div>
+      <button type="button" class="cta">
+        <Plus :size="16" :stroke-width="1.8" />
+        Nuevo evento
+      </button>
+    </header>
+
+    <AgendaToolbar
+      v-model:view="view"
+      v-model:cursor="cursor"
+      @set-view="setViewDirect"
+    />
+    <AgendaFilters v-model="filter" :events="allEvents" />
+
+    <!-- ⚠ Botón "atrás" abajo de los filtros (no arriba) -->
+    <button
+      v-if="view === 'day' && previousView"
+      type="button"
+      class="back-btn"
+      @click="goBack"
+    >
+      <ArrowLeft :size="14" :stroke-width="1.8" />
+      {{ previousView === 'month' ? 'Volver al mes' : 'Volver a la semana' }}
+    </button>
+
+    <div class="agenda-body">
+      <AgendaMonthView
+        v-if="view === 'month'"
+        :cursor="cursor" :events="filteredEvents"
+        @day-click="goToDay"
+        @event-click="(ev) => selectedEvent = ev"
+      />
+      <AgendaWeekView
+        v-else-if="view === 'week'"
+        :cursor="cursor" :events="filteredEvents"
+        @day-click="goToDay"
+        @event-click="(ev) => selectedEvent = ev"
+      />
+      <AgendaDayView
+        v-else
+        :cursor="cursor" :events="filteredEvents"
+        @event-click="(ev) => selectedEvent = ev"
+      />
+    </div>
+
+    <AgendaEventDetailModal
+      :event="selectedEvent"
+      @close="selectedEvent = null"
+    />
+  </div>
+</template>
+```
+
+### Helpers en `composables/dateUtils.ts`
+
+```ts
+export const MONTHS_LONG = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+export const WEEKDAYS_SHORT = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom']
+
+export function isoFromDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
+export function parseISO(iso: string): Date | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso)
+  return m ? new Date(+m[1], +m[2]-1, +m[3]) : null
+}
+export function startOfMonth(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), 1)
+}
+export function startOfWeek(d: Date): Date {
+  const day = (d.getDay() + 6) % 7 // lunes = 0
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() - day)
+}
+export function addDays(d: Date, n: number): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n)
+}
+export function sameDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear()
+      && a.getMonth() === b.getMonth()
+      && a.getDate() === b.getDate()
+}
+```
+
+### Comportamiento del "back button"
+
+- **Posición**: después de `<AgendaFilters>`, antes del cuerpo del calendario (no encima del toolbar).
+- **Cuándo aparece**: solo si `view === 'day'` y `previousView !== null` (es decir, el usuario llegó haciendo click en un día desde Mes o Semana).
+- Si el usuario eligió "Día" directamente desde el toggle del toolbar, NO aparece (no hay donde volver).
+- Texto adaptativo según origen: "Volver al mes" / "Volver a la semana".
+- Al apretarlo: restaura `view = previousView` y limpia `previousView`.
+
+### Color coding
+
+Reutilizar la paleta `VET_EVENT_TYPES + TYPE_COLORS` de `src/features/historia-clinica/constants/eventTypes.ts`. Los chips, filtros y modal usan el mismo `bg/fg/dot` ya definidos.
+
+### Hospitalización multi-día
+
+En el aggregator, las hospitalizaciones tienen `endDate`. En el render de mes/semana, comprobar:
+
+```ts
+function eventsOn(day: Date) {
+  const iso = isoFromDate(day)
+  return events.value.filter((ev) =>
+    (ev.endDate && ev.endDate !== ev.date)
+      ? iso >= ev.date && iso <= ev.endDate
+      : ev.date === iso
+  )
+}
+```
+
+Esto hace que la hospitalización aparezca en cada día del rango.
+
+### CSS
+
+Todo el CSS scoped en cada componente. Como referencia visual y selectores, ver `vetrina/agenda.css` en el prototipo. Puntos clave:
+
+- **Mes**: `display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: minmax(110px, auto);`
+- **Semana**: `display: grid; grid-template-columns: repeat(7, 1fr); min-height: 600px;`
+- **Día actual**: background `var(--amatista-50)` en mes, número en círculo morado en semana
+- **Toggle Mes/Semana/Día**: segmented control con background `var(--warm-150)` y opción activa con `var(--warm-50)` + sombra ligera
+- **Cursor label** en `var(--font-serif)` 20px, text-transform capitalize
+- **Back button**: ghost transparent con border-radius 9px, hover en `var(--amatista-50)` + border-color `var(--amatista-300)` + color `var(--amatista-700)`
+
+### Permiso a añadir (opcional)
+
+En `src/constants/permissions.ts`:
+```ts
+AGENDA_READ: 'agenda.read',
+```
+
+### TypeScript types
+
+Reusar `ClinicalEventType` de `historia-clinica/types/historia.ts`. No crear duplicados.
+
+### Pruebas básicas
+
+- Click en un día de Mes → vista Día con back button "Volver al mes"
+- Click en un día de Semana → vista Día con back button "Volver a la semana"
+- Toggle directo Mes → Día desde toolbar → **sin** back button
+- Hospitalización del 11-12 may aparece en ambos días del mes
+- Filtrar por "Vacunación" → solo se ven las vacunaciones en todas las vistas
+- Click en evento → modal con paciente, propietario, notas
+

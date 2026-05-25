@@ -106,7 +106,6 @@ function VetAppSidebar() {
 
   const upcomingItems = [
     { label: 'Pacientes',   Icon: VetIcons.User },
-    { label: 'Agenda',      Icon: VetIcons.Calendar },
     { label: 'Inventario',  Icon: VetIcons.Package },
     { label: 'Facturación', Icon: VetIcons.Receipt },
     { label: 'Reportes',    Icon: VetIcons.BarChart3 },
@@ -117,6 +116,12 @@ function VetAppSidebar() {
       <VetSidebarBrand appName="Vetrina" clinic={VET_MOCK_USER.clinic} />
 
       <div style={vetShellStyles.sectionLabel}>TRABAJO</div>
+      <VetSidebarNavItem
+        label="Agenda"
+        Icon={VetIcons.Calendar}
+        active={route.name === 'agenda'}
+        onClick={() => router.push({ name: 'agenda' })}
+      />
       <VetSidebarNavItem
         label="Consulta"
         Icon={VetIcons.FileText}
