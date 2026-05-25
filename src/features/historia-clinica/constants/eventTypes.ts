@@ -94,4 +94,5 @@ export const EVENT_TYPE_DETAILABLE: ReadonlySet<ClinicalEventType> = new Set<
   'LABORATORY_TEST',
   'DIAGNOSTIC_IMAGING',
   'PRESCRIPTION',
+  'SPA',
 ])

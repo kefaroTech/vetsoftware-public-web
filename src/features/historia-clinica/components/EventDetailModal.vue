@@ -38,6 +38,10 @@ import {
   consultationApi,
   type ConsultationResponse,
 } from '@/features/dashboard/views/consulta/nueva/api/consultation.api'
+import {
+  spaApi,
+  type SpaResponse,
+} from '@/features/dashboard/views/consulta/nueva/api/spa.api'
 
 import VaccinationDetail from './detail/VaccinationDetail.vue'
 import LaboratoryTestDetail from './detail/LaboratoryTestDetail.vue'
@@ -47,6 +51,7 @@ import HospitalizationDetail from './detail/HospitalizationDetail.vue'
 import DiagnosticImagingDetail from './detail/DiagnosticImagingDetail.vue'
 import PrescriptionDetail from './detail/PrescriptionDetail.vue'
 import ConsultationDetail from './detail/ConsultationDetail.vue'
+import SpaDetail from './detail/SpaDetail.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -67,6 +72,7 @@ type Payload =
   | { type: 'DIAGNOSTIC_IMAGING'; data: DiagnosticImagingResponse }
   | { type: 'PRESCRIPTION'; data: PrescriptionResponse }
   | { type: 'CONSULTATION'; data: ConsultationResponse }
+  | { type: 'SPA'; data: SpaResponse }
 
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -117,6 +123,9 @@ async function fetchEvent(ev: ClinicalEvent) {
           type: 'CONSULTATION',
           data: await consultationApi.findById(id),
         }
+        break
+      case 'SPA':
+        payload.value = { type: 'SPA', data: await spaApi.findById(id) }
         break
       default:
         error.value = 'Tipo de evento no soportado.'
@@ -196,6 +205,7 @@ const subtitle = computed(() => {
           :data="payload.data"
           :children="props.children"
         />
+        <SpaDetail v-else-if="payload.type === 'SPA'" :data="payload.data" />
       </template>
     </template>
 

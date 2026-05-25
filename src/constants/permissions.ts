@@ -46,6 +46,9 @@ export const PERMISSIONS = {
   SURGERY_CREATE: 'surgery.create',
   SURGERY_UPDATE: 'surgery.update',
   SURGERY_DELETE: 'surgery.delete',
+  SPA_CREATE: 'spa.create',
+  SPA_UPDATE: 'spa.update',
+  SPA_DELETE: 'spa.delete',
 } as const
 
 export type PermissionCode = typeof PERMISSIONS[keyof typeof PERMISSIONS]

@@ -121,6 +121,12 @@ const router = createRouter({
           meta: { permission: PERMISSIONS.SURGERY_CREATE },
         },
         {
+          path: 'acciones/spa',
+          name: 'acciones-spa',
+          component: () => import('@/features/acciones/views/SpaListView.vue'),
+          meta: { permission: PERMISSIONS.SPA_CREATE },
+        },
+        {
           path: 'empleados',
           name: 'empleados',
           component: () => import('@/features/employees/views/EmpleadosView.vue'),

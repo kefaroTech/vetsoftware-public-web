@@ -207,3 +207,17 @@ export interface SurgeryType {
   name: string
   description?: string
 }
+export interface SpaType {
+  id: string
+  name: string
+  description?: string
+}
+
+// Spa es una acción standalone (no vinculada a Consultation)
+export interface Spa {
+  date: string
+  spaTypeId: string
+  reason: string
+  details: string
+  observations: string
+}

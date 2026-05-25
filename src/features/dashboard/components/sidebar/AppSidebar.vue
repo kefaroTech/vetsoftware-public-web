@@ -19,6 +19,7 @@ import {
   BedDouble,
   Bug,
   Scissors,
+  Sparkles,
 } from 'lucide-vue-next'
 import SidebarBrand from './SidebarBrand.vue'
 import SidebarNavItem from './SidebarNavItem.vue'
@@ -58,6 +59,7 @@ const canLabTest = can(PERMISSIONS.LABORATORY_TEST_CREATE)
 const canImaging = can(PERMISSIONS.DIAGNOSTIC_IMAGING_CREATE)
 const canDeworming = can(PERMISSIONS.DEWORMING_CREATE)
 const canSurgery = can(PERMISSIONS.SURGERY_CREATE)
+const canSpa = can(PERMISSIONS.SPA_CREATE)
 const canEmployees = can(PERMISSIONS.EMPLOYEE_READ)
 const canRoles = can(PERMISSIONS.ROLE_PERMISSIONS_READ)
 
@@ -84,6 +86,7 @@ const accionesSubRoutes = [
   'acciones-hospitalizacion',
   'acciones-desparasitacion',
   'acciones-cirugia',
+  'acciones-spa',
 ] as const
 
 const isAccionesActive = computed(() =>
@@ -97,6 +100,7 @@ const accionesItems = computed(() => [
   { label: 'Hospitalización', icon: BedDouble, to: { name: 'acciones-hospitalizacion' as const }, show: canHospital.value },
   { label: 'Desparasitación', icon: Bug, to: { name: 'acciones-desparasitacion' as const }, show: canDeworming.value },
   { label: 'Cirugía', icon: Scissors, to: { name: 'acciones-cirugia' as const }, show: canSurgery.value },
+  { label: 'Spa', icon: Sparkles, to: { name: 'acciones-spa' as const }, show: canSpa.value },
 ].filter((item) => item.show))
 
 const showAccionesSection = computed(() => accionesItems.value.length > 0)
