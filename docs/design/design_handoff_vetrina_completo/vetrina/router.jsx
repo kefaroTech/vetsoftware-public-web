@@ -10,6 +10,7 @@ const VET_ROUTES = [
   { name: 'signup',                       path: '/signup',                          meta: { guestOnly: true } },
   { name: 'home',                         path: '/dashboard',                       meta: { requiresAuth: true } },
   { name: 'agenda',                       path: '/dashboard/agenda',                meta: { requiresAuth: true } },
+  { name: 'laboratorio-interno',          path: '/dashboard/laboratorio',           meta: { requiresAuth: true } },
   { name: 'consulta-nueva',               path: '/dashboard/consulta/nueva',        meta: { requiresAuth: true, fullBleed: true, hideTopbar: true } },
   { name: 'consulta-nueva-exito',         path: '/dashboard/consulta/nueva/exito',  meta: { requiresAuth: true, fullBleed: true, hideTopbar: true } },
   { name: 'consulta-historial',           path: '/dashboard/consulta/historial',    meta: { requiresAuth: true, fullBleed: true, hideTopbar: true } },

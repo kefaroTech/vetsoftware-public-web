@@ -1027,3 +1027,125 @@ Reusar `ClinicalEventType` de `historia-clinica/types/historia.ts`. No crear dup
 - Filtrar por "Vacunación" → solo se ven las vacunaciones en todas las vistas
 - Click en evento → modal con paciente, propietario, notas
 
+---
+
+## §15. Laboratorio interno — procesamiento de muestras
+
+Nueva sección de primer nivel en el sidebar (grupo **LABORATORIO** → "Bandeja de muestras").
+Es el lado del laboratorio que **procesa** las muestras que el veterinario solicita
+(complementa la acción clínica "Laboratorio" que solo crea la solicitud).
+
+**Archivos prototipo de referencia**:
+- `vetrina/data-lab.jsx` — modelo de datos + cola + histórico simulado (>500 registros)
+- `vetrina/screens-lab.jsx` — tablero kanban, histórico, modales
+- `vetrina/lab.css` — estilos
+
+**Ruta**: `/dashboard/laboratorio` (name: `laboratorio-interno`, `meta: { requiresAuth: true }`).
+
+### Estructura sugerida en Vue
+
+```
+src/features/laboratorio/
+  views/LaboratorioView.vue          ← tabs: Bandeja activa | Histórico
+  components/
+    LabBoard.vue                     ← kanban 3 columnas
+    LabSampleCard.vue                ← tarjeta de muestra
+    LabHistory.vue                   ← tabla + filtros + paginación
+    LabResultsModal.vue              ← cargar archivos adjuntos
+    LabDetailModal.vue               ← detalle read-only + acciones
+    LabPriorityPill.vue
+  composables/useLaboratorio.ts      ← estado + transiciones
+  types/lab.ts
+```
+
+### Modelo de datos (campos)
+
+```ts
+type LabSampleStatus = 'EN_COLA' | 'EN_PROCESO' | 'POR_VALIDAR' | 'VALIDADO'
+type LabPriority = 'RUTINA' | 'URGENTE' | 'STAT'
+
+interface LabSample {
+  id: number
+  code: string                 // M-2026-0512
+  animalId: string
+  testType: string
+  priority: LabPriority
+  collectedAt: string          // fecha/hora recolección
+  collectedBy: string
+  status: LabSampleStatus
+  startedAt: string | null
+  attachments: LabAttachment[] // resultados = archivos (PDF/imagen), NO tabla de parámetros
+  validatedBy: string | null
+  validatedAt: string | null
+}
+
+interface LabAttachment { name: string; size: string; kind: 'pdf' | 'image' }
+```
+
+> **Importante**: por decisión de diseño NO hay campos de tipo de muestra, calidad,
+> técnico, equipo/analizador, tabla de parámetros ni conclusión. El resultado es
+> simplemente uno o más **archivos adjuntos** (PDF/imagen) + la firma de validación.
+
+### Ciclo de vida (transiciones)
+
+| Estado | Acción disponible | Transición |
+|---|---|---|
+| `EN_COLA` | "Tomar muestra" | → `EN_PROCESO` (set `startedAt`) — directo, sin pedir datos |
+| `EN_PROCESO` | "Cargar resultados" | → `POR_VALIDAR` (adjunta archivos) |
+| `POR_VALIDAR` | "Devolver" / "Validar y firmar" | → `EN_PROCESO` / `VALIDADO` (set `validatedBy`, `validatedAt`) |
+| `VALIDADO` | — | sale del tablero, va al histórico |
+
+### UI: dos pestañas (clave de escalabilidad)
+
+**Pestaña "Bandeja activa"** — Kanban de **solo 3 columnas**: En cola, En proceso, Por validar.
+Volumen siempre acotado. Al validar, la muestra **sale del tablero** y entra al histórico.
+Esto evita que la columna "Validado" crezca sin límite.
+
+**Pestaña "Histórico"** — tabla densa con TODOS los validados:
+- Por defecto muestra **todos** los registros **paginados** (12/página). NO hay buscador de texto libre.
+- Filtro **opcional** por paciente: botón "Filtrar por paciente" → modal con el cascade
+  `PatientCascadePicker` (propietario → mascota). Al seleccionar, chip con mascota + dueño + X.
+- Filtros secundarios: tipo de examen, prioridad, rango de fechas, botón "Limpiar".
+- Columna Paciente visible (porque por defecto se ven todos).
+- Click en fila → mismo `LabDetailModal`.
+
+### ⚠️ Paginación server-side (CRÍTICO en producción)
+
+El prototipo carga los 500+ registros en memoria por simplicidad. **En Vue real, el
+histórico DEBE paginar del lado del servidor**. El endpoint recibe:
+
+```
+GET /api/laboratory-tests?status=VALIDADO
+    &page=1&pageSize=12
+    &animalId=<id>            (filtro opcional por paciente)
+    &testType=<str>&priority=<str>
+    &dateFrom=<iso>&dateTo=<iso>
+```
+
+La bandeja activa sí puede cargar todo (poco volumen). Para tablas con scroll muy largo,
+considerar `@tanstack/vue-virtual` (no está en tus deps actuales; solo si hace falta).
+
+### Conexión con la acción clínica "Laboratorio"
+
+Las solicitudes marcadas `PENDIENTE_POR_PROCESAR` (el check "muestra recolectada"
+del form de laboratorio) entran automáticamente a la columna **En cola** de esta bandeja.
+Cuando se valida, el resultado queda disponible en la historia clínica del paciente.
+
+### CSS
+
+Scoped por componente. Referencia: `vetrina/lab.css`. Puntos clave:
+- **Kanban**: `grid-template-columns: repeat(3, 1fr)` con borde superior coloreado por estado.
+- **Tabs**: border-bottom con tab activo en `var(--amatista-700)` + border 2px.
+- **Tabla histórico**: zebra hover, código en `var(--font-mono)`, paginación « ‹ N › ».
+- **Prioridad pill**: Rutina (warm), Urgente (ámbar), STAT (rojo, con icono campana).
+
+### Pruebas básicas
+
+- Bandeja activa muestra solo 3 columnas (sin "Validado")
+- Tomar muestra (En cola) → pasa a En proceso directo
+- Cargar resultados → adjuntar archivo → pasa a Por validar
+- Validar → desaparece del tablero, aparece en Histórico
+- Histórico por defecto muestra todos paginados, sin buscador de texto
+- "Filtrar por paciente" → modal cascade → tabla filtrada con chip
+- Filtros tipo/prioridad/fecha + Limpiar funcionan
+

@@ -1076,5 +1076,6 @@ function VetSpaListViewC() {
 Object.assign(window, {
   VetLabListViewC, VetImagingListViewC, VetVaccineListViewC,
   VetHospListViewC, VetDewormListViewC, VetSurgeryListViewC,
+  VetPatientCascadePicker, VetOwnerAnimalBreadcrumb,
   VetSpaListViewC,
 });

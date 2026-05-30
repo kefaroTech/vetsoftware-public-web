@@ -1,0 +1,606 @@
+/* Laboratorio interno — kanban board + result modals */
+
+.vet-lab-page {
+  font-family: var(--font-sans);
+  color: var(--warm-900);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.vet-lab-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+.vet-lab-kicker {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--warm-500);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.vet-lab-title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 36px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.05;
+  color: var(--warm-900);
+}
+.vet-lab-lead {
+  font-size: 13.5px;
+  color: var(--warm-600);
+  margin-top: 6px;
+  max-width: 600px;
+  line-height: 1.5;
+}
+.vet-lab-lead strong { color: var(--amatista-700); font-weight: 600; }
+
+/* ===== Tabs ===== */
+.vet-lab-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--warm-200);
+  margin-bottom: 4px;
+}
+.vet-lab-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--warm-600);
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+.vet-lab-tab:hover { color: var(--warm-900); }
+.vet-lab-tab.active {
+  color: var(--amatista-700);
+  border-bottom-color: var(--amatista-600);
+}
+.vet-lab-tab-badge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 10px;
+  background: var(--amatista-600);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  display: grid;
+  place-items: center;
+}
+.vet-lab-tab-badge.muted {
+  background: var(--warm-200);
+  color: var(--warm-600);
+}
+
+/* ===== Board ===== */
+.vet-lab-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.vet-lab-board-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 1100px) {
+  .vet-lab-board,
+  .vet-lab-board-3 { grid-template-columns: repeat(2, 1fr); }
+}
+.vet-lab-col {
+  background: var(--warm-100);
+  border: 1px solid var(--warm-200);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+}
+.vet-lab-col-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-top: 3px solid var(--warm-400);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  border-bottom: 1px solid var(--warm-200);
+}
+.vet-lab-col-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--warm-800);
+}
+.vet-lab-col-count {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+}
+.vet-lab-col-body {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vet-lab-col-empty {
+  padding: 24px 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--warm-400);
+}
+
+/* ===== Sample card ===== */
+.vet-lab-card {
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
+}
+.vet-lab-card:hover {
+  border-color: var(--amatista-300);
+  box-shadow: 0 4px 12px -6px rgba(20, 15, 30, 0.18);
+}
+.vet-lab-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.vet-lab-card-code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--warm-600);
+  font-weight: 500;
+}
+.vet-lab-card-test {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--warm-900);
+  line-height: 1.3;
+}
+.vet-lab-card-patient {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--warm-800);
+}
+.vet-lab-card-dim { color: var(--warm-500); font-weight: 400; }
+.vet-lab-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--warm-600);
+}
+.vet-lab-card-tech {
+  font-size: 11.5px;
+  color: var(--warm-600);
+  padding-top: 6px;
+  border-top: 1px dashed var(--warm-200);
+}
+
+/* ===== Priority pill ===== */
+.vet-lab-prio-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* ===== Result flag ===== */
+.vet-lab-flag {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* ===== Take modal / status inline ===== */
+.vet-lab-status-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+/* ===== Results modal — archivos ===== */
+.vet-lab-params-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--warm-700);
+}
+
+/* ===== File attachment list ===== */
+.vet-lab-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vet-lab-file-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 10px;
+}
+.vet-lab-file-ic {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: oklch(94% 0.04 25);
+  color: oklch(48% 0.18 25);
+}
+.vet-lab-file-ic.img {
+  background: oklch(94% 0.05 280);
+  color: oklch(45% 0.16 280);
+}
+.vet-lab-file-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--warm-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vet-lab-file-size {
+  font-size: 11.5px;
+  color: var(--warm-500);
+  margin-top: 1px;
+}
+.vet-lab-file-dl {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--warm-200);
+  background: transparent;
+  color: var(--warm-600);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.vet-lab-file-dl:hover { background: var(--warm-100); color: var(--warm-900); }
+
+/* ===== Upload dropzone ===== */
+.vet-lab-upload {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  background: var(--warm-100);
+  border: 1.5px dashed var(--warm-300);
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: var(--warm-600);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.vet-lab-upload:hover {
+  border-color: var(--amatista-400);
+  background: var(--amatista-50);
+}
+
+/* ===== Result block (detail) ===== */
+.vet-lab-result-block {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--warm-200);
+}
+.vet-lab-result-title {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--warm-500);
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.vet-lab-validated {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: oklch(94% 0.06 150);
+  color: oklch(40% 0.13 150);
+  border-radius: 10px;
+  font-size: 12.5px;
+}
+.vet-lab-validated strong { font-weight: 600; }
+
+/* ===== Histórico (tabla + filtros + paginación) ===== */
+.vet-lab-history {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.vet-lab-hist-intro {
+  font-size: 13px;
+  color: var(--warm-600);
+  line-height: 1.5;
+}
+.vet-lab-hist-empty-state {
+  padding: 48px 20px;
+  text-align: center;
+  background: var(--warm-50);
+  border: 1px dashed var(--warm-300);
+  border-radius: 14px;
+}
+.vet-lab-hist-empty-ic {
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  background: var(--amatista-50);
+  color: var(--amatista-700);
+  display: grid; place-items: center;
+  margin: 0 auto 14px;
+}
+.vet-lab-hist-empty-title {
+  font-size: 15px; font-weight: 500;
+  color: var(--warm-900); margin-bottom: 4px;
+}
+.vet-lab-hist-empty-desc {
+  margin: 0 auto; max-width: 320px;
+  font-size: 13px; color: var(--warm-600); line-height: 1.5;
+}
+.vet-lab-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.vet-lab-hist-search {
+  flex: 1;
+  min-width: 240px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 13px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 9px;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.vet-lab-hist-search:focus-within {
+  border-color: var(--amatista-500);
+  box-shadow: 0 0 0 3px var(--amatista-50);
+}
+.vet-lab-hist-search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--warm-900);
+  min-width: 0;
+}
+.vet-lab-filter-select {
+  appearance: none;
+  border: 1px solid var(--warm-200);
+  background: var(--warm-50);
+  border-radius: 9px;
+  padding: 9px 30px 9px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--warm-800);
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23999' stroke-width='1.5' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+}
+.vet-lab-filter-select:focus {
+  outline: none;
+  border-color: var(--amatista-500);
+  box-shadow: 0 0 0 3px var(--amatista-50);
+}
+.vet-lab-date-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 9px;
+}
+.vet-lab-date-range input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--warm-800);
+}
+.vet-lab-date-sep { color: var(--warm-400); font-size: 12px; }
+.vet-lab-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--warm-700);
+  cursor: pointer;
+}
+.vet-lab-clear:hover { background: var(--warm-100); color: var(--warm-900); }
+
+/* Filtro por paciente (botón + chip) */
+.vet-lab-patient-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--warm-700);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.vet-lab-patient-btn:hover {
+  border-color: var(--amatista-300);
+  background: var(--amatista-50);
+  color: var(--amatista-700);
+}
+.vet-lab-patient-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 8px 7px 12px;
+  background: var(--amatista-50);
+  border: 1px solid var(--amatista-200);
+  border-radius: 9px;
+  font-size: 13px;
+}
+.vet-lab-patient-chip-name { font-weight: 600; color: var(--warm-900); }
+.vet-lab-patient-chip-owner { color: var(--warm-500); font-size: 12px; }
+.vet-lab-patient-chip-x {
+  width: 22px; height: 22px;
+  display: grid; place-items: center;
+  border: none; border-radius: 6px;
+  background: transparent;
+  color: var(--amatista-700);
+  cursor: pointer;
+}
+.vet-lab-patient-chip-x:hover { background: var(--amatista-100); }
+
+.vet-lab-hist-count {
+  font-size: 12.5px;
+  color: var(--warm-500);
+}
+
+.vet-lab-hist-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.vet-lab-hist-table th {
+  text-align: left;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--warm-500);
+  font-weight: 600;
+  padding: 11px 14px;
+  background: var(--warm-100);
+  border-bottom: 1px solid var(--warm-200);
+}
+.vet-lab-hist-row {
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+.vet-lab-hist-row:hover { background: var(--warm-100); }
+.vet-lab-hist-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--warm-150);
+  color: var(--warm-800);
+  vertical-align: middle;
+}
+.vet-lab-hist-table tbody tr:last-child td { border-bottom: none; }
+.vet-lab-hist-code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--warm-700);
+  font-weight: 500;
+}
+.vet-lab-hist-patient { font-weight: 500; color: var(--warm-900); }
+.vet-lab-hist-owner { font-size: 11.5px; color: var(--warm-500); margin-top: 1px; }
+.vet-lab-hist-date {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--warm-600);
+  white-space: nowrap;
+}
+.vet-lab-hist-by { font-size: 12.5px; color: var(--warm-700); }
+.vet-lab-hist-empty {
+  text-align: center !important;
+  padding: 40px 16px !important;
+  color: var(--warm-500);
+}
+
+.vet-lab-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.vet-lab-pag-info { font-size: 12.5px; color: var(--warm-500); }
+.vet-lab-pag-controls { display: flex; align-items: center; gap: 6px; }
+.vet-lab-pag-btn {
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--warm-200);
+  background: var(--warm-50);
+  border-radius: 7px;
+  color: var(--warm-700);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-family: inherit;
+  font-size: 13px;
+}
+.vet-lab-pag-btn:hover:not(:disabled) { background: var(--warm-100); }
+.vet-lab-pag-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.vet-lab-pag-current {
+  min-width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--amatista-600);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+}

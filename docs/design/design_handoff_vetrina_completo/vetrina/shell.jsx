@@ -172,6 +172,14 @@ function VetAppSidebar() {
         </div>
       )}
 
+      <div style={vetShellStyles.sectionLabel}>LABORATORIO</div>
+      <VetSidebarNavItem
+        label="Bandeja de muestras"
+        Icon={VetIcons.Beaker}
+        active={route.name === 'laboratorio-interno'}
+        onClick={() => router.push({ name: 'laboratorio-interno' })}
+      />
+
       <div style={vetShellStyles.sectionLabel}>ADMINISTRACIÓN</div>
       <VetSidebarNavItem
         label="Empleados"
