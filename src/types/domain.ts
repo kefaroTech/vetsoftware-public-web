@@ -120,6 +120,23 @@ export type ReasonLeaving =
   | 'EUTHANASIA'
 export type DewormingType = 'INTERNAL' | 'EXTERNAL' | 'MIX' | 'OTHER'
 
+// ─── Hospitalización: plan de tratamiento (sala de internados) ─────────
+// Espejo de los enums Java en
+// com.vetsoftware.app.hospitalizationmedication.domain.* (idénticos en
+// hospitalizationprocedure.domain.*). Se envían como identificador al backend.
+export type MedicationFrequency =
+  | 'CONTINUOUS'
+  | 'EVERY_4H'
+  | 'EVERY_6H'
+  | 'EVERY_8H'
+  | 'EVERY_12H'
+  | 'EVERY_24H'
+  | 'SINGLE'
+// FIJO | INTERVALO — define cómo se recalculan las tomas tardías
+export type GuidelineType = 'FIXED' | 'INTERVAL'
+// DIAS | TOMAS | INDEF
+export type DurationMeasure = 'DAYS' | 'DOSES' | 'INDEFINITE'
+
 export interface MedicamentPrescription {
   name: string
   presentation: string

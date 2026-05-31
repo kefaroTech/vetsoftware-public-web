@@ -138,6 +138,13 @@ const router = createRouter({
           meta: { permission: PERMISSIONS.LABORATORY_TEST_READ },
         },
         {
+          path: 'hospital',
+          name: 'hospital-ward',
+          component: () =>
+            import('@/features/hospitalizacion/views/HospitalizacionView.vue'),
+          meta: { permission: PERMISSIONS.HOSPITALIZATION_READ },
+        },
+        {
           path: 'empleados',
           name: 'empleados',
           component: () => import('@/features/employees/views/EmpleadosView.vue'),

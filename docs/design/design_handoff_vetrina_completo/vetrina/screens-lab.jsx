@@ -113,7 +113,7 @@ function VetLabSampleCard({ sample, onOpen }) {
         <div className="vet-lab-card-tech">📎 {sample.attachments.length} archivo{sample.attachments.length === 1 ? '' : 's'} adjunto{sample.attachments.length === 1 ? '' : 's'}</div>
       )}
       {sample.status === 'VALIDADO' && sample.validatedBy && (
-        <div className="vet-lab-card-tech">✓ Procesado por {sample.validatedBy}</div>
+        <div className="vet-lab-card-tech">✓ Validado por {sample.validatedBy}</div>
       )}
     </button>
   );
@@ -392,7 +392,7 @@ function VetLabDetailModal({ open, sample, onClose, onTake, onLoad, onValidate, 
 
   const actions = (() => {
     if (sample.status === 'EN_COLA') {
-      return <button type="button" className="vet-btn-primary-modal" onClick={() => onTake(sample)}>Procesar muestra</button>;
+      return <button type="button" className="vet-btn-primary-modal" onClick={() => onTake(sample)}>Tomar muestra</button>;
     }
     if (sample.status === 'EN_PROCESO') {
       return <button type="button" className="vet-btn-primary-modal" onClick={() => onLoad(sample)}>Cargar resultados</button>;
@@ -450,7 +450,7 @@ function VetLabDetailModal({ open, sample, onClose, onTake, onLoad, onValidate, 
           </div>
           {sample.validatedBy && (
             <div className="vet-lab-validated">
-              ✓ Procesado por <strong>{sample.validatedBy}</strong> · {sample.validatedAt}
+              ✓ Validado por <strong>{sample.validatedBy}</strong> · {sample.validatedAt}
             </div>
           )}
         </div>

@@ -32,6 +32,7 @@ export const PERMISSIONS = {
   VACCINATION_UPDATE: 'vaccination.update',
   VACCINATION_DELETE: 'vaccination.delete',
   HOSPITALIZATION_CREATE: 'hospitalization.create',
+  HOSPITALIZATION_READ: 'hospitalization.read',
   HOSPITALIZATION_UPDATE: 'hospitalization.update',
   HOSPITALIZATION_DELETE: 'hospitalization.delete',
   DEWORMING_CREATE: 'deworming.create',

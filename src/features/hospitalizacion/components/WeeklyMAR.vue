@@ -1,0 +1,276 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { Check } from 'lucide-vue-next'
+import {
+  WEEKDAYS_SHORT,
+  addDays,
+  isoFromDate,
+  sameDay,
+  effectiveDoseStatus,
+  normalizeTime,
+} from '../composables/mar'
+import type { DoseSlot, OrderVM } from '../types/hospital'
+
+const props = defineProps<{
+  weekStart: Date
+  orders: OrderVM[]
+  now: Date
+}>()
+
+const emit = defineEmits<{
+  apply: [order: OrderVM, slotId: string]
+  moverequest: [order: OrderVM, slotId: string, newDate: string, newTime: string]
+}>()
+
+interface Entry {
+  order: OrderVM
+  slot: DoseSlot
+  dayIso: string
+  hour: number
+}
+
+const days = computed(() => Array.from({ length: 7 }, (_, i) => addDays(props.weekStart, i)))
+const dayIsos = computed(() => days.value.map(isoFromDate))
+
+const entries = computed<Entry[]>(() => {
+  const set = new Set(dayIsos.value)
+  const out: Entry[] = []
+  for (const order of props.orders) {
+    for (const slot of order.schedule) {
+      if (!set.has(slot.date)) continue
+      const hour = Number(normalizeTime(slot.time).split(':')[0]) || 0
+      out.push({ order, slot, dayIso: slot.date, hour })
+    }
+  }
+  return out
+})
+
+const hours = computed(() =>
+  [...new Set(entries.value.map((e) => e.hour))].sort((a, b) => a - b),
+)
+
+function chipsAt(dayIso: string, hour: number): Entry[] {
+  return entries.value.filter((e) => e.dayIso === dayIso && e.hour === hour)
+}
+
+function statusOf(slot: DoseSlot): string {
+  return effectiveDoseStatus(slot, props.now).toLowerCase()
+}
+
+function interactive(slot: DoseSlot): boolean {
+  const s = effectiveDoseStatus(slot, props.now)
+  return s === 'PENDIENTE' || s === 'ATRASADA'
+}
+
+function isToday(d: Date): boolean {
+  return sameDay(d, props.now)
+}
+
+// ── Drag & drop nativo ──
+const dragging = ref<{ order: OrderVM; slot: DoseSlot } | null>(null)
+const dragOver = ref<string | null>(null) // `${dayIso}-${hour}`
+
+function onDragStart(e: Entry) {
+  if (!interactive(e.slot)) return
+  dragging.value = { order: e.order, slot: e.slot }
+}
+
+function onDrop(dayIso: string, hour: number) {
+  const d = dragging.value
+  dragOver.value = null
+  dragging.value = null
+  if (!d) return
+  const newTime = `${String(hour).padStart(2, '0')}:00`
+  if (dayIso === d.slot.date && newTime === normalizeTime(d.slot.time)) return
+  emit('moverequest', d.order, d.slot.id, dayIso, newTime)
+}
+</script>
+
+<template>
+  <div class="wrap">
+    <div v-if="hours.length === 0" class="empty">
+      No hay tomas programadas en esta semana.
+    </div>
+    <div
+      v-else
+      class="grid"
+      :style="{ gridTemplateColumns: `64px repeat(7, minmax(96px, 1fr))` }"
+    >
+      <div class="corner" />
+      <div
+        v-for="(d, i) in days"
+        :key="`h${i}`"
+        class="dayhead"
+        :class="{ today: isToday(d) }"
+      >
+        <span class="dow">{{ WEEKDAYS_SHORT[i] }}</span>
+        <span class="dnum">{{ d.getDate() }}</span>
+      </div>
+
+      <template v-for="hour in hours" :key="`r${hour}`">
+        <div class="hourcell">{{ String(hour).padStart(2, '0') }}:00</div>
+        <div
+          v-for="(d, i) in days"
+          :key="`c${hour}-${i}`"
+          class="cell"
+          :class="{
+            today: isToday(d),
+            dropover: dragOver === `${dayIsos[i]}-${hour}`,
+          }"
+          @dragover.prevent="dragOver = `${dayIsos[i]}-${hour}`"
+          @dragleave="dragOver = null"
+          @drop="onDrop(dayIsos[i], hour)"
+        >
+          <span
+            v-for="e in chipsAt(dayIsos[i], hour)"
+            :key="e.slot.id"
+            class="chip"
+            :class="[statusOf(e.slot), { proc: e.order.kind === 'proc' }]"
+            :draggable="interactive(e.slot)"
+            :title="`${e.order.name}${e.order.kind === 'med' && e.order.dose ? ' · ' + e.order.dose : ''} · ${normalizeTime(e.slot.time)}`"
+            @click="interactive(e.slot) && emit('apply', e.order, e.slot.id)"
+            @dragstart="onDragStart(e)"
+          >
+            <Check v-if="statusOf(e.slot) === 'aplicada'" :size="11" :stroke-width="3" />
+            <span class="chip-name">{{ e.order.name }}</span>
+          </span>
+        </div>
+      </template>
+    </div>
+
+    <div class="legend">
+      <span><i class="sw aplicada" /> Aplicada</span>
+      <span><i class="sw pendiente" /> Pendiente</span>
+      <span><i class="sw atrasada" /> Atrasada</span>
+      <span><i class="sw proc" /> Procedimiento</span>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.wrap {
+  overflow-x: auto;
+}
+.grid {
+  display: grid;
+  gap: 1px;
+  background: var(--warm-200);
+  border: 1px solid var(--warm-200);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: max-content;
+}
+.corner {
+  background: var(--warm-100);
+}
+.dayhead {
+  background: var(--warm-100);
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.dayhead.today {
+  background: var(--amatista-100);
+}
+.dow {
+  font-size: 11px;
+  color: var(--warm-600);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.dnum {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--warm-900);
+}
+.hourcell {
+  background: var(--warm-100);
+  padding: 8px 6px;
+  font-size: 11.5px;
+  font-family: var(--font-mono);
+  color: var(--warm-600);
+  text-align: right;
+}
+.cell {
+  background: var(--warm-50);
+  min-height: 46px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cell.today {
+  background: oklch(98% 0.02 var(--hue));
+}
+.cell.dropover {
+  background: var(--amatista-100);
+  outline: 2px dashed var(--amatista-500);
+  outline-offset: -2px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chip.aplicada {
+  background: oklch(94% 0.06 150);
+  color: oklch(40% 0.13 150);
+}
+.chip.pendiente {
+  background: var(--warm-50);
+  color: var(--warm-700);
+  border: 1px solid var(--warm-300);
+  cursor: pointer;
+}
+.chip.pendiente:hover {
+  border-color: var(--amatista-500);
+}
+.chip.atrasada {
+  background: oklch(95% 0.05 25);
+  color: oklch(48% 0.18 25);
+  border: 1px solid oklch(85% 0.10 25);
+  cursor: pointer;
+}
+.chip.proc.pendiente,
+.chip.proc.aplicada,
+.chip.proc.atrasada {
+  background: oklch(94% 0.05 200);
+  color: oklch(42% 0.10 220);
+  border-color: oklch(85% 0.07 210);
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--warm-600);
+}
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sw {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  display: inline-block;
+}
+.sw.aplicada { background: oklch(80% 0.10 150); }
+.sw.pendiente { background: var(--warm-50); border: 1px solid var(--warm-300); }
+.sw.atrasada { background: oklch(80% 0.12 25); }
+.sw.proc { background: oklch(80% 0.07 210); }
+</style>

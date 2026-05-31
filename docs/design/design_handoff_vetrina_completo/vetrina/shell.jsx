@@ -180,6 +180,14 @@ function VetAppSidebar() {
         onClick={() => router.push({ name: 'laboratorio-interno' })}
       />
 
+      <div style={vetShellStyles.sectionLabel}>HOSPITALIZACIÓN</div>
+      <VetSidebarNavItem
+        label="Pacientes internados"
+        Icon={VetIcons.BedDouble}
+        active={route.name === 'hospital-ward'}
+        onClick={() => router.push({ name: 'hospital-ward' })}
+      />
+
       <div style={vetShellStyles.sectionLabel}>ADMINISTRACIÓN</div>
       <VetSidebarNavItem
         label="Empleados"

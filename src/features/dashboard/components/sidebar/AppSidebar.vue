@@ -64,6 +64,7 @@ const canSpa = can(PERMISSIONS.SPA_CREATE)
 const canEmployees = can(PERMISSIONS.EMPLOYEE_READ)
 const canRoles = can(PERMISSIONS.ROLE_PERMISSIONS_READ)
 const canLabProcess = can(PERMISSIONS.LABORATORY_TEST_READ)
+const canHospitalWard = can(PERMISSIONS.HOSPITALIZATION_READ)
 
 const historialActiveRoutes = [
   'consulta-historial',
@@ -207,6 +208,16 @@ const upcomingItems = [
         :icon="FlaskConical"
         :active="route.name === 'laboratorio-interno'"
         @click="router.push({ name: 'laboratorio-interno' })"
+      />
+    </template>
+
+    <template v-if="canHospitalWard">
+      <div class="section-label">HOSPITALIZACIÓN</div>
+      <SidebarNavItem
+        label="Pacientes internados"
+        :icon="BedDouble"
+        :active="route.name === 'hospital-ward'"
+        @click="router.push({ name: 'hospital-ward' })"
       />
     </template>
 

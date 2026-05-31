@@ -1,0 +1,526 @@
+/* Hospitalización — ward board + detalle (MAR, plan, evolución) */
+
+.vet-hosp-page { font-family: var(--font-sans); color: var(--warm-900); }
+
+.vet-hosp-header { margin-bottom: 24px; }
+.vet-hosp-kicker {
+  font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--warm-500); font-weight: 500; margin-bottom: 6px;
+}
+.vet-hosp-title {
+  margin: 0; font-family: var(--font-serif);
+  font-size: 36px; font-weight: 400; letter-spacing: -0.015em; line-height: 1.05;
+}
+.vet-hosp-lead { font-size: 13.5px; color: var(--warm-600); margin-top: 6px; }
+
+/* ===== Status pill ===== */
+.vet-hosp-status {
+  display: inline-flex; align-items: center; gap: 6px;
+  border-radius: 999px; font-weight: 500; white-space: nowrap;
+}
+.vet-hosp-status.size-md { padding: 3px 10px; font-size: 12px; }
+.vet-hosp-status.size-lg { padding: 5px 12px; font-size: 13px; }
+.vet-hosp-status-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+/* ===== Board ===== */
+.vet-hosp-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+.vet-hosp-card {
+  display: flex; flex-direction: column; gap: 11px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 14px;
+  padding: 16px;
+  font-family: inherit; text-align: left; cursor: pointer;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.vet-hosp-card:hover {
+  border-color: var(--amatista-300);
+  box-shadow: 0 4px 14px -8px rgba(20, 15, 30, 0.18);
+}
+.vet-hosp-card-top { display: flex; align-items: center; justify-content: space-between; }
+.vet-hosp-kennel {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+  color: var(--warm-700); background: var(--warm-150);
+  padding: 2px 8px; border-radius: 6px;
+}
+.vet-hosp-card-pet { display: flex; align-items: center; gap: 11px; }
+.vet-hosp-card-avatar {
+  width: 42px; height: 42px; border-radius: 11px;
+  background: var(--amatista-100); color: var(--amatista-700);
+  display: grid; place-items: center;
+  font-family: var(--font-serif); font-size: 16px; font-weight: 500;
+  flex-shrink: 0;
+}
+.vet-hosp-card-name { font-size: 15px; font-weight: 500; color: var(--warm-900); }
+.vet-hosp-card-owner { font-size: 12px; color: var(--warm-500); margin-top: 1px; }
+.vet-hosp-card-reason {
+  font-size: 12.5px; color: var(--warm-700); line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.vet-hosp-card-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 11px; border-top: 1px solid var(--warm-150);
+}
+.vet-hosp-card-days {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; color: var(--warm-600);
+}
+.vet-hosp-alert {
+  font-size: 11px; font-weight: 500;
+  padding: 2px 9px; border-radius: 999px;
+}
+.vet-hosp-alert.overdue { background: oklch(93% 0.06 25); color: oklch(48% 0.19 25); }
+.vet-hosp-alert.pending { background: oklch(94% 0.07 80); color: oklch(45% 0.13 70); }
+.vet-hosp-alert.ok { background: oklch(94% 0.06 150); color: oklch(40% 0.13 150); }
+
+/* ===== Empty ===== */
+.vet-hosp-empty {
+  padding: 56px 20px; text-align: center;
+  background: var(--warm-50); border: 1px dashed var(--warm-300); border-radius: 14px;
+}
+.vet-hosp-empty-ic {
+  width: 60px; height: 60px; border-radius: 16px;
+  background: var(--amatista-50); color: var(--amatista-700);
+  display: grid; place-items: center; margin: 0 auto 14px;
+}
+.vet-hosp-empty-title { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+.vet-hosp-empty-desc { font-size: 13px; color: var(--warm-600); margin: 0; }
+.vet-hosp-mini-empty { padding: 20px; text-align: center; font-size: 12.5px; color: var(--warm-500); }
+
+/* ===== Detail ===== */
+.vet-hosp-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: transparent; border: none;
+  font-family: inherit; font-size: 13px; color: var(--warm-600);
+  cursor: pointer; padding: 4px 0; margin-bottom: 16px;
+}
+.vet-hosp-back:hover { color: var(--amatista-700); }
+
+.vet-hosp-detail-head {
+  display: flex; align-items: flex-start; gap: 16px;
+  padding-bottom: 16px;
+}
+.vet-hosp-detail-avatar {
+  width: 64px; height: 64px; border-radius: 16px;
+  background: var(--amatista-100); color: var(--amatista-700);
+  display: grid; place-items: center;
+  font-family: var(--font-serif); font-size: 22px; font-weight: 500;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px -6px oklch(40% 0.18 var(--hue) / 0.3);
+}
+.vet-hosp-detail-name-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.vet-hosp-detail-name {
+  margin: 0; font-family: var(--font-serif);
+  font-size: 28px; font-weight: 400; letter-spacing: -0.01em; line-height: 1.05;
+}
+.vet-hosp-detail-kennel {
+  font-family: var(--font-mono); font-size: 12.5px; font-weight: 600;
+  color: var(--warm-700); background: var(--warm-150);
+  padding: 3px 9px; border-radius: 7px;
+}
+.vet-hosp-detail-meta { font-size: 13px; color: var(--warm-600); margin-top: 5px; }
+.vet-hosp-detail-sub {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  font-size: 12px; color: var(--warm-500); margin-top: 6px;
+}
+.vet-hosp-detail-sub span { display: inline-flex; align-items: center; gap: 4px; }
+.vet-hosp-discharge-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px; border-radius: 9px;
+  background: var(--amatista-700); color: white; border: none;
+  font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+  flex-shrink: 0;
+}
+.vet-hosp-discharge-btn:hover { background: var(--amatista-800); }
+
+.vet-hosp-diagnosis {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 12px 16px; margin-bottom: 16px;
+  background: var(--warm-100); border-radius: 10px;
+  font-size: 13px; color: var(--warm-800); line-height: 1.45;
+}
+.vet-hosp-diagnosis-label {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--warm-500); font-weight: 600;
+}
+
+/* ===== Treatment CTA (overview → screen) ===== */
+.vet-treat-cta {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%; text-align: left;
+  background: var(--warm-50); border: 1px solid var(--warm-200);
+  border-radius: 12px; padding: 16px 18px; margin-bottom: 16px;
+  font-family: inherit;
+}
+.vet-treat-cta.alert { background: oklch(97% 0.03 25); border-color: oklch(88% 0.08 25); }
+.vet-treat-cta-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: 9px; flex-shrink: 0;
+  background: var(--amatista-700); color: white; border: none;
+  font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+}
+.vet-treat-cta-btn:hover { background: var(--amatista-800); }
+.vet-treat-cta.alert .vet-treat-cta-btn { background: oklch(48% 0.19 25); }
+.vet-treat-cta.alert .vet-treat-cta-btn:hover { background: oklch(42% 0.19 25); }
+.vet-treat-cta-ic {
+  width: 44px; height: 44px; border-radius: 11px;
+  background: var(--amatista-100); color: var(--amatista-700);
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.vet-treat-cta.alert .vet-treat-cta-ic { background: oklch(93% 0.06 25); color: oklch(48% 0.19 25); }
+.vet-treat-cta-body { flex: 1; min-width: 0; }
+.vet-treat-cta-title { font-size: 14.5px; font-weight: 600; color: var(--warm-900); }
+.vet-treat-cta-sub { font-size: 12.5px; color: var(--warm-600); margin-top: 3px; }
+.vet-treat-cta-alert { color: oklch(48% 0.19 25); font-weight: 600; }
+
+/* ===== Treatment screen head ===== */
+.vet-treat-screen-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 16px; margin-bottom: 18px;
+}
+.vet-treat-add-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: 9px;
+  background: var(--amatista-700); color: white; border: none;
+  font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+  flex-shrink: 0;
+}
+.vet-treat-add-btn:hover { background: var(--amatista-800); }
+
+/* ===== Weekly MAR grid ===== */
+.vet-wk-wrap { padding: 16px 18px; overflow-x: auto; }
+.vet-wk-hint {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11.5px; color: var(--warm-500);
+  margin-bottom: 10px;
+}
+.vet-wk-grip { opacity: 0.5; margin-right: -2px; }
+.vet-wk-chip.draggable { cursor: grab; }
+.vet-wk-chip.draggable:active { cursor: grabbing; }
+.vet-wk-cell.droppable {
+  outline: 1px dashed var(--amatista-300);
+  outline-offset: -2px;
+}
+.vet-wk-cell.dropover {
+  background: var(--amatista-100) !important;
+  outline: 2px dashed var(--amatista-500);
+  outline-offset: -2px;
+}
+.vet-wk-grid {
+  display: grid; gap: 1px;
+  background: var(--warm-200);
+  border: 1px solid var(--warm-200);
+  border-radius: 10px; overflow: hidden;
+  min-width: max-content;
+}
+.vet-wk-corner {
+  background: var(--warm-100); padding: 10px 12px;
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em;
+  font-weight: 600; color: var(--warm-500);
+  display: flex; align-items: center;
+}
+.vet-wk-dayhead {
+  background: var(--warm-100); padding: 8px 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+}
+.vet-wk-dayhead.today { background: var(--amatista-100); }
+.vet-wk-dow { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--warm-500); font-weight: 600; }
+.vet-wk-dayhead.today .vet-wk-dow { color: var(--amatista-700); }
+.vet-wk-dom { font-size: 15px; font-weight: 600; color: var(--warm-800); }
+.vet-wk-dayhead.today .vet-wk-dom { color: var(--amatista-700); }
+.vet-wk-medcell { background: var(--warm-50); padding: 10px 12px; }
+.vet-wk-hourcell {
+  background: var(--warm-100); padding: 10px 8px;
+  font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+  color: var(--warm-600); display: flex; align-items: center; justify-content: center;
+}
+.vet-wk-med-name { font-size: 13px; font-weight: 600; color: var(--warm-900); }
+.vet-wk-med-detail { font-size: 11px; color: var(--warm-500); margin-top: 2px; }
+.vet-wk-cell {
+  background: var(--warm-50); padding: 8px 6px;
+  display: flex; flex-direction: column; gap: 4px; align-items: center;
+  justify-content: flex-start;
+}
+.vet-wk-cell.today { background: oklch(98% 0.015 var(--hue)); }
+.vet-wk-cell.future { background: oklch(99% 0.004 60); }
+.vet-wk-na { color: var(--warm-300); font-size: 13px; }
+.vet-wk-chip {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10.5px; font-weight: 600;
+  padding: 3px 8px; border-radius: 6px; border: 1px solid transparent;
+  white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+}
+.vet-wk-chip.applied { background: oklch(94% 0.06 150); color: oklch(40% 0.13 150); }
+.vet-wk-chip.future, .vet-wk-chip.scheduled { background: var(--warm-150); color: var(--warm-500); }
+.vet-wk-chip.pending { background: var(--warm-50); color: var(--warm-700); border-color: var(--warm-300); cursor: pointer; }
+.vet-wk-chip.pending:hover { border-color: var(--amatista-500); color: var(--amatista-700); }
+.vet-wk-chip.overdue { background: oklch(95% 0.05 25); color: oklch(48% 0.19 25); border-color: oklch(82% 0.10 25); cursor: pointer; }
+.vet-wk-chip.overdue:hover { background: oklch(92% 0.07 25); }
+/* Procedimientos: tinte teal para distinguir de medicamentos */
+.vet-wk-chip.proc.applied { background: oklch(94% 0.05 200); color: oklch(42% 0.12 200); }
+.vet-wk-chip.proc.future { background: oklch(95% 0.02 200); color: oklch(55% 0.06 200); }
+.vet-wk-chip.proc.pending { border-color: oklch(70% 0.08 200); color: oklch(42% 0.12 200); }
+.vet-wk-chip.proc.pending:hover { border-color: oklch(55% 0.12 200); }
+.vet-wk-legend {
+  display: flex; flex-wrap: wrap; gap: 16px;
+  margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--warm-150);
+}
+.vet-wk-leg { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--warm-600); }
+.vet-hosp-now-chip {
+  font-size: 11px; font-weight: 500;
+  padding: 3px 10px; border-radius: 999px;
+  background: var(--warm-150); color: var(--warm-600);
+}
+
+/* Rango fecha+hora inicio/fin en formularios */
+.vet-hosp-range {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  padding: 12px; border: 1px solid var(--warm-200); border-radius: 10px;
+  background: var(--warm-100);
+}
+@media (max-width: 560px) { .vet-hosp-range { grid-template-columns: 1fr; } }
+.vet-hosp-range-col { display: flex; flex-direction: column; gap: 8px; }
+.vet-hosp-range-label {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em;
+  font-weight: 600; color: var(--warm-500);
+}
+.vet-pauta-help {
+  margin: -2px 0 0;
+  font-size: 12px; line-height: 1.5; color: var(--warm-500);
+  background: var(--warm-100);
+  border-left: 2px solid var(--amatista-300);
+  padding: 8px 11px; border-radius: 0 7px 7px 0;
+}
+.vet-dur-field { display: flex; flex-direction: column; gap: 7px; }
+.vet-dur-row { display: flex; gap: 10px; align-items: stretch; }
+.vet-dur-mode { flex: 1.4; }
+.vet-dur-value { flex: 1; display: flex; align-items: center; gap: 8px; }
+.vet-dur-value .vet-base-input { flex: 1; }
+.vet-dur-suffix { font-size: 13px; color: var(--warm-600); white-space: nowrap; }
+
+/* ===== Treatment (med + schedule unified) ===== */
+.vet-treat-list { display: flex; flex-direction: column; }
+.vet-treat-row {
+  display: grid; grid-template-columns: 1fr 1.1fr; gap: 16px;
+  padding: 14px 18px; border-bottom: 1px solid var(--warm-150);
+  align-items: center;
+}
+.vet-treat-row:last-child { border-bottom: none; }
+@media (max-width: 720px) { .vet-treat-row { grid-template-columns: 1fr; gap: 10px; } }
+.vet-treat-name-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.vet-treat-name { font-size: 14.5px; font-weight: 600; color: var(--warm-900); }
+.vet-treat-actions { display: flex; gap: 4px; }
+.vet-treat-detail { font-size: 12.5px; color: var(--warm-600); margin-top: 3px; }
+.vet-treat-notes { font-size: 11.5px; color: var(--warm-500); margin-top: 3px; font-style: italic; }
+.vet-treat-doses { display: flex; align-items: center; gap: 10px; }
+.vet-treat-doses-label {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--warm-400); font-weight: 600; flex-shrink: 0;
+}
+.vet-treat-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.vet-treat-nodoses { font-size: 12px; color: var(--warm-400); font-style: italic; }
+
+/* Dose chip */
+.vet-dchip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 999px;
+  font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+  border: 1px solid transparent; cursor: default; font-feature-settings: 'tnum';
+}
+.vet-dchip.applied { background: oklch(94% 0.06 150); color: oklch(40% 0.13 150); }
+.vet-dchip.pending {
+  background: var(--warm-50); color: var(--warm-600);
+  border-color: var(--warm-300); cursor: pointer;
+}
+.vet-dchip.pending:hover { border-color: var(--amatista-500); color: var(--amatista-700); }
+.vet-dchip.overdue {
+  background: oklch(95% 0.05 25); color: oklch(48% 0.19 25);
+  border-color: oklch(82% 0.10 25); cursor: pointer;
+}
+.vet-dchip.overdue:hover { background: oklch(92% 0.07 25); }
+.vet-dchip-apply {
+  font-family: var(--font-sans); font-size: 10.5px; font-weight: 500;
+  padding-left: 5px; border-left: 1px solid currentColor; opacity: 0.7;
+}
+
+/* ===== Bottom two columns ===== */
+.vet-hosp-bottom {
+  display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px; align-items: start;
+  margin-top: 16px;
+}
+@media (max-width: 1000px) { .vet-hosp-bottom { grid-template-columns: 1fr; } }
+
+.vet-hosp-grid {
+  display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; align-items: start;
+}
+@media (max-width: 1000px) { .vet-hosp-grid { grid-template-columns: 1fr; } }
+.vet-hosp-col-main, .vet-hosp-col-side { display: flex; flex-direction: column; gap: 16px; }
+
+.vet-hosp-section {
+  background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 14px;
+  overflow: hidden;
+}
+.vet-hosp-section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid var(--warm-200);
+}
+.vet-hosp-section-title {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 14px; font-weight: 500; color: var(--warm-900);
+}
+.vet-hosp-section-title svg { color: var(--amatista-600); }
+.vet-hosp-add-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: transparent; border: none;
+  color: var(--amatista-700); font-family: inherit;
+  font-size: 12.5px; font-weight: 500; cursor: pointer;
+  padding: 4px 8px; border-radius: 6px;
+}
+.vet-hosp-add-link:hover { background: var(--amatista-50); }
+.vet-hosp-mar-progress {
+  font-size: 12px; font-weight: 500;
+  padding: 3px 10px; border-radius: 999px;
+  background: var(--amatista-100); color: var(--amatista-700);
+}
+
+/* ===== MAR ===== */
+.vet-hosp-now-line {
+  padding: 8px 18px; background: var(--warm-100);
+  border-bottom: 1px solid var(--warm-150);
+}
+.vet-hosp-now-label {
+  font-size: 11px; color: var(--warm-500);
+  text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500;
+}
+.vet-mar-list { padding: 6px 0; }
+.vet-mar-row {
+  display: grid; grid-template-columns: 48px 20px 1fr;
+  gap: 10px; align-items: stretch;
+  padding: 10px 18px;
+}
+.vet-mar-time {
+  font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+  color: var(--warm-700); padding-top: 2px;
+}
+.vet-mar-rail { display: flex; justify-content: center; position: relative; }
+.vet-mar-rail::before {
+  content: ''; position: absolute; top: 0; bottom: -10px; width: 2px;
+  background: var(--warm-200);
+}
+.vet-mar-row:last-child .vet-mar-rail::before { bottom: 50%; }
+.vet-mar-dot {
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--warm-300); border: 2px solid var(--warm-50);
+  margin-top: 4px; z-index: 1;
+}
+.vet-mar-row.st-APLICADA .vet-mar-dot { background: oklch(55% 0.15 150); }
+.vet-mar-row.st-ATRASADA .vet-mar-dot { background: oklch(58% 0.20 25); }
+.vet-mar-body {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  min-width: 0;
+}
+.vet-mar-med { min-width: 0; }
+.vet-mar-med-name { display: block; font-size: 13.5px; font-weight: 500; color: var(--warm-900); }
+.vet-mar-med-dose { display: block; font-size: 12px; color: var(--warm-500); margin-top: 1px; }
+.vet-mar-applied {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; color: oklch(40% 0.13 150); white-space: nowrap;
+}
+.vet-mar-action { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.vet-mar-apply {
+  padding: 5px 14px; border-radius: 7px;
+  background: var(--amatista-700); color: white; border: none;
+  font-family: inherit; font-size: 12px; font-weight: 500; cursor: pointer;
+}
+.vet-mar-apply:hover { background: var(--amatista-800); }
+.vet-dose-pill {
+  font-size: 11px; font-weight: 500;
+  padding: 2px 9px; border-radius: 999px;
+}
+
+/* ===== Plan de tratamiento ===== */
+.vet-plan-list, .vet-proc-list { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.vet-plan-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 11px 12px; border-radius: 10px; background: var(--warm-100);
+}
+.vet-plan-name { font-size: 13.5px; font-weight: 500; color: var(--warm-900); }
+.vet-plan-detail { font-size: 12px; color: var(--warm-600); margin-top: 2px; }
+.vet-plan-notes { font-size: 11.5px; color: var(--warm-500); margin-top: 3px; font-style: italic; }
+.vet-plan-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.vet-plan-icon {
+  width: 28px; height: 28px; border-radius: 7px;
+  border: 1px solid var(--warm-200); background: var(--warm-50);
+  color: var(--warm-600); cursor: pointer;
+  display: grid; place-items: center;
+}
+.vet-plan-icon:hover { background: var(--warm-100); }
+.vet-plan-icon.danger:hover { background: oklch(95% 0.06 25); color: oklch(48% 0.18 25); border-color: oklch(85% 0.12 25); }
+
+/* ===== Procedimientos ===== */
+.vet-proc-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px; border-radius: 10px; cursor: pointer;
+  transition: background 0.1s ease;
+}
+.vet-proc-row:hover { background: var(--warm-100); }
+.vet-proc-row input { margin-top: 2px; width: 15px; height: 15px; accent-color: var(--amatista-600); cursor: pointer; flex-shrink: 0; }
+.vet-proc-name { font-size: 13px; font-weight: 500; color: var(--warm-900); }
+.vet-proc-row.done .vet-proc-name { text-decoration: line-through; color: var(--warm-500); }
+.vet-proc-detail { font-size: 11.5px; color: var(--warm-500); margin-top: 2px; }
+
+/* ===== Evolución ===== */
+.vet-evo-list { padding: 12px 18px 18px; display: flex; flex-direction: column; gap: 0; }
+.vet-evo-row {
+  display: grid; grid-template-columns: 56px 1fr; gap: 14px;
+  padding: 12px 0; border-bottom: 1px solid var(--warm-150);
+}
+.vet-evo-row:last-child { border-bottom: none; }
+.vet-evo-when { display: flex; flex-direction: column; gap: 1px; }
+.vet-evo-date { font-size: 12px; font-weight: 600; color: var(--warm-700); }
+.vet-evo-time { font-family: var(--font-mono); font-size: 11px; color: var(--warm-500); }
+.vet-evo-vitals {
+  display: flex; gap: 12px; margin-bottom: 5px;
+  font-size: 12px; color: var(--warm-600);
+}
+.vet-evo-vitals b { color: var(--warm-400); font-weight: 600; font-size: 10.5px; }
+.vet-evo-notes { font-size: 13px; color: var(--warm-800); line-height: 1.5; }
+.vet-evo-author { font-size: 11.5px; color: var(--warm-500); margin-top: 4px; }
+
+/* Observaciones (historial) */
+.vet-obs-list { padding: 12px 18px 18px; display: flex; flex-direction: column; gap: 0; }
+.vet-obs-row {
+  display: grid; grid-template-columns: 56px 1fr; gap: 14px;
+  padding: 12px 0; border-bottom: 1px solid var(--warm-150);
+}
+.vet-obs-row:last-child { border-bottom: none; }
+.vet-obs-when { display: flex; flex-direction: column; gap: 1px; }
+.vet-obs-body { min-width: 0; }
+.vet-obs-text {
+  font-size: 13px; color: var(--warm-800); line-height: 1.5;
+  background: oklch(96% 0.04 80); border-left: 2px solid oklch(75% 0.10 75);
+  padding: 7px 11px; border-radius: 0 7px 7px 0;
+}
+.vet-obs-quick { display: flex; flex-wrap: wrap; gap: 6px; }
+.vet-obs-chip {
+  font-size: 12px; padding: 5px 11px; border-radius: 999px;
+  background: var(--warm-100); border: 1px solid var(--warm-200);
+  color: var(--warm-700); cursor: pointer; font-family: inherit;
+}
+.vet-obs-chip:hover { background: var(--amatista-50); border-color: var(--amatista-300); color: var(--amatista-700); }
+
+/* Modal reprogramar toma — explicación de pauta */
+.vet-move-help { display: flex; flex-direction: column; gap: 8px; }
+.vet-move-opt {
+  font-size: 12.5px; line-height: 1.5; color: var(--warm-700);
+  background: var(--warm-100); border-left: 2px solid var(--warm-300);
+  padding: 9px 12px; border-radius: 0 8px 8px 0;
+}
+.vet-move-opt b { color: var(--warm-900); }
+.vet-move-opt.warn {
+  background: oklch(96% 0.04 80); border-left-color: oklch(70% 0.12 75);
+}

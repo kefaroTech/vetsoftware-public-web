@@ -1090,7 +1090,7 @@ interface LabAttachment { name: string; size: string; kind: 'pdf' | 'image' }
 
 | Estado | Acción disponible | Transición |
 |---|---|---|
-| `EN_COLA` | "Procesar muestra" | → `EN_PROCESO` (set `startedAt`) — directo, sin pedir datos |
+| `EN_COLA` | "Tomar muestra" | → `EN_PROCESO` (set `startedAt`) — directo, sin pedir datos |
 | `EN_PROCESO` | "Cargar resultados" | → `POR_VALIDAR` (adjunta archivos) |
 | `POR_VALIDAR` | "Devolver" / "Validar y firmar" | → `EN_PROCESO` / `VALIDADO` (set `validatedBy`, `validatedAt`) |
 | `VALIDADO` | — | sale del tablero, va al histórico |
@@ -1142,10 +1142,141 @@ Scoped por componente. Referencia: `vetrina/lab.css`. Puntos clave:
 ### Pruebas básicas
 
 - Bandeja activa muestra solo 3 columnas (sin "Validado")
-- Procesar muestra (En cola) → pasa a En proceso directo
+- Tomar muestra (En cola) → pasa a En proceso directo
 - Cargar resultados → adjuntar archivo → pasa a Por validar
 - Validar → desaparece del tablero, aparece en Histórico
 - Histórico por defecto muestra todos paginados, sin buscador de texto
 - "Filtrar por paciente" → modal cascade → tabla filtrada con chip
 - Filtros tipo/prioridad/fecha + Limpiar funcionan
+
+---
+
+## §16. Hospitalización — internación y administración de tratamiento
+
+Nueva sección de primer nivel en el sidebar (grupo **HOSPITALIZACIÓN** → "Pacientes
+internados"). Es la gestión de animales hospitalizados: plan de tratamiento, registro
+de administración de dosis/procedimientos (MAR), observaciones y evolución.
+
+**Archivos prototipo de referencia**:
+- `vetrina/data-hospital.jsx` — modelo de datos + helpers (intervalo, shift de hora, semana)
+- `vetrina/screens-hospital.jsx` — board, pills, modales (medicamento, procedimiento, evolución, observación), store `useVetHospState`
+- `vetrina/screens-hospital-detail.jsx` — detalle del paciente + pantalla de tratamiento (calendario semanal)
+- `vetrina/hospital.css` — estilos
+
+**Ruta**: `/dashboard/hospital` (name: `hospital-ward`, `meta: { requiresAuth: true }`).
+
+### Estructura sugerida en Vue
+
+```
+src/features/hospitalizacion/
+  views/HospitalizacionView.vue       ← board | detalle de paciente
+  components/
+    HospBoard.vue / HospCard.vue      ← tablero de internados
+    HospDetail.vue                    ← overview: acceso a tratamiento + observaciones + evolución
+    TreatmentScreen.vue               ← pantalla aparte: calendario semanal + planes
+    WeeklyMAR.vue                     ← calendario (eje Y horas × días) drag&drop
+    MedFormModal.vue / ProcFormModal.vue
+    EvolutionModal.vue / ObservationModal.vue
+    DischargeDialog.vue
+  composables/useHospitalizacion.ts   ← estado + transiciones + recálculo de pauta
+  types/hospital.ts
+```
+
+### Modelo de datos (campos)
+
+```ts
+type HospStatus = 'ESTABLE' | 'OBSERVACION' | 'CRITICO'
+type Pauta = 'FIJO' | 'INTERVALO'
+type DurMode = 'DIAS' | 'TOMAS' | 'INDEF'
+type DoseStatus = 'APLICADA' | 'PENDIENTE' | 'ATRASADA' | 'OMITIDA'
+
+interface HospPatient {
+  id: number; animalId: string; kennel: string
+  admittedAt: string; reason: string; diagnosis: string
+  attendingVet: string; status: HospStatus
+  medications: MedOrder[]
+  procedures: ProcOrder[]
+  observations: Observation[]   // historial de indicaciones (no dar comida sólida, etc.)
+  evolution: EvolutionNote[]     // notas de turno (SIN signos vitales — se quitaron)
+}
+
+interface MedOrder {
+  id: number; name: string; dose: string
+  frequency: string              // 'c/8h', 'c/12h', 'Continua'…  (NO hay campo "vía")
+  pauta: Pauta                   // FIJO | INTERVALO
+  durMode: DurMode; durValue: string   // 'DIAS'+'3' | 'TOMAS'+'15' | 'INDEF'
+  startDate: string; startTime: string  // solo inicio (NO hay fecha/hora fin)
+  notes: string
+  schedule: DoseSlot[]
+}
+interface ProcOrder { /* igual que MedOrder pero sin `dose` */ }
+interface DoseSlot { id: string; time: string; status: DoseStatus; givenBy: string|null; givenAt: string|null }
+interface Observation { id: number; date: string; time: string; author: string; text: string }
+interface EvolutionNote { id: number; date: string; time: string; author: string; notes: string }
+```
+
+### Conceptos clave de diseño
+
+**1. Tipo de pauta (FIJO vs INTERVALO)** — resuelve el problema de las dosis tardías:
+- `FIJO`: las tomas se mantienen en horas de reloj. Aplicar tarde NO mueve las siguientes.
+- `INTERVALO`: cada toma se cuenta desde la administración real de la anterior. Al aplicar
+  (o mover) una toma, las pendientes posteriores se **recalculan** sumando el intervalo
+  (`c/Nh` → N horas) desde la hora real. Ver `recalcInterval()` en el store.
+- Ambos formularios muestran un **disclaimer** que explica la pauta seleccionada.
+
+**2. Duración** — `DIAS` ("cada 6h por 3 días"), `TOMAS` ("hasta completar 15 tomas"),
+o `INDEF` ("hasta nueva orden"). NO se usa fecha/hora de fin.
+
+**3. Calendario semanal (MAR)** — pantalla aparte (botón "Administrar" desde el overview):
+- Eje Y = **horas**; columnas = **días** (semana, con hoy resaltado).
+- En cada celda hora×día, **chips con el nombre** de la orden (medicamento o procedimiento).
+- Medicamentos en color normal; procedimientos en **tinte teal** (toma de tensión, diuresis…).
+- Estados: aplicada (verde+check), programada futura (gris), pendiente/atrasada (clicable, hoy).
+- Click en chip de hoy → marca aplicado. **Drag de un chip pendiente a otra hora** → SIEMPRE
+  abre un modal de confirmación que explica el efecto según la pauta:
+  - FIJO → "se mueve solo esta toma" (1 botón de confirmar).
+  - INTERVALO → "Solo esta toma" / "Esta y las siguientes" (recalcula la cadena).
+- `overflow-x: auto` + `min-width: max-content` para que la columna de hoy sea alcanzable.
+
+**4. Overview del paciente** (sin KPIs dispersos): header + diagnóstico + tarjeta de acceso
+"Tratamiento y administración de dosis" (con botón **Administrar** explícito que lleva al
+calendario) + **Observaciones** (historial de indicaciones, con modal de chips frecuentes)
++ **Notas evolutivas** (timeline; el modal de nota ya NO pide signos vitales).
+
+**5. Plan de medicamentos / Plan de procedimientos** — ambas tablas editables (CRUD) están
+en la pantalla de tratamiento, debajo del calendario. "Añadir medicamento"/"Añadir
+procedimiento" en el header de cada tabla.
+
+**6. Alta** — `DischargeDialog` saca al paciente del tablero (queda en historia clínica).
+
+### ⚠️ Notas para producción
+
+- La "hora actual" es fija (`VET_HOSP_NOW = '15:30'`, día `2026-05-23`) para demostrar
+  dosis atrasadas y el resaltado de "hoy". En Vue usar la fecha/hora real.
+- El recálculo de pauta INTERVALO y la generación de `schedule` a partir de
+  `frequency` + `startTime` + `durMode/durValue` deben vivir en el backend o en un
+  composable bien testeado (el prototipo trae los slots precomputados en los mocks).
+- Drag-and-drop: el prototipo usa HTML5 nativo (`draggable` + `onDragOver/onDrop`).
+  En Vue puede mantenerse nativo o usar `vuedraggable`; no requiere libs nuevas.
+
+### CSS
+
+Referencia `vetrina/hospital.css`. Puntos clave:
+- **Board**: `grid auto-fill minmax(280px,1fr)`, status pill (estable/observación/crítico).
+- **Calendario**: grid `64px repeat(7, minmax(96px,1fr))`, chips `.vet-wk-chip` con
+  variantes `applied/pending/overdue/future` + `.proc` (teal). Droppable: outline dashed.
+- **Disclaimer pauta**: `.vet-pauta-help` (borde izq amatista). **Modal mover**: `.vet-move-opt`.
+- **Observaciones**: `.vet-obs-text` con fondo ámbar + borde izq.
+
+### Pruebas básicas
+
+- Board lista internados con jaula/estado/alerta de dosis
+- "Administrar" → calendario semanal (horas × días) con meds + procedimientos
+- Click en chip pendiente de hoy → aplicado; INTERVALO recalcula siguientes
+- Drag chip a otra hora → modal según pauta (FIJO 1 opción / INTERVALO 2 opciones)
+- Añadir medicamento: sin vía, sin fecha fin, con pauta + disclaimer + duración (días/tomas/indef)
+- Añadir procedimiento: mismos campos sin "dosis"
+- Observaciones: historial + modal con chips frecuentes
+- Nota evolutiva: solo texto (sin signos vitales)
+- Dar de alta → sale del tablero
 

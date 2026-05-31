@@ -44,6 +44,7 @@ export interface HospitalizationResponse {
   consultation: HospitalizationConsultationSummary | null
   company: HospitalizationCompanySummary
   createdDate: string
+  enabled: boolean
 }
 
 export const hospitalizationApi = {

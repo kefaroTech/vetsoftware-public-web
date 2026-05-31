@@ -11,7 +11,7 @@
    VetConsultaVacunacionView, VetConsultaHospitalView,
    VetLabListViewC, VetImagingListViewC, VetVaccineListViewC,
    VetHospListViewC, VetDewormListViewC, VetSurgeryListViewC, VetSpaListViewC,
-   VetEmpleadosView, VetRolesView, VetAgendaView, VetLabInternoView */
+   VetEmpleadosView, VetRolesView, VetAgendaView, VetLabInternoView, VetHospitalView */
 
 function VetRoutedScreen() {
   const route = useVetRoute();
@@ -40,6 +40,7 @@ function VetRoutedScreen() {
       case 'home':                       return <VetHomeView />;
       case 'agenda':                     return <VetAgendaView />;
       case 'laboratorio-interno':        return <VetLabInternoView />;
+      case 'hospital-ward':              return <VetHospitalView />;
       case 'consulta-vacunacion':        return <VetConsultaVacunacionView />;
       case 'consulta-hospital':          return <VetConsultaHospitalView />;
       case 'acciones-laboratorio':       return <VetLabListViewC />;
