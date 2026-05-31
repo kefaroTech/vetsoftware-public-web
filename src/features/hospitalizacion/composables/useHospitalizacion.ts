@@ -6,14 +6,18 @@ import {
 } from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
 import {
   hospitalizationMedicationApi,
+  type HospitalizationMedicationResponse,
   type CreateHospitalizationMedicationPayload,
   type UpdateHospitalizationMedicationPayload,
 } from '../api/hospitalizationMedication.api'
+import { medicationScheduleApi } from '../api/medicationSchedule.api'
 import {
   hospitalizationProcedureApi,
+  type HospitalizationProcedureResponse,
   type CreateHospitalizationProcedurePayload,
   type UpdateHospitalizationProcedurePayload,
 } from '../api/hospitalizationProcedure.api'
+import { procedureScheduleApi } from '../api/procedureSchedule.api'
 import {
   hospitalizationObservationApi,
   type HospitalizationObservationResponse,
@@ -24,38 +28,18 @@ import {
 } from '../api/hospitalizationProgressNote.api'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
-import { buildSchedule, intervalFromFrequency, recalcInterval } from './mar'
-import type { MedOrderVM, OrderVM, ProcOrderVM } from '../types/hospital'
+import { scheduleToDoseSlot } from './mar'
+import type { DoseSlot, MedOrderVM, OrderVM, ProcOrderVM } from '../types/hospital'
 import type { ReasonLeaving } from '@/types/domain'
 
-function toMedVM(r: MedOrderVM | (Omit<MedOrderVM, 'kind' | 'schedule'>)): MedOrderVM {
-  return {
-    ...(r as MedOrderVM),
-    kind: 'med',
-    schedule: buildSchedule({
-      orderId: r.id,
-      frequency: r.frequency,
-      startDate: r.startDate,
-      startTime: r.startTime,
-      durationMeasure: r.durationMeasure,
-      durationQuantity: r.durationQuantity,
-    }),
-  }
+/** El calendario de medicación se persiste en backend (tabla medication_schedules). */
+function toMedVM(r: HospitalizationMedicationResponse, slots: DoseSlot[]): MedOrderVM {
+  return { ...r, kind: 'med', schedule: slots }
 }
 
-function toProcVM(r: Omit<ProcOrderVM, 'kind' | 'schedule'>): ProcOrderVM {
-  return {
-    ...(r as ProcOrderVM),
-    kind: 'proc',
-    schedule: buildSchedule({
-      orderId: r.id,
-      frequency: r.frequency,
-      startDate: r.startDate,
-      startTime: r.startTime,
-      durationMeasure: r.durationMeasure,
-      durationQuantity: r.durationQuantity,
-    }),
-  }
+/** El calendario de procedimientos se persiste en backend (tabla procedure_schedules). */
+function toProcVM(r: HospitalizationProcedureResponse, slots: DoseSlot[]): ProcOrderVM {
+  return { ...r, kind: 'proc', schedule: slots }
 }
 
 /**
@@ -99,14 +83,30 @@ export function useHospitalizacion() {
     detailLoading.value = true
     detailError.value = null
     try {
-      const [m, p, o, n] = await Promise.all([
+      const [m, p, o, n, medSchedules, procSchedules] = await Promise.all([
         hospitalizationMedicationApi.listByHospitalization(h.id),
         hospitalizationProcedureApi.listByHospitalization(h.id),
         hospitalizationObservationApi.listByHospitalization(h.id),
         hospitalizationProgressNoteApi.listByHospitalization(h.id),
+        medicationScheduleApi.listByHospitalization(h.id),
+        procedureScheduleApi.listByHospitalization(h.id),
       ])
-      meds.value = m.map(toMedVM)
-      procs.value = p.map(toProcVM)
+      // Agrupa las tomas persistidas por medicación
+      const slotsByMed = new Map<number, DoseSlot[]>()
+      for (const s of medSchedules) {
+        const list = slotsByMed.get(s.hospitalizationMedication.id) ?? []
+        list.push(scheduleToDoseSlot(s))
+        slotsByMed.set(s.hospitalizationMedication.id, list)
+      }
+      // Agrupa las ejecuciones persistidas por procedimiento
+      const slotsByProc = new Map<number, DoseSlot[]>()
+      for (const s of procSchedules) {
+        const list = slotsByProc.get(s.hospitalizationProcedure.id) ?? []
+        list.push(scheduleToDoseSlot(s))
+        slotsByProc.set(s.hospitalizationProcedure.id, list)
+      }
+      meds.value = m.map((med) => toMedVM(med, slotsByMed.get(med.id) ?? []))
+      procs.value = p.map((proc) => toProcVM(proc, slotsByProc.get(proc.id) ?? []))
       observations.value = o
       notes.value = n
     } catch (e) {
@@ -133,7 +133,9 @@ export function useHospitalizacion() {
       ...payload,
       hospitalizationId: patient.value.id,
     })
-    meds.value.push(toMedVM(created))
+    // El backend calcula y persiste las tomas según frecuencia + duración
+    const schedule = await medicationScheduleApi.generate(created.id)
+    meds.value.push(toMedVM(created, schedule.map(scheduleToDoseSlot)))
   }
 
   async function updateMedication(
@@ -141,8 +143,10 @@ export function useHospitalizacion() {
     payload: UpdateHospitalizationMedicationPayload,
   ) {
     const updated = await hospitalizationMedicationApi.update(id, payload)
+    // Regenera el calendario (pudo cambiar frecuencia/duración/inicio)
+    const schedule = await medicationScheduleApi.generate(id)
     const idx = meds.value.findIndex((m) => m.id === id)
-    if (idx >= 0) meds.value.splice(idx, 1, toMedVM(updated))
+    if (idx >= 0) meds.value.splice(idx, 1, toMedVM(updated, schedule.map(scheduleToDoseSlot)))
   }
 
   async function removeMedication(id: number) {
@@ -159,7 +163,9 @@ export function useHospitalizacion() {
       ...payload,
       hospitalizationId: patient.value.id,
     })
-    procs.value.push(toProcVM(created))
+    // El backend calcula y persiste las ejecuciones según frecuencia + duración
+    const schedule = await procedureScheduleApi.generate(created.id)
+    procs.value.push(toProcVM(created, schedule.map(scheduleToDoseSlot)))
   }
 
   async function updateProcedure(
@@ -167,8 +173,10 @@ export function useHospitalizacion() {
     payload: UpdateHospitalizationProcedurePayload,
   ) {
     const updated = await hospitalizationProcedureApi.update(id, payload)
+    // Regenera el calendario (pudo cambiar frecuencia/duración/inicio)
+    const schedule = await procedureScheduleApi.generate(id)
     const idx = procs.value.findIndex((p) => p.id === id)
-    if (idx >= 0) procs.value.splice(idx, 1, toProcVM(updated))
+    if (idx >= 0) procs.value.splice(idx, 1, toProcVM(updated, schedule.map(scheduleToDoseSlot)))
   }
 
   async function removeProcedure(id: number) {
@@ -215,55 +223,38 @@ export function useHospitalizacion() {
     board.value = board.value.filter((b) => b.id !== h.id)
   }
 
-  // ── MAR (client-side, volátil — NO persiste) ──
-  function applyDose(order: OrderVM, slotId: string) {
+  // ── MAR (persistido en backend) ──
+  function replaceSchedule(order: OrderVM, schedule: DoseSlot[]) {
     const list: OrderVM[] = order.kind === 'med' ? meds.value : procs.value
     const target = list.find((o) => o.id === order.id)
-    if (!target) return
-    const now = new Date()
-    const time = `${String(now.getHours()).padStart(2, '0')}:${String(
-      now.getMinutes(),
-    ).padStart(2, '0')}`
-    const slot = target.schedule.find((s) => s.id === slotId)
-    if (!slot) return
-    slot.status = 'APLICADA'
-    slot.givenAt = time
-    slot.givenBy = auth.me.value?.name ?? 'Tú'
-
-    if (target.guidelineType === 'INTERVAL') {
-      const interval = intervalFromFrequency(target.frequency)
-      if (interval) {
-        target.schedule = recalcInterval(
-          target.schedule,
-          slotId,
-          slot.date,
-          time,
-          interval,
-        )
-      }
-    }
+    if (target) target.schedule = schedule
   }
 
-  function moveDose(
+  /** Marca una toma como aplicada; el backend recalcula la pauta INTERVALO. */
+  async function applyDose(order: OrderVM, slotId: string) {
+    const id = Number(slotId)
+    const slots =
+      order.kind === 'med'
+        ? await medicationScheduleApi.apply(id)
+        : await procedureScheduleApi.apply(id)
+    replaceSchedule(order, slots.map(scheduleToDoseSlot))
+  }
+
+  /** Reprograma una toma (mode one|cascade); el backend persiste y recalcula. */
+  async function moveDose(
     order: OrderVM,
     slotId: string,
     newDate: string,
     newTime: string,
     mode: 'one' | 'cascade',
   ) {
-    const list: OrderVM[] = order.kind === 'med' ? meds.value : procs.value
-    const target = list.find((o) => o.id === order.id)
-    if (!target) return
-    const slot = target.schedule.find((s) => s.id === slotId)
-    if (!slot) return
-    slot.date = newDate
-    slot.time = newTime
-    if (mode === 'cascade' && target.guidelineType === 'INTERVAL') {
-      const interval = intervalFromFrequency(target.frequency)
-      if (interval) {
-        target.schedule = recalcInterval(target.schedule, slotId, newDate, newTime, interval)
-      }
-    }
+    const id = Number(slotId)
+    const newDateTime = `${newDate}T${newTime}:00`
+    const slots =
+      order.kind === 'med'
+        ? await medicationScheduleApi.reschedule(id, newDateTime, mode)
+        : await procedureScheduleApi.reschedule(id, newDateTime, mode)
+    replaceSchedule(order, slots.map(scheduleToDoseSlot))
   }
 
   return {

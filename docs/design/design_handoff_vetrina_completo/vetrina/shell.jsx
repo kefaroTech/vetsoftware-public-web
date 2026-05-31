@@ -188,6 +188,32 @@ function VetAppSidebar() {
         onClick={() => router.push({ name: 'hospital-ward' })}
       />
 
+      <div style={vetShellStyles.sectionLabel}>TIENDA</div>
+      <VetSidebarNavItem
+        label="Punto de venta"
+        Icon={VetIcons.Receipt}
+        active={route.name === 'tienda-pos'}
+        onClick={() => router.push({ name: 'tienda-pos' })}
+      />
+      <VetSidebarNavItem
+        label="Inventario"
+        Icon={VetIcons.Package}
+        active={route.name === 'tienda-inventario'}
+        onClick={() => router.push({ name: 'tienda-inventario' })}
+      />
+      <VetSidebarNavItem
+        label="Servicios"
+        Icon={VetIcons.Stethoscope}
+        active={route.name === 'tienda-servicios'}
+        onClick={() => router.push({ name: 'tienda-servicios' })}
+      />
+      <VetSidebarNavItem
+        label="Promociones"
+        Icon={VetIcons.Receipt}
+        active={route.name === 'tienda-promociones'}
+        onClick={() => router.push({ name: 'tienda-promociones' })}
+      />
+
       <div style={vetShellStyles.sectionLabel}>ADMINISTRACIÓN</div>
       <VetSidebarNavItem
         label="Empleados"

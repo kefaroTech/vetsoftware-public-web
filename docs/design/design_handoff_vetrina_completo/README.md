@@ -1280,3 +1280,94 @@ Referencia `vetrina/hospital.css`. Puntos clave:
 - Nota evolutiva: solo texto (sin signos vitales)
 - Dar de alta → sale del tablero
 
+### Adendas al flujo de hospitalización (cambios posteriores)
+
+- **Procedimientos con horario**: `ProcOrder` también tiene `schedule[]`, `pauta`, `durMode/durValue`.
+  Aparecen en el calendario semanal con **tinte teal** junto a los medicamentos.
+- **Tipo de pauta** (`FIJO` | `INTERVALO`) y **duración** (`DIAS` | `TOMAS` | `INDEF`) aplican a
+  medicamentos Y procedimientos. El form NO tiene "vía" ni fecha/hora de fin; solo inicio + duración.
+- **Confirmación al aplicar**: click en un chip pendiente/atrasado del día → modal
+  "¿Registrar dosis aplicada?" / "¿Registrar procedimiento?" antes de marcar (con nombre, dosis, hora).
+- **Drag&drop**: SIEMPRE abre modal explicando el efecto según pauta (FIJO mueve solo esa toma;
+  INTERVALO ofrece "Solo esta" / "Esta y las siguientes" con recálculo).
+- **Observaciones**: el modal ya NO tiene chips de "Frecuentes", solo el textarea.
+
+---
+
+## §17. Tienda (Petshop) — POS + Inventario + Servicios + Promociones
+
+Grupo **TIENDA** en el sidebar con 4 secciones. Combina retail (productos con stock) y
+facturación de servicios clínicos, con un motor de promociones.
+
+**Archivos prototipo**:
+- `vetrina/data-shop.jsx` — productos, servicios, categorías, ventas, IVA, helpers (`vetMoney`)
+- `vetrina/data-promos.jsx` — promociones + `vetApplyPromo()` + `vetPromoStatus()`
+- `vetrina/screens-shop.jsx` — store `useVetShopState` + tarjetas (producto/servicio) + modales (pago, recibo)
+- `vetrina/screens-shop-pos.jsx` — Punto de venta (catálogo + ticket)
+- `vetrina/screens-shop-inventory.jsx` — Inventario (tabla + CRUD + reabastecer)
+- `vetrina/screens-shop-services.jsx` — admin de Servicios
+- `vetrina/screens-shop-promos.jsx` — admin de Promociones + editor de paquetes
+- `vetrina/screens-shop-root.jsx` — wrapper que monta el store y enruta por tab
+- `vetrina/shop.css` — estilos
+
+**Rutas**: `tienda-pos` `/dashboard/tienda`, `tienda-inventario` `/dashboard/tienda/inventario`,
+`tienda-servicios` `/dashboard/tienda/servicios`, `tienda-promociones` `/dashboard/tienda/promociones`.
+
+### Estructura sugerida en Vue
+
+```
+src/features/tienda/
+  views/{POSView, InventarioView, ServiciosView, PromocionesView}.vue
+  components/{ProductCard, ServiceCard, BundleCard, Ticket, PayModal, ReceiptModal,
+              ProductFormModal, ServiceFormModal, PromoFormModal, BundleEditor}.vue
+  composables/useTienda.ts          ← store GLOBAL (Pinia): products, services, promos, sales
+  types/tienda.ts
+```
+
+### Modelo de datos
+
+```ts
+interface Product { id; name; sku; category; costPrice; salePrice; stock; minStock; supplier; expiryDate?; notes }
+interface Service { id; name; category; salePrice; notes? }
+interface Sale { id; code; date; customerId?; items: SaleItem[]; discount; paymentMethod }
+interface SaleItem { kind: 'product'|'service'|'bundle'; id; qty; unitPrice; name }
+interface Promo {
+  id; name; type: 'DESCUENTO'|'PRECIO'|'PAQUETE'; active;
+  target?: 'categoria'|'producto'|'servicio'; categoryId?; targetId?;
+  value?; valueKind?: 'PCT'|'FIJO'; specialPrice?;        // descuento / precio especial
+  bundlePrice?; bundleItems?: {kind;id;qty}[];            // paquete
+  startDate?; endDate?;                                   // vigencia → estado calculado
+}
+```
+
+### Puntos clave
+
+- **POS** dos columnas: catálogo (toggle Productos / Servicios / Paquetes + búsqueda + categorías)
+  y ticket (líneas con ± cant., cliente opcional vía cascade, descuento manual, subtotal,
+  ahorro por promos, IVA 19%, total). Cobro → modal de pago (efectivo calcula cambio) → recibo.
+- **IVA** = `VET_SHOP_TAX_RATE` (0.19). Configurable.
+- **Promociones** (`vetApplyPromo`): al renderizar cada producto/servicio se calcula la mejor
+  promo activa (DESCUENTO %/$ o PRECIO especial) → precio tachado + badge "Promo". Los PAQUETE
+  se agregan como una línea. El descuento manual del ticket va sobre el total (se suma al ahorro).
+  ⚠️ Importante: la comparación de `kind` para servicios usa el string **'servicio'** (español)
+  en todo el flujo (bug ya corregido en el proto).
+- **Estado de promo** se calcula por fecha (`vetPromoStatus`): ACTIVA / PROGRAMADA / EXPIRADA / INACTIVA.
+- **Inventario**: estado de stock OK/BAJO/AGOTADO, banner de alertas (stock bajo + por vencer ≤120d),
+  filtros, paginación, CRUD, "Reabastecer". Los AGOTADO no se pueden vender.
+
+### ⚠️ Producción
+
+- En el proto el store se monta **por pantalla** (`useVetShopState` en el wrapper), así que los
+  cambios de productos/servicios/promos NO persisten al navegar entre tabs. En Vue usar **un store
+  global (Pinia)** para que sí persistan y el POS vea siempre el catálogo actualizado.
+- Descontar stock, generar `code` de venta y registrar la venta deben ir contra el backend.
+- Decisiones tomadas (ajustables): inventario de tienda separado del de clínica; solo venta de
+  contado (sin caja/turnos); promos generales (sin precio por cliente ni límite de usos).
+
+### Pruebas básicas
+
+- POS cobra productos (baja stock) + servicios + paquetes en un mismo ticket
+- Promo activa → precio tachado + badge; ticket/recibo muestran "Ahorro por promociones"
+- Servicios y Promociones: CRUD; switch activa/desactiva promo; estados por fecha
+- Inventario: alertas, filtros, paginación, reabastecer
+

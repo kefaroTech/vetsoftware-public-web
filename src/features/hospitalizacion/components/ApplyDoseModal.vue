@@ -1,0 +1,111 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { CircleCheck } from 'lucide-vue-next'
+import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
+import type { DoseSlot, OrderVM } from '../types/hospital'
+
+const props = defineProps<{
+  open: boolean
+  order: OrderVM | null
+  doseSlot: DoseSlot | null
+}>()
+
+const emit = defineEmits<{ confirm: []; close: [] }>()
+
+const isMed = computed(() => props.order?.kind === 'med')
+const dose = computed(() =>
+  props.order?.kind === 'med' ? (props.order.dose ?? '') : '',
+)
+</script>
+
+<template>
+  <ModalShell
+    :open="open"
+    :icon="CircleCheck"
+    :title="isMed ? '¿Registrar dosis aplicada?' : '¿Registrar procedimiento?'"
+    :subtitle="isMed
+      ? 'Se marcará la toma como administrada en este momento.'
+      : 'Se marcará la ejecución como realizada en este momento.'"
+    :width="480"
+    @close="emit('close')"
+  >
+    <template #body>
+      <dl v-if="order && doseSlot" class="facts">
+        <div class="row">
+          <dt>{{ isMed ? 'Medicamento' : 'Procedimiento' }}</dt>
+          <dd>{{ order.name }}</dd>
+        </div>
+        <div v-if="isMed && dose" class="row">
+          <dt>Dosis</dt>
+          <dd>{{ dose }}</dd>
+        </div>
+        <div class="row">
+          <dt>Programada</dt>
+          <dd>{{ formatDateShort(doseSlot.date) }} · {{ doseSlot.time }}</dd>
+        </div>
+      </dl>
+    </template>
+
+    <template #footer-actions>
+      <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
+      <button type="button" class="btn-primary" @click="emit('confirm')">
+        {{ isMed ? 'Registrar dosis' : 'Registrar' }}
+      </button>
+    </template>
+  </ModalShell>
+</template>
+
+<style scoped>
+.facts {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--warm-150);
+}
+.row:last-child { border-bottom: none; padding-bottom: 0; }
+.row dt {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--warm-500);
+  font-weight: 500;
+}
+.row dd {
+  margin: 0;
+  font-size: 14px;
+  color: var(--warm-900);
+  font-weight: 500;
+  text-align: right;
+}
+.btn-ghost,
+.btn-primary {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.btn-ghost {
+  background: transparent;
+  border-color: var(--warm-200);
+  color: var(--warm-900);
+}
+.btn-ghost:hover { background: var(--warm-100); }
+.btn-primary {
+  background: oklch(48% 0.16 150);
+  color: white;
+  border: none;
+  padding: 9px 18px;
+}
+.btn-primary:hover { filter: brightness(1.05); }
+</style>

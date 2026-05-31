@@ -51,6 +51,7 @@ function VetWeeklyMAR({ patient, hosp }) {
   const [drag, setDrag] = React.useState(null);      // { kind, orderId, doseId }
   const [dropTo, setDropTo] = React.useState(null);  // hora destino sobre la que se suelta
   const [moveModal, setMoveModal] = React.useState(null); // { order, doseId, newTime }
+  const [applyModal, setApplyModal] = React.useState(null); // { order, dose }
 
   const orders = React.useMemo(() => [
     ...patient.medications.map((m) => ({ ...m, kind: 'med' })),
@@ -129,7 +130,7 @@ function VetWeeklyMAR({ patient, hosp }) {
                     ? <span className="vet-wk-na">·</span>
                     : items.map((it) => (
                         <VetWeekMedChip key={it.order.kind + it.order.id} order={it.order} status={it.status}
-                          onApply={() => apply(it.order, it.dose.id)}
+                          onApply={() => setApplyModal({ order: it.order, dose: it.dose })}
                           draggable={day.isToday && (it.status === 'PENDIENTE' || it.status === 'ATRASADA')}
                           onDragStart={() => setDrag({ kind: it.order.kind, orderId: it.order.id, doseId: it.dose.id, fromTime: time })}
                         />
@@ -152,6 +153,30 @@ function VetWeeklyMAR({ patient, hosp }) {
         <span className="vet-wk-leg"><span className="vet-wk-chip future">··</span> Programada</span>
         <span className="vet-wk-leg"><span className="vet-wk-chip applied proc"><VetIcons.Check size={10} strokeWidth={2.6} /></span> Procedimiento</span>
       </div>
+
+      {/* Confirmación de reprogramación — mensaje según la pauta */}
+      <VetModalShell
+        open={!!applyModal}
+        title={applyModal?.order.kind === 'proc' ? '¿Registrar procedimiento?' : '¿Registrar dosis aplicada?'}
+        subtitle={applyModal ? `${applyModal.order.name} · ${applyModal.dose.time}` : ''}
+        icon={VetIcons.Check} accent="amatista" width={440}
+        onClose={() => setApplyModal(null)}
+        footerActions={
+          <>
+            <button type="button" className="vet-btn-ghost-modal" onClick={() => setApplyModal(null)}>Cancelar</button>
+            <button type="button" className="vet-btn-primary-modal"
+              onClick={() => { apply(applyModal.order, applyModal.dose.id); setApplyModal(null); }}>
+              <VetIcons.Check size={14} strokeWidth={2} /> Confirmar {applyModal?.order.kind === 'proc' ? 'realizado' : 'aplicación'}
+            </button>
+          </>
+        }
+      >
+        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--warm-600)', lineHeight: 1.55 }}>
+          {applyModal?.order.kind === 'proc'
+            ? <>Vas a marcar <strong>{applyModal?.order.name}</strong> como realizado a las {applyModal?.dose.time}. Quedará registrado con tu nombre y la hora actual.</>
+            : <>Vas a registrar la aplicación de <strong>{applyModal?.order.name}</strong> ({applyModal?.order.dose}) programada para las {applyModal?.dose.time}. Quedará registrada con tu nombre y la hora actual.</>}
+        </p>
+      </VetModalShell>
 
       {/* Confirmación de reprogramación — mensaje según la pauta */}
       <VetModalShell

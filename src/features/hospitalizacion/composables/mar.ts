@@ -1,10 +1,20 @@
 import type { MedicationFrequency, DurationMeasure } from '@/types/domain'
 import type { DoseSlot, DoseStatus } from '../types/hospital'
+import type { AppliedStatus } from '../api/medicationSchedule.api'
+
+/** Forma mínima común de una toma/ejecución persistida (med o proc). */
+export interface ScheduleSlotSource {
+  id: number
+  currentDateTime: string
+  realDateTime: string | null
+  appliedStatus: AppliedStatus | null
+  createdBy: { name: string }
+}
 
 // ─── Motor MAR client-side ────────────────────────────────────────────
-// Genera y recalcula el calendario de tomas (DoseSlot[]) a partir de
-// frequency + startDate + startTime + duración. NO persiste nada: el backend
-// no tiene aún MedicationSchedule/ProcedureSchedule. Ver §16 del handoff.
+// Helpers de fecha/hora + estado efectivo de las tomas. La generación de
+// medicación y procedimientos vive ahora en el backend (medication_schedules
+// y procedure_schedules); estos slots se mapean con scheduleToDoseSlot.
 
 export const WEEKDAYS_SHORT = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 export const MONTHS_LONG = [
@@ -135,6 +145,26 @@ function slot(orderId: number, i: number, date: string, time: string): DoseSlot 
     status: 'PENDIENTE',
     givenBy: null,
     givenAt: null,
+  }
+}
+
+const APPLIED_STATUS_MAP: Record<AppliedStatus, DoseStatus> = {
+  APPLIED: 'APLICADA',
+  PENDING: 'PENDIENTE',
+  SKIPPED: 'OMITIDA',
+}
+
+/** Convierte una toma/ejecución persistida del backend a DoseSlot (med o proc). */
+export function scheduleToDoseSlot(s: ScheduleSlotSource): DoseSlot {
+  const [date, rawTime] = s.currentDateTime.split('T')
+  const realTime = s.realDateTime ? s.realDateTime.split('T')[1] : null
+  return {
+    id: String(s.id),
+    date,
+    time: normalizeTime(rawTime),
+    status: s.appliedStatus ? APPLIED_STATUS_MAP[s.appliedStatus] : 'PENDIENTE',
+    givenBy: s.realDateTime ? s.createdBy.name : null,
+    givenAt: realTime ? normalizeTime(realTime) : null,
   }
 }
 

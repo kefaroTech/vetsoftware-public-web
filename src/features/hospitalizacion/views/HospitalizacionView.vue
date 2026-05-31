@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import PageHeader from '@/components/ui/PageHeader.vue'
 import HospBoard from '../components/HospBoard.vue'
 import HospDetail from '../components/HospDetail.vue'
 import TreatmentScreen from '../components/TreatmentScreen.vue'
@@ -86,20 +85,31 @@ async function onRemove(kind: OrderKind, id: number) {
   }
 }
 
-function onApply(order: OrderVM, slotId: string) {
-  applyDose(order, slotId)
-  toast.info('Dosis registrada', 'Aplicación marcada en esta sesión (no persistida aún).')
+async function onApply(order: OrderVM, slotId: string) {
+  try {
+    await applyDose(order, slotId)
+    toast.success('Dosis registrada', `${order.name} marcada como aplicada.`)
+  } catch (e) {
+    toast.error('No se pudo registrar', e instanceof Error ? e.message : 'Intenta de nuevo.')
+  }
 }
 
-function onMove(
+async function onMove(
   order: OrderVM,
   slotId: string,
   newDate: string,
   newTime: string,
   m: 'one' | 'cascade',
 ) {
-  moveDose(order, slotId, newDate, newTime, m)
-  toast.info('Toma reprogramada', m === 'cascade' ? 'Se recalcularon las tomas siguientes.' : 'Se movió esta toma.')
+  try {
+    await moveDose(order, slotId, newDate, newTime, m)
+    toast.success(
+      'Toma reprogramada',
+      m === 'cascade' ? 'Se recalcularon las tomas siguientes.' : 'Se movió esta toma.',
+    )
+  } catch (e) {
+    toast.error('No se pudo reprogramar', e instanceof Error ? e.message : 'Intenta de nuevo.')
+  }
 }
 
 async function onAddObservation(text: string) {
@@ -134,12 +144,6 @@ async function onDischarge(reason: ReasonLeaving) {
 
 <template>
   <div class="page">
-    <PageHeader
-      kicker="Hospitalización"
-      title="Pacientes internados"
-      lead="Gestión de animales hospitalizados: plan de tratamiento, administración de dosis, observaciones y evolución."
-    />
-
     <div v-if="boardError" class="banner error">{{ boardError }}</div>
 
     <HospBoard

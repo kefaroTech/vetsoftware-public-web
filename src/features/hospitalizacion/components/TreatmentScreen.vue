@@ -10,12 +10,14 @@ import {
 } from 'lucide-vue-next'
 import WeeklyMAR from './WeeklyMAR.vue'
 import MoveDoseModal from './MoveDoseModal.vue'
+import ApplyDoseModal from './ApplyDoseModal.vue'
 import OrderFormModal from '../modals/OrderFormModal.vue'
 import { startOfWeek, addDays, MONTHS_LONG } from '../composables/mar'
 import {
   frequencyLabel,
   guidelineLabel,
   durationLabel,
+  type DoseSlot,
   type MedOrderVM,
   type OrderKind,
   type OrderVM,
@@ -109,6 +111,23 @@ function onMoveConfirm(mode: 'one' | 'cascade') {
   moveOpen.value = false
   pendingMove.value = null
 }
+
+// ── Modal confirmar aplicación de dosis ──
+const applyOpen = ref(false)
+const pendingApply = ref<{ order: OrderVM; slot: DoseSlot } | null>(null)
+
+function onApplyRequest(order: OrderVM, slotId: string) {
+  const slot = order.schedule.find((s) => s.id === slotId)
+  if (!slot) return
+  pendingApply.value = { order, slot }
+  applyOpen.value = true
+}
+function onApplyConfirm() {
+  const a = pendingApply.value
+  if (a) emit('apply', a.order, a.slot.id)
+  applyOpen.value = false
+  pendingApply.value = null
+}
 </script>
 
 <template>
@@ -134,17 +153,11 @@ function onMoveConfirm(mode: 'one' | 'cascade') {
       </div>
     </header>
 
-    <div class="volatile-banner">
-      Las aplicaciones de dosis y reprogramaciones aún no se guardan en el servidor
-      (se recalculan en esta sesión). El plan de medicamentos y procedimientos sí se
-      persiste.
-    </div>
-
     <WeeklyMAR
       :week-start="weekStart"
       :orders="allOrders"
       :now="now"
-      @apply="(o, s) => emit('apply', o, s)"
+      @apply="onApplyRequest"
       @moverequest="onMoveRequest"
     />
 
@@ -214,6 +227,13 @@ function onMoveConfirm(mode: 'one' | 'cascade') {
       :to-time="pendingMove?.newTime ?? ''"
       @confirm="onMoveConfirm"
       @close="moveOpen = false"
+    />
+    <ApplyDoseModal
+      :open="applyOpen"
+      :order="pendingApply?.order ?? null"
+      :dose-slot="pendingApply?.slot ?? null"
+      @confirm="onApplyConfirm"
+      @close="applyOpen = false"
     />
   </div>
 </template>

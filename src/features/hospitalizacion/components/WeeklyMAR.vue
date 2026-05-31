@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, nextTick, watch } from 'vue'
 import { Check } from 'lucide-vue-next'
 import {
   WEEKDAYS_SHORT,
@@ -29,6 +29,9 @@ interface Entry {
   hour: number
 }
 
+/** Eje continuo de 24 horas: cada celda hora×día es zona de drop. */
+const HOURS = Array.from({ length: 24 }, (_, h) => h)
+
 const days = computed(() => Array.from({ length: 7 }, (_, i) => addDays(props.weekStart, i)))
 const dayIsos = computed(() => days.value.map(isoFromDate))
 
@@ -45,9 +48,7 @@ const entries = computed<Entry[]>(() => {
   return out
 })
 
-const hours = computed(() =>
-  [...new Set(entries.value.map((e) => e.hour))].sort((a, b) => a - b),
-)
+const hasEntries = computed(() => entries.value.length > 0)
 
 function chipsAt(dayIso: string, hour: number): Entry[] {
   return entries.value.filter((e) => e.dayIso === dayIso && e.hour === hour)
@@ -70,72 +71,108 @@ function isToday(d: Date): boolean {
 const dragging = ref<{ order: OrderVM; slot: DoseSlot } | null>(null)
 const dragOver = ref<string | null>(null) // `${dayIso}-${hour}`
 
-function onDragStart(e: Entry) {
-  if (!interactive(e.slot)) return
+function onDragStart(e: Entry, ev: DragEvent) {
+  if (!interactive(e.slot)) {
+    ev.preventDefault()
+    return
+  }
+  // setData + effectAllowed son necesarios para que el drag inicie en todos los navegadores.
+  ev.dataTransfer?.setData('text/plain', e.slot.id)
+  if (ev.dataTransfer) ev.dataTransfer.effectAllowed = 'move'
   dragging.value = { order: e.order, slot: e.slot }
 }
+
+function onDragEnd() {
+  dragging.value = null
+  dragOver.value = null
+}
+
+// ── Auto-centrado en la hora actual ──
+const scrollEl = ref<HTMLElement | null>(null)
+
+function centerOnNow() {
+  const el = scrollEl.value
+  if (!el) return
+  const hour = props.now.getHours()
+  const row = el.querySelector<HTMLElement>(`[data-hour="${hour}"]`)
+  if (!row) return
+  const rowRect = row.getBoundingClientRect()
+  const contRect = el.getBoundingClientRect()
+  el.scrollTop += rowRect.top - contRect.top - el.clientHeight / 2 + rowRect.height / 2
+}
+
+onMounted(() => nextTick(centerOnNow))
+watch(
+  () => [props.weekStart, props.now, hasEntries.value],
+  () => nextTick(centerOnNow),
+)
 
 function onDrop(dayIso: string, hour: number) {
   const d = dragging.value
   dragOver.value = null
   dragging.value = null
   if (!d) return
-  const newTime = `${String(hour).padStart(2, '0')}:00`
-  if (dayIso === d.slot.date && newTime === normalizeTime(d.slot.time)) return
+  const origHour = Number(normalizeTime(d.slot.time).split(':')[0]) || 0
+  // Conserva los minutos originales; solo cambia hora/día.
+  const origMinutes = normalizeTime(d.slot.time).split(':')[1] ?? '00'
+  if (dayIso === d.slot.date && hour === origHour) return
+  const newTime = `${String(hour).padStart(2, '0')}:${origMinutes}`
   emit('moverequest', d.order, d.slot.id, dayIso, newTime)
 }
 </script>
 
 <template>
   <div class="wrap">
-    <div v-if="hours.length === 0" class="empty">
+    <div v-if="!hasEntries" class="empty">
       No hay tomas programadas en esta semana.
     </div>
-    <div
-      v-else
-      class="grid"
-      :style="{ gridTemplateColumns: `64px repeat(7, minmax(96px, 1fr))` }"
-    >
-      <div class="corner" />
+    <div v-else ref="scrollEl" class="scroll">
       <div
-        v-for="(d, i) in days"
-        :key="`h${i}`"
-        class="dayhead"
-        :class="{ today: isToday(d) }"
+        class="grid"
+        :style="{ gridTemplateColumns: `64px repeat(7, minmax(96px, 1fr))` }"
       >
-        <span class="dow">{{ WEEKDAYS_SHORT[i] }}</span>
-        <span class="dnum">{{ d.getDate() }}</span>
-      </div>
-
-      <template v-for="hour in hours" :key="`r${hour}`">
-        <div class="hourcell">{{ String(hour).padStart(2, '0') }}:00</div>
+        <div class="corner" />
         <div
           v-for="(d, i) in days"
-          :key="`c${hour}-${i}`"
-          class="cell"
-          :class="{
-            today: isToday(d),
-            dropover: dragOver === `${dayIsos[i]}-${hour}`,
-          }"
-          @dragover.prevent="dragOver = `${dayIsos[i]}-${hour}`"
-          @dragleave="dragOver = null"
-          @drop="onDrop(dayIsos[i], hour)"
+          :key="`h${i}`"
+          class="dayhead"
+          :class="{ today: isToday(d) }"
         >
-          <span
-            v-for="e in chipsAt(dayIsos[i], hour)"
-            :key="e.slot.id"
-            class="chip"
-            :class="[statusOf(e.slot), { proc: e.order.kind === 'proc' }]"
-            :draggable="interactive(e.slot)"
-            :title="`${e.order.name}${e.order.kind === 'med' && e.order.dose ? ' · ' + e.order.dose : ''} · ${normalizeTime(e.slot.time)}`"
-            @click="interactive(e.slot) && emit('apply', e.order, e.slot.id)"
-            @dragstart="onDragStart(e)"
-          >
-            <Check v-if="statusOf(e.slot) === 'aplicada'" :size="11" :stroke-width="3" />
-            <span class="chip-name">{{ e.order.name }}</span>
-          </span>
+          <span class="dow">{{ WEEKDAYS_SHORT[i] }}</span>
+          <span class="dnum">{{ d.getDate() }}</span>
         </div>
-      </template>
+
+        <template v-for="hour in HOURS" :key="`r${hour}`">
+          <div class="hourcell" :data-hour="hour">{{ String(hour).padStart(2, '0') }}:00</div>
+          <div
+            v-for="(d, i) in days"
+            :key="`c${hour}-${i}`"
+            class="cell"
+            :class="{
+              today: isToday(d),
+              dropover: dragOver === `${dayIsos[i]}-${hour}`,
+            }"
+            @dragover.prevent="dragOver = `${dayIsos[i]}-${hour}`"
+            @dragleave="dragOver = null"
+            @drop.prevent="onDrop(dayIsos[i], hour)"
+          >
+            <span
+              v-for="e in chipsAt(dayIsos[i], hour)"
+              :key="e.slot.id"
+              class="chip"
+              :class="[statusOf(e.slot), { proc: e.order.kind === 'proc' }]"
+              :draggable="interactive(e.slot)"
+              :title="`${e.order.name}${e.order.kind === 'med' && e.order.dose ? ' · ' + e.order.dose : ''} · ${normalizeTime(e.slot.time)}`"
+              @click="interactive(e.slot) && emit('apply', e.order, e.slot.id)"
+              @dragstart="onDragStart(e, $event)"
+              @dragend="onDragEnd"
+            >
+              <Check v-if="statusOf(e.slot) === 'aplicada'" :size="11" :stroke-width="3" />
+              <span class="chip-name">{{ e.order.name }}</span>
+            </span>
+          </div>
+        </template>
+      </div>
     </div>
 
     <div class="legend">
@@ -149,7 +186,11 @@ function onDrop(dayIso: string, hour: number) {
 
 <style scoped>
 .wrap {
-  overflow-x: auto;
+  overflow: hidden;
+}
+.scroll {
+  max-height: clamp(420px, 60vh, 680px);
+  overflow: auto;
 }
 .grid {
   display: grid;
@@ -195,8 +236,8 @@ function onDrop(dayIso: string, hour: number) {
 }
 .cell {
   background: var(--warm-50);
-  min-height: 46px;
-  padding: 5px;
+  min-height: 36px;
+  padding: 4px 5px;
   display: flex;
   flex-direction: column;
   gap: 4px;
