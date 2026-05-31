@@ -287,9 +287,9 @@ function onDrop(dayIso: string, hour: number) {
   border: 1px solid oklch(85% 0.10 25);
   cursor: pointer;
 }
-.chip.proc.pendiente,
-.chip.proc.aplicada,
-.chip.proc.atrasada {
+/* Procedimientos pendientes: tinte teal para distinguirlos de los medicamentos.
+   Aplicada (verde) y atrasada (rojo) usan el color de estado, igual que los meds. */
+.chip.proc.pendiente {
   background: oklch(94% 0.05 200);
   color: oklch(42% 0.10 220);
   border-color: oklch(85% 0.07 210);
