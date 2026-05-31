@@ -1,5 +1,5 @@
 import { http } from '@/services/http/http.client'
-import type { LaboratoryTestStatus } from '@/types/domain'
+import type { LaboratoryTestPriority, LaboratoryTestStatus } from '@/types/domain'
 
 export interface CreateLaboratoryTestPayload {
   date: string
@@ -7,9 +7,16 @@ export interface CreateLaboratoryTestPayload {
   quantity: number
   diagnosis: string
   status?: LaboratoryTestStatus
+  prioridad?: LaboratoryTestPriority
   animalId: number
   consultationId: number | null
   companyId: number
+}
+
+export interface LaboratoryTestEmployeeSummary {
+  id: number
+  employeeCode: string
+  name: string
 }
 
 export interface LaboratoryTestTypeSummary {
@@ -41,9 +48,12 @@ export interface LaboratoryTestResponse {
   quantity: number
   diagnosis: string
   status: LaboratoryTestStatus
+  prioridad: LaboratoryTestPriority
   animal: LaboratoryTestAnimalSummary
   consultation: LaboratoryTestConsultationSummary | null
   company: LaboratoryTestCompanySummary
+  processedBy: LaboratoryTestEmployeeSummary | null
+  processedDate: string | null
   createdDate: string
 }
 

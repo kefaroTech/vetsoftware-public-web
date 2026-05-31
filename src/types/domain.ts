@@ -134,11 +134,17 @@ export interface Prescription {
   medicaments: MedicamentPrescription[]
 }
 
+// Espejo de com.vetsoftware.app.laboratorytest.domain.LaboratoryTestStatus
 export type LaboratoryTestStatus =
-  | 'PENDIENTE'
-  | 'PENDIENTE_POR_PROCESAR'
-  | 'COMPLETADO'
-  | 'CANCELADO'
+  | 'PENDING_COLLECTION'
+  | 'PENDING_PROCESSING'
+  | 'IN_PROGRESS'
+  | 'PENDING_VALIDATION'
+  | 'COMPLETED'
+  | 'CANCELLED'
+
+// Espejo de com.vetsoftware.app.laboratorytest.domain.LaboratoryTestPriority
+export type LaboratoryTestPriority = 'NORMAL' | 'URGENTE'
 
 export interface LaboratoryTest {
   date: string

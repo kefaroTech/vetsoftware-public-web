@@ -43,6 +43,7 @@ export const PERMISSIONS = {
   LABORATORY_TEST_CREATE: 'laboratoryTest.create',
   LABORATORY_TEST_UPDATE: 'laboratoryTest.update',
   LABORATORY_TEST_DELETE: 'laboratoryTest.delete',
+  LABORATORY_TEST_READ: 'laboratoryTest.read',
   SURGERY_CREATE: 'surgery.create',
   SURGERY_UPDATE: 'surgery.update',
   SURGERY_DELETE: 'surgery.delete',

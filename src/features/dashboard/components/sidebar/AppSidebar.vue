@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Stethoscope,
   Beaker,
+  FlaskConical,
   ScanLine,
   BedDouble,
   Bug,
@@ -62,6 +63,7 @@ const canSurgery = can(PERMISSIONS.SURGERY_CREATE)
 const canSpa = can(PERMISSIONS.SPA_CREATE)
 const canEmployees = can(PERMISSIONS.EMPLOYEE_READ)
 const canRoles = can(PERMISSIONS.ROLE_PERMISSIONS_READ)
+const canLabProcess = can(PERMISSIONS.LABORATORY_TEST_READ)
 
 const historialActiveRoutes = [
   'consulta-historial',
@@ -196,6 +198,16 @@ const upcomingItems = [
           :active="route.name === item.to.name"
         />
       </div>
+    </template>
+
+    <template v-if="canLabProcess">
+      <div class="section-label">LABORATORIO</div>
+      <SidebarNavItem
+        label="Bandeja de muestras"
+        :icon="FlaskConical"
+        :active="route.name === 'laboratorio-interno'"
+        @click="router.push({ name: 'laboratorio-interno' })"
+      />
     </template>
 
     <template v-if="showAdminSection">

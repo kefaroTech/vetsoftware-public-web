@@ -1090,7 +1090,7 @@ interface LabAttachment { name: string; size: string; kind: 'pdf' | 'image' }
 
 | Estado | Acción disponible | Transición |
 |---|---|---|
-| `EN_COLA` | "Tomar muestra" | → `EN_PROCESO` (set `startedAt`) — directo, sin pedir datos |
+| `EN_COLA` | "Procesar muestra" | → `EN_PROCESO` (set `startedAt`) — directo, sin pedir datos |
 | `EN_PROCESO` | "Cargar resultados" | → `POR_VALIDAR` (adjunta archivos) |
 | `POR_VALIDAR` | "Devolver" / "Validar y firmar" | → `EN_PROCESO` / `VALIDADO` (set `validatedBy`, `validatedAt`) |
 | `VALIDADO` | — | sale del tablero, va al histórico |
@@ -1142,7 +1142,7 @@ Scoped por componente. Referencia: `vetrina/lab.css`. Puntos clave:
 ### Pruebas básicas
 
 - Bandeja activa muestra solo 3 columnas (sin "Validado")
-- Tomar muestra (En cola) → pasa a En proceso directo
+- Procesar muestra (En cola) → pasa a En proceso directo
 - Cargar resultados → adjuntar archivo → pasa a Por validar
 - Validar → desaparece del tablero, aparece en Histórico
 - Histórico por defecto muestra todos paginados, sin buscador de texto

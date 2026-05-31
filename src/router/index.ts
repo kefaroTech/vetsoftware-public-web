@@ -132,6 +132,12 @@ const router = createRouter({
           meta: { permission: PERMISSIONS.SPA_CREATE },
         },
         {
+          path: 'laboratorio',
+          name: 'laboratorio-interno',
+          component: () => import('@/features/laboratorio/views/LaboratorioView.vue'),
+          meta: { permission: PERMISSIONS.LABORATORY_TEST_READ },
+        },
+        {
           path: 'empleados',
           name: 'empleados',
           component: () => import('@/features/employees/views/EmpleadosView.vue'),

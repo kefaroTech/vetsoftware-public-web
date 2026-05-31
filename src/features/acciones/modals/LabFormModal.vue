@@ -58,19 +58,19 @@ const saving = ref(false)
 const saveError = ref<string | null>(null)
 
 // Solo mostrar el toggle cuando aplica: en create siempre, en edit solo si el
-// status actual sigue en alguno de los dos PENDIENTE*. Si el examen ya está
-// COMPLETADO o CANCELADO, no degradar via este checkbox.
+// status actual sigue en alguno de los dos PENDING*. Si el examen ya está
+// COMPLETED o CANCELLED, no degradar via este checkbox.
 const showSampleCollected = computed(() => {
   if (!isEdit.value) return true
   const s = props.initial?.status
-  return s === 'PENDIENTE' || s === 'PENDIENTE_POR_PROCESAR'
+  return s === 'PENDING_COLLECTION' || s === 'PENDING_PROCESSING'
 })
 
 function reset() {
   if (props.initial) {
     patientId.value = props.initial.animal.id
     draft.date = props.initial.date
-    draft.sampleCollected = props.initial.status === 'PENDIENTE_POR_PROCESAR'
+    draft.sampleCollected = props.initial.status === 'PENDING_PROCESSING'
     draft.rows = [
       {
         testTypeId: String(props.initial.testType.id),
@@ -163,15 +163,15 @@ async function save() {
       // cambio via PATCH /status (el PUT no acepta status en este endpoint).
       if (showSampleCollected.value) {
         const desired = draft.sampleCollected
-          ? 'PENDIENTE_POR_PROCESAR'
-          : 'PENDIENTE'
+          ? 'PENDING_PROCESSING'
+          : 'PENDING_COLLECTION'
         if (desired !== props.initial.status) {
           updated = await laboratoryTestApi.changeStatus(props.initial.id, desired)
         }
       }
       emit('saved', updated)
     } else {
-      const status = draft.sampleCollected ? 'PENDIENTE_POR_PROCESAR' : 'PENDIENTE'
+      const status = draft.sampleCollected ? 'PENDING_PROCESSING' : 'PENDING_COLLECTION'
       for (const r of draft.rows) {
         const created = await laboratoryTestApi.create({
           date: draft.date,

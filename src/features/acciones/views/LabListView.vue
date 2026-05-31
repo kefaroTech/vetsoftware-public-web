@@ -38,10 +38,12 @@ const deletingBusy = ref(false)
 const viewing = ref<LaboratoryTestResponse | null>(null)
 
 const STATUS_LABEL: Record<LaboratoryTestResponse['status'], string> = {
-  PENDIENTE: 'Pendiente',
-  PENDIENTE_POR_PROCESAR: 'Pendiente por procesar',
-  COMPLETADO: 'Completado',
-  CANCELADO: 'Cancelado',
+  PENDING_COLLECTION: 'Pendiente por recolectar',
+  PENDING_PROCESSING: 'Pendiente por procesar',
+  IN_PROGRESS: 'En proceso',
+  PENDING_VALIDATION: 'Por validar',
+  COMPLETED: 'Completado',
+  CANCELLED: 'Cancelado',
 }
 
 function detailFields(item: LaboratoryTestResponse): DetailFieldDef[] {
