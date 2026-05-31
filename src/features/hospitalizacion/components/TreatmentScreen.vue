@@ -6,11 +6,12 @@ import {
   ChevronRight,
   Plus,
   Pencil,
-  Trash2,
+  Ban,
 } from 'lucide-vue-next'
 import WeeklyMAR from './WeeklyMAR.vue'
 import MoveDoseModal from './MoveDoseModal.vue'
 import ApplyDoseModal from './ApplyDoseModal.vue'
+import SuspendOrderModal from '../modals/SuspendOrderModal.vue'
 import OrderFormModal from '../modals/OrderFormModal.vue'
 import { startOfWeek, addDays, MONTHS_LONG } from '../composables/mar'
 import {
@@ -38,7 +39,7 @@ const emit = defineEmits<{
   back: []
   add: [kind: OrderKind, payload: OrderPayload]
   edit: [kind: OrderKind, id: number, payload: OrderPayload]
-  remove: [kind: OrderKind, id: number]
+  suspend: [kind: OrderKind, id: number]
   apply: [order: OrderVM, slotId: string]
   move: [order: OrderVM, slotId: string, newDate: string, newTime: string, mode: 'one' | 'cascade']
 }>()
@@ -128,6 +129,21 @@ function onApplyConfirm() {
   applyOpen.value = false
   pendingApply.value = null
 }
+
+// ── Modal suspender orden ──
+const suspendOpen = ref(false)
+const pendingSuspend = ref<{ kind: OrderKind; id: number; name: string } | null>(null)
+
+function askSuspend(kind: OrderKind, order: OrderVM) {
+  pendingSuspend.value = { kind, id: order.id, name: order.name }
+  suspendOpen.value = true
+}
+function onSuspendConfirm() {
+  const s = pendingSuspend.value
+  if (s) emit('suspend', s.kind, s.id)
+  suspendOpen.value = false
+  pendingSuspend.value = null
+}
 </script>
 
 <template>
@@ -170,20 +186,25 @@ function onApplyConfirm() {
         </button>
       </div>
       <p v-if="meds.length === 0" class="plan-empty">Sin medicamentos en el plan.</p>
-      <div v-for="m in meds" :key="m.id" class="row">
+      <div v-for="m in meds" :key="m.id" class="row" :class="{ suspended: !!m.suspensionDate }">
         <div class="row-main">
-          <div class="row-name">{{ m.name }}<span v-if="m.dose"> · {{ m.dose }}</span></div>
+          <div class="row-name">
+            {{ m.name }}<span v-if="m.dose"> · {{ m.dose }}</span>
+            <span v-if="m.suspensionDate" class="susp-badge">Suspendido</span>
+          </div>
           <div class="row-detail">
             {{ frequencyLabel(m.frequency) }} · {{ guidelineLabel(m.guidelineType) }} ·
             {{ durationLabel(m.durationMeasure, m.durationQuantity) }}
           </div>
         </div>
-        <button type="button" class="icon" aria-label="Editar" @click="openEdit(m)">
-          <Pencil :size="14" :stroke-width="1.7" />
-        </button>
-        <button type="button" class="icon" aria-label="Eliminar" @click="emit('remove', 'med', m.id)">
-          <Trash2 :size="14" :stroke-width="1.7" />
-        </button>
+        <template v-if="!m.suspensionDate">
+          <button type="button" class="icon" aria-label="Editar" @click="openEdit(m)">
+            <Pencil :size="14" :stroke-width="1.7" />
+          </button>
+          <button type="button" class="icon" aria-label="Suspender" @click="askSuspend('med', m)">
+            <Ban :size="14" :stroke-width="1.7" />
+          </button>
+        </template>
       </div>
     </section>
 
@@ -196,20 +217,25 @@ function onApplyConfirm() {
         </button>
       </div>
       <p v-if="procs.length === 0" class="plan-empty">Sin procedimientos en el plan.</p>
-      <div v-for="p in procs" :key="p.id" class="row">
+      <div v-for="p in procs" :key="p.id" class="row" :class="{ suspended: !!p.suspensionDate }">
         <div class="row-main">
-          <div class="row-name">{{ p.name }}</div>
+          <div class="row-name">
+            {{ p.name }}
+            <span v-if="p.suspensionDate" class="susp-badge">Suspendido</span>
+          </div>
           <div class="row-detail">
             {{ frequencyLabel(p.frequency) }} · {{ guidelineLabel(p.guidelineType) }} ·
             {{ durationLabel(p.durationMeasure, p.durationQuantity) }}
           </div>
         </div>
-        <button type="button" class="icon" aria-label="Editar" @click="openEdit(p)">
-          <Pencil :size="14" :stroke-width="1.7" />
-        </button>
-        <button type="button" class="icon" aria-label="Eliminar" @click="emit('remove', 'proc', p.id)">
-          <Trash2 :size="14" :stroke-width="1.7" />
-        </button>
+        <template v-if="!p.suspensionDate">
+          <button type="button" class="icon" aria-label="Editar" @click="openEdit(p)">
+            <Pencil :size="14" :stroke-width="1.7" />
+          </button>
+          <button type="button" class="icon" aria-label="Suspender" @click="askSuspend('proc', p)">
+            <Ban :size="14" :stroke-width="1.7" />
+          </button>
+        </template>
       </div>
     </section>
 
@@ -234,6 +260,13 @@ function onApplyConfirm() {
       :dose-slot="pendingApply?.slot ?? null"
       @confirm="onApplyConfirm"
       @close="applyOpen = false"
+    />
+    <SuspendOrderModal
+      :open="suspendOpen"
+      :kind="pendingSuspend?.kind ?? 'med'"
+      :name="pendingSuspend?.name ?? ''"
+      @confirm="onSuspendConfirm"
+      @close="suspendOpen = false"
     />
   </div>
 </template>
@@ -360,6 +393,23 @@ function onApplyConfirm() {
   background: var(--warm-100);
   border-radius: 10px;
   margin-bottom: 6px;
+}
+.row.suspended {
+  opacity: 0.6;
+  background: var(--warm-50);
+  border: 1px dashed var(--warm-300);
+}
+.susp-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  vertical-align: middle;
+  background: oklch(94% 0.05 25);
+  color: oklch(48% 0.18 25);
+  border: 1px solid oklch(85% 0.08 25);
 }
 .row-main { flex: 1; min-width: 0; }
 .row-name {

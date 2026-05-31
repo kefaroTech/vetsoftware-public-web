@@ -1371,3 +1371,21 @@ interface Promo {
 - Servicios y Promociones: CRUD; switch activa/desactiva promo; estados por fecha
 - Inventario: alertas, filtros, paginación, reabastecer
 
+### Adenda §16 — Edición con dosis aplicadas (integridad de registro)
+
+Al editar un medicamento/procedimiento con dosis ya aplicadas: las aplicadas son
+registro histórico inmutable, solo se recalculan las pendientes.
+- Store `updateMedication/updateProcedure`: conserva las `APLICADA`; re-cronometra
+  pendientes (INTERVALO desde última aplicada + intervalo; TOMAS ajusta conteo, nunca
+  por debajo de aplicadas); `startDate` se conserva si hay aplicadas.
+- Form: banner informativo, fecha de inicio bloqueada, validación de duración mínima,
+  y modal de impacto antes de confirmar. Sin aplicadas → sin banner/bloqueo/modal.
+
+### Adenda §16 — Suspender (en vez de eliminar)
+
+El plan de medicamentos y procedimientos usa un botón **"Suspender"** (no eliminar).
+- Store `suspendMedication/suspendProcedure`: conserva solo las dosis `APLICADA`, elimina
+  las pendientes del schedule, marca el ítem `suspended: true`.
+- UI: el ítem queda atenuado con etiqueta "Suspendido"; en el calendario desaparecen los
+  chips pendientes/futuros y permanecen los aplicados. Modal de confirmación antes de suspender.
+

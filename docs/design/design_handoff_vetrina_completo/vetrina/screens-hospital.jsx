@@ -106,16 +106,52 @@ function useVetHospState() {
     }));
     toast.success('Medicamento añadido', `${med.name} agregado al plan.`);
   }
+  // Reconstruye el schedule conservando SIEMPRE las dosis aplicadas (registro histórico).
+  // Solo recalcula/ajusta las pendientes según la nueva pauta/duración.
+  function rebuildKeepingApplied(existing, data) {
+    const applied = (existing || []).filter((d) => d.status === 'APLICADA');
+    let pending = (existing || []).filter((d) => d.status !== 'APLICADA');
+    // Duración por nº de tomas: el total no puede ser menor que lo ya aplicado
+    if (data.durMode === 'TOMAS') {
+      const target = Math.max(applied.length, Number(data.durValue) || 0);
+      const need = target - applied.length;
+      if (pending.length > need) pending = pending.slice(0, need);
+      while (pending.length < need) {
+        pending.push({ id: 'p' + Math.random().toString(36).slice(2, 7), time: '08:00', status: 'PENDIENTE', givenBy: null, givenAt: null });
+      }
+    }
+    // Pauta por intervalo: re-cronometrar las pendientes desde la última aplicada (o inicio)
+    const interval = vetIntervalFromFreq(data.frequency);
+    if (data.pauta === 'INTERVALO' && interval) {
+      let t = applied.length ? (applied[applied.length - 1].givenAt || applied[applied.length - 1].time) : (data.startTime || '08:00');
+      pending = pending.map((d) => { t = vetShiftTime(t, interval); return { ...d, time: t }; });
+    }
+    return [...applied, ...pending];
+  }
+
   function updateMedication(patientId, medId, med) {
     patch(patientId, (p) => ({
       ...p,
-      medications: p.medications.map((m) => m.id === medId ? { ...m, ...med } : m),
+      medications: p.medications.map((m) => {
+        if (m.id !== medId) return m;
+        const hasApplied = (m.schedule || []).some((d) => d.status === 'APLICADA');
+        // startDate es histórico: si hay aplicadas, se conserva el original
+        const startDate = hasApplied ? m.startDate : med.startDate;
+        return { ...m, ...med, startDate, schedule: rebuildKeepingApplied(m.schedule, { ...med, startTime: m.startTime }) };
+      }),
     }));
-    toast.success('Plan actualizado', `${med.name} modificado.`);
+    toast.success('Plan actualizado', `${med.name} modificado. Las dosis aplicadas se conservaron.`);
   }
-  function removeMedication(patientId, medId) {
-    patch(patientId, (p) => ({ ...p, medications: p.medications.filter((m) => m.id !== medId) }));
-    toast.info('Medicamento retirado', 'Se quitó del plan de tratamiento.');
+  function suspendMedication(patientId, medId) {
+    patch(patientId, (p) => ({
+      ...p,
+      medications: p.medications.map((m) => {
+        if (m.id !== medId) return m;
+        const applied = (m.schedule || []).filter((d) => d.status === 'APLICADA');
+        return { ...m, suspended: true, schedule: applied };
+      }),
+    }));
+    toast.info('Medicamento suspendido', 'Se quitaron las tomas pendientes; lo ya aplicado se conserva.');
   }
 
   function toggleProcedure(patientId, procId) {
@@ -134,13 +170,25 @@ function useVetHospState() {
   function updateProcedure(patientId, procId, proc) {
     patch(patientId, (p) => ({
       ...p,
-      procedures: p.procedures.map((pr) => pr.id === procId ? { ...pr, ...proc } : pr),
+      procedures: p.procedures.map((pr) => {
+        if (pr.id !== procId) return pr;
+        const hasApplied = (pr.schedule || []).some((d) => d.status === 'APLICADA');
+        const startDate = hasApplied ? pr.startDate : proc.startDate;
+        return { ...pr, ...proc, startDate, schedule: rebuildKeepingApplied(pr.schedule, { ...proc, startTime: pr.startTime }) };
+      }),
     }));
-    toast.success('Plan actualizado', `${proc.name} modificado.`);
+    toast.success('Plan actualizado', `${proc.name} modificado. Los registros previos se conservaron.`);
   }
-  function removeProcedure(patientId, procId) {
-    patch(patientId, (p) => ({ ...p, procedures: p.procedures.filter((pr) => pr.id !== procId) }));
-    toast.info('Procedimiento retirado', 'Se quitó del plan de cuidados.');
+  function suspendProcedure(patientId, procId) {
+    patch(patientId, (p) => ({
+      ...p,
+      procedures: p.procedures.map((pr) => {
+        if (pr.id !== procId) return pr;
+        const applied = (pr.schedule || []).filter((d) => d.status === 'APLICADA');
+        return { ...pr, suspended: true, schedule: applied };
+      }),
+    }));
+    toast.info('Procedimiento suspendido', 'Se quitaron los controles pendientes; lo ya realizado se conserva.');
   }
 
   function addEvolution(patientId, note) {
@@ -164,7 +212,7 @@ function useVetHospState() {
     toast.success('Paciente dado de alta', 'Salió de hospitalización.');
   }
 
-  return { patients, markDose, markProcedure, moveDose, addMedication, updateMedication, removeMedication, toggleProcedure, addProcedure, updateProcedure, removeProcedure, addEvolution, addObservation, discharge };
+  return { patients, markDose, markProcedure, moveDose, addMedication, updateMedication, suspendMedication, toggleProcedure, addProcedure, updateProcedure, suspendProcedure, addEvolution, addObservation, discharge };
 }
 
 function vetDaysSince(iso) {
@@ -269,13 +317,19 @@ function VetHospBoard({ patients, onOpen }) {
 
 function VetMedFormModal({ open, initial, onClose, onSave }) {
   const [d, setD] = React.useState({ name: '', dose: '', frequency: 'c/12h', pauta: 'FIJO', durMode: 'DIAS', durValue: '3', startDate: '', startTime: '', notes: '' });
+  const [impact, setImpact] = React.useState(false);
   React.useEffect(() => {
     if (!open) return;
+    setImpact(false);
     if (initial) setD({ pauta: 'FIJO', durMode: 'DIAS', durValue: '3', ...initial });
     else setD({ name: '', dose: '', frequency: 'c/12h', pauta: 'FIJO', durMode: 'DIAS', durValue: '3', startDate: '2026-05-23', startTime: '08:00', notes: '' });
   }, [open, initial]);
   const u = (p) => setD((x) => ({ ...x, ...p }));
   const freqOptions = ['Continua', 'c/4h', 'c/6h', 'c/8h', 'c/12h', 'c/24h', 'Única'];
+  const appliedCount = (initial?.schedule || []).filter((x) => x.status === 'APLICADA').length;
+  const tomasMin = d.durMode === 'TOMAS' && appliedCount > 0 && (Number(d.durValue) || 0) < appliedCount;
+  const valid = d.name.trim() && d.dose.trim() && !tomasMin;
+  function attemptSave() { if (appliedCount > 0) setImpact(true); else onSave(d); }
 
   return (
     <VetModalShell
@@ -287,15 +341,21 @@ function VetMedFormModal({ open, initial, onClose, onSave }) {
         <>
           <button type="button" className="vet-btn-ghost-modal" onClick={onClose}>Cancelar</button>
           <button type="button" className="vet-btn-primary-modal"
-            disabled={!d.name.trim() || !d.dose.trim()}
-            style={(!d.name.trim() || !d.dose.trim()) ? { opacity: 0.5, cursor: 'not-allowed' } : null}
-            onClick={() => onSave(d)}>
+            disabled={!valid}
+            style={!valid ? { opacity: 0.5, cursor: 'not-allowed' } : null}
+            onClick={attemptSave}>
             {initial ? 'Guardar cambios' : 'Añadir al plan'}
           </button>
         </>
       }
     >
       <div className="vet-action-modal-body">
+        {appliedCount > 0 && (
+          <div className="vet-applied-banner">
+            <VetIcons.Check size={14} strokeWidth={2} />
+            <span>Este medicamento tiene <strong>{appliedCount} dosis aplicada{appliedCount === 1 ? '' : 's'}</strong>. Esas quedan intactas; los cambios solo afectan las tomas pendientes.</span>
+          </div>
+        )}
         <VetBaseField label="Medicamento" required>
           {({ id }) => <VetBaseInput id={id} value={d.name} onChange={(v) => u({ name: v })} placeholder="Ej. Cefazolina" />}
         </VetBaseField>
@@ -323,23 +383,55 @@ function VetMedFormModal({ open, initial, onClose, onSave }) {
         </p>
 
         <VetDurationField mode={d.durMode} value={d.durValue} onMode={(v) => u({ durMode: v })} onValue={(v) => u({ durValue: v })} />
+        {tomasMin && (
+          <p className="vet-pauta-help vet-pauta-err">Ya hay {appliedCount} tomas aplicadas: la duración no puede ser menor a {appliedCount}.</p>
+        )}
 
         <div className="vet-hosp-range-col">
           <span className="vet-hosp-range-label">Inicio del tratamiento</span>
-          <div className="vet-form-grid-2">
-            <VetBaseField label="Fecha" required>
-              {({ id }) => <VetDateInput id={id} value={d.startDate} onChange={(v) => u({ startDate: v })} />}
-            </VetBaseField>
-            <VetBaseField label="Hora" required>
-              {({ id }) => <VetBaseInput id={id} type="time" value={d.startTime} onChange={(v) => u({ startTime: v })} />}
-            </VetBaseField>
-          </div>
+          {appliedCount > 0 ? (
+            <div className="vet-locked-field">
+              <VetIcons.ShieldCheck size={14} strokeWidth={1.7} />
+              <span>{d.startDate} {d.startTime} · bloqueado (ya hay dosis aplicadas)</span>
+            </div>
+          ) : (
+            <div className="vet-form-grid-2">
+              <VetBaseField label="Fecha" required>
+                {({ id }) => <VetDateInput id={id} value={d.startDate} onChange={(v) => u({ startDate: v })} />}
+              </VetBaseField>
+              <VetBaseField label="Hora" required>
+                {({ id }) => <VetBaseInput id={id} type="time" value={d.startTime} onChange={(v) => u({ startTime: v })} />}
+              </VetBaseField>
+            </div>
+          )}
         </div>
 
         <VetBaseField label="Notas">
           {({ id }) => <VetBaseTextarea id={id} value={d.notes} onChange={(v) => u({ notes: v })} rows={2} placeholder="Indicaciones, diluciones…" />}
         </VetBaseField>
       </div>
+
+      <VetModalShell
+        open={impact}
+        title="Confirmar cambios"
+        subtitle={d.name}
+        icon={VetIcons.Check} accent="warn" width={440}
+        onClose={() => setImpact(false)}
+        footerActions={
+          <>
+            <button type="button" className="vet-btn-ghost-modal" onClick={() => setImpact(false)}>Volver</button>
+            <button type="button" className="vet-btn-primary-modal" onClick={() => { setImpact(false); onSave(d); }}>
+              Aplicar a tomas pendientes
+            </button>
+          </>
+        }
+      >
+        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--warm-600)', lineHeight: 1.55 }}>
+          Hay <strong>{appliedCount} dosis ya aplicada{appliedCount === 1 ? '' : 's'}</strong> que se conservan sin cambios.
+          Los nuevos valores (pauta, frecuencia y duración) solo reprograman las <strong>tomas pendientes</strong> desde la última aplicación.
+          La fecha de inicio no se modifica.
+        </p>
+      </VetModalShell>
     </VetModalShell>
   );
 }
@@ -386,6 +478,12 @@ function VetProcFormModal({ open, initial, onClose, onSave }) {
   }, [open, initial]);
   const u = (p) => setD((x) => ({ ...x, ...p }));
   const freqOptions = ['Continuo', 'c/2h', 'c/4h', 'c/6h', 'c/8h', 'c/12h', 'c/24h', 'Único'];
+  const [impact, setImpact] = React.useState(false);
+  React.useEffect(() => { if (!open) setImpact(false); }, [open]);
+  const appliedCount = (initial?.schedule || []).filter((x) => x.status === 'APLICADA').length;
+  const tomasMin = d.durMode === 'TOMAS' && appliedCount > 0 && (Number(d.durValue) || 0) < appliedCount;
+  const valid = d.name.trim() && !tomasMin;
+  function attemptSave() { if (appliedCount > 0) setImpact(true); else onSave(d); }
 
   return (
     <VetModalShell
@@ -397,15 +495,21 @@ function VetProcFormModal({ open, initial, onClose, onSave }) {
         <>
           <button type="button" className="vet-btn-ghost-modal" onClick={onClose}>Cancelar</button>
           <button type="button" className="vet-btn-primary-modal"
-            disabled={!d.name.trim()}
-            style={!d.name.trim() ? { opacity: 0.5, cursor: 'not-allowed' } : null}
-            onClick={() => onSave(d)}>
+            disabled={!valid}
+            style={!valid ? { opacity: 0.5, cursor: 'not-allowed' } : null}
+            onClick={attemptSave}>
             {initial ? 'Guardar cambios' : 'Añadir al plan'}
           </button>
         </>
       }
     >
       <div className="vet-action-modal-body">
+        {appliedCount > 0 && (
+          <div className="vet-applied-banner">
+            <VetIcons.Check size={14} strokeWidth={2} />
+            <span>Este procedimiento tiene <strong>{appliedCount} registro{appliedCount === 1 ? '' : 's'}</strong>. Esos quedan intactos; los cambios solo afectan los controles pendientes.</span>
+          </div>
+        )}
         <VetBaseField label="Procedimiento / control" required>
           {({ id }) => <VetBaseInput id={id} value={d.name} onChange={(v) => u({ name: v })} placeholder="Ej. Toma de tensión arterial" />}
         </VetBaseField>
@@ -428,23 +532,54 @@ function VetProcFormModal({ open, initial, onClose, onSave }) {
         </p>
 
         <VetDurationField mode={d.durMode} value={d.durValue} onMode={(v) => u({ durMode: v })} onValue={(v) => u({ durValue: v })} />
+        {tomasMin && (
+          <p className="vet-pauta-help vet-pauta-err">Ya hay {appliedCount} controles registrados: la duración no puede ser menor a {appliedCount}.</p>
+        )}
 
         <div className="vet-hosp-range-col">
           <span className="vet-hosp-range-label">Inicio</span>
-          <div className="vet-form-grid-2">
-            <VetBaseField label="Fecha" required>
-              {({ id }) => <VetDateInput id={id} value={d.startDate} onChange={(v) => u({ startDate: v })} />}
-            </VetBaseField>
-            <VetBaseField label="Hora" required>
-              {({ id }) => <VetBaseInput id={id} type="time" value={d.startTime} onChange={(v) => u({ startTime: v })} />}
-            </VetBaseField>
-          </div>
+          {appliedCount > 0 ? (
+            <div className="vet-locked-field">
+              <VetIcons.ShieldCheck size={14} strokeWidth={1.7} />
+              <span>{d.startDate} {d.startTime} · bloqueado (ya hay registros)</span>
+            </div>
+          ) : (
+            <div className="vet-form-grid-2">
+              <VetBaseField label="Fecha" required>
+                {({ id }) => <VetDateInput id={id} value={d.startDate} onChange={(v) => u({ startDate: v })} />}
+              </VetBaseField>
+              <VetBaseField label="Hora" required>
+                {({ id }) => <VetBaseInput id={id} type="time" value={d.startTime} onChange={(v) => u({ startTime: v })} />}
+              </VetBaseField>
+            </div>
+          )}
         </div>
 
         <VetBaseField label="Notas">
           {({ id }) => <VetBaseTextarea id={id} value={d.notes} onChange={(v) => u({ notes: v })} rows={2} placeholder="Indicaciones específicas…" />}
         </VetBaseField>
       </div>
+
+      <VetModalShell
+        open={impact}
+        title="Confirmar cambios"
+        subtitle={d.name}
+        icon={VetIcons.Check} accent="warn" width={440}
+        onClose={() => setImpact(false)}
+        footerActions={
+          <>
+            <button type="button" className="vet-btn-ghost-modal" onClick={() => setImpact(false)}>Volver</button>
+            <button type="button" className="vet-btn-primary-modal" onClick={() => { setImpact(false); onSave(d); }}>
+              Aplicar a controles pendientes
+            </button>
+          </>
+        }
+      >
+        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--warm-600)', lineHeight: 1.55 }}>
+          Hay <strong>{appliedCount} control{appliedCount === 1 ? '' : 'es'} ya registrado{appliedCount === 1 ? '' : 's'}</strong> que se conservan.
+          Los nuevos valores solo reprograman los controles <strong>pendientes</strong>. La fecha de inicio no cambia.
+        </p>
+      </VetModalShell>
     </VetModalShell>
   );
 }

@@ -51,6 +51,8 @@ export interface HospitalizationMedicationResponse {
   createdBy: MedicationEmployeeSummary
   createdDate: string
   enabled: boolean
+  suspensionDate: string | null
+  suspensionBy: MedicationEmployeeSummary | null
 }
 
 const BASE = '/hospitalization-medications'
@@ -85,5 +87,11 @@ export const hospitalizationMedicationApi = {
 
   async remove(id: number): Promise<void> {
     await http.delete(`${BASE}/${id}`)
+  },
+
+  /** Suspende la medicación (registra suspensionDate/By). */
+  async suspend(id: number): Promise<HospitalizationMedicationResponse> {
+    const { data } = await http.patch<HospitalizationMedicationResponse>(`${BASE}/${id}/suspend`)
+    return data
   },
 }

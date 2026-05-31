@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, nextTick, watch } from 'vue'
-import { Check } from 'lucide-vue-next'
+import { Lock } from 'lucide-vue-next'
 import {
   WEEKDAYS_SHORT,
   addDays,
@@ -162,12 +162,14 @@ function onDrop(dayIso: string, hour: number) {
               class="chip"
               :class="[statusOf(e.slot), { proc: e.order.kind === 'proc' }]"
               :draggable="interactive(e.slot)"
-              :title="`${e.order.name}${e.order.kind === 'med' && e.order.dose ? ' · ' + e.order.dose : ''} · ${normalizeTime(e.slot.time)}`"
+              :title="statusOf(e.slot) === 'aplicada'
+                ? `${e.order.name} · aplicada ${e.slot.givenAt ?? ''} · registro no editable`
+                : `${e.order.name}${e.order.kind === 'med' && e.order.dose ? ' · ' + e.order.dose : ''} · ${normalizeTime(e.slot.time)}`"
               @click="interactive(e.slot) && emit('apply', e.order, e.slot.id)"
               @dragstart="onDragStart(e, $event)"
               @dragend="onDragEnd"
             >
-              <Check v-if="statusOf(e.slot) === 'aplicada'" :size="11" :stroke-width="3" />
+              <Lock v-if="statusOf(e.slot) === 'aplicada'" :size="10" :stroke-width="2.4" />
               <span class="chip-name">{{ e.order.name }}</span>
             </span>
           </div>
@@ -268,6 +270,7 @@ function onDrop(dayIso: string, hour: number) {
 .chip.aplicada {
   background: oklch(94% 0.06 150);
   color: oklch(40% 0.13 150);
+  cursor: default;
 }
 .chip.pendiente {
   background: var(--warm-50);

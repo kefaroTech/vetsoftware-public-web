@@ -248,6 +248,8 @@ function VetTreatmentScreen({ patient, hosp, onBack }) {
   const ctx = vetHospPetCtx(patient.animalId);
   const [medModal, setMedModal] = React.useState(null);
   const [procModal, setProcModal] = React.useState(null);
+  const [suspendMed, setSuspendMed] = React.useState(null);
+  const [suspendProc, setSuspendProc] = React.useState(null);
 
   function saveMed(data) {
     if (medModal?.initial) hosp.updateMedication(patient.id, medModal.initial.id, data);
@@ -297,9 +299,9 @@ function VetTreatmentScreen({ patient, hosp, onBack }) {
         </header>
         <div className="vet-plan-list">
           {patient.medications.map((m) => (
-            <div key={m.id} className="vet-plan-row">
+            <div key={m.id} className={'vet-plan-row' + (m.suspended ? ' suspended' : '')}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="vet-plan-name">{m.name}</div>
+                <div className="vet-plan-name">{m.name}{m.suspended && <span className="vet-plan-susp-tag">Suspendido</span>}</div>
                 <div className="vet-plan-detail">{m.dose} · {m.frequency}{vetFmtDuration(m)}</div>
                 {m.notes && <div className="vet-plan-notes">{m.notes}</div>}
               </div>
@@ -307,9 +309,11 @@ function VetTreatmentScreen({ patient, hosp, onBack }) {
                 <button type="button" className="vet-plan-icon" onClick={() => setMedModal({ initial: m })} aria-label="Editar">
                   <VetIcons.Edit size={14} strokeWidth={1.7} />
                 </button>
-                <button type="button" className="vet-plan-icon danger" onClick={() => hosp.removeMedication(patient.id, m.id)} aria-label="Quitar">
-                  <VetIcons.Trash size={14} strokeWidth={1.7} />
-                </button>
+                {!m.suspended && (
+                  <button type="button" className="vet-plan-suspend" onClick={() => setSuspendMed(m)}>
+                    Suspender
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -331,9 +335,9 @@ function VetTreatmentScreen({ patient, hosp, onBack }) {
         </header>
         <div className="vet-plan-list">
           {patient.procedures.map((pr) => (
-            <div key={pr.id} className="vet-plan-row">
+            <div key={pr.id} className={'vet-plan-row' + (pr.suspended ? ' suspended' : '')}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="vet-plan-name">{pr.name}</div>
+                <div className="vet-plan-name">{pr.name}{pr.suspended && <span className="vet-plan-susp-tag">Suspendido</span>}</div>
                 <div className="vet-plan-detail">{pr.frequency}{(pr.schedule ?? []).length > 0 ? ` · ${pr.schedule.length} toma${pr.schedule.length === 1 ? '' : 's'}/día` : ''}</div>
                 {pr.notes && <div className="vet-plan-notes">{pr.notes}</div>}
               </div>
@@ -341,9 +345,11 @@ function VetTreatmentScreen({ patient, hosp, onBack }) {
                 <button type="button" className="vet-plan-icon" onClick={() => setProcModal({ initial: pr })} aria-label="Editar">
                   <VetIcons.Edit size={14} strokeWidth={1.7} />
                 </button>
-                <button type="button" className="vet-plan-icon danger" onClick={() => hosp.removeProcedure(patient.id, pr.id)} aria-label="Quitar">
-                  <VetIcons.Trash size={14} strokeWidth={1.7} />
-                </button>
+                {!pr.suspended && (
+                  <button type="button" className="vet-plan-suspend" onClick={() => setSuspendProc(pr)}>
+                    Suspender
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -355,6 +361,46 @@ function VetTreatmentScreen({ patient, hosp, onBack }) {
 
       <VetMedFormModal open={!!medModal} initial={medModal?.initial} onClose={() => setMedModal(null)} onSave={saveMed} />
       <VetProcFormModal open={!!procModal} initial={procModal?.initial} onClose={() => setProcModal(null)} onSave={saveProc} />
+
+      <VetModalShell
+        open={!!suspendMed}
+        title={`¿Suspender ${suspendMed?.name}?`}
+        icon={VetIcons.X} accent="warn" width={440}
+        onClose={() => setSuspendMed(null)}
+        footerActions={
+          <>
+            <button type="button" className="vet-btn-ghost-modal" onClick={() => setSuspendMed(null)}>Cancelar</button>
+            <button type="button" className="vet-btn-primary-modal" onClick={() => { hosp.suspendMedication(patient.id, suspendMed.id); setSuspendMed(null); }}>
+              Suspender medicamento
+            </button>
+          </>
+        }
+      >
+        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--warm-600)', lineHeight: 1.55 }}>
+          Se eliminarán del calendario las <strong>tomas pendientes</strong> de {suspendMed?.name}.
+          Las dosis <strong>ya aplicadas</strong> se conservan en el registro. El medicamento quedará marcado como suspendido.
+        </p>
+      </VetModalShell>
+
+      <VetModalShell
+        open={!!suspendProc}
+        title={`¿Suspender ${suspendProc?.name}?`}
+        icon={VetIcons.X} accent="warn" width={440}
+        onClose={() => setSuspendProc(null)}
+        footerActions={
+          <>
+            <button type="button" className="vet-btn-ghost-modal" onClick={() => setSuspendProc(null)}>Cancelar</button>
+            <button type="button" className="vet-btn-primary-modal" onClick={() => { hosp.suspendProcedure(patient.id, suspendProc.id); setSuspendProc(null); }}>
+              Suspender procedimiento
+            </button>
+          </>
+        }
+      >
+        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--warm-600)', lineHeight: 1.55 }}>
+          Se eliminarán del calendario los <strong>controles pendientes</strong> de {suspendProc?.name}.
+          Los <strong>ya realizados</strong> se conservan en el registro.
+        </p>
+      </VetModalShell>
     </div>
   );
 }

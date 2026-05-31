@@ -27,10 +27,10 @@ const {
   closeDetail,
   addMedication,
   updateMedication,
-  removeMedication,
+  suspendMedication,
   addProcedure,
   updateProcedure,
-  removeProcedure,
+  suspendProcedure,
   addObservation,
   addProgressNote,
   discharge,
@@ -75,13 +75,16 @@ async function onEdit(kind: OrderKind, id: number, payload: OrderPayload) {
   }
 }
 
-async function onRemove(kind: OrderKind, id: number) {
+async function onSuspend(kind: OrderKind, id: number) {
   try {
-    if (kind === 'med') await removeMedication(id)
-    else await removeProcedure(id)
-    toast.info(kind === 'med' ? 'Medicamento eliminado' : 'Procedimiento eliminado')
+    if (kind === 'med') await suspendMedication(id)
+    else await suspendProcedure(id)
+    toast.info(
+      kind === 'med' ? 'Medicamento suspendido' : 'Procedimiento suspendido',
+      'Se conservaron las dosis aplicadas; se retiraron las pendientes.',
+    )
   } catch (e) {
-    toast.error('No se pudo eliminar', e instanceof Error ? e.message : 'Intenta de nuevo.')
+    toast.error('No se pudo suspender', e instanceof Error ? e.message : 'Intenta de nuevo.')
   }
 }
 
@@ -174,7 +177,7 @@ async function onDischarge(reason: ReasonLeaving) {
       @back="mode = 'detail'"
       @add="onAdd"
       @edit="onEdit"
-      @remove="onRemove"
+      @suspend="onSuspend"
       @apply="onApply"
       @move="onMove"
     />

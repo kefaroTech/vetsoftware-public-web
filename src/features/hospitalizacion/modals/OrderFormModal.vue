@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { Pill, Activity } from 'lucide-vue-next'
+import { Pill, Activity, Lock } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
@@ -8,6 +8,7 @@ import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
 import SegmentedRadio from '@/features/dashboard/components/ui/SegmentedRadio.vue'
 import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
+import EditImpactModal from './EditImpactModal.vue'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import {
   FREQUENCY_LABEL,
@@ -38,6 +39,12 @@ const emit = defineEmits<{
 
 const isMed = computed(() => props.kind === 'med')
 const isEdit = computed(() => props.initial !== null)
+
+// Dosis/ejecuciones ya aplicadas = registro histórico inmutable.
+const appliedCount = computed(
+  () => props.initial?.schedule.filter((s) => s.status === 'APLICADA').length ?? 0,
+)
+const hasApplied = computed(() => appliedCount.value > 0)
 
 const frequencyOptions = (Object.keys(FREQUENCY_LABEL) as MedicationFrequency[]).map(
   (v) => ({ value: v, label: FREQUENCY_LABEL[v] }),
@@ -111,11 +118,18 @@ const isDiscrete = computed(
 const errors = computed(() => ({
   name: draft.name.trim().length < 2 ? 'Indica el nombre' : null,
   dose: isMed.value && draft.dose.trim().length < 1 ? 'Indica la dosis' : null,
-  durationQuantity:
-    needsQuantity.value && !(Number(draft.durationQuantity) > 0)
-      ? 'Indica un número mayor a 0'
-      : null,
+  durationQuantity: durationQuantityError(),
 }))
+
+function durationQuantityError(): string | null {
+  if (!needsQuantity.value) return null
+  const n = Number(draft.durationQuantity)
+  if (!(n > 0)) return 'Indica un número mayor a 0'
+  if (draft.durationMeasure === 'DOSES' && hasApplied.value && n < appliedCount.value) {
+    return `Debe ser ≥ ${appliedCount.value} (tomas ya aplicadas)`
+  }
+  return null
+}
 
 const valid = computed(
   () => !errors.value.name && !errors.value.dose && !errors.value.durationQuantity,
@@ -131,10 +145,10 @@ const guidelineHelp = computed(() =>
     : 'Las tomas se mantienen en horas de reloj. Aplicar una toma tarde no mueve las siguientes.',
 )
 
-function save() {
-  submitted.value = true
-  if (!valid.value) return
-  emit('save', {
+const impactOpen = ref(false)
+
+function buildPayload(): OrderPayload {
+  return {
     name: draft.name.trim(),
     dose: isMed.value ? draft.dose.trim() || null : null,
     frequency: draft.frequency,
@@ -144,7 +158,23 @@ function save() {
     startDate: draft.startDate,
     startTime: draft.startTime,
     notes: draft.notes.trim() || null,
-  })
+  }
+}
+
+function save() {
+  submitted.value = true
+  if (!valid.value) return
+  // Si hay aplicadas, confirmar el impacto antes de persistir.
+  if (hasApplied.value) {
+    impactOpen.value = true
+    return
+  }
+  emit('save', buildPayload())
+}
+
+function confirmImpact() {
+  impactOpen.value = false
+  emit('save', buildPayload())
 }
 </script>
 
@@ -166,6 +196,17 @@ function save() {
     @close="emit('close')"
   >
     <template #body>
+      <div v-if="hasApplied" class="applied-banner">
+        <Lock :size="15" :stroke-width="1.8" />
+        <span>
+          Tiene <strong>{{ appliedCount }}</strong>
+          {{ isMed
+            ? (appliedCount === 1 ? 'dosis aplicada' : 'dosis aplicadas')
+            : (appliedCount === 1 ? 'ejecución aplicada' : 'ejecuciones aplicadas') }};
+          esas se conservan, los cambios solo afectan las pendientes.
+        </span>
+      </div>
+
       <div class="grid-2">
         <BaseField label="Nombre" required :error="err('name')">
           <template #default="{ id }">
@@ -224,14 +265,22 @@ function save() {
             />
           </template>
         </BaseField>
-        <BaseField label="Fecha de inicio" required>
+        <BaseField
+          :label="hasApplied ? 'Fecha de inicio 🔒' : 'Fecha de inicio'"
+          required
+          :hint="hasApplied ? 'Bloqueada: inicio histórico' : undefined"
+        >
           <template #default>
-            <DateInput v-model="draft.startDate" />
+            <DateInput v-model="draft.startDate" :disabled="hasApplied" />
           </template>
         </BaseField>
-        <BaseField label="Hora de inicio" required>
+        <BaseField
+          :label="hasApplied ? 'Hora de inicio 🔒' : 'Hora de inicio'"
+          required
+          :hint="hasApplied ? 'Bloqueada: inicio histórico' : undefined"
+        >
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.startTime" type="time" />
+            <BaseInput :id="id" v-model="draft.startTime" type="time" :disabled="hasApplied" />
           </template>
         </BaseField>
       </div>
@@ -260,6 +309,14 @@ function save() {
       </button>
     </template>
   </ModalShell>
+
+  <EditImpactModal
+    :open="impactOpen"
+    :applied-count="appliedCount"
+    :kind="kind"
+    @confirm="confirmImpact"
+    @close="impactOpen = false"
+  />
 </template>
 
 <style scoped>
@@ -272,6 +329,20 @@ function save() {
 @media (max-width: 640px) {
   .grid-2 { grid-template-columns: 1fr; }
 }
+.applied-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 0 0 18px;
+  padding: 10px 13px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: oklch(45% 0.13 70);
+  background: oklch(96% 0.04 80);
+  border-left: 3px solid oklch(70% 0.13 75);
+  border-radius: 0 8px 8px 0;
+}
+.applied-banner svg { flex-shrink: 0; margin-top: 1px; }
 .pauta-help {
   margin: -6px 0 16px;
   padding: 9px 12px;

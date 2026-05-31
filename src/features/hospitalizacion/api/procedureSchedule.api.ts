@@ -62,4 +62,14 @@ export const procedureScheduleApi = {
     )
     return data
   },
+
+  /** Soft-delete de las ejecuciones pendientes (al suspender). Devuelve las aplicadas. */
+  async suspendPending(
+    hospitalizationProcedureId: number,
+  ): Promise<ProcedureScheduleResponse[]> {
+    const { data } = await http.patch<ProcedureScheduleResponse[]>(
+      `${BASE}/by-procedure/${hospitalizationProcedureId}/suspend-pending`,
+    )
+    return data
+  },
 }

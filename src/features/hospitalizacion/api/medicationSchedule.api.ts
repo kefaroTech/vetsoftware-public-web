@@ -64,4 +64,14 @@ export const medicationScheduleApi = {
     )
     return data
   },
+
+  /** Soft-delete de las tomas pendientes (al suspender). Devuelve las aplicadas. */
+  async suspendPending(
+    hospitalizationMedicationId: number,
+  ): Promise<MedicationScheduleResponse[]> {
+    const { data } = await http.patch<MedicationScheduleResponse[]>(
+      `${BASE}/by-medication/${hospitalizationMedicationId}/suspend-pending`,
+    )
+    return data
+  },
 }

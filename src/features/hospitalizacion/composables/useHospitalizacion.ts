@@ -154,6 +154,14 @@ export function useHospitalizacion() {
     meds.value = meds.value.filter((m) => m.id !== id)
   }
 
+  /** Suspende: marca la orden + borra (soft) las tomas pendientes; conserva las aplicadas. */
+  async function suspendMedication(id: number) {
+    const updated = await hospitalizationMedicationApi.suspend(id)
+    const remaining = await medicationScheduleApi.suspendPending(id)
+    const idx = meds.value.findIndex((m) => m.id === id)
+    if (idx >= 0) meds.value.splice(idx, 1, toMedVM(updated, remaining.map(scheduleToDoseSlot)))
+  }
+
   // ── CRUD procedimientos ──
   async function addProcedure(
     payload: Omit<CreateHospitalizationProcedurePayload, 'hospitalizationId'>,
@@ -182,6 +190,14 @@ export function useHospitalizacion() {
   async function removeProcedure(id: number) {
     await hospitalizationProcedureApi.remove(id)
     procs.value = procs.value.filter((p) => p.id !== id)
+  }
+
+  /** Suspende: marca la orden + borra (soft) las ejecuciones pendientes; conserva las aplicadas. */
+  async function suspendProcedure(id: number) {
+    const updated = await hospitalizationProcedureApi.suspend(id)
+    const remaining = await procedureScheduleApi.suspendPending(id)
+    const idx = procs.value.findIndex((p) => p.id === id)
+    if (idx >= 0) procs.value.splice(idx, 1, toProcVM(updated, remaining.map(scheduleToDoseSlot)))
   }
 
   // ── Observaciones / notas evolutivas ──
@@ -274,9 +290,11 @@ export function useHospitalizacion() {
     addMedication,
     updateMedication,
     removeMedication,
+    suspendMedication,
     addProcedure,
     updateProcedure,
     removeProcedure,
+    suspendProcedure,
     addObservation,
     addProgressNote,
     discharge,
