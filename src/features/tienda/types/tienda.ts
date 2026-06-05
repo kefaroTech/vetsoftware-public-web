@@ -184,6 +184,7 @@ export interface SaleLine {
   qty: number
   hasTax: boolean
   taxPercentage: number
+  taxName?: string
   /** Promo aplicada (si existe) — para mostrar precio tachado + ahorro. */
   promoName?: string
   originalUnitPrice?: number

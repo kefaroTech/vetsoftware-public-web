@@ -1,29 +1,66 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { Minus, Plus, Search, ShoppingCart, Trash2 } from 'lucide-vue-next'
+import { computed, onMounted, ref, watch } from 'vue'
+import {
+  Minus,
+  Package,
+  Plus,
+  Receipt,
+  Search,
+  Stethoscope,
+  Trash2,
+  User,
+  X,
+} from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
+import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import OwnerPicker from '@/features/cuentas/components/OwnerPicker.vue'
 import PayModal from '../components/PayModal.vue'
 import ReceiptModal from '../components/ReceiptModal.vue'
 import { useTienda } from '../composables/useTienda'
-import { applyPromo, computeTotals, formatMoney, stockState, type TotalsBreakdown } from '../composables/pricing'
+import { applyPromo, formatMoney, stockState } from '../composables/pricing'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import { useToast } from '@/composables/useToast'
-import type { SaleLine } from '../types/tienda'
+import type { TotalsBreakdown } from '../composables/pricing'
+import type { SaleLine, StockState } from '../types/tienda'
+import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
 
 const store = useTienda()
 const toast = useToast()
 const today = todayISO()
 
-const tab = ref<'product' | 'service'>('product')
+type Mode = 'producto' | 'servicio' | 'paquete'
+const mode = ref<Mode>('producto')
 const query = ref('')
+const cat = ref<string>('')
 const lines = ref<SaleLine[]>([])
 const discount = ref('')
 
+const customer = ref<OwnerResponse | null>(null)
+const custOpen = ref(false)
 const payOpen = ref(false)
 const receiptOpen = ref(false)
-const receipt = ref<{ lines: SaleLine[]; totals: TotalsBreakdown; method: string; change: number | null } | null>(null)
+const receipt = ref<{
+  lines: SaleLine[]
+  totals: TotalsBreakdown
+  method: string
+  change: number | null
+} | null>(null)
 
 onMounted(() => store.ensureLoaded())
+
+// Al cambiar de modo, limpia búsqueda y categoría.
+watch(mode, () => {
+  query.value = ''
+  cat.value = ''
+})
+
+const categories = computed(() =>
+  mode.value === 'producto'
+    ? store.productCategories.value
+    : mode.value === 'servicio'
+      ? store.serviceCategories.value
+      : [],
+)
 
 interface CatalogCard {
   id: number
@@ -33,54 +70,76 @@ interface CatalogCard {
   promoName: string | null
   hasTax: boolean
   taxPercentage: number
-  soldOut: boolean
+  taxName?: string
+  stockState: StockState | null
+  stockCount: number | null
+  isService: boolean
 }
 
 const catalog = computed<CatalogCard[]>(() => {
   const q = query.value.trim().toLowerCase()
-  if (tab.value === 'product') {
+  if (mode.value === 'producto') {
     return store.products.value
-      .filter((p) => !q || p.name.toLowerCase().includes(q))
+      .filter((p) => (!cat.value || String(p.productCategory.id) === cat.value))
+      .filter((p) => !q || p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q))
       .map((p) => {
         const applied = applyPromo(p, 'product', p.salePrice, p.productCategory.id, store.promotions.value, today)
         return {
           id: p.id, name: p.name, basePrice: p.salePrice, price: applied.unitPrice,
           promoName: applied.promo?.name ?? null,
-          hasTax: p.hasTax, taxPercentage: p.hasTax ? p.tax?.percentage ?? 0 : 0,
-          soldOut: stockState(p) === 'AGOTADO',
+          hasTax: p.hasTax, taxPercentage: p.hasTax ? p.tax?.percentage ?? 0 : 0, taxName: p.tax?.name,
+          stockState: stockState(p), stockCount: p.currentStock, isService: false,
         }
       })
   }
-  return store.services.value
-    .filter((s) => !q || s.name.toLowerCase().includes(q))
-    .map((s) => {
-      const applied = applyPromo(s, 'service', s.price, s.serviceCategory.id, store.promotions.value, today)
-      return {
-        id: s.id, name: s.name, basePrice: s.price, price: applied.unitPrice,
-        promoName: applied.promo?.name ?? null,
-        hasTax: s.hasTax, taxPercentage: s.hasTax ? s.tax?.percentage ?? 0 : 0,
-        soldOut: false,
-      }
-    })
+  if (mode.value === 'servicio') {
+    return store.services.value
+      .filter((s) => (!cat.value || String(s.serviceCategory.id) === cat.value))
+      .filter((s) => !q || s.name.toLowerCase().includes(q))
+      .map((s) => {
+        const applied = applyPromo(s, 'service', s.price, s.serviceCategory.id, store.promotions.value, today)
+        return {
+          id: s.id, name: s.name, basePrice: s.price, price: applied.unitPrice,
+          promoName: applied.promo?.name ?? null,
+          hasTax: s.hasTax, taxPercentage: s.hasTax ? s.tax?.percentage ?? 0 : 0, taxName: s.tax?.name,
+          stockState: null, stockCount: null, isService: true,
+        }
+      })
+  }
+  // Paquetes: el backend aún no soporta bundles (ver gaps); tab vacío.
+  return []
 })
 
 function addToTicket(card: CatalogCard) {
-  if (card.soldOut) return
-  const kind = tab.value
+  if (card.stockState === 'AGOTADO') return
+  const kind = card.isService ? 'service' : 'product'
   const existing = lines.value.find((l) => l.kind === kind && l.id === card.id)
   if (existing) {
+    if (!card.isService && card.stockCount != null && existing.qty >= card.stockCount) {
+      toast.warn('Sin stock', `Solo quedan ${card.stockCount} u.`)
+      return
+    }
     existing.qty += 1
     return
   }
   lines.value.push({
     kind, id: card.id, name: card.name, unitPrice: card.price, qty: 1,
-    hasTax: card.hasTax, taxPercentage: card.taxPercentage,
+    hasTax: card.hasTax, taxPercentage: card.taxPercentage, taxName: card.taxName,
     promoName: card.promoName ?? undefined,
     originalUnitPrice: card.promoName ? card.basePrice : undefined,
   })
 }
 
-function inc(line: SaleLine) { line.qty += 1 }
+function inc(line: SaleLine) {
+  if (line.kind === 'product') {
+    const p = store.products.value.find((x) => x.id === line.id)
+    if (p && line.qty >= p.currentStock) {
+      toast.warn('Sin stock', `Solo quedan ${p.currentStock} u.`)
+      return
+    }
+  }
+  line.qty += 1
+}
 function dec(line: SaleLine) {
   line.qty -= 1
   if (line.qty <= 0) removeLine(line)
@@ -90,21 +149,63 @@ function removeLine(line: SaleLine) {
 }
 
 const discountNum = computed(() => Math.max(0, Number(discount.value.replace(',', '.')) || 0))
-const totals = computed(() => computeTotals(lines.value, discountNum.value))
+
+// Subtotal base (tras promo, antes de descuento manual e impuestos).
+const grossNet = computed(() => lines.value.reduce((a, l) => a + l.unitPrice * l.qty, 0))
+const promoSavings = computed(() =>
+  lines.value.reduce(
+    (a, l) => a + (l.originalUnitPrice != null && l.originalUnitPrice > l.unitPrice ? (l.originalUnitPrice - l.unitPrice) * l.qty : 0),
+    0,
+  ),
+)
+const discountedNet = computed(() => Math.max(0, grossNet.value - discountNum.value))
+
+// Impuestos desglosados por tasa (aplicando el descuento manual proporcionalmente).
+const taxByRate = computed(() => {
+  const factor = grossNet.value > 0 ? discountedNet.value / grossNet.value : 0
+  const groups = new Map<string, { name: string; amount: number }>()
+  for (const l of lines.value) {
+    if (!l.hasTax || l.taxPercentage <= 0) continue
+    const key = l.taxName ?? `Impuesto ${l.taxPercentage}%`
+    const amount = l.unitPrice * l.qty * factor * (l.taxPercentage / 100)
+    const g = groups.get(key) ?? { name: key, amount: 0 }
+    g.amount += amount
+    groups.set(key, g)
+  }
+  return Array.from(groups.values()).filter((g) => g.amount > 0)
+})
+const taxTotal = computed(() => taxByRate.value.reduce((a, g) => a + g.amount, 0))
+const total = computed(() => discountedNet.value + taxTotal.value)
 const isEmpty = computed(() => lines.value.length === 0)
 
 function onConfirmPay(method: string, received: number | null) {
+  const totals: TotalsBreakdown = {
+    net: discountedNet.value,
+    tax: taxTotal.value,
+    total: total.value,
+    promoSavings: promoSavings.value + discountNum.value,
+  }
   receipt.value = {
     lines: lines.value.map((l) => ({ ...l })),
-    totals: totals.value,
+    totals,
     method,
-    change: received != null ? Math.max(0, received - totals.value.total) : null,
+    change: received != null ? Math.max(0, received - total.value) : null,
   }
   payOpen.value = false
   receiptOpen.value = true
   lines.value = []
   discount.value = ''
+  customer.value = null
   toast.success('Cobro registrado', 'Recibo generado (demo, no persistido).')
+}
+
+function onSelectCustomer(owner: OwnerResponse) {
+  customer.value = owner
+  custOpen.value = false
+}
+function toggleCustomer() {
+  if (customer.value) customer.value = null
+  else custOpen.value = true
 }
 </script>
 
@@ -116,75 +217,155 @@ function onConfirmPay(method: string, received: number | null) {
 
     <div class="pos">
       <!-- Catálogo -->
-      <section class="catalog-col">
-        <div class="tabs">
-          <button type="button" class="tab" :class="{ active: tab === 'product' }" @click="tab = 'product'">Productos</button>
-          <button type="button" class="tab" :class="{ active: tab === 'service' }" @click="tab = 'service'">Servicios</button>
+      <section class="catalog">
+        <div class="catalog-head">
+          <div class="modetabs">
+            <button type="button" class="modetab" :class="{ active: mode === 'producto' }" @click="mode = 'producto'">
+              <Package :size="14" :stroke-width="1.7" /> Productos
+            </button>
+            <button type="button" class="modetab" :class="{ active: mode === 'servicio' }" @click="mode = 'servicio'">
+              <Stethoscope :size="14" :stroke-width="1.7" /> Servicios
+            </button>
+            <button type="button" class="modetab" :class="{ active: mode === 'paquete' }" @click="mode = 'paquete'">
+              <Package :size="14" :stroke-width="1.7" /> Paquetes
+            </button>
+          </div>
+
+          <template v-if="mode !== 'paquete'">
+            <div class="search">
+              <Search :size="15" :stroke-width="1.7" class="s-icon" />
+              <input
+                v-model="query"
+                type="search"
+                :placeholder="mode === 'producto' ? 'Buscar producto o SKU…' : 'Buscar servicio…'"
+              />
+            </div>
+            <div class="cats">
+              <button type="button" class="cat" :class="{ active: cat === '' }" @click="cat = ''">Todos</button>
+              <button
+                v-for="c in categories"
+                :key="c.id"
+                type="button"
+                class="cat"
+                :class="{ active: cat === String(c.id) }"
+                @click="cat = String(c.id)"
+              >
+                {{ c.name }}
+              </button>
+            </div>
+          </template>
         </div>
-        <div class="search">
-          <Search :size="14" :stroke-width="1.7" class="s-icon" />
-          <input v-model="query" type="text" class="s-input" placeholder="Buscar…" />
-        </div>
+
         <div class="grid">
+          <div v-if="mode === 'paquete'" class="grid-empty">El backend aún no soporta paquetes.</div>
+          <div v-else-if="catalog.length === 0" class="grid-empty">
+            {{ mode === 'producto' ? 'Sin productos para el filtro.' : 'Sin servicios para el filtro.' }}
+          </div>
           <button
             v-for="c in catalog"
-            :key="`${tab}-${c.id}`"
+            :key="`${mode}-${c.id}`"
             type="button"
-            class="prod"
-            :class="{ disabled: c.soldOut }"
-            :disabled="c.soldOut"
+            class="pcard"
+            :class="{ disabled: c.stockState === 'AGOTADO' }"
+            :disabled="c.stockState === 'AGOTADO'"
             @click="addToTicket(c)"
           >
-            <span class="p-name">{{ c.name }}</span>
-            <span class="p-price">
-              <span v-if="c.promoName" class="p-old">{{ formatMoney(c.basePrice) }}</span>
-              {{ formatMoney(c.price) }}
-            </span>
-            <span v-if="c.promoName" class="p-promo">Promo</span>
-            <span v-if="c.soldOut" class="p-out">Agotado</span>
+            <span v-if="c.promoName" class="promo-badge">Promo</span>
+            <div class="pcard-thumb" :class="c.isService ? 'svc' : 'prod'">
+              <component :is="c.isService ? Stethoscope : Package" :size="22" :stroke-width="1.6" />
+            </div>
+            <div class="pcard-name">{{ c.name }}</div>
+            <div class="pcard-foot">
+              <span class="pcard-price">
+                <span v-if="c.promoName" class="price-old">{{ formatMoney(c.basePrice) }}</span>
+                {{ formatMoney(c.price) }}
+              </span>
+              <span
+                v-if="!c.isService && c.stockState"
+                class="pcard-stock"
+                :class="`st-${c.stockState}`"
+              >
+                {{ c.stockState === 'AGOTADO' ? 'Agotado' : c.stockCount + ' u.' }}
+              </span>
+              <span v-else-if="c.isService" class="pcard-svc">Servicio</span>
+            </div>
           </button>
-          <p v-if="catalog.length === 0" class="empty">No hay ítems en este catálogo.</p>
         </div>
       </section>
 
       <!-- Ticket -->
-      <aside class="ticket-col">
-        <div class="ticket-head">
-          <ShoppingCart :size="16" :stroke-width="1.8" />
-          <span>Ticket</span>
-        </div>
-        <div v-if="isEmpty" class="ticket-empty">Agrega productos o servicios al ticket.</div>
-        <ul v-else class="ticket-lines">
-          <li v-for="l in lines" :key="`${l.kind}-${l.id}`" class="t-line">
-            <div class="t-info">
-              <span class="t-name">{{ l.name }}</span>
-              <span class="t-price">{{ formatMoney(l.unitPrice) }} c/u</span>
-            </div>
-            <div class="t-qty">
-              <button type="button" class="q-btn" @click="dec(l)"><Minus :size="13" :stroke-width="2" /></button>
-              <span class="q-val">{{ l.qty }}</span>
-              <button type="button" class="q-btn" @click="inc(l)"><Plus :size="13" :stroke-width="2" /></button>
-            </div>
-            <span class="t-total">{{ formatMoney(l.unitPrice * l.qty) }}</span>
-            <button type="button" class="t-remove" @click="removeLine(l)"><Trash2 :size="14" :stroke-width="1.7" /></button>
-          </li>
-        </ul>
+      <aside class="ticket">
+        <header class="ticket-head">
+          <Receipt :size="17" :stroke-width="1.7" />
+          <span>Ticket de venta</span>
+        </header>
 
-        <div class="ticket-foot">
-          <label class="disc">
-            <span>Descuento manual</span>
-            <input v-model="discount" type="text" inputmode="decimal" placeholder="0" class="disc-input" />
-          </label>
-          <div class="srow"><span>Subtotal</span><span>{{ formatMoney(totals.net) }}</span></div>
-          <div v-if="totals.promoSavings > 0" class="srow saving"><span>Ahorro</span><span>− {{ formatMoney(totals.promoSavings) }}</span></div>
-          <div class="srow"><span>Impuestos</span><span>{{ formatMoney(totals.tax) }}</span></div>
-          <div class="srow total"><span>Total</span><span>{{ formatMoney(totals.total) }}</span></div>
-          <button type="button" class="cobrar" :disabled="isEmpty" @click="payOpen = true">Cobrar</button>
+        <button type="button" class="customer" @click="toggleCustomer">
+          <User :size="14" :stroke-width="1.7" />
+          <span>{{ customer ? customer.name : 'Asociar propietario (opcional)' }}</span>
+          <X v-if="customer" :size="13" :stroke-width="1.8" class="cust-x" />
+        </button>
+
+        <div class="lines">
+          <div v-if="isEmpty" class="lines-empty">
+            <Receipt :size="26" :stroke-width="1.4" />
+            <span>Agrega productos o servicios</span>
+          </div>
+          <div v-for="l in lines" :key="`${l.kind}-${l.id}`" class="line">
+            <div class="line-info">
+              <div class="line-name">
+                <span v-if="l.kind === 'service'" class="line-tag">Servicio</span>{{ l.name }}
+              </div>
+              <div class="line-price">
+                <span v-if="l.originalUnitPrice != null && l.originalUnitPrice > l.unitPrice" class="price-old">
+                  {{ formatMoney(l.originalUnitPrice) }}
+                </span>
+                {{ formatMoney(l.unitPrice) }} c/u
+              </div>
+            </div>
+            <div class="qty">
+              <button type="button" @click="dec(l)"><Minus :size="13" :stroke-width="2" /></button>
+              <span>{{ l.qty }}</span>
+              <button type="button" @click="inc(l)"><Plus :size="13" :stroke-width="2" /></button>
+            </div>
+            <div class="line-total">{{ formatMoney(l.unitPrice * l.qty) }}</div>
+            <button type="button" class="line-x" aria-label="Quitar" @click="removeLine(l)">
+              <Trash2 :size="13" :stroke-width="1.7" />
+            </button>
+          </div>
+        </div>
+
+        <div class="summary">
+          <div class="disc">
+            <span>Descuento</span>
+            <input v-model="discount" type="text" inputmode="decimal" placeholder="0" />
+          </div>
+          <div class="srow"><span>Subtotal (base)</span><span>{{ formatMoney(grossNet) }}</span></div>
+          <div v-if="promoSavings > 0" class="srow savings"><span>Ahorro por promociones</span><span>−{{ formatMoney(promoSavings) }}</span></div>
+          <div v-if="discountNum > 0" class="srow"><span>Descuento</span><span>−{{ formatMoney(discountNum) }}</span></div>
+          <div v-for="r in taxByRate" :key="r.name" class="srow"><span>{{ r.name }}</span><span>{{ formatMoney(r.amount) }}</span></div>
+          <div class="srow grand"><span>Total</span><span>{{ formatMoney(total) }}</span></div>
+          <button type="button" class="charge" :disabled="isEmpty" @click="payOpen = true">
+            Cobrar {{ formatMoney(total) }}
+          </button>
         </div>
       </aside>
     </div>
 
-    <PayModal :open="payOpen" :total="totals.total" @close="payOpen = false" @confirm="onConfirmPay" />
+    <ModalShell
+      :open="custOpen"
+      title="Asociar propietario"
+      subtitle="Vincula la venta a un cliente (opcional)"
+      :icon="User"
+      :width="520"
+      @close="custOpen = false"
+    >
+      <template #body>
+        <OwnerPicker @select="onSelectCustomer" />
+      </template>
+    </ModalShell>
+
+    <PayModal :open="payOpen" :total="total" @close="payOpen = false" @confirm="onConfirmPay" />
     <ReceiptModal
       v-if="receipt"
       :open="receiptOpen"
@@ -200,55 +381,76 @@ function onConfirmPay(method: string, received: number | null) {
 <style scoped>
 .page { font-family: var(--font-sans); color: var(--warm-900); }
 .banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
-.pos { display: grid; grid-template-columns: 1fr 360px; gap: 22px; align-items: start; }
+
+.pos { display: grid; grid-template-columns: 1fr 380px; gap: 18px; align-items: start; }
+@media (max-width: 1100px) { .pos { grid-template-columns: 1fr 340px; } }
 @media (max-width: 900px) { .pos { grid-template-columns: 1fr; } }
-.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--warm-200); margin-bottom: 12px; }
-.tab { padding: 8px 14px; font-size: 13px; font-family: inherit; cursor: pointer; background: transparent; border: none; color: var(--warm-600); border-bottom: 2px solid transparent; margin-bottom: -1px; }
-.tab.active { color: var(--amatista-700); border-bottom-color: var(--amatista-700); font-weight: 500; }
-.search { position: relative; display: flex; align-items: center; margin-bottom: 12px; }
-.s-icon { position: absolute; left: 12px; color: var(--warm-500); }
-.s-input { width: 100%; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 9px; padding: 9px 12px 9px 34px; font-family: inherit; font-size: 13px; color: var(--warm-900); outline: none; }
-.s-input:focus { border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-.prod {
-  position: relative; text-align: left; font-family: inherit; cursor: pointer; padding: 14px; border-radius: 11px;
-  background: var(--warm-50); border: 1px solid var(--warm-200); display: flex; flex-direction: column; gap: 6px; min-height: 84px;
-  transition: border-color 0.12s, box-shadow 0.12s;
-}
-.prod:hover:not(.disabled) { border-color: var(--amatista-300); box-shadow: 0 4px 12px -8px oklch(40% 0.18 var(--hue) / 0.3); }
-.prod.disabled { opacity: 0.55; cursor: not-allowed; }
-.p-name { font-size: 13px; font-weight: 500; color: var(--warm-900); }
-.p-price { font-size: 14px; color: var(--warm-800); display: flex; align-items: center; gap: 6px; }
-.p-old { font-size: 11.5px; color: var(--warm-500); text-decoration: line-through; }
-.p-promo { position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: 500; padding: 2px 6px; border-radius: 999px; background: oklch(94% 0.06 150); color: oklch(40% 0.13 150); }
-.p-out { font-size: 11px; color: oklch(48% 0.18 25); }
-.empty { font-size: 13px; color: var(--warm-500); padding: 16px; grid-column: 1 / -1; }
-.ticket-col { position: sticky; top: 12px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-.ticket-head { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--warm-800); }
-.ticket-empty { font-size: 13px; color: var(--warm-500); padding: 20px 0; text-align: center; }
-.ticket-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 340px; overflow: auto; }
-.t-line { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 8px; }
-.t-info { min-width: 0; }
-.t-name { font-size: 13px; color: var(--warm-900); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.t-price { font-size: 11px; color: var(--warm-500); }
-.t-qty { display: flex; align-items: center; gap: 4px; }
-.q-btn { width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--warm-200); background: transparent; color: var(--warm-700); cursor: pointer; display: grid; place-items: center; }
-.q-btn:hover { background: var(--warm-100); }
-.q-val { font-size: 13px; min-width: 18px; text-align: center; }
-.t-total { font-size: 13px; font-weight: 500; color: var(--warm-900); white-space: nowrap; }
-.t-remove { background: transparent; border: none; color: var(--warm-400); cursor: pointer; padding: 2px; }
-.t-remove:hover { color: oklch(48% 0.18 25); }
-.ticket-foot { border-top: 1px solid var(--warm-200); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
-.disc { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--warm-600); }
-.disc-input { width: 100px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 8px; padding: 6px 10px; font-family: inherit; font-size: 13px; text-align: right; outline: none; }
-.disc-input:focus { border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
-.srow { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--warm-700); }
-.srow.saving { color: oklch(45% 0.13 150); }
-.srow.total { font-size: 16px; font-weight: 600; color: var(--warm-900); padding-top: 6px; border-top: 1px solid var(--warm-200); }
-.cobrar {
-  margin-top: 6px; padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500; color: white;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
-  box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08), 0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.5);
-}
-.cobrar:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+.catalog { display: flex; flex-direction: column; min-height: 0; }
+.catalog-head { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+
+.modetabs { display: inline-flex; gap: 3px; background: var(--warm-150); border: 1px solid var(--warm-200); border-radius: 9px; padding: 3px; align-self: flex-start; }
+.modetab { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: none; background: transparent; border-radius: 7px; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--warm-600); cursor: pointer; }
+.modetab.active { background: var(--warm-50); color: var(--amatista-700); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); }
+
+.search { display: flex; align-items: center; gap: 9px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 9px; padding: 10px 13px; }
+.search:focus-within { border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
+.s-icon { color: var(--warm-500); flex-shrink: 0; }
+.search input { flex: 1; border: none; outline: none; background: transparent; font-family: inherit; font-size: 13.5px; color: var(--warm-900); min-width: 0; }
+
+.cats { display: flex; flex-wrap: wrap; gap: 6px; }
+.cat { padding: 6px 13px; border-radius: 999px; background: var(--warm-50); border: 1px solid var(--warm-200); font-family: inherit; font-size: 12.5px; color: var(--warm-700); cursor: pointer; }
+.cat:hover { border-color: var(--amatista-300); }
+.cat.active { background: var(--amatista-700); color: #fff; border-color: var(--amatista-700); font-weight: 500; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; align-content: start; }
+.grid-empty { grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--warm-500); font-size: 13px; }
+.pcard { position: relative; display: flex; flex-direction: column; gap: 8px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 12px; padding: 12px; cursor: pointer; font-family: inherit; text-align: left; transition: border-color 0.12s ease, box-shadow 0.12s ease; }
+.pcard:hover:not(.disabled) { border-color: var(--amatista-300); box-shadow: 0 4px 14px -8px rgba(20, 15, 30, 0.18); }
+.pcard.disabled { opacity: 0.55; cursor: not-allowed; }
+.pcard-thumb { height: 56px; border-radius: 9px; display: grid; place-items: center; }
+.pcard-thumb.prod { background: var(--warm-150); color: var(--warm-600); }
+.pcard-thumb.svc { background: var(--amatista-50); color: var(--amatista-700); }
+.pcard-name { font-size: 13px; font-weight: 500; color: var(--warm-900); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 34px; }
+.pcard-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.pcard-price { font-size: 14px; font-weight: 600; color: var(--warm-900); }
+.price-old { font-size: 11px; color: var(--warm-400); text-decoration: line-through; margin-right: 6px; font-weight: 400; }
+.pcard-stock { font-size: 11px; padding: 2px 7px; border-radius: 999px; background: var(--warm-150); color: var(--warm-600); white-space: nowrap; }
+.pcard-stock.st-BAJO { background: oklch(94% 0.07 80); color: oklch(45% 0.13 70); }
+.pcard-stock.st-AGOTADO { background: oklch(93% 0.06 25); color: oklch(48% 0.19 25); }
+.pcard-svc { font-size: 11px; padding: 2px 7px; border-radius: 999px; background: var(--amatista-50); color: var(--amatista-700); }
+.promo-badge { position: absolute; top: 8px; right: 8px; z-index: 1; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 999px; background: oklch(58% 0.18 25); color: #fff; }
+
+.ticket { position: sticky; top: 12px; display: flex; flex-direction: column; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 14px; overflow: hidden; }
+.ticket-head { display: flex; align-items: center; gap: 9px; padding: 15px 18px; border-bottom: 1px solid var(--warm-200); font-size: 14px; font-weight: 500; color: var(--warm-900); }
+.ticket-head svg { color: var(--amatista-600); }
+.customer { display: flex; align-items: center; gap: 8px; width: 100%; padding: 11px 18px; border: none; border-bottom: 1px solid var(--warm-150); background: var(--warm-100); font-family: inherit; font-size: 12.5px; color: var(--warm-700); cursor: pointer; }
+.customer:hover { background: var(--warm-150); }
+.cust-x { margin-left: auto; }
+.lines { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 4px; max-height: 360px; }
+.lines-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--warm-400); font-size: 13px; padding: 40px 20px; text-align: center; }
+.line { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 9px; }
+.line:hover { background: var(--warm-100); }
+.line-info { flex: 1; min-width: 0; }
+.line-name { font-size: 13px; font-weight: 500; color: var(--warm-900); }
+.line-tag { display: inline-block; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; color: var(--amatista-700); background: var(--amatista-50); padding: 1px 5px; border-radius: 4px; margin-right: 6px; vertical-align: middle; }
+.line-price { font-size: 11px; color: var(--warm-500); margin-top: 1px; }
+.qty { display: flex; align-items: center; border: 1px solid var(--warm-200); border-radius: 7px; overflow: hidden; }
+.qty button { width: 24px; height: 26px; border: none; background: var(--warm-100); color: var(--warm-700); cursor: pointer; display: grid; place-items: center; }
+.qty button:hover { background: var(--warm-200); }
+.qty span { min-width: 26px; text-align: center; font-size: 13px; font-weight: 500; }
+.line-total { font-size: 13px; font-weight: 600; color: var(--warm-900); min-width: 64px; text-align: right; }
+.line-x { width: 26px; height: 26px; border: none; background: transparent; color: var(--warm-400); cursor: pointer; border-radius: 6px; display: grid; place-items: center; }
+.line-x:hover { background: oklch(94% 0.05 25); color: oklch(48% 0.18 25); }
+
+.summary { border-top: 1px solid var(--warm-200); padding: 14px 18px; display: flex; flex-direction: column; gap: 7px; }
+.disc { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; font-size: 12.5px; color: var(--warm-600); }
+.disc input { width: 90px; text-align: right; border: 1px solid var(--warm-200); border-radius: 7px; padding: 5px 9px; font-family: inherit; font-size: 13px; outline: none; }
+.disc input:focus { border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
+.srow { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--warm-600); }
+.srow.savings { color: oklch(45% 0.13 150); }
+.srow.grand { font-size: 17px; font-weight: 600; color: var(--warm-900); padding-top: 7px; margin-top: 3px; border-top: 1px solid var(--warm-150); }
+.charge { margin-top: 10px; padding: 12px; border-radius: 10px; border: none; background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5))); color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.charge:hover:not(:disabled) { filter: brightness(1.05); }
+.charge:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>
