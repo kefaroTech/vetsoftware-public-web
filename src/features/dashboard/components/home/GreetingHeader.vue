@@ -24,8 +24,7 @@ const today = computed(() => {
 })
 
 const subtitle = computed(() => {
-  const dateText = today.value.replace(' de ', ' de ')
-  return `${dateText} · ${props.scheduledToday} ${props.scheduledToday === 1 ? 'consulta prevista' : 'consultas previstas'} hoy`
+  return `${today.value} · ${props.scheduledToday} ${props.scheduledToday === 1 ? 'consulta prevista' : 'consultas previstas'} hoy`
 })
 </script>
 

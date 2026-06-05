@@ -74,8 +74,8 @@ function formatLocation(owner: Owner): string {
       <Sparkles :size="14" :stroke-width="1.6" />
       <span>
         <strong>{{ petCount }} mascota{{ petCount === 1 ? '' : 's' }}</strong>
-        registrada{{ petCount === 1 ? '' : 's' }} a su nombre. Las verás en el
-        siguiente paso.
+        registrada{{ petCount === 1 ? '' : 's' }} a su nombre. Elige abajo la que
+        vas a atender.
       </span>
     </div>
   </SectionCard>

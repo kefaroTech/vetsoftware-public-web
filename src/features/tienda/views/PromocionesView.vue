@@ -13,7 +13,12 @@ import { useToast } from '@/composables/useToast'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import { getProblemDetailMessage } from '@/services/http/http.client'
-import type { ApplicationType, PromotionPayload, PromotionResponse } from '../types/tienda'
+import type {
+  ApplicationType,
+  PromotionPayload,
+  PromotionResponse,
+  PromotionType,
+} from '../types/tienda'
 
 const store = useTienda()
 const toast = useToast()
@@ -63,6 +68,16 @@ const APP_LABEL: Record<ApplicationType, string> = {
   PRODUCT: 'Producto',
   SERVICE: 'Servicio',
   CATEGORY: 'Categoría',
+}
+
+const TYPE_LABEL: Record<PromotionType, string> = {
+  DISCOUNT: 'Descuento',
+  SPECIAL_PRICE: 'Precio especial',
+}
+
+function vigencia(promo: PromotionResponse): string {
+  if (!promo.startDate && !promo.endDate) return 'Permanente'
+  return `${promo.startDate?.slice(0, 10) ?? '—'} → ${promo.endDate?.slice(0, 10) ?? '—'}`
 }
 
 function targetName(promo: PromotionResponse): string {
@@ -151,6 +166,7 @@ async function onConfirmDelete() {
       <template #header>
         <tr>
           <th>Promoción</th>
+          <th>Tipo</th>
           <th>Aplica a</th>
           <th>Destino</th>
           <th>Valor</th>
@@ -162,10 +178,11 @@ async function onConfirmDelete() {
       <template #row="{ item }">
         <tr>
           <td>{{ item.name }}</td>
+          <td><span class="typepill">{{ TYPE_LABEL[item.promotionType] }}</span></td>
           <td>{{ APP_LABEL[item.applicationType] }}</td>
           <td class="truncate">{{ targetName(item) }}</td>
           <td>{{ valueLabel(item) }}</td>
-          <td class="dates">{{ item.startDate.slice(0, 10) }} → {{ item.endDate.slice(0, 10) }}</td>
+          <td class="dates">{{ vigencia(item) }}</td>
           <td><PromoStatusPill :status="promoStatus(item, today)" /></td>
           <td v-if="canUpdate || canDelete" class="actions">
             <button
@@ -225,6 +242,7 @@ async function onConfirmDelete() {
 .switch.on { background: oklch(55% 0.16 150); }
 .knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; display: grid; place-items: center; color: oklch(45% 0.15 150); transition: left 0.15s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
 .switch.on .knob { left: 16px; }
+.typepill { display: inline-flex; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 500; white-space: nowrap; background: var(--amatista-100); color: var(--amatista-700); }
 .truncate { max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dates { font-size: 12px; color: var(--warm-600); white-space: nowrap; }
 .actions-col { width: 88px; text-align: right; }

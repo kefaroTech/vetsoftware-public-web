@@ -169,7 +169,7 @@ const subtitleText = computed(() =>
     :subtitle="subtitleText"
     :icon="isEditing ? Pencil : UserPlus"
     accent="amatista"
-    :width="640"
+    :width="560"
     @close="emit('close')"
   >
     <template #body>

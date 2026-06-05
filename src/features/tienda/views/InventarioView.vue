@@ -7,6 +7,7 @@ import RestockModal from '../components/RestockModal.vue'
 import CategoryManagerModal from '../components/CategoryManagerModal.vue'
 import { useTienda } from '../composables/useTienda'
 import { formatMoney, stockState } from '../composables/pricing'
+import { productCategoryTone } from '../composables/categoryTone'
 import { useToast } from '@/composables/useToast'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
@@ -190,7 +191,16 @@ async function onCategoryRemove(id: number) {
         </tr>
         <tr v-for="p in slice" v-else :key="p.id" class="trow" @click="onRowClick(p)">
           <td class="tname">{{ p.name }}</td>
-          <td><span class="catpill">{{ p.productCategory.name }}</span></td>
+          <td>
+            <span
+              class="catpill"
+              :style="{
+                background: productCategoryTone(p.productCategory).bg,
+                color: productCategoryTone(p.productCategory).fg,
+              }"
+              >{{ p.productCategory.name }}</span
+            >
+          </td>
           <td class="tsku">{{ p.code }}</td>
           <td>{{ formatMoney(p.salePrice) }}</td>
           <td class="tstock">{{ p.currentStock }} u</td>

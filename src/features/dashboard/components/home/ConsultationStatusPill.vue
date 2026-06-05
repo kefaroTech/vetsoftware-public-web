@@ -30,8 +30,8 @@ const meta = computed(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
-  padding: 3px 8px;
+  font-size: 11.5px;
+  padding: 4px 10px;
   border-radius: 999px;
   font-weight: 500;
 }
@@ -46,11 +46,11 @@ const meta = computed(() => {
   color: var(--amatista-700);
 }
 .pill-amatista .dot {
-  background: var(--amatista-600);
+  background: var(--amatista-500);
 }
 .pill-wait {
   background: var(--warm-150);
-  color: var(--warm-600);
+  color: var(--warm-700);
 }
 .pill-wait .dot {
   background: var(--warm-500);

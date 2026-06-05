@@ -138,9 +138,9 @@ function save() {
   <ModalShell
     :open="open"
     :icon="Bug"
-    title="Desparasitación"
+    title="Registrar desparasitación"
     :subtitle="subtitle"
-    :width="1040"
+    :width="640"
     @close="emit('close')"
   >
     <template #body>

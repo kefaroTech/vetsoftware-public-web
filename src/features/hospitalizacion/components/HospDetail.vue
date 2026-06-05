@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import {
   ArrowLeft,
-  LogOut,
+  Check,
   Stethoscope,
   Plus,
   MessageSquare,
@@ -69,7 +69,7 @@ function fmtStamp(iso: string): string {
         </div>
       </div>
       <button type="button" class="discharge" @click="dischargeOpen = true">
-        <LogOut :size="15" :stroke-width="1.7" /> Dar de alta
+        <Check :size="15" :stroke-width="1.7" /> Dar de alta
       </button>
     </header>
 
@@ -220,18 +220,19 @@ function fmtStamp(iso: string): string {
 .discharge {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  border: 1px solid var(--warm-200);
-  background: var(--warm-50);
-  color: var(--amatista-700);
+  gap: 6px;
+  border: none;
+  background: var(--amatista-700);
+  color: white;
   border-radius: 9px;
   padding: 9px 16px;
   font-family: inherit;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
+  flex-shrink: 0;
 }
-.discharge:hover { border-color: var(--amatista-300); background: var(--amatista-50); }
+.discharge:hover { background: var(--amatista-800); }
 .diagnosis {
   margin: 18px 0;
   padding: 14px 16px;

@@ -175,6 +175,13 @@ function onNotifications() {
 
     <div class="section-label">TRABAJO</div>
     <SidebarNavItem
+      label="Agenda"
+      :icon="Calendar"
+      :active="route.name === 'agenda'"
+      @click="router.push({ name: 'agenda' })"
+    />
+
+    <SidebarNavItem
       label="Consulta"
       :icon="FileText"
       :active="isConsultaActive"
@@ -202,13 +209,6 @@ function onNotifications() {
         :active="item.activeRoutes.includes(String(route.name))"
       />
     </div>
-
-    <SidebarNavItem
-      label="Agenda"
-      :icon="Calendar"
-      :active="route.name === 'agenda'"
-      @click="router.push({ name: 'agenda' })"
-    />
 
     <template v-if="showAccionesSection">
       <div class="section-label">ACCIONES CLÍNICAS</div>

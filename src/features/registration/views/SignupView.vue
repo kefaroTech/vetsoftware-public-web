@@ -8,7 +8,7 @@ const stage = ref<'form' | 'success'>('form')
 
 <template>
   <v-main class="vet-auth-shell">
-    <v-container class="py-10">
+    <v-container class="py-16 d-flex justify-center">
       <SignupForm v-if="stage === 'form'" @success="stage = 'success'" />
       <SignupSuccessCard v-else />
     </v-container>

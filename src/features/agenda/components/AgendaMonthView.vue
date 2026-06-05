@@ -60,7 +60,10 @@ const MAX_VISIBLE = 3
         }"
         @click="emit('day-click', day)"
       >
-        <div class="day-number">{{ day.getDate() }}</div>
+        <div class="day-num">
+          <span :class="{ 'today-marker': sameDay(day, today) }">{{ day.getDate() }}</span>
+          <span v-if="eventsOn(day).length > 0" class="day-count">{{ eventsOn(day).length }}</span>
+        </div>
         <div class="events">
           <AgendaEventChip
             v-for="ev in eventsOn(day).slice(0, MAX_VISIBLE)"
@@ -95,12 +98,12 @@ const MAX_VISIBLE = 3
   border-bottom: 1px solid var(--warm-200);
 }
 .weekday {
-  padding: 10px;
+  padding: 10px 12px;
   text-align: center;
-  font-size: 11.5px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  color: var(--warm-600);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--warm-500);
   text-transform: uppercase;
 }
 .grid {
@@ -140,13 +143,33 @@ const MAX_VISIBLE = 3
 .cell.today:hover {
   background: var(--amatista-100);
 }
-.day-number {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--warm-800);
+.day-num {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--warm-700);
+  margin-bottom: 2px;
 }
-.cell.today .day-number {
+.today-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--amatista-700);
+  color: white;
+  font-weight: 600;
+}
+.day-count {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 6px;
+  background: var(--amatista-100);
   color: var(--amatista-700);
+  border-radius: 4px;
 }
 .events {
   display: flex;

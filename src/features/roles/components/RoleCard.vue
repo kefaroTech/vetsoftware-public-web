@@ -97,7 +97,7 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 14px;
-  padding: 20px;
+  padding: 18px;
   transition: opacity 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .card:hover {
@@ -138,7 +138,7 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
 .name {
   margin: 0;
   font-family: var(--font-serif);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 400;
   letter-spacing: -0.01em;
   color: var(--warm-900);
@@ -176,7 +176,7 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 12px;
-  padding: 12px 0;
+  padding: 10px 0;
   border-top: 1px solid var(--warm-150);
   border-bottom: 1px solid var(--warm-150);
 }
@@ -188,7 +188,7 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
 }
 .stat-num {
   font-family: var(--font-serif);
-  font-size: 28px;
+  font-size: 26px;
   line-height: 1;
   color: var(--warm-900);
   letter-spacing: -0.02em;

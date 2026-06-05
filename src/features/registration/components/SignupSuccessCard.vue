@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { Check } from 'lucide-vue-next'
 </script>
 
 <template>
   <v-card class="vet-auth-card text-center mx-auto" max-width="540" :elevation="0">
-    <v-icon icon="mdi-check-circle" color="success" size="80" class="mb-4" />
+    <div class="success-badge">
+      <Check :size="42" :stroke-width="2" />
+    </div>
     <h1 class="vet-auth-title">¡Cuenta creada!</h1>
     <p class="vet-auth-sub">
       Tu empresa fue registrada y tu código de empleado se generó automáticamente.
@@ -22,6 +25,16 @@
 </template>
 
 <style scoped>
+.success-badge {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in oklab, var(--v-success) 14%, white);
+  color: var(--v-success);
+}
 .vet-auth-card {
   border: 1px solid var(--warm-200) !important;
   border-radius: 16px !important;

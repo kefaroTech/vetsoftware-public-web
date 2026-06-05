@@ -154,9 +154,10 @@ function save() {
   <ModalShell
     :open="open"
     :icon="Scissors"
-    title="Cirugía"
+    title="Programar cirugía"
     :subtitle="subtitle"
-    :width="1080"
+    accent="danger"
+    :width="640"
     @close="emit('close')"
   >
     <template #body>

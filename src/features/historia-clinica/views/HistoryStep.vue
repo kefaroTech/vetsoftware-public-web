@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, FileDown, Plus, Search } from 'lucide-vue-next'
+import { ArrowLeft, Download, Plus, Search } from 'lucide-vue-next'
 import PawLoader from '@/components/ui/PawLoader.vue'
 import MonthTimelineGroup from '../components/MonthTimelineGroup.vue'
 import EventDetailModal from '../components/EventDetailModal.vue'
@@ -228,7 +228,7 @@ function goNuevaConsulta() {
             :disabled="exporting || !state.pet"
             @click="onExport"
           >
-            <FileDown :size="14" :stroke-width="1.7" />
+            <Download :size="14" :stroke-width="1.7" />
             {{ exporting ? 'Generando…' : 'Exportar PDF' }}
           </button>
           <button
@@ -334,7 +334,7 @@ function goNuevaConsulta() {
   flex-direction: column;
 }
 .patient-head {
-  padding: 28px 36px 24px;
+  padding: 24px 36px;
   background: linear-gradient(180deg, var(--amatista-50), var(--warm-50));
   border-bottom: 1px solid var(--warm-200);
 }
@@ -360,9 +360,9 @@ function goNuevaConsulta() {
   gap: 18px;
 }
 .avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
   background: var(--amatista-200);
   color: var(--amatista-700);
   display: grid;
@@ -371,7 +371,6 @@ function goNuevaConsulta() {
   font-size: 22px;
   flex-shrink: 0;
   font-family: 'Instrument Serif', serif;
-  box-shadow: 0 4px 12px -6px oklch(40% 0.18 var(--hue) / 0.3);
 }
 .patient-body {
   flex: 1;
@@ -379,12 +378,12 @@ function goNuevaConsulta() {
 }
 .patient-name {
   font-family: 'Instrument Serif', serif;
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 400;
   letter-spacing: -0.015em;
   color: var(--warm-900);
   margin: 0;
-  line-height: 1.05;
+  line-height: 1.1;
 }
 .pills {
   display: flex;
@@ -537,7 +536,7 @@ function goNuevaConsulta() {
   text-align: center;
   color: var(--warm-500);
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px dashed var(--warm-200);
   border-radius: 12px;
   font-size: 14px;
 }

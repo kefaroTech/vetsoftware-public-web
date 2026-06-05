@@ -6,6 +6,7 @@ import ServiceFormModal from '../components/ServiceFormModal.vue'
 import CategoryManagerModal from '../components/CategoryManagerModal.vue'
 import { useTienda } from '../composables/useTienda'
 import { formatMoney } from '../composables/pricing'
+import { serviceCategoryTone } from '../composables/categoryTone'
 import { useToast } from '@/composables/useToast'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
@@ -39,9 +40,13 @@ const filtered = computed(() => {
 })
 
 const groups = computed(() => {
-  const map = new Map<number, { name: string; items: ServiceResponse[] }>()
+  const map = new Map<number, { id: number; name: string; items: ServiceResponse[] }>()
   for (const s of filtered.value) {
-    const g = map.get(s.serviceCategory.id) ?? { name: s.serviceCategory.name, items: [] }
+    const g = map.get(s.serviceCategory.id) ?? {
+      id: s.serviceCategory.id,
+      name: s.serviceCategory.name,
+      items: [],
+    }
     g.items.push(s)
     map.set(s.serviceCategory.id, g)
   }
@@ -134,9 +139,16 @@ async function onCategoryRemove(id: number) {
     <div v-if="store.loading.value" class="state">Cargando…</div>
     <div v-else-if="groups.length === 0" class="state">Sin servicios para el filtro.</div>
 
-    <section v-for="g in groups" v-else :key="g.name" class="svc-group">
+    <section v-for="g in groups" v-else :key="g.id" class="svc-group">
       <div class="svc-group-head">
-        <span class="catpill">{{ g.name }}</span>
+        <span
+          class="catpill"
+          :style="{
+            background: serviceCategoryTone(g).bg,
+            color: serviceCategoryTone(g).fg,
+          }"
+          >{{ g.name }}</span
+        >
         <span class="svc-group-count">{{ g.items.length }}</span>
       </div>
       <div class="svc-list">

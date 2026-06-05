@@ -63,6 +63,15 @@ export const ROLE_COLORS: Record<RoleColor, RoleColorTokens> = {
   },
 }
 
-export function pickRoleColor(_role: { id: number; code?: string }): RoleColor {
-  return 'amatista'
+const ROLE_COLOR_BY_CODE: Record<string, RoleColor> = {
+  admin: 'amatista',
+  vet: 'green',
+  assistant: 'blue',
+  reception: 'amber',
+  aux: 'gray',
+}
+
+export function pickRoleColor(role: { id: number; code?: string }): RoleColor {
+  const code = role.code?.trim().toLowerCase()
+  return (code && ROLE_COLOR_BY_CODE[code]) || 'gray'
 }

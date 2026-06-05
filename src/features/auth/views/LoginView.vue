@@ -4,7 +4,7 @@ import LoginForm from '../components/LoginForm.vue'
 
 <template>
   <v-main class="vet-auth-shell">
-    <v-container class="py-10 d-flex justify-center">
+    <v-container class="py-16 d-flex justify-center">
       <v-card class="vet-auth-card" max-width="440" width="100%" :elevation="0">
         <h1 class="vet-auth-title">Iniciar sesión</h1>
         <p class="vet-auth-sub">

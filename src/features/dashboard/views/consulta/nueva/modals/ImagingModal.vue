@@ -156,9 +156,9 @@ function save() {
   <ModalShell
     :open="open"
     :icon="ImageIcon"
-    title="Imagen diagnóstica"
+    title="Solicitar imagen diagnóstica"
     :subtitle="subtitle"
-    :width="1080"
+    :width="640"
     @close="emit('close')"
   >
     <template #body>

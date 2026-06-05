@@ -110,7 +110,7 @@ function onSave() {
     :icon="ShieldCheck"
     title="Cambiar roles"
     :subtitle="subtitle"
-    :width="640"
+    :width="560"
     @close="emit('close')"
   >
     <template #body>

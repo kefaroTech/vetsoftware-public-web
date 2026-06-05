@@ -214,9 +214,9 @@ function medErr(i: number, k: keyof MedDraft): string | undefined {
   <ModalShell
     :open="open"
     :icon="Pill"
-    title="Receta médica"
+    title="Nueva receta"
     :subtitle="subtitle"
-    :width="1280"
+    :width="640"
     @close="emit('close')"
   >
     <template #body>

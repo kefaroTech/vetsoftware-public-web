@@ -155,9 +155,10 @@ function save() {
   <ModalShell
     :open="open"
     :icon="BedDouble"
-    title="Hospitalización"
+    title="Ingresar a hospitalización"
     :subtitle="subtitle"
-    :width="1080"
+    accent="warn"
+    :width="640"
     @close="emit('close')"
   >
     <template #body>

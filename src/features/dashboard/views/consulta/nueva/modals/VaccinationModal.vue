@@ -191,9 +191,9 @@ function save() {
   <ModalShell
     :open="open"
     :icon="Shield"
-    title="Vacunación"
+    title="Aplicar vacuna"
     :subtitle="subtitle"
-    :width="1160"
+    :width="640"
     @close="emit('close')"
   >
     <template #body>

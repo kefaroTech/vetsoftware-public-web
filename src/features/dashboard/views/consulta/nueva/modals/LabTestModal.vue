@@ -159,9 +159,9 @@ function save() {
   <ModalShell
     :open="open"
     :icon="Beaker"
-    title="Solicitud de examen de laboratorio"
+    title="Solicitar examen de laboratorio"
     :subtitle="subtitle"
-    :width="1160"
+    :width="640"
     @close="emit('close')"
   >
     <template #body>

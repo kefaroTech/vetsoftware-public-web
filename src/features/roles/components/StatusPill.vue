@@ -13,10 +13,10 @@ defineProps<{ active: boolean }>()
 .pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 2px 8px;
+  gap: 6px;
+  padding: 3px 9px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 500;
   white-space: nowrap;
   line-height: 1;
@@ -30,8 +30,8 @@ defineProps<{ active: boolean }>()
   color: var(--warm-600);
 }
 .dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
 }

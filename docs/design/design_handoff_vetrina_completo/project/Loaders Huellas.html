@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Loaders de Huellas — variaciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --hue: 300;
+    --amatista-50:  oklch(97% 0.015 var(--hue));
+    --amatista-100: oklch(94% 0.035 var(--hue));
+    --amatista-200: oklch(88% 0.07  var(--hue));
+    --amatista-300: oklch(78% 0.12  var(--hue));
+    --amatista-400: oklch(68% 0.16  var(--hue));
+    --amatista-500: oklch(58% 0.18  var(--hue));
+    --amatista-600: oklch(50% 0.18  var(--hue));
+    --amatista-700: oklch(42% 0.16  var(--hue));
+    --amatista-900: oklch(22% 0.08  var(--hue));
+    --warm-50:  oklch(99% 0.005 60);
+    --warm-100: oklch(97% 0.008 60);
+    --warm-200: oklch(92% 0.012 60);
+    --warm-300: oklch(86% 0.015 60);
+    --warm-500: oklch(58% 0.012 60);
+    --warm-600: oklch(45% 0.012 60);
+    --warm-700: oklch(35% 0.012 60);
+    --warm-900: oklch(16% 0.012 60);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--warm-100);
+    font-family: 'Geist', sans-serif;
+    color: var(--warm-900);
+    min-height: 100vh;
+  }
+  .page { max-width: 1280px; margin: 0 auto; padding: 56px 40px 80px; }
+  .header { margin-bottom: 44px; }
+  .header h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 42px; font-weight: 400; letter-spacing: -0.02em;
+    margin: 0 0 6px;
+  }
+  .header p {
+    margin: 0; color: var(--warm-600); font-size: 14.5px;
+    max-width: 640px; line-height: 1.55;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+  }
+  @media (max-width: 1100px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  .card {
+    background: var(--warm-50);
+    border: 1px solid var(--warm-200);
+    border-radius: 18px;
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+  .num {
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px; color: var(--amatista-700); font-style: italic;
+  }
+  .title { font-size: 16px; font-weight: 500; letter-spacing: -0.005em; }
+  .desc {
+    font-size: 12.5px; color: var(--warm-600);
+    line-height: 1.5; margin-bottom: 20px;
+  }
+  .stage {
+    flex: 1;
+    background: linear-gradient(180deg, var(--warm-100), var(--warm-50));
+    border: 1px solid var(--warm-200);
+    border-radius: 14px;
+    min-height: 240px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 18px; padding: 24px 18px;
+    position: relative; overflow: hidden;
+  }
+  .stage.dark {
+    background: linear-gradient(180deg, var(--amatista-900), oklch(15% 0.05 300));
+  }
+  .stage.dark .label { color: oklch(80% 0.05 300); }
+  .stage.dark .label strong { color: white; }
+  .label {
+    font-size: 11.5px; color: var(--warm-600); letter-spacing: 0.02em;
+    text-align: center;
+  }
+  .label strong { color: var(--warm-900); font-weight: 500; }
+
+  /* shared paw shape — used inline in each card */
+  .paw ellipse { transform-box: fill-box; }
+
+  /* ============================================ */
+  /* 01 · Original — pulse + rotate               */
+  /* ============================================ */
+  .v1 { width: 130px; height: 130px; }
+  .v1 svg { width: 100%; height: 100%; animation: v1-rot 4s linear infinite; }
+  .v1 .paw {
+    fill: var(--amatista-300);
+    animation: v1-pulse 1.6s ease-in-out infinite;
+  }
+  .v1 .paw > g { transform-origin: center; transform-box: fill-box; }
+  .v1 .paw:nth-child(1) { animation-delay: 0s; }
+  .v1 .paw:nth-child(2) { animation-delay: 0.2s; }
+  .v1 .paw:nth-child(3) { animation-delay: 0.4s; }
+  .v1 .paw:nth-child(4) { animation-delay: 0.6s; }
+  .v1 .paw:nth-child(5) { animation-delay: 0.8s; }
+  .v1 .paw:nth-child(6) { animation-delay: 1.0s; }
+  .v1 .paw:nth-child(7) { animation-delay: 1.2s; }
+  .v1 .paw:nth-child(8) { animation-delay: 1.4s; }
+  @keyframes v1-rot { to { transform: rotate(360deg); } }
+  @keyframes v1-pulse {
+    0%, 100% { fill: var(--amatista-200); }
+    25% { fill: var(--amatista-700); }
+    50% { fill: var(--amatista-400); }
+  }
+  /* inner pulse on the paw shape itself */
+  .v1 .paw .pulse, .v3 .paw .pulse {
+    transform-origin: center; transform-box: fill-box;
+    animation: paw-scale 1.6s ease-in-out infinite;
+    animation-delay: inherit;
+  }
+  @keyframes paw-scale {
+    0%, 100% { transform: scale(0.85); }
+    25%      { transform: scale(1.1);  }
+    50%      { transform: scale(0.95); }
+  }
+
+  /* ============================================ */
+  /* 02 · Trail — solo 3 huellas viajan en círculo */
+  /* ============================================ */
+  .v2 { width: 130px; height: 130px; position: relative; }
+  .v2 svg { width: 100%; height: 100%; }
+  .v2-orbit {
+    transform-origin: 70px 70px;
+    animation: v2-orbit 1.4s linear infinite;
+  }
+  .v2-orbit g.paw {
+    fill: var(--amatista-700);
+  }
+  .v2-orbit g.paw.t1 { opacity: 1; }
+  .v2-orbit g.paw.t2 { opacity: 0.55; }
+  .v2-orbit g.paw.t3 { opacity: 0.25; }
+  @keyframes v2-orbit { to { transform: rotate(360deg); } }
+
+  /* ============================================ */
+  /* 03 · Filling ring — anillo de huellas se llena */
+  /* ============================================ */
+  .v3 { width: 130px; height: 130px; }
+  .v3 svg { width: 100%; height: 100%; }
+  .v3 .paw {
+    fill: var(--amatista-200);
+    animation: v3-fill 2.4s ease-in-out infinite;
+  }
+  .v3 .paw:nth-child(1) { animation-delay: 0s; }
+  .v3 .paw:nth-child(2) { animation-delay: 0.15s; }
+  .v3 .paw:nth-child(3) { animation-delay: 0.30s; }
+  .v3 .paw:nth-child(4) { animation-delay: 0.45s; }
+  .v3 .paw:nth-child(5) { animation-delay: 0.60s; }
+  .v3 .paw:nth-child(6) { animation-delay: 0.75s; }
+  .v3 .paw:nth-child(7) { animation-delay: 0.90s; }
+  .v3 .paw:nth-child(8) { animation-delay: 1.05s; }
+  @keyframes v3-fill {
+    0%, 60%, 100% { fill: var(--amatista-200); }
+    30%           { fill: var(--amatista-700); }
+  }
+  .v3-pct {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 500; color: var(--amatista-700);
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+  }
+  .v3-wrap { position: relative; width: 130px; height: 130px; }
+
+  /* ============================================ */
+  /* 04 · Bouncing ball + huellas que aparecen     */
+  /* ============================================ */
+  .v4 {
+    width: 200px; height: 130px; position: relative;
+  }
+  .v4-track {
+    position: absolute; left: 0; right: 0; bottom: 24px;
+    height: 1px; background: var(--warm-300);
+  }
+  .v4 .stamp {
+    position: absolute;
+    bottom: 26px;
+    width: 18px; height: 18px;
+    opacity: 0;
+    animation: v4-stamp 2s linear infinite;
+  }
+  .v4 .stamp svg { width: 100%; height: 100%; fill: var(--amatista-500); }
+  .v4 .stamp:nth-child(1) { left: 6%;  animation-delay: 0s; }
+  .v4 .stamp:nth-child(2) { left: 22%; animation-delay: 0.25s; transform: rotate(-8deg); }
+  .v4 .stamp:nth-child(3) { left: 38%; animation-delay: 0.5s; }
+  .v4 .stamp:nth-child(4) { left: 54%; animation-delay: 0.75s; transform: rotate(6deg); }
+  .v4 .stamp:nth-child(5) { left: 70%; animation-delay: 1.0s; }
+  .v4 .stamp:nth-child(6) { left: 86%; animation-delay: 1.25s; transform: rotate(-4deg); }
+  @keyframes v4-stamp {
+    0%, 5% { opacity: 0; transform: translateY(-4px) scale(0.6); }
+    15%    { opacity: 1; transform: translateY(0) scale(1); }
+    65%    { opacity: 1; }
+    90%, 100% { opacity: 0; }
+  }
+
+  /* ============================================ */
+  /* 05 · Orbit — un perro atrás, huellas adelante */
+  /* ============================================ */
+  .v5 { width: 130px; height: 130px; position: relative; }
+  .v5 svg { width: 100%; height: 100%; }
+  .v5-spin {
+    transform-origin: 70px 70px;
+    animation: v5-spin 2.4s linear infinite;
+  }
+  @keyframes v5-spin { to { transform: rotate(360deg); } }
+  .v5-paw { fill: var(--amatista-600); }
+  .v5-paw.lead { fill: var(--amatista-700); }
+  .v5-fade { opacity: 0.15; }
+
+  /* ============================================ */
+  /* 06 · Conveyor belt — huellas cruzan en línea */
+  /* ============================================ */
+  .v6 {
+    width: 220px; height: 50px;
+    position: relative; overflow: hidden;
+    border-bottom: 1px dashed var(--warm-300);
+  }
+  .v6-belt {
+    display: flex;
+    gap: 24px;
+    padding-top: 12px;
+    animation: v6-slide 2.5s linear infinite;
+    width: max-content;
+  }
+  .v6 .stamp {
+    width: 22px; height: 22px;
+    flex-shrink: 0;
+    animation: v6-bob 0.5s ease-in-out infinite alternate;
+  }
+  .v6 .stamp:nth-child(odd)  { transform: rotate(-6deg); animation-delay: 0s; }
+  .v6 .stamp:nth-child(even) { transform: rotate(6deg); animation-delay: -0.25s; }
+  .v6 .stamp svg { width: 100%; height: 100%; fill: var(--amatista-700); }
+  .v6 .stamp:nth-child(even) svg { fill: var(--amatista-500); }
+  @keyframes v6-slide {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-92px); }
+  }
+  @keyframes v6-bob {
+    0%   { transform: translateY(0)   rotate(var(--r, 0deg)); }
+    100% { transform: translateY(-3px) rotate(var(--r, 0deg)); }
+  }
+
+  /* ============================================ */
+  /* 07 · Pulse heart of paw — gran huella central */
+  /* ============================================ */
+  .v7 { width: 140px; height: 140px; position: relative; }
+  .v7-bg, .v7-fg {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .v7-bg svg { width: 100%; height: 100%; opacity: 0.18; }
+  .v7-bg svg .paw { fill: var(--amatista-700); }
+  .v7-fg svg { width: 70px; height: 70px; }
+  .v7-fg svg .paw { fill: var(--amatista-700); animation: v7-beat 1.4s ease-in-out infinite; transform-origin: center; }
+  @keyframes v7-beat {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.18); }
+  }
+  .v7-ring {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    border: 2px solid var(--amatista-400);
+    opacity: 0;
+    animation: v7-ring 1.4s ease-out infinite;
+  }
+  .v7-ring.r2 { animation-delay: 0.7s; }
+  @keyframes v7-ring {
+    0%   { transform: scale(0.6); opacity: 0.6; }
+    100% { transform: scale(1.2); opacity: 0; }
+  }
+
+  /* ============================================ */
+  /* 08 · Compact inline — para botones / chips    */
+  /* ============================================ */
+  .v8-wrap { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+  .button-mock {
+    background: var(--amatista-700); color: white;
+    padding: 10px 18px; border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 10px;
+  }
+  .v8 {
+    display: inline-flex; gap: 4px;
+  }
+  .v8 .dot {
+    width: 7px; height: 7px;
+    background: white; border-radius: 50%;
+    animation: v8-dot 1.2s ease-in-out infinite;
+  }
+  .v8 .dot:nth-child(2) { animation-delay: 0.15s; }
+  .v8 .dot:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes v8-dot {
+    0%, 100% { opacity: 0.3; transform: translateY(0); }
+    50%      { opacity: 1;   transform: translateY(-3px); }
+  }
+  .chip-mock {
+    background: var(--amatista-100); color: var(--amatista-700);
+    padding: 5px 12px; border-radius: 999px;
+    font-size: 12px; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .v8b {
+    width: 14px; height: 14px;
+    position: relative;
+  }
+  .v8b svg {
+    width: 100%; height: 100%;
+    animation: v8b-rot 1s linear infinite;
+  }
+  .v8b svg .paw { fill: var(--amatista-700); }
+  @keyframes v8b-rot { to { transform: rotate(360deg); } }
+
+  /* ============================================ */
+  /* 09 · Dark mode (modo clínica)                 */
+  /* ============================================ */
+  .v9 { width: 130px; height: 130px; }
+  .v9 svg { width: 100%; height: 100%; animation: v1-rot 3s linear infinite; }
+  .v9 .paw {
+    transform-origin: 70px 70px;
+    fill: oklch(78% 0.18 var(--hue));
+    filter: drop-shadow(0 0 6px oklch(70% 0.20 var(--hue) / 0.5));
+    animation: v9-pulse 1.4s ease-in-out infinite;
+  }
+  .v9 .paw:nth-child(1) { animation-delay: 0s; }
+  .v9 .paw:nth-child(2) { animation-delay: 0.18s; }
+  .v9 .paw:nth-child(3) { animation-delay: 0.36s; }
+  .v9 .paw:nth-child(4) { animation-delay: 0.54s; }
+  .v9 .paw:nth-child(5) { animation-delay: 0.72s; }
+  .v9 .paw:nth-child(6) { animation-delay: 0.90s; }
+  .v9 .paw:nth-child(7) { animation-delay: 1.08s; }
+  .v9 .paw:nth-child(8) { animation-delay: 1.26s; }
+  @keyframes v9-pulse {
+    0%, 100% { opacity: 0.25; }
+    25%      { opacity: 1; }
+    50%      { opacity: 0.5; }
+  }
+
+  /* notes */
+  .notes {
+    margin-top: 44px;
+    padding: 24px 28px;
+    background: var(--amatista-50);
+    border: 1px solid var(--amatista-200);
+    border-radius: 14px;
+  }
+  .notes h3 {
+    font-size: 12px; font-weight: 500; margin: 0 0 8px;
+    color: var(--amatista-700);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .notes ul {
+    margin: 0; padding-left: 18px;
+    font-size: 13px; color: var(--warm-700); line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="header">
+    <h1>Huellas — variaciones</h1>
+    <p>9 versiones del loader de huellas, desde el original hasta variantes inline para botones, modo dark, contadores y ritmos distintos. Todas comparten la misma forma base de huella para mantener identidad visual.</p>
+  </header>
+
+  <div class="grid">
+
+    <!-- 01 -->
+    <div class="card">
+      <div class="card-head"><span class="num">01</span><span class="title">Pulso + rotación (original)</span></div>
+      <p class="desc">8 huellas en círculo que pulsan en secuencia mientras el conjunto rota lento. Loader genérico.</p>
+      <div class="stage">
+        <div class="v1"><svg viewBox="0 0 140 140" id="paws-v1"></svg></div>
+        <div class="label">Genérico · <strong>1–3 s</strong></div>
+      </div>
+    </div>
+
+    <!-- 02 -->
+    <div class="card">
+      <div class="card-head"><span class="num">02</span><span class="title">Trail (3 huellas en órbita)</span></div>
+      <p class="desc">Solo 3 huellas, con opacidad decreciente (cabeza · cuerpo · cola), girando rápido. Más limpio, moderno, menos ruido visual.</p>
+      <div class="stage">
+        <div class="v2"><svg viewBox="0 0 140 140" id="paws-v2"></svg></div>
+        <div class="label">Listas · botones grandes · <strong>indeterminado</strong></div>
+      </div>
+    </div>
+
+    <!-- 03 -->
+    <div class="card">
+      <div class="card-head"><span class="num">03</span><span class="title">Anillo que se llena</span></div>
+      <p class="desc">Las 8 huellas se "encienden" en orden de claro a oscuro, como un anillo de progreso. Sugiere avance sin necesitar %.</p>
+      <div class="stage">
+        <div class="v3-wrap">
+          <div class="v3"><svg viewBox="0 0 140 140" id="paws-v3"></svg></div>
+          <div class="v3-pct">∞</div>
+        </div>
+        <div class="label">Esperas <strong>2–6 s</strong> · sin porcentaje real</div>
+      </div>
+    </div>
+
+    <!-- 04 -->
+    <div class="card">
+      <div class="card-head"><span class="num">04</span><span class="title">Camino de huellas</span></div>
+      <p class="desc">Linealizado: 6 huellas alternadas izq/der aparecen en secuencia sobre una línea, como si alguien caminara cruzando la pantalla. Súper character-driven.</p>
+      <div class="stage">
+        <div class="v4">
+          <div class="v4-track"></div>
+          <div class="stamp" id="stamp-1"></div>
+          <div class="stamp" id="stamp-2"></div>
+          <div class="stamp" id="stamp-3"></div>
+          <div class="stamp" id="stamp-4"></div>
+          <div class="stamp" id="stamp-5"></div>
+          <div class="stamp" id="stamp-6"></div>
+        </div>
+        <div class="label">Splash · <strong>onboarding</strong> · pantalla de marca</div>
+      </div>
+    </div>
+
+    <!-- 05 -->
+    <div class="card">
+      <div class="card-head"><span class="num">05</span><span class="title">Cometa (lead + estela)</span></div>
+      <p class="desc">Una huella delantera más grande tira de una estela de 7 huellas atenuadas. Más rápido y dinámico.</p>
+      <div class="stage">
+        <div class="v5"><svg viewBox="0 0 140 140" id="paws-v5"></svg></div>
+        <div class="label">Procesos rápidos · <strong>0.5–2 s</strong></div>
+      </div>
+    </div>
+
+    <!-- 06 -->
+    <div class="card">
+      <div class="card-head"><span class="num">06</span><span class="title">Cinta horizontal</span></div>
+      <p class="desc">Banda lineal de huellas alternadas que avanza horizontalmente con bob suave. Para banners, headers o estados de "sincronizando".</p>
+      <div class="stage">
+        <div class="v6"><div class="v6-belt" id="belt"></div></div>
+        <div class="label">Sincronización · <strong>headers</strong> · banners</div>
+      </div>
+    </div>
+
+    <!-- 07 -->
+    <div class="card">
+      <div class="card-head"><span class="num">07</span><span class="title">Latido con ondas</span></div>
+      <p class="desc">Una huella central late mientras emite ondas concéntricas. Lectura "presencia / pulso vital". Buena para detección de paciente, conexión a dispositivo.</p>
+      <div class="stage">
+        <div class="v7">
+          <div class="v7-ring"></div>
+          <div class="v7-ring r2"></div>
+          <div class="v7-fg"><svg viewBox="0 0 140 140" id="paw-center"></svg></div>
+        </div>
+        <div class="label">Conexión · <strong>presencia</strong> · monitor pasivo</div>
+      </div>
+    </div>
+
+    <!-- 08 -->
+    <div class="card">
+      <div class="card-head"><span class="num">08</span><span class="title">Inline (botones / chips)</span></div>
+      <p class="desc">Versiones compactas para usar dentro de botones y chips. Mantiene el lenguaje de huellas pero a 14–16px sin perder claridad.</p>
+      <div class="stage">
+        <div class="v8-wrap">
+          <div class="button-mock">
+            <div class="v8b"><svg viewBox="0 0 24 24"><g class="paw" transform="translate(12 13)"><ellipse cx="0" cy="2" rx="4" ry="3.5" fill="white"/><ellipse cx="-4" cy="-3" rx="1.6" ry="2" fill="white"/><ellipse cx="4" cy="-3" rx="1.6" ry="2" fill="white"/><ellipse cx="-6.5" cy="0.5" rx="1.4" ry="1.8" fill="white"/><ellipse cx="6.5" cy="0.5" rx="1.4" ry="1.8" fill="white"/></g></svg></div>
+            Guardando consulta
+          </div>
+          <div class="button-mock"><div class="v8"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>Procesando</div>
+          <div class="chip-mock">
+            <div class="v8b"><svg viewBox="0 0 24 24" id="paw-chip"></svg></div>
+            Sincronizando
+          </div>
+        </div>
+        <div class="label">Inline · <strong>botones</strong> · chips · estados</div>
+      </div>
+    </div>
+
+    <!-- 09 -->
+    <div class="card">
+      <div class="card-head"><span class="num">09</span><span class="title">Modo clínica (dark)</span></div>
+      <p class="desc">Misma forma del 01 pero en fondo oscuro con glow amatista neón. Para vistas de hospitalización, monitoreo nocturno y "presentation mode".</p>
+      <div class="stage dark">
+        <div class="v9"><svg viewBox="0 0 140 140" id="paws-v9"></svg></div>
+        <div class="label">Hospitalización · <strong>dark mode</strong></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="notes">
+    <h3>Recomendación</h3>
+    <ul>
+      <li><strong>02 Trail</strong> es el reemplazo más limpio del 01 si quieres algo más moderno.</li>
+      <li><strong>03 Anillo que se llena</strong> da sensación de progreso aunque no haya % real.</li>
+      <li><strong>04 Camino</strong> es el más memorable — úsalo para splash/onboarding, no para esperas frecuentes.</li>
+      <li><strong>05 Cometa</strong> es ideal cuando quieres velocidad percibida (acciones cortas).</li>
+      <li><strong>08 Inline</strong> es necesario en cualquier caso — los botones/chips no pueden usar el grande.</li>
+      <li><strong>09 Dark</strong> es el mismo 01 pero adaptado a temas oscuros — mantén consistencia.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  // Reusable paw renderer
+  const PAW_SHAPE = `
+    <ellipse cx="0" cy="3" rx="6" ry="5"/>
+    <ellipse cx="-6" cy="-5" rx="2.6" ry="3.2"/>
+    <ellipse cx="6" cy="-5" rx="2.6" ry="3.2"/>
+    <ellipse cx="-9" cy="0" rx="2.2" ry="2.8"/>
+    <ellipse cx="9" cy="0" rx="2.2" ry="2.8"/>
+  `;
+  function paw(transform, cls = 'paw') {
+    // outer <g>: SVG transform for positioning. inner <g>: CSS-animated scale.
+    return `<g class="${cls}" transform="${transform}"><g class="pulse">${PAW_SHAPE}</g></g>`;
+  }
+  // 8 positions on a circle, radius 50, center 70,70
+  const positions8 = [
+    { t: 'translate(70 20)' },
+    { t: 'translate(105.4 34.6) rotate(45)' },
+    { t: 'translate(120 70) rotate(90)' },
+    { t: 'translate(105.4 105.4) rotate(135)' },
+    { t: 'translate(70 120) rotate(180)' },
+    { t: 'translate(34.6 105.4) rotate(225)' },
+    { t: 'translate(20 70) rotate(270)' },
+    { t: 'translate(34.6 34.6) rotate(315)' },
+  ];
+
+  // V1 + V3 + V9: 8 huellas en círculo
+  const ring8 = positions8.map(p => paw(p.t)).join('');
+  document.getElementById('paws-v1').innerHTML = ring8;
+  document.getElementById('paws-v3').innerHTML = ring8;
+  document.getElementById('paws-v9').innerHTML = ring8;
+
+  // V2: 3 huellas en órbita (radio 50, ángulos 0/30/60° atrás)
+  document.getElementById('paws-v2').innerHTML = `
+    <g class="v2-orbit">
+      <g class="paw t1" transform="translate(70 20)">${PAW_SHAPE}</g>
+      <g class="paw t2" transform="translate(95 26.7) rotate(30)">${PAW_SHAPE}</g>
+      <g class="paw t3" transform="translate(113.3 45) rotate(60)">${PAW_SHAPE}</g>
+    </g>
+  `;
+
+  // V5: cometa — 1 lead + 7 trail
+  const v5Inner = positions8.map((p, i) => {
+    if (i === 0) return `<g class="paw v5-paw lead" transform="${p.t} scale(1.15)">${PAW_SHAPE}</g>`;
+    const op = (1 - i * 0.13).toFixed(2);
+    return `<g class="paw v5-paw" transform="${p.t}" style="opacity:${op}">${PAW_SHAPE}</g>`;
+  }).join('');
+  document.getElementById('paws-v5').innerHTML = `<g class="v5-spin">${v5Inner}</g>`;
+
+  // V4 stamps — alternados izq/der
+  const stampSvg = (flip) => `<svg viewBox="-12 -12 24 24" style="transform:scaleX(${flip ? -1 : 1})"><g class="paw">${PAW_SHAPE}</g></svg>`;
+  for (let i = 1; i <= 6; i++) {
+    document.getElementById('stamp-' + i).innerHTML = stampSvg(i % 2 === 0);
+  }
+
+  // V6 belt
+  const belt = document.getElementById('belt');
+  let beltHtml = '';
+  for (let i = 0; i < 16; i++) {
+    beltHtml += `<div class="stamp">${stampSvg(i % 2 === 0)}</div>`;
+  }
+  belt.innerHTML = beltHtml;
+
+  // V7 center paw
+  document.getElementById('paw-center').innerHTML = `<g class="paw" transform="translate(70 70) scale(2.2)">${PAW_SHAPE}</g>`;
+
+  // V8 chip paw
+  document.getElementById('paw-chip').innerHTML = `<g class="paw" transform="translate(12 13)"><ellipse cx="0" cy="2" rx="4" ry="3.5"/><ellipse cx="-4" cy="-3" rx="1.6" ry="2"/><ellipse cx="4" cy="-3" rx="1.6" ry="2"/><ellipse cx="-6.5" cy="0.5" rx="1.4" ry="1.8"/><ellipse cx="6.5" cy="0.5" rx="1.4" ry="1.8"/></g>`;
+</script>
+</body>
+</html>

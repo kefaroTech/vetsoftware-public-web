@@ -18,6 +18,7 @@ import PayModal from '../components/PayModal.vue'
 import ReceiptModal from '../components/ReceiptModal.vue'
 import { useTienda } from '../composables/useTienda'
 import { applyPromo, formatMoney, stockState } from '../composables/pricing'
+import { productCategoryTone, serviceCategoryTone } from '../composables/categoryTone'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import { useToast } from '@/composables/useToast'
 import type { TotalsBreakdown } from '../composables/pricing'
@@ -74,6 +75,8 @@ interface CatalogCard {
   stockState: StockState | null
   stockCount: number | null
   isService: boolean
+  toneBg: string
+  toneFg: string
 }
 
 const catalog = computed<CatalogCard[]>(() => {
@@ -89,6 +92,8 @@ const catalog = computed<CatalogCard[]>(() => {
           promoName: applied.promo?.name ?? null,
           hasTax: p.hasTax, taxPercentage: p.hasTax ? p.tax?.percentage ?? 0 : 0, taxName: p.tax?.name,
           stockState: stockState(p), stockCount: p.currentStock, isService: false,
+          toneBg: productCategoryTone(p.productCategory).bg,
+          toneFg: productCategoryTone(p.productCategory).fg,
         }
       })
   }
@@ -103,6 +108,8 @@ const catalog = computed<CatalogCard[]>(() => {
           promoName: applied.promo?.name ?? null,
           hasTax: s.hasTax, taxPercentage: s.hasTax ? s.tax?.percentage ?? 0 : 0, taxName: s.tax?.name,
           stockState: null, stockCount: null, isService: true,
+          toneBg: serviceCategoryTone(s.serviceCategory).bg,
+          toneFg: serviceCategoryTone(s.serviceCategory).fg,
         }
       })
   }
@@ -271,7 +278,7 @@ function toggleCustomer() {
             @click="addToTicket(c)"
           >
             <span v-if="c.promoName" class="promo-badge">Promo</span>
-            <div class="pcard-thumb" :class="c.isService ? 'svc' : 'prod'">
+            <div class="pcard-thumb" :style="{ background: c.toneBg, color: c.toneFg }">
               <component :is="c.isService ? Stethoscope : Package" :size="22" :stroke-width="1.6" />
             </div>
             <div class="pcard-name">{{ c.name }}</div>
@@ -285,7 +292,7 @@ function toggleCustomer() {
                 class="pcard-stock"
                 :class="`st-${c.stockState}`"
               >
-                {{ c.stockState === 'AGOTADO' ? 'Agotado' : c.stockCount + ' u.' }}
+                {{ c.stockState === 'AGOTADO' ? 'Agotado' : c.stockCount + ' u' }}
               </span>
               <span v-else-if="c.isService" class="pcard-svc">Servicio</span>
             </div>

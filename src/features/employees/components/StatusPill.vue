@@ -40,7 +40,7 @@ const label = computed(() => (props.active ? 'Activo' : 'Inactivo'))
   font-family: var(--font-sans);
 }
 .pill.size-md {
-  padding: 3px 9px;
+  padding: 3px 10px;
   font-size: 12px;
 }
 .pill.size-lg {
