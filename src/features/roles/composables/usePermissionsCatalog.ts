@@ -1,43 +1,10 @@
-import { computed, onMounted, ref } from 'vue'
-import { permissionsApi } from '../api/permissions.api'
-import type { PermissionResponse } from '../types'
-
-const cache = ref<PermissionResponse[]>([])
-let inFlight: Promise<PermissionResponse[]> | null = null
-
-async function load(): Promise<PermissionResponse[]> {
-  if (inFlight) return inFlight
-  inFlight = permissionsApi
-    .listByCompany()
-    .then((list) => {
-      cache.value = list
-      inFlight = null
-      return list
-    })
-    .catch((e) => {
-      inFlight = null
-      throw e
-    })
-  return inFlight
-}
-
-const bySubModule = computed<Map<number, PermissionResponse[]>>(() => {
-  const map = new Map<number, PermissionResponse[]>()
-  for (const p of cache.value) {
-    const bucket = map.get(p.subModule.id)
-    if (bucket) bucket.push(p)
-    else map.set(p.subModule.id, [p])
-  }
-  return map
-})
-
-const byId = computed<Map<number, PermissionResponse>>(() => {
-  const map = new Map<number, PermissionResponse>()
-  for (const p of cache.value) map.set(p.id, p)
-  return map
-})
+import { onMounted, ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import { usePermissionsCatalogStore } from '../stores/permissionsCatalog.store'
 
 export function usePermissionsCatalog() {
+  const store = usePermissionsCatalogStore()
+  const { list, bySubModule, byId } = storeToRefs(store)
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -45,7 +12,7 @@ export function usePermissionsCatalog() {
     loading.value = true
     error.value = null
     try {
-      await load()
+      await store.load()
     } catch {
       error.value = 'No se pudo cargar el catálogo de permisos.'
     } finally {
@@ -61,5 +28,5 @@ export function usePermissionsCatalog() {
     refresh()
   })
 
-  return { list: cache, bySubModule, byId, loading, error, refresh, forceRefresh }
+  return { list, bySubModule, byId, loading, error, refresh, forceRefresh }
 }

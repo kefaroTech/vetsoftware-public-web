@@ -1,35 +1,13 @@
 import { onMounted, ref, watch, type Ref } from 'vue'
-import { animalApi } from '../api/animal.api'
-import { mapAnimalResponse } from '../api/animal.mapper'
+import { useAnimalsByOwnerStore } from '../stores/animalsByOwner.store'
 import type { Animal } from '@/types/domain'
 
-const cache = new Map<string, Animal[]>()
-const inFlight = new Map<string, Promise<Animal[]>>()
-
-async function load(ownerId: string): Promise<Animal[]> {
-  const cached = cache.get(ownerId)
-  if (cached) return cached
-  const pending = inFlight.get(ownerId)
-  if (pending) return pending
-  const id = Number(ownerId)
-  if (!Number.isFinite(id)) return []
-  const promise = animalApi
-    .listByOwner(id)
-    .then((list) => list.map(mapAnimalResponse))
-    .then((animals) => {
-      cache.set(ownerId, animals)
-      inFlight.delete(ownerId)
-      return animals
-    })
-    .catch((e) => {
-      inFlight.delete(ownerId)
-      throw e
-    })
-  inFlight.set(ownerId, promise)
-  return promise
-}
-
+/**
+ * Estado reactivo por-componente de las mascotas de un propietario. La caché
+ * compartida vive en el store Pinia `animalsByOwner`.
+ */
 export function useAnimalsByOwner(ownerId: Ref<string>) {
+  const store = useAnimalsByOwnerStore()
   const list = ref<Animal[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -43,7 +21,7 @@ export function useAnimalsByOwner(ownerId: Ref<string>) {
     loading.value = true
     error.value = null
     try {
-      list.value = await load(id)
+      list.value = await store.load(id)
     } catch {
       list.value = []
       error.value = 'No se pudieron cargar las mascotas del propietario.'
@@ -54,13 +32,13 @@ export function useAnimalsByOwner(ownerId: Ref<string>) {
 
   function addPet(pet: Animal) {
     const ownerKey = pet.ownerId
-    const next = [pet, ...(cache.get(ownerKey) ?? [])]
-    cache.set(ownerKey, next)
+    const next = [pet, ...(store.getCached(ownerKey) ?? [])]
+    store.setCached(ownerKey, next)
     if (ownerKey === ownerId.value) list.value = next
   }
 
   function invalidate(id: string = ownerId.value) {
-    cache.delete(id)
+    store.invalidate(id)
   }
 
   onMounted(() => {

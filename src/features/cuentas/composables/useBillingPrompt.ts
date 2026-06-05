@@ -1,64 +1,29 @@
-import { reactive } from 'vue'
+import {
+  useBillingPromptStore,
+  type BillingPromptOptions,
+} from '../stores/billingPrompt.store'
 
-/**
- * Estado global del modal de facturación (ConsultaBillingModal), montado una
- * sola vez vía BillingPromptHost en App.vue. Se dispara tras guardar una
- * consulta o crear un procedimiento clínico.
- */
-export interface BillingPromptOptions {
-  ownerId: number | null
-  ownerName: string
-  animalId: number | null
-  animalName: string
-  heading?: string
-  subtitle?: string
-  autoConsulta?: boolean
-  onFinish?: () => void
-  /** Se invoca al cerrar el modal (por finish o por cierre directo). */
-  onClose?: () => void
-}
+export type { BillingPromptOptions }
 
-interface BillingPromptState extends Required<Omit<BillingPromptOptions, 'onFinish' | 'onClose'>> {
-  open: boolean
-  onFinish: (() => void) | null
-  onClose: (() => void) | null
-}
-
-const state = reactive<BillingPromptState>({
-  open: false,
-  ownerId: null,
-  ownerName: '',
-  animalId: null,
-  animalName: '',
-  heading: 'Facturación',
-  subtitle: '',
-  autoConsulta: false,
-  onFinish: null,
-  onClose: null,
-})
-
+/** Abre el modal global de facturación (montado vía BillingPromptHost en App.vue). */
 export function openBilling(opts: BillingPromptOptions): void {
-  state.ownerId = opts.ownerId
-  state.ownerName = opts.ownerName
-  state.animalId = opts.animalId
-  state.animalName = opts.animalName
-  state.heading = opts.heading ?? 'Facturación'
-  state.subtitle = opts.subtitle ?? ''
-  state.autoConsulta = opts.autoConsulta ?? false
-  state.onFinish = opts.onFinish ?? null
-  state.onClose = opts.onClose ?? null
-  state.open = true
+  useBillingPromptStore().open(opts)
 }
 
 export function closeBilling(): void {
-  state.open = false
-  state.onClose?.()
+  useBillingPromptStore().close()
 }
 
 export function finishBilling(): void {
-  state.onFinish?.()
+  useBillingPromptStore().finish()
 }
 
 export function useBillingPrompt() {
-  return { state, openBilling, closeBilling, finishBilling }
+  const store = useBillingPromptStore()
+  return {
+    state: store.state,
+    openBilling: store.open,
+    closeBilling: store.close,
+    finishBilling: store.finish,
+  }
 }

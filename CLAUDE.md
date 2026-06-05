@@ -7,8 +7,48 @@ en todas las contribuciones.
 
 - Vue 3 + `<script setup lang="ts">` + Composition API
 - Vite + TypeScript estricto (`vue-tsc -b` debe pasar limpio)
+- **Pinia** para todo el estado global/compartido (montado en `main.ts` con `createPinia()`)
 - Axios para HTTP, montado en `src/services/http/http.client.ts` (`http`)
 - Backend Spring Boot vive en `C:\Users\orlan\OneDrive\Documentos\Proyectos\VetSoftware`
+
+## Manejo de estado: SIEMPRE Pinia (regla obligatoria)
+
+**Todo estado global/compartido entre componentes o pantallas DEBE vivir en un
+store de Pinia. Está prohibido el patrón híbrido de "estado module-scoped"
+(declarar `const x = ref()` / `reactive()` a nivel de módulo dentro de un
+composable). No hay excepciones para estado nuevo.**
+
+Convención (espejo en ambos fronts):
+
+1. **Store** en `src/features/<feature>/stores/<x>.store.ts` (o `src/stores/<x>.store.ts`
+   para estado transversal). Usar **setup store**:
+   ```ts
+   export const useXxxStore = defineStore('xxx', () => {
+     const items = ref<T[]>([])
+     async function fetchAll() { /* ... */ }
+     return { items, fetchAll }
+   })
+   ```
+2. **Composable wrapper** `composables/use<Xxx>.ts` que expone el store con
+   `storeToRefs(store)` para el estado + las acciones, manteniendo una API
+   estable para los componentes. Los accesos siguen siendo `x.items.value` en
+   script y auto-unwrap en template:
+   ```ts
+   export function useXxx() {
+     const store = useXxxStore()
+     const { items } = storeToRefs(store)
+     return { items, fetchAll: store.fetchAll }
+   }
+   ```
+3. Funciones standalone que se usan **fuera de componentes** (interceptores
+   axios, guards) llaman al store dentro de la función: `useXxxStore().push()`
+   (Pinia ya está activo en runtime tras `app.use(createPinia())`).
+
+**Qué NO es estado global** (y por tanto sigue siendo un composable normal con
+`ref()` local, no un store): estado por-instancia de un componente, p.ej.
+`useOwnerSearch` (búsqueda con debounce local) o el factory `createCatalog`
+(cada componente tiene su propia lista). Usar `ref` local dentro de una función
+NO es un patrón híbrido — lo prohibido es el `ref()` module-scoped singleton.
 
 ## Estructura por feature
 
@@ -120,12 +160,14 @@ de consulta, etc.):
 
 1. **Cliente axios** en `api/<recurso>.api.ts` exportando `<recurso>Api` con
    métodos `listAll`, `findById`, etc.
-2. **Composable cacheado** en `composables/use<Recurso>.ts` que:
-   - Mantiene cache module-scoped + promesa in-flight para evitar dobles
-     fetches.
+2. **Store de Pinia** en `stores/<recurso>.store.ts` que mantiene la cache
+   (lista + promesa in-flight para evitar dobles fetches), expuesto por un
+   **composable wrapper** `composables/use<Recurso>.ts` (ver "Manejo de estado:
+   SIEMPRE Pinia") que:
    - Expone `options: ComputedRef<{value, label}[]>`, `loading`, `error`,
      `findById(id)`, `refresh()`.
    - Carga en `onMounted` si la cache está vacía.
+   - (El factory `createCatalog` es per-componente y no necesita store.)
 3. **El componente** muestra el error si existe (banner rojo arriba) y
    `placeholder="Cargando…"` mientras `loading`.
 

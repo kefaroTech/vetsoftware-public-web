@@ -1,10 +1,10 @@
-import { computed, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useNuevaConsultaDraft } from '@/features/dashboard/views/consulta/nueva/composables/useNuevaConsultaDraft'
-
-const dismissed = ref(false)
+import { useConsultaActiveBannerStore } from '@/stores/consultaActiveBanner.store'
 
 export function useConsultaActiveBanner() {
+  const store = useConsultaActiveBannerStore()
   const draft = useNuevaConsultaDraft()
   const route = useRoute()
 
@@ -17,16 +17,16 @@ export function useConsultaActiveBanner() {
   watch(
     [() => draft.state.owner?.id, isInsideWizard],
     ([_ownerId, inside]) => {
-      if (inside) dismissed.value = false
+      if (inside) store.reset()
     },
   )
 
   const visible = computed<boolean>(
-    () => !!draft.state.owner && !isInsideWizard.value && !dismissed.value,
+    () => !!draft.state.owner && !isInsideWizard.value && !store.dismissed,
   )
 
   function dismiss() {
-    dismissed.value = true
+    store.dismiss()
   }
 
   return { visible, dismiss, draft }

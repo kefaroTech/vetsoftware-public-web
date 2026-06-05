@@ -1,43 +1,10 @@
-import { computed, onMounted, ref } from 'vue'
-import { subModulesApi } from '../api/subModules.api'
-import type { SubModuleResponse } from '../types'
-
-const cache = ref<SubModuleResponse[]>([])
-let inFlight: Promise<SubModuleResponse[]> | null = null
-
-async function load(): Promise<SubModuleResponse[]> {
-  if (inFlight) return inFlight
-  inFlight = subModulesApi
-    .listAll()
-    .then((list) => {
-      cache.value = list
-      inFlight = null
-      return list
-    })
-    .catch((e) => {
-      inFlight = null
-      throw e
-    })
-  return inFlight
-}
-
-const byId = computed<Map<number, SubModuleResponse>>(() => {
-  const map = new Map<number, SubModuleResponse>()
-  for (const s of cache.value) map.set(s.id, s)
-  return map
-})
-
-const byModule = computed<Map<number, SubModuleResponse[]>>(() => {
-  const map = new Map<number, SubModuleResponse[]>()
-  for (const s of cache.value) {
-    const bucket = map.get(s.module.id)
-    if (bucket) bucket.push(s)
-    else map.set(s.module.id, [s])
-  }
-  return map
-})
+import { onMounted, ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useSubModulesCatalogStore } from '../stores/subModulesCatalog.store'
 
 export function useSubModulesCatalog() {
+  const store = useSubModulesCatalogStore()
+  const { list, byId, byModule } = storeToRefs(store)
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -45,7 +12,7 @@ export function useSubModulesCatalog() {
     loading.value = true
     error.value = null
     try {
-      await load()
+      await store.load()
     } catch {
       error.value = 'No se pudo cargar el catálogo de sub-módulos.'
     } finally {
@@ -61,5 +28,5 @@ export function useSubModulesCatalog() {
     refresh()
   })
 
-  return { list: cache, byId, byModule, loading, error, refresh, forceRefresh }
+  return { list, byId, byModule, loading, error, refresh, forceRefresh }
 }
