@@ -104,7 +104,7 @@ function VetModalShell({ open, title, subtitle, icon: IconComp, width = 720, acc
       style={vetCoreStyles.overlay}
       onClick={(e) => { if (e.target === e.currentTarget) onClose?.(); }}
     >
-      <div style={{ ...vetCoreStyles.modalCard, width, maxWidth: 'calc(100vw - 32px)' }}>
+      <div style={{ ...vetCoreStyles.modalCard, width: `min(${width + 180}px, calc(100vw - 48px))`, maxWidth: 'calc(100vw - 48px)' }}>
         <header style={vetCoreStyles.modalHead}>
           {IconComp && (
             <div style={{ ...vetCoreStyles.modalIconBox, ...accentStyles }}>

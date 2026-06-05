@@ -54,7 +54,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="resume-title"
-        @click.self="emit('cancel')"
       >
         <div class="card">
           <div class="icon">

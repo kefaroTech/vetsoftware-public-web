@@ -1526,3 +1526,138 @@ Cambios al shell global. Archivo proto: `vetrina/shell.jsx`.
 - **Padding de contenido reducido**: `appContent` pasó de `36px 48px` a `24px 28px` (el menú izquierdo
   no cambia). En Vue: ajustar el padding del `<main>` del layout, no del `<aside>`.
 
+---
+
+## §21. Pantalla de Cargos / Facturación (post-consulta y post-procedimiento) — ESPEC. DETALLADA
+
+Componente proto: `vetrina/screens-consulta-billing.jsx` → `VetConsultaBillingModal`.
+Es un **modal** (no pantalla completa) que se dispara al **Guardar consulta** (paso 2 del wizard) y
+tras **crear** cualquier procedimiento clínico (lab, imagen, vacuna, hosp, desparasitación, cirugía, spa).
+Su función: decidir si los servicios/productos de ese acto clínico se cobran y cómo, contra el modelo
+de **cuentas abiertas por propietario**.
+
+### Props del componente
+
+```
+{ open, owner, pet, consultationType, heading, subtitle, autoConsulta=true, onClose, onFinish }
+```
+- `owner` / `pet`: objetos del propietario y mascota atendidos.
+- `consultationType`: tipo de consulta (sólo para autoprecargar el servicio "Consulta").
+- `heading` / `subtitle`: título y subtítulo del modal. En consulta: "Facturación de la consulta".
+  En procedimiento: `heading="Facturación · <sección>"` (p.ej. "Facturación · Vacunaciones").
+- `autoConsulta`: `true` en consulta (precarga servicio consulta); `false` en procedimientos.
+- `onFinish(payload)`: callback con el resultado (ver "Salida").
+
+### Estado interno
+
+- `destino`: `'existing'` | `'new'` | `'nada'`. Default = `'existing'` si el dueño tiene cuenta abierta, si no `'new'`.
+- `items[]`: cargos NUEVOS seleccionados, cada uno `{ key, kind:'servicio'|'producto', id, name, unitPrice, qty }`.
+  `key` = `'svc-'+id` o `'prod-'+id` (evita duplicados; re-agregar incrementa `qty`).
+- `tab`: `'servicio'` | `'producto'` (catálogo activo).
+- `query`: texto de búsqueda en catálogo.
+- Helper `vetOwnerOpenAccount(ownerId)`: devuelve la cuenta ABIERTA del propietario o `null`.
+
+### Layout (de arriba a abajo dentro del modal, ancho 700px)
+
+1. **Header del modal** (`VetModalShell`): icono Receipt en burbuja amatista, `heading` + `subtitle`
+   (subtítulo por defecto `"{pet} · {owner}"`).
+
+2. **Banda de estado de cuenta** (condicional):
+   - **CON cuenta abierta** → tarjeta VERDE (`.vet-bill-acctcard`): icono Receipt + "{Nombre} ya tiene
+     una cuenta abierta" + sub "{origen} · {N} cargos · desde {MM-DD}" + a la derecha bloque "Saldo
+     actual" con el monto en grande.
+   - **SIN cuenta** → aviso ÁMBAR (`.vet-bill-acct.none`): "{Nombre} no tiene cuenta abierta. Puedes
+     abrir una con los cargos de esta consulta."
+
+3. **Selector de destino** (`.vet-bill-dest`, grid; 3 columnas si hay cuenta, 2 si no). Cada opción es
+   `.vet-bill-destopt` (check + título + subtítulo), resaltada al activarse:
+   - `existing` (solo si hay cuenta): "Agregar a la cuenta abierta" · sub muestra **saldo proyectado**
+     = saldo actual + total de los nuevos cargos (`vetMoney(acctSaldo + total)`).
+   - `new`: "Abrir una cuenta nueva" (si ya hay cuenta, sub "Para un motivo o responsable distinto.")
+     o "Abrir cuenta y agregar cargos" (si no hay cuenta).
+   - `nada`: "Solo guardar la consulta" · sub "Sin cobro ni cuenta. Podrás cobrar después."
+
+4. **Selector de cargos** (`.vet-bill-cols`, 2 columnas) — visible solo si `destino ∈ {existing,new}`:
+   - **Izquierda — catálogo** (`.vet-bill-catalog`):
+     - Segmented `Servicios | Productos` (`.vet-acct-srcseg`), cambia `tab` y limpia `query`.
+     - Input de búsqueda (`.vet-acct-search`) filtra por nombre o categoría.
+     - Lista scrollable (`.vet-bill-catlist`) de filas `.vet-acct-catrow`: nombre + precio + icono "+".
+       Productos con `stock<=0` salen deshabilitados con badge "Agotado".
+   - **Derecha — cargos seleccionados** (`.vet-bill-selected`):
+     - Encabezado: "Cargos de la cuenta" (modo existing) o "Cargos de esta consulta" (modo new).
+     - **Modo `existing`**: primero bloque SOLO LECTURA (`.vet-bill-existing`) con rótulo "Ya en la
+       cuenta · solo lectura" listando los `account.charges` existentes (check gris, concepto, fecha,
+       monto; SIN stepper ni quitar), seguido de un divisor "Nuevos cargos".
+     - Lista de `items` nuevos: cada fila `.vet-bill-selrow` con nombre + tipo·precio unit, **stepper**
+       de cantidad (−/input/+), total de línea, y botón quitar (X). Vacío → mensaje placeholder.
+
+5. **Footer** (`VetModalShell.footerActions` + `footerLeft`):
+   - Izquierda: "Total cargos **{vetMoney(total)}**" (solo si hay selección de cargos).
+   - Botones: "Cancelar" (ghost) + botón primario cuyo label depende de `destino`:
+     `nada`→"Guardar consulta" · `existing`→"Guardar y agregar a cuenta" · `new`→"Guardar y abrir cuenta".
+
+### Comportamiento al confirmar (`finish()`) — Salida `onFinish(payload)`
+
+- `destino==='nada'` → `{ billed:false }` (solo guarda el acto clínico, sin tocar cuentas).
+- `destino==='existing'` → `{ billed:true, account:'existing', accountId, items }` + toast
+  "Cargos agregados · N ítems sumados a la cuenta abierta de {Nombre}". En Vue: `addCharge` por cada
+  item a la cuenta, **etiquetando `petId` con la mascota atendida** (no "General").
+- `destino==='new'` → `{ billed:true, account:'new', items }` + toast "Cuenta abierta · Se creó una
+  cuenta para {Nombre} con N cargo(s)". En Vue: crear cuenta del propietario y agregar los items.
+
+### Reglas de negocio (replicar en Vue)
+
+1. Los **cargos previos** de una cuenta existente NUNCA se editan/quitan desde este modal (solo lectura).
+2. Re-agregar un mismo ítem del catálogo **incrementa la cantidad**, no duplica la línea.
+3. Productos sin stock no se pueden agregar.
+4. En consulta `autoConsulta=true` precarga el servicio cuyo nombre contiene "consulta"; en
+   procedimientos `autoConsulta=false` (lista vacía: el vet elige qué cobrar).
+5. El cargo creado debe llevar el `petId` de la mascota atendida para agrupar correctamente en la cuenta.
+6. Solo un acto de **crear** dispara el modal; **editar** un registro existente NO lo dispara.
+
+### Clases CSS clave (en `vetrina/shop.css`)
+
+`.vet-bill-acctcard`(+`-top/-ic/-title/-sub/-saldo`), `.vet-bill-acct.none`, `.vet-bill-dest`(+`.three`),
+`.vet-bill-destopt`(+`.active`,`-check/-title/-sub`), `.vet-bill-cols`, `.vet-bill-catalog`,
+`.vet-bill-catlist`, `.vet-bill-selected`, `.vet-bill-selhead`, `.vet-bill-existing`(+`-lab/-div`),
+`.vet-bill-selrow`(+`.locked`), `.vet-bill-selinfo/-selname/-selkind`, `.vet-bill-stepper`,
+`.vet-bill-sellinetotal`, `.vet-bill-selremove`, `.vet-bill-selempty`, `.vet-bill-foottotal`.
+Reutiliza también `.vet-acct-srcseg/-srcbtn`, `.vet-acct-search`, `.vet-acct-catrow`.
+
+### Vue / Pinia
+
+- Componente `BillingChargesModal.vue` con esas props; estado local con `ref`/`reactive`.
+- Catálogos `services`/`products` y la lógica de cuentas (`accounts`, `addCharge`, `createAccount`,
+  `vetOwnerOpenAccount`) desde el store global (Pinia).
+- Importante: el `total` y el saldo proyectado se recalculan en `computed`; el `onFinish` debe persistir
+  contra backend (crear cuenta / agregar cargos) y etiquetar `petId`.
+
+### Pruebas básicas
+
+- Consulta: guardar → modal con servicio "consulta" precargado; sin cuenta (ámbar, 2 opciones) /
+  con cuenta (verde, 3 opciones, saldo proyectado correcto).
+- Procedimiento: crear → mismo modal, heading de la sección, lista de cargos vacía.
+- Modo "agregar a cuenta": cargos previos en solo lectura + nuevos editables con stepper.
+- Re-agregar ítem incrementa cantidad; producto agotado no se agrega.
+- "Solo guardar" oculta el selector de cargos y guarda sin cuenta.
+
+---
+
+## §22. Regla: una sola cuenta abierta por cliente + modales más grandes
+
+### Una cuenta abierta por cliente (back y front)
+
+Regla de negocio: **un propietario solo puede tener UNA cuenta abierta a la vez**.
+- "Abrir cuenta" (lista de cuentas): el picker bloquea al dueño con cuenta abierta (advertencia + botón
+  deshabilitado), validando por `ownerId` + `estado==='ABIERTA'`.
+- Modal de facturación (post-consulta/procedimiento): si el cliente ya tiene cuenta abierta, **solo**
+  ofrece "Agregar a la cuenta abierta" o "Solo guardar" — se eliminó la opción "Abrir una cuenta nueva".
+- **Backend**: rechazar (409) la creación de una segunda cuenta abierta para el mismo cliente; el front
+  debe asumir esa validación como fuente de verdad.
+
+### Modales más grandes
+
+`VetModalShell` ahora calcula el ancho como `min(width + 180px, calc(100vw - 48px))` — todos los modales
+de la app crecen ~180px sobre su `width` solicitado, hasta casi todo el viewport, con margen estético de
+48px y `maxHeight: calc(100vh - 48px)`. En Vue: aplicar el mismo cálculo de ancho en el componente base de modal.
+

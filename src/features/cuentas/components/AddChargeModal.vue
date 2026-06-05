@@ -216,18 +216,20 @@ async function addGeneral() {
   color: var(--warm-600); border-bottom: 2px solid transparent; margin-bottom: -1px;
 }
 .tab.active { color: var(--amatista-700); border-bottom-color: var(--amatista-700); font-weight: 500; }
-.search { position: relative; display: flex; align-items: center; margin-bottom: 10px; }
-.s-icon { position: absolute; left: 12px; color: var(--warm-500); }
+.search { position: relative; display: flex; align-items: center; margin-bottom: 12px; }
+.s-icon { position: absolute; left: 13px; color: var(--warm-500); }
 .s-input {
-  width: 100%; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 9px;
-  padding: 9px 12px 9px 34px; font-family: inherit; font-size: 13px; color: var(--warm-900); outline: none;
+  width: 100%; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 10px;
+  padding: 10px 14px 10px 38px; font-family: inherit; font-size: 13.5px; color: var(--warm-900); outline: none;
 }
 .s-input:focus { border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
 .catalog { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow: auto; }
 .cat-row {
-  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  display: flex; align-items: center; gap: 12px; padding: 11px 14px;
   background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 10px;
+  transition: border-color 0.12s, background 0.12s;
 }
+.cat-row:hover { border-color: var(--amatista-300); background: var(--amatista-50); }
 .cat-name { flex: 1; font-size: 13.5px; color: var(--warm-900); }
 .cat-price { font-size: 13px; color: var(--warm-600); }
 .add-btn {

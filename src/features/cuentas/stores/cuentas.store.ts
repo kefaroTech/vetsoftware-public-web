@@ -130,6 +130,11 @@ export const useCuentasStore = defineStore('cuentas', () => {
     return res.content[0] ?? null
   }
 
+  /**
+   * Abre una cuenta para el propietario. Regla de negocio: un propietario solo
+   * puede tener UNA cuenta abierta a la vez — si ya tiene una, se rechaza
+   * (también enforzado en el backend con 409 OWNER_ALREADY_HAS_OPEN_ACCOUNT).
+   */
   async function openAccount(ownerId: number): Promise<OpenAccountResponse> {
     const existing = await findOpenAccountByOwner(ownerId)
     if (existing) throw new Error('Este propietario ya tiene una cuenta abierta.')
@@ -155,6 +160,27 @@ export const useCuentasStore = defineStore('cuentas', () => {
   async function addGeneralCharge(payload: CreateGeneralChargePayload) {
     await generalChargeApi.create(payload)
     await refreshAccount(payload.openAccountId)
+  }
+
+  /**
+   * Agrega varios cargos de producto/servicio a una cuenta en una sola pasada
+   * (un cargo por unidad de `qty`) y refresca la cuenta una sola vez al final.
+   */
+  async function addChargesBatch(
+    accountId: number,
+    animalId: number,
+    items: { kind: 'service' | 'product'; id: number; qty: number }[],
+  ): Promise<void> {
+    for (const it of items) {
+      for (let i = 0; i < it.qty; i++) {
+        if (it.kind === 'service') {
+          await serviceChargeApi.create({ animalId, serviceId: it.id, openAccountId: accountId })
+        } else {
+          await productChargeApi.create({ animalId, productId: it.id, openAccountId: accountId })
+        }
+      }
+    }
+    await refreshAccount(accountId)
   }
 
   async function addPayment(accountId: number, amount: number, paymentMethod: PaymentMethod) {
@@ -187,6 +213,7 @@ export const useCuentasStore = defineStore('cuentas', () => {
     addProductCharge,
     addServiceCharge,
     addGeneralCharge,
+    addChargesBatch,
     addPayment,
     removeCharge,
   }

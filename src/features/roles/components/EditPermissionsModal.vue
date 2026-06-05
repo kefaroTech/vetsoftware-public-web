@@ -210,11 +210,6 @@ watch(search, (q) => {
   }
 })
 
-function onBackdrop() {
-  if (saving.value) return
-  emit('close')
-}
-
 function onKey(e: KeyboardEvent) {
   if (!props.open) return
   if (e.key === 'Escape' && !saving.value) {
@@ -272,7 +267,6 @@ async function save() {
         class="overlay"
         role="dialog"
         aria-modal="true"
-        @click.self="onBackdrop"
       >
         <div class="card">
           <header class="head" :style="{ background: tokens.headerGradient }">

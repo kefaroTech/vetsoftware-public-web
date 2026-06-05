@@ -33,6 +33,7 @@ export function useCuentas() {
     addProductCharge: store.addProductCharge,
     addServiceCharge: store.addServiceCharge,
     addGeneralCharge: store.addGeneralCharge,
+    addChargesBatch: store.addChargesBatch,
     addPayment: store.addPayment,
     removeCharge: store.removeCharge,
   }

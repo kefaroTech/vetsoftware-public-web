@@ -13,8 +13,7 @@ import {
   X,
 } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import OwnerPicker from '../components/OwnerPicker.vue'
+import OpenAccountModal from '../components/OpenAccountModal.vue'
 import AddChargeModal from '../components/AddChargeModal.vue'
 import PaymentModal from '../components/PaymentModal.vue'
 import { useCuentas } from '../composables/useCuentas'
@@ -34,7 +33,6 @@ import {
   type OpenAccountResponse,
   type UnifiedCharge,
 } from '../types/cuentas'
-import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
 
 const store = useCuentas()
 const toast = useToast()
@@ -48,11 +46,6 @@ const ownerPets = ref<{ id: number; name: string }[]>([])
 const openAccountOpen = ref(false)
 const addChargeOpen = ref(false)
 const paymentOpen = ref(false)
-
-// Estado del modal "abrir cuenta"
-const pickedOwner = ref<OwnerResponse | null>(null)
-const dupAccount = ref<OpenAccountResponse | null>(null)
-const openingBusy = ref(false)
 
 onMounted(() => store.ensureLoaded())
 
@@ -98,39 +91,12 @@ async function refreshSelected() {
 
 // ── Abrir cuenta ─────────────────────────────────────────────────────────────
 function openCreateModal() {
-  pickedOwner.value = null
-  dupAccount.value = null
   openAccountOpen.value = true
 }
 
-async function onOwnerPicked(owner: OwnerResponse) {
-  pickedOwner.value = owner
-  try {
-    dupAccount.value = await store.findOpenAccountByOwner(owner.id)
-  } catch {
-    dupAccount.value = null
-  }
-}
-
-function changeOwner() {
-  pickedOwner.value = null
-  dupAccount.value = null
-}
-
-async function confirmOpenAccount() {
-  const owner = pickedOwner.value
-  if (!owner || dupAccount.value || openingBusy.value) return
-  openingBusy.value = true
-  try {
-    const created = await store.openAccount(owner.id)
-    toast.success('Cuenta abierta', `Lista para acumular cargos de ${owner.name}.`)
-    openAccountOpen.value = false
-    await selectAccount(created)
-  } catch (e) {
-    toast.error('No se pudo abrir', getProblemDetailMessage(e, 'No se pudo abrir la cuenta'))
-  } finally {
-    openingBusy.value = false
-  }
+async function onAccountCreated(account: OpenAccountResponse) {
+  openAccountOpen.value = false
+  await selectAccount(account)
 }
 
 // ── Eliminar cargo ───────────────────────────────────────────────────────────
@@ -326,56 +292,11 @@ async function onDeleteCharge(c: UnifiedCharge) {
     </template>
 
     <!-- ABRIR CUENTA -->
-    <ModalShell
+    <OpenAccountModal
       :open="openAccountOpen"
-      title="Abrir cuenta"
-      subtitle="Selecciona el propietario"
-      :icon="Wallet"
-      :width="520"
       @close="openAccountOpen = false"
-    >
-      <template #body>
-        <div class="open-body">
-          <OwnerPicker v-if="!pickedOwner" @select="onOwnerPicked" />
-
-          <template v-else>
-            <div class="picked">
-              <span class="avatar">{{ initials(pickedOwner.name) }}</span>
-              <div class="who-text">
-                <div class="name">{{ pickedOwner.name }}</div>
-                <div class="doc">{{ pickedOwner.document }} · {{ pickedOwner.phone }}</div>
-              </div>
-              <button type="button" class="change" @click="changeOwner">Cambiar</button>
-            </div>
-
-            <div v-if="dupAccount" class="dup-warn">
-              <Receipt :size="14" :stroke-width="1.8" />
-              <span>
-                <strong>{{ pickedOwner.name.split(' ')[0] }}</strong> ya tiene una cuenta abierta.
-                Ábrela desde la lista para agregar cargos.
-              </span>
-            </div>
-          </template>
-
-          <p class="help">
-            La cuenta es del propietario. Los cargos de sus distintas mascotas se agrupan dentro de
-            la misma cuenta.
-          </p>
-        </div>
-      </template>
-
-      <template #footer-actions>
-        <button type="button" class="btn-ghost" @click="openAccountOpen = false">Cancelar</button>
-        <button
-          type="button"
-          class="btn-primary"
-          :disabled="!pickedOwner || !!dupAccount || openingBusy"
-          @click="confirmOpenAccount"
-        >
-          {{ openingBusy ? 'Abriendo…' : 'Abrir cuenta' }}
-        </button>
-      </template>
-    </ModalShell>
+      @created="onAccountCreated"
+    />
   </div>
 </template>
 
@@ -397,14 +318,14 @@ async function onDeleteCharge(c: UnifiedCharge) {
 .alert { display: flex; align-items: center; gap: 9px; padding: 11px 14px; margin-bottom: 16px; background: oklch(95% 0.06 80); border: 1px solid oklch(88% 0.09 80); border-radius: 10px; font-size: 13px; color: oklch(40% 0.10 70); }
 .alert strong { color: oklch(35% 0.13 70); }
 .search {
-  width: 100%; max-width: 360px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 9px;
-  padding: 9px 12px; font-family: inherit; font-size: 13px; color: var(--warm-900); outline: none; margin-bottom: 16px;
+  width: 100%; max-width: 360px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 10px;
+  padding: 10px 14px; font-family: inherit; font-size: 13.5px; color: var(--warm-900); outline: none; margin-bottom: 16px;
 }
 .search:focus { border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
 .state { padding: 32px 16px; text-align: center; font-size: 13px; color: var(--warm-500); background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 12px; }
 
 .status-pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 500; white-space: nowrap; }
-.status-pill.abierta { background: oklch(94% 0.06 150); color: oklch(40% 0.13 150); }
+.status-pill.abierta { background: var(--success-bg); color: var(--success-fg); }
 
 /* Tarjetas de lista */
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
@@ -431,7 +352,7 @@ async function onDeleteCharge(c: UnifiedCharge) {
 .acct-totals .row strong { color: var(--warm-900); font-variant-numeric: tabular-nums; }
 .acct-totals .row.saldo { font-size: 14px; padding-top: 5px; margin-top: 2px; border-top: 1px dashed var(--warm-200); }
 .acct-totals .row.saldo strong { color: oklch(45% 0.13 70); font-size: 15px; }
-.acct-totals .row.saldo strong.zero { color: oklch(45% 0.13 150); }
+.acct-totals .row.saldo strong.zero { color: var(--success-fg); }
 
 /* Detalle */
 .back {
@@ -446,7 +367,7 @@ async function onDeleteCharge(c: UnifiedCharge) {
 
 .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
 .sum-box { background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 5px; }
-.sum-box.alert { background: oklch(96% 0.04 80); border-color: oklch(88% 0.08 80); }
+.sum-box.alert { background: oklch(95% 0.06 80); border-color: oklch(88% 0.09 80); }
 .sum-lab { font-size: 11.5px; color: var(--warm-500); text-transform: uppercase; letter-spacing: 0.04em; }
 .sum-val { font-family: var(--font-serif); font-size: 24px; color: var(--warm-900); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .sum-box.alert .sum-val { color: oklch(45% 0.13 70); }
@@ -483,19 +404,5 @@ async function onDeleteCharge(c: UnifiedCharge) {
 .pago { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--warm-100); border-radius: 9px; }
 .pago-amt { font-size: 14px; font-weight: 600; color: var(--warm-900); font-variant-numeric: tabular-nums; }
 .pago-meta { font-size: 11.5px; color: var(--warm-500); margin-top: 1px; display: block; }
-.pago-check { color: oklch(55% 0.15 150); flex-shrink: 0; }
-
-/* Modal abrir cuenta */
-.open-body { display: flex; flex-direction: column; gap: 14px; }
-.picked { display: flex; align-items: center; gap: 11px; padding: 12px; background: var(--warm-100); border-radius: 11px; }
-.change { margin-left: auto; background: transparent; border: none; color: var(--amatista-700); font-family: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; }
-.dup-warn { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 9px; font-size: 12.5px; background: oklch(94% 0.07 80); border: 1px solid oklch(88% 0.09 80); color: oklch(40% 0.10 70); }
-.help { margin: 0; font-size: 12.5px; color: var(--warm-500); line-height: 1.5; }
-.btn-primary {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  border: none; color: white; background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
-}
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-.btn-ghost { font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer; background: transparent; border: 1px solid var(--warm-200); color: var(--warm-700); }
-.btn-ghost:hover { background: var(--warm-100); }
+.pago-check { color: var(--success-dot); flex-shrink: 0; }
 </style>

@@ -59,7 +59,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
         class="drawer-root"
         role="dialog"
         aria-modal="true"
-        @click.self="emit('close')"
       >
         <aside class="drawer">
           <header class="head" :style="headerStyle">

@@ -134,16 +134,17 @@ function VetConsultaBillingModal({ open, owner, pet, consultationType, heading, 
           </div>
         )}
 
-        {/* Elección de destino */}
-        <div className={'vet-bill-dest' + (hasAccount ? ' three' : '')}>
-          {hasAccount && (
+        {/* Elección de destino — un cliente solo puede tener UNA cuenta abierta a la vez */}
+        <div className={'vet-bill-dest' + (hasAccount ? ' two' : '')}>
+          {hasAccount ? (
             <DestOpt value="existing"
               title="Agregar a la cuenta abierta"
               sub={`Los cargos suben el saldo a ${vetMoney(acctSaldo + total)}.`} />
+          ) : (
+            <DestOpt value="new"
+              title="Abrir cuenta y agregar cargos"
+              sub="Selecciona los productos y servicios de la consulta." />
           )}
-          <DestOpt value="new"
-            title={hasAccount ? 'Abrir una cuenta nueva' : 'Abrir cuenta y agregar cargos'}
-            sub={hasAccount ? 'Para un motivo o responsable distinto.' : 'Selecciona los productos y servicios de la consulta.'} />
           <DestOpt value="nada"
             title="Solo guardar la consulta"
             sub="Sin cobro ni cuenta. Podrás cobrar después." />

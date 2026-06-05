@@ -65,17 +65,17 @@ watch(query, (q) => {
 <style scoped>
 .owner-picker { font-family: var(--font-sans); }
 .search { position: relative; display: flex; align-items: center; }
-.icon { position: absolute; left: 12px; color: var(--warm-500); }
+.icon { position: absolute; left: 13px; color: var(--warm-500); }
 .loader { position: absolute; right: 10px; }
 .input {
-  width: 100%; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 9px;
-  padding: 10px 12px 10px 36px; font-family: inherit; font-size: 13.5px; color: var(--warm-900); outline: none;
+  width: 100%; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 10px;
+  padding: 10px 14px 10px 38px; font-family: inherit; font-size: 13.5px; color: var(--warm-900); outline: none;
 }
 .input:focus { border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
-.results { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 280px; overflow: auto; }
+.results { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow: auto; }
 .result {
   display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
-  padding: 10px 12px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 10px; cursor: pointer; font-family: inherit;
+  padding: 11px 14px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 10px; cursor: pointer; font-family: inherit;
 }
 .result:hover { border-color: var(--amatista-300); background: var(--amatista-50); }
 .avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--amatista-100); color: var(--amatista-700); display: grid; place-items: center; flex-shrink: 0; }

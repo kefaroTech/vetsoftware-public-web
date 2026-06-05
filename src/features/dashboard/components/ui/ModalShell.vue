@@ -15,7 +15,8 @@ const props = withDefaults(
   {
     width: 720,
     accent: 'amatista',
-    closeOnBackdrop: true,
+    // Regla global: los modales NO se cierran al hacer click fuera (solo con la X / Escape).
+    closeOnBackdrop: false,
   },
 )
 
@@ -60,7 +61,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
         <div
           class="card"
           :class="`accent-${accent}`"
-          :style="{ width: `${width}px`, maxWidth: 'calc(100vw - 32px)' }"
+          :style="{ width: `min(${width + 180}px, calc(100vw - 48px))`, maxHeight: 'calc(100vh - 48px)' }"
         >
           <header class="head">
             <div v-if="icon" class="icon-box">
