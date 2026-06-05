@@ -169,6 +169,12 @@ const router = createRouter({
           meta: { permission: PERMISSIONS.PROMOTION_READ },
         },
         {
+          path: 'tienda/impuestos',
+          name: 'tienda-impuestos',
+          component: () => import('@/features/tienda/views/ImpuestosView.vue'),
+          meta: { permission: PERMISSIONS.TAX_READ },
+        },
+        {
           path: 'cuentas',
           name: 'cuentas',
           component: () => import('@/features/cuentas/views/CuentasView.vue'),

@@ -131,8 +131,14 @@ export interface CreateGeneralChargePayload {
 
 // ── Pagos / abonos (DebtOpenAccount) ─────────────────────────────────────────
 
-/** Debe coincidir con el enum PaymentMethod del backend. */
-export type PaymentMethod = 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA'
+/** Espejo del enum PaymentMethod del backend (com.vetsoftware...PaymentMethod). */
+export type PaymentMethod = 'CASH' | 'CARD' | 'BANK_TRANSFER'
+
+export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
+  CASH: 'Efectivo',
+  CARD: 'Tarjeta',
+  BANK_TRANSFER: 'Transferencia',
+}
 
 export interface DebtResponse {
   id: number

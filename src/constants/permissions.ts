@@ -67,6 +67,10 @@ export const PERMISSIONS = {
   PROMOTION_READ: 'promotion.read',
   PROMOTION_UPDATE: 'promotion.update',
   PROMOTION_DELETE: 'promotion.delete',
+  TAX_CREATE: 'tax.create',
+  TAX_READ: 'tax.read',
+  TAX_UPDATE: 'tax.update',
+  TAX_DELETE: 'tax.delete',
 
   // Cuentas / Facturación
   OPEN_ACCOUNT_CREATE: 'openAccount.create',

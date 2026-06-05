@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { Pencil, Plus, Trash2 } from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
+import { Bell, Check, Pencil, Plus, Trash2 } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import ListBody from '@/features/acciones/components/ListBody.vue'
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
@@ -13,7 +13,7 @@ import { useToast } from '@/composables/useToast'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import { getProblemDetailMessage } from '@/services/http/http.client'
-import type { ApplicationType, PromotionResponse } from '../types/tienda'
+import type { ApplicationType, PromotionPayload, PromotionResponse } from '../types/tienda'
 
 const store = useTienda()
 const toast = useToast()
@@ -30,6 +30,34 @@ const deletingBusy = ref(false)
 const today = todayISO()
 
 onMounted(() => store.ensureLoaded())
+
+const activeCount = computed(
+  () => store.promotions.value.filter((p) => promoStatus(p, today) === 'ACTIVA').length,
+)
+
+function toPayload(p: PromotionResponse, active: boolean): PromotionPayload {
+  return {
+    name: p.name,
+    promotionType: p.promotionType,
+    applicationType: p.applicationType,
+    applicationItem: p.applicationItem,
+    valueType: p.valueType,
+    value: p.value,
+    startDate: p.startDate,
+    endDate: p.endDate,
+    promotionStatus: active ? 'ACTIVE' : 'INACTIVE',
+  }
+}
+
+async function togglePromo(p: PromotionResponse) {
+  const next = p.promotionStatus !== 'ACTIVE'
+  try {
+    await store.updatePromotion(p.id, toPayload(p, next))
+    toast.success(next ? 'Promoción activada' : 'Promoción desactivada')
+  } catch (e) {
+    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo cambiar el estado'))
+  }
+}
 
 const APP_LABEL: Record<ApplicationType, string> = {
   PRODUCT: 'Producto',
@@ -104,6 +132,15 @@ async function onConfirmDelete() {
 
     <div v-if="store.error.value" class="banner error">{{ store.error.value }}</div>
 
+    <div v-if="activeCount > 0" class="alert">
+      <Bell :size="15" :stroke-width="1.8" />
+      <span>
+        <strong>{{ activeCount }}</strong>
+        {{ activeCount === 1 ? 'promoción activa aplicándose' : 'promociones activas aplicándose' }}
+        en el punto de venta.
+      </span>
+    </div>
+
     <ListBody
       :items="store.promotions.value"
       :loading="store.loading.value"
@@ -131,6 +168,18 @@ async function onConfirmDelete() {
           <td class="dates">{{ item.startDate.slice(0, 10) }} → {{ item.endDate.slice(0, 10) }}</td>
           <td><PromoStatusPill :status="promoStatus(item, today)" /></td>
           <td v-if="canUpdate || canDelete" class="actions">
+            <button
+              v-if="canUpdate"
+              type="button"
+              class="switch"
+              :class="{ on: item.promotionStatus === 'ACTIVE' }"
+              :title="item.promotionStatus === 'ACTIVE' ? 'Desactivar' : 'Activar'"
+              role="switch"
+              :aria-checked="item.promotionStatus === 'ACTIVE'"
+              @click="togglePromo(item)"
+            >
+              <span class="knob"><Check v-if="item.promotionStatus === 'ACTIVE'" :size="10" :stroke-width="3" /></span>
+            </button>
             <button v-if="canUpdate" type="button" class="icon-btn" title="Editar" @click="editing = item">
               <Pencil :size="15" :stroke-width="1.7" />
             </button>
@@ -170,6 +219,12 @@ async function onConfirmDelete() {
 }
 .banner { border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
 .banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); }
+.alert { display: flex; align-items: center; gap: 9px; padding: 11px 14px; margin-bottom: 16px; background: oklch(95% 0.05 150); border: 1px solid oklch(86% 0.07 150); border-radius: 10px; font-size: 13px; color: oklch(38% 0.13 150); }
+.alert strong { color: oklch(34% 0.14 150); }
+.switch { width: 34px; height: 20px; border-radius: 999px; border: none; background: var(--warm-300); position: relative; cursor: pointer; padding: 0; flex-shrink: 0; transition: background 0.15s ease; }
+.switch.on { background: oklch(55% 0.16 150); }
+.knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; display: grid; place-items: center; color: oklch(45% 0.15 150); transition: left 0.15s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+.switch.on .knob { left: 16px; }
 .truncate { max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dates { font-size: 12px; color: var(--warm-600); white-space: nowrap; }
 .actions-col { width: 88px; text-align: right; }

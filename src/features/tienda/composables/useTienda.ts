@@ -44,5 +44,8 @@ export function useTienda() {
     createServiceCategory: store.createServiceCategory,
     updateServiceCategory: store.updateServiceCategory,
     removeServiceCategory: store.removeServiceCategory,
+    createTax: store.createTax,
+    updateTax: store.updateTax,
+    removeTax: store.removeTax,
   }
 }

@@ -27,7 +27,6 @@ const fullName = computed(() => `${props.firstName} ${props.lastName}`)
 
 <style scoped>
 .user-card {
-  margin-top: auto;
   display: flex;
   align-items: center;
   gap: 10px;

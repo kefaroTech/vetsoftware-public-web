@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import HospBoard from '../components/HospBoard.vue'
 import HospDetail from '../components/HospDetail.vue'
 import TreatmentScreen from '../components/TreatmentScreen.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { useHospitalizacion } from '../composables/useHospitalizacion'
 import { useToast } from '@/composables/useToast'
 import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
@@ -149,12 +150,18 @@ async function onDischarge(reason: ReasonLeaving) {
   <div class="page">
     <div v-if="boardError" class="banner error">{{ boardError }}</div>
 
-    <HospBoard
-      v-if="mode === 'board'"
-      :items="board"
-      :loading="boardLoading"
-      @open="openPatient"
-    />
+    <template v-if="mode === 'board'">
+      <PageHeader
+        kicker="Hospitalización"
+        title="Pacientes internados"
+        lead="Animales hospitalizados: plan de tratamiento, administración de dosis y evolución."
+      />
+      <HospBoard
+        :items="board"
+        :loading="boardLoading"
+        @open="openPatient"
+      />
+    </template>
 
     <HospDetail
       v-else-if="mode === 'detail' && patient"

@@ -104,13 +104,6 @@ function VetAppSidebar() {
     { label: 'Spa',                 Icon: VetIcons.Sparkles,  name: 'acciones-spa' },
   ];
 
-  const upcomingItems = [
-    { label: 'Pacientes',   Icon: VetIcons.User },
-    { label: 'Inventario',  Icon: VetIcons.Package },
-    { label: 'Facturación', Icon: VetIcons.Receipt },
-    { label: 'Reportes',    Icon: VetIcons.BarChart3 },
-  ];
-
   return (
     <aside style={vetShellStyles.sidebar}>
       <VetSidebarBrand appName="Vetrina" clinic={VET_MOCK_USER.clinic} />
@@ -240,16 +233,18 @@ function VetAppSidebar() {
         onClick={() => router.push({ name: 'roles' })}
       />
 
-      <div style={vetShellStyles.sectionLabel}>PRÓXIMAMENTE</div>
-      {upcomingItems.map((item) => (
-        <VetSidebarNavItem
-          key={item.label}
-          label={item.label}
-          Icon={item.Icon}
-          disabled
-          badge="Pronto"
-        />
-      ))}
+      <div style={{ marginTop: 'auto' }} />
+
+      <button
+        type="button"
+        className="vet-nav-item"
+        style={{ position: 'relative' }}
+        onClick={() => {}}
+      >
+        <VetIcons.Bell size={17} strokeWidth={1.5} />
+        <span style={{ flex: 1 }}>Notificaciones</span>
+        <span className="vet-nav-badge" style={{ background: 'oklch(62% 0.18 25)', color: 'white' }}>3</span>
+      </button>
 
       <VetSidebarUserCard
         firstName={VET_MOCK_USER.firstName}
@@ -264,11 +259,8 @@ function VetAppSidebar() {
 function VetAppTopbar() {
   return (
     <header style={vetShellStyles.topbar}>
-      <VetSearchBox />
+      <div style={{ flex: 1 }} />
       <div style={vetShellStyles.topbarActions}>
-        <button type="button" style={vetShellStyles.iconBtn} aria-label="Notificaciones" className="vet-icon-btn">
-          <VetIcons.Bell size={16} strokeWidth={1.5} />
-        </button>
         <button type="button" style={vetShellStyles.iconBtn} aria-label="Ajustes" className="vet-icon-btn">
           <VetIcons.Settings size={16} strokeWidth={1.5} />
         </button>
@@ -313,7 +305,6 @@ function VetAppLayout({ children }) {
     <div style={vetShellStyles.appShell}>
       <VetAppSidebar />
       <div style={vetShellStyles.appMain}>
-        {!hideTopbar && <VetAppTopbar />}
         <main
           style={{
             ...vetShellStyles.appContent,
@@ -339,7 +330,7 @@ const vetShellStyles = {
     overflow: 'hidden',
   },
   appMain: { flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 },
-  appContent: { flex: 1, padding: '36px 48px', overflow: 'auto' },
+  appContent: { flex: 1, padding: '24px 28px', overflow: 'auto' },
   appContentFullBleed: { padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' },
   sidebar: {
     width: 248,
@@ -352,7 +343,8 @@ const vetShellStyles = {
     background: 'linear-gradient(180deg, oklch(28% 0.10 var(--hue)) 0%, oklch(22% 0.08 var(--hue)) 100%)',
     color: 'oklch(94% 0.02 var(--hue))',
     fontFamily: 'var(--font-sans)',
-    overflow: 'hidden',
+    overflowY: 'auto',
+    overflowX: 'hidden',
   },
   brand: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 6px 22px' },
   brandMark: {
@@ -372,7 +364,6 @@ const vetShellStyles = {
   },
   subList: { display: 'flex', flexDirection: 'column', gap: 1, paddingLeft: 28, marginTop: 2 },
   userCard: {
-    marginTop: 'auto',
     display: 'flex', alignItems: 'center', gap: 10,
     padding: 10, border: 'none', borderRadius: 10,
     background: 'oklch(35% 0.10 var(--hue) / 0.4)',

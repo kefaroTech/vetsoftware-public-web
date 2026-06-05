@@ -121,7 +121,7 @@ function confirmRemove(id: number) {
             <template v-else>
               <div class="row-main">
                 <span class="cat-name">{{ cat.name }}</span>
-                <span class="count">{{ counts[cat.id] ?? 0 }} ítem(s)</span>
+                <span class="count">{{ counts[cat.id] ?? 0 }} {{ (counts[cat.id] ?? 0) === 1 ? 'ítem' : 'ítems' }}</span>
               </div>
               <div v-if="confirmingId === cat.id" class="confirm">
                 <span>¿Eliminar?</span>

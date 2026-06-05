@@ -5,7 +5,7 @@ import { serviceApi } from '../api/service.api'
 import { promotionApi } from '../api/promotion.api'
 import { productCategoryApi } from '../api/productCategory.api'
 import { serviceCategoryApi } from '../api/serviceCategory.api'
-import { taxApi } from '../api/tax.api'
+import { taxApi, type TaxPayload } from '../api/tax.api'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import type {
   CategoryResponse,
@@ -156,6 +156,21 @@ export const useTiendaStore = defineStore('tienda', () => {
     removeFrom(serviceCategories, id)
   }
 
+  async function createTax(payload: TaxPayload) {
+    const created = await taxApi.create(payload)
+    upsert(taxes, created)
+    return created
+  }
+  async function updateTax(id: number, payload: TaxPayload) {
+    const updated = await taxApi.update(id, payload)
+    upsert(taxes, updated)
+    return updated
+  }
+  async function removeTax(id: number) {
+    await taxApi.remove(id)
+    removeFrom(taxes, id)
+  }
+
   return {
     products,
     services,
@@ -182,5 +197,8 @@ export const useTiendaStore = defineStore('tienda', () => {
     createServiceCategory,
     updateServiceCategory,
     removeServiceCategory,
+    createTax,
+    updateTax,
+    removeTax,
   }
 })

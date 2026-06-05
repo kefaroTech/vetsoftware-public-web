@@ -1506,3 +1506,23 @@ Props: `{ open, onClose, title, categories, counts, onUpsert, onRemove }`.
 - Botón "Categorías" en el header de `InventarioView.vue` y `ServiciosView.vue`.
 - Persistir categorías en el backend; al eliminar, validar integridad referencial (FK con productos/servicios).
 
+---
+
+## §20. Ajustes de layout (shell)
+
+Cambios al shell global. Archivo proto: `vetrina/shell.jsx`.
+
+- **Topbar superior eliminado** por completo (`AppLayout` ya no renderiza `<AppTopbar>`). En Vue:
+  quitar el `<AppTopbar>` de `AppLayout.vue`. Antes tenía buscador, notificaciones, ajustes y menú
+  de usuario — todo se quitó o se movió.
+- **Buscador global "⌘K" eliminado** (estaba en el topbar). No reponer.
+- **Notificaciones movidas al sidebar**: ítem "Notificaciones" (icono campana + badge contador rojo)
+  en la parte inferior del menú izquierdo, justo antes de la tarjeta de usuario. Usa un spacer
+  `<div style="margin-top:auto">` para empujar el bloque inferior (notificaciones + user card) al
+  fondo; se quitó el `margin-top:auto` que tenía la user card.
+- **Sección "PRÓXIMAMENTE" eliminada** del sidebar (Pacientes/Inventario/Facturación/Reportes deshabilitados).
+- **Sidebar con scroll vertical**: `overflow-y: auto; overflow-x: hidden` (antes `overflow: hidden`)
+  para que al expandir grupos (Tienda, Procedimientos) ningún ítem quede oculto.
+- **Padding de contenido reducido**: `appContent` pasó de `36px 48px` a `24px 28px` (el menú izquierdo
+  no cambia). En Vue: ajustar el padding del `<main>` del layout, no del `<aside>`.
+

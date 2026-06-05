@@ -6,10 +6,10 @@ import {
   FilePlus,
   History,
   Syringe,
-  User,
   Calendar,
   Package,
   BarChart3,
+  Bell,
   Users,
   ShieldCheck,
   Stethoscope,
@@ -32,6 +32,7 @@ import { mockUser } from '../../data/mock'
 import { useNuevaConsultaDraft } from '../../views/consulta/nueva/composables/useNuevaConsultaDraft'
 import { showResumeOrNewDialog } from '@/composables/useConsultaResumeGuard'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
+import { useToast } from '@/composables/useToast'
 import { PERMISSIONS } from '@/constants/permissions'
 
 const route = useRoute()
@@ -70,6 +71,7 @@ const canHospitalWard = can(PERMISSIONS.HOSPITALIZATION_READ)
 const canInventory = can(PERMISSIONS.PRODUCT_READ)
 const canServices = can(PERMISSIONS.SERVICE_READ)
 const canPromotions = can(PERMISSIONS.PROMOTION_READ)
+const canTaxes = can(PERMISSIONS.TAX_READ)
 const canAccounts = can(PERMISSIONS.OPEN_ACCOUNT_READ)
 
 const historialActiveRoutes = [
@@ -120,6 +122,7 @@ const tiendaSubRoutes = [
   'tienda-inventario',
   'tienda-servicios',
   'tienda-promociones',
+  'tienda-impuestos',
 ] as const
 
 const isTiendaActive = computed(() =>
@@ -131,6 +134,7 @@ const tiendaItems = computed(() => [
   { label: 'Inventario', icon: Package, to: { name: 'tienda-inventario' as const }, show: canInventory.value },
   { label: 'Servicios', icon: Stethoscope, to: { name: 'tienda-servicios' as const }, show: canServices.value },
   { label: 'Promociones', icon: BadgePercent, to: { name: 'tienda-promociones' as const }, show: canPromotions.value },
+  { label: 'Impuestos', icon: BarChart3, to: { name: 'tienda-impuestos' as const }, show: canTaxes.value },
 ].filter((item) => item.show))
 
 const showTiendaSection = computed(() => tiendaItems.value.length > 0)
@@ -157,10 +161,12 @@ function goNuevaConsulta() {
   router.push({ name: 'consulta-nueva' })
 }
 
-const upcomingItems = [
-  { label: 'Pacientes', icon: User },
-  { label: 'Reportes', icon: BarChart3 },
-]
+const toast = useToast()
+const notificationCount = ref(0)
+
+function onNotifications() {
+  toast.info('Notificaciones', 'No tienes notificaciones nuevas.')
+}
 </script>
 
 <template>
@@ -296,15 +302,13 @@ const upcomingItems = [
       />
     </template>
 
-    <div class="section-label">PRÓXIMAMENTE</div>
-    <SidebarNavItem
-      v-for="item in upcomingItems"
-      :key="item.label"
-      :label="item.label"
-      :icon="item.icon"
-      disabled
-      badge="Pronto"
-    />
+    <div class="spacer" />
+
+    <button type="button" class="notif-item" @click="onNotifications">
+      <Bell :size="17" :stroke-width="1.6" />
+      <span class="notif-label">Notificaciones</span>
+      <span v-if="notificationCount > 0" class="notif-badge">{{ notificationCount }}</span>
+    </button>
 
     <SidebarUserCard
       :first-name="mockUser.firstName"
@@ -330,7 +334,45 @@ const upcomingItems = [
   );
   color: oklch(94% 0.02 var(--hue));
   font-family: var(--font-sans);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.spacer {
+  margin-top: auto;
+}
+.notif-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 11px;
+  margin-bottom: 4px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: oklch(88% 0.03 var(--hue) / 0.82);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease;
+}
+.notif-item:hover {
+  background: oklch(70% 0.04 var(--hue) / 0.1);
+}
+.notif-label {
+  flex: 1;
+}
+.notif-badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: oklch(58% 0.2 25);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  display: grid;
+  place-items: center;
 }
 .section-label {
   font-size: 10.5px;

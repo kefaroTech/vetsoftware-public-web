@@ -162,6 +162,13 @@ export const useCuentasStore = defineStore('cuentas', () => {
     await refreshAccount(accountId)
   }
 
+  async function removeCharge(accountId: number, charge: UnifiedCharge) {
+    if (charge.kind === 'product') await productChargeApi.remove(charge.id)
+    else if (charge.kind === 'service') await serviceChargeApi.remove(charge.id)
+    else await generalChargeApi.remove(charge.id)
+    await refreshAccount(accountId)
+  }
+
   return {
     accounts,
     loading,
@@ -181,5 +188,6 @@ export const useCuentasStore = defineStore('cuentas', () => {
     addServiceCharge,
     addGeneralCharge,
     addPayment,
+    removeCharge,
   }
 })

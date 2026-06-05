@@ -22,14 +22,14 @@ const emit = defineEmits<{ close: []; paid: [] }>()
 const cuentas = useCuentas()
 const toast = useToast()
 
-const form = reactive({ amount: '', method: 'EFECTIVO' as PaymentMethod })
+const form = reactive({ amount: '', method: 'CASH' as PaymentMethod })
 const submitted = ref(false)
 const busy = ref(false)
 
 const METHOD_OPTIONS = [
-  { value: 'EFECTIVO', label: 'Efectivo' },
-  { value: 'TARJETA', label: 'Tarjeta' },
-  { value: 'TRANSFERENCIA', label: 'Transferencia' },
+  { value: 'CASH', label: 'Efectivo' },
+  { value: 'CARD', label: 'Tarjeta' },
+  { value: 'BANK_TRANSFER', label: 'Transferencia' },
 ]
 
 watch(
@@ -37,7 +37,7 @@ watch(
   (open) => {
     if (!open) return
     form.amount = props.outstanding > 0 ? String(props.outstanding) : ''
-    form.method = 'EFECTIVO'
+    form.method = 'CASH'
     submitted.value = false
   },
 )
