@@ -2,7 +2,7 @@
    useVetRoute, useVetRouter,
    useVetDraft,
    VetPasoPropietario, VetPasoMascota, VetPasoConsulta, VetPasoResumen,
-   VetActionModals,
+   VetActionModals, VetConsultaBillingModal,
    vetFormatDateLong */
 
 // ============================================================================
@@ -14,10 +14,9 @@ function VetWizardStepper({ active, onNavigate }) {
     { n: 1, label: 'Propietario' },
     { n: 2, label: 'Mascota' },
     { n: 3, label: 'Consulta' },
-    { n: 4, label: 'Resumen' },
   ];
   return (
-    <nav className="vet-stepper" role="progressbar" aria-valuenow={active} aria-valuemin={1} aria-valuemax={4}>
+    <nav className="vet-stepper" role="progressbar" aria-valuenow={active} aria-valuemin={1} aria-valuemax={3}>
       {steps.map((s, i) => {
         const state = s.n < active ? 'done' : s.n === active ? 'current' : 'future';
         return (
@@ -208,7 +207,7 @@ function VetNuevaView() {
   // Sync step from query param ?paso=N
   React.useEffect(() => {
     const raw = Number(route.query.paso ?? 1);
-    const s = [1, 2, 3, 4].includes(raw) ? raw : 1;
+    const s = [1, 2].includes(raw) ? raw : 1;
     if (s !== draft.state.step) draft.setStep(s);
   }, [route.query.paso]); // eslint-disable-line
 
@@ -221,16 +220,16 @@ function VetNuevaView() {
   const step = draft.state.step;
   const [openModal, setOpenModal] = React.useState(null);
   const [discardOpen, setDiscardOpen] = React.useState(false);
+  const [billingOpen, setBillingOpen] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
 
   function goStep(s) { draft.setStep(s); }
 
   const nextLabel = step === 1 && draft.state.ownerCreating ? 'Guardar y continuar'
-    : step === 2 && draft.state.petCreating ? 'Guardar y continuar'
-    : step === 3 ? 'Revisar resumen'
-    : step === 4 ? 'Guardar consulta' : 'Siguiente';
+    : step === 1 && draft.state.petCreating ? 'Guardar y continuar'
+    : step === 2 ? 'Guardar consulta' : 'Continuar a la consulta';
 
-  const nextVariant = step === 4 ? 'success' : 'primary';
+  const nextVariant = step === 2 ? 'success' : 'primary';
 
   const nextDisabled = (() => {
     const s = draft.state;
@@ -239,38 +238,50 @@ function VetNuevaView() {
         const o = s.ownerCreating;
         return !(o.name.trim() && o.document.trim() && o.phone.trim() && o.countryId && o.stateId && o.cityId);
       }
-      return !s.owner;
-    }
-    if (step === 2) {
       if (s.petCreating) {
         const p = s.petCreating;
         return !(p.name.trim() && p.specieId && p.breedId && p.colorId && p.gender && p.bod && p.weight.trim() && p.reproductiveState);
       }
-      return !s.pet;
+      return !s.owner || !s.pet;
     }
-    if (step === 3) {
+    if (step === 2) {
       return !(s.consultation.typeId && s.consultation.anamnesis.trim());
     }
     return false;
   })();
 
-  async function handleNext() {
-    if (step < 4) { goStep(step + 1); return; }
-    // Save
+  // Paso 1 confirma owner/pet en creación; paso 2 abre facturación
+  function handleNext() {
+    const s = draft.state;
+    if (step === 1 && s.ownerCreating) {
+      const oc = s.ownerCreating;
+      draft.setOwner({ id: 'new-' + Date.now().toString(36), name: oc.name, document: oc.document, phone: oc.phone, email: oc.email, address: oc.address, _new: true });
+      return;
+    }
+    if (step === 1 && s.petCreating) {
+      const pc = s.petCreating;
+      draft.setPet({ id: 'newp-' + Date.now().toString(36), name: pc.name, specie: { name: '—' }, breed: { name: '—' }, gender: pc.gender, bod: pc.bod, weight: pc.weight, weightType: pc.weightType, reproductiveState: pc.reproductiveState, _new: true });
+      return;
+    }
+    if (step < 2) { goStep(2); return; }
+    setBillingOpen(true);
+  }
+
+  function finishSave() {
+    setBillingOpen(false);
     setSaving(true);
     setTimeout(() => {
       setSaving(false);
       const { owner, pet, consultationType, consultation } = draft.state;
-      const successState = {
+      window.__vetConsultaSuccess = {
         ownerName: owner?.name,
         petName: pet?.name,
         consultationType: consultationType?.name,
         date: consultation.date,
       };
-      window.__vetConsultaSuccess = successState;
       draft.reset();
       router.push({ name: 'consulta-nueva-exito' });
-    }, 700);
+    }, 600);
   }
 
   function handleBack() {
@@ -306,15 +317,9 @@ function VetNuevaView() {
         </button>
       </header>
 
-      <div className="vet-wiz-stepper-row">
-        <VetWizardStepper active={step} onNavigate={goStep} />
-      </div>
-
       <main className="vet-wiz-content">
         {step === 1 && <VetPasoPropietario />}
-        {step === 2 && <VetPasoMascota />}
-        {step === 3 && <VetPasoConsulta onOpenModal={setOpenModal} />}
-        {step === 4 && <VetPasoResumen onEditStep={goStep} />}
+        {step === 2 && <VetPasoConsulta onOpenModal={setOpenModal} />}
       </main>
 
       <VetWizardFooter
@@ -322,7 +327,7 @@ function VetNuevaView() {
         nextLabel={nextLabel}
         nextVariant={nextVariant}
         nextDisabled={nextDisabled}
-        nextLoading={saving && step === 4}
+        nextLoading={saving && step === 2}
         onBack={handleBack}
         onNext={handleNext}
         extra={
@@ -330,7 +335,7 @@ function VetNuevaView() {
             {step === 1 && draft.state.ownerCreating && (
               <button type="button" className="vet-wiz-discard-extra" onClick={draft.cancelCreatingOwner}>Descartar</button>
             )}
-            {step === 2 && draft.state.petCreating && (
+            {step === 1 && draft.state.petCreating && (
               <button type="button" className="vet-wiz-discard-extra" onClick={draft.cancelCreatingPet}>Descartar</button>
             )}
           </>
@@ -338,6 +343,15 @@ function VetNuevaView() {
       />
 
       <VetActionModals openKind={openModal} onClose={() => setOpenModal(null)} />
+
+      <VetConsultaBillingModal
+        open={billingOpen}
+        owner={draft.state.owner}
+        pet={draft.state.pet}
+        consultationType={draft.state.consultationType}
+        onClose={() => setBillingOpen(false)}
+        onFinish={finishSave}
+      />
 
       <VetDiscardDialog
         open={discardOpen}

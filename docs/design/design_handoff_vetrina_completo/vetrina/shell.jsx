@@ -213,6 +213,18 @@ function VetAppSidebar() {
         active={route.name === 'tienda-promociones'}
         onClick={() => router.push({ name: 'tienda-promociones' })}
       />
+      <VetSidebarNavItem
+        label="Impuestos"
+        Icon={VetIcons.BarChart3}
+        active={route.name === 'tienda-impuestos'}
+        onClick={() => router.push({ name: 'tienda-impuestos' })}
+      />
+      <VetSidebarNavItem
+        label="Cuentas abiertas"
+        Icon={VetIcons.FileText}
+        active={route.name === 'tienda-cuentas'}
+        onClick={() => router.push({ name: 'tienda-cuentas' })}
+      />
 
       <div style={vetShellStyles.sectionLabel}>ADMINISTRACIÓN</div>
       <VetSidebarNavItem

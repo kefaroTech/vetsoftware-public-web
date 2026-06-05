@@ -1,13 +1,14 @@
 /* global React, VetIcons, VetModalShell,
    VetBaseField, VetBaseInput, VetBaseSelect,
    VET_SHOP_CATEGORIES, VET_SHOP_CAT_TONE, VET_SHOP_PAY, VET_SHOP_TAX_RATE,
-   vetShopStockState, VET_SHOP_PRODUCTS_INITIAL, VET_SHOP_SALES_INITIAL, VET_SHOP_SERVICES,
+   VET_TAX_RATES, VET_TAX_CONFIG_DEFAULT, vetComputeTotals,
+   vetShopStockState, VET_SHOP_PRODUCTS_INITIAL, VET_SHOP_SALES_INITIAL, VET_SHOP_SERVICES, VET_SHOP_SERVICE_CATEGORIES,
    VET_PROMOS_INITIAL,
    vetMoney, vetShopCustomerName, VET_MOCK_OWNERS,
    useVetToast, VetPatientCascadePicker */
 
 // ============================================================================
-// Shop store (compartido entre POS, Inventario, Servicios y Promociones)
+// Shop store (POS, Inventario, Servicios, Promociones, Impuestos)
 // ============================================================================
 
 function useVetShopState() {
@@ -15,7 +16,46 @@ function useVetShopState() {
   const [products, setProducts] = React.useState(VET_SHOP_PRODUCTS_INITIAL);
   const [services, setServices] = React.useState(VET_SHOP_SERVICES);
   const [promos, setPromos] = React.useState(VET_PROMOS_INITIAL);
+  const [taxRates, setTaxRates] = React.useState(VET_TAX_RATES);
+  const [taxConfig, setTaxConfig] = React.useState(VET_TAX_CONFIG_DEFAULT);
   const [sales, setSales] = React.useState(VET_SHOP_SALES_INITIAL);
+  const [prodCats, setProdCats] = React.useState(VET_SHOP_CATEGORIES);
+  const [svcCats, setSvcCats] = React.useState(VET_SHOP_SERVICE_CATEGORIES);
+
+  function upsertProdCat(data) {
+    if (data.id) { setProdCats((a) => a.map((c) => c.id === data.id ? { ...c, ...data } : c)); toast.success('Categoría actualizada', data.name); }
+    else { const id = 'pc' + Date.now().toString(36); setProdCats((a) => [...a, { id, name: data.name }]); toast.success('Categoría creada', data.name); }
+  }
+  function removeProdCat(id) {
+    if (products.some((p) => p.category === id)) { toast.warn('No se puede eliminar', 'Hay productos en esta categoría.'); return; }
+    setProdCats((a) => a.filter((c) => c.id !== id)); toast.info('Categoría eliminada', '');
+  }
+  function upsertSvcCat(data) {
+    if (data.id) { setSvcCats((a) => a.map((c) => c.id === data.id ? { ...c, ...data } : c)); toast.success('Categoría actualizada', data.name); }
+    else { const id = 'sc' + Date.now().toString(36); setSvcCats((a) => [...a, { id, name: data.name }]); toast.success('Categoría creada', data.name); }
+  }
+  function removeSvcCat(id) {
+    if (services.some((s) => s.category === id)) { toast.warn('No se puede eliminar', 'Hay servicios en esta categoría.'); return; }
+    setSvcCats((a) => a.filter((c) => c.id !== id)); toast.info('Categoría eliminada', '');
+  }
+
+  function setPricesIncludeTax(v) {
+    setTaxConfig({ pricesIncludeTax: v });
+  }
+  function upsertTaxRate(data) {
+    if (data.id) {
+      setTaxRates((arr) => arr.map((t) => t.id === data.id ? { ...t, ...data } : t));
+      toast.success('Impuesto actualizado', data.name);
+    } else {
+      const id = 'tax' + Date.now().toString(36);
+      setTaxRates((arr) => [...arr, { ...data, id }]);
+      toast.success('Impuesto creado', `${data.name} disponible para asignar.`);
+    }
+  }
+  function removeTaxRate(id) {
+    setTaxRates((arr) => arr.filter((t) => t.id !== id));
+    toast.info('Impuesto eliminado', 'Ya no aparece en las fichas.');
+  }
 
   function upsertPromo(data) {
     if (data.id) {
@@ -78,7 +118,8 @@ function useVetShopState() {
     return code;
   }
 
-  return { products, services, promos, sales, upsertProduct, restock, upsertService, removeService, upsertPromo, removePromo, togglePromo, registerSale };
+  return { products, services, promos, taxRates, taxConfig, setPricesIncludeTax, upsertTaxRate, removeTaxRate, sales, upsertProduct, restock, upsertService, removeService, upsertPromo, removePromo, togglePromo, registerSale,
+    prodCats, svcCats, upsertProdCat, removeProdCat, upsertSvcCat, removeSvcCat };
 }
 
 // ============================================================================
@@ -192,15 +233,13 @@ function VetShopPayModal({ open, total, onClose, onConfirm }) {
 // Receipt modal
 // ============================================================================
 
-function VetShopReceiptModal({ open, sale, products, onClose }) {
+function VetShopReceiptModal({ open, sale, products, taxConfig, onClose }) {
   if (!open || !sale) return null;
   const lines = sale.items.map((it) => {
     const name = it.name ?? (products.find((x) => x.id === (it.id ?? it.productId)) || {}).name ?? '—';
-    return { name, kind: it.kind, qty: it.qty, unitPrice: it.unitPrice, total: it.qty * it.unitPrice };
+    return { name, kind: it.kind, qty: it.qty, unitPrice: it.unitPrice, taxId: it.taxId, total: it.qty * it.unitPrice };
   });
-  const subtotal = lines.reduce((a, l) => a + l.total, 0);
-  const tax = Math.round((subtotal - sale.discount) * VET_SHOP_TAX_RATE);
-  const total = subtotal - sale.discount + tax;
+  const T = vetComputeTotals(lines, sale.discount, sale.taxConfig ?? taxConfig);
 
   return (
     <VetModalShell
@@ -230,11 +269,13 @@ function VetShopReceiptModal({ open, sale, products, onClose }) {
           ))}
         </div>
         <div className="vet-shop-receipt-totals">
-          <div><span>Subtotal</span><span>{vetMoney(subtotal)}</span></div>
+          <div><span>Subtotal (base)</span><span>{vetMoney(T.base)}</span></div>
           {sale.discount > 0 && <div><span>Descuento</span><span>−{vetMoney(sale.discount)}</span></div>}
           {sale.savings > 0 && <div className="vet-shop-receipt-savings"><span>Ahorro por promociones</span><span>−{vetMoney(sale.savings)}</span></div>}
-          <div><span>IVA (19%)</span><span>{vetMoney(tax)}</span></div>
-          <div className="vet-shop-receipt-grand"><span>Total</span><span>{vetMoney(total)}</span></div>
+          {T.byRate.filter((r) => r.amount > 0).map((r) => (
+            <div key={r.id}><span>{r.name}</span><span>{vetMoney(r.amount)}</span></div>
+          ))}
+          <div className="vet-shop-receipt-grand"><span>Total</span><span>{vetMoney(T.total)}</span></div>
         </div>
       </div>
     </VetModalShell>

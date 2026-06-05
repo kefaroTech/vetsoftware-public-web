@@ -9,6 +9,7 @@ import AccionDetailModal, { type DetailFieldDef } from '../modals/AccionDetailMo
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { useToast } from '@/composables/useToast'
+import { openBilling } from '@/features/cuentas/composables/useBillingPrompt'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import {
@@ -91,6 +92,15 @@ function onSaved(item: SpaResponse) {
     'Servicio guardado',
     wasEdit ? 'Los cambios se guardaron.' : 'Se añadió correctamente al paciente.',
   )
+  if (!wasEdit && selection.value) {
+    openBilling({
+      ownerId: Number(selection.value.owner.id),
+      ownerName: selection.value.owner.name,
+      animalId: selection.value.animal.id,
+      animalName: selection.value.animal.name,
+      heading: 'Facturación · Spa',
+    })
+  }
 }
 
 function onFormClose() {

@@ -16,6 +16,8 @@ const VET_ROUTES = [
   { name: 'tienda-inventario',            path: '/dashboard/tienda/inventario',     meta: { requiresAuth: true } },
   { name: 'tienda-servicios',             path: '/dashboard/tienda/servicios',      meta: { requiresAuth: true } },
   { name: 'tienda-promociones',           path: '/dashboard/tienda/promociones',    meta: { requiresAuth: true } },
+  { name: 'tienda-impuestos',             path: '/dashboard/tienda/impuestos',      meta: { requiresAuth: true } },
+  { name: 'tienda-cuentas',               path: '/dashboard/tienda/cuentas',        meta: { requiresAuth: true } },
   { name: 'consulta-nueva',               path: '/dashboard/consulta/nueva',        meta: { requiresAuth: true, fullBleed: true, hideTopbar: true } },
   { name: 'consulta-nueva-exito',         path: '/dashboard/consulta/nueva/exito',  meta: { requiresAuth: true, fullBleed: true, hideTopbar: true } },
   { name: 'consulta-historial',           path: '/dashboard/consulta/historial',    meta: { requiresAuth: true, fullBleed: true, hideTopbar: true } },

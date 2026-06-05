@@ -145,6 +145,36 @@ const router = createRouter({
           meta: { permission: PERMISSIONS.HOSPITALIZATION_READ },
         },
         {
+          path: 'tienda',
+          name: 'tienda-pos',
+          component: () => import('@/features/tienda/views/POSView.vue'),
+          meta: { permission: PERMISSIONS.PRODUCT_READ },
+        },
+        {
+          path: 'tienda/inventario',
+          name: 'tienda-inventario',
+          component: () => import('@/features/tienda/views/InventarioView.vue'),
+          meta: { permission: PERMISSIONS.PRODUCT_READ },
+        },
+        {
+          path: 'tienda/servicios',
+          name: 'tienda-servicios',
+          component: () => import('@/features/tienda/views/ServiciosView.vue'),
+          meta: { permission: PERMISSIONS.SERVICE_READ },
+        },
+        {
+          path: 'tienda/promociones',
+          name: 'tienda-promociones',
+          component: () => import('@/features/tienda/views/PromocionesView.vue'),
+          meta: { permission: PERMISSIONS.PROMOTION_READ },
+        },
+        {
+          path: 'cuentas',
+          name: 'cuentas',
+          component: () => import('@/features/cuentas/views/CuentasView.vue'),
+          meta: { permission: PERMISSIONS.OPEN_ACCOUNT_READ },
+        },
+        {
           path: 'empleados',
           name: 'empleados',
           component: () => import('@/features/employees/views/EmpleadosView.vue'),

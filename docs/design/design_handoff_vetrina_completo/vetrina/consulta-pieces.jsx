@@ -84,12 +84,6 @@ function VetOwnerSummaryCard({ owner, petCount, onChange }) {
         <SummaryItem Icon={VetIcons.User} label="Dirección" value={owner.address || '—'} />
         <SummaryItem Icon={VetIcons.User} label="Ciudad" value={owner.address?.split(',').pop()?.trim() || '—'} />
       </div>
-      <div className="vet-owner-summary-banner">
-        <span style={{ color: 'var(--amatista-700)', display: 'inline-flex' }}>✦</span>
-        <span>
-          <strong>{petCount} mascota{petCount === 1 ? '' : 's'}</strong> registrada{petCount === 1 ? '' : 's'} a su nombre. Las verás en el siguiente paso.
-        </span>
-      </div>
     </VetSectionCard>
   );
 }

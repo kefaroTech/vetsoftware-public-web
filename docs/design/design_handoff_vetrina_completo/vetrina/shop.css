@@ -209,3 +209,263 @@
 .vet-promo-bundle-item button { width: 22px; height: 22px; border: none; background: transparent; color: var(--warm-400); cursor: pointer; border-radius: 5px; display: grid; place-items: center; }
 .vet-promo-bundle-item button:hover { background: oklch(94% 0.05 25); color: oklch(48% 0.18 25); }
 .vet-promo-bundle-orig { font-size: 12px; color: var(--warm-500); text-align: right; }
+
+/* ===== Impuestos ===== */
+.vet-tax-config { background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 12px; padding: 16px 18px; margin-bottom: 22px; }
+.vet-tax-config-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.vet-tax-config-title { font-size: 14px; font-weight: 500; color: var(--warm-900); }
+.vet-tax-config-sub { font-size: 12.5px; color: var(--warm-600); margin-top: 3px; max-width: 460px; line-height: 1.45; }
+.vet-tax-rates-head { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--warm-500); font-weight: 600; margin-bottom: 10px; }
+.vet-tax-pct { display: inline-flex; align-items: center; gap: 6px; max-width: 110px; }
+.vet-tax-pct .vet-base-input { width: 70px; }
+.vet-tax-note { font-size: 12.5px; color: var(--warm-500); line-height: 1.55; margin-top: 16px; max-width: 640px; }
+
+/* ===== Cuentas abiertas ===== */
+.vet-catm-add {
+  display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px;
+  border-radius: 9px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600;
+  background: var(--amatista-700); color: white; border: none;
+}
+.vet-catm-add:hover { background: var(--amatista-800); }
+.vet-catm-form { background: var(--warm-100); border-radius: 10px; padding: 12px; }
+.vet-catm-formrow { display: flex; gap: 8px; align-items: stretch; margin-top: 6px; }
+.vet-catm-formrow .vet-base-input { flex: 1; }
+.vet-catm-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.vet-catm-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 12px; border-radius: 9px; background: var(--warm-50); border: 1px solid var(--warm-200);
+}
+.vet-catm-row.danger { border-color: oklch(80% 0.10 25); background: oklch(97% 0.03 25); }
+.vet-catm-info { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.vet-catm-name { font-size: 13.5px; font-weight: 600; color: var(--warm-900); }
+.vet-catm-count { font-size: 11.5px; color: var(--warm-500); }
+.vet-catm-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.vet-catm-iconbtn {
+  width: 28px; height: 28px; display: grid; place-items: center; border-radius: 7px;
+  background: var(--warm-50); border: 1px solid var(--warm-200); color: var(--warm-600); cursor: pointer; font-size: 12px;
+}
+.vet-catm-iconbtn:hover { background: var(--warm-100); }
+.vet-catm-iconbtn.danger:hover { background: oklch(94% 0.06 25); color: oklch(50% 0.16 25); border-color: oklch(82% 0.10 25); }
+.vet-catm-delq { font-size: 12px; color: oklch(50% 0.16 25); font-weight: 600; }
+.vet-catm-del {
+  padding: 5px 12px; border-radius: 7px; border: none; cursor: pointer; font-family: inherit; font-size: 12.5px; font-weight: 600;
+  background: oklch(55% 0.18 25); color: white;
+}
+.vet-catm-del:hover { background: oklch(48% 0.18 25); }
+.vet-acct-petchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.vet-acct-petchip {
+  display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px 6px 7px;
+  border-radius: 999px; cursor: pointer; font-family: inherit; font-size: 12.5px; font-weight: 500;
+  color: var(--warm-700); background: var(--warm-50); border: 1.5px solid var(--warm-200); transition: all 0.12s ease;
+}
+.vet-acct-petchip:hover { border-color: var(--warm-300); }
+.vet-acct-petchip.active { background: var(--amatista-50); border-color: var(--amatista-400); color: var(--amatista-700); }
+.vet-acct-petchip-av {
+  width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0;
+  background: var(--amatista-100); color: var(--amatista-700); font-size: 9.5px; font-weight: 700;
+}
+.vet-acct-petchip-av.general { background: var(--warm-200); color: var(--warm-600); }
+.vet-acct-petgroup { margin-bottom: 14px; }
+.vet-acct-petgroup:last-child { margin-bottom: 0; }
+.vet-acct-petgroup-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 7px 2px 8px; border-bottom: 1.5px solid var(--warm-200); margin-bottom: 4px;
+}
+.vet-acct-petgroup-id { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.vet-acct-petavatar {
+  width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0;
+  background: var(--amatista-100); color: var(--amatista-700); font-size: 10.5px; font-weight: 700;
+}
+.vet-acct-petavatar.general { background: var(--warm-200); color: var(--warm-600); }
+.vet-acct-petname { font-size: 13.5px; font-weight: 600; color: var(--warm-900); }
+.vet-acct-pettaxa { font-size: 11.5px; color: var(--warm-500); }
+.vet-acct-petgroup-sub { font-size: 13px; font-weight: 700; color: var(--amatista-700); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vet-acct-charge-date { font-size: 11px; color: var(--warm-400); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* Facturación de consulta — billing modal */
+.vet-bill-acct {
+  display: flex; align-items: center; gap: 9px;
+  padding: 11px 13px; border-radius: 9px; font-size: 13px; line-height: 1.45;
+}
+.vet-bill-acct.has { background: oklch(94% 0.06 150); border: 1px solid oklch(88% 0.07 150); color: oklch(38% 0.12 150); }
+.vet-bill-acct.none { background: oklch(94% 0.07 80); border: 1px solid oklch(88% 0.09 80); color: oklch(40% 0.10 70); }
+.vet-bill-dest { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.vet-bill-dest.three { grid-template-columns: 1fr 1fr 1fr; }
+.vet-bill-acctcard {
+  background: oklch(94% 0.06 150); border: 1px solid oklch(88% 0.07 150); border-radius: 10px; padding: 12px 13px;
+}
+.vet-bill-acctcard-top { display: flex; align-items: center; gap: 11px; }
+.vet-bill-acctcard-ic {
+  width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0; display: grid; place-items: center;
+  background: oklch(90% 0.08 150); color: oklch(40% 0.13 150);
+}
+.vet-bill-acctcard-title { font-size: 13.5px; font-weight: 600; color: oklch(34% 0.12 150); }
+.vet-bill-acctcard-sub { font-size: 11.5px; color: oklch(45% 0.08 150); margin-top: 2px; }
+.vet-bill-acctcard-saldo { text-align: right; flex-shrink: 0; }
+.vet-bill-acctcard-saldo span { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; color: oklch(45% 0.08 150); }
+.vet-bill-acctcard-saldo strong { font-size: 16px; color: oklch(36% 0.13 150); font-variant-numeric: tabular-nums; }
+.vet-bill-destopt {
+  display: flex; align-items: flex-start; gap: 9px; text-align: left;
+  padding: 12px; border-radius: 10px; cursor: pointer; font-family: inherit;
+  background: var(--warm-50); border: 1.5px solid var(--warm-200); transition: all 0.12s ease;
+}
+.vet-bill-destopt:hover { border-color: var(--warm-300); }
+.vet-bill-destopt.active { background: var(--amatista-50); border-color: var(--amatista-400); }
+.vet-bill-destcheck { flex-shrink: 0; margin-top: 1px; color: var(--warm-300); }
+.vet-bill-destopt.active .vet-bill-destcheck { color: var(--amatista-600); }
+.vet-bill-desttitle { font-size: 13px; font-weight: 600; color: var(--warm-900); }
+.vet-bill-destsub { font-size: 11.5px; color: var(--warm-500); margin-top: 2px; line-height: 1.4; }
+.vet-bill-cols { display: grid; grid-template-columns: 1fr 1.1fr; gap: 12px; }
+.vet-bill-catalog { display: flex; flex-direction: column; min-width: 0; }
+.vet-bill-catlist {
+  display: flex; flex-direction: column; gap: 3px; max-height: 230px; overflow-y: auto;
+  border: 1px solid var(--warm-200); border-radius: 9px; padding: 5px;
+}
+.vet-bill-selected {
+  display: flex; flex-direction: column; min-width: 0;
+  background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 10px; padding: 10px;
+}
+.vet-bill-selhead { font-size: 12px; font-weight: 600; color: var(--warm-600); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 8px; }
+.vet-bill-selempty { flex: 1; display: grid; place-items: center; text-align: center; font-size: 12.5px; color: var(--warm-400); line-height: 1.6; padding: 20px 0; }
+.vet-bill-sellist { display: flex; flex-direction: column; gap: 6px; }
+.vet-bill-selrow { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 8px; background: var(--warm-100); }
+.vet-bill-selinfo { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.vet-bill-selname { font-size: 12.5px; font-weight: 500; color: var(--warm-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vet-bill-selkind { font-size: 11px; color: var(--warm-500); }
+.vet-bill-stepper button { width: 26px; height: 26px; font-size: 15px; }
+.vet-bill-stepper input { width: 36px; height: 26px; font-size: 12.5px; }
+.vet-bill-sellinetotal { font-size: 12.5px; font-weight: 700; color: var(--amatista-700); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vet-bill-selremove { width: 24px; height: 24px; border: none; background: none; cursor: pointer; color: var(--warm-400); display: grid; place-items: center; border-radius: 6px; }
+.vet-bill-selremove:hover { background: oklch(94% 0.06 25); color: oklch(50% 0.16 25); }
+.vet-bill-foottotal { font-size: 13px; color: var(--warm-600); }
+.vet-bill-foottotal strong { color: var(--amatista-700); font-size: 15px; }
+.vet-bill-existing { margin-bottom: 10px; }
+.vet-bill-existing-lab {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--warm-400); font-weight: 600; margin-bottom: 6px;
+}
+.vet-bill-selrow.locked { background: var(--warm-50); border: 1px dashed var(--warm-200); opacity: 0.85; }
+.vet-bill-existing-div {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--amatista-600); font-weight: 600; margin: 10px 0 6px;
+  padding-top: 8px; border-top: 1px dashed var(--warm-200);
+}
+.vet-acct-fieldlabel { font-size: 12px; font-weight: 600; color: var(--warm-600); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.03em; }
+.vet-acct-origseg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.vet-acct-orighelp { margin: 10px 0 0; font-size: 12.5px; color: var(--warm-500); line-height: 1.5; }
+.vet-acct-dupwarn {
+  display: flex; align-items: center; gap: 8px; margin-top: 10px;
+  padding: 9px 12px; border-radius: 9px; font-size: 12.5px;
+  background: oklch(94% 0.07 80); border: 1px solid oklch(88% 0.09 80); color: oklch(40% 0.10 70);
+}
+/* Agregar cargo — segmented + catálogo */
+.vet-acct-srcseg { display: flex; gap: 6px; }
+.vet-acct-srcbtn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 10px 8px; border-radius: 9px; cursor: pointer; font-family: inherit;
+  font-size: 13px; font-weight: 500; color: var(--warm-600);
+  background: var(--warm-50); border: 1px solid var(--warm-200);
+  transition: all 0.12s ease;
+}
+.vet-acct-srcbtn:hover { border-color: var(--warm-300); color: var(--warm-800); }
+.vet-acct-srcbtn.active {
+  background: var(--amatista-50); border-color: var(--amatista-400);
+  color: var(--amatista-700);
+}
+.vet-acct-search {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; border-radius: 9px;
+  background: var(--warm-50); border: 1px solid var(--warm-200);
+  color: var(--warm-500);
+}
+.vet-acct-search input {
+  flex: 1; border: none; outline: none; background: none;
+  font-family: inherit; font-size: 13.5px; color: var(--warm-900);
+}
+.vet-acct-catalog {
+  display: flex; flex-direction: column; gap: 4px;
+  max-height: 360px; overflow-y: auto;
+  border: 1px solid var(--warm-200); border-radius: 9px; padding: 6px;
+}
+.vet-acct-catalog-empty { padding: 24px; text-align: center; color: var(--warm-400); font-size: 13px; }
+.vet-acct-catrow {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 10px 12px; border-radius: 8px; cursor: pointer; font-family: inherit;
+  background: none; border: 1px solid transparent; text-align: left;
+  transition: background 0.1s ease;
+}
+.vet-acct-catrow:hover { background: var(--warm-100); }
+.vet-acct-catrow.selected { background: var(--amatista-50); border-color: var(--amatista-300); }
+.vet-acct-catrow.out { opacity: 0.5; cursor: not-allowed; }
+.vet-acct-catrow-main { flex: 1; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.vet-acct-catrow-name { font-size: 13.5px; font-weight: 500; color: var(--warm-900); }
+.vet-acct-catrow-cat { font-size: 11px; color: var(--warm-500); background: var(--warm-100); padding: 1px 7px; border-radius: 999px; }
+.vet-acct-catrow-out { font-size: 11px; color: oklch(50% 0.16 25); font-weight: 600; }
+.vet-acct-catrow-price { font-size: 13px; font-weight: 600; color: var(--warm-700); font-variant-numeric: tabular-nums; }
+.vet-acct-catrow-check { color: var(--amatista-600); }
+.vet-acct-qtyrow {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px; border-radius: 9px; background: var(--warm-100);
+}
+.vet-acct-qtylabel { font-size: 13px; font-weight: 500; color: var(--warm-700); }
+.vet-acct-stepper { display: flex; align-items: center; gap: 0; }
+.vet-acct-stepper button {
+  width: 32px; height: 32px; border: 1px solid var(--warm-300); background: var(--warm-50);
+  cursor: pointer; font-size: 17px; color: var(--warm-700); display: grid; place-items: center;
+}
+.vet-acct-stepper button:first-child { border-radius: 8px 0 0 8px; }
+.vet-acct-stepper button:last-child { border-radius: 0 8px 8px 0; }
+.vet-acct-stepper button:hover { background: var(--warm-100); }
+.vet-acct-stepper input {
+  width: 48px; height: 32px; border: 1px solid var(--warm-300); border-left: none; border-right: none;
+  text-align: center; font-family: inherit; font-size: 13.5px; color: var(--warm-900); outline: none;
+}
+.vet-acct-linetotal { margin-left: auto; font-size: 15px; font-weight: 700; color: var(--amatista-700); font-variant-numeric: tabular-nums; }
+.vet-acct-taxinfo {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; border-radius: 9px;
+  background: var(--warm-100); color: var(--warm-700); font-size: 12.5px;
+}
+.vet-acct-taxinfo-hint { margin-left: auto; font-size: 11px; color: var(--warm-400); font-style: italic; }
+.vet-acct-close { display: flex; flex-direction: column; gap: 7px; }
+.vet-acct-close-row { display: flex; justify-content: space-between; font-size: 13.5px; color: var(--warm-700); font-variant-numeric: tabular-nums; }
+.vet-acct-close-tax { color: var(--warm-500); font-size: 12.5px; }
+.vet-acct-close-total { border-top: 1px solid var(--warm-200); padding-top: 8px; margin-top: 2px; font-weight: 600; color: var(--warm-900); }
+.vet-acct-close-saldo { font-size: 16px; font-weight: 700; color: var(--amatista-700); border-top: 1px solid var(--warm-200); padding-top: 8px; }
+.vet-acct-close-note { margin: 6px 0 0; font-size: 12px; color: var(--warm-500); line-height: 1.5; }
+.vet-acct-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.vet-acct-card { display: flex; flex-direction: column; gap: 11px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 14px; padding: 16px; cursor: pointer; font-family: inherit; text-align: left; transition: border-color 0.12s ease, box-shadow 0.12s ease; }
+.vet-acct-card:hover { border-color: var(--amatista-300); box-shadow: 0 4px 14px -8px rgba(20,15,30,0.18); }
+.vet-acct-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.vet-acct-card-pet { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.vet-acct-avatar { width: 42px; height: 42px; border-radius: 11px; background: var(--amatista-100); color: var(--amatista-700); display: grid; place-items: center; font-family: var(--font-serif); font-size: 16px; font-weight: 500; flex-shrink: 0; }
+.vet-acct-name { font-size: 15px; font-weight: 500; color: var(--warm-900); }
+.vet-acct-owner { font-size: 12px; color: var(--warm-500); margin-top: 1px; }
+.vet-acct-card-meta { font-size: 12px; color: var(--warm-500); }
+.vet-acct-card-totals { display: flex; flex-direction: column; gap: 4px; padding-top: 11px; border-top: 1px solid var(--warm-150); }
+.vet-acct-card-totals > div { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--warm-600); }
+.vet-acct-card-totals strong { color: var(--warm-900); }
+.vet-acct-saldo { font-size: 14px !important; padding-top: 5px; margin-top: 2px; border-top: 1px dashed var(--warm-200); }
+.vet-acct-saldo strong { color: oklch(45% 0.13 70) !important; font-size: 15px; }
+
+/* Detalle */
+.vet-acct-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+.vet-acct-sum-box { background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 12px; padding: 14px 16px; }
+.vet-acct-sum-box.alert { background: oklch(96% 0.04 80); border-color: oklch(88% 0.08 80); }
+.vet-acct-sum-lab { font-size: 11.5px; color: var(--warm-500); margin-bottom: 5px; }
+.vet-acct-sum-val { font-family: var(--font-serif); font-size: 24px; color: var(--warm-900); letter-spacing: -0.02em; }
+.vet-acct-sum-box.alert .vet-acct-sum-val { color: oklch(45% 0.13 70); }
+.vet-acct-cols { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; align-items: start; }
+@media (max-width: 1000px) { .vet-acct-cols { grid-template-columns: 1fr; } .vet-acct-summary { grid-template-columns: 1fr; } }
+.vet-acct-charges { padding: 8px 18px 16px; }
+.vet-acct-daygroup { margin-top: 10px; }
+.vet-acct-dayhead { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--warm-500); font-weight: 600; padding: 6px 0; border-bottom: 1px solid var(--warm-150); }
+.vet-acct-daysum { color: var(--warm-700); }
+.vet-acct-charge { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--warm-100); }
+.vet-acct-charge-name { flex: 1; min-width: 0; font-size: 13px; color: var(--warm-800); }
+.vet-acct-charge-amt { font-size: 13px; font-weight: 500; color: var(--warm-900); }
+.vet-acct-charge-x { width: 22px; height: 22px; border: none; background: transparent; color: var(--warm-400); cursor: pointer; border-radius: 5px; display: grid; place-items: center; }
+.vet-acct-charge-x:hover { background: oklch(94% 0.05 25); color: oklch(48% 0.18 25); }
+.vet-acct-pagos { padding: 12px 18px 16px; display: flex; flex-direction: column; gap: 8px; }
+.vet-acct-pago { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--warm-100); border-radius: 9px; }
+.vet-acct-pago-amt { font-size: 14px; font-weight: 600; color: var(--warm-900); }
+.vet-acct-pago-meta { font-size: 11.5px; color: var(--warm-500); margin-top: 1px; }

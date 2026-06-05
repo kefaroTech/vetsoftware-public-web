@@ -1,7 +1,7 @@
 /* global React, VetIcons,
-   VET_SHOP_CATEGORIES, VET_SHOP_CAT_TONE, VET_SHOP_TAX_RATE,
+   VET_SHOP_CATEGORIES, VET_SHOP_CAT_TONE,
    VET_SHOP_SERVICE_CATEGORIES, VET_SHOP_SVC_TONE,
-   vetShopStockState, vetMoney, vetShopCustomerName,
+   vetShopStockState, vetMoney, vetShopCustomerName, vetComputeTotals,
    vetApplyPromo, vetPromoStatus,
    VetShopProductCard, VetShopServiceCard, VetShopPayModal, VetShopReceiptModal,
    VetModalShell, VetPatientCascadePicker, useVetToast */
@@ -51,11 +51,15 @@ function VetShopPOSView({ shop }) {
   function resolve(line) {
     if (line.kind === 'bundle') {
       const b = shop.promos.find((p) => p.id === line.id);
-      return { name: b.name, salePrice: b.bundlePrice, original: vetBundleOriginal(b), promo: b };
+      const allExcl = b.bundleItems.every((bi) => {
+        const it = bi.kind === 'service' ? shop.services.find((s) => s.id === bi.id) : shop.products.find((p) => p.id === bi.id);
+        return it && (it.taxId === 'excluido' || it.taxId === 'exento');
+      });
+      return { name: b.name, salePrice: b.bundlePrice, original: vetBundleOriginal(b), promo: b, taxId: allExcl ? 'excluido' : 'iva19', priceIncludesTax: true };
     }
     const it = line.kind === 'service' ? shop.services.find((s) => s.id === line.id) : shop.products.find((p) => p.id === line.id);
     const info = priceFor(it, line.kind === 'service' ? 'servicio' : 'product');
-    return { name: it.name, salePrice: info.price, original: info.original, promo: info.promo };
+    return { name: it.name, salePrice: info.price, original: info.original, promo: info.promo, taxId: it.taxId, priceIncludesTax: it.priceIncludesTax };
   }
   function vetBundleOriginal(b) {
     return b.bundleItems.reduce((a, bi) => {
@@ -98,18 +102,16 @@ function VetShopPOSView({ shop }) {
 
   const lines = cart.map((l) => {
     const r = resolve(l);
-    return { ...l, name: r.name, unitPrice: r.salePrice, original: r.original, promo: r.promo, total: r.salePrice * l.qty };
+    return { ...l, name: r.name, unitPrice: r.salePrice, original: r.original, promo: r.promo, taxId: r.taxId, priceIncludesTax: r.priceIncludesTax, total: r.salePrice * l.qty };
   });
-  const subtotal = lines.reduce((a, l) => a + l.total, 0);
   const promoSavings = lines.reduce((a, l) => a + ((l.original ? (l.original - l.unitPrice) : 0) * l.qty), 0);
-  const disc = Math.min(Number(discount) || 0, subtotal);
-  const tax = Math.round((subtotal - disc) * VET_SHOP_TAX_RATE);
-  const total = subtotal - disc + tax;
+  const T = vetComputeTotals(lines, discount, shop.taxConfig);
+  const total = T.total;
 
   function buildItems() {
     return cart.map((l) => {
       const r = resolve(l);
-      return { kind: l.kind, id: l.id, qty: l.qty, unitPrice: r.salePrice, name: r.name };
+      return { kind: l.kind, id: l.id, qty: l.qty, unitPrice: r.salePrice, name: r.name, taxId: r.taxId, priceIncludesTax: r.priceIncludesTax };
     });
   }
 
@@ -121,7 +123,7 @@ function VetShopPOSView({ shop }) {
       items, discount: disc, paymentMethod: method,
     });
     setPayOpen(false);
-    setReceipt({ code, paymentMethod: method, discount: disc, savings: promoSavings, customerId: customer?.owner?.id ?? null, items });
+    setReceipt({ code, paymentMethod: method, discount: T.disc, savings: promoSavings, customerId: customer?.owner?.id ?? null, items, taxConfig: shop.taxConfig });
     setCart([]); setCustomer(null); setDiscount('');
   }
 
@@ -238,10 +240,12 @@ function VetShopPOSView({ shop }) {
             <span>Descuento</span>
             <input type="number" value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="0" />
           </div>
-          <div className="vet-shop-srow"><span>Subtotal</span><span>{vetMoney(subtotal)}</span></div>
+          <div className="vet-shop-srow"><span>Subtotal (base)</span><span>{vetMoney(T.base)}</span></div>
           {promoSavings > 0 && <div className="vet-shop-srow savings"><span>Ahorro por promociones</span><span>−{vetMoney(promoSavings)}</span></div>}
-          {disc > 0 && <div className="vet-shop-srow"><span>Descuento</span><span>−{vetMoney(disc)}</span></div>}
-          <div className="vet-shop-srow"><span>IVA (19%)</span><span>{vetMoney(tax)}</span></div>
+          {T.disc > 0 && <div className="vet-shop-srow"><span>Descuento</span><span>−{vetMoney(T.disc)}</span></div>}
+          {T.byRate.filter((r) => r.amount > 0).map((r) => (
+            <div key={r.id} className="vet-shop-srow"><span>{r.name}</span><span>{vetMoney(r.amount)}</span></div>
+          ))}
           <div className="vet-shop-srow grand"><span>Total</span><span>{vetMoney(total)}</span></div>
           <button type="button" className="vet-shop-charge" disabled={lines.length === 0}
             style={lines.length === 0 ? { opacity: 0.5, cursor: 'not-allowed' } : null}
@@ -257,7 +261,7 @@ function VetShopPOSView({ shop }) {
       </VetModalShell>
 
       <VetShopPayModal open={payOpen} total={total} onClose={() => setPayOpen(false)} onConfirm={confirmPay} />
-      <VetShopReceiptModal open={!!receipt} sale={receipt} products={shop.products} onClose={() => setReceipt(null)} />
+      <VetShopReceiptModal open={!!receipt} sale={receipt} products={shop.products} taxConfig={shop.taxConfig} onClose={() => setReceipt(null)} />
     </div>
   );
 }

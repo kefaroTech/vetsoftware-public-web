@@ -39,7 +39,11 @@ function VetPasoPropietario() {
 
   const ownerCreating = draft.state.ownerCreating;
   const owner = draft.state.owner;
-  const mode = ownerCreating ? 'creating' : owner ? 'selected' : 'search';
+  const mode = ownerCreating ? 'creating'
+    : draft.state.petCreating ? 'petCreating'
+    : owner ? 'selected' : 'search';
+  const pets = owner ? (VET_MOCK_PETS[owner.id] || []) : [];
+  const selectedPet = draft.state.pet;
 
   function pick(o) { draft.setOwner(o); }
   function startCreate() { draft.startCreatingOwner({ name: query.trim() }); }
@@ -117,9 +121,43 @@ function VetPasoPropietario() {
         <>
           <VetPageHeading
             title="¿Quién es el propietario?"
-            subtitle="Confirma los datos del propietario seleccionado."
+            subtitle="Confirma el propietario y selecciona la mascota a atender."
           />
           <VetOwnerSummaryCard owner={owner} petCount={(VET_MOCK_PETS[owner.id] || []).length} onChange={changeOwner} />
+
+          <div style={{ marginTop: 22 }}>
+            <div className="vet-paso1-pethead">
+              <h3 className="vet-paso1-pettitle">Mascota a atender</h3>
+              <span className="vet-paso1-petsub">
+                {pets.length === 0 ? 'Sin mascotas registradas' : `${pets.length} ${pets.length === 1 ? 'mascota' : 'mascotas'}`}
+              </span>
+            </div>
+
+            {pets.length === 0 ? (
+              <div className="vet-paso1-petempty">
+                <VetIcons.PawPrint size={22} strokeWidth={1.6} />
+                <span style={{ flex: 1 }}>{owner.name.split(' ')[0]} aún no tiene mascotas registradas.</span>
+                <button type="button" className="vet-btn-create" onClick={() => draft.startCreatingPet()}>
+                  <VetIcons.Plus size={14} strokeWidth={1.6} />
+                  <span>Registrar mascota</span>
+                </button>
+              </div>
+            ) : (
+              <div className="vet-pet-grid-c">
+                {pets.map((p) => (
+                  <VetPetCardC
+                    key={p.id} pet={p}
+                    selected={selectedPet?.id === p.id}
+                    onSelect={() => draft.setPet(p)}
+                  />
+                ))}
+                <button type="button" className="vet-add-pet" onClick={() => draft.startCreatingPet()}>
+                  <VetIcons.Plus size={20} strokeWidth={1.6} />
+                  <span>Registrar nueva mascota</span>
+                </button>
+              </div>
+            )}
+          </div>
         </>
       )}
 
@@ -130,6 +168,23 @@ function VetPasoPropietario() {
             subtitle="Completa los datos. Podrás editarlos después desde su ficha."
           />
           <VetOwnerForm data={ownerCreating} onUpdate={draft.updateOwnerCreating} />
+        </>
+      )}
+
+      {mode === 'petCreating' && draft.state.petCreating && (
+        <>
+          <div className="vet-paso2-create-head">
+            <VetPageHeading
+              title="Registrar nueva mascota"
+              subtitle="Datos básicos para crear el expediente. Los detalles clínicos se agregan en cada consulta."
+            />
+            {pets.length > 0 && (
+              <button type="button" className="vet-back-list" onClick={() => draft.cancelCreatingPet()}>
+                ← Ver mascotas existentes
+              </button>
+            )}
+          </div>
+          <VetPetForm data={draft.state.petCreating} onUpdate={draft.updatePetCreating} />
         </>
       )}
     </VetContentWrap>

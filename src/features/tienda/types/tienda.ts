@@ -1,0 +1,193 @@
+/**
+ * Tipos del módulo Tienda (Petshop). Espejo de los DTOs del backend
+ * (com.vetsoftware.app.{product,service,promotion,productcategory,servicecategory,tax}).
+ *
+ * Nota: el backend serializa BigDecimal como number en JSON; los precios se
+ * tipan como number en el front.
+ */
+
+/** Espejo de com.vetsoftware.app.infrastructure.web.PageResponse */
+export interface PageResponse<T> {
+  content: T[]
+  page: number
+  pageSize: number
+  totalElements: number
+  totalPages: number
+}
+
+export interface CompanySummary {
+  id: number
+  name: string
+  identifier: string
+}
+
+export interface TaxSummary {
+  id: number
+  name: string
+  percentage: number
+}
+
+export interface TaxResponse extends TaxSummary {
+  company: CompanySummary
+  createdDate: string
+  enabled: boolean
+}
+
+// ── Categorías ─────────────────────────────────────────────────────────────
+
+export interface CategorySummary {
+  id: number
+  name: string
+}
+
+export interface CategoryResponse {
+  id: number
+  name: string
+  description: string
+  company?: CompanySummary
+  createdDate?: string
+  enabled?: boolean
+}
+
+export interface CategoryPayload {
+  name: string
+  description: string
+}
+
+// ── Productos ──────────────────────────────────────────────────────────────
+
+export interface ProductResponse {
+  id: number
+  name: string
+  code: string
+  purchasePrice: number
+  salePrice: number
+  currentStock: number
+  minStock: number
+  provider: string | null
+  hasTax: boolean
+  /** Bandera: el producto maneja fecha de vencimiento (el backend no persiste la fecha). */
+  expireDate: boolean
+  notes: string | null
+  productCategory: CategorySummary
+  tax: TaxSummary | null
+  company: CompanySummary
+  createdDate: string
+  enabled: boolean
+}
+
+export interface ProductPayload {
+  name: string
+  code: string
+  purchasePrice: number
+  salePrice: number
+  currentStock: number
+  minStock: number
+  provider?: string | null
+  hasTax: boolean
+  expireDate: boolean
+  notes?: string | null
+  productCategoryId: number
+  taxId?: number | null
+}
+
+export interface ProductSearchCriteria {
+  name?: string | null
+  code?: string | null
+  productCategoryId?: number | null
+  taxId?: number | null
+  page?: number
+  pageSize?: number
+}
+
+// ── Servicios ──────────────────────────────────────────────────────────────
+
+export interface ServiceResponse {
+  id: number
+  name: string
+  price: number
+  hasTax: boolean
+  notes: string | null
+  serviceCategory: CategorySummary
+  tax: TaxSummary | null
+  company: CompanySummary
+  createdDate: string
+  enabled: boolean
+}
+
+export interface ServicePayload {
+  name: string
+  price: number
+  hasTax: boolean
+  notes?: string | null
+  serviceCategoryId: number
+  taxId?: number | null
+}
+
+export interface ServiceSearchCriteria {
+  name?: string | null
+  serviceCategoryId?: number | null
+  taxId?: number | null
+  page?: number
+  pageSize?: number
+}
+
+// ── Promociones ────────────────────────────────────────────────────────────
+
+export type PromotionType = 'DISCOUNT' | 'SPECIAL_PRICE'
+export type ApplicationType = 'CATEGORY' | 'PRODUCT' | 'SERVICE'
+export type ValueType = 'PERCENTAGE' | 'VALUE'
+/** Estado persistido por el backend. El estado "PROGRAMADA/VENCIDA" se deriva por fecha en el front. */
+export type PromotionStatus = 'ACTIVE' | 'INACTIVE'
+
+export interface PromotionResponse {
+  id: number
+  name: string
+  promotionType: PromotionType
+  applicationType: ApplicationType
+  /** Id del producto/servicio/categoría destino, según applicationType. */
+  applicationItem: number
+  valueType: ValueType
+  value: number
+  startDate: string
+  endDate: string
+  promotionStatus: PromotionStatus
+  company: CompanySummary
+  createdDate: string
+  enabled: boolean
+}
+
+export interface PromotionPayload {
+  name: string
+  promotionType: PromotionType
+  applicationType: ApplicationType
+  applicationItem: number
+  valueType: ValueType
+  value: number
+  startDate: string
+  endDate: string
+  promotionStatus: PromotionStatus
+}
+
+/** Estado derivado por fecha (no persistido): para los badges de la UI. */
+export type DerivedPromoStatus = 'ACTIVA' | 'PROGRAMADA' | 'VENCIDA' | 'INACTIVA'
+
+// ── POS (ticket client-side, no persistido como entidad propia) ──────────────
+
+export type SaleItemKind = 'product' | 'service'
+
+export interface SaleLine {
+  kind: SaleItemKind
+  id: number
+  name: string
+  unitPrice: number
+  qty: number
+  hasTax: boolean
+  taxPercentage: number
+  /** Promo aplicada (si existe) — para mostrar precio tachado + ahorro. */
+  promoName?: string
+  originalUnitPrice?: number
+}
+
+/** Estado de stock derivado. */
+export type StockState = 'OK' | 'BAJO' | 'AGOTADO'

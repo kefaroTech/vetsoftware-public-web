@@ -1,0 +1,64 @@
+<script setup lang="ts">
+import { Check } from 'lucide-vue-next'
+import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import { formatMoney, type TotalsBreakdown } from '../composables/pricing'
+import type { SaleLine } from '../types/tienda'
+
+defineProps<{
+  open: boolean
+  lines: SaleLine[]
+  totals: TotalsBreakdown
+  method: string
+  change: number | null
+}>()
+
+defineEmits<{ close: [] }>()
+
+const METHOD_LABEL: Record<string, string> = {
+  EFECTIVO: 'Efectivo',
+  TARJETA: 'Tarjeta',
+  TRANSFERENCIA: 'Transferencia',
+}
+</script>
+
+<template>
+  <ModalShell :open="open" title="Recibo" subtitle="Venta registrada (demo, no persistida)" :icon="Check" :width="460" @close="$emit('close')">
+    <template #body>
+      <div class="receipt">
+        <ul class="lines">
+          <li v-for="l in lines" :key="`${l.kind}-${l.id}`" class="line">
+            <span class="ln-name">{{ l.name }} <span class="ln-qty">×{{ l.qty }}</span></span>
+            <span class="ln-amount">{{ formatMoney(l.unitPrice * l.qty) }}</span>
+          </li>
+        </ul>
+        <div class="summary">
+          <div class="srow"><span>Subtotal</span><span>{{ formatMoney(totals.net) }}</span></div>
+          <div v-if="totals.promoSavings > 0" class="srow saving"><span>Ahorro por promociones</span><span>− {{ formatMoney(totals.promoSavings) }}</span></div>
+          <div class="srow"><span>Impuestos</span><span>{{ formatMoney(totals.tax) }}</span></div>
+          <div class="srow total"><span>Total</span><span>{{ formatMoney(totals.total) }}</span></div>
+          <div class="srow"><span>Método</span><span>{{ METHOD_LABEL[method] ?? method }}</span></div>
+          <div v-if="change != null" class="srow"><span>Cambio</span><span>{{ formatMoney(change) }}</span></div>
+        </div>
+      </div>
+    </template>
+    <template #footer-actions>
+      <button type="button" class="btn-primary" @click="$emit('close')">Cerrar</button>
+    </template>
+  </ModalShell>
+</template>
+
+<style scoped>
+.receipt { font-family: var(--font-sans); }
+.lines { list-style: none; margin: 0 0 14px; padding: 0 0 14px; border-bottom: 1px dashed var(--warm-300); display: flex; flex-direction: column; gap: 8px; }
+.line { display: flex; align-items: center; justify-content: space-between; font-size: 13.5px; color: var(--warm-800); }
+.ln-qty { color: var(--warm-500); font-size: 12px; }
+.summary { display: flex; flex-direction: column; gap: 8px; }
+.srow { display: flex; align-items: center; justify-content: space-between; font-size: 13.5px; color: var(--warm-700); }
+.srow.saving { color: oklch(45% 0.13 150); }
+.srow.total { font-size: 16px; font-weight: 600; color: var(--warm-900); padding-top: 8px; border-top: 1px solid var(--warm-200); }
+.btn-primary {
+  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
+  border: none; color: white;
+  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+}
+</style>

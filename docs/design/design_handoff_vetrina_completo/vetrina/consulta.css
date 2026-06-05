@@ -541,6 +541,14 @@
   color: var(--warm-600);
   transition: border-color 0.15s, background 0.15s;
 }
+.vet-paso1-pethead { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+.vet-paso1-pettitle { font-size: 15px; font-weight: 600; color: var(--warm-900); margin: 0; }
+.vet-paso1-petsub { font-size: 12.5px; color: var(--warm-500); }
+.vet-paso1-petempty {
+  display: flex; align-items: center; gap: 10px; padding: 16px;
+  background: var(--warm-50); border: 1px dashed var(--warm-300); border-radius: 10px;
+  font-size: 13px; color: var(--warm-500);
+}
 .vet-add-pet:hover {
   border-color: var(--amatista-700);
   background: var(--amatista-50);

@@ -14,7 +14,7 @@ import type {
   Vaccination,
 } from '@/types/domain'
 
-export type WizardStep = 1 | 2 | 3 | 4
+export type WizardStep = 1 | 2
 
 export interface OwnerDraft {
   name: string
@@ -141,7 +141,13 @@ function load(): NuevaConsultaDraft {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (!raw) return defaultDraft()
     const parsed = JSON.parse(raw) as Partial<NuevaConsultaDraft>
-    return { ...defaultDraft(), ...parsed }
+    const merged = { ...defaultDraft(), ...parsed }
+    // Migración 4→2 pasos: antiguos pasos 1 (propietario) y 2 (mascota) ahora
+    // viven en el paso 1 unificado; los antiguos 3 (consulta) y 4 (resumen)
+    // mapean al nuevo paso 2.
+    const rawStep = Number((parsed as { step?: number }).step ?? 1)
+    merged.step = rawStep >= 3 ? 2 : 1
+    return merged
   } catch {
     return defaultDraft()
   }
@@ -246,7 +252,7 @@ export function useNuevaConsultaDraft() {
     const keptOwner = state.owner
     Object.assign(state, defaultDraft())
     state.owner = keptOwner
-    state.step = 2
+    state.step = 1
   }
 
   const isEmpty = computed<boolean>(() => {

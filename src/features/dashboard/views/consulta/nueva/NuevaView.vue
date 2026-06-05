@@ -2,13 +2,10 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, X } from 'lucide-vue-next'
-import WizardStepper from './components/WizardStepper.vue'
 import WizardFooter from './components/WizardFooter.vue'
 import DiscardConsultaDialog from './components/DiscardConsultaDialog.vue'
-import PasoPropietario from './pasos/PasoPropietario.vue'
-import PasoMascota from './pasos/PasoMascota.vue'
+import PasoPaciente from './pasos/PasoPaciente.vue'
 import PasoConsulta from './pasos/PasoConsulta.vue'
-import PasoResumen from './pasos/PasoResumen.vue'
 import { useNuevaConsultaDraft, type WizardStep } from './composables/useNuevaConsultaDraft'
 import { showResumeOrNewDialog } from '@/composables/useConsultaResumeGuard'
 import { consultationApi } from './api/consultation.api'
@@ -21,6 +18,7 @@ import { hospitalizationApi } from './api/hospitalization.api'
 import { dewormingApi } from './api/deworming.api'
 import { surgeryApi } from './api/surgery.api'
 import { useAuth } from '@/features/auth/composables/useAuth'
+import { openBilling } from '@/features/cuentas/composables/useBillingPrompt'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 
 const router = useRouter()
@@ -41,7 +39,7 @@ const step = computed<WizardStep>(() => draft.state.step)
 
 function syncStepFromQuery() {
   const raw = Number(route.query.paso ?? 1)
-  const s = ([1, 2, 3, 4].includes(raw) ? raw : 1) as WizardStep
+  const s = ([1, 2].includes(raw) ? raw : 1) as WizardStep
   if (s !== draft.state.step) draft.setStep(s)
 }
 
@@ -59,15 +57,16 @@ function goStep(s: WizardStep) {
 }
 
 const nextLabel = computed(() => {
-  if (draft.state.ownerCreating && step.value === 1) return 'Guardar y continuar'
-  if (draft.state.petCreating && step.value === 2) return 'Guardar y continuar'
-  if (step.value === 3) return 'Revisar resumen'
-  if (step.value === 4) return 'Guardar consulta'
-  return 'Siguiente'
+  if (step.value === 1) {
+    if (draft.state.ownerCreating) return 'Guardar propietario'
+    if (draft.state.petCreating) return 'Guardar mascota'
+    return 'Continuar a la consulta'
+  }
+  return 'Guardar consulta'
 })
 
 const nextVariant = computed<'primary' | 'success'>(() =>
-  step.value === 4 ? 'success' : 'primary',
+  step.value === 2 ? 'success' : 'primary',
 )
 
 const nextDisabled = computed(() => {
@@ -84,9 +83,6 @@ const nextDisabled = computed(() => {
         o.cityId
       )
     }
-    return !s.owner
-  }
-  if (step.value === 2) {
     if (s.petCreating) {
       const p = s.petCreating
       return !(
@@ -100,49 +96,31 @@ const nextDisabled = computed(() => {
         p.reproductiveState
       )
     }
-    return !s.pet
+    return !(s.owner && s.pet)
   }
-  if (step.value === 3) {
-    return !(s.consultation.typeId && s.consultation.anamnesis.trim())
-  }
-  return false
+  // paso 2: datos de la consulta
+  return !(s.consultation.typeId && s.consultation.anamnesis.trim())
 })
 
 async function handleNext() {
-  const s = step.value
-  if (s === 1) {
-    if (draft.state.ownerCreating) {
+  if (step.value === 1) {
+    // En el paso 1 unificado, si el usuario está creando propietario o
+    // mascota, el botón confirma esa creación y permanecemos en el paso 1
+    // (ahora con el propietario/mascota ya seleccionado). Solo avanzamos a
+    // la consulta cuando ambos están seleccionados.
+    if (draft.state.ownerCreating || draft.state.petCreating) {
       submittingStep.value = true
       try {
-        const ok = (await pasoRef.value?.submit?.()) ?? true
-        if (!ok) return
+        await pasoRef.value?.submit?.()
       } finally {
         submittingStep.value = false
       }
+      return
     }
     goStep(2)
     return
   }
-  if (s === 2) {
-    if (draft.state.petCreating) {
-      submittingStep.value = true
-      try {
-        const ok = (await pasoRef.value?.submit?.()) ?? true
-        if (!ok) return
-      } finally {
-        submittingStep.value = false
-      }
-    }
-    goStep(3)
-    return
-  }
-  if (s === 3) {
-    goStep(4)
-    return
-  }
-  if (s === 4) {
-    await saveConsultation()
-  }
+  await saveConsultation()
 }
 
 async function handleBack() {
@@ -330,14 +308,27 @@ async function saveConsultation(keepOwner = false) {
       pushStepToQuery(2)
       return
     }
+    const successState = {
+      ownerName: owner?.name ?? '',
+      petName: pet.name,
+      consultationType: consultationType.name,
+      date,
+    }
+    const billOwnerId = owner ? Number(owner.id) : null
+    const billAnimalId = Number(pet.id)
+    const billPetName = pet.name
     draft.reset()
-    router.push({
-      name: 'consulta-nueva-exito',
-      state: {
-        ownerName: owner?.name ?? '',
-        petName: pet.name,
-        consultationType: consultationType.name,
-        date,
+    // Tras guardar, ofrecer facturación a cuenta (§18.2). Al cerrar el modal
+    // (facturar o "solo guardar"), navegar a la pantalla de éxito.
+    openBilling({
+      ownerId: billOwnerId,
+      ownerName: successState.ownerName,
+      animalId: billAnimalId,
+      animalName: billPetName,
+      heading: 'Facturación · Consulta',
+      autoConsulta: true,
+      onClose: () => {
+        router.push({ name: 'consulta-nueva-exito', state: successState })
       },
     })
   } catch (e) {
@@ -408,7 +399,7 @@ function onKey(e: KeyboardEvent) {
     return
   }
   if (
-    step.value === 4 &&
+    step.value === 2 &&
     (e.metaKey || e.ctrlKey) &&
     e.key === 'Enter' &&
     !nextDisabled.value
@@ -454,21 +445,12 @@ onUnmounted(() => {
       </button>
     </header>
 
-    <div class="stepper-row">
-      <WizardStepper :active="step" @navigate="goStep" />
-    </div>
-
     <main class="content">
-      <PasoPropietario v-if="step === 1" ref="pasoRef" />
-      <PasoMascota v-else-if="step === 2" ref="pasoRef" />
-      <PasoConsulta v-else-if="step === 3" ref="pasoRef" />
-      <PasoResumen
-        v-else-if="step === 4"
-        @edit-step="goStep"
-      />
+      <PasoPaciente v-if="step === 1" ref="pasoRef" />
+      <PasoConsulta v-else ref="pasoRef" />
     </main>
 
-    <div v-if="saveError && step === 4" class="save-error">
+    <div v-if="saveError && step === 2" class="save-error">
       <X :size="14" :stroke-width="1.7" />
       <span>{{ saveError }}</span>
     </div>
@@ -478,7 +460,7 @@ onUnmounted(() => {
       :next-label="nextLabel"
       :next-variant="nextVariant"
       :next-disabled="nextDisabled"
-      :next-loading="(saving && step === 4) || submittingStep"
+      :next-loading="(saving && step === 2) || submittingStep"
       @back="handleBack"
       @next="handleNext"
     >
@@ -492,7 +474,7 @@ onUnmounted(() => {
           Descartar
         </button>
         <button
-          v-if="step === 2 && draft.state.petCreating"
+          v-if="step === 1 && draft.state.petCreating"
           type="button"
           class="discard-extra"
           @click="draft.cancelCreatingPet()"
@@ -502,7 +484,7 @@ onUnmounted(() => {
       </template>
       <template #endExtra>
         <button
-          v-if="step === 4"
+          v-if="step === 2"
           type="button"
           class="btn-keep-owner"
           :disabled="saving"
@@ -601,12 +583,6 @@ onUnmounted(() => {
 .cancel:hover {
   background: var(--warm-100);
   color: var(--warm-900);
-}
-.stepper-row {
-  padding: 20px clamp(16px, 4vw, 56px) 16px;
-  background: var(--warm-50);
-  border-bottom: 1px solid var(--warm-200);
-  flex-shrink: 0;
 }
 @media (max-width: 720px) {
   .topbar .brand {

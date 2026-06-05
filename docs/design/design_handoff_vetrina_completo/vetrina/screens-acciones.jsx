@@ -240,6 +240,7 @@ function VetAccionesListView({ kicker, title, lead, items, addRecord, removeReco
   const [modalOpen, setModalOpen] = React.useState(false);
   const [editing, setEditing] = React.useState(null);
   const [viewing, setViewing] = React.useState(null);
+  const [billingFor, setBillingFor] = React.useState(null); // { owner, pet } tras crear
 
   const filtered = selection
     ? items.filter((it) => it.animalId === selection.animal.id)
@@ -249,11 +250,15 @@ function VetAccionesListView({ kicker, title, lead, items, addRecord, removeReco
     if (editing) {
       removeRecord(editing.id);
       addRecord({ ...record, id: editing.id });
+      setModalOpen(false);
+      setEditing(null);
     } else {
       addRecord(record);
+      setModalOpen(false);
+      setEditing(null);
+      // Tras crear un procedimiento nuevo, ofrecer facturarlo a cuenta abierta
+      if (selection) setBillingFor({ owner: selection.owner, pet: selection.animal });
     }
-    setModalOpen(false);
-    setEditing(null);
   }
 
   function reset() { setSelection(null); }
@@ -315,6 +320,17 @@ function VetAccionesListView({ kicker, title, lead, items, addRecord, removeReco
           setViewing(null);
           setModalOpen(true);
         }}
+      />
+
+      <VetConsultaBillingModal
+        open={!!billingFor}
+        owner={billingFor?.owner}
+        pet={billingFor?.pet}
+        heading={`Facturación · ${title}`}
+        subtitle={billingFor ? `${billingFor.pet?.name} · ${billingFor.owner?.name}` : ''}
+        autoConsulta={false}
+        onClose={() => setBillingFor(null)}
+        onFinish={() => setBillingFor(null)}
       />
     </div>
   );

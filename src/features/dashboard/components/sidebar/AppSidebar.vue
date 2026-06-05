@@ -9,7 +9,6 @@ import {
   User,
   Calendar,
   Package,
-  Receipt,
   BarChart3,
   Users,
   ShieldCheck,
@@ -21,6 +20,9 @@ import {
   Bug,
   Scissors,
   Sparkles,
+  BadgePercent,
+  ShoppingBag,
+  Wallet,
 } from 'lucide-vue-next'
 import SidebarBrand from './SidebarBrand.vue'
 import SidebarNavItem from './SidebarNavItem.vue'
@@ -65,6 +67,10 @@ const canEmployees = can(PERMISSIONS.EMPLOYEE_READ)
 const canRoles = can(PERMISSIONS.ROLE_PERMISSIONS_READ)
 const canLabProcess = can(PERMISSIONS.LABORATORY_TEST_READ)
 const canHospitalWard = can(PERMISSIONS.HOSPITALIZATION_READ)
+const canInventory = can(PERMISSIONS.PRODUCT_READ)
+const canServices = can(PERMISSIONS.SERVICE_READ)
+const canPromotions = can(PERMISSIONS.PROMOTION_READ)
+const canAccounts = can(PERMISSIONS.OPEN_ACCOUNT_READ)
 
 const historialActiveRoutes = [
   'consulta-historial',
@@ -109,6 +115,27 @@ const accionesItems = computed(() => [
 const showAccionesSection = computed(() => accionesItems.value.length > 0)
 const showAdminSection = computed(() => canEmployees.value || canRoles.value)
 
+const tiendaSubRoutes = [
+  'tienda-pos',
+  'tienda-inventario',
+  'tienda-servicios',
+  'tienda-promociones',
+] as const
+
+const isTiendaActive = computed(() =>
+  tiendaSubRoutes.some((name) => route.name === name),
+)
+
+const tiendaItems = computed(() => [
+  { label: 'Punto de venta', icon: ShoppingBag, to: { name: 'tienda-pos' as const }, show: canInventory.value },
+  { label: 'Inventario', icon: Package, to: { name: 'tienda-inventario' as const }, show: canInventory.value },
+  { label: 'Servicios', icon: Stethoscope, to: { name: 'tienda-servicios' as const }, show: canServices.value },
+  { label: 'Promociones', icon: BadgePercent, to: { name: 'tienda-promociones' as const }, show: canPromotions.value },
+].filter((item) => item.show))
+
+const showTiendaSection = computed(() => tiendaItems.value.length > 0)
+const tiendaOpen = ref(false)
+
 function goNuevaConsulta() {
   if (draft.state.owner) {
     showResumeOrNewDialog({
@@ -132,8 +159,6 @@ function goNuevaConsulta() {
 
 const upcomingItems = [
   { label: 'Pacientes', icon: User },
-  { label: 'Inventario', icon: Package },
-  { label: 'Facturación', icon: Receipt },
   { label: 'Reportes', icon: BarChart3 },
 ]
 </script>
@@ -218,6 +243,38 @@ const upcomingItems = [
         :icon="BedDouble"
         :active="route.name === 'hospital-ward'"
         @click="router.push({ name: 'hospital-ward' })"
+      />
+    </template>
+
+    <template v-if="showTiendaSection">
+      <div class="section-label">TIENDA</div>
+      <SidebarNavItem
+        label="Tienda"
+        :icon="ShoppingBag"
+        :active="isTiendaActive"
+        expandable
+        :expanded="tiendaOpen"
+        @click="tiendaOpen = !tiendaOpen"
+      />
+      <div v-if="tiendaOpen" class="sub-list">
+        <SidebarSubItem
+          v-for="item in tiendaItems"
+          :key="item.label"
+          :label="item.label"
+          :icon="item.icon"
+          :to="item.to"
+          :active="route.name === item.to.name"
+        />
+      </div>
+    </template>
+
+    <template v-if="canAccounts">
+      <div class="section-label">FACTURACIÓN</div>
+      <SidebarNavItem
+        label="Cuentas abiertas"
+        :icon="Wallet"
+        :active="route.name === 'cuentas'"
+        @click="router.push({ name: 'cuentas' })"
       />
     </template>
 

@@ -4,6 +4,7 @@ import PageLoader from '@/components/ui/PageLoader.vue'
 import ConsultaActiveBanner from '@/components/ui/ConsultaActiveBanner.vue'
 import ToastStack from '@/components/ui/ToastStack.vue'
 import ResumeOrNewConsultaDialog from '@/features/dashboard/views/consulta/nueva/components/ResumeOrNewConsultaDialog.vue'
+import BillingPromptHost from '@/features/cuentas/components/BillingPromptHost.vue'
 import { useConsultaResumeGuard } from '@/composables/useConsultaResumeGuard'
 
 const guard = useConsultaResumeGuard()
@@ -15,6 +16,7 @@ const guard = useConsultaResumeGuard()
     <ConsultaActiveBanner />
     <PageLoader />
     <ToastStack />
+    <BillingPromptHost />
     <ResumeOrNewConsultaDialog
       :open="guard.state.open"
       :owner-name="guard.state.ownerName"

@@ -1389,3 +1389,120 @@ El plan de medicamentos y procedimientos usa un botón **"Suspender"** (no elimi
 - UI: el ítem queda atenuado con etiqueta "Suspendido"; en el calendario desaparecen los
   chips pendientes/futuros y permanecen los aplicados. Modal de confirmación antes de suspender.
 
+---
+
+## §18. Consulta (2 pasos) + Facturación a cuenta + Cuentas por propietario
+
+Cambios al wizard de **Nueva consulta** y al módulo de **Cuentas abiertas**. Archivos proto:
+`vetrina/consulta-pasos.jsx`, `vetrina/screens-consulta.jsx`, `vetrina/screens-consulta-billing.jsx`,
+`vetrina/data-accounts.jsx`, `vetrina/screens-accounts.jsx`, `vetrina/screens-accounts-detail.jsx`,
+`vetrina/screens-acciones.jsx`.
+
+### 18.1 Wizard de consulta: 2 pasos, sin stepper
+
+- Antes: 4 pasos (Propietario / Mascota / Consulta / Resumen) con barra de pasos.
+- Ahora: **2 pantallas, sin stepper**.
+  - **Paso 1 — Propietario + Mascota** en la misma pantalla: buscar/seleccionar propietario y,
+    debajo, el grid de sus mascotas (seleccionable) + "Registrar nueva mascota" inline. Crear
+    propietario o mascota también ocurre dentro del paso 1 (sub-modos `creating`/`petCreating`).
+    El botón "Continuar a la consulta" se habilita solo con propietario **y** mascota.
+  - **Paso 2 — Datos de la consulta** (tipo + anamnesis + acciones rápidas). Botón "Guardar consulta".
+- Se eliminó el componente de **Resumen** (`PasoResumen`) por completo.
+- En Vue: `useNuevaConsultaDraft` ya tenía `step`; reducir a 1–2 y quitar `<WizardStepper>`.
+
+### 18.2 Modal de Facturación al guardar (reemplaza el Resumen)
+
+`VetConsultaBillingModal` — al "Guardar consulta" se abre un modal que decide el destino del cobro
+según el estado de cuenta **del propietario** (`vetOwnerOpenAccount(ownerId)`):
+
+- **Sin cuenta abierta**: aviso ámbar + 2 opciones — "Abrir cuenta y agregar cargos" / "Solo guardar".
+- **Con cuenta abierta**: tarjeta **verde** con resumen de la cuenta (origen · # cargos · fecha · **saldo
+  actual**) + **3 opciones** — "Agregar a la cuenta abierta" (muestra saldo proyectado) / "Abrir una
+  cuenta nueva" (otro motivo/responsable) / "Solo guardar".
+- Selector de cargos en 2 columnas: catálogo (tabs **Servicios/Productos** + buscador) → lista de
+  cargos con stepper de cantidad y total. En consulta, autoprecarga el servicio "consulta"
+  (`autoConsulta=true`).
+- **Modo "Agregar a cuenta"**: los cargos **existentes** de la cuenta se muestran en **solo lectura**
+  (filas atenuadas, con check, sin stepper ni quitar) bajo el rótulo "Ya en la cuenta · solo lectura",
+  separados de los "Nuevos cargos" por un divisor. Solo los nuevos son editables.
+- Props: `{ open, owner, pet, consultationType, heading, subtitle, autoConsulta, onClose, onFinish }`.
+
+### 18.3 El mismo modal al crear CUALQUIER procedimiento
+
+`VetAccionesListView.onSaved`: tras **crear** (no editar) un procedimiento clínico (laboratorio,
+imagen, vacunación, hospitalización, desparasitación, cirugía, spa) se abre el mismo
+`VetConsultaBillingModal` con `heading="Facturación · <sección>"` y `autoConsulta={false}`
+(no precarga servicio de consulta). Al **editar** un registro existente NO se abre.
+
+### 18.4 Cuentas abiertas: POR PROPIETARIO (no por mascota)
+
+Rediseño del modelo de datos en `data-accounts.jsx`:
+
+- La cuenta pertenece al **propietario** (`ownerId`); se eliminó el `petId` a nivel de cuenta.
+- **Cada cargo lleva su `petId`** (o `null` = "General", para ítems no asociados a una mascota,
+  p. ej. un producto que compra el dueño).
+- Helpers nuevos: `vetAcctOwner`, `vetAcctPet`, `vetAcctPets(acct)` (mascotas distintas en los cargos),
+  `vetAcctGroupByPet(acct)` (agrupa cargos por mascota, "General" al final),
+  `vetAcctChargesSubtotal(charges)` (subtotal por grupo, con impuestos).
+- **Tarjeta de lista**: avatar+nombre del **dueño**, mascotas involucradas, "N cargos · N mascotas", saldo.
+- **Detalle**: header con el dueño + lista de mascotas; cargos **agrupados por mascota** (cada grupo con
+  avatar/nombre/subtotal) y grupo "General" al final.
+- **Agregar cargo**: el modal incluye arriba un selector "¿Para cuál mascota?" (chips de las mascotas del
+  dueño + chip "General"); el cargo se etiqueta con ese `petId`.
+- **Abrir cuenta** (botón): selector **solo de propietario** (`VetAcctOwnerPicker`, búsqueda por nombre/
+  documento) — ya NO usa el cascade que obligaba a elegir mascota. Validación de **duplicado por dueño**
+  (un propietario no puede tener 2 cuentas abiertas).
+- Cierre/cobro: desglose por tasa de impuesto; `vetAcctChargesTotal` calcula con `vetComputeTotals`
+  (respeta `priceIncludesTax` por cargo). Saldo = total − abonos; todo reconcilia.
+
+### Vue / Pinia (producción)
+
+- Store global de cuentas en Pinia: `accounts[]`, cada una `{ id, ownerId, origen, estado, openedAt,
+  charges: [{ id, petId|null, date, concepto, kind, qty, unitPrice, taxId, priceIncludesTax }], pagos[] }`.
+- El billing modal debe escribir contra ese store (crear cuenta o `addCharge`) y, al agregar cargos
+  desde consulta/procedimiento, etiquetar el `petId` con la mascota atendida.
+- Persistir todo contra el backend (crear cuenta, agregar cargo, abono, cierre con generación de recibo).
+
+### Pruebas básicas
+
+- Nueva consulta: 2 pantallas, sin stepper; paso 1 selecciona dueño + mascota juntos.
+- Guardar consulta → modal de facturación; sin cuenta (ámbar, 2 opciones) / con cuenta (verde, 3 opciones).
+- Con cuenta: cargos previos en solo lectura + nuevos editables.
+- Crear cualquier procedimiento → mismo modal (heading de la sección, sin preset de consulta); editar → no.
+- Cuentas: tarjeta y detalle por propietario, cargos agrupados por mascota + "General".
+- Agregar cargo con selector de mascota; abrir cuenta solo-propietario con duplicado por dueño.
+
+---
+
+## §19. CRUD de categorías en Inventario y Servicios
+
+Cada pantalla (Inventario y Servicios) tiene un botón **"Categorías"** en el header que abre un
+administrador CRUD reutilizable. Archivos proto: `vetrina/screens-shop-categories.jsx`
+(`VetCategoryManager`), más cambios en `screens-shop.jsx` (store), `screens-shop-inventory.jsx`,
+`screens-shop-services.jsx`.
+
+### Store (Pinia en producción)
+
+- Estado: `prodCats` (categorías de productos) y `svcCats` (categorías de servicios), seed desde
+  `VET_SHOP_CATEGORIES` / `VET_SHOP_SERVICE_CATEGORIES`.
+- Acciones: `upsertProdCat/removeProdCat` y `upsertSvcCat/removeSvcCat`.
+  - `upsert`: si trae `id` edita; si no, crea con id generado.
+  - `remove`: **bloquea** si hay productos/servicios usando esa categoría (toast de advertencia);
+    en producción ofrecer reasignar antes de borrar.
+
+### Componente `VetCategoryManager`
+
+Props: `{ open, onClose, title, categories, counts, onUpsert, onRemove }`.
+- `counts`: mapa `{ [catId]: nº de ítems }` (se calcula en cada pantalla filtrando products/services).
+- UI: botón "Nueva categoría" → input inline (Enter para guardar); lista con nombre + conteo +
+  iconos editar/eliminar; eliminar pide confirmación inline (¿Eliminar? Sí/No).
+- Los dropdowns de filtro y los `<select>` de categoría en los formularios de producto/servicio
+  consumen `shop.prodCats` / `shop.svcCats` (no las constantes estáticas), para que las categorías
+  nuevas aparezcan de inmediato.
+
+### Vue
+
+- `CategoryManagerModal.vue` reutilizable, recibe `categories`, `counts`, y emite `upsert`/`remove`.
+- Botón "Categorías" en el header de `InventarioView.vue` y `ServiciosView.vue`.
+- Persistir categorías en el backend; al eliminar, validar integridad referencial (FK con productos/servicios).
+

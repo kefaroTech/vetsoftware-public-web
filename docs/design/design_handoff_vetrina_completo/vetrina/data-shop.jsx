@@ -26,7 +26,27 @@ const VET_SHOP_PAY = {
   TRANSFERENCIA:'Transferencia',
 };
 
-const VET_SHOP_TAX_RATE = 0.19; // IVA Colombia 19% (configurable)
+const VET_SHOP_TAX_RATE = 0.19; // IVA por defecto (configurable)
+
+// Catálogo de tasas de impuesto (editable)
+const VET_TAX_RATES = [
+  { id: 'iva19',    name: 'IVA 19%',  rate: 0.19 },
+  { id: 'iva5',     name: 'IVA 5%',   rate: 0.05 },
+  { id: 'exento',   name: 'Exento 0%', rate: 0 },
+  { id: 'excluido', name: 'Excluido',  rate: 0 },
+];
+
+function vetTaxRate(taxId) {
+  const t = VET_TAX_RATES.find((x) => x.id === taxId);
+  return t ? t.rate : VET_SHOP_TAX_RATE;
+}
+function vetTaxName(taxId) {
+  const t = VET_TAX_RATES.find((x) => x.id === taxId);
+  return t ? t.name : 'IVA 19%';
+}
+
+// Config de impuestos (configurable por el usuario)
+const VET_TAX_CONFIG_DEFAULT = { pricesIncludeTax: true }; // precios incluyen IVA por defecto
 
 function vetShopStockState(p) {
   if (p.stock <= 0) return 'AGOTADO';
@@ -54,20 +74,20 @@ const VET_SHOP_SVC_TONE = {
 };
 
 const VET_SHOP_SERVICES = [
-  { id: 's1',  name: 'Consulta general',              category: 'consulta',     salePrice: 55000 },
-  { id: 's2',  name: 'Consulta especializada',        category: 'consulta',     salePrice: 90000 },
-  { id: 's3',  name: 'Consulta de urgencia',          category: 'consulta',     salePrice: 120000 },
-  { id: 's4',  name: 'Hemograma completo',            category: 'laboratorio',  salePrice: 48000 },
-  { id: 's5',  name: 'Química sanguínea (8)',         category: 'laboratorio',  salePrice: 72000 },
-  { id: 's6',  name: 'Uroanálisis',                   category: 'laboratorio',  salePrice: 38000 },
-  { id: 's7',  name: 'Radiografía simple',            category: 'imagen',       salePrice: 85000 },
-  { id: 's8',  name: 'Ecografía abdominal',           category: 'imagen',       salePrice: 130000 },
-  { id: 's9',  name: 'Vacunación (aplicación)',       category: 'procedimiento',salePrice: 25000 },
-  { id: 's10', name: 'Desparasitación',               category: 'procedimiento',salePrice: 20000 },
-  { id: 's11', name: 'Curación / sutura',             category: 'procedimiento',salePrice: 65000 },
-  { id: 's12', name: 'Baño y peluquería',             category: 'estetica',     salePrice: 45000 },
-  { id: 's13', name: 'Corte de uñas',                 category: 'estetica',     salePrice: 15000 },
-  { id: 's14', name: 'Día de hospitalización',        category: 'hospital',     salePrice: 95000 },
+  { id: 's1',  name: 'Consulta general',              category: 'consulta',     salePrice: 55000, taxId: 'excluido' },
+  { id: 's2',  name: 'Consulta especializada',        category: 'consulta',     salePrice: 90000, taxId: 'excluido' },
+  { id: 's3',  name: 'Consulta de urgencia',          category: 'consulta',     salePrice: 120000, taxId: 'excluido' },
+  { id: 's4',  name: 'Hemograma completo',            category: 'laboratorio',  salePrice: 48000, taxId: 'excluido' },
+  { id: 's5',  name: 'Química sanguínea (8)',         category: 'laboratorio',  salePrice: 72000, taxId: 'excluido' },
+  { id: 's6',  name: 'Uroanálisis',                   category: 'laboratorio',  salePrice: 38000, taxId: 'excluido' },
+  { id: 's7',  name: 'Radiografía simple',            category: 'imagen',       salePrice: 85000, taxId: 'excluido' },
+  { id: 's8',  name: 'Ecografía abdominal',           category: 'imagen',       salePrice: 130000, taxId: 'excluido' },
+  { id: 's9',  name: 'Vacunación (aplicación)',       category: 'procedimiento',salePrice: 25000, taxId: 'excluido' },
+  { id: 's10', name: 'Desparasitación',               category: 'procedimiento',salePrice: 20000, taxId: 'excluido' },
+  { id: 's11', name: 'Curación / sutura',             category: 'procedimiento',salePrice: 65000, taxId: 'excluido' },
+  { id: 's12', name: 'Baño y peluquería',             category: 'estetica',     salePrice: 45000, taxId: 'iva19' },
+  { id: 's13', name: 'Corte de uñas',                 category: 'estetica',     salePrice: 15000, taxId: 'iva19' },
+  { id: 's14', name: 'Día de hospitalización',        category: 'hospital',     salePrice: 95000, taxId: 'excluido' },
 ];
 
 function vetSvcCatName(id) {
@@ -75,20 +95,20 @@ function vetSvcCatName(id) {
 }
 
 const VET_SHOP_PRODUCTS_INITIAL = [
-  { id: 1, name: 'Royal Canin Adult 3kg',        sku: 'ALM-0001', category: 'alimento',    costPrice: 48000, salePrice: 72000, stock: 24, minStock: 6, supplier: 'Royal Canin', expiryDate: '2026-12-01' },
-  { id: 2, name: 'Hill\u2019s Science Diet 2kg',  sku: 'ALM-0002', category: 'alimento',    costPrice: 52000, salePrice: 78000, stock: 4,  minStock: 6, supplier: 'Hill\u2019s', expiryDate: '2026-09-15' },
-  { id: 3, name: 'Pro Plan Cat 1.5kg',           sku: 'ALM-0003', category: 'alimento',    costPrice: 31000, salePrice: 46000, stock: 18, minStock: 5, supplier: 'Purina', expiryDate: '2027-02-20' },
-  { id: 4, name: 'Collar antipulgas perro',       sku: 'ACC-0011', category: 'accesorios',  costPrice: 18000, salePrice: 32000, stock: 30, minStock: 8, supplier: 'Bayer' },
-  { id: 5, name: 'Correa retráctil 5m',           sku: 'ACC-0012', category: 'accesorios',  costPrice: 22000, salePrice: 39000, stock: 12, minStock: 4, supplier: 'Flexi' },
-  { id: 6, name: 'Comedero doble acero',          sku: 'ACC-0013', category: 'accesorios',  costPrice: 14000, salePrice: 26000, stock: 0,  minStock: 4, supplier: 'PetMate' },
-  { id: 7, name: 'Shampoo hipoalergénico 250ml',  sku: 'HIG-0021', category: 'higiene',     costPrice: 12000, salePrice: 23000, stock: 16, minStock: 5, supplier: 'Virbac' },
-  { id: 8, name: 'Toallitas húmedas x80',         sku: 'HIG-0022', category: 'higiene',     costPrice: 7000,  salePrice: 14000, stock: 40, minStock: 10, supplier: 'PetClean' },
-  { id: 9, name: 'Cepillo dental + pasta',        sku: 'HIG-0023', category: 'higiene',     costPrice: 9000,  salePrice: 18000, stock: 3,  minStock: 5, supplier: 'Virbac' },
-  { id: 10, name: 'Antiparasitario oral (OTC)',   sku: 'MED-0031', category: 'medicamento', costPrice: 8000,  salePrice: 16000, stock: 22, minStock: 8, supplier: 'Drontal', expiryDate: '2026-07-30' },
-  { id: 11, name: 'Suplemento vitamínico',        sku: 'MED-0032', category: 'medicamento', costPrice: 15000, salePrice: 28000, stock: 9,  minStock: 4, supplier: 'Nutreca', expiryDate: '2026-11-10' },
-  { id: 12, name: 'Pelota de caucho',             sku: 'JUG-0041', category: 'juguetes',    costPrice: 5000,  salePrice: 12000, stock: 35, minStock: 8, supplier: 'Kong' },
-  { id: 13, name: 'Ratón con catnip',             sku: 'JUG-0042', category: 'juguetes',    costPrice: 3000,  salePrice: 8000,  stock: 2,  minStock: 6, supplier: 'PetToys' },
-  { id: 14, name: 'Hueso masticable',             sku: 'JUG-0043', category: 'juguetes',    costPrice: 6000,  salePrice: 13000, stock: 20, minStock: 5, supplier: 'Nylabone' },
+  { id: 1, name: 'Royal Canin Adult 3kg',        sku: 'ALM-0001', category: 'alimento',    costPrice: 48000, salePrice: 72000, taxId: 'iva19', stock: 24, minStock: 6, supplier: 'Royal Canin', expiryDate: '2026-12-01' },
+  { id: 2, name: 'Hill\u2019s Science Diet 2kg',  sku: 'ALM-0002', category: 'alimento',    costPrice: 52000, salePrice: 78000, taxId: 'iva19', stock: 4,  minStock: 6, supplier: 'Hill\u2019s', expiryDate: '2026-09-15' },
+  { id: 3, name: 'Pro Plan Cat 1.5kg',           sku: 'ALM-0003', category: 'alimento',    costPrice: 31000, salePrice: 46000, taxId: 'iva5',  stock: 18, minStock: 5, supplier: 'Purina', expiryDate: '2027-02-20' },
+  { id: 4, name: 'Collar antipulgas perro',       sku: 'ACC-0011', category: 'accesorios',  costPrice: 18000, salePrice: 32000, taxId: 'iva19', stock: 30, minStock: 8, supplier: 'Bayer' },
+  { id: 5, name: 'Correa retráctil 5m',           sku: 'ACC-0012', category: 'accesorios',  costPrice: 22000, salePrice: 39000, taxId: 'iva19', stock: 12, minStock: 4, supplier: 'Flexi' },
+  { id: 6, name: 'Comedero doble acero',          sku: 'ACC-0013', category: 'accesorios',  costPrice: 14000, salePrice: 26000, taxId: 'iva19', stock: 0,  minStock: 4, supplier: 'PetMate' },
+  { id: 7, name: 'Shampoo hipoalergénico 250ml',  sku: 'HIG-0021', category: 'higiene',     costPrice: 12000, salePrice: 23000, taxId: 'iva19', stock: 16, minStock: 5, supplier: 'Virbac' },
+  { id: 8, name: 'Toallitas húmedas x80',         sku: 'HIG-0022', category: 'higiene',     costPrice: 7000,  salePrice: 14000, taxId: 'iva19', stock: 40, minStock: 10, supplier: 'PetClean' },
+  { id: 9, name: 'Cepillo dental + pasta',        sku: 'HIG-0023', category: 'higiene',     costPrice: 9000,  salePrice: 18000, taxId: 'iva19', stock: 3,  minStock: 5, supplier: 'Virbac' },
+  { id: 10, name: 'Antiparasitario oral (OTC)',   sku: 'MED-0031', category: 'medicamento', costPrice: 8000,  salePrice: 16000, taxId: 'exento', stock: 22, minStock: 8, supplier: 'Drontal', expiryDate: '2026-07-30' },
+  { id: 11, name: 'Suplemento vitamínico',        sku: 'MED-0032', category: 'medicamento', costPrice: 15000, salePrice: 28000, taxId: 'exento', stock: 9,  minStock: 4, supplier: 'Nutreca', expiryDate: '2026-11-10' },
+  { id: 12, name: 'Pelota de caucho',             sku: 'JUG-0041', category: 'juguetes',    costPrice: 5000,  salePrice: 12000, taxId: 'iva19', stock: 35, minStock: 8, supplier: 'Kong' },
+  { id: 13, name: 'Ratón con catnip',             sku: 'JUG-0042', category: 'juguetes',    costPrice: 3000,  salePrice: 8000,  taxId: 'iva19', stock: 2,  minStock: 6, supplier: 'PetToys' },
+  { id: 14, name: 'Hueso masticable',             sku: 'JUG-0043', category: 'juguetes',    costPrice: 6000,  salePrice: 13000, taxId: 'iva19', stock: 20, minStock: 5, supplier: 'Nylabone' },
 ];
 
 // Ventas históricas
@@ -109,9 +129,38 @@ function vetShopCustomerName(id) {
   return o ? o.name : null;
 }
 
+// Calcula totales con impuesto por línea. Cada línea define si su precio incluye IVA
+// (l.priceIncludesTax, por defecto true). lines: [{ unitPrice, qty, taxId, priceIncludesTax }]
+function vetComputeTotals(lines, discount, config) {
+  const grossTotal = lines.reduce((a, l) => a + l.unitPrice * l.qty, 0);
+  const disc = Math.min(Number(discount) || 0, grossTotal);
+  const factor = grossTotal > 0 ? (grossTotal - disc) / grossTotal : 1;
+  const byRate = {};
+  let baseSum = 0, taxSum = 0, total = 0;
+  for (const l of lines) {
+    const rate = vetTaxRate(l.taxId);
+    const inc = l.priceIncludesTax !== undefined ? l.priceIncludesTax : (config ? config.pricesIncludeTax : true);
+    const g = l.unitPrice * l.qty * factor;
+    let base, tax;
+    if (inc) { base = g / (1 + rate); tax = g - base; total += g; }
+    else { base = g; tax = g * rate; total += g + tax; }
+    baseSum += base; taxSum += tax;
+    const key = l.taxId || 'iva19';
+    if (!byRate[key]) byRate[key] = { id: key, name: vetTaxName(key), rate, base: 0, amount: 0 };
+    byRate[key].base += base; byRate[key].amount += tax;
+  }
+  return {
+    grossTotal, disc, base: Math.round(baseSum), taxSum: Math.round(taxSum),
+    byRate: Object.values(byRate).map((r) => ({ ...r, base: Math.round(r.base), amount: Math.round(r.amount) })),
+    total: Math.round(total),
+  };
+}
+
 Object.assign(window, {
   VET_SHOP_CATEGORIES, VET_SHOP_CAT_TONE, VET_SHOP_PAY, VET_SHOP_TAX_RATE,
+  VET_TAX_RATES, vetTaxRate, vetTaxName, VET_TAX_CONFIG_DEFAULT,
   vetShopStockState, VET_SHOP_PRODUCTS_INITIAL, VET_SHOP_SALES_INITIAL,
   vetMoney, vetShopCustomerName,
   VET_SHOP_SERVICE_CATEGORIES, VET_SHOP_SVC_TONE, VET_SHOP_SERVICES, vetSvcCatName,
+  vetComputeTotals,
 });

@@ -53,6 +53,26 @@ export const PERMISSIONS = {
   SPA_DELETE: 'spa.delete',
 
   AGENDA_READ: 'agenda.read',
+
+  // Tienda
+  PRODUCT_CREATE: 'product.create',
+  PRODUCT_READ: 'product.read',
+  PRODUCT_UPDATE: 'product.update',
+  PRODUCT_DELETE: 'product.delete',
+  SERVICE_CREATE: 'service.create',
+  SERVICE_READ: 'service.read',
+  SERVICE_UPDATE: 'service.update',
+  SERVICE_DELETE: 'service.delete',
+  PROMOTION_CREATE: 'promotion.create',
+  PROMOTION_READ: 'promotion.read',
+  PROMOTION_UPDATE: 'promotion.update',
+  PROMOTION_DELETE: 'promotion.delete',
+
+  // Cuentas / Facturación
+  OPEN_ACCOUNT_CREATE: 'openAccount.create',
+  OPEN_ACCOUNT_READ: 'openAccount.read',
+  OPEN_ACCOUNT_UPDATE: 'openAccount.update',
+  OPEN_ACCOUNT_DELETE: 'openAccount.delete',
 } as const
 
 export type PermissionCode = typeof PERMISSIONS[keyof typeof PERMISSIONS]

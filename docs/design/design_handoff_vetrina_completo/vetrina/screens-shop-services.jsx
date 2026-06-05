@@ -11,6 +11,8 @@ function VetShopServicesView({ shop }) {
   const [cat, setCat] = React.useState('');
   const [formOpen, setFormOpen] = React.useState(null);   // { initial } | null
   const [removeFor, setRemoveFor] = React.useState(null);
+  const [catOpen, setCatOpen] = React.useState(false);
+  const cats = shop.svcCats || [];
 
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -38,9 +40,14 @@ function VetShopServicesView({ shop }) {
           <div className="vet-shop-kicker">Tienda · Servicios</div>
           <h1 className="vet-shop-title">Servicios ofrecidos</h1>
         </div>
-        <button type="button" className="vet-shop-cta" onClick={() => setFormOpen({ initial: null })}>
-          <VetIcons.Plus size={16} strokeWidth={1.8} /> Nuevo servicio
-        </button>
+        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+          <button type="button" className="vet-historia-btn-ghost" onClick={() => setCatOpen(true)}>
+            <VetIcons.Package size={14} strokeWidth={1.8} /> Categorías
+          </button>
+          <button type="button" className="vet-shop-cta" onClick={() => setFormOpen({ initial: null })}>
+            <VetIcons.Plus size={16} strokeWidth={1.8} /> Nuevo servicio
+          </button>
+        </div>
       </header>
 
       <div className="vet-shop-inv-filters">
@@ -50,7 +57,7 @@ function VetShopServicesView({ shop }) {
         </div>
         <select className="vet-shop-fsel" value={cat} onChange={(e) => setCat(e.target.value)}>
           <option value="">Todas las categorías</option>
-          {VET_SHOP_SERVICE_CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </div>
 
@@ -86,9 +93,18 @@ function VetShopServicesView({ shop }) {
         </section>
       ))}
 
-      <VetShopServiceForm open={!!formOpen} initial={formOpen?.initial}
+      <VetShopServiceForm open={!!formOpen} initial={formOpen?.initial} cats={cats}
         onClose={() => setFormOpen(null)}
         onSave={(d) => { shop.upsertService(d); setFormOpen(null); }} />
+
+      <VetCategoryManager
+        open={catOpen} onClose={() => setCatOpen(false)}
+        title="Categorías de servicios"
+        categories={cats}
+        counts={Object.fromEntries(cats.map((c) => [c.id, shop.services.filter((s) => s.category === c.id).length]))}
+        onUpsert={shop.upsertSvcCat}
+        onRemove={shop.removeSvcCat}
+      />
 
       <VetModalShell open={!!removeFor} title="Eliminar servicio"
         subtitle={removeFor?.name} icon={VetIcons.Trash} accent="danger" width={420}
@@ -114,11 +130,11 @@ function VetShopServicesView({ shop }) {
 // Service form
 // ============================================================================
 
-function VetShopServiceForm({ open, initial, onClose, onSave }) {
+function VetShopServiceForm({ open, initial, cats, onClose, onSave }) {
   const [d, setD] = React.useState({});
   React.useEffect(() => {
     if (!open) return;
-    setD(initial ? { ...initial } : { name: '', category: 'consulta', salePrice: '', notes: '' });
+    setD(initial ? { ...initial } : { name: '', category: 'consulta', salePrice: '', taxId: 'excluido', notes: '' });
   }, [open, initial]);
   const u = (p) => setD((x) => ({ ...x, ...p }));
   const valid = d.name?.trim() && d.salePrice;
@@ -147,12 +163,20 @@ function VetShopServiceForm({ open, initial, onClose, onSave }) {
         <div className="vet-form-grid-2">
           <VetBaseField label="Categoría" required>
             {({ id }) => <VetBaseSelect id={id} value={d.category} onChange={(v) => u({ category: v })}
-              options={VET_SHOP_SERVICE_CATEGORIES.map((c) => ({ value: c.id, label: c.name }))} />}
+              options={(cats || VET_SHOP_SERVICE_CATEGORIES).map((c) => ({ value: c.id, label: c.name }))} />}
           </VetBaseField>
           <VetBaseField label="Precio" required>
             {({ id }) => <VetBaseInput id={id} type="number" value={d.salePrice} onChange={(v) => u({ salePrice: v })} placeholder="55000" />}
           </VetBaseField>
         </div>
+        <VetBaseField label="Impuesto">
+          {({ id }) => <VetBaseSelect id={id} value={d.taxId || 'excluido'} onChange={(v) => u({ taxId: v })}
+            options={window.VET_TAX_RATES.map((t) => ({ value: t.id, label: t.name }))} />}
+        </VetBaseField>
+        <VetBaseField label="¿El precio incluye impuestos?">
+          {({ id }) => <VetBaseSelect id={id} value={(d.priceIncludesTax !== false) ? 'si' : 'no'} onChange={(v) => u({ priceIncludesTax: v === 'si' })}
+            options={[{ value: 'si', label: 'Sí, incluido' }, { value: 'no', label: 'No, se suma' }]} />}
+        </VetBaseField>
         <VetBaseField label="Notas (opcional)">
           {({ id }) => <VetBaseTextarea id={id} value={d.notes} onChange={(v) => u({ notes: v })} rows={2} placeholder="Descripción, qué incluye…" />}
         </VetBaseField>
