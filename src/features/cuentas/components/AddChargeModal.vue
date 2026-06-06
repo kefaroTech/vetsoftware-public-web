@@ -8,7 +8,7 @@ import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import { useTienda } from '@/features/tienda/composables/useTienda'
 import { useCuentas } from '../composables/useCuentas'
 import { formatMoney } from '@/features/tienda/composables/pricing'
-import { getProblemDetailMessage } from '@/services/http/http.client'
+import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
 
 const props = defineProps<{
@@ -18,7 +18,7 @@ const props = defineProps<{
   pets: { id: number; name: string }[]
 }>()
 
-const emit = defineEmits<{ close: []; added: [] }>()
+const emit = defineEmits<{ close: []; added: []; refresh: [] }>()
 
 const tienda = useTienda()
 const cuentas = useCuentas()
@@ -74,7 +74,12 @@ async function addCatalogItem(itemId: number) {
     toast.success('Cargo agregado', 'Se añadió a la cuenta.')
     emit('added')
   } catch (e) {
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo agregar el cargo'))
+    if (isConcurrencyConflict(e)) {
+      toast.warn('Conflicto de concurrencia', getProblemDetailMessage(e))
+      emit('refresh')
+    } else {
+      toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo agregar el cargo'))
+    }
   } finally {
     busy.value = false
   }
@@ -100,7 +105,12 @@ async function addGeneral() {
     Object.assign(general, { name: '', unitAmount: '', quantity: '1', taxId: '', hasTax: false })
     emit('added')
   } catch (e) {
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo agregar el cargo'))
+    if (isConcurrencyConflict(e)) {
+      toast.warn('Conflicto de concurrencia', getProblemDetailMessage(e))
+      emit('refresh')
+    } else {
+      toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo agregar el cargo'))
+    }
   } finally {
     busy.value = false
   }

@@ -28,7 +28,7 @@ import { animalApi } from '@/features/dashboard/views/consulta/nueva/api/animal.
 import { useToast } from '@/composables/useToast'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
-import { getProblemDetailMessage } from '@/services/http/http.client'
+import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 import {
   OPEN_ACCOUNT_STATUS_LABEL,
   PAYMENT_METHOD_LABEL,
@@ -127,7 +127,12 @@ async function onDeleteCharge(c: UnifiedCharge) {
     selected.value = store.accounts.value.find((a) => a.id === selected.value!.id) ?? selected.value
     toast.info('Cargo eliminado', `${c.concept} fue removido de la cuenta.`)
   } catch (e) {
-    toast.error('No se pudo eliminar', getProblemDetailMessage(e, 'No se pudo eliminar el cargo'))
+    if (isConcurrencyConflict(e)) {
+      await refreshSelected()
+      toast.warn('Conflicto de concurrencia', getProblemDetailMessage(e))
+    } else {
+      toast.error('No se pudo eliminar', getProblemDetailMessage(e, 'No se pudo eliminar el cargo'))
+    }
   }
 }
 </script>
@@ -304,6 +309,7 @@ async function onDeleteCharge(c: UnifiedCharge) {
         :pets="ownerPets"
         @close="addChargeOpen = false"
         @added="refreshSelected"
+        @refresh="refreshSelected"
       />
       <PaymentModal
         :open="paymentOpen"
@@ -311,12 +317,14 @@ async function onDeleteCharge(c: UnifiedCharge) {
         :outstanding="selected.outstandingAmount"
         @close="paymentOpen = false"
         @paid="refreshSelected"
+        @refresh="refreshSelected"
       />
       <CloseAccountModal
         :open="closeOpen"
         :account="selected"
         @close="closeOpen = false"
         @closed="onAccountClosed"
+        @refresh="refreshSelected"
       />
     </template>
 

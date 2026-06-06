@@ -7,7 +7,7 @@ import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import { useCuentas } from '../composables/useCuentas'
 import { formatMoney } from '@/features/tienda/composables/pricing'
-import { getProblemDetailMessage } from '@/services/http/http.client'
+import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
 import type { PaymentMethod } from '../types/cuentas'
 
@@ -17,7 +17,7 @@ const props = defineProps<{
   outstanding: number
 }>()
 
-const emit = defineEmits<{ close: []; paid: [] }>()
+const emit = defineEmits<{ close: []; paid: []; refresh: [] }>()
 
 const cuentas = useCuentas()
 const toast = useToast()
@@ -57,7 +57,12 @@ async function submit() {
     emit('paid')
     emit('close')
   } catch (e) {
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo registrar el abono'))
+    if (isConcurrencyConflict(e)) {
+      toast.warn('Conflicto de concurrencia', getProblemDetailMessage(e))
+      emit('refresh')
+    } else {
+      toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo registrar el abono'))
+    }
   } finally {
     busy.value = false
   }

@@ -61,6 +61,24 @@ export function getProblemDetailMessage(error: unknown, fallback = 'Error inespe
   return fallback
 }
 
+/** Código de negocio del `ProblemDetail` (`pd.code`), o `null` si no aplica. */
+export function getProblemDetailCode(error: unknown): string | null {
+  if (error instanceof AxiosError) {
+    const pd = error.response?.data as ProblemDetail | undefined
+    if (pd?.code) return pd.code
+  }
+  return null
+}
+
+/**
+ * `true` si el backend respondió 409 por optimistic locking (`@Version`): dos
+ * operaciones tocaron la misma entidad versionada a la vez. El llamador debería
+ * recargar datos frescos y permitir reintentar sobre el estado actual.
+ */
+export function isConcurrencyConflict(error: unknown): boolean {
+  return getProblemDetailCode(error) === 'CONCURRENT_MODIFICATION'
+}
+
 export function getProblemDetailFieldErrors(
   error: unknown,
 ): Record<string, string> {

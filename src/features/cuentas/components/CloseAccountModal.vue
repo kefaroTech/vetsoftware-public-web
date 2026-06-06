@@ -6,7 +6,7 @@ import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import { useCuentas } from '../composables/useCuentas'
 import { formatMoney } from '@/features/tienda/composables/pricing'
-import { getProblemDetailMessage } from '@/services/http/http.client'
+import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
 import {
   PAYMENT_METHOD_LABEL,
@@ -19,7 +19,7 @@ const props = defineProps<{
   account: OpenAccountResponse | null
 }>()
 
-const emit = defineEmits<{ close: []; closed: [account: OpenAccountResponse] }>()
+const emit = defineEmits<{ close: []; closed: [account: OpenAccountResponse]; refresh: [] }>()
 
 const store = useCuentas()
 const toast = useToast()
@@ -88,7 +88,12 @@ async function confirm() {
     }
     step.value = 'recibo'
   } catch (e) {
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo cerrar la cuenta'))
+    if (isConcurrencyConflict(e)) {
+      toast.warn('Conflicto de concurrencia', getProblemDetailMessage(e))
+      emit('refresh')
+    } else {
+      toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo cerrar la cuenta'))
+    }
   } finally {
     busy.value = false
   }
