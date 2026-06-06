@@ -199,7 +199,12 @@ export const useCuentasStore = defineStore('cuentas', () => {
    */
   async function closeAccount(
     accountId: number,
-    opts: { motivo: 'COBRADA' | 'CANCELADA'; paymentMethod: PaymentMethod; outstanding: number },
+    opts: {
+      motivo: 'COBRADA' | 'CANCELADA'
+      paymentMethod: PaymentMethod
+      outstanding: number
+      reason?: string
+    },
   ): Promise<OpenAccountResponse> {
     if (opts.motivo === 'COBRADA' && opts.outstanding > 0) {
       await debtOpenAccountApi.create({
@@ -211,6 +216,7 @@ export const useCuentasStore = defineStore('cuentas', () => {
     const updated = await openAccountApi.changeStatus(
       accountId,
       opts.motivo === 'CANCELADA' ? 'CANCEL' : 'CLOSE',
+      opts.motivo === 'CANCELADA' ? opts.reason : undefined,
     )
     upsertAccount(updated)
     return updated

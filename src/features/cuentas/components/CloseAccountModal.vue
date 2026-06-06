@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { Check, Receipt, X } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
+import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import { useCuentas } from '../composables/useCuentas'
 import { formatMoney } from '@/features/tienda/composables/pricing'
@@ -29,6 +30,7 @@ type Motivo = 'COBRADA' | 'CANCELADA'
 const step = ref<'cobro' | 'recibo'>('cobro')
 const motivo = ref<Motivo>('COBRADA')
 const method = ref<PaymentMethod>('CASH')
+const reason = ref('')
 const busy = ref(false)
 const result = ref<{ account: OpenAccountResponse; charged: number } | null>(null)
 
@@ -51,6 +53,11 @@ const primaryLabel = computed(() =>
   motivo.value === 'COBRADA' ? 'Cobrar y cerrar' : 'Cancelar cuenta',
 )
 
+// El motivo es obligatorio al cancelar (lo exige también el backend).
+const canConfirm = computed(
+  () => !busy.value && !(motivo.value === 'CANCELADA' && reason.value.trim() === ''),
+)
+
 const receiptCancel = computed(() => result.value?.charged === 0 && motivo.value === 'CANCELADA')
 const receiptTitle = computed(() =>
   receiptCancel.value ? 'Cuenta cancelada sin cobro' : 'Cuenta cerrada y cobrada',
@@ -63,6 +70,7 @@ watch(
     step.value = 'cobro'
     motivo.value = 'COBRADA'
     method.value = 'CASH'
+    reason.value = ''
     busy.value = false
     result.value = null
   },
@@ -76,6 +84,7 @@ async function confirm() {
       motivo: motivo.value,
       paymentMethod: method.value,
       outstanding: outstanding.value,
+      reason: motivo.value === 'CANCELADA' ? reason.value.trim() : undefined,
     })
     result.value = {
       account: updated,
@@ -151,6 +160,16 @@ function finish() {
           </template>
         </BaseField>
 
+        <BaseField v-if="motivo === 'CANCELADA'" label="Motivo de la cancelación" required>
+          <template #default="{ id }">
+            <BaseInput
+              :id="id"
+              v-model="reason"
+              placeholder="Ej. cortesía, garantía, error de facturación…"
+            />
+          </template>
+        </BaseField>
+
         <p class="note">{{ note }}</p>
       </div>
     </template>
@@ -160,7 +179,7 @@ function finish() {
     </template>
     <template v-if="step === 'cobro'" #footer-actions>
       <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn-primary" :disabled="busy" @click="confirm">
+      <button type="button" class="btn-primary" :disabled="!canConfirm" @click="confirm">
         {{ busy ? 'Procesando…' : primaryLabel }}
       </button>
     </template>
@@ -178,6 +197,10 @@ function finish() {
           <div class="rec-row"><span>Acumulado</span><span>{{ formatMoney(result.account.totalAmount) }}</span></div>
           <div class="rec-row"><span>Abonado</span><span>{{ formatMoney(result.account.paidAmount) }}</span></div>
           <div class="rec-row total"><span>Cobrado ahora</span><span>{{ formatMoney(result.charged) }}</span></div>
+        </div>
+        <div v-if="receiptCancel && result.account.closeReason" class="rec-reason">
+          <span class="rec-reason-lab">Motivo</span>
+          <span>{{ result.account.closeReason }}</span>
         </div>
       </div>
     </template>
@@ -226,6 +249,8 @@ function finish() {
 .rec-row span:last-child { font-variant-numeric: tabular-nums; color: var(--warm-900); }
 .rec-row.total { border-bottom: none; border-top: 1.5px solid var(--warm-200); margin-top: 4px; font-weight: 600; }
 .rec-row.total span:last-child { color: var(--success-fg); }
+.rec-reason { width: 100%; margin-top: 10px; padding: 10px 12px; background: var(--warm-100); border-radius: 9px; text-align: left; font-size: 12.5px; color: var(--warm-700); }
+.rec-reason-lab { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--warm-500); margin-bottom: 2px; }
 
 /* Footer */
 .foottotal { font-size: 13px; color: var(--warm-600); }

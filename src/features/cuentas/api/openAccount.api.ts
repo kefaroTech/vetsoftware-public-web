@@ -33,8 +33,15 @@ export const openAccountApi = {
     return data
   },
 
-  async changeStatus(id: number, status: OpenAccountStatus): Promise<OpenAccountResponse> {
-    const { data } = await http.patch<OpenAccountResponse>(`/open-accounts/${id}/status`, { status })
+  async changeStatus(
+    id: number,
+    status: OpenAccountStatus,
+    reason?: string,
+  ): Promise<OpenAccountResponse> {
+    const { data } = await http.patch<OpenAccountResponse>(`/open-accounts/${id}/status`, {
+      status,
+      reason,
+    })
     return data
   },
 

@@ -70,6 +70,10 @@ export interface OpenAccountResponse {
   createdBy: EmployeeSummary
   createdDate: string
   enabled: boolean
+  /** Trazabilidad de cierre (presentes cuando status !== OPEN). */
+  closedBy?: EmployeeSummary | null
+  closedAt?: string | null
+  closeReason?: string | null
 }
 
 export interface OpenAccountSearchCriteria {
