@@ -89,33 +89,50 @@ export interface ChargeAccountRef {
   id: number
 }
 
-export interface ProductChargeResponse {
+/** Trazabilidad de anulación de un cargo (presente cuando voided=true). */
+export interface ChargeVoidInfo {
+  /** El cargo anulado sigue enabled=true pero voided=true (queda visible tachado). */
+  voided: boolean
+  voidedBy?: EmployeeSummary | null
+  voidedAt?: string | null
+  voidReason?: string | null
+}
+
+export interface ProductChargeResponse extends ChargeVoidInfo {
   id: number
   animal: AnimalSummary
+  /** `salePrice` es el precio ACTUAL del catálogo (informativo); usar `unitPrice` para el monto. */
   product: { id: number; name: string; salePrice?: number }
+  /** Precio unitario congelado al crear el cargo (snapshot del backend). */
+  unitPrice: number
   openAccount: ChargeAccountRef
   createdBy: EmployeeSummary
   createdDate: string
   enabled: boolean
 }
 
-export interface ServiceChargeResponse {
+export interface ServiceChargeResponse extends ChargeVoidInfo {
   id: number
   animal: AnimalSummary
+  /** `price` es el precio ACTUAL del catálogo (informativo); usar `unitPrice` para el monto. */
   service: { id: number; name: string; price?: number }
+  /** Precio unitario congelado al crear el cargo (snapshot del backend). */
+  unitPrice: number
   openAccount: ChargeAccountRef
   createdBy: EmployeeSummary
   createdDate: string
   enabled: boolean
 }
 
-export interface GeneralChargeResponse {
+export interface GeneralChargeResponse extends ChargeVoidInfo {
   id: number
   name: string
   unitAmount: number
   quantity: number
   tax: TaxSummary | null
   hasTax: boolean
+  /** Porcentaje de impuesto congelado al crear el cargo; null si no aplica. */
+  taxPercentage?: number | null
   openAccount: ChargeAccountRef
   createdBy: EmployeeSummary
   createdDate: string
@@ -162,6 +179,11 @@ export interface DebtResponse {
   createdBy: EmployeeSummary
   createdDate: string
   enabled: boolean
+  /** Trazabilidad de anulación. El abono anulado sigue enabled=true pero voided=true. */
+  voided: boolean
+  voidedBy?: EmployeeSummary | null
+  voidedAt?: string | null
+  voidReason?: string | null
 }
 
 export interface CreateDebtPayload {
@@ -183,4 +205,10 @@ export interface UnifiedCharge {
   concept: string
   amount: number
   date: string
+  /** Autoría del cargo (cajero que lo registró). */
+  createdByName: string
+  /** Anulado: queda visible tachado y deja de contar en el total. */
+  voided: boolean
+  voidedByName: string
+  voidReason: string
 }

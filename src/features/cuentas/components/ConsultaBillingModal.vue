@@ -50,6 +50,18 @@ const tab = ref<CartKind>('service')
 const query = ref('')
 const items = ref<CartLine[]>([])
 
+// ── Marcadores de idempotencia para el reintento de guardado ─────────────────
+// La cuenta (destino 'new') se crea una sola vez y cada cargo (un POST por unidad)
+// se marca al persistirse; tras un fallo parcial, reintentar continúa sin duplicar.
+interface ChargeOp {
+  kind: CartKind
+  animalId: number
+  refId: number
+  done: boolean
+}
+const createdAccount = ref<OpenAccountResponse | null>(null)
+const pendingOps = ref<ChargeOp[]>([])
+
 const firstName = computed(() => props.ownerName.trim().split(/\s+/)[0] || props.ownerName)
 const hasAccount = computed(() => existingAccount.value !== null)
 
@@ -60,6 +72,8 @@ watch(
     existingAccount.value = null
     existingCharges.value = []
     items.value = []
+    createdAccount.value = null
+    pendingOps.value = []
     tab.value = 'service'
     query.value = ''
     destino.value = 'new'
@@ -132,6 +146,26 @@ const canConfirm = computed(() => {
   return props.ownerId != null
 })
 
+// Hubo un guardado parcial: la cuenta destino ya existe pero faltan cargos por persistir.
+const retryHint = computed(
+  () =>
+    !busy.value &&
+    pendingOps.value.some((o) => !o.done) &&
+    (!!createdAccount.value || pendingOps.value.some((o) => o.done)),
+)
+
+/** Aplana el carrito a POSTs individuales (1 cargo por unidad); base de la idempotencia. */
+function buildOps(): ChargeOp[] {
+  const ops: ChargeOp[] = []
+  if (props.animalId == null) return ops
+  for (const l of items.value) {
+    for (let i = 0; i < l.qty; i++) {
+      ops.push({ kind: l.kind, animalId: props.animalId, refId: l.id, done: false })
+    }
+  }
+  return ops
+}
+
 async function confirm() {
   if (!canConfirm.value) return
   if (destino.value === 'nada') {
@@ -141,23 +175,36 @@ async function confirm() {
   }
   busy.value = true
   try {
-    const batch = items.value.map((l) => ({ kind: l.kind, id: l.id, qty: l.qty }))
-    const units = items.value.reduce((n, l) => n + l.qty, 0)
+    // 1. Cuenta destino: 'existing' la reutiliza; 'new' la crea una sola vez (idempotente).
+    let accountId: number
     if (destino.value === 'existing' && existingAccount.value) {
-      if (props.animalId != null && batch.length) {
-        await cuentas.addChargesBatch(existingAccount.value.id, props.animalId, batch)
+      accountId = existingAccount.value.id
+    } else {
+      if (!createdAccount.value) {
+        createdAccount.value = await cuentas.openAccount(props.ownerId as number)
       }
+      accountId = createdAccount.value.id
+    }
+
+    // 2. Aplanar el carrito una sola vez; cada op se marca al persistirse.
+    if (pendingOps.value.length === 0) pendingOps.value = buildOps()
+    for (const op of pendingOps.value) {
+      if (op.done) continue
+      await cuentas.addChargeUnit(accountId, op.animalId, op.kind, op.refId)
+      op.done = true
+    }
+    if (pendingOps.value.length > 0) await cuentas.refreshAccount(accountId)
+
+    const units = pendingOps.value.length
+    if (destino.value === 'existing') {
       toast.success('Cargos agregados', `${units} ítem(s) sumados a la cuenta de ${firstName.value}.`)
     } else {
-      const account = await cuentas.openAccount(props.ownerId as number)
-      if (props.animalId != null && batch.length) {
-        await cuentas.addChargesBatch(account.id, props.animalId, batch)
-      }
       toast.success('Cuenta abierta', `Se creó una cuenta para ${props.ownerName} con ${units} cargo(s).`)
     }
     emit('finish')
     emit('close')
   } catch (e) {
+    // Los marcadores (createdAccount + ops.done) persisten → el reintento salta lo ya guardado.
     toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo completar la facturación'))
   } finally {
     busy.value = false
@@ -300,6 +347,14 @@ async function confirm() {
               <span class="hint">Elige del catálogo a la izquierda.</span>
             </div>
           </div>
+        </div>
+
+        <div v-if="retryHint" class="acct-none" style="margin-top: 14px">
+          <Receipt :size="15" :stroke-width="1.8" />
+          <span>
+            Guardado parcial: reintenta <strong>{{ primaryLabel }}</strong> para registrar los
+            cargos restantes.
+          </span>
         </div>
       </template>
     </template>

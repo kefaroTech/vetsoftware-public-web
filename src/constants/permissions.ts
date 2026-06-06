@@ -77,6 +77,10 @@ export const PERMISSIONS = {
   OPEN_ACCOUNT_READ: 'openAccount.read',
   OPEN_ACCOUNT_UPDATE: 'openAccount.update',
   OPEN_ACCOUNT_DELETE: 'openAccount.delete',
+  /** Permiso elevado: anular un abono ya registrado (con motivo). */
+  DEBT_OPEN_ACCOUNT_VOID: 'debtOpenAccount.delete',
+  /** Permiso elevado: anular un cargo ya registrado (con motivo). */
+  CHARGE_OPEN_ACCOUNT_VOID: 'chargeOpenAccount.delete',
 } as const
 
 export type PermissionCode = typeof PERMISSIONS[keyof typeof PERMISSIONS]

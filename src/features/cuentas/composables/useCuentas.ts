@@ -33,9 +33,13 @@ export function useCuentas() {
     addProductCharge: store.addProductCharge,
     addServiceCharge: store.addServiceCharge,
     addGeneralCharge: store.addGeneralCharge,
+    addChargeUnit: store.addChargeUnit,
+    addGeneralChargeNoRefresh: store.addGeneralChargeNoRefresh,
     addChargesBatch: store.addChargesBatch,
     addPayment: store.addPayment,
     closeAccount: store.closeAccount,
+    voidPayment: store.voidPayment,
+    voidCharge: store.voidCharge,
     removeCharge: store.removeCharge,
   }
 }

@@ -1,0 +1,120 @@
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue'
+import { Ban } from 'lucide-vue-next'
+import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
+import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
+import { useCuentas } from '../composables/useCuentas'
+import { formatMoney } from '@/features/tienda/composables/pricing'
+import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
+import { useToast } from '@/composables/useToast'
+import type { UnifiedCharge } from '../types/cuentas'
+
+const props = defineProps<{
+  open: boolean
+  accountId: number
+  charge: UnifiedCharge | null
+}>()
+
+const emit = defineEmits<{ close: []; voided: []; refresh: [] }>()
+
+const cuentas = useCuentas()
+const toast = useToast()
+
+const reason = ref('')
+const submitted = ref(false)
+const busy = ref(false)
+
+watch(
+  () => props.open,
+  (open) => {
+    if (!open) return
+    reason.value = ''
+    submitted.value = false
+  },
+)
+
+const reasonError = computed(() => (reason.value.trim().length < 3 ? 'Indica el motivo de la anulación' : null))
+
+const subtitle = computed(() => {
+  const c = props.charge
+  if (!c) return ''
+  return `${c.concept} · ${formatMoney(c.amount)}${c.createdByName ? ` · ${c.createdByName}` : ''}`
+})
+
+async function submit() {
+  submitted.value = true
+  if (reasonError.value || busy.value || !props.charge) return
+  busy.value = true
+  try {
+    await cuentas.voidCharge(props.accountId, props.charge, reason.value.trim())
+    toast.success('Cargo anulado', 'El cargo dejó de contar en el total de la cuenta.')
+    emit('voided')
+    emit('close')
+  } catch (e) {
+    if (isConcurrencyConflict(e)) {
+      toast.warn('Conflicto de concurrencia', getProblemDetailMessage(e))
+      emit('refresh')
+    } else {
+      toast.error('No se pudo anular', getProblemDetailMessage(e, 'No se pudo anular el cargo'))
+    }
+  } finally {
+    busy.value = false
+  }
+}
+</script>
+
+<template>
+  <ModalShell
+    :open="open"
+    title="Anular cargo"
+    :subtitle="subtitle"
+    :icon="Ban"
+    accent="danger"
+    :width="460"
+    @close="emit('close')"
+  >
+    <template #body>
+      <div class="form">
+        <p class="warn">
+          El cargo quedará registrado como <strong>anulado</strong> (visible, tachado) y dejará de
+          contar en el total. Esta acción registra tu autoría y el motivo.
+        </p>
+        <BaseField label="Motivo de la anulación" required :error="submitted ? reasonError ?? undefined : undefined">
+          <template #default="{ id }">
+            <BaseTextarea
+              :id="id"
+              v-model="reason"
+              :rows="3"
+              placeholder="Ej. cargo erróneo, mascota equivocada, duplicado…"
+            />
+          </template>
+        </BaseField>
+      </div>
+    </template>
+
+    <template #footer-actions>
+      <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
+      <button type="button" class="btn-danger" :disabled="busy" @click="submit">
+        {{ busy ? 'Anulando…' : 'Anular cargo' }}
+      </button>
+    </template>
+  </ModalShell>
+</template>
+
+<style scoped>
+.form { display: flex; flex-direction: column; gap: 16px; }
+.warn { margin: 0; font-size: 13px; line-height: 1.5; color: var(--warm-600); }
+.warn strong { color: oklch(48% 0.18 25); }
+.btn-danger {
+  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
+  border: none; color: white;
+  background: linear-gradient(135deg, oklch(52% 0.18 25), oklch(45% 0.18 22));
+}
+.btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-ghost {
+  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
+  background: transparent; border: 1px solid var(--warm-200); color: var(--warm-700);
+}
+.btn-ghost:hover { background: var(--warm-100); }
+</style>

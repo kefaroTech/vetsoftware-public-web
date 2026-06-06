@@ -3,7 +3,6 @@ import { computed, ref } from 'vue'
 import { openAccountApi } from '../api/openAccount.api'
 import { generalChargeApi, productChargeApi, serviceChargeApi } from '../api/charges.api'
 import { debtOpenAccountApi } from '../api/debtOpenAccount.api'
-import { useTiendaStore } from '@/features/tienda/stores/tienda.store'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import type {
   CreateGeneralChargePayload,
@@ -46,10 +45,8 @@ export const useCuentasStore = defineStore('cuentas', () => {
   }
 
   async function loadDetail(accountId: number): Promise<void> {
-    const tienda = useTiendaStore()
     detailLoading.value = true
     try {
-      await tienda.ensureLoaded()
       const [prod, svc, gen, debts] = await Promise.all([
         productChargeApi.listByOpenAccount(accountId),
         serviceChargeApi.listByOpenAccount(accountId),
@@ -58,32 +55,32 @@ export const useCuentasStore = defineStore('cuentas', () => {
       ])
       const unified: UnifiedCharge[] = []
       for (const c of prod.filter((x) => x.enabled)) {
-        const price =
-          c.product.salePrice ??
-          tienda.products.find((p) => p.id === c.product.id)?.salePrice ??
-          0
+        // Precio congelado al crear el cargo (snapshot del backend); no se lee del catálogo en vivo.
         unified.push({
           id: c.id, kind: 'product', animalId: c.animal.id, animalName: c.animal.name,
-          concept: c.product.name, amount: price, date: c.createdDate,
+          concept: c.product.name, amount: c.unitPrice, date: c.createdDate,
+          createdByName: c.createdBy?.name ?? '',
+          voided: c.voided, voidedByName: c.voidedBy?.name ?? '', voidReason: c.voidReason ?? '',
         })
       }
       for (const c of svc.filter((x) => x.enabled)) {
-        const price =
-          c.service.price ??
-          tienda.services.find((s) => s.id === c.service.id)?.price ??
-          0
         unified.push({
           id: c.id, kind: 'service', animalId: c.animal.id, animalName: c.animal.name,
-          concept: c.service.name, amount: price, date: c.createdDate,
+          concept: c.service.name, amount: c.unitPrice, date: c.createdDate,
+          createdByName: c.createdBy?.name ?? '',
+          voided: c.voided, voidedByName: c.voidedBy?.name ?? '', voidReason: c.voidReason ?? '',
         })
       }
       for (const c of gen.filter((x) => x.enabled)) {
         unified.push({
           id: c.id, kind: 'general', animalId: null, animalName: null,
           concept: c.name, amount: c.unitAmount * c.quantity, date: c.createdDate,
+          createdByName: c.createdBy?.name ?? '',
+          voided: c.voided, voidedByName: c.voidedBy?.name ?? '', voidReason: c.voidReason ?? '',
         })
       }
       charges.value = unified
+      // Los abonos anulados siguen enabled=true (voided=true) y deben verse tachados.
       payments.value = debts.filter((d) => d.enabled)
     } catch (e) {
       error.value = getProblemDetailMessage(e, 'No se pudo cargar el detalle de la cuenta')
@@ -116,7 +113,8 @@ export const useCuentasStore = defineStore('cuentas', () => {
       if (!groups.has(key)) groups.set(key, { key, name, charges: [], subtotal: 0 })
       const g = groups.get(key)!
       g.charges.push(c)
-      g.subtotal += c.amount
+      // Los cargos anulados se muestran (tachados) pero no cuentan en el subtotal ni en el total.
+      if (!c.voided) g.subtotal += c.amount
     }
     const arr = Array.from(groups.values())
     arr.sort((a, b) => (a.key === 'general' ? 1 : b.key === 'general' ? -1 : 0))
@@ -164,6 +162,29 @@ export const useCuentasStore = defineStore('cuentas', () => {
   async function addGeneralCharge(payload: CreateGeneralChargePayload) {
     await generalChargeApi.create(payload)
     await refreshAccount(payload.openAccountId)
+  }
+
+  /**
+   * Crea UN cargo de producto/servicio (1 unidad) sin refrescar la cuenta. Pensado para
+   * flujos que orquestan varios POST con marcadores de idempotencia y refrescan al final
+   * (ver OpenAccountModal). Para uso normal preferir addProductCharge/addServiceCharge.
+   */
+  async function addChargeUnit(
+    accountId: number,
+    animalId: number,
+    kind: 'service' | 'product',
+    refId: number,
+  ): Promise<void> {
+    if (kind === 'service') {
+      await serviceChargeApi.create({ animalId, serviceId: refId, openAccountId: accountId })
+    } else {
+      await productChargeApi.create({ animalId, productId: refId, openAccountId: accountId })
+    }
+  }
+
+  /** Crea un cargo general sin refrescar la cuenta (el caller refresca al final). */
+  async function addGeneralChargeNoRefresh(payload: CreateGeneralChargePayload): Promise<void> {
+    await generalChargeApi.create(payload)
   }
 
   /**
@@ -222,6 +243,28 @@ export const useCuentasStore = defineStore('cuentas', () => {
     return updated
   }
 
+  /**
+   * Anula un abono mal registrado con un motivo obligatorio (permiso elevado
+   * debtOpenAccount.delete). Solo permitido con la cuenta OPEN. El abono no se borra:
+   * queda visible tachado y deja de contar en el saldo. Refresca cuenta + detalle.
+   */
+  async function voidPayment(accountId: number, debtId: number, reason: string) {
+    await debtOpenAccountApi.voidPayment(debtId, reason)
+    await refreshAccount(accountId)
+  }
+
+  /**
+   * Anula un cargo mal registrado con un motivo obligatorio (permiso elevado
+   * chargeOpenAccount.delete). Solo permitido con la cuenta OPEN. El cargo no se borra:
+   * queda visible tachado y deja de contar en el total. Refresca cuenta + detalle.
+   */
+  async function voidCharge(accountId: number, charge: UnifiedCharge, reason: string) {
+    if (charge.kind === 'product') await productChargeApi.voidCharge(charge.id, reason)
+    else if (charge.kind === 'service') await serviceChargeApi.voidCharge(charge.id, reason)
+    else await generalChargeApi.voidCharge(charge.id, reason)
+    await refreshAccount(accountId)
+  }
+
   async function removeCharge(accountId: number, charge: UnifiedCharge) {
     if (charge.kind === 'product') await productChargeApi.remove(charge.id)
     else if (charge.kind === 'service') await serviceChargeApi.remove(charge.id)
@@ -247,9 +290,13 @@ export const useCuentasStore = defineStore('cuentas', () => {
     addProductCharge,
     addServiceCharge,
     addGeneralCharge,
+    addChargeUnit,
+    addGeneralChargeNoRefresh,
     addChargesBatch,
     addPayment,
     closeAccount,
+    voidPayment,
+    voidCharge,
     removeCharge,
   }
 })

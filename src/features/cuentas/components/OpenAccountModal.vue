@@ -13,7 +13,7 @@ import { initials } from '@/features/dashboard/views/consulta/nueva/composables/
 import { animalApi } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
-import type { OpenAccountResponse } from '../types/cuentas'
+import type { CreateGeneralChargePayload, OpenAccountResponse } from '../types/cuentas'
 import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
 
 const props = defineProps<{ open: boolean }>()
@@ -52,6 +52,15 @@ const tab = ref<'service' | 'product'>('service')
 const query = ref('')
 const cart = ref<CartLine[]>([])
 
+// ── Marcadores de idempotencia para el reintento de "Abrir cuenta" ───────────
+// La cuenta se crea una sola vez y cada cargo (un POST por unidad) se marca al
+// persistirse; tras un fallo parcial, reintentar continúa sin duplicar nada.
+type ChargeOp =
+  | { type: 'product' | 'service'; animalId: number; refId: number; done: boolean }
+  | { type: 'general'; payload: Omit<CreateGeneralChargePayload, 'openAccountId'>; done: boolean }
+const createdAccount = ref<OpenAccountResponse | null>(null)
+const pendingOps = ref<ChargeOp[]>([])
+
 // Cargo general (mini-form)
 const general = reactive({ name: '', unitAmount: '', quantity: '1', taxId: '', hasTax: false })
 
@@ -68,6 +77,8 @@ watch(
     tab.value = 'service'
     query.value = ''
     cart.value = []
+    createdAccount.value = null
+    pendingOps.value = []
     Object.assign(general, { name: '', unitAmount: '', quantity: '1', taxId: '', hasTax: false })
   },
 )
@@ -95,6 +106,10 @@ function changeOwner() {
   ownerPets.value = []
   dupAccount.value = null
   cart.value = []
+  // Si hubo creación parcial para el dueño anterior, su cuenta persiste en el servidor
+  // (aparecerá en la lista); el modal arranca limpio para el nuevo dueño.
+  createdAccount.value = null
+  pendingOps.value = []
 }
 
 const taxOptions = computed(() => [
@@ -175,40 +190,62 @@ const canConfirm = computed(
   () => !!pickedOwner.value && !dupAccount.value && cart.value.length > 0 && !busy.value,
 )
 
+// Hubo una creación parcial (la cuenta existe pero faltan cargos por persistir).
+const retryHint = computed(
+  () => !busy.value && !!createdAccount.value && pendingOps.value.some((o) => !o.done),
+)
+
+/** Aplana el carrito a POSTs individuales (1 cargo por unidad); base de la idempotencia. */
+function buildOps(): ChargeOp[] {
+  const ops: ChargeOp[] = []
+  for (const l of cart.value) {
+    if (l.kind === 'general') {
+      ops.push({
+        type: 'general',
+        payload: {
+          name: l.name,
+          unitAmount: l.unitPrice,
+          quantity: l.qty,
+          taxId: l.taxId ? Number(l.taxId) : null,
+          hasTax: !!l.hasTax,
+        },
+        done: false,
+      })
+    } else if (l.refId != null && l.animalId != null) {
+      for (let i = 0; i < l.qty; i++) {
+        ops.push({ type: l.kind, animalId: l.animalId, refId: l.refId, done: false })
+      }
+    }
+  }
+  return ops
+}
+
 async function confirm() {
   if (!canConfirm.value || !pickedOwner.value) return
   busy.value = true
   try {
-    const account = await store.openAccount(pickedOwner.value.id)
-
-    // Agrupar líneas product/service por animalId → un batch por mascota.
-    const batchByAnimal = new Map<number, { kind: 'service' | 'product'; id: number; qty: number }[]>()
-    for (const l of cart.value) {
-      if (l.kind === 'general' || l.refId == null || l.animalId == null) continue
-      const items = batchByAnimal.get(l.animalId) ?? []
-      items.push({ kind: l.kind, id: l.refId, qty: l.qty })
-      batchByAnimal.set(l.animalId, items)
+    // 1. Crear la cuenta una sola vez (idempotente en reintento tras fallo parcial).
+    if (!createdAccount.value) {
+      createdAccount.value = await store.openAccount(pickedOwner.value.id)
     }
-    for (const [animalId, items] of batchByAnimal) {
-      await store.addChargesBatch(account.id, animalId, items)
-    }
+    const accountId = createdAccount.value.id
 
-    // Cargos generales, uno por uno.
-    for (const l of cart.value) {
-      if (l.kind !== 'general') continue
-      await store.addGeneralCharge({
-        name: l.name,
-        unitAmount: l.unitPrice,
-        quantity: l.qty,
-        taxId: l.taxId ? Number(l.taxId) : null,
-        hasTax: !!l.hasTax,
-        openAccountId: account.id,
-      })
+    // 2. Aplanar el carrito una sola vez; cada op se marca al persistirse.
+    if (pendingOps.value.length === 0) pendingOps.value = buildOps()
+    for (const op of pendingOps.value) {
+      if (op.done) continue
+      if (op.type === 'general') {
+        await store.addGeneralChargeNoRefresh({ ...op.payload, openAccountId: accountId })
+      } else {
+        await store.addChargeUnit(accountId, op.animalId, op.type, op.refId)
+      }
+      op.done = true
     }
 
-    await store.refreshAccount(account.id)
-    const fresh = store.accounts.value.find((a) => a.id === account.id) ?? account
-    const count = cart.value.length
+    // 3. Refrescar una sola vez al final.
+    await store.refreshAccount(accountId)
+    const fresh = store.accounts.value.find((a) => a.id === accountId) ?? createdAccount.value
+    const count = pendingOps.value.length
     toast.success(
       'Cuenta abierta',
       `${pickedOwner.value.name} con ${count} cargo${count === 1 ? '' : 's'}.`,
@@ -216,6 +253,7 @@ async function confirm() {
     emit('created', fresh)
     emit('close')
   } catch (e) {
+    // Los marcadores (createdAccount + ops.done) persisten → el reintento salta lo ya guardado.
     toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo abrir la cuenta'))
   } finally {
     busy.value = false
@@ -362,6 +400,14 @@ async function confirm() {
               </li>
             </ul>
             <div v-else class="cart-empty">Agrega al menos un cargo para abrir la cuenta.</div>
+          </div>
+
+          <div v-if="retryHint" class="dup-warn" style="margin-top: 12px">
+            <Wallet :size="15" :stroke-width="1.8" />
+            <span>
+              La cuenta ya se creó; reintenta <strong>Abrir cuenta</strong> para registrar los
+              cargos restantes.
+            </span>
           </div>
         </template>
       </template>

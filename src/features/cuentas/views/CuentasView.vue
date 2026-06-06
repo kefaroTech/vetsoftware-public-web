@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import {
   ArrowLeft,
+  Ban,
   Check,
   CreditCard,
   FileText,
@@ -9,15 +10,17 @@ import {
   Package,
   Plus,
   Receipt,
+  Search,
   Stethoscope,
   Wallet,
-  X,
 } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import OpenAccountModal from '../components/OpenAccountModal.vue'
 import AddChargeModal from '../components/AddChargeModal.vue'
 import PaymentModal from '../components/PaymentModal.vue'
 import CloseAccountModal from '../components/CloseAccountModal.vue'
+import VoidPaymentModal from '../components/VoidPaymentModal.vue'
+import VoidChargeModal from '../components/VoidChargeModal.vue'
 import { useCuentas } from '../composables/useCuentas'
 import { formatMoney } from '@/features/tienda/composables/pricing'
 import {
@@ -25,23 +28,23 @@ import {
   formatDateShort,
 } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import { animalApi } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
-import { useToast } from '@/composables/useToast'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
-import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 import {
   OPEN_ACCOUNT_STATUS_LABEL,
   PAYMENT_METHOD_LABEL,
   type ChargeKind,
+  type DebtResponse,
   type OpenAccountResponse,
   type OpenAccountStatus,
   type UnifiedCharge,
 } from '../types/cuentas'
 
 const store = useCuentas()
-const toast = useToast()
 const { can } = useAuthorization()
 const canCreate = can(PERMISSIONS.OPEN_ACCOUNT_CREATE)
+const canVoidPayment = can(PERMISSIONS.DEBT_OPEN_ACCOUNT_VOID)
+const canVoidCharge = can(PERMISSIONS.CHARGE_OPEN_ACCOUNT_VOID)
 
 const query = ref('')
 const tab = ref<'activas' | 'cerradas'>('activas')
@@ -52,6 +55,10 @@ const openAccountOpen = ref(false)
 const addChargeOpen = ref(false)
 const paymentOpen = ref(false)
 const closeOpen = ref(false)
+const voidOpen = ref(false)
+const paymentToVoid = ref<DebtResponse | null>(null)
+const voidChargeOpen = ref(false)
+const chargeToVoid = ref<UnifiedCharge | null>(null)
 
 /** Clase de tono para el pill de estado según el estado de la cuenta. */
 const STATUS_TONE: Record<OpenAccountStatus, string> = {
@@ -64,10 +71,17 @@ onMounted(() => store.ensureLoaded())
 
 // Activas = cuentas abiertas (OPEN); Cerradas = cobradas (CLOSE) o canceladas (CANCEL).
 const activeAccounts = computed(() => store.accounts.value.filter((a) => a.status === 'OPEN'))
-const closedAccounts = computed(() => store.accounts.value.filter((a) => a.status !== 'OPEN'))
+const closedAccounts = computed(() =>
+  store.accounts.value
+    .filter((a) => a.status !== 'OPEN')
+    .slice()
+    .sort((a, b) => (b.closedAt ?? b.createdDate).localeCompare(a.closedAt ?? a.createdDate)),
+)
 const visibleAccounts = computed(() =>
   tab.value === 'activas' ? activeAccounts.value : closedAccounts.value,
 )
+
+const isSearching = computed(() => query.value.trim().length > 0)
 
 const filteredAccounts = computed(() => {
   const q = query.value.trim().toLowerCase()
@@ -101,6 +115,18 @@ function saldoValue(acc: OpenAccountResponse): number {
 
 /** Una cuenta cerrada o cancelada es de solo lectura: no admite cambios. */
 const isReadOnly = computed(() => !!selected.value && selected.value.status !== 'OPEN')
+
+/** Línea de meta del detalle: "cuenta abierta {fecha}" o "cerrada/cancelada el X por Y · motivo". */
+const detailMeta = computed(() => {
+  const a = selected.value
+  if (!a) return ''
+  if (a.status === 'OPEN') return `cuenta abierta ${formatDateShort(a.createdDate)}`
+  const verbo = a.status === 'CANCEL' ? 'cancelada' : 'cerrada'
+  const fecha = formatDateShort((a.closedAt ?? a.createdDate).slice(0, 10))
+  const quien = a.closedBy?.name ? ` por ${a.closedBy.name}` : ''
+  const motivo = a.closeReason ? ` · ${a.closeReason}` : ''
+  return `${verbo} el ${fecha}${quien}${motivo}`
+})
 
 const CHARGE_ICON: Record<ChargeKind, typeof Package> = {
   product: Package,
@@ -148,21 +174,30 @@ async function onAccountClosed(account: OpenAccountResponse) {
   await store.loadDetail(account.id)
 }
 
-// ── Eliminar cargo ───────────────────────────────────────────────────────────
-async function onDeleteCharge(c: UnifiedCharge) {
-  if (!selected.value || isReadOnly.value) return
-  try {
-    await store.removeCharge(selected.value.id, c)
-    selected.value = store.accounts.value.find((a) => a.id === selected.value!.id) ?? selected.value
-    toast.info('Cargo eliminado', `${c.concept} fue removido de la cuenta.`)
-  } catch (e) {
-    if (isConcurrencyConflict(e)) {
-      await refreshSelected()
-      toast.warn('Conflicto de concurrencia', getProblemDetailMessage(e))
-    } else {
-      toast.error('No se pudo eliminar', getProblemDetailMessage(e, 'No se pudo eliminar el cargo'))
-    }
-  }
+// ── Anular abono ─────────────────────────────────────────────────────────────
+function onVoidPayment(p: DebtResponse) {
+  if (isReadOnly.value || !canVoidPayment) return
+  paymentToVoid.value = p
+  voidOpen.value = true
+}
+
+async function onPaymentVoided() {
+  voidOpen.value = false
+  paymentToVoid.value = null
+  await refreshSelected()
+}
+
+// ── Anular cargo ─────────────────────────────────────────────────────────────
+function onVoidCharge(c: UnifiedCharge) {
+  if (isReadOnly.value || !canVoidCharge || c.voided) return
+  chargeToVoid.value = c
+  voidChargeOpen.value = true
+}
+
+async function onChargeVoided() {
+  voidChargeOpen.value = false
+  chargeToVoid.value = null
+  await refreshSelected()
 }
 </script>
 
@@ -219,6 +254,16 @@ async function onDeleteCharge(c: UnifiedCharge) {
       <input v-model="query" type="text" class="search" placeholder="Buscar por propietario o documento…" />
 
       <div v-if="store.loading.value" class="state">Cargando…</div>
+      <div
+        v-else-if="filteredAccounts.length === 0 && isSearching && visibleAccounts.length > 0"
+        class="empty-state"
+      >
+        <div class="empty-ic"><Search :size="28" :stroke-width="1.5" /></div>
+        <div class="empty-title">Sin resultados</div>
+        <p class="empty-desc">
+          Ninguna cuenta {{ tab === 'activas' ? 'activa' : 'cerrada' }} coincide con tu búsqueda.
+        </p>
+      </div>
       <div v-else-if="filteredAccounts.length === 0" class="empty-state">
         <div class="empty-ic"><Receipt :size="28" :stroke-width="1.5" /></div>
         <div class="empty-title">
@@ -253,7 +298,7 @@ async function onDeleteCharge(c: UnifiedCharge) {
           <div class="acct-meta">Cuenta desde {{ formatDateShort(acc.createdDate) }}</div>
           <div class="acct-totals">
             <div class="row"><span>Acumulado</span><strong>{{ formatMoney(acc.totalAmount) }}</strong></div>
-            <div class="row"><span>Abonado</span><strong>{{ formatMoney(acc.paidAmount) }}</strong></div>
+            <div v-if="acc.paidAmount > 0" class="row"><span>Abonado</span><strong>{{ formatMoney(acc.paidAmount) }}</strong></div>
             <div class="row saldo">
               <span>{{ saldoLabel(acc) }}</span>
               <strong :class="{ zero: saldoValue(acc) <= 0 }">{{ formatMoney(saldoValue(acc)) }}</strong>
@@ -278,7 +323,7 @@ async function onDeleteCharge(c: UnifiedCharge) {
               <span class="status-pill" :class="STATUS_TONE[selected.status]">{{ OPEN_ACCOUNT_STATUS_LABEL[selected.status] }}</span>
             </div>
             <div class="detail-meta">
-              {{ selected.owner.document }} · cuenta abierta {{ formatDateShort(selected.createdDate) }}
+              {{ selected.owner.document }} · {{ detailMeta }}
             </div>
           </div>
         </div>
@@ -298,6 +343,14 @@ async function onDeleteCharge(c: UnifiedCharge) {
             <Lock :size="15" :stroke-width="1.8" /> Cerrar cuenta
           </button>
         </div>
+      </div>
+
+      <div v-if="isReadOnly" class="readonly-note">
+        <Lock :size="15" :stroke-width="1.8" />
+        <span>
+          Cuenta {{ selected.status === 'CANCEL' ? 'cancelada' : 'cerrada' }} · solo lectura.
+          No admite nuevos cargos ni abonos.
+        </span>
       </div>
 
       <div class="summary">
@@ -336,20 +389,32 @@ async function onDeleteCharge(c: UnifiedCharge) {
               <span class="group-sub">{{ formatMoney(group.subtotal) }}</span>
             </div>
             <ul class="charge-list">
-              <li v-for="c in group.charges" :key="`${c.kind}-${c.id}`" class="charge">
+              <li
+                v-for="c in group.charges"
+                :key="`${c.kind}-${c.id}`"
+                class="charge"
+                :class="{ voided: c.voided }"
+              >
                 <component :is="CHARGE_ICON[c.kind]" :size="14" :stroke-width="1.7" class="c-icon" :class="c.kind" />
-                <span class="c-concept">{{ c.concept }}</span>
+                <span class="c-concept">
+                  {{ c.concept }}
+                  <span v-if="c.voided" class="c-void" :title="c.voidReason ? `Motivo: ${c.voidReason}` : ''">
+                    Anulado{{ c.voidedByName ? ` por ${c.voidedByName}` : '' }}
+                  </span>
+                </span>
+                <span v-if="c.createdByName" class="c-by" :title="`Registrado por ${c.createdByName}`">{{ c.createdByName }}</span>
                 <span class="c-date">{{ c.date.slice(5, 10) }}</span>
                 <span class="c-amount">{{ formatMoney(c.amount) }}</span>
                 <button
-                  v-if="!isReadOnly"
+                  v-if="!isReadOnly && !c.voided && canVoidCharge"
                   type="button"
-                  class="c-del"
-                  title="Eliminar cargo"
-                  @click="onDeleteCharge(c)"
+                  class="c-void-btn"
+                  title="Anular cargo"
+                  @click="onVoidCharge(c)"
                 >
-                  <X :size="13" :stroke-width="1.9" />
+                  <Ban :size="13" :stroke-width="1.9" />
                 </button>
+                <Ban v-else-if="c.voided" :size="14" :stroke-width="1.9" class="c-banned" />
               </li>
             </ul>
           </div>
@@ -362,12 +427,28 @@ async function onDeleteCharge(c: UnifiedCharge) {
           </div>
           <div v-if="store.payments.value.length === 0" class="mini-empty">Sin abonos registrados.</div>
           <ul v-else class="pago-list">
-            <li v-for="p in store.payments.value" :key="p.id" class="pago">
+            <li v-for="p in store.payments.value" :key="p.id" class="pago" :class="{ voided: p.voided }">
               <div class="pago-info">
                 <span class="pago-amt">{{ formatMoney(p.amount) }}</span>
-                <span class="pago-meta">{{ p.createdDate.slice(0, 10) }} · {{ PAYMENT_METHOD_LABEL[p.paymentMethod] }}</span>
+                <span class="pago-meta">
+                  {{ p.createdDate.slice(0, 10) }} · {{ PAYMENT_METHOD_LABEL[p.paymentMethod] }}
+                  <template v-if="p.createdBy?.name"> · {{ p.createdBy.name }}</template>
+                </span>
+                <span v-if="p.voided" class="pago-void">
+                  Anulado{{ p.voidedBy?.name ? ` por ${p.voidedBy.name}` : '' }}{{ p.voidReason ? ` · ${p.voidReason}` : '' }}
+                </span>
               </div>
-              <Check :size="15" :stroke-width="1.9" class="pago-check" />
+              <button
+                v-if="!p.voided && !isReadOnly && canVoidPayment"
+                type="button"
+                class="pago-void-btn"
+                title="Anular abono"
+                @click="onVoidPayment(p)"
+              >
+                <Ban :size="13" :stroke-width="1.9" /> Anular
+              </button>
+              <Ban v-else-if="p.voided" :size="15" :stroke-width="1.9" class="pago-banned" />
+              <Check v-else :size="15" :stroke-width="1.9" class="pago-check" />
             </li>
           </ul>
         </section>
@@ -394,6 +475,22 @@ async function onDeleteCharge(c: UnifiedCharge) {
         :account="selected"
         @close="closeOpen = false"
         @closed="onAccountClosed"
+        @refresh="refreshSelected"
+      />
+      <VoidPaymentModal
+        :open="voidOpen"
+        :account-id="selected.id"
+        :payment="paymentToVoid"
+        @close="voidOpen = false"
+        @voided="onPaymentVoided"
+        @refresh="refreshSelected"
+      />
+      <VoidChargeModal
+        :open="voidChargeOpen"
+        :account-id="selected.id"
+        :charge="chargeToVoid"
+        @close="voidChargeOpen = false"
+        @voided="onChargeVoided"
         @refresh="refreshSelected"
       />
     </template>
@@ -445,6 +542,8 @@ async function onDeleteCharge(c: UnifiedCharge) {
 .empty-desc { font-size: 13px; color: var(--warm-600); margin: 0; }
 .alert { display: flex; align-items: center; gap: 9px; padding: 11px 14px; margin-bottom: 16px; background: oklch(95% 0.06 80); border: 1px solid oklch(88% 0.09 80); border-radius: 10px; font-size: 13px; color: oklch(40% 0.10 70); }
 .alert strong { color: oklch(35% 0.13 70); }
+.readonly-note { display: flex; align-items: center; gap: 9px; padding: 11px 14px; margin-bottom: 18px; background: var(--warm-100); border: 1px solid var(--warm-200); border-radius: 10px; font-size: 13px; color: var(--warm-600); }
+.readonly-note svg { color: var(--warm-500); flex-shrink: 0; }
 .search {
   width: 100%; max-width: 360px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 10px;
   padding: 10px 14px; font-family: inherit; font-size: 13.5px; color: var(--warm-900); outline: none; margin-bottom: 16px;
@@ -525,14 +624,31 @@ async function onDeleteCharge(c: UnifiedCharge) {
 .c-icon.service { color: oklch(45% 0.15 240); }
 .c-icon.general { color: var(--amatista-600); }
 .c-concept { flex: 1; min-width: 0; font-size: 13px; color: var(--warm-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c-by { font-size: 11px; color: var(--warm-400); white-space: nowrap; max-width: 90px; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
 .c-date { font-size: 11px; color: var(--warm-400); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .c-amount { font-size: 13px; font-weight: 500; color: var(--warm-900); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.c-del { width: 22px; height: 22px; border: none; background: transparent; color: var(--warm-400); cursor: pointer; border-radius: 5px; display: grid; place-items: center; flex-shrink: 0; }
-.c-del:hover { background: oklch(94% 0.05 25); color: oklch(48% 0.18 25); }
+/* Cargo anulado: queda visible, atenuado y tachado en concepto + monto. */
+.charge.voided .c-concept { color: var(--warm-500); }
+.charge.voided .c-amount { text-decoration: line-through; color: var(--warm-500); }
+.c-void { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 500; color: oklch(48% 0.16 25); }
+.c-banned { color: oklch(55% 0.16 25); flex-shrink: 0; }
+.c-void-btn { width: 24px; height: 24px; border: 1px solid var(--warm-200); background: transparent; color: var(--warm-500); cursor: pointer; border-radius: 6px; display: grid; place-items: center; flex-shrink: 0; }
+.c-void-btn:hover { background: oklch(95% 0.05 25); border-color: oklch(85% 0.10 25); color: oklch(48% 0.18 25); }
 
 .pago-list { list-style: none; margin: 0; padding: 12px 18px; display: flex; flex-direction: column; gap: 8px; }
-.pago { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--warm-100); border-radius: 9px; }
+.pago { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; background: var(--warm-100); border-radius: 9px; }
+.pago-info { min-width: 0; }
 .pago-amt { font-size: 14px; font-weight: 600; color: var(--warm-900); font-variant-numeric: tabular-nums; }
 .pago-meta { font-size: 11.5px; color: var(--warm-500); margin-top: 1px; display: block; }
 .pago-check { color: var(--success-dot); flex-shrink: 0; }
+/* Abono anulado: queda visible, atenuado y tachado en el monto. */
+.pago.voided { background: oklch(96% 0.02 25); }
+.pago.voided .pago-amt { text-decoration: line-through; color: var(--warm-500); }
+.pago-void { display: block; margin-top: 3px; font-size: 11.5px; color: oklch(48% 0.16 25); }
+.pago-banned { color: oklch(55% 0.16 25); flex-shrink: 0; }
+.pago-void-btn {
+  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; font-family: inherit; font-size: 12px; font-weight: 500;
+  background: transparent; border: 1px solid var(--warm-200); color: var(--warm-600); border-radius: 7px; padding: 5px 9px; cursor: pointer;
+}
+.pago-void-btn:hover { background: oklch(95% 0.05 25); border-color: oklch(85% 0.10 25); color: oklch(48% 0.18 25); }
 </style>
