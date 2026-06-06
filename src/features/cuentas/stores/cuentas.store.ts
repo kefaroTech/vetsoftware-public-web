@@ -124,10 +124,14 @@ export const useCuentasStore = defineStore('cuentas', () => {
   })
 
   async function findOpenAccountByOwner(ownerId: number): Promise<OpenAccountResponse | null> {
-    const local = accounts.value.find((a) => a.owner.id === ownerId && a.enabled)
+    // "Cuenta abierta" = status === 'OPEN'. Una cuenta cerrada/cancelada sigue
+    // enabled=true pero ya no es abierta, así que no debe bloquear abrir otra.
+    const local = accounts.value.find(
+      (a) => a.owner.id === ownerId && a.enabled && a.status === 'OPEN',
+    )
     if (local) return local
-    const res = await openAccountApi.search({ ownerId, enabled: true, page: 0, pageSize: 1 })
-    return res.content[0] ?? null
+    const res = await openAccountApi.search({ ownerId, enabled: true, page: 0, pageSize: 20 })
+    return res.content.find((a) => a.status === 'OPEN') ?? null
   }
 
   /**
@@ -188,6 +192,30 @@ export const useCuentasStore = defineStore('cuentas', () => {
     await refreshAccount(accountId)
   }
 
+  /**
+   * Cierra una cuenta. Si el motivo es COBRADA y hay saldo pendiente, registra
+   * primero el abono del saldo restante; luego cambia el estado de la cuenta a
+   * CLOSE (cobrada) o CANCEL (cancelada). Devuelve la cuenta actualizada.
+   */
+  async function closeAccount(
+    accountId: number,
+    opts: { motivo: 'COBRADA' | 'CANCELADA'; paymentMethod: PaymentMethod; outstanding: number },
+  ): Promise<OpenAccountResponse> {
+    if (opts.motivo === 'COBRADA' && opts.outstanding > 0) {
+      await debtOpenAccountApi.create({
+        amount: opts.outstanding,
+        paymentMethod: opts.paymentMethod,
+        openAccountId: accountId,
+      })
+    }
+    const updated = await openAccountApi.changeStatus(
+      accountId,
+      opts.motivo === 'CANCELADA' ? 'CANCEL' : 'CLOSE',
+    )
+    upsertAccount(updated)
+    return updated
+  }
+
   async function removeCharge(accountId: number, charge: UnifiedCharge) {
     if (charge.kind === 'product') await productChargeApi.remove(charge.id)
     else if (charge.kind === 'service') await serviceChargeApi.remove(charge.id)
@@ -215,6 +243,7 @@ export const useCuentasStore = defineStore('cuentas', () => {
     addGeneralCharge,
     addChargesBatch,
     addPayment,
+    closeAccount,
     removeCharge,
   }
 })

@@ -2,6 +2,7 @@ import { http } from '@/services/http/http.client'
 import type {
   OpenAccountResponse,
   OpenAccountSearchCriteria,
+  OpenAccountStatus,
   PageResponse,
 } from '../types/cuentas'
 
@@ -29,6 +30,11 @@ export const openAccountApi = {
 
   async create(ownerId: number): Promise<OpenAccountResponse> {
     const { data } = await http.post<OpenAccountResponse>('/open-accounts', { ownerId })
+    return data
+  },
+
+  async changeStatus(id: number, status: OpenAccountStatus): Promise<OpenAccountResponse> {
+    const { data } = await http.patch<OpenAccountResponse>(`/open-accounts/${id}/status`, { status })
     return data
   },
 

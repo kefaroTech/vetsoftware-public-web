@@ -5,6 +5,7 @@ import {
   Check,
   CreditCard,
   FileText,
+  Lock,
   Package,
   Plus,
   Receipt,
@@ -16,6 +17,7 @@ import PageHeader from '@/components/ui/PageHeader.vue'
 import OpenAccountModal from '../components/OpenAccountModal.vue'
 import AddChargeModal from '../components/AddChargeModal.vue'
 import PaymentModal from '../components/PaymentModal.vue'
+import CloseAccountModal from '../components/CloseAccountModal.vue'
 import { useCuentas } from '../composables/useCuentas'
 import { formatMoney } from '@/features/tienda/composables/pricing'
 import {
@@ -28,9 +30,11 @@ import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import {
+  OPEN_ACCOUNT_STATUS_LABEL,
   PAYMENT_METHOD_LABEL,
   type ChargeKind,
   type OpenAccountResponse,
+  type OpenAccountStatus,
   type UnifiedCharge,
 } from '../types/cuentas'
 
@@ -46,6 +50,14 @@ const ownerPets = ref<{ id: number; name: string }[]>([])
 const openAccountOpen = ref(false)
 const addChargeOpen = ref(false)
 const paymentOpen = ref(false)
+const closeOpen = ref(false)
+
+/** Clase de tono para el pill de estado según el estado de la cuenta. */
+const STATUS_TONE: Record<OpenAccountStatus, string> = {
+  OPEN: 'open',
+  CLOSE: 'closed',
+  CANCEL: 'cancelled',
+}
 
 onMounted(() => store.ensureLoaded())
 
@@ -97,6 +109,14 @@ function openCreateModal() {
 async function onAccountCreated(account: OpenAccountResponse) {
   openAccountOpen.value = false
   await selectAccount(account)
+}
+
+// ── Cerrar cuenta ────────────────────────────────────────────────────────────
+async function onAccountClosed(account: OpenAccountResponse) {
+  closeOpen.value = false
+  // Reflejar el nuevo estado en el detalle y la lista (pill + acciones read-only).
+  selected.value = account
+  await store.loadDetail(account.id)
 }
 
 // ── Eliminar cargo ───────────────────────────────────────────────────────────
@@ -159,7 +179,7 @@ async function onDeleteCharge(c: UnifiedCharge) {
                 <div class="doc">{{ acc.owner.document }}</div>
               </div>
             </div>
-            <span class="status-pill abierta">Abierta</span>
+            <span class="status-pill" :class="STATUS_TONE[acc.status]">{{ OPEN_ACCOUNT_STATUS_LABEL[acc.status] }}</span>
           </div>
           <div class="acct-meta">Cuenta desde {{ formatDateShort(acc.createdDate) }}</div>
           <div class="acct-totals">
@@ -186,14 +206,14 @@ async function onDeleteCharge(c: UnifiedCharge) {
           <div>
             <div class="name-row">
               <h1 class="name lg">{{ selected.owner.name }}</h1>
-              <span class="status-pill abierta">Abierta</span>
+              <span class="status-pill" :class="STATUS_TONE[selected.status]">{{ OPEN_ACCOUNT_STATUS_LABEL[selected.status] }}</span>
             </div>
             <div class="detail-meta">
               {{ selected.owner.document }} · cuenta abierta {{ formatDateShort(selected.createdDate) }}
             </div>
           </div>
         </div>
-        <div class="detail-actions">
+        <div v-if="selected.status === 'OPEN'" class="detail-actions">
           <button type="button" class="cta" @click="addChargeOpen = true">
             <Plus :size="15" :stroke-width="1.8" /> Agregar cargo
           </button>
@@ -204,6 +224,9 @@ async function onDeleteCharge(c: UnifiedCharge) {
             @click="paymentOpen = true"
           >
             <CreditCard :size="15" :stroke-width="1.8" /> Registrar abono
+          </button>
+          <button type="button" class="ghost-cta" @click="closeOpen = true">
+            <Lock :size="15" :stroke-width="1.8" /> Cerrar cuenta
           </button>
         </div>
       </div>
@@ -289,6 +312,12 @@ async function onDeleteCharge(c: UnifiedCharge) {
         @close="paymentOpen = false"
         @paid="refreshSelected"
       />
+      <CloseAccountModal
+        :open="closeOpen"
+        :account="selected"
+        @close="closeOpen = false"
+        @closed="onAccountClosed"
+      />
     </template>
 
     <!-- ABRIR CUENTA -->
@@ -325,7 +354,9 @@ async function onDeleteCharge(c: UnifiedCharge) {
 .state { padding: 32px 16px; text-align: center; font-size: 13px; color: var(--warm-500); background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 12px; }
 
 .status-pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 500; white-space: nowrap; }
-.status-pill.abierta { background: var(--success-bg); color: var(--success-fg); }
+.status-pill.open { background: var(--success-bg); color: var(--success-fg); }
+.status-pill.closed { background: var(--warm-150); color: var(--warm-600); }
+.status-pill.cancelled { background: oklch(95% 0.06 25); color: oklch(48% 0.18 25); }
 
 /* Tarjetas de lista */
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }

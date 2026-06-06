@@ -50,12 +50,22 @@ export interface TaxSummary {
 
 // ── Cuenta ───────────────────────────────────────────────────────────────────
 
+/** Espejo del estado de la cuenta en el backend. "Abierta" = status === 'OPEN'. */
+export type OpenAccountStatus = 'OPEN' | 'CLOSE' | 'CANCEL'
+
+export const OPEN_ACCOUNT_STATUS_LABEL: Record<OpenAccountStatus, string> = {
+  OPEN: 'Abierta',
+  CLOSE: 'Cerrada',
+  CANCEL: 'Cancelada',
+}
+
 export interface OpenAccountResponse {
   id: number
   owner: OwnerSummary
   totalAmount: number
   paidAmount: number
   outstandingAmount: number
+  status: OpenAccountStatus
   company: CompanySummary
   createdBy: EmployeeSummary
   createdDate: string
