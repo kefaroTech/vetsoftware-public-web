@@ -53,7 +53,7 @@ defineEmits<{
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 9px 10px;
+  padding: 4px 10px;
   border: none;
   background: transparent;
   border-radius: 8px;

@@ -339,7 +339,7 @@ const vetShellStyles = {
     padding: '20px 14px',
     display: 'flex',
     flexDirection: 'column',
-    gap: 2,
+    gap: 0,
     background: 'linear-gradient(180deg, oklch(28% 0.10 var(--hue)) 0%, oklch(22% 0.08 var(--hue)) 100%)',
     color: 'oklch(94% 0.02 var(--hue))',
     fontFamily: 'var(--font-sans)',
@@ -360,7 +360,7 @@ const vetShellStyles = {
   sectionLabel: {
     fontSize: 10.5, letterSpacing: '0.1em', textTransform: 'uppercase',
     color: 'oklch(75% 0.04 var(--hue) / 0.55)',
-    padding: '14px 10px 8px', fontWeight: 500,
+    padding: '10px 10px 5px', fontWeight: 500,
   },
   subList: { display: 'flex', flexDirection: 'column', gap: 1, paddingLeft: 28, marginTop: 2 },
   userCard: {

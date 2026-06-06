@@ -53,8 +53,12 @@ const isConsultaActive = computed(() =>
   consultaSubRoutes.some((name) => route.name === name),
 )
 
-const consultaOpen = ref(false)
-const accionesOpen = ref(false)
+// Acordeón del sidebar: solo un desplegable abierto a la vez.
+type SidebarSection = 'consulta' | 'acciones' | 'tienda'
+const openSection = ref<SidebarSection | null>(null)
+function toggleSection(section: SidebarSection) {
+  openSection.value = openSection.value === section ? null : section
+}
 
 const canCreateConsultation = can(PERMISSIONS.CONSULTATION_CREATE)
 const canVaccination = can(PERMISSIONS.VACCINATION_CREATE)
@@ -138,7 +142,6 @@ const tiendaItems = computed(() => [
 ].filter((item) => item.show))
 
 const showTiendaSection = computed(() => tiendaItems.value.length > 0)
-const tiendaOpen = ref(false)
 
 function goNuevaConsulta() {
   if (draft.state.owner) {
@@ -186,10 +189,10 @@ function onNotifications() {
       :icon="FileText"
       :active="isConsultaActive"
       expandable
-      :expanded="consultaOpen"
-      @click="consultaOpen = !consultaOpen"
+      :expanded="openSection === 'consulta'"
+      @click="toggleSection('consulta')"
     />
-    <div v-if="consultaOpen" class="sub-list">
+    <div v-if="openSection === 'consulta'" class="sub-list">
       <button
         v-if="canCreateConsultation"
         type="button"
@@ -217,10 +220,10 @@ function onNotifications() {
         :icon="Stethoscope"
         :active="isAccionesActive"
         expandable
-        :expanded="accionesOpen"
-        @click="accionesOpen = !accionesOpen"
+        :expanded="openSection === 'acciones'"
+        @click="toggleSection('acciones')"
       />
-      <div v-if="accionesOpen" class="sub-list">
+      <div v-if="openSection === 'acciones'" class="sub-list">
         <SidebarSubItem
           v-for="item in accionesItems"
           :key="item.label"
@@ -259,10 +262,10 @@ function onNotifications() {
         :icon="ShoppingBag"
         :active="isTiendaActive"
         expandable
-        :expanded="tiendaOpen"
-        @click="tiendaOpen = !tiendaOpen"
+        :expanded="openSection === 'tienda'"
+        @click="toggleSection('tienda')"
       />
-      <div v-if="tiendaOpen" class="sub-list">
+      <div v-if="openSection === 'tienda'" class="sub-list">
         <SidebarSubItem
           v-for="item in tiendaItems"
           :key="item.label"
@@ -326,7 +329,7 @@ function onNotifications() {
   padding: 20px 14px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
   background: linear-gradient(
     180deg,
     oklch(28% 0.10 var(--hue)) 0%,
@@ -379,7 +382,7 @@ function onNotifications() {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: oklch(75% 0.04 var(--hue) / 0.55);
-  padding: 14px 10px 8px;
+  padding: 10px 10px 5px;
   font-weight: 500;
 }
 .sub-list {
@@ -393,7 +396,7 @@ function onNotifications() {
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 7px 10px;
+  padding: 3px 10px;
   border-radius: 6px;
   font-family: inherit;
   font-size: 12.5px;
