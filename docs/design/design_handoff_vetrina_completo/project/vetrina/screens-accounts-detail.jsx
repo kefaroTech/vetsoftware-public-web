@@ -152,9 +152,7 @@ function VetAcctCerrarModal({ open, account, owner, pets, saldo, pagado, onClose
 
   React.useEffect(() => { if (open) { setStep('cobro'); setMotivo('COBRADA'); setMetodo('EFECTIVO'); setRecibido(''); setNota(''); setReciboData(null); } }, [open]);
 
-  if (!open) return null;
-
-  // Desglose por impuesto
+  // Desglose por impuesto (hook SIEMPRE antes de cualquier early return)
   const breakdown = React.useMemo(() => {
     const lines = account.charges.map((c) => ({ unitPrice: c.unitPrice, qty: c.qty, taxId: c.taxId, priceIncludesTax: c.priceIncludesTax !== false }));
     const t = vetComputeTotals(lines, 0, null);
@@ -169,6 +167,8 @@ function VetAcctCerrarModal({ open, account, owner, pets, saldo, pagado, onClose
     }
     return { ...t, taxRows: Object.values(byTax) };
   }, [account.charges]);
+
+  if (!open) return null;
 
   const esCancelada = motivo === 'CANCELADA';
   const recNum = Number(recibido) || 0;

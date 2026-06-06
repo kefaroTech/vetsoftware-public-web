@@ -184,37 +184,68 @@ function VetAccountsView() {
   const acct = useVetAccountsState();
   const [openId, setOpenId] = React.useState(null);
   const [createOpen, setCreateOpen] = React.useState(false);
+  const [tab, setTab] = React.useState('abiertas');
   const current = openId ? acct.accounts.find((a) => a.id === openId) : null;
 
   if (current) return <VetAccountDetail account={current} store={acct} onBack={() => setOpenId(null)} />;
 
   const abiertas = acct.accounts.filter((a) => a.estado === 'ABIERTA');
+  const cerradas = acct.accounts.filter((a) => a.estado === 'CERRADA');
   const totalPend = abiertas.reduce((s, a) => s + vetAcctSaldo(a), 0);
+  const visibles = tab === 'abiertas' ? abiertas : cerradas;
 
   return (
     <div className="vet-shop-inv">
       <header className="vet-shop-inv-head">
         <div>
-          <div className="vet-shop-kicker">Tienda · Cuentas abiertas</div>
-          <h1 className="vet-shop-title">Cuentas abiertas</h1>
+          <div className="vet-shop-kicker">Tienda · Cuentas</div>
+          <h1 className="vet-shop-title">Cuentas</h1>
         </div>
         <button type="button" className="vet-shop-addbtn" onClick={() => setCreateOpen(true)}>
           <VetIcons.Plus size={16} strokeWidth={2} /> Abrir cuenta
         </button>
       </header>
 
-      {abiertas.length > 0 && (
+      <div className="vet-lab-tabs" role="tablist">
+        <button type="button" role="tab" aria-selected={tab === 'abiertas'}
+          className={'vet-lab-tab' + (tab === 'abiertas' ? ' active' : '')}
+          onClick={() => setTab('abiertas')}>
+          <VetIcons.Receipt size={15} strokeWidth={1.7} />
+          <span>Activas</span>
+          {abiertas.length > 0 && <span className="vet-lab-tab-badge">{abiertas.length}</span>}
+        </button>
+        <button type="button" role="tab" aria-selected={tab === 'cerradas'}
+          className={'vet-lab-tab' + (tab === 'cerradas' ? ' active' : '')}
+          onClick={() => setTab('cerradas')}>
+          <VetIcons.Check size={15} strokeWidth={1.7} />
+          <span>Cerradas</span>
+          <span className="vet-lab-tab-badge muted">{cerradas.length}</span>
+        </button>
+      </div>
+
+      {tab === 'abiertas' && abiertas.length > 0 && (
         <div className="vet-shop-alert" style={{ background: 'oklch(94% 0.07 80)', borderColor: 'oklch(88% 0.09 80)', color: 'oklch(40% 0.10 70)' }}>
           <VetIcons.Receipt size={15} strokeWidth={1.8} />
           <span><strong>{abiertas.length}</strong> cuenta{abiertas.length === 1 ? '' : 's'} abierta{abiertas.length === 1 ? '' : 's'} · saldo acumulado pendiente <strong>{vetMoney(totalPend)}</strong></span>
         </div>
       )}
 
+      {visibles.length === 0 ? (
+        <div className="vet-hosp-empty">
+          <div className="vet-hosp-empty-ic"><VetIcons.Receipt size={28} strokeWidth={1.5} /></div>
+          <div className="vet-hosp-empty-title">{tab === 'abiertas' ? 'Sin cuentas activas' : 'Sin cuentas cerradas'}</div>
+          <p className="vet-hosp-empty-desc">{tab === 'abiertas' ? 'Abre una cuenta para acumular cargos.' : 'Las cuentas cobradas o canceladas aparecerán aquí.'}</p>
+        </div>
+      ) : (
       <div className="vet-acct-grid">
-        {acct.accounts.map((a) => {
+        {visibles.map((a) => {
           const owner = vetAcctOwner(a.ownerId);
           const pets = vetAcctPets(a);
-          const st = VET_ACCT_STATUS[a.estado];
+          const cancelada = a.cierre && a.cierre.motivo === 'CANCELADA';
+          const st = a.estado === 'CERRADA'
+            ? (cancelada ? { bg: 'oklch(94% 0.06 60)', fg: 'oklch(48% 0.10 60)', label: 'Cancelada' }
+                         : { bg: 'var(--warm-200)', fg: 'var(--warm-600)', label: 'Pagada' })
+            : VET_ACCT_STATUS[a.estado];
           const saldo = vetAcctSaldo(a);
           const petLabel = pets.length === 0 ? 'Sin mascotas'
             : pets.length <= 2 ? pets.map((p) => p.name).join(', ')
@@ -240,12 +271,13 @@ function VetAccountsView() {
               <div className="vet-acct-card-totals">
                 <div><span>Acumulado</span><strong>{vetMoney(vetAcctChargesTotal(a))}</strong></div>
                 {vetAcctPagado(a) > 0 && <div><span>Abonado</span><strong>−{vetMoney(vetAcctPagado(a))}</strong></div>}
-                <div className="vet-acct-saldo"><span>Saldo</span><strong>{vetMoney(saldo)}</strong></div>
+                <div className="vet-acct-saldo"><span>{a.estado === 'CERRADA' ? (cancelada ? 'Anulado' : 'Cobrado') : 'Saldo'}</span><strong>{vetMoney(a.estado === 'CERRADA' && !cancelada ? vetAcctChargesTotal(a) : saldo)}</strong></div>
               </div>
             </button>
           );
         })}
       </div>
+      )}
 
       <VetAcctCreateModal
         open={createOpen}

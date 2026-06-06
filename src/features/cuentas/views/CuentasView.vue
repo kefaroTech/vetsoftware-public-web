@@ -44,6 +44,7 @@ const { can } = useAuthorization()
 const canCreate = can(PERMISSIONS.OPEN_ACCOUNT_CREATE)
 
 const query = ref('')
+const tab = ref<'activas' | 'cerradas'>('activas')
 const selected = ref<OpenAccountResponse | null>(null)
 const ownerPets = ref<{ id: number; name: string }[]>([])
 
@@ -61,17 +62,45 @@ const STATUS_TONE: Record<OpenAccountStatus, string> = {
 
 onMounted(() => store.ensureLoaded())
 
+// Activas = cuentas abiertas (OPEN); Cerradas = cobradas (CLOSE) o canceladas (CANCEL).
+const activeAccounts = computed(() => store.accounts.value.filter((a) => a.status === 'OPEN'))
+const closedAccounts = computed(() => store.accounts.value.filter((a) => a.status !== 'OPEN'))
+const visibleAccounts = computed(() =>
+  tab.value === 'activas' ? activeAccounts.value : closedAccounts.value,
+)
+
 const filteredAccounts = computed(() => {
   const q = query.value.trim().toLowerCase()
-  if (!q) return store.accounts.value
-  return store.accounts.value.filter(
+  if (!q) return visibleAccounts.value
+  return visibleAccounts.value.filter(
     (a) => a.owner.name.toLowerCase().includes(q) || (a.owner.document ?? '').toLowerCase().includes(q),
   )
 })
 
+// El saldo pendiente acumulado solo aplica a las cuentas activas.
 const totalPending = computed(() =>
-  store.accounts.value.reduce((sum, a) => sum + a.outstandingAmount, 0),
+  activeAccounts.value.reduce((sum, a) => sum + a.outstandingAmount, 0),
 )
+
+/** Etiqueta del pill de estado en la tarjeta (CLOSE se muestra como "Pagada"). */
+function cardStatusLabel(acc: OpenAccountResponse): string {
+  return acc.status === 'CLOSE' ? 'Pagada' : OPEN_ACCOUNT_STATUS_LABEL[acc.status]
+}
+
+/** Etiqueta de la fila inferior: Saldo (abierta) / Cobrado (pagada) / Anulado (cancelada). */
+function saldoLabel(acc: OpenAccountResponse): string {
+  if (acc.status === 'CLOSE') return 'Cobrado'
+  if (acc.status === 'CANCEL') return 'Anulado'
+  return 'Saldo'
+}
+
+/** Monto de la fila inferior: total cobrado en cuentas pagadas, saldo pendiente en el resto. */
+function saldoValue(acc: OpenAccountResponse): number {
+  return acc.status === 'CLOSE' ? acc.totalAmount : acc.outstandingAmount
+}
+
+/** Una cuenta cerrada o cancelada es de solo lectura: no admite cambios. */
+const isReadOnly = computed(() => !!selected.value && selected.value.status !== 'OPEN')
 
 const CHARGE_ICON: Record<ChargeKind, typeof Package> = {
   product: Package,
@@ -121,7 +150,7 @@ async function onAccountClosed(account: OpenAccountResponse) {
 
 // ── Eliminar cargo ───────────────────────────────────────────────────────────
 async function onDeleteCharge(c: UnifiedCharge) {
-  if (!selected.value) return
+  if (!selected.value || isReadOnly.value) return
   try {
     await store.removeCharge(selected.value.id, c)
     selected.value = store.accounts.value.find((a) => a.id === selected.value!.id) ?? selected.value
@@ -141,7 +170,7 @@ async function onDeleteCharge(c: UnifiedCharge) {
   <div class="page">
     <PageHeader
       kicker="Facturación"
-      title="Cuentas abiertas"
+      title="Cuentas"
       lead="Cuentas a crédito por propietario. Los cargos se agrupan por mascota."
     >
       <template #action>
@@ -155,11 +184,34 @@ async function onDeleteCharge(c: UnifiedCharge) {
 
     <!-- LISTA -->
     <template v-if="!selected">
-      <div v-if="filteredAccounts.length > 0" class="alert">
+      <div class="tabs" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          :aria-selected="tab === 'activas'"
+          :class="{ active: tab === 'activas' }"
+          @click="tab = 'activas'"
+        >
+          <Receipt :size="15" :stroke-width="1.7" /> <span>Activas</span>
+          <span v-if="activeAccounts.length > 0" class="tab-badge">{{ activeAccounts.length }}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          :aria-selected="tab === 'cerradas'"
+          :class="{ active: tab === 'cerradas' }"
+          @click="tab = 'cerradas'"
+        >
+          <Check :size="15" :stroke-width="1.7" /> <span>Cerradas</span>
+          <span class="tab-badge muted">{{ closedAccounts.length }}</span>
+        </button>
+      </div>
+
+      <div v-if="tab === 'activas' && activeAccounts.length > 0" class="alert">
         <Receipt :size="15" :stroke-width="1.8" />
         <span>
-          <strong>{{ filteredAccounts.length }}</strong>
-          {{ filteredAccounts.length === 1 ? 'cuenta abierta' : 'cuentas abiertas' }}
+          <strong>{{ activeAccounts.length }}</strong>
+          {{ activeAccounts.length === 1 ? 'cuenta abierta' : 'cuentas abiertas' }}
           · saldo acumulado pendiente <strong>{{ formatMoney(totalPending) }}</strong>
         </span>
       </div>
@@ -167,7 +219,19 @@ async function onDeleteCharge(c: UnifiedCharge) {
       <input v-model="query" type="text" class="search" placeholder="Buscar por propietario o documento…" />
 
       <div v-if="store.loading.value" class="state">Cargando…</div>
-      <div v-else-if="filteredAccounts.length === 0" class="state empty">No hay cuentas abiertas.</div>
+      <div v-else-if="filteredAccounts.length === 0" class="empty-state">
+        <div class="empty-ic"><Receipt :size="28" :stroke-width="1.5" /></div>
+        <div class="empty-title">
+          {{ tab === 'activas' ? 'Sin cuentas activas' : 'Sin cuentas cerradas' }}
+        </div>
+        <p class="empty-desc">
+          {{
+            tab === 'activas'
+              ? 'Abre una cuenta para acumular cargos.'
+              : 'Las cuentas cobradas o canceladas aparecerán aquí.'
+          }}
+        </p>
+      </div>
       <div v-else class="cards">
         <button
           v-for="acc in filteredAccounts"
@@ -184,15 +248,15 @@ async function onDeleteCharge(c: UnifiedCharge) {
                 <div class="doc">{{ acc.owner.document }}</div>
               </div>
             </div>
-            <span class="status-pill" :class="STATUS_TONE[acc.status]">{{ OPEN_ACCOUNT_STATUS_LABEL[acc.status] }}</span>
+            <span class="status-pill" :class="STATUS_TONE[acc.status]">{{ cardStatusLabel(acc) }}</span>
           </div>
           <div class="acct-meta">Cuenta desde {{ formatDateShort(acc.createdDate) }}</div>
           <div class="acct-totals">
             <div class="row"><span>Acumulado</span><strong>{{ formatMoney(acc.totalAmount) }}</strong></div>
             <div class="row"><span>Abonado</span><strong>{{ formatMoney(acc.paidAmount) }}</strong></div>
             <div class="row saldo">
-              <span>Saldo</span>
-              <strong :class="{ zero: acc.outstandingAmount <= 0 }">{{ formatMoney(acc.outstandingAmount) }}</strong>
+              <span>{{ saldoLabel(acc) }}</span>
+              <strong :class="{ zero: saldoValue(acc) <= 0 }">{{ formatMoney(saldoValue(acc)) }}</strong>
             </div>
           </div>
         </button>
@@ -277,7 +341,13 @@ async function onDeleteCharge(c: UnifiedCharge) {
                 <span class="c-concept">{{ c.concept }}</span>
                 <span class="c-date">{{ c.date.slice(5, 10) }}</span>
                 <span class="c-amount">{{ formatMoney(c.amount) }}</span>
-                <button type="button" class="c-del" title="Eliminar cargo" @click="onDeleteCharge(c)">
+                <button
+                  v-if="!isReadOnly"
+                  type="button"
+                  class="c-del"
+                  title="Eliminar cargo"
+                  @click="onDeleteCharge(c)"
+                >
                   <X :size="13" :stroke-width="1.9" />
                 </button>
               </li>
@@ -352,6 +422,27 @@ async function onDeleteCharge(c: UnifiedCharge) {
 .ghost-cta:hover:not(:disabled) { background: var(--warm-100); }
 .ghost-cta:disabled { opacity: 0.5; cursor: not-allowed; }
 .banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
+
+/* Tabs Activas / Cerradas */
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--warm-200); margin-bottom: 16px; }
+.tabs button {
+  display: inline-flex; align-items: center; gap: 8px; font-family: inherit; font-size: 13.5px; font-weight: 500;
+  color: var(--warm-600); background: transparent; border: none; border-bottom: 2px solid transparent;
+  padding: 10px 16px; margin-bottom: -1px; cursor: pointer; transition: color 0.12s ease, border-color 0.12s ease;
+}
+.tabs button:hover { color: var(--warm-900); }
+.tabs button.active { color: var(--amatista-700); border-bottom-color: var(--amatista-600); }
+.tab-badge {
+  min-width: 20px; height: 20px; padding: 0 7px; border-radius: 10px; background: var(--amatista-600);
+  color: white; font-size: 11px; font-weight: 600; display: grid; place-items: center; font-variant-numeric: tabular-nums;
+}
+.tab-badge.muted { background: var(--warm-200); color: var(--warm-600); }
+
+/* Estado vacío por tab */
+.empty-state { padding: 56px 20px; text-align: center; background: var(--warm-50); border: 1px dashed var(--warm-300); border-radius: 14px; }
+.empty-ic { width: 60px; height: 60px; border-radius: 16px; background: var(--amatista-50); color: var(--amatista-700); display: grid; place-items: center; margin: 0 auto 14px; }
+.empty-title { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+.empty-desc { font-size: 13px; color: var(--warm-600); margin: 0; }
 .alert { display: flex; align-items: center; gap: 9px; padding: 11px 14px; margin-bottom: 16px; background: oklch(95% 0.06 80); border: 1px solid oklch(88% 0.09 80); border-radius: 10px; font-size: 13px; color: oklch(40% 0.10 70); }
 .alert strong { color: oklch(35% 0.13 70); }
 .search {
