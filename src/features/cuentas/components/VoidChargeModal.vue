@@ -14,6 +14,8 @@ const props = defineProps<{
   open: boolean
   accountId: number
   charge: UnifiedCharge | null
+  /** Saldo pendiente actual de la cuenta; anular no debe dejarlo en negativo. */
+  outstanding: number
 }>()
 
 const emit = defineEmits<{ close: []; voided: []; refresh: [] }>()
@@ -24,6 +26,10 @@ const toast = useToast()
 const reason = ref('')
 const submitted = ref(false)
 const busy = ref(false)
+
+// Anular este cargo dejaría el saldo pendiente negativo (hay abonos que lo cubren).
+// El back lo rechaza igual; aquí se bloquea antes para dar feedback inmediato.
+const wouldGoNegative = computed(() => !!props.charge && props.charge.amount > props.outstanding)
 
 watch(
   () => props.open,
@@ -44,7 +50,7 @@ const subtitle = computed(() => {
 
 async function submit() {
   submitted.value = true
-  if (reasonError.value || busy.value || !props.charge) return
+  if (wouldGoNegative.value || reasonError.value || busy.value || !props.charge) return
   busy.value = true
   try {
     await cuentas.voidCharge(props.accountId, props.charge, reason.value.trim())
@@ -75,7 +81,17 @@ async function submit() {
     @close="emit('close')"
   >
     <template #body>
-      <div class="form">
+      <!-- Bloqueado: anular dejaría el saldo en negativo -->
+      <div v-if="wouldGoNegative" class="blocked">
+        <p class="blocked-title">No se puede anular este cargo</p>
+        <p class="blocked-desc">
+          El saldo pendiente quedaría en negativo: este cargo ({{ formatMoney(charge?.amount ?? 0) }})
+          es mayor que el saldo actual ({{ formatMoney(outstanding) }}) porque ya hay abonos que lo
+          cubren. <strong>Anula primero los abonos necesarios</strong> y vuelve a intentarlo.
+        </p>
+      </div>
+
+      <div v-else class="form">
         <p class="warn">
           El cargo quedará registrado como <strong>anulado</strong> (visible, tachado) y dejará de
           contar en el total. Esta acción registra tu autoría y el motivo.
@@ -94,8 +110,16 @@ async function submit() {
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn-danger" :disabled="busy" @click="submit">
+      <button type="button" class="btn-ghost" @click="emit('close')">
+        {{ wouldGoNegative ? 'Entendido' : 'Cancelar' }}
+      </button>
+      <button
+        v-if="!wouldGoNegative"
+        type="button"
+        class="btn-danger"
+        :disabled="busy"
+        @click="submit"
+      >
         {{ busy ? 'Anulando…' : 'Anular cargo' }}
       </button>
     </template>
@@ -106,6 +130,10 @@ async function submit() {
 .form { display: flex; flex-direction: column; gap: 16px; }
 .warn { margin: 0; font-size: 13px; line-height: 1.5; color: var(--warm-600); }
 .warn strong { color: oklch(48% 0.18 25); }
+.blocked { padding: 14px 16px; background: oklch(96% 0.04 25); border: 1px solid oklch(88% 0.09 25); border-radius: 11px; }
+.blocked-title { margin: 0 0 6px; font-size: 14px; font-weight: 600; color: oklch(45% 0.18 25); }
+.blocked-desc { margin: 0; font-size: 13px; line-height: 1.5; color: var(--warm-700); }
+.blocked-desc strong { color: oklch(45% 0.18 25); }
 .btn-danger {
   font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
   border: none; color: white;

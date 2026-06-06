@@ -489,6 +489,7 @@ async function onChargeVoided() {
         :open="voidChargeOpen"
         :account-id="selected.id"
         :charge="chargeToVoid"
+        :outstanding="selected.outstandingAmount"
         @close="voidChargeOpen = false"
         @voided="onChargeVoided"
         @refresh="refreshSelected"
