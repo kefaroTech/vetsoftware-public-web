@@ -31,7 +31,7 @@ const query = ref('')
 const busy = ref(false)
 
 // Cargo general
-const general = reactive({ name: '', unitAmount: '', quantity: '1', taxId: '', hasTax: false })
+const general = reactive({ name: '', unitAmount: '', quantity: '1', taxId: '' })
 
 watch(
   () => props.open,
@@ -41,7 +41,7 @@ watch(
     selectedPet.value = props.pets[0]?.id ?? 'general'
     tab.value = 'service'
     query.value = ''
-    Object.assign(general, { name: '', unitAmount: '', quantity: '1', taxId: '', hasTax: false })
+    Object.assign(general, { name: '', unitAmount: '', quantity: '1', taxId: '' })
   },
 )
 
@@ -98,11 +98,11 @@ async function addGeneral() {
       unitAmount: Number(general.unitAmount.replace(',', '.')),
       quantity: Number(general.quantity.replace(',', '.')) || 1,
       taxId: general.taxId ? Number(general.taxId) : null,
-      hasTax: general.hasTax,
+      hasTax: general.taxId !== '',
       openAccountId: props.accountId,
     })
     toast.success('Cargo agregado', 'Cargo general añadido a la cuenta.')
-    Object.assign(general, { name: '', unitAmount: '', quantity: '1', taxId: '', hasTax: false })
+    Object.assign(general, { name: '', unitAmount: '', quantity: '1', taxId: '' })
     emit('added')
   } catch (e) {
     if (isConcurrencyConflict(e)) {
@@ -179,7 +179,7 @@ async function addGeneral() {
           </template>
         </BaseField>
         <div class="grid">
-          <BaseField label="Valor unitario" required>
+          <BaseField label="Valor unitario (IVA incl.)" required>
             <template #default="{ id }">
               <BaseInput :id="id" v-model="general.unitAmount" inputmode="decimal" placeholder="0" />
             </template>
@@ -195,10 +195,6 @@ async function addGeneral() {
             </template>
           </BaseField>
         </div>
-        <label class="check">
-          <input v-model="general.hasTax" type="checkbox" />
-          <span>Aplica impuesto</span>
-        </label>
         <button type="button" class="add-btn solid" :disabled="!canAddGeneral || busy" @click="addGeneral">
           <Plus :size="14" :stroke-width="1.9" /> Agregar cargo general
         </button>

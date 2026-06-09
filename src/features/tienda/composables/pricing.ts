@@ -31,12 +31,27 @@ export function effectiveTaxRate(hasTax: boolean, taxPercentage: number | null |
   return taxPercentage
 }
 
+/**
+ * Separa un monto BRUTO (IVA incluido) en base gravable + impuesto contenido.
+ * base = gross / (1 + tasa/100); tax = gross − base. Si no aplica impuesto, tax = 0.
+ */
+export function splitGross(
+  gross: number,
+  hasTax: boolean,
+  taxPercentage: number | null | undefined,
+): { base: number; tax: number } {
+  const rate = effectiveTaxRate(hasTax, taxPercentage)
+  if (rate <= 0) return { base: gross, tax: 0 }
+  const base = gross / (1 + rate / 100)
+  return { base, tax: gross - base }
+}
+
 export interface TotalsBreakdown {
-  /** Suma de subtotales de línea (precio × cantidad, sin impuesto). */
+  /** Base gravable (extraída del bruto, sin IVA). */
   net: number
-  /** Suma de impuestos por línea. */
+  /** Impuesto contenido en el bruto. */
   tax: number
-  /** net + tax. */
+  /** Total bruto que paga el cliente (= base + IVA). */
   total: number
   /** Ahorro total por promociones aplicadas en las líneas. */
   promoSavings: number
@@ -44,28 +59,31 @@ export interface TotalsBreakdown {
 
 /**
  * Totales del ticket. Cada línea ya trae su `unitPrice` con la promo aplicada;
- * `originalUnitPrice` permite calcular el ahorro. El impuesto se asume NO incluido
- * en el precio (se suma encima), igual que el modelo de cargos del backend.
+ * `originalUnitPrice` permite calcular el ahorro. El precio se asume BRUTO (IVA
+ * INCLUIDO), igual que el modelo de cargos del backend: el total es la suma de los
+ * precios y el IVA se EXTRAE (no se suma encima).
  */
 export function computeTotals(lines: SaleLine[], manualDiscount = 0): TotalsBreakdown {
-  let net = 0
-  let tax = 0
+  let gross = 0
   let promoSavings = 0
   for (const l of lines) {
-    const lineNet = l.unitPrice * l.qty
-    net += lineNet
-    tax += lineNet * (effectiveTaxRate(l.hasTax, l.taxPercentage) / 100)
+    gross += l.unitPrice * l.qty
     if (l.originalUnitPrice != null && l.originalUnitPrice > l.unitPrice) {
       promoSavings += (l.originalUnitPrice - l.unitPrice) * l.qty
     }
   }
-  const discounted = Math.max(0, net - manualDiscount)
-  // Recalcular impuesto proporcional si hubo descuento manual sobre el neto.
-  const taxAfter = net > 0 ? tax * (discounted / net) : 0
+  const discountedGross = Math.max(0, gross - manualDiscount)
+  // El descuento manual reduce el bruto proporcionalmente antes de extraer el IVA.
+  const factor = gross > 0 ? discountedGross / gross : 0
+  let tax = 0
+  for (const l of lines) {
+    const lineGross = l.unitPrice * l.qty * factor
+    tax += splitGross(lineGross, l.hasTax, l.taxPercentage).tax
+  }
   return {
-    net: discounted,
-    tax: taxAfter,
-    total: discounted + taxAfter,
+    net: discountedGross - tax,
+    tax,
+    total: discountedGross,
     promoSavings: promoSavings + manualDiscount,
   }
 }

@@ -17,7 +17,7 @@ import OwnerPicker from '@/features/cuentas/components/OwnerPicker.vue'
 import PayModal from '../components/PayModal.vue'
 import ReceiptModal from '../components/ReceiptModal.vue'
 import { useTienda } from '../composables/useTienda'
-import { applyPromo, formatMoney, stockState } from '../composables/pricing'
+import { applyPromo, formatMoney, splitGross, stockState } from '../composables/pricing'
 import { productCategoryTone, serviceCategoryTone } from '../composables/categoryTone'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import { useToast } from '@/composables/useToast'
@@ -157,24 +157,25 @@ function removeLine(line: SaleLine) {
 
 const discountNum = computed(() => Math.max(0, Number(discount.value.replace(',', '.')) || 0))
 
-// Subtotal base (tras promo, antes de descuento manual e impuestos).
-const grossNet = computed(() => lines.value.reduce((a, l) => a + l.unitPrice * l.qty, 0))
+// Subtotal BRUTO (IVA incluido), tras promo, antes del descuento manual.
+const grossSubtotal = computed(() => lines.value.reduce((a, l) => a + l.unitPrice * l.qty, 0))
 const promoSavings = computed(() =>
   lines.value.reduce(
     (a, l) => a + (l.originalUnitPrice != null && l.originalUnitPrice > l.unitPrice ? (l.originalUnitPrice - l.unitPrice) * l.qty : 0),
     0,
   ),
 )
-const discountedNet = computed(() => Math.max(0, grossNet.value - discountNum.value))
+const discountedGross = computed(() => Math.max(0, grossSubtotal.value - discountNum.value))
 
-// Impuestos desglosados por tasa (aplicando el descuento manual proporcionalmente).
+// IVA contenido por tasa, EXTRAÍDO del bruto (descuento manual aplicado proporcionalmente).
 const taxByRate = computed(() => {
-  const factor = grossNet.value > 0 ? discountedNet.value / grossNet.value : 0
+  const factor = grossSubtotal.value > 0 ? discountedGross.value / grossSubtotal.value : 0
   const groups = new Map<string, { name: string; amount: number }>()
   for (const l of lines.value) {
     if (!l.hasTax || l.taxPercentage <= 0) continue
-    const key = l.taxName ?? `Impuesto ${l.taxPercentage}%`
-    const amount = l.unitPrice * l.qty * factor * (l.taxPercentage / 100)
+    const key = l.taxName ?? `IVA ${l.taxPercentage}%`
+    const lineGross = l.unitPrice * l.qty * factor
+    const amount = splitGross(lineGross, l.hasTax, l.taxPercentage).tax
     const g = groups.get(key) ?? { name: key, amount: 0 }
     g.amount += amount
     groups.set(key, g)
@@ -182,12 +183,13 @@ const taxByRate = computed(() => {
   return Array.from(groups.values()).filter((g) => g.amount > 0)
 })
 const taxTotal = computed(() => taxByRate.value.reduce((a, g) => a + g.amount, 0))
-const total = computed(() => discountedNet.value + taxTotal.value)
+const total = computed(() => discountedGross.value)
+const baseTotal = computed(() => discountedGross.value - taxTotal.value)
 const isEmpty = computed(() => lines.value.length === 0)
 
 function onConfirmPay(method: string, received: number | null) {
   const totals: TotalsBreakdown = {
-    net: discountedNet.value,
+    net: baseTotal.value,
     tax: taxTotal.value,
     total: total.value,
     promoSavings: promoSavings.value + discountNum.value,
@@ -347,10 +349,11 @@ function toggleCustomer() {
             <span>Descuento</span>
             <input v-model="discount" type="text" inputmode="decimal" placeholder="0" />
           </div>
-          <div class="srow"><span>Subtotal (base)</span><span>{{ formatMoney(grossNet) }}</span></div>
+          <div class="srow"><span>Subtotal (IVA incl.)</span><span>{{ formatMoney(grossSubtotal) }}</span></div>
           <div v-if="promoSavings > 0" class="srow savings"><span>Ahorro por promociones</span><span>−{{ formatMoney(promoSavings) }}</span></div>
           <div v-if="discountNum > 0" class="srow"><span>Descuento</span><span>−{{ formatMoney(discountNum) }}</span></div>
-          <div v-for="r in taxByRate" :key="r.name" class="srow"><span>{{ r.name }}</span><span>{{ formatMoney(r.amount) }}</span></div>
+          <div class="srow"><span>Base gravable</span><span>{{ formatMoney(baseTotal) }}</span></div>
+          <div v-for="r in taxByRate" :key="r.name" class="srow"><span>{{ r.name }} (incluido)</span><span>{{ formatMoney(r.amount) }}</span></div>
           <div class="srow grand"><span>Total</span><span>{{ formatMoney(total) }}</span></div>
           <button type="button" class="charge" :disabled="isEmpty" @click="payOpen = true">
             Cobrar {{ formatMoney(total) }}

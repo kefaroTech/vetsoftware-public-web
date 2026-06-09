@@ -32,9 +32,9 @@ const METHOD_LABEL: Record<string, string> = {
           </li>
         </ul>
         <div class="summary">
-          <div class="srow"><span>Subtotal</span><span>{{ formatMoney(totals.net) }}</span></div>
+          <div class="srow"><span>Base gravable</span><span>{{ formatMoney(totals.net) }}</span></div>
           <div v-if="totals.promoSavings > 0" class="srow saving"><span>Ahorro por promociones</span><span>− {{ formatMoney(totals.promoSavings) }}</span></div>
-          <div class="srow"><span>Impuestos</span><span>{{ formatMoney(totals.tax) }}</span></div>
+          <div class="srow"><span>IVA (incluido)</span><span>{{ formatMoney(totals.tax) }}</span></div>
           <div class="srow total"><span>Total</span><span>{{ formatMoney(totals.total) }}</span></div>
           <div class="srow"><span>Método</span><span>{{ METHOD_LABEL[method] ?? method }}</span></div>
           <div v-if="change != null" class="srow"><span>Cambio</span><span>{{ formatMoney(change) }}</span></div>

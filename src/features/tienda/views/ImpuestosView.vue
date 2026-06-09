@@ -76,7 +76,7 @@ async function onConfirmDelete() {
         <tr>
           <th>Impuesto</th>
           <th>Porcentaje</th>
-          <th>Ejemplo sobre $100.000</th>
+          <th>IVA contenido en $100.000</th>
           <th v-if="canUpdate || canDelete"></th>
         </tr>
       </thead>
@@ -90,7 +90,7 @@ async function onConfirmDelete() {
         <tr v-for="t in store.taxes.value" v-else :key="t.id" class="trow" @click="onRowClick(t)">
           <td class="tname">{{ t.name }}</td>
           <td class="tstock">{{ t.percentage }}%</td>
-          <td>{{ formatMoney(Math.round(100000 * (t.percentage / 100))) }}</td>
+          <td>{{ formatMoney(Math.round(100000 - 100000 / (1 + t.percentage / 100))) }}</td>
           <td v-if="canUpdate || canDelete" @click.stop>
             <div class="actions">
               <button v-if="canUpdate" type="button" class="icon-btn" title="Editar" @click="editing = t">

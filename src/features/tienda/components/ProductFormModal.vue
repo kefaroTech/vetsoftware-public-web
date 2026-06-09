@@ -30,7 +30,6 @@ interface Draft {
   currentStock: string
   minStock: string
   provider: string
-  hasTax: boolean
   expireDate: boolean
   notes: string
   productCategoryId: string
@@ -40,7 +39,7 @@ interface Draft {
 function emptyDraft(): Draft {
   return {
     name: '', code: '', purchasePrice: '', salePrice: '', currentStock: '0', minStock: '0',
-    provider: '', hasTax: false, expireDate: false, notes: '', productCategoryId: '', taxId: '',
+    provider: '', expireDate: false, notes: '', productCategoryId: '', taxId: '',
   }
 }
 
@@ -75,7 +74,6 @@ watch(
         currentStock: String(it.currentStock),
         minStock: String(it.minStock),
         provider: it.provider ?? '',
-        hasTax: it.hasTax,
         expireDate: it.expireDate,
         notes: it.notes ?? '',
         productCategoryId: String(it.productCategory.id),
@@ -120,7 +118,7 @@ async function submit() {
     currentStock: num(draft.currentStock),
     minStock: num(draft.minStock),
     provider: draft.provider.trim() || null,
-    hasTax: draft.hasTax,
+    hasTax: draft.taxId !== '',
     expireDate: draft.expireDate,
     notes: draft.notes.trim() || null,
     productCategoryId: Number(draft.productCategoryId),
@@ -172,7 +170,7 @@ async function submit() {
             <BaseInput :id="id" v-model="draft.purchasePrice" :invalid="!!err('purchasePrice')" inputmode="decimal" placeholder="0" />
           </template>
         </BaseField>
-        <BaseField label="Precio de venta" required :error="err('salePrice')">
+        <BaseField label="Precio de venta (IVA incl.)" required :error="err('salePrice')">
           <template #default="{ id }">
             <BaseInput :id="id" v-model="draft.salePrice" :invalid="!!err('salePrice')" inputmode="decimal" placeholder="0" />
           </template>
@@ -197,16 +195,6 @@ async function submit() {
             <BaseSelect :id="id" v-model="draft.taxId" :options="taxOptions" placeholder="Sin impuesto" />
           </template>
         </BaseField>
-        <div class="checks col-2">
-          <label class="check">
-            <input v-model="draft.hasTax" type="checkbox" />
-            <span>Aplica impuesto en la venta</span>
-          </label>
-          <label class="check">
-            <input v-model="draft.expireDate" type="checkbox" />
-            <span>Maneja fecha de vencimiento</span>
-          </label>
-        </div>
         <BaseField label="Notas" class="col-2">
           <template #default="{ id }">
             <BaseTextarea :id="id" v-model="draft.notes" :rows="2" placeholder="Opcional" />

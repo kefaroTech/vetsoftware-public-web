@@ -62,7 +62,7 @@ const createdAccount = ref<OpenAccountResponse | null>(null)
 const pendingOps = ref<ChargeOp[]>([])
 
 // Cargo general (mini-form)
-const general = reactive({ name: '', unitAmount: '', quantity: '1', taxId: '', hasTax: false })
+const general = reactive({ name: '', unitAmount: '', quantity: '1', taxId: '' })
 
 watch(
   () => props.open,
@@ -79,7 +79,7 @@ watch(
     cart.value = []
     createdAccount.value = null
     pendingOps.value = []
-    Object.assign(general, { name: '', unitAmount: '', quantity: '1', taxId: '', hasTax: false })
+    Object.assign(general, { name: '', unitAmount: '', quantity: '1', taxId: '' })
   },
 )
 
@@ -167,9 +167,9 @@ function addGeneralToCart() {
     animalId: null,
     animalName: null,
     taxId: general.taxId ? Number(general.taxId) : null,
-    hasTax: general.hasTax,
+    hasTax: general.taxId !== '',
   })
-  Object.assign(general, { name: '', unitAmount: '', quantity: '1', taxId: '', hasTax: false })
+  Object.assign(general, { name: '', unitAmount: '', quantity: '1', taxId: '' })
 }
 
 function lineLabel(line: CartLine): string {
@@ -366,10 +366,6 @@ async function confirm() {
                 </template>
               </BaseField>
             </div>
-            <label class="check">
-              <input v-model="general.hasTax" type="checkbox" />
-              <span>Aplica impuesto</span>
-            </label>
             <button type="button" class="add-btn solid" :disabled="!canAddGeneral" @click="addGeneralToCart">
               <Plus :size="14" :stroke-width="1.9" /> Agregar al carrito
             </button>

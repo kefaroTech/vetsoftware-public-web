@@ -25,14 +25,13 @@ const store = useTienda()
 interface Draft {
   name: string
   price: string
-  hasTax: boolean
   notes: string
   serviceCategoryId: string
   taxId: string
 }
 
 function emptyDraft(): Draft {
-  return { name: '', price: '', hasTax: false, notes: '', serviceCategoryId: '', taxId: '' }
+  return { name: '', price: '', notes: '', serviceCategoryId: '', taxId: '' }
 }
 
 const draft = reactive<Draft>(emptyDraft())
@@ -61,7 +60,6 @@ watch(
       Object.assign(draft, {
         name: it.name,
         price: String(it.price),
-        hasTax: it.hasTax,
         notes: it.notes ?? '',
         serviceCategoryId: String(it.serviceCategory.id),
         taxId: it.tax ? String(it.tax.id) : '',
@@ -96,7 +94,7 @@ async function submit() {
   const payload: ServicePayload = {
     name: draft.name.trim(),
     price: num(draft.price),
-    hasTax: draft.hasTax,
+    hasTax: draft.taxId !== '',
     notes: draft.notes.trim() || null,
     serviceCategoryId: Number(draft.serviceCategoryId),
     taxId: draft.taxId ? Number(draft.taxId) : null,
@@ -137,7 +135,7 @@ async function submit() {
             <BaseSelect :id="id" v-model="draft.serviceCategoryId" :options="categoryOptions" :invalid="!!err('serviceCategoryId')" placeholder="Selecciona…" />
           </template>
         </BaseField>
-        <BaseField label="Precio" required :error="err('price')">
+        <BaseField label="Precio (IVA incl.)" required :error="err('price')">
           <template #default="{ id }">
             <BaseInput :id="id" v-model="draft.price" :invalid="!!err('price')" inputmode="decimal" placeholder="0" />
           </template>
@@ -147,10 +145,6 @@ async function submit() {
             <BaseSelect :id="id" v-model="draft.taxId" :options="taxOptions" placeholder="Sin impuesto" />
           </template>
         </BaseField>
-        <label class="check">
-          <input v-model="draft.hasTax" type="checkbox" />
-          <span>Aplica impuesto en la venta</span>
-        </label>
         <BaseField label="Notas" class="col-2">
           <template #default="{ id }">
             <BaseTextarea :id="id" v-model="draft.notes" :rows="2" placeholder="Opcional" />
