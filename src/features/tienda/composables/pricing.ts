@@ -42,7 +42,8 @@ export function splitGross(
 ): { base: number; tax: number } {
   const rate = effectiveTaxRate(hasTax, taxPercentage)
   if (rate <= 0) return { base: gross, tax: 0 }
-  const base = gross / (1 + rate / 100)
+  // Redondeo por línea a 2 decimales (HALF_UP), igual que el backend, para que la preview coincida.
+  const base = Math.round((gross / (1 + rate / 100)) * 100) / 100
   return { base, tax: gross - base }
 }
 
