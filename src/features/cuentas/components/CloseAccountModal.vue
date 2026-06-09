@@ -34,6 +34,13 @@ const reason = ref('')
 const busy = ref(false)
 const result = ref<{ account: OpenAccountResponse; charged: number } | null>(null)
 
+// ── Idempotencia del cierre cobrado ──────────────────────────────────────────
+// El cierre son 2 requests (abono del saldo + cambio de estado). Si el abono pasa
+// pero el cambio de estado falla, estos marcadores evitan que el reintento vuelva a
+// cobrar: el abono se registra una sola vez y `charged` queda congelado para el recibo.
+const paymentDone = ref(false)
+const charged = ref(0)
+
 const outstanding = computed(() => props.account?.outstandingAmount ?? 0)
 
 const METHOD_OPTIONS = (Object.entries(PAYMENT_METHOD_LABEL) as [PaymentMethod, string][]).map(
@@ -58,6 +65,9 @@ const canConfirm = computed(
   () => !busy.value && !(motivo.value === 'CANCELADA' && reason.value.trim() === ''),
 )
 
+// El abono ya se registró pero el cierre falló: el reintento solo cambia el estado.
+const retryHint = computed(() => !busy.value && paymentDone.value && step.value === 'cobro')
+
 const receiptCancel = computed(() => result.value?.charged === 0 && motivo.value === 'CANCELADA')
 const receiptTitle = computed(() =>
   receiptCancel.value ? 'Cuenta cancelada sin cobro' : 'Cuenta cerrada y cobrada',
@@ -73,22 +83,32 @@ watch(
     reason.value = ''
     busy.value = false
     result.value = null
+    paymentDone.value = false
+    charged.value = 0
   },
 )
 
 async function confirm() {
   if (!props.account || busy.value) return
+  const accountId = props.account.id
   busy.value = true
   try {
-    const updated = await store.closeAccount(props.account.id, {
-      motivo: motivo.value,
-      paymentMethod: method.value,
-      outstanding: outstanding.value,
-      reason: motivo.value === 'CANCELADA' ? reason.value.trim() : undefined,
-    })
+    // 1. Cobrada con saldo: registrar el abono UNA sola vez (idempotente en reintento).
+    //    El backend exige saldo cero para CLOSE, así que el abono va antes del cambio de estado.
+    if (motivo.value === 'COBRADA' && outstanding.value > 0 && !paymentDone.value) {
+      await store.addPaymentNoRefresh(accountId, outstanding.value, method.value)
+      charged.value = outstanding.value
+      paymentDone.value = true
+    }
+    // 2. Cambiar el estado (CLOSE/CANCEL). Si esto falla, el marcador evita recobrar.
+    const updated = await store.changeAccountStatus(
+      accountId,
+      motivo.value === 'CANCELADA' ? 'CANCEL' : 'CLOSE',
+      motivo.value === 'CANCELADA' ? reason.value.trim() : undefined,
+    )
     result.value = {
       account: updated,
-      charged: motivo.value === 'COBRADA' ? outstanding.value : 0,
+      charged: motivo.value === 'COBRADA' ? charged.value : 0,
     }
     if (motivo.value === 'COBRADA') {
       toast.success('Cuenta cerrada', `La cuenta de ${ownerName.value} se cerró.`)
@@ -171,6 +191,11 @@ function finish() {
         </BaseField>
 
         <p class="note">{{ note }}</p>
+
+        <p v-if="retryHint" class="retry-hint">
+          El cobro ya se registró; reintenta <strong>Cobrar y cerrar</strong> para terminar de
+          cerrar la cuenta.
+        </p>
       </div>
     </template>
 
@@ -234,6 +259,11 @@ function finish() {
 .do-sub { font-size: 11.5px; color: var(--warm-500); line-height: 1.35; }
 
 .note { margin: 0; font-size: 12.5px; color: var(--warm-600); line-height: 1.4; }
+.retry-hint {
+  margin: 0; padding: 11px 14px; border-radius: 10px; font-size: 12.5px; line-height: 1.4;
+  background: oklch(95% 0.06 80); border: 1px solid oklch(88% 0.09 80); color: oklch(40% 0.10 70);
+}
+.retry-hint strong { font-weight: 600; }
 
 /* Recibo */
 .receipt { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 6px 0; }

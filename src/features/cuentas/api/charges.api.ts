@@ -19,9 +19,6 @@ export const productChargeApi = {
     const { data } = await http.post<ProductChargeResponse>('/product-charge-open-accounts', payload)
     return data
   },
-  async remove(id: number): Promise<void> {
-    await http.delete(`/product-charge-open-accounts/${id}`)
-  },
   /** Anula un cargo con motivo obligatorio (queda visible tachado; permiso chargeOpenAccount.delete). */
   async voidCharge(id: number, reason: string): Promise<ProductChargeResponse> {
     const { data } = await http.patch<ProductChargeResponse>(
@@ -42,9 +39,6 @@ export const serviceChargeApi = {
     const { data } = await http.post<ServiceChargeResponse>('/service-charge-open-accounts', payload)
     return data
   },
-  async remove(id: number): Promise<void> {
-    await http.delete(`/service-charge-open-accounts/${id}`)
-  },
   /** Anula un cargo con motivo obligatorio (queda visible tachado; permiso chargeOpenAccount.delete). */
   async voidCharge(id: number, reason: string): Promise<ServiceChargeResponse> {
     const { data } = await http.patch<ServiceChargeResponse>(
@@ -64,9 +58,6 @@ export const generalChargeApi = {
   async create(payload: CreateGeneralChargePayload): Promise<GeneralChargeResponse> {
     const { data } = await http.post<GeneralChargeResponse>('/general-charge-open-accounts', payload)
     return data
-  },
-  async remove(id: number): Promise<void> {
-    await http.delete(`/general-charge-open-accounts/${id}`)
   },
   /** Anula un cargo con motivo obligatorio (queda visible tachado; permiso chargeOpenAccount.delete). */
   async voidCharge(id: number, reason: string): Promise<GeneralChargeResponse> {

@@ -214,31 +214,29 @@ export const useCuentasStore = defineStore('cuentas', () => {
   }
 
   /**
-   * Cierra una cuenta. Si el motivo es COBRADA y hay saldo pendiente, registra
-   * primero el abono del saldo restante; luego cambia el estado de la cuenta a
-   * CLOSE (cobrada) o CANCEL (cancelada). Devuelve la cuenta actualizada.
+   * Registra un abono SIN refrescar la cuenta. Pensado para el cierre cobrado, que
+   * orquesta abono + cambio de estado con un marcador de idempotencia en el modal
+   * (ver CloseAccountModal) y refresca al final. Para abonos normales usar addPayment.
    */
-  async function closeAccount(
+  async function addPaymentNoRefresh(
     accountId: number,
-    opts: {
-      motivo: 'COBRADA' | 'CANCELADA'
-      paymentMethod: PaymentMethod
-      outstanding: number
-      reason?: string
-    },
+    amount: number,
+    paymentMethod: PaymentMethod,
+  ): Promise<void> {
+    await debtOpenAccountApi.create({ amount, paymentMethod, openAccountId: accountId })
+  }
+
+  /**
+   * Cambia el estado de la cuenta a CLOSE (cobrada) o CANCEL (cancelada) y refleja la
+   * cuenta actualizada en la lista. El backend exige saldo cero para CLOSE, así que el
+   * abono del saldo debe registrarse antes (ver addPaymentNoRefresh + CloseAccountModal).
+   */
+  async function changeAccountStatus(
+    accountId: number,
+    status: 'CLOSE' | 'CANCEL',
+    reason?: string,
   ): Promise<OpenAccountResponse> {
-    if (opts.motivo === 'COBRADA' && opts.outstanding > 0) {
-      await debtOpenAccountApi.create({
-        amount: opts.outstanding,
-        paymentMethod: opts.paymentMethod,
-        openAccountId: accountId,
-      })
-    }
-    const updated = await openAccountApi.changeStatus(
-      accountId,
-      opts.motivo === 'CANCELADA' ? 'CANCEL' : 'CLOSE',
-      opts.motivo === 'CANCELADA' ? opts.reason : undefined,
-    )
+    const updated = await openAccountApi.changeStatus(accountId, status, reason)
     upsertAccount(updated)
     return updated
   }
@@ -265,13 +263,6 @@ export const useCuentasStore = defineStore('cuentas', () => {
     await refreshAccount(accountId)
   }
 
-  async function removeCharge(accountId: number, charge: UnifiedCharge) {
-    if (charge.kind === 'product') await productChargeApi.remove(charge.id)
-    else if (charge.kind === 'service') await serviceChargeApi.remove(charge.id)
-    else await generalChargeApi.remove(charge.id)
-    await refreshAccount(accountId)
-  }
-
   return {
     accounts,
     loading,
@@ -294,9 +285,9 @@ export const useCuentasStore = defineStore('cuentas', () => {
     addGeneralChargeNoRefresh,
     addChargesBatch,
     addPayment,
-    closeAccount,
+    addPaymentNoRefresh,
+    changeAccountStatus,
     voidPayment,
     voidCharge,
-    removeCharge,
   }
 })

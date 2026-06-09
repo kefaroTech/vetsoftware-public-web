@@ -91,7 +91,9 @@ const filteredAccounts = computed(() => {
   )
 })
 
-// El saldo pendiente acumulado solo aplica a las cuentas activas.
+// "Por cobrar" = saldo de cuentas OPEN únicamente. El outstandingAmount de una cuenta
+// CANCEL es el monto dado de baja (pérdida), no algo cobrable; sumarlo aquí lo contaría
+// mal. Cualquier total/reporte de cuentas por cobrar debe filtrar status === 'OPEN'.
 const totalPending = computed(() =>
   activeAccounts.value.reduce((sum, a) => sum + a.outstandingAmount, 0),
 )
