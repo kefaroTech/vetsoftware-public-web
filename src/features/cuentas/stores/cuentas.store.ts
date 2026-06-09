@@ -133,13 +133,18 @@ export const useCuentasStore = defineStore('cuentas', () => {
   }
 
   /**
-   * Abre una cuenta para el propietario. Regla de negocio: un propietario solo
-   * puede tener UNA cuenta abierta a la vez — si ya tiene una, se rechaza
-   * (también enforzado en el backend con 409 OWNER_ALREADY_HAS_OPEN_ACCOUNT).
+   * Get-or-create de la cuenta abierta del propietario (regla: UNA por dueño). Si ya existe
+   * —incluida una cuenta vacía dejada por un intento fallido— se reutiliza en vez de fallar;
+   * si no, se crea. El backend es idempotente por ownerId del mismo modo, así que un reintento
+   * tras perder la respuesta no duplica ni choca con 409. La UX que impide abrir una segunda
+   * cuenta vive en el modal (aviso de duplicado al elegir propietario), no aquí.
    */
   async function openAccount(ownerId: number): Promise<OpenAccountResponse> {
     const existing = await findOpenAccountByOwner(ownerId)
-    if (existing) throw new Error('Este propietario ya tiene una cuenta abierta.')
+    if (existing) {
+      upsertAccount(existing)
+      return existing
+    }
     const created = await openAccountApi.create(ownerId)
     upsertAccount(created)
     return created
