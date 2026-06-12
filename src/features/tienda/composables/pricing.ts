@@ -13,7 +13,25 @@ import type {
   SaleLine,
   ServiceResponse,
   StockState,
+  TaxTreatment,
 } from '../types/tienda'
+
+/** El IVA solo se extrae cuando el ítem es GRAVADO. */
+export function appliesIva(taxTreatment: TaxTreatment): boolean {
+  return taxTreatment === 'GRAVADO'
+}
+
+const TAX_TREATMENT_LABELS: Record<TaxTreatment, string> = {
+  GRAVADO: 'Gravado',
+  EXENTO: 'Exento (0%)',
+  EXCLUIDO: 'Excluido',
+  INC: 'INC',
+}
+
+/** Etiqueta en español de la clasificación tributaria. */
+export function taxTreatmentLabel(taxTreatment: TaxTreatment): string {
+  return TAX_TREATMENT_LABELS[taxTreatment] ?? taxTreatment
+}
 
 const moneyFmt = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -26,8 +44,8 @@ export function formatMoney(n: number): string {
 }
 
 /** Porcentaje (0–100) de impuesto efectivo de un ítem; 0 si no aplica. */
-export function effectiveTaxRate(hasTax: boolean, taxPercentage: number | null | undefined): number {
-  if (!hasTax || taxPercentage == null) return 0
+export function effectiveTaxRate(aplicaIva: boolean, taxPercentage: number | null | undefined): number {
+  if (!aplicaIva || taxPercentage == null) return 0
   return taxPercentage
 }
 
@@ -37,10 +55,10 @@ export function effectiveTaxRate(hasTax: boolean, taxPercentage: number | null |
  */
 export function splitGross(
   gross: number,
-  hasTax: boolean,
+  aplicaIva: boolean,
   taxPercentage: number | null | undefined,
 ): { base: number; tax: number } {
-  const rate = effectiveTaxRate(hasTax, taxPercentage)
+  const rate = effectiveTaxRate(aplicaIva, taxPercentage)
   if (rate <= 0) return { base: gross, tax: 0 }
   // Redondeo por línea a 2 decimales (HALF_UP), igual que el backend, para que la preview coincida.
   const base = Math.round((gross / (1 + rate / 100)) * 100) / 100
@@ -79,7 +97,7 @@ export function computeTotals(lines: SaleLine[], manualDiscount = 0): TotalsBrea
   let tax = 0
   for (const l of lines) {
     const lineGross = l.unitPrice * l.qty * factor
-    tax += splitGross(lineGross, l.hasTax, l.taxPercentage).tax
+    tax += splitGross(lineGross, appliesIva(l.taxTreatment), l.taxPercentage).tax
   }
   return {
     net: discountedGross - tax,

@@ -6,7 +6,7 @@ import ProductFormModal from '../components/ProductFormModal.vue'
 import RestockModal from '../components/RestockModal.vue'
 import CategoryManagerModal from '../components/CategoryManagerModal.vue'
 import { useTienda } from '../composables/useTienda'
-import { formatMoney, stockState } from '../composables/pricing'
+import { formatMoney, stockState, taxTreatmentLabel } from '../composables/pricing'
 import { productCategoryTone } from '../composables/categoryTone'
 import { useToast } from '@/composables/useToast'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
@@ -89,7 +89,7 @@ function toPayload(p: ProductResponse, currentStock: number): ProductPayload {
     currentStock,
     minStock: p.minStock,
     provider: p.provider,
-    hasTax: p.hasTax,
+    taxTreatment: p.taxTreatment,
     expireDate: p.expireDate,
     notes: p.notes,
     productCategoryId: p.productCategory.id,
@@ -176,6 +176,7 @@ async function onCategoryRemove(id: number) {
           <th>Categoría</th>
           <th>SKU</th>
           <th>Precio venta</th>
+          <th>IVA</th>
           <th>Stock</th>
           <th>Estado</th>
           <th>Vence</th>
@@ -184,10 +185,10 @@ async function onCategoryRemove(id: number) {
       </thead>
       <tbody>
         <tr v-if="store.loading.value">
-          <td colspan="8" class="empty">Cargando…</td>
+          <td colspan="9" class="empty">Cargando…</td>
         </tr>
         <tr v-else-if="slice.length === 0">
-          <td colspan="8" class="empty">Sin productos para el filtro.</td>
+          <td colspan="9" class="empty">Sin productos para el filtro.</td>
         </tr>
         <tr v-for="p in slice" v-else :key="p.id" class="trow" @click="onRowClick(p)">
           <td class="tname">{{ p.name }}</td>
@@ -203,6 +204,7 @@ async function onCategoryRemove(id: number) {
           </td>
           <td class="tsku">{{ p.code }}</td>
           <td>{{ formatMoney(p.salePrice) }}</td>
+          <td class="ttax">{{ taxTreatmentLabel(p.taxTreatment) }}</td>
           <td class="tstock">{{ p.currentStock }} u</td>
           <td><StockStatePill :state="stockState(p)" /></td>
           <td class="texp">{{ p.expireDate ? 'Sí' : '—' }}</td>
@@ -281,6 +283,7 @@ async function onCategoryRemove(id: number) {
 .tname { font-weight: 500; color: var(--warm-900); }
 .tsku { font-family: var(--font-mono); font-size: 12px; color: var(--warm-600); }
 .tstock { font-weight: 600; }
+.ttax { color: var(--warm-600); font-size: 12.5px; }
 .texp { color: var(--warm-600); }
 .catpill { display: inline-flex; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 500; white-space: nowrap; background: var(--warm-150); color: var(--warm-700); }
 .restock { padding: 5px 11px; border-radius: 7px; border: 1px solid var(--warm-200); background: var(--warm-50); color: var(--warm-700); font-family: inherit; font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; }

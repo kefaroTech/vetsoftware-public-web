@@ -8,7 +8,18 @@ import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useTienda } from '../composables/useTienda'
-import type { ProductPayload, ProductResponse } from '../types/tienda'
+import type { ProductPayload, ProductResponse, TaxTreatment } from '../types/tienda'
+
+const TAX_TREATMENT_OPTIONS: { value: TaxTreatment; label: string }[] = [
+  { value: 'GRAVADO', label: 'Gravado' },
+  { value: 'EXENTO', label: 'Exento (0%)' },
+  { value: 'EXCLUIDO', label: 'Excluido' },
+  { value: 'INC', label: 'INC' },
+]
+/** El selector de tarifa (taxId) solo aplica cuando hay IVA/INC que liquidar. */
+function requiresTaxRate(t: TaxTreatment): boolean {
+  return t === 'GRAVADO' || t === 'INC'
+}
 
 const props = defineProps<{
   open: boolean
@@ -33,13 +44,14 @@ interface Draft {
   expireDate: boolean
   notes: string
   productCategoryId: string
+  taxTreatment: TaxTreatment
   taxId: string
 }
 
 function emptyDraft(): Draft {
   return {
     name: '', code: '', purchasePrice: '', salePrice: '', currentStock: '0', minStock: '0',
-    provider: '', expireDate: false, notes: '', productCategoryId: '', taxId: '',
+    provider: '', expireDate: false, notes: '', productCategoryId: '', taxTreatment: 'GRAVADO', taxId: '',
   }
 }
 
@@ -51,12 +63,21 @@ const saveError = ref<string | null>(null)
 const categoryOptions = computed(() =>
   store.productCategories.value.map((c) => ({ value: String(c.id), label: c.name })),
 )
-const taxOptions = computed(() => [
-  { value: '', label: 'Sin impuesto' },
-  ...store.taxes.value.map((t) => ({ value: String(t.id), label: `${t.name} (${t.percentage}%)` })),
-])
+const taxOptions = computed(() =>
+  store.taxes.value.map((t) => ({ value: String(t.id), label: `${t.name} (${t.percentage}%)` })),
+)
+
+const showTaxRate = computed(() => requiresTaxRate(draft.taxTreatment))
 
 const isEdit = computed(() => props.initial !== null)
+
+// Para EXENTO/EXCLUIDO no hay tarifa: forzamos taxId vacío.
+watch(
+  () => draft.taxTreatment,
+  (t) => {
+    if (!requiresTaxRate(t)) draft.taxId = ''
+  },
+)
 
 watch(
   () => props.open,
@@ -77,6 +98,7 @@ watch(
         expireDate: it.expireDate,
         notes: it.notes ?? '',
         productCategoryId: String(it.productCategory.id),
+        taxTreatment: it.taxTreatment,
         taxId: it.tax ? String(it.tax.id) : '',
       } satisfies Draft)
     } else {
@@ -97,6 +119,7 @@ const errors = computed(() => ({
   currentStock: !(Number.isInteger(num(draft.currentStock)) && num(draft.currentStock) >= 0) ? 'Entero ≥ 0' : null,
   minStock: !(Number.isInteger(num(draft.minStock)) && num(draft.minStock) >= 0) ? 'Entero ≥ 0' : null,
   productCategoryId: !draft.productCategoryId ? 'Selecciona una categoría' : null,
+  taxId: requiresTaxRate(draft.taxTreatment) && !draft.taxId ? 'Selecciona la tarifa' : null,
 }))
 
 function err(field: string): string | undefined {
@@ -118,11 +141,11 @@ async function submit() {
     currentStock: num(draft.currentStock),
     minStock: num(draft.minStock),
     provider: draft.provider.trim() || null,
-    hasTax: draft.taxId !== '',
+    taxTreatment: draft.taxTreatment,
     expireDate: draft.expireDate,
     notes: draft.notes.trim() || null,
     productCategoryId: Number(draft.productCategoryId),
-    taxId: draft.taxId ? Number(draft.taxId) : null,
+    taxId: requiresTaxRate(draft.taxTreatment) && draft.taxId ? Number(draft.taxId) : null,
   }
   try {
     const saved = props.initial
@@ -190,9 +213,14 @@ async function submit() {
             <BaseInput :id="id" v-model="draft.provider" placeholder="Opcional" />
           </template>
         </BaseField>
-        <BaseField label="Impuesto">
+        <BaseField label="Tratamiento de IVA" required>
           <template #default="{ id }">
-            <BaseSelect :id="id" v-model="draft.taxId" :options="taxOptions" placeholder="Sin impuesto" />
+            <BaseSelect :id="id" v-model="draft.taxTreatment" :options="TAX_TREATMENT_OPTIONS" />
+          </template>
+        </BaseField>
+        <BaseField v-if="showTaxRate" label="Tarifa de impuesto" required :error="err('taxId')">
+          <template #default="{ id }">
+            <BaseSelect :id="id" v-model="draft.taxId" :options="taxOptions" :invalid="!!err('taxId')" placeholder="Selecciona tarifa…" />
           </template>
         </BaseField>
         <BaseField label="Notas" class="col-2">

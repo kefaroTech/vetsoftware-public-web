@@ -17,12 +17,12 @@ import OwnerPicker from '@/features/cuentas/components/OwnerPicker.vue'
 import PayModal from '../components/PayModal.vue'
 import ReceiptModal from '../components/ReceiptModal.vue'
 import { useTienda } from '../composables/useTienda'
-import { applyPromo, formatMoney, splitGross, stockState } from '../composables/pricing'
+import { appliesIva, applyPromo, formatMoney, splitGross, stockState } from '../composables/pricing'
 import { productCategoryTone, serviceCategoryTone } from '../composables/categoryTone'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import { useToast } from '@/composables/useToast'
 import type { TotalsBreakdown } from '../composables/pricing'
-import type { SaleLine, StockState } from '../types/tienda'
+import type { SaleLine, StockState, TaxTreatment } from '../types/tienda'
 import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
 
 const store = useTienda()
@@ -69,7 +69,7 @@ interface CatalogCard {
   basePrice: number
   price: number
   promoName: string | null
-  hasTax: boolean
+  taxTreatment: TaxTreatment
   taxPercentage: number
   taxName?: string
   stockState: StockState | null
@@ -90,7 +90,9 @@ const catalog = computed<CatalogCard[]>(() => {
         return {
           id: p.id, name: p.name, basePrice: p.salePrice, price: applied.unitPrice,
           promoName: applied.promo?.name ?? null,
-          hasTax: p.hasTax, taxPercentage: p.hasTax ? p.tax?.percentage ?? 0 : 0, taxName: p.tax?.name,
+          taxTreatment: p.taxTreatment,
+          taxPercentage: appliesIva(p.taxTreatment) ? p.tax?.percentage ?? 0 : 0,
+          taxName: p.tax?.name,
           stockState: stockState(p), stockCount: p.currentStock, isService: false,
           toneBg: productCategoryTone(p.productCategory).bg,
           toneFg: productCategoryTone(p.productCategory).fg,
@@ -106,7 +108,9 @@ const catalog = computed<CatalogCard[]>(() => {
         return {
           id: s.id, name: s.name, basePrice: s.price, price: applied.unitPrice,
           promoName: applied.promo?.name ?? null,
-          hasTax: s.hasTax, taxPercentage: s.hasTax ? s.tax?.percentage ?? 0 : 0, taxName: s.tax?.name,
+          taxTreatment: s.taxTreatment,
+          taxPercentage: appliesIva(s.taxTreatment) ? s.tax?.percentage ?? 0 : 0,
+          taxName: s.tax?.name,
           stockState: null, stockCount: null, isService: true,
           toneBg: serviceCategoryTone(s.serviceCategory).bg,
           toneFg: serviceCategoryTone(s.serviceCategory).fg,
@@ -131,7 +135,7 @@ function addToTicket(card: CatalogCard) {
   }
   lines.value.push({
     kind, id: card.id, name: card.name, unitPrice: card.price, qty: 1,
-    hasTax: card.hasTax, taxPercentage: card.taxPercentage, taxName: card.taxName,
+    taxTreatment: card.taxTreatment, taxPercentage: card.taxPercentage, taxName: card.taxName,
     promoName: card.promoName ?? undefined,
     originalUnitPrice: card.promoName ? card.basePrice : undefined,
   })
@@ -172,10 +176,11 @@ const taxByRate = computed(() => {
   const factor = grossSubtotal.value > 0 ? discountedGross.value / grossSubtotal.value : 0
   const groups = new Map<string, { name: string; amount: number }>()
   for (const l of lines.value) {
-    if (!l.hasTax || l.taxPercentage <= 0) continue
+    const aplicaIva = appliesIva(l.taxTreatment)
+    if (!aplicaIva || l.taxPercentage <= 0) continue
     const key = l.taxName ?? `IVA ${l.taxPercentage}%`
     const lineGross = l.unitPrice * l.qty * factor
-    const amount = splitGross(lineGross, l.hasTax, l.taxPercentage).tax
+    const amount = splitGross(lineGross, aplicaIva, l.taxPercentage).tax
     const g = groups.get(key) ?? { name: key, amount: 0 }
     g.amount += amount
     groups.set(key, g)

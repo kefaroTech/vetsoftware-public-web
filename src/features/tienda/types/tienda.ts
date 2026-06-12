@@ -33,6 +33,13 @@ export interface TaxResponse extends TaxSummary {
   enabled: boolean
 }
 
+/**
+ * Clasificación tributaria del producto/servicio (espejo del enum del backend).
+ * El IVA solo se extrae cuando es `GRAVADO`. `EXENTO`/`EXCLUIDO`/`INC` no
+ * generan IVA contenido en el bruto.
+ */
+export type TaxTreatment = 'GRAVADO' | 'EXENTO' | 'EXCLUIDO' | 'INC'
+
 // ── Categorías ─────────────────────────────────────────────────────────────
 
 export interface CategorySummary {
@@ -65,7 +72,7 @@ export interface ProductResponse {
   currentStock: number
   minStock: number
   provider: string | null
-  hasTax: boolean
+  taxTreatment: TaxTreatment
   /** Bandera: el producto maneja fecha de vencimiento (el backend no persiste la fecha). */
   expireDate: boolean
   notes: string | null
@@ -84,7 +91,7 @@ export interface ProductPayload {
   currentStock: number
   minStock: number
   provider?: string | null
-  hasTax: boolean
+  taxTreatment: TaxTreatment
   expireDate: boolean
   notes?: string | null
   productCategoryId: number
@@ -106,7 +113,7 @@ export interface ServiceResponse {
   id: number
   name: string
   price: number
-  hasTax: boolean
+  taxTreatment: TaxTreatment
   notes: string | null
   serviceCategory: CategorySummary
   tax: TaxSummary | null
@@ -118,7 +125,7 @@ export interface ServiceResponse {
 export interface ServicePayload {
   name: string
   price: number
-  hasTax: boolean
+  taxTreatment: TaxTreatment
   notes?: string | null
   serviceCategoryId: number
   taxId?: number | null
@@ -182,7 +189,7 @@ export interface SaleLine {
   name: string
   unitPrice: number
   qty: number
-  hasTax: boolean
+  taxTreatment: TaxTreatment
   taxPercentage: number
   taxName?: string
   /** Promo aplicada (si existe) — para mostrar precio tachado + ahorro. */
