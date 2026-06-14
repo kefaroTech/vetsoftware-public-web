@@ -1,9 +1,10 @@
 import { http } from '@/services/http/http.client'
-import type { TaxResponse } from '../types/tienda'
+import type { TaxResponse, TaxScheme } from '../types/tienda'
 
 export interface TaxPayload {
   name: string
   percentage: number
+  taxScheme: TaxScheme
 }
 
 export const taxApi = {

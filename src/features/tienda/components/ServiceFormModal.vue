@@ -8,7 +8,7 @@ import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useTienda } from '../composables/useTienda'
-import type { ServicePayload, ServiceResponse, TaxTreatment } from '../types/tienda'
+import type { ServicePayload, ServiceResponse, TaxScheme, TaxTreatment } from '../types/tienda'
 
 const TAX_TREATMENT_OPTIONS: { value: TaxTreatment; label: string }[] = [
   { value: 'GRAVADO', label: 'Gravado' },
@@ -19,6 +19,12 @@ const TAX_TREATMENT_OPTIONS: { value: TaxTreatment; label: string }[] = [
 /** El selector de tarifa (taxId) solo aplica cuando hay IVA/INC que liquidar. */
 function requiresTaxRate(t: TaxTreatment): boolean {
   return t === 'GRAVADO' || t === 'INC'
+}
+/** Tributo DIAN exigido por el tratamiento: GRAVADO liquida IVA, INC liquida INC. */
+function schemeForTreatment(t: TaxTreatment): TaxScheme | null {
+  if (t === 'GRAVADO') return 'IVA'
+  if (t === 'INC') return 'INC'
+  return null
 }
 
 const props = defineProps<{
@@ -54,19 +60,31 @@ const saveError = ref<string | null>(null)
 const categoryOptions = computed(() =>
   store.serviceCategories.value.map((c) => ({ value: String(c.id), label: c.name })),
 )
-const taxOptions = computed(() =>
-  store.taxes.value.map((t) => ({ value: String(t.id), label: `${t.name} (${t.percentage}%)` })),
-)
+/** Tarifas filtradas por el tributo que exige el tratamiento seleccionado. */
+const taxOptions = computed(() => {
+  const scheme = schemeForTreatment(draft.taxTreatment)
+  return store.taxes.value
+    .filter((t) => scheme === null || t.taxScheme === scheme)
+    .map((t) => ({ value: String(t.id), label: `${t.name} (${t.percentage}%)` }))
+})
 
 const showTaxRate = computed(() => requiresTaxRate(draft.taxTreatment))
 
 const isEdit = computed(() => props.initial !== null)
 
 // Para EXENTO/EXCLUIDO no hay tarifa: forzamos taxId vacío.
+// Al cambiar de tratamiento, si la tarifa elegida ya no pertenece al tributo
+// correspondiente (IVA↔INC), la limpiamos.
 watch(
   () => draft.taxTreatment,
   (t) => {
-    if (!requiresTaxRate(t)) draft.taxId = ''
+    if (!requiresTaxRate(t)) {
+      draft.taxId = ''
+      return
+    }
+    const scheme = schemeForTreatment(t)
+    const selected = store.taxes.value.find((x) => String(x.id) === draft.taxId)
+    if (selected && scheme !== null && selected.taxScheme !== scheme) draft.taxId = ''
   },
 )
 

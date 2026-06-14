@@ -75,6 +75,7 @@ async function onConfirmDelete() {
       <thead>
         <tr>
           <th>Impuesto</th>
+          <th>Tributo</th>
           <th>Porcentaje</th>
           <th>IVA contenido en $100.000</th>
           <th v-if="canUpdate || canDelete"></th>
@@ -82,13 +83,14 @@ async function onConfirmDelete() {
       </thead>
       <tbody>
         <tr v-if="store.loading.value">
-          <td colspan="4" class="empty">Cargando…</td>
+          <td colspan="5" class="empty">Cargando…</td>
         </tr>
         <tr v-else-if="store.taxes.value.length === 0">
-          <td colspan="4" class="empty">Sin impuestos. Crea el primero.</td>
+          <td colspan="5" class="empty">Sin impuestos. Crea el primero.</td>
         </tr>
         <tr v-for="t in store.taxes.value" v-else :key="t.id" class="trow" @click="onRowClick(t)">
           <td class="tname">{{ t.name }}</td>
+          <td>{{ t.taxScheme }}</td>
           <td class="tstock">{{ t.percentage }}%</td>
           <td>{{ formatMoney(Math.round(100000 - 100000 / (1 + t.percentage / 100))) }}</td>
           <td v-if="canUpdate || canDelete" @click.stop>

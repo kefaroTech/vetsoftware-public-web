@@ -4,9 +4,15 @@ import { BarChart3 } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
+import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useTienda } from '../composables/useTienda'
-import type { TaxResponse } from '../types/tienda'
+import type { TaxResponse, TaxScheme } from '../types/tienda'
+
+const TAX_SCHEME_OPTIONS: { value: TaxScheme; label: string }[] = [
+  { value: 'IVA', label: 'IVA' },
+  { value: 'INC', label: 'INC (Impuesto Nacional al Consumo)' },
+]
 
 const props = defineProps<{
   open: boolean
@@ -20,7 +26,13 @@ const emit = defineEmits<{
 
 const store = useTienda()
 
-const draft = reactive({ name: '', pct: '' })
+interface Draft {
+  name: string
+  pct: string
+  taxScheme: TaxScheme
+}
+
+const draft = reactive<Draft>({ name: '', pct: '', taxScheme: 'IVA' })
 const submitted = ref(false)
 const busy = ref(false)
 const saveError = ref<string | null>(null)
@@ -36,9 +48,11 @@ watch(
     if (props.initial) {
       draft.name = props.initial.name
       draft.pct = String(props.initial.percentage)
+      draft.taxScheme = props.initial.taxScheme
     } else {
       draft.name = ''
       draft.pct = ''
+      draft.taxScheme = 'IVA'
     }
   },
 )
@@ -63,7 +77,7 @@ async function submit() {
   if (!isValid.value || busy.value) return
   busy.value = true
   saveError.value = null
-  const payload = { name: draft.name.trim(), percentage: num(draft.pct) }
+  const payload = { name: draft.name.trim(), percentage: num(draft.pct), taxScheme: draft.taxScheme }
   try {
     const saved = props.initial
       ? await store.updateTax(props.initial.id, payload)
@@ -101,6 +115,11 @@ async function submit() {
               <BaseInput :id="id" v-model="draft.pct" :invalid="!!err('pct')" inputmode="decimal" placeholder="19" />
               <span class="pct-sign">%</span>
             </div>
+          </template>
+        </BaseField>
+        <BaseField label="Tributo" required>
+          <template #default="{ id }">
+            <BaseSelect :id="id" v-model="draft.taxScheme" :options="TAX_SCHEME_OPTIONS" />
           </template>
         </BaseField>
         <p class="note">

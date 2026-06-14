@@ -21,10 +21,14 @@ export interface CompanySummary {
   identifier: string
 }
 
+/** Tributo DIAN de la tasa: IVA o INC (Impuesto Nacional al Consumo). */
+export type TaxScheme = 'IVA' | 'INC'
+
 export interface TaxSummary {
   id: number
   name: string
   percentage: number
+  taxScheme: TaxScheme
 }
 
 export interface TaxResponse extends TaxSummary {
