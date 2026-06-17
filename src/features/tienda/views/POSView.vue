@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import {
+  AlertTriangle,
   Minus,
   Package,
   Plus,
@@ -21,13 +23,28 @@ import { appliesIva, applyPromo, formatMoney, splitGross, stockState } from '../
 import { productCategoryTone, serviceCategoryTone } from '../composables/categoryTone'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import { useToast } from '@/composables/useToast'
+import { getProblemDetailMessage } from '@/services/http/http.client'
+import { posSaleApi, type PosSaleLineKind } from '../api/posSale.api'
+import { companyTaxProfileApi } from '@/features/facturacion/api/companyTaxProfile.api'
+import { useFacturacionAccess } from '@/features/facturacion/composables/useFacturacionAccess'
+import { PERMISSIONS } from '@/constants/permissions'
 import type { TotalsBreakdown } from '../composables/pricing'
 import type { SaleLine, StockState, TaxTreatment } from '../types/tienda'
 import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
+import type { ElectronicDocumentResponse, PaymentMeans } from '@/features/facturacion/types/facturacion'
 
 const store = useTienda()
 const toast = useToast()
+const router = useRouter()
+const { can } = useFacturacionAccess()
 const today = todayISO()
+
+// Toda venta (tiquete POS o factura) lleva los datos fiscales del emisor, que salen del perfil fiscal de
+// la empresa (CompanyTaxProfile). Sin él, el backend rechaza el registro: bloqueamos el cobro y guiamos a
+// configurarlo en vez de dejar que falle con un error crudo.
+const taxProfileMissing = ref(false)
+const canConfigTaxProfile =
+  can(PERMISSIONS.COMPANY_TAX_PROFILE_MANAGE) || can(PERMISSIONS.COMPANY_TAX_PROFILE_READ)
 
 type Mode = 'producto' | 'servicio' | 'paquete'
 const mode = ref<Mode>('producto')
@@ -39,15 +56,41 @@ const discount = ref('')
 const customer = ref<OwnerResponse | null>(null)
 const custOpen = ref(false)
 const payOpen = ref(false)
+const paying = ref(false)
 const receiptOpen = ref(false)
 const receipt = ref<{
   lines: SaleLine[]
   totals: TotalsBreakdown
   method: string
   change: number | null
+  document: ElectronicDocumentResponse | null
 } | null>(null)
 
-onMounted(() => store.ensureLoaded())
+// Método de pago del POS → medio de pago DIAN.
+const MEANS_BY_METHOD: Record<string, PaymentMeans> = {
+  EFECTIVO: 'EFECTIVO',
+  TARJETA: 'TARJETA_CREDITO',
+  TRANSFERENCIA: 'TRANSFERENCIA',
+}
+
+onMounted(() => {
+  store.ensureLoaded()
+  void checkTaxProfile()
+})
+
+// Se re-evalúa en cada montaje, así que volver del configurador refleja el perfil recién creado.
+async function checkTaxProfile() {
+  try {
+    taxProfileMissing.value = (await companyTaxProfileApi.find()) === null
+  } catch {
+    // Ante un fallo transitorio no bloqueamos el POS; el cobro sigue protegido por el catch de onConfirmPay.
+    taxProfileMissing.value = false
+  }
+}
+
+function goToTaxProfile() {
+  router.push({ name: 'facturacion-configuracion' })
+}
 
 // Al cambiar de modo, limpia búsqueda y categoría.
 watch(mode, () => {
@@ -192,25 +235,60 @@ const total = computed(() => discountedGross.value)
 const baseTotal = computed(() => discountedGross.value - taxTotal.value)
 const isEmpty = computed(() => lines.value.length === 0)
 
-function onConfirmPay(method: string, received: number | null) {
+async function onConfirmPay(method: string, received: number | null) {
+  if (paying.value || taxProfileMissing.value) return
+  const totalNow = total.value
   const totals: TotalsBreakdown = {
     net: baseTotal.value,
     tax: taxTotal.value,
-    total: total.value,
+    total: totalNow,
     promoSavings: promoSavings.value + discountNum.value,
   }
-  receipt.value = {
-    lines: lines.value.map((l) => ({ ...l })),
-    totals,
-    method,
-    change: received != null ? Math.max(0, received - total.value) : null,
+  // El descuento manual se reparte proporcional sobre el precio de cada línea, para que el total del
+  // documento (suma de líneas) cuadre con lo cobrado. El backend extrae base/IVA de cada unitPrice.
+  const factor = grossSubtotal.value > 0 ? discountedGross.value / grossSubtotal.value : 1
+  const saleLines = lines.value.map((l) => ({
+    kind: (l.kind === 'service' ? 'SERVICE' : 'PRODUCT') as PosSaleLineKind,
+    refId: l.id,
+    quantity: l.qty,
+    unitPrice: Math.round(l.unitPrice * factor * 100) / 100,
+  }))
+  const snapshot = lines.value.map((l) => ({ ...l }))
+
+  paying.value = true
+  try {
+    const document = await posSaleApi.register({
+      documentType: 'DOC_EQUIV_POS',
+      finalConsumer: !customer.value,
+      customerOwnerId: customer.value?.id ?? null,
+      lines: saleLines,
+      payments: [{ means: MEANS_BY_METHOD[method] ?? 'EFECTIVO', amount: totalNow }],
+    })
+    receipt.value = {
+      lines: snapshot,
+      totals,
+      method,
+      change: received != null ? Math.max(0, received - totalNow) : null,
+      document,
+    }
+    payOpen.value = false
+    receiptOpen.value = true
+    lines.value = []
+    discount.value = ''
+    customer.value = null
+    if (document.dianStatus === 'VALIDADO') {
+      toast.success('Venta registrada', 'Factura validada por la DIAN.')
+    } else if (document.dianStatus === 'PENDIENTE') {
+      toast.success('Venta registrada', 'Documento guardado · emisión a la DIAN pendiente.')
+    } else {
+      toast.success('Venta registrada', 'Documento generado.')
+    }
+  } catch (e) {
+    // Se mantiene el ticket y el modal de cobro abiertos para reintentar.
+    toast.error('No se pudo registrar la venta', getProblemDetailMessage(e))
+  } finally {
+    paying.value = false
   }
-  payOpen.value = false
-  receiptOpen.value = true
-  lines.value = []
-  discount.value = ''
-  customer.value = null
-  toast.success('Cobro registrado', 'Recibo generado (demo, no persistido).')
 }
 
 function onSelectCustomer(owner: OwnerResponse) {
@@ -225,7 +303,19 @@ function toggleCustomer() {
 
 <template>
   <div class="page">
-    <PageHeader kicker="Tienda" title="Punto de venta" lead="Cobra productos y servicios. El cobro es una demo client-side (sin persistir)." />
+    <PageHeader kicker="Tienda" title="Punto de venta" lead="Cobra productos y servicios. Cada venta genera su documento DIAN (o queda pendiente si no tienes el módulo)." />
+
+    <div v-if="taxProfileMissing" class="banner warn">
+      <AlertTriangle :size="18" class="warn-icon" />
+      <div class="warn-text">
+        <strong>Configura la identidad fiscal de tu empresa</strong>
+        <span>Cada venta genera un documento (tiquete POS o factura) que debe llevar los datos fiscales del emisor. Sin el perfil fiscal no puedes registrar ventas.</span>
+      </div>
+      <button v-if="canConfigTaxProfile" type="button" class="warn-cta" @click="goToTaxProfile">
+        Configurar
+      </button>
+      <span v-else class="warn-hint">Pídele a un administrador que la configure.</span>
+    </div>
 
     <div v-if="store.error.value" class="banner error">{{ store.error.value }}</div>
 
@@ -360,7 +450,7 @@ function toggleCustomer() {
           <div class="srow"><span>Base gravable</span><span>{{ formatMoney(baseTotal) }}</span></div>
           <div v-for="r in taxByRate" :key="r.name" class="srow"><span>{{ r.name }} (incluido)</span><span>{{ formatMoney(r.amount) }}</span></div>
           <div class="srow grand"><span>Total</span><span>{{ formatMoney(total) }}</span></div>
-          <button type="button" class="charge" :disabled="isEmpty" @click="payOpen = true">
+          <button type="button" class="charge" :disabled="isEmpty || taxProfileMissing" @click="payOpen = true">
             Cobrar {{ formatMoney(total) }}
           </button>
         </div>
@@ -388,6 +478,7 @@ function toggleCustomer() {
       :totals="receipt.totals"
       :method="receipt.method"
       :change="receipt.change"
+      :document="receipt.document"
       @close="receiptOpen = false"
     />
   </div>
@@ -396,6 +487,14 @@ function toggleCustomer() {
 <style scoped>
 .page { font-family: var(--font-sans); color: var(--warm-900); }
 .banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
+.banner.warn { display: flex; align-items: flex-start; gap: 12px; background: oklch(97% 0.05 85); border: 1px solid oklch(85% 0.11 85); color: oklch(40% 0.09 70); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
+.banner.warn .warn-icon { flex: 0 0 auto; margin-top: 1px; color: oklch(60% 0.15 70); }
+.banner.warn .warn-text { display: flex; flex-direction: column; gap: 2px; font-size: 13px; min-width: 0; }
+.banner.warn .warn-text strong { font-weight: 600; }
+.banner.warn .warn-text span { color: oklch(45% 0.05 70); }
+.banner.warn .warn-cta { flex: 0 0 auto; margin-left: auto; align-self: center; border: 1px solid oklch(60% 0.15 70); background: oklch(99% 0.02 85); color: oklch(40% 0.12 70); border-radius: 7px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.banner.warn .warn-cta:hover { background: oklch(95% 0.06 85); }
+.banner.warn .warn-hint { flex: 0 0 auto; margin-left: auto; align-self: center; font-size: 12.5px; color: oklch(50% 0.05 70); }
 
 .pos { display: grid; grid-template-columns: 1fr 380px; gap: 18px; align-items: start; }
 @media (max-width: 1100px) { .pos { grid-template-columns: 1fr 340px; } }

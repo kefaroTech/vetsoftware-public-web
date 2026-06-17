@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Check, Printer } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import { formatMoney, type TotalsBreakdown } from '../composables/pricing'
 import type { SaleLine } from '../types/tienda'
 import { useReceiptPrint } from '@/composables/useReceiptPrint'
+import FeStatusPill from '@/features/facturacion/components/FeStatusPill.vue'
+import type { ElectronicDocumentResponse } from '@/features/facturacion/types/facturacion'
 
 const props = defineProps<{
   open: boolean
@@ -11,6 +14,7 @@ const props = defineProps<{
   totals: TotalsBreakdown
   method: string
   change: number | null
+  document?: ElectronicDocumentResponse | null
 }>()
 
 defineEmits<{ close: [] }>()
@@ -20,6 +24,13 @@ const METHOD_LABEL: Record<string, string> = {
   TARJETA: 'Tarjeta',
   TRANSFERENCIA: 'Transferencia',
 }
+
+// Número fiscal (prefijo-consecutivo) cuando el documento ya fue numerado por la DIAN.
+const docNumber = computed(() => {
+  const d = props.document
+  if (!d || d.consecutive == null) return null
+  return `${d.prefix ?? ''}${d.consecutive}`
+})
 
 const { printReceipt } = useReceiptPrint()
 
@@ -48,15 +59,27 @@ function onPrint() {
       method: METHOD_LABEL[props.method] ?? props.method,
       change: props.change != null ? formatMoney(props.change) : undefined,
     },
-    footer: 'Comprobante de venta — no válido como factura',
+    footer: docNumber.value
+      ? `Documento ${docNumber.value}`
+      : 'Comprobante de venta — emisión a la DIAN pendiente',
   })
 }
 </script>
 
 <template>
-  <ModalShell :open="open" title="Recibo" subtitle="Venta registrada (demo, no persistida)" :icon="Check" :width="460" @close="$emit('close')">
+  <ModalShell :open="open" title="Recibo" subtitle="Venta registrada" :icon="Check" :width="460" @close="$emit('close')">
     <template #body>
       <div class="receipt">
+        <div v-if="document" class="fe-doc">
+          <div class="fe-doc-row">
+            <span class="fe-doc-lab">Documento DIAN</span>
+            <FeStatusPill :status="document.dianStatus" />
+          </div>
+          <div v-if="docNumber" class="fe-doc-num">N.º {{ docNumber }}</div>
+          <p v-else-if="document.dianStatus === 'PENDIENTE'" class="fe-doc-hint">
+            Datos guardados. La emisión a la DIAN queda pendiente (módulo de facturación no habilitado).
+          </p>
+        </div>
         <ul class="lines">
           <li v-for="l in lines" :key="`${l.kind}-${l.id}`" class="line">
             <span class="ln-name">{{ l.name }} <span class="ln-qty">×{{ l.qty }}</span></span>
@@ -84,6 +107,11 @@ function onPrint() {
 
 <style scoped>
 .receipt { font-family: var(--font-sans); }
+.fe-doc { display: flex; flex-direction: column; gap: 7px; padding: 12px 14px; margin-bottom: 14px; border-radius: 11px; background: var(--amatista-50); border: 1px solid var(--amatista-100); }
+.fe-doc-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.fe-doc-lab { font-size: 12.5px; font-weight: 600; color: var(--warm-700); }
+.fe-doc-num { font-size: 13px; font-weight: 600; color: var(--warm-900); }
+.fe-doc-hint { margin: 0; font-size: 11.5px; color: var(--warm-600); line-height: 1.4; }
 .lines { list-style: none; margin: 0 0 14px; padding: 0 0 14px; border-bottom: 1px dashed var(--warm-300); display: flex; flex-direction: column; gap: 8px; }
 .line { display: flex; align-items: center; justify-content: space-between; font-size: 13.5px; color: var(--warm-800); }
 .ln-qty { color: var(--warm-500); font-size: 12px; }
