@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { Check } from 'lucide-vue-next'
+import { Check, Printer } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import { formatMoney, type TotalsBreakdown } from '../composables/pricing'
 import type { SaleLine } from '../types/tienda'
+import { useReceiptPrint } from '@/composables/useReceiptPrint'
 
-defineProps<{
+const props = defineProps<{
   open: boolean
   lines: SaleLine[]
   totals: TotalsBreakdown
@@ -18,6 +19,37 @@ const METHOD_LABEL: Record<string, string> = {
   EFECTIVO: 'Efectivo',
   TARJETA: 'Tarjeta',
   TRANSFERENCIA: 'Transferencia',
+}
+
+const { printReceipt } = useReceiptPrint()
+
+function onPrint() {
+  const summary = [
+    { label: 'Base gravable', value: formatMoney(props.totals.net) },
+    ...(props.totals.promoSavings > 0
+      ? [{ label: 'Ahorro por promociones', value: `- ${formatMoney(props.totals.promoSavings)}` }]
+      : []),
+    { label: 'IVA (incluido)', value: formatMoney(props.totals.tax) },
+    { label: 'Total', value: formatMoney(props.totals.total), emphasis: true },
+  ]
+  printReceipt({
+    header: {
+      companyName: 'Vetrina',
+      dateTime: new Date().toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }),
+    },
+    title: 'Recibo de venta',
+    lines: props.lines.map((l) => ({
+      name: l.name,
+      qty: l.qty,
+      amount: formatMoney(l.unitPrice * l.qty),
+    })),
+    summary,
+    payment: {
+      method: METHOD_LABEL[props.method] ?? props.method,
+      change: props.change != null ? formatMoney(props.change) : undefined,
+    },
+    footer: 'Comprobante de venta — no válido como factura',
+  })
 }
 </script>
 
@@ -42,6 +74,9 @@ const METHOD_LABEL: Record<string, string> = {
       </div>
     </template>
     <template #footer-actions>
+      <button type="button" class="btn-ghost" @click="onPrint">
+        <Printer :size="15" :stroke-width="2" /> Imprimir
+      </button>
       <button type="button" class="btn-primary" @click="$emit('close')">Cerrar</button>
     </template>
   </ModalShell>
@@ -61,4 +96,10 @@ const METHOD_LABEL: Record<string, string> = {
   border: none; color: white;
   background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
 }
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 16px; border-radius: 9px; cursor: pointer;
+  border: 1px solid var(--warm-300); background: white; color: var(--warm-800);
+}
+.btn-ghost:hover { border-color: var(--warm-400); background: var(--warm-50); }
 </style>

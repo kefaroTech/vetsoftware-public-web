@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { Check, Receipt, X } from 'lucide-vue-next'
+import { Check, Printer, Receipt, X } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
@@ -10,6 +10,7 @@ import { formatMoney } from '@/features/tienda/composables/pricing'
 import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
 import { useFacturacionAccess } from '@/features/facturacion/composables/useFacturacionAccess'
+import { useReceiptPrint } from '@/composables/useReceiptPrint'
 import {
   PAYMENT_METHOD_LABEL,
   type OpenAccountResponse,
@@ -84,6 +85,38 @@ const receiptCancel = computed(() => result.value?.charged === 0 && motivo.value
 const receiptTitle = computed(() =>
   receiptCancel.value ? 'Cuenta cancelada sin cobro' : 'Cuenta cerrada y cobrada',
 )
+
+// Comprobante interno de cierre/cobro (no es la representación fiscal DIAN).
+const { printReceipt } = useReceiptPrint()
+
+function onPrint() {
+  const r = result.value
+  if (!r) return
+  const summary = [
+    { label: 'Acumulado', value: formatMoney(r.account.totalAmount) },
+    { label: 'Abonado', value: formatMoney(r.account.paidAmount) },
+    { label: 'Cobrado ahora', value: formatMoney(r.charged), emphasis: true },
+  ]
+  printReceipt({
+    header: {
+      companyName: r.account.company.name,
+      nit: r.account.company.identifier,
+      dateTime: new Date().toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }),
+    },
+    title: receiptTitle.value,
+    lines: [],
+    summary,
+    payment:
+      r.charged > 0
+        ? { method: PAYMENT_METHOD_LABEL[method.value] ?? method.value }
+        : undefined,
+    footer: receiptCancel.value
+      ? r.account.closeReason
+        ? `Motivo: ${r.account.closeReason}`
+        : 'Cuenta cancelada — no válido como factura'
+      : 'Comprobante de cobro — no válido como factura',
+  })
+}
 
 watch(
   () => props.open,
@@ -274,6 +307,9 @@ function finish() {
     </template>
 
     <template v-if="step === 'recibo'" #footer-actions>
+      <button type="button" class="btn-ghost" @click="onPrint">
+        <Printer :size="15" :stroke-width="2" /> Imprimir
+      </button>
       <button type="button" class="btn-primary" @click="finish">
         <Check :size="15" :stroke-width="2" /> Listo
       </button>
@@ -347,6 +383,7 @@ function finish() {
 .btn-primary:hover:not(:disabled) { filter: brightness(1.05); }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-ghost {
+  display: inline-flex; align-items: center; gap: 6px;
   font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
   background: transparent; border: 1px solid var(--warm-200); color: var(--warm-700);
 }
