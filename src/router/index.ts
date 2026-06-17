@@ -181,6 +181,39 @@ const router = createRouter({
           meta: { permission: PERMISSIONS.OPEN_ACCOUNT_READ },
         },
         {
+          path: 'facturacion/documentos',
+          name: 'facturacion-documentos',
+          component: () => import('@/features/facturacion/views/DocumentosView.vue'),
+          meta: {
+            permissionsAny: [
+              PERMISSIONS.ELECTRONIC_DOCUMENT_READ,
+              PERMISSIONS.ELECTRONIC_DOCUMENT_EMIT,
+            ],
+          },
+        },
+        {
+          path: 'facturacion/reportes',
+          name: 'facturacion-reportes',
+          component: () => import('@/features/facturacion/views/ReportesView.vue'),
+          meta: { permission: PERMISSIONS.SALES_REPORT_READ },
+        },
+        {
+          path: 'facturacion/configuracion',
+          name: 'facturacion-configuracion',
+          component: () => import('@/features/facturacion/views/ConfiguracionView.vue'),
+          meta: {
+            permissionsAny: [
+              PERMISSIONS.DIAN_PROVIDER_CONFIG_MANAGE,
+              PERMISSIONS.DIAN_PROVIDER_CONFIG_READ,
+              PERMISSIONS.NUMBERING_RESOLUTION_READ,
+              PERMISSIONS.WITHHOLDING_CONFIG_MANAGE,
+              PERMISSIONS.WITHHOLDING_CONFIG_READ,
+              PERMISSIONS.COMPANY_TAX_PROFILE_MANAGE,
+              PERMISSIONS.COMPANY_TAX_PROFILE_READ,
+            ],
+          },
+        },
+        {
           path: 'empleados',
           name: 'empleados',
           component: () => import('@/features/employees/views/EmpleadosView.vue'),

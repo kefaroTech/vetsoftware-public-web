@@ -23,6 +23,7 @@ import {
   BadgePercent,
   ShoppingBag,
   Wallet,
+  Settings,
 } from 'lucide-vue-next'
 import SidebarBrand from './SidebarBrand.vue'
 import SidebarNavItem from './SidebarNavItem.vue'
@@ -32,6 +33,7 @@ import { mockUser } from '../../data/mock'
 import { useNuevaConsultaDraft } from '../../views/consulta/nueva/composables/useNuevaConsultaDraft'
 import { showResumeOrNewDialog } from '@/composables/useConsultaResumeGuard'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
+import { useFacturacionAccess } from '@/features/facturacion/composables/useFacturacionAccess'
 import { useToast } from '@/composables/useToast'
 import { PERMISSIONS } from '@/constants/permissions'
 
@@ -77,6 +79,15 @@ const canServices = can(PERMISSIONS.SERVICE_READ)
 const canPromotions = can(PERMISSIONS.PROMOTION_READ)
 const canTaxes = can(PERMISSIONS.TAX_READ)
 const canAccounts = can(PERMISSIONS.OPEN_ACCOUNT_READ)
+
+// Facturación electrónica (DIAN) — gateada por permisos FE.
+const {
+  hasModule: feHasModule,
+  canDocuments: feCanDocuments,
+  canReports: feCanReports,
+  canConfig: feCanConfig,
+} = useFacturacionAccess()
+const showFacturacionSection = computed(() => canAccounts.value || feHasModule.value)
 
 const historialActiveRoutes = [
   'consulta-historial',
@@ -277,13 +288,35 @@ function onNotifications() {
       </div>
     </template>
 
-    <template v-if="canAccounts">
+    <template v-if="showFacturacionSection">
       <div class="section-label">FACTURACIÓN</div>
       <SidebarNavItem
+        v-if="canAccounts"
         label="Cuentas abiertas"
         :icon="Wallet"
         :active="route.name === 'cuentas'"
         @click="router.push({ name: 'cuentas' })"
+      />
+      <SidebarNavItem
+        v-if="feCanDocuments"
+        label="Documentos"
+        :icon="FileText"
+        :active="route.name === 'facturacion-documentos'"
+        @click="router.push({ name: 'facturacion-documentos' })"
+      />
+      <SidebarNavItem
+        v-if="feCanReports"
+        label="Reportes"
+        :icon="BarChart3"
+        :active="route.name === 'facturacion-reportes'"
+        @click="router.push({ name: 'facturacion-reportes' })"
+      />
+      <SidebarNavItem
+        v-if="feCanConfig"
+        label="Configuración DIAN"
+        :icon="Settings"
+        :active="route.name === 'facturacion-configuracion'"
+        @click="router.push({ name: 'facturacion-configuracion' })"
       />
     </template>
 

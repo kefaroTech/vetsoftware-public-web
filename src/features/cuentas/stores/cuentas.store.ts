@@ -240,8 +240,17 @@ export const useCuentasStore = defineStore('cuentas', () => {
     accountId: number,
     status: 'CLOSE' | 'CANCEL',
     reason?: string,
+    // Al CERRAR (CLOSE) dispara la auto-emisión del documento DIAN (best-effort en el backend).
+    documentType?: 'FE_VENTA' | 'DOC_EQUIV_POS',
+    finalConsumer?: boolean,
   ): Promise<OpenAccountResponse> {
-    const updated = await openAccountApi.changeStatus(accountId, status, reason)
+    const updated = await openAccountApi.changeStatus(
+      accountId,
+      status,
+      reason,
+      documentType,
+      finalConsumer,
+    )
     upsertAccount(updated)
     return updated
   }

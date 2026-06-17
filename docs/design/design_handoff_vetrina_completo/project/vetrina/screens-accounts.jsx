@@ -32,8 +32,8 @@ function useVetAccountsState() {
       cierre: pago ? { motivo: pago.motivo || 'COBRADA', nota: pago.nota, fecha: pago.fecha } : null,
       pagos: pago && !cancelada ? [...a.pagos, { ...pago, id: 'p' + Date.now().toString(36) }] : a.pagos,
     }));
-    toast.success(cancelada ? 'Cuenta cancelada' : 'Cuenta cerrada',
-      cancelada ? 'Saldo anulado sin cobro.' : 'Saldo liquidado y recibo generado.');
+    toast.success(cancelada ? 'Cuenta cancelada' : 'Venta cerrada · factura en proceso',
+      cancelada ? 'Saldo anulado sin cobro.' : 'Documento electrónico emitido · validando DIAN.');
   }
   function crear(data) {
     const id = 8000 + Math.floor(Math.random() * 9000);

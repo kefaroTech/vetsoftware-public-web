@@ -219,6 +219,14 @@ function VetAppSidebar() {
         onClick={() => router.push({ name: 'tienda-cuentas' })}
       />
 
+      <div style={vetShellStyles.sectionLabel}>FACTURACIÓN</div>
+      <VetSidebarNavItem
+        label="Facturación electrónica"
+        Icon={VetIcons.Receipt}
+        active={route.name === 'facturacion'}
+        onClick={() => router.push({ name: 'facturacion' })}
+      />
+
       <div style={vetShellStyles.sectionLabel}>ADMINISTRACIÓN</div>
       <VetSidebarNavItem
         label="Empleados"

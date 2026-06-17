@@ -37,10 +37,15 @@ export const openAccountApi = {
     id: number,
     status: OpenAccountStatus,
     reason?: string,
+    // Solo relevantes al CERRAR (CLOSE): disparan la auto-emisión del documento DIAN.
+    documentType?: 'FE_VENTA' | 'DOC_EQUIV_POS',
+    finalConsumer?: boolean,
   ): Promise<OpenAccountResponse> {
     const { data } = await http.patch<OpenAccountResponse>(`/open-accounts/${id}/status`, {
       status,
       reason,
+      documentType,
+      finalConsumer,
     })
     return data
   },

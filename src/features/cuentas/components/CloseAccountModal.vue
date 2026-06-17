@@ -9,6 +9,7 @@ import { useCuentas } from '../composables/useCuentas'
 import { formatMoney } from '@/features/tienda/composables/pricing'
 import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
+import { useFacturacionAccess } from '@/features/facturacion/composables/useFacturacionAccess'
 import {
   PAYMENT_METHOD_LABEL,
   type OpenAccountResponse,
@@ -24,14 +25,25 @@ const emit = defineEmits<{ close: []; closed: [account: OpenAccountResponse]; re
 
 const store = useCuentas()
 const toast = useToast()
+// Facturación electrónica: solo si el usuario puede emitir (módulo premium). Reactivo.
+const { canEmit } = useFacturacionAccess()
 
 type Motivo = 'COBRADA' | 'CANCELADA'
+type FeDocType = 'DOC_EQUIV_POS' | 'FE_VENTA'
 
 const step = ref<'cobro' | 'recibo'>('cobro')
 const motivo = ref<Motivo>('COBRADA')
 const method = ref<PaymentMethod>('CASH')
 const reason = ref('')
 const busy = ref(false)
+// Documento DIAN a auto-emitir al cerrar (solo COBRADA). Default: documento POS.
+const docType = ref<FeDocType>('DOC_EQUIV_POS')
+const finalConsumer = ref(false)
+
+const DOC_TYPE_OPTIONS: { value: FeDocType; label: string }[] = [
+  { value: 'DOC_EQUIV_POS', label: 'Documento POS' },
+  { value: 'FE_VENTA', label: 'Factura electrónica' },
+]
 const result = ref<{ account: OpenAccountResponse; charged: number } | null>(null)
 
 // ── Idempotencia del cierre cobrado ──────────────────────────────────────────
@@ -85,6 +97,8 @@ watch(
     result.value = null
     paymentDone.value = false
     charged.value = 0
+    docType.value = 'DOC_EQUIV_POS'
+    finalConsumer.value = false
   },
 )
 
@@ -101,17 +115,26 @@ async function confirm() {
       paymentDone.value = true
     }
     // 2. Cambiar el estado (CLOSE/CANCEL). Si esto falla, el marcador evita recobrar.
+    //    Al CERRAR, el backend auto-emite el documento DIAN (best-effort) según docType/finalConsumer.
+    const emitting = motivo.value === 'COBRADA' && canEmit.value
     const updated = await store.changeAccountStatus(
       accountId,
       motivo.value === 'CANCELADA' ? 'CANCEL' : 'CLOSE',
       motivo.value === 'CANCELADA' ? reason.value.trim() : undefined,
+      emitting ? docType.value : undefined,
+      emitting ? finalConsumer.value : undefined,
     )
     result.value = {
       account: updated,
       charged: motivo.value === 'COBRADA' ? charged.value : 0,
     }
     if (motivo.value === 'COBRADA') {
-      toast.success('Cuenta cerrada', `La cuenta de ${ownerName.value} se cerró.`)
+      toast.success(
+        'Cuenta cerrada',
+        emitting
+          ? `Venta de ${ownerName.value} cerrada · factura en proceso.`
+          : `La cuenta de ${ownerName.value} se cerró.`,
+      )
     } else {
       toast.success('Cuenta cancelada', `La cuenta de ${ownerName.value} se canceló.`)
     }
@@ -179,6 +202,26 @@ function finish() {
             <BaseSelect :id="id" v-model="method" :options="METHOD_OPTIONS" />
           </template>
         </BaseField>
+
+        <!-- Facturación electrónica: solo si el usuario puede emitir (módulo premium). -->
+        <div v-if="motivo === 'COBRADA' && canEmit" class="fe-block">
+          <div class="field-lab">Facturación electrónica</div>
+          <BaseField label="Tipo de documento" required>
+            <template #default="{ id }">
+              <BaseSelect :id="id" v-model="docType" :options="DOC_TYPE_OPTIONS" />
+            </template>
+          </BaseField>
+          <button
+            type="button"
+            class="fc-toggle"
+            :class="{ on: finalConsumer }"
+            @click="finalConsumer = !finalConsumer"
+          >
+            <span class="fc-box"><Check v-if="finalConsumer" :size="12" :stroke-width="2.6" /></span>
+            Consumidor final
+          </button>
+          <p class="fe-hint">Se emite a la DIAN al cerrar la venta. La validación es asíncrona.</p>
+        </div>
 
         <BaseField v-if="motivo === 'CANCELADA'" label="Motivo de la cancelación" required>
           <template #default="{ id }">
@@ -259,6 +302,17 @@ function finish() {
 .do-sub { font-size: 11.5px; color: var(--warm-500); line-height: 1.35; }
 
 .note { margin: 0; font-size: 12.5px; color: var(--warm-600); line-height: 1.4; }
+
+/* Bloque de facturación electrónica */
+.fe-block { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 12px; background: var(--amatista-50); border: 1px solid var(--amatista-100); }
+.fc-toggle {
+  display: inline-flex; align-items: center; gap: 9px; align-self: flex-start; font-family: inherit; font-size: 13px;
+  cursor: pointer; padding: 8px 12px; border-radius: 9px; background: white; border: 1px solid var(--warm-200); color: var(--warm-800);
+}
+.fc-toggle.on { border-color: var(--amatista-500); color: var(--amatista-700); }
+.fc-box { width: 18px; height: 18px; border-radius: 5px; display: grid; place-items: center; border: 1px solid var(--warm-300); background: white; color: white; }
+.fc-toggle.on .fc-box { background: var(--amatista-600); border-color: var(--amatista-600); }
+.fe-hint { margin: 0; font-size: 11.5px; color: var(--warm-500); }
 .retry-hint {
   margin: 0; padding: 11px 14px; border-radius: 10px; font-size: 12.5px; line-height: 1.4;
   background: oklch(95% 0.06 80); border: 1px solid oklch(88% 0.09 80); color: oklch(40% 0.10 70);

@@ -81,6 +81,24 @@ export const PERMISSIONS = {
   DEBT_OPEN_ACCOUNT_VOID: 'debtOpenAccount.delete',
   /** Permiso elevado: anular un cargo ya registrado (con motivo). */
   CHARGE_OPEN_ACCOUNT_VOID: 'chargeOpenAccount.delete',
+
+  // Facturación electrónica (DIAN) — módulo premium. El front muestra el módulo
+  // si el usuario tiene AL MENOS uno de estos permisos (no hay bandera en /me).
+  ELECTRONIC_DOCUMENT_READ: 'electronicDocument.read',
+  ELECTRONIC_DOCUMENT_EMIT: 'electronicDocument.emit',
+  ELECTRONIC_DOCUMENT_TRANSMIT: 'electronicDocument.transmit',
+  ELECTRONIC_DOCUMENT_CREATE: 'electronicDocument.create',
+  SALES_REPORT_READ: 'salesReport.read',
+  DIAN_PROVIDER_CONFIG_MANAGE: 'dianProviderConfig.manage',
+  DIAN_PROVIDER_CONFIG_READ: 'dianProviderConfig.read',
+  NUMBERING_RESOLUTION_CREATE: 'numberingResolution.create',
+  NUMBERING_RESOLUTION_UPDATE: 'numberingResolution.update',
+  NUMBERING_RESOLUTION_READ: 'numberingResolution.read',
+  NUMBERING_RESOLUTION_DELETE: 'numberingResolution.delete',
+  WITHHOLDING_CONFIG_MANAGE: 'withholdingConfig.manage',
+  WITHHOLDING_CONFIG_READ: 'withholdingConfig.read',
+  COMPANY_TAX_PROFILE_MANAGE: 'companyTaxProfile.manage',
+  COMPANY_TAX_PROFILE_READ: 'companyTaxProfile.read',
 } as const
 
 export type PermissionCode = typeof PERMISSIONS[keyof typeof PERMISSIONS]

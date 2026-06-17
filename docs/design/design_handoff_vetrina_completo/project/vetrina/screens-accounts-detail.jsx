@@ -149,8 +149,10 @@ function VetAcctCerrarModal({ open, account, owner, pets, saldo, pagado, onClose
   const [recibido, setRecibido] = React.useState('');
   const [nota, setNota] = React.useState('');
   const [reciboData, setReciboData] = React.useState(null);
+  const [feDocType, setFeDocType] = React.useState('DOC_EQUIV_POS');
+  const [feFinalConsumer, setFeFinalConsumer] = React.useState(false);
 
-  React.useEffect(() => { if (open) { setStep('cobro'); setMotivo('COBRADA'); setMetodo('EFECTIVO'); setRecibido(''); setNota(''); setReciboData(null); } }, [open]);
+  React.useEffect(() => { if (open) { setStep('cobro'); setMotivo('COBRADA'); setMetodo('EFECTIVO'); setRecibido(''); setNota(''); setReciboData(null); setFeDocType('DOC_EQUIV_POS'); setFeFinalConsumer(false); } }, [open]);
 
   // Desglose por impuesto (hook SIEMPRE antes de cualquier early return)
   const breakdown = React.useMemo(() => {
@@ -181,7 +183,7 @@ function VetAcctCerrarModal({ open, account, owner, pets, saldo, pagado, onClose
       setReciboData({ motivo: 'CANCELADA', monto: 0, nota: nota.trim(), fecha: '2026-06-05' });
     } else {
       const code = 'REC-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 9000) + 1000);
-      setReciboData({ motivo: 'COBRADA', monto: saldo, metodo, recibido: metodo === 'EFECTIVO' ? recNum : saldo, cambio, code, fecha: '2026-06-05' });
+      setReciboData({ motivo: 'COBRADA', monto: saldo, metodo, recibido: metodo === 'EFECTIVO' ? recNum : saldo, cambio, code, fecha: '2026-06-05', feDocType, feFinalConsumer });
     }
     setStep('recibo');
   }
@@ -227,6 +229,12 @@ function VetAcctCerrarModal({ open, account, owner, pets, saldo, pagado, onClose
               </>
             )}
           </div>
+          {!cancel && (
+            <div className="vet-fe-receiptdoc">
+              <VetIcons.Receipt size={14} strokeWidth={1.8} />
+              <span>{reciboData.feDocType === 'FE_VENTA' ? 'Factura electrónica' : 'Documento POS'} en proceso · <strong>Validando DIAN…</strong></span>
+            </div>
+          )}
         </div>
       </VetModalShell>
     );
@@ -311,6 +319,34 @@ function VetAcctCerrarModal({ open, account, owner, pets, saldo, pagado, onClose
                 </div>
               </div>
             )}
+
+            {/* Documento fiscal — auto-emisión al cerrar */}
+            <div className="vet-fe-closesec">
+              <div className="vet-acct-fieldlabel" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <VetIcons.Receipt size={13} strokeWidth={1.8} /> Documento electrónico
+              </div>
+              <div className="vet-fe-closedocs">
+                <button type="button" className={'vet-fe-doctype' + (feDocType === 'DOC_EQUIV_POS' ? ' on' : '')} onClick={() => setFeDocType('DOC_EQUIV_POS')}>
+                  <span className="vet-fe-doctype-rb">{feDocType === 'DOC_EQUIV_POS' && <span />}</span>
+                  Documento POS
+                </button>
+                <button type="button" className={'vet-fe-doctype' + (feDocType === 'FE_VENTA' ? ' on' : '')} onClick={() => setFeDocType('FE_VENTA')}>
+                  <span className="vet-fe-doctype-rb">{feDocType === 'FE_VENTA' && <span />}</span>
+                  Factura electrónica
+                </button>
+              </div>
+              <button type="button" className={'vet-fe-toggle' + (feFinalConsumer ? ' on' : '')} style={{ marginTop: 8 }} onClick={() => setFeFinalConsumer((v) => !v)}>
+                <span className="vet-fe-toggle-box">{feFinalConsumer && <VetIcons.Check size={12} strokeWidth={2.6} />}</span>
+                Consumidor final
+              </button>
+              {feDocType === 'FE_VENTA' && !feFinalConsumer && (
+                <div className="vet-fe-clientwarn" style={{ marginTop: 8 }}>
+                  <VetIcons.User size={14} strokeWidth={1.8} />
+                  <span>Verifica que <strong>{owner?.name.split(' ')[0]}</strong> tenga documento, tipo y ciudad completos en su ficha fiscal.</span>
+                </div>
+              )}
+              <p className="vet-fe-closehelp"><VetIcons.History size={12} strokeWidth={1.8} /> La emisión es <strong>automática</strong> al cerrar la venta y <strong>asíncrona</strong>: el documento nace <em>Validando…</em> sin bloquear el cobro.</p>
+            </div>
           </>
         )}
 
