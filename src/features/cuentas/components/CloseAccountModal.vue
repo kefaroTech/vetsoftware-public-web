@@ -59,6 +59,9 @@ const feDocument = ref<ElectronicDocumentResponse | null>(null)
 // cobrar: el abono se registra una sola vez y `charged` queda congelado para el recibo.
 const paymentDone = ref(false)
 const charged = ref(0)
+// Idempotency key del abono del cierre (servidor): el reintento reusa la misma → no cobra dos veces aunque
+// se pierda la respuesta. Complementa los marcadores de cliente de arriba.
+const paymentRequestId = ref('')
 
 const outstanding = computed(() => props.account?.outstandingAmount ?? 0)
 
@@ -143,6 +146,7 @@ watch(
     feDocument.value = null
     paymentDone.value = false
     charged.value = 0
+    paymentRequestId.value = crypto.randomUUID()
     docType.value = 'DOC_EQUIV_POS'
     finalConsumer.value = false
   },
@@ -156,7 +160,7 @@ async function confirm() {
     // 1. Cobrada con saldo: registrar el abono UNA sola vez (idempotente en reintento).
     //    El backend exige saldo cero para CLOSE, así que el abono va antes del cambio de estado.
     if (motivo.value === 'COBRADA' && outstanding.value > 0 && !paymentDone.value) {
-      await store.addPaymentNoRefresh(accountId, outstanding.value, method.value)
+      await store.addPaymentNoRefresh(accountId, outstanding.value, method.value, paymentRequestId.value)
       charged.value = outstanding.value
       paymentDone.value = true
     }

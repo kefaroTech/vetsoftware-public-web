@@ -190,6 +190,8 @@ export interface CreateDebtPayload {
   amount: number
   paymentMethod: PaymentMethod
   openAccountId: number
+  /** Idempotency key (UUID) opcional para deduplicar reintentos del mismo cobro. */
+  clientRequestId?: string
 }
 
 // ── Vista unificada de un cargo (para agrupar por mascota en la UI) ──────────

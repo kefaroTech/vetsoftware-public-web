@@ -25,6 +25,8 @@ const toast = useToast()
 const form = reactive({ amount: '', method: 'CASH' as PaymentMethod })
 const submitted = ref(false)
 const busy = ref(false)
+// Idempotency key del abono: una por apertura del modal; los reintentos la reusan para no cobrar dos veces.
+const requestId = ref('')
 
 const METHOD_OPTIONS = [
   { value: 'CASH', label: 'Efectivo' },
@@ -39,6 +41,7 @@ watch(
     form.amount = props.outstanding > 0 ? String(props.outstanding) : ''
     form.method = 'CASH'
     submitted.value = false
+    requestId.value = crypto.randomUUID()
   },
 )
 
@@ -52,7 +55,7 @@ async function submit() {
   if (amountError.value || busy.value) return
   busy.value = true
   try {
-    await cuentas.addPayment(props.accountId, amountNum.value, form.method)
+    await cuentas.addPayment(props.accountId, amountNum.value, form.method, requestId.value)
     toast.success('Abono registrado', `Se registró ${formatMoney(amountNum.value)}.`)
     emit('paid')
     emit('close')

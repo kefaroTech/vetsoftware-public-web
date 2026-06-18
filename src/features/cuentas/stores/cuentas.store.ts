@@ -213,8 +213,13 @@ export const useCuentasStore = defineStore('cuentas', () => {
     await refreshAccount(accountId)
   }
 
-  async function addPayment(accountId: number, amount: number, paymentMethod: PaymentMethod) {
-    await debtOpenAccountApi.create({ amount, paymentMethod, openAccountId: accountId })
+  async function addPayment(
+    accountId: number,
+    amount: number,
+    paymentMethod: PaymentMethod,
+    clientRequestId?: string,
+  ) {
+    await debtOpenAccountApi.create({ amount, paymentMethod, openAccountId: accountId, clientRequestId })
     await refreshAccount(accountId)
   }
 
@@ -227,8 +232,9 @@ export const useCuentasStore = defineStore('cuentas', () => {
     accountId: number,
     amount: number,
     paymentMethod: PaymentMethod,
+    clientRequestId?: string,
   ): Promise<void> {
-    await debtOpenAccountApi.create({ amount, paymentMethod, openAccountId: accountId })
+    await debtOpenAccountApi.create({ amount, paymentMethod, openAccountId: accountId, clientRequestId })
   }
 
   /**
