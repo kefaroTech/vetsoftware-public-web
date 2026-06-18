@@ -12,6 +12,9 @@ import { useToast } from '@/composables/useToast'
 import { useFacturacionAccess } from '@/features/facturacion/composables/useFacturacionAccess'
 import { useReceiptPrint } from '@/composables/useReceiptPrint'
 import { useReceiptSettings } from '@/composables/useReceiptSettings'
+import { buildDocumentReceiptTicket } from '@/composables/buildDocumentReceipt'
+import { electronicDocumentApi } from '@/features/facturacion/api/electronicDocument.api'
+import type { ElectronicDocumentResponse } from '@/features/facturacion/types/facturacion'
 import {
   PAYMENT_METHOD_LABEL,
   type OpenAccountResponse,
@@ -47,6 +50,8 @@ const DOC_TYPE_OPTIONS: { value: FeDocType; label: string }[] = [
   { value: 'FE_VENTA', label: 'Factura electrónica' },
 ]
 const result = ref<{ account: OpenAccountResponse; charged: number } | null>(null)
+// Documento fiscal emitido al cerrar (si lo hubo): permite imprimir el MISMO recibo que el POS.
+const feDocument = ref<ElectronicDocumentResponse | null>(null)
 
 // ── Idempotencia del cierre cobrado ──────────────────────────────────────────
 // El cierre son 2 requests (abono del saldo + cambio de estado). Si el abono pasa
@@ -94,6 +99,12 @@ const { width, setWidth } = useReceiptSettings()
 function onPrint() {
   const r = result.value
   if (!r) return
+  // Si el cierre emitió documento fiscal, imprime el MISMO recibo que el POS (builder compartido).
+  if (feDocument.value) {
+    printReceipt(buildDocumentReceiptTicket(feDocument.value, { width: width.value }))
+    return
+  }
+  // Fallback (cuenta cancelada o cobrada sin módulo de facturación): mismo layout, datos de la cuenta.
   const dateTime = new Date().toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' })
   const note = receiptCancel.value
     ? r.account.closeReason
@@ -129,6 +140,7 @@ watch(
     reason.value = ''
     busy.value = false
     result.value = null
+    feDocument.value = null
     paymentDone.value = false
     charged.value = 0
     docType.value = 'DOC_EQUIV_POS'
@@ -161,6 +173,15 @@ async function confirm() {
     result.value = {
       account: updated,
       charged: motivo.value === 'COBRADA' ? charged.value : 0,
+    }
+    // Trae el documento fiscal emitido al cerrar (si lo hubo) para imprimir el recibo igual que el POS.
+    // Best-effort: si falla o no hay documento, el recibo cae al fallback con datos de la cuenta.
+    if (motivo.value === 'COBRADA') {
+      try {
+        feDocument.value = await electronicDocumentApi.findByAccount(accountId)
+      } catch {
+        feDocument.value = null
+      }
     }
     if (motivo.value === 'COBRADA') {
       toast.success(

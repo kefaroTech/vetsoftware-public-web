@@ -6,18 +6,10 @@ import { formatMoney, type TotalsBreakdown } from '../composables/pricing'
 import type { SaleLine } from '../types/tienda'
 import { useReceiptPrint } from '@/composables/useReceiptPrint'
 import type { ReceiptLine, ReceiptTotalRow } from '@/composables/useReceiptPrint'
+import { buildDocumentReceiptTicket } from '@/composables/buildDocumentReceipt'
 import { useReceiptSettings } from '@/composables/useReceiptSettings'
 import FeStatusPill from '@/features/facturacion/components/FeStatusPill.vue'
-import {
-  COMPANY_DOCTYPE_LABEL,
-  DOC_TYPE_LABEL,
-  PAYMENT_FORM_LABEL,
-  PAYMENT_MEANS_LABEL,
-  TAX_REGIME_LABEL,
-  type CompanyDocumentType,
-  type ElectronicDocumentResponse,
-  type TaxRegime,
-} from '@/features/facturacion/types/facturacion'
+import type { ElectronicDocumentResponse } from '@/features/facturacion/types/facturacion'
 
 const props = defineProps<{
   open: boolean
@@ -50,109 +42,47 @@ const { width, setWidth } = useReceiptSettings()
 const cleanLabel = (s: string) => s.replace(/\s*\(\d+\)\s*$/, '')
 
 function onPrint() {
-  const doc = props.document
-  const issuer = doc?.issuer
-  const total = doc ? doc.payableAmount : props.totals.total
-
-  // Bloque fiscal del emisor (lo que trae el snapshot del documento).
-  const fiscal: string[] = []
-  if (issuer) {
-    const docTypeShort = cleanLabel(
-      COMPANY_DOCTYPE_LABEL[issuer.documentType as CompanyDocumentType] ?? issuer.documentType,
-    )
-    const taxId = `${docTypeShort} ${issuer.documentId}${issuer.verificationDigit ? `-${issuer.verificationDigit}` : ''}`
-    const regime = issuer.taxRegime
-      ? TAX_REGIME_LABEL[issuer.taxRegime as TaxRegime] ?? issuer.taxRegime
-      : null
-    fiscal.push(regime ? `${taxId} · ${regime}` : taxId)
-    if (issuer.email) fiscal.push(issuer.email)
+  // Documento fiscal → recibo canónico (mismo builder que el cierre de cuenta).
+  if (props.document) {
+    printReceipt(buildDocumentReceiptTicket(props.document, { width: width.value, change: props.change }))
+    return
   }
 
-  // Datos del documento.
-  const meta: { label: string; value: string }[] = []
-  if (doc) {
-    meta.push({ label: 'Fecha', value: `${doc.issueDate} ${(doc.issueTime ?? '').slice(0, 5)}`.trim() })
-    const cust = doc.customer
-    const custName = cust?.name || cust?.legalName
-    if (custName) meta.push({ label: 'Cliente', value: custName })
-    if (cust?.documentId) {
-      meta.push({
-        label: 'Documento',
-        value: `${cust.documentId}${cust.verificationDigit ? `-${cust.verificationDigit}` : ''}`,
-      })
-    }
-  } else {
-    meta.push({
-      label: 'Fecha',
-      value: new Date().toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }),
-    })
-  }
-
-  // Detalle: líneas del documento (autoritativo) o, en su defecto, del carrito.
-  const lines: ReceiptLine[] = doc
-    ? doc.lines.map((l) => ({
-        qty: `${l.quantity}×`,
-        desc: l.description,
-        sub: l.quantity > 1 ? `· ${formatMoney(l.unitPrice)} c/u` : undefined,
-        amount: formatMoney(l.totalAmount),
-      }))
-    : props.lines.map((l) => ({
-        qty: `${l.qty}×`,
-        desc: l.name,
-        sub: l.qty > 1 ? `· ${formatMoney(l.unitPrice)} c/u` : undefined,
-        amount: formatMoney(l.unitPrice * l.qty),
-      }))
-
-  // Totales (desglose). El IVA va incluido en los precios; se muestra extraído.
-  const iva = doc ? doc.taxInclusiveAmount - doc.taxExclusiveAmount : props.totals.tax
-  const base = doc ? doc.taxExclusiveAmount : props.totals.net
+  // Fallback sin documento (raro en POS): arma el recibo desde el carrito, con el mismo layout.
+  const lines: ReceiptLine[] = props.lines.map((l) => ({
+    qty: `${l.qty}×`,
+    desc: l.name,
+    sub: l.qty > 1 ? `· ${formatMoney(l.unitPrice)} c/u` : undefined,
+    amount: formatMoney(l.unitPrice * l.qty),
+  }))
   const totals: ReceiptTotalRow[] = [
-    { label: 'Subtotal (base)', value: formatMoney(base), kind: 'muted' },
-    ...(iva > 0 ? [{ label: 'IVA', value: formatMoney(iva), kind: 'muted' as const }] : []),
-    { label: 'TOTAL', value: formatMoney(total), kind: 'grand' as const },
+    { label: 'Subtotal (base)', value: formatMoney(props.totals.net), kind: 'muted' },
+    ...(props.totals.tax > 0
+      ? [{ label: 'IVA', value: formatMoney(props.totals.tax), kind: 'muted' as const }]
+      : []),
+    { label: 'TOTAL', value: formatMoney(props.totals.total), kind: 'grand' as const },
   ]
-
-  // Medio de pago + recibido/cambio.
-  const meansLabel =
-    doc && doc.payments.length
-      ? cleanLabel(PAYMENT_MEANS_LABEL[doc.payments[0].paymentMeans] ?? doc.payments[0].paymentMeans)
-      : cleanLabel(METHOD_LABEL[props.method] ?? props.method)
-  const formLabel = doc ? PAYMENT_FORM_LABEL[doc.paymentForm] ?? doc.paymentForm : 'Contado'
   const tender: ReceiptTotalRow[] = []
   if (props.change != null) {
-    tender.push({ label: 'Recibido', value: formatMoney(total + props.change), kind: 'pay' })
+    tender.push({ label: 'Recibido', value: formatMoney(props.totals.total + props.change), kind: 'pay' })
     tender.push({ label: 'Cambio', value: formatMoney(props.change), kind: 'change' })
   }
-
-  // Sello DIAN: solo cuando el documento ya fue validado (tiene CUFE/CUDE).
-  const seal = doc?.cufe ?? doc?.cude ?? null
-  const dian =
-    doc && seal
-      ? {
-          sealLabel: doc.cufe ? 'CUFE' : 'CUDE',
-          seal,
-          info: doc.dianValidationDate
-            ? [`Validado DIAN ${doc.dianValidationDate.slice(0, 16).replace('T', ' ')}`]
-            : undefined,
-        }
-      : undefined
-
   printReceipt({
     width: width.value,
-    brand: { name: issuer?.legalName || 'Vetrina' },
-    fiscal,
-    docType: doc ? DOC_TYPE_LABEL[doc.documentType] ?? 'Comprobante' : 'Comprobante de venta',
-    docNumber: docNumber.value ?? (doc ? `Interno ${doc.id}` : '—'),
-    meta,
+    brand: { name: 'Vetrina' },
+    docType: 'Comprobante de venta',
+    docNumber: '—',
+    meta: [
+      {
+        label: 'Fecha',
+        value: new Date().toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }),
+      },
+    ],
     lines,
     totals,
-    payPill: `${meansLabel} · ${formLabel}`,
+    payPill: `${cleanLabel(METHOD_LABEL[props.method] ?? props.method)} · Contado`,
     tender,
-    dian,
-    footer: {
-      thanks: 'Gracias por su compra, vuelva pronto',
-      lines: docNumber.value ? undefined : ['Comprobante de venta · emisión a la DIAN pendiente'],
-    },
+    footer: { thanks: 'Gracias por su compra, vuelva pronto' },
   })
 }
 </script>
