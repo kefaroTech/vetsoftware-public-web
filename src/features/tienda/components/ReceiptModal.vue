@@ -5,7 +5,8 @@ import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import { formatMoney, type TotalsBreakdown } from '../composables/pricing'
 import type { SaleLine } from '../types/tienda'
 import { useReceiptPrint } from '@/composables/useReceiptPrint'
-import type { ReceiptKeyValue, ReceiptLine } from '@/composables/useReceiptPrint'
+import type { ReceiptLine, ReceiptTotalRow } from '@/composables/useReceiptPrint'
+import { useReceiptSettings } from '@/composables/useReceiptSettings'
 import FeStatusPill from '@/features/facturacion/components/FeStatusPill.vue'
 import {
   COMPANY_DOCTYPE_LABEL,
@@ -43,6 +44,7 @@ const docNumber = computed(() => {
 })
 
 const { printReceipt } = useReceiptPrint()
+const { width, setWidth } = useReceiptSettings()
 
 // Quita el código DIAN entre paréntesis de las etiquetas (p.ej. "Efectivo (10)" → "Efectivo").
 const cleanLabel = (s: string) => s.replace(/\s*\(\d+\)\s*$/, '')
@@ -52,66 +54,105 @@ function onPrint() {
   const issuer = doc?.issuer
   const total = doc ? doc.payableAmount : props.totals.total
 
-  // Encabezado fiscal: documento e identidad del emisor (del snapshot del documento).
-  const taxId = issuer
-    ? `${cleanLabel(COMPANY_DOCTYPE_LABEL[issuer.documentType as CompanyDocumentType] ?? issuer.documentType)} ` +
-      `${issuer.documentId}${issuer.verificationDigit ? `-${issuer.verificationDigit}` : ''}`
-    : undefined
-  const taxRegime = issuer?.taxRegime
-    ? TAX_REGIME_LABEL[issuer.taxRegime as TaxRegime] ?? issuer.taxRegime
-    : undefined
+  // Bloque fiscal del emisor (lo que trae el snapshot del documento).
+  const fiscal: string[] = []
+  if (issuer) {
+    const docTypeShort = cleanLabel(
+      COMPANY_DOCTYPE_LABEL[issuer.documentType as CompanyDocumentType] ?? issuer.documentType,
+    )
+    const taxId = `${docTypeShort} ${issuer.documentId}${issuer.verificationDigit ? `-${issuer.verificationDigit}` : ''}`
+    const regime = issuer.taxRegime
+      ? TAX_REGIME_LABEL[issuer.taxRegime as TaxRegime] ?? issuer.taxRegime
+      : null
+    fiscal.push(regime ? `${taxId} · ${regime}` : taxId)
+    if (issuer.email) fiscal.push(issuer.email)
+  }
 
-  const dateTime = doc
-    ? `${doc.issueDate} ${(doc.issueTime ?? '').slice(0, 5)}`.trim()
-    : new Date().toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' })
-
-  // Bloque de datos del documento (izquierda).
-  const meta: ReceiptKeyValue[] = doc
-    ? [
-        { label: (DOC_TYPE_LABEL[doc.documentType] ?? 'Comprobante').toUpperCase(), value: '' },
-        { label: 'No.', value: docNumber.value ?? `Interno ${doc.id}` },
-        { label: 'Fecha', value: dateTime },
-        { label: 'Forma de pago', value: PAYMENT_FORM_LABEL[doc.paymentForm] ?? doc.paymentForm },
-      ]
-    : [{ label: 'Fecha', value: dateTime }]
+  // Datos del documento.
+  const meta: { label: string; value: string }[] = []
+  if (doc) {
+    meta.push({ label: 'Fecha', value: `${doc.issueDate} ${(doc.issueTime ?? '').slice(0, 5)}`.trim() })
+    const cust = doc.customer
+    const custName = cust?.name || cust?.legalName
+    if (custName) meta.push({ label: 'Cliente', value: custName })
+    if (cust?.documentId) {
+      meta.push({
+        label: 'Documento',
+        value: `${cust.documentId}${cust.verificationDigit ? `-${cust.verificationDigit}` : ''}`,
+      })
+    }
+  } else {
+    meta.push({
+      label: 'Fecha',
+      value: new Date().toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }),
+    })
+  }
 
   // Detalle: líneas del documento (autoritativo) o, en su defecto, del carrito.
   const lines: ReceiptLine[] = doc
-    ? doc.lines.map((l) => ({ qty: l.quantity, name: l.description, amount: formatMoney(l.totalAmount) }))
-    : props.lines.map((l) => ({ qty: l.qty, name: l.name, amount: formatMoney(l.unitPrice * l.qty) }))
+    ? doc.lines.map((l) => ({
+        qty: `${l.quantity}×`,
+        desc: l.description,
+        sub: l.quantity > 1 ? `· ${formatMoney(l.unitPrice)} c/u` : undefined,
+        amount: formatMoney(l.totalAmount),
+      }))
+    : props.lines.map((l) => ({
+        qty: `${l.qty}×`,
+        desc: l.name,
+        sub: l.qty > 1 ? `· ${formatMoney(l.unitPrice)} c/u` : undefined,
+        amount: formatMoney(l.unitPrice * l.qty),
+      }))
 
-  // Medio(s) de pago.
-  const payments: ReceiptKeyValue[] =
-    doc && doc.payments.length
-      ? doc.payments.map((p) => ({
-          label: cleanLabel(PAYMENT_MEANS_LABEL[p.paymentMeans] ?? p.paymentMeans),
-          value: formatMoney(p.amount),
-        }))
-      : [{ label: cleanLabel(METHOD_LABEL[props.method] ?? props.method), value: formatMoney(total) }]
-
-  // Totales: consumo, total y —cuando hubo efectivo recibido— pago y cambio.
-  const totals: ReceiptKeyValue[] = [
-    { label: 'Total consumo', value: formatMoney(total) },
-    { label: 'Total', value: formatMoney(total), emphasis: true },
+  // Totales (desglose). El IVA va incluido en los precios; se muestra extraído.
+  const iva = doc ? doc.taxInclusiveAmount - doc.taxExclusiveAmount : props.totals.tax
+  const base = doc ? doc.taxExclusiveAmount : props.totals.net
+  const totals: ReceiptTotalRow[] = [
+    { label: 'Subtotal (base)', value: formatMoney(base), kind: 'muted' },
+    ...(iva > 0 ? [{ label: 'IVA', value: formatMoney(iva), kind: 'muted' as const }] : []),
+    { label: 'TOTAL', value: formatMoney(total), kind: 'grand' as const },
   ]
+
+  // Medio de pago + recibido/cambio.
+  const meansLabel =
+    doc && doc.payments.length
+      ? cleanLabel(PAYMENT_MEANS_LABEL[doc.payments[0].paymentMeans] ?? doc.payments[0].paymentMeans)
+      : cleanLabel(METHOD_LABEL[props.method] ?? props.method)
+  const formLabel = doc ? PAYMENT_FORM_LABEL[doc.paymentForm] ?? doc.paymentForm : 'Contado'
+  const tender: ReceiptTotalRow[] = []
   if (props.change != null) {
-    totals.push({ label: 'Pago', value: formatMoney(total + props.change) })
-    totals.push({ label: 'Cambio', value: formatMoney(props.change) })
+    tender.push({ label: 'Recibido', value: formatMoney(total + props.change), kind: 'pay' })
+    tender.push({ label: 'Cambio', value: formatMoney(props.change), kind: 'change' })
   }
 
+  // Sello DIAN: solo cuando el documento ya fue validado (tiene CUFE/CUDE).
+  const seal = doc?.cufe ?? doc?.cude ?? null
+  const dian =
+    doc && seal
+      ? {
+          sealLabel: doc.cufe ? 'CUFE' : 'CUDE',
+          seal,
+          info: doc.dianValidationDate
+            ? [`Validado DIAN ${doc.dianValidationDate.slice(0, 16).replace('T', ' ')}`]
+            : undefined,
+        }
+      : undefined
+
   printReceipt({
-    header: {
-      legalName: issuer?.legalName || 'Vetrina',
-      taxId,
-      taxRegime,
-    },
+    width: width.value,
+    brand: { name: issuer?.legalName || 'Vetrina' },
+    fiscal,
+    docType: doc ? DOC_TYPE_LABEL[doc.documentType] ?? 'Comprobante' : 'Comprobante de venta',
+    docNumber: docNumber.value ?? (doc ? `Interno ${doc.id}` : '—'),
     meta,
     lines,
-    linesTotal: { label: 'Vlr total', value: formatMoney(total) },
-    payments,
     totals,
-    thanks: 'Gracias por su compra, vuelva pronto',
-    note: docNumber.value ? undefined : 'Comprobante de venta · emisión a la DIAN pendiente',
+    payPill: `${meansLabel} · ${formLabel}`,
+    tender,
+    dian,
+    footer: {
+      thanks: 'Gracias por su compra, vuelva pronto',
+      lines: docNumber.value ? undefined : ['Comprobante de venta · emisión a la DIAN pendiente'],
+    },
   })
 }
 </script>
@@ -144,6 +185,12 @@ function onPrint() {
           <div class="srow"><span>Método</span><span>{{ METHOD_LABEL[method] ?? method }}</span></div>
           <div v-if="change != null" class="srow"><span>Cambio</span><span>{{ formatMoney(change) }}</span></div>
         </div>
+      </div>
+    </template>
+    <template #footer-left>
+      <div class="w-seg" role="group" aria-label="Ancho del tiquete">
+        <button type="button" :class="{ on: width === '80' }" @click="setWidth('80')">80mm</button>
+        <button type="button" :class="{ on: width === '58' }" @click="setWidth('58')">58mm</button>
       </div>
     </template>
     <template #footer-actions>
@@ -180,4 +227,10 @@ function onPrint() {
   border: 1px solid var(--warm-300); background: white; color: var(--warm-800);
 }
 .btn-ghost:hover { border-color: var(--warm-400); background: var(--warm-50); }
+.w-seg { display: inline-flex; border: 1px solid var(--warm-300); border-radius: 8px; padding: 2px; gap: 2px; }
+.w-seg button {
+  font-family: inherit; font-size: 12px; font-weight: 500; padding: 5px 10px; border-radius: 6px; cursor: pointer;
+  border: none; background: transparent; color: var(--warm-600);
+}
+.w-seg button.on { background: var(--warm-100); color: var(--warm-900); }
 </style>

@@ -11,6 +11,7 @@ import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/
 import { useToast } from '@/composables/useToast'
 import { useFacturacionAccess } from '@/features/facturacion/composables/useFacturacionAccess'
 import { useReceiptPrint } from '@/composables/useReceiptPrint'
+import { useReceiptSettings } from '@/composables/useReceiptSettings'
 import {
   PAYMENT_METHOD_LABEL,
   type OpenAccountResponse,
@@ -88,35 +89,33 @@ const receiptTitle = computed(() =>
 
 // Comprobante interno de cierre/cobro (no es la representación fiscal DIAN).
 const { printReceipt } = useReceiptPrint()
+const { width, setWidth } = useReceiptSettings()
 
 function onPrint() {
   const r = result.value
   if (!r) return
   const dateTime = new Date().toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' })
+  const note = receiptCancel.value
+    ? r.account.closeReason
+      ? `Motivo: ${r.account.closeReason} · no válido como factura`
+      : 'Cuenta cancelada · no válido como factura'
+    : 'Comprobante de cobro · no válido como factura'
   printReceipt({
-    header: {
-      legalName: r.account.company.name,
-      taxId: r.account.company.identifier ? `NIT ${r.account.company.identifier}` : undefined,
-    },
-    meta: [
-      { label: receiptTitle.value.toUpperCase(), value: '' },
-      { label: 'Fecha', value: dateTime },
-    ],
+    width: width.value,
+    brand: { name: r.account.company.name },
+    fiscal: r.account.company.identifier ? [`NIT ${r.account.company.identifier}`] : undefined,
+    docType: receiptTitle.value,
+    docNumber: `Cuenta #${r.account.id}`,
+    meta: [{ label: 'Fecha', value: dateTime }],
     lines: [],
-    payments:
-      r.charged > 0
-        ? [{ label: PAYMENT_METHOD_LABEL[method.value] ?? method.value, value: formatMoney(r.charged) }]
-        : undefined,
     totals: [
-      { label: 'Acumulado', value: formatMoney(r.account.totalAmount) },
-      { label: 'Abonado', value: formatMoney(r.account.paidAmount) },
-      { label: 'Cobrado ahora', value: formatMoney(r.charged), emphasis: true },
+      { label: 'Acumulado', value: formatMoney(r.account.totalAmount), kind: 'muted' },
+      { label: 'Abonado', value: formatMoney(r.account.paidAmount), kind: 'muted' },
+      { label: 'Cobrado ahora', value: formatMoney(r.charged), kind: 'grand' },
     ],
-    note: receiptCancel.value
-      ? r.account.closeReason
-        ? `Motivo: ${r.account.closeReason} · no válido como factura`
-        : 'Cuenta cancelada · no válido como factura'
-      : 'Comprobante de cobro · no válido como factura',
+    payPill:
+      r.charged > 0 ? `${PAYMENT_METHOD_LABEL[method.value] ?? method.value} · Contado` : undefined,
+    footer: { lines: [note] },
   })
 }
 
@@ -308,6 +307,12 @@ function finish() {
       </div>
     </template>
 
+    <template v-if="step === 'recibo'" #footer-left>
+      <div class="w-seg" role="group" aria-label="Ancho del tiquete">
+        <button type="button" :class="{ on: width === '80' }" @click="setWidth('80')">80mm</button>
+        <button type="button" :class="{ on: width === '58' }" @click="setWidth('58')">58mm</button>
+      </div>
+    </template>
     <template v-if="step === 'recibo'" #footer-actions>
       <button type="button" class="btn-ghost" @click="onPrint">
         <Printer :size="15" :stroke-width="2" /> Imprimir
@@ -320,6 +325,12 @@ function finish() {
 </template>
 
 <style scoped>
+.w-seg { display: inline-flex; border: 1px solid var(--warm-300); border-radius: 8px; padding: 2px; gap: 2px; }
+.w-seg button {
+  font-family: inherit; font-size: 12px; font-weight: 500; padding: 5px 10px; border-radius: 6px; cursor: pointer;
+  border: none; background: transparent; color: var(--warm-600);
+}
+.w-seg button.on { background: var(--warm-100); color: var(--warm-900); }
 .form { display: flex; flex-direction: column; gap: 16px; }
 .field-lab { font-size: 12.5px; font-weight: 600; color: var(--warm-700); margin-bottom: -6px; }
 
