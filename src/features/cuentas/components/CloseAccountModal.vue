@@ -92,29 +92,31 @@ const { printReceipt } = useReceiptPrint()
 function onPrint() {
   const r = result.value
   if (!r) return
-  const summary = [
-    { label: 'Acumulado', value: formatMoney(r.account.totalAmount) },
-    { label: 'Abonado', value: formatMoney(r.account.paidAmount) },
-    { label: 'Cobrado ahora', value: formatMoney(r.charged), emphasis: true },
-  ]
+  const dateTime = new Date().toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' })
   printReceipt({
     header: {
-      companyName: r.account.company.name,
-      nit: r.account.company.identifier,
-      dateTime: new Date().toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }),
+      legalName: r.account.company.name,
+      taxId: r.account.company.identifier ? `NIT ${r.account.company.identifier}` : undefined,
     },
-    title: receiptTitle.value,
+    meta: [
+      { label: receiptTitle.value.toUpperCase(), value: '' },
+      { label: 'Fecha', value: dateTime },
+    ],
     lines: [],
-    summary,
-    payment:
+    payments:
       r.charged > 0
-        ? { method: PAYMENT_METHOD_LABEL[method.value] ?? method.value }
+        ? [{ label: PAYMENT_METHOD_LABEL[method.value] ?? method.value, value: formatMoney(r.charged) }]
         : undefined,
-    footer: receiptCancel.value
+    totals: [
+      { label: 'Acumulado', value: formatMoney(r.account.totalAmount) },
+      { label: 'Abonado', value: formatMoney(r.account.paidAmount) },
+      { label: 'Cobrado ahora', value: formatMoney(r.charged), emphasis: true },
+    ],
+    note: receiptCancel.value
       ? r.account.closeReason
-        ? `Motivo: ${r.account.closeReason}`
-        : 'Cuenta cancelada — no válido como factura'
-      : 'Comprobante de cobro — no válido como factura',
+        ? `Motivo: ${r.account.closeReason} · no válido como factura`
+        : 'Cuenta cancelada · no válido como factura'
+      : 'Comprobante de cobro · no válido como factura',
   })
 }
 

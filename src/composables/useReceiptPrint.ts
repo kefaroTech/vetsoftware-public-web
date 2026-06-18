@@ -1,12 +1,15 @@
-// Impresión de recibos en impresora térmica (rollo 80mm) vía el diálogo de
+// Impresión de recibos en impresora térmica (rollo 58/80mm) vía el diálogo de
 // impresión del navegador. PublicFront es una SPA pura (sin Electron), así que
 // no hay acceso nativo al puerto: armamos el HTML del ticket y lo mandamos a
 // imprimir desde un <iframe> oculto. El iframe evita el bloqueo de popups y
 // aísla el ticket del CSS global de la app (Vuetify, overlays, loader, etc.).
 //
-// Estos recibos son COMPROBANTES INTERNOS de venta/pago, no la representación
-// gráfica fiscal DIAN (esa lleva CUFE/QR y se imprime aparte cuando el documento
-// está VALIDADO).
+// El diseño imita el tiquete térmico clásico de POS: encabezado centrado con la
+// identidad fiscal del emisor, bloque de datos del documento, detalle con
+// columnas, medio de pago, totales (consumo/total/pago/cambio) y pie centrado.
+//
+// Estos recibos son COMPROBANTES de venta/pago. Cuando el documento DIAN está
+// VALIDADO llevan su número fiscal; mientras esté PENDIENTE se imprime el aviso.
 
 export interface ReceiptLine {
   name: string
@@ -15,32 +18,44 @@ export interface ReceiptLine {
   amount: string
 }
 
-export interface ReceiptSummaryRow {
+export interface ReceiptKeyValue {
   label: string
   /** Valor ya formateado. */
   value: string
-  /** Resalta la fila (negrita + separador); úsalo para el total. */
+  /** Resalta la fila (negrita + tamaño mayor); úsalo para el total. */
   emphasis?: boolean
 }
 
 export interface ReceiptTicket {
   header: {
-    companyName: string
-    /** Identificador / NIT, si está disponible. */
-    nit?: string
+    /** Razón social del emisor (línea grande). */
+    legalName: string
+    /** Nombre comercial, si difiere de la razón social. */
+    commercialName?: string
+    /** Documento fiscal ya formateado, p.ej. "NIT 901477435-6". */
+    taxId?: string
+    /** Régimen / responsabilidad, p.ej. "No responsable de IVA". */
+    taxRegime?: string
     address?: string
-    /** Fecha/hora ya formateada, p.ej. "17 jun 2026, 15:18". */
-    dateTime: string
-    /** Cajero / quien atiende. */
-    cashier?: string
+    /** Ciudad - departamento. */
+    city?: string
+    phone?: string
   }
-  /** Título del comprobante, p.ej. "Recibo de venta". */
-  title?: string
+  /** Bloque de datos del documento (izquierda): tipo, número, fecha, forma de pago. */
+  meta?: ReceiptKeyValue[]
   lines: ReceiptLine[]
-  summary: ReceiptSummaryRow[]
-  payment?: { method: string; change?: string }
-  /** Pie de página, p.ej. "Comprobante de venta — no válido como factura". */
-  footer?: string
+  /** Total de las líneas del detalle (VLR TOTAL). */
+  linesTotal?: ReceiptKeyValue
+  /** Sección "Medio de pago". */
+  payments?: ReceiptKeyValue[]
+  /** Totales finales (Total consumo / Total / Pago / Cambio). */
+  totals: ReceiptKeyValue[]
+  /** Líneas de pie centradas (vendedor, software, etc.). */
+  footerLines?: string[]
+  /** Mensaje de agradecimiento centrado. */
+  thanks?: string
+  /** Nota legal pequeña (estado DIAN / comprobante). */
+  note?: string
 }
 
 /** CSS del ticket, embebido en el iframe (no hereda los estilos de la app). */
@@ -51,21 +66,38 @@ const TICKET_STYLES = `
   body {
     width: 100%; margin: 0; padding: 2mm 1.5mm;
     font-family: 'Courier New', ui-monospace, monospace;
-    font-size: 9.5px; line-height: 1.32; color: #000;
+    font-size: 9.5px; line-height: 1.3; color: #000;
     /* Negrita por defecto: en térmica el trazo fino sale muy claro. */
     font-weight: 700;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
-  .hdr { text-align: center; margin-bottom: 3px; }
-  .hdr .name { font-size: 12px; }
+  .hdr { text-align: center; }
+  .hdr .name { font-size: 12px; text-transform: uppercase; }
+  .hdr .sub { font-size: 9px; }
   .hdr .meta { font-size: 8.5px; }
-  .title { text-align: center; margin: 3px 0; text-transform: uppercase; font-size: 10px; }
-  .row { display: flex; justify-content: space-between; gap: 4px; }
+  .hdr .regime { font-size: 8.5px; text-transform: uppercase; }
+
+  /* Divisor de sección con etiqueta centrada (imita ====LABEL====). */
+  .sec { display: flex; align-items: center; gap: 5px; margin: 4px 0;
+         font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  .sec::before, .sec::after { content: ''; flex: 1; border-top: 3px double #000; }
+  /* Doble línea sólida (imita la fila de ===). */
+  .rule { border-top: 3px double #000; margin: 4px 0; }
+  .dash { border-top: 1px dashed #000; margin: 3px 0; }
+
+  .info div { display: block; }
+  .info .k { font-size: 9px; }
+
+  .row { display: flex; justify-content: space-between; gap: 6px; align-items: baseline; }
   .row .r { text-align: right; white-space: nowrap; }
+  .colhead { font-size: 8.5px; text-transform: uppercase; }
   .line .nm { flex: 1; word-break: break-word; }
-  .total { font-size: 11px; }
+  .emph { font-size: 11px; }
+
   .ftr { text-align: center; margin-top: 4px; font-size: 8.5px; }
-  hr { border: 0; border-top: 1px solid #000; margin: 3px 0; }
+  .ftr .thanks { margin-top: 3px; }
+  .ftr .stars { letter-spacing: 1px; word-break: break-all; }
+  .ftr .note { margin-top: 3px; font-size: 8px; }
 `
 
 /** Escapa texto para insertarlo de forma segura en el HTML del ticket. */
@@ -76,49 +108,66 @@ function esc(value: string): string {
     .replace(/>/g, '&gt;')
 }
 
+function kvRow(kv: ReceiptKeyValue): string {
+  return `<div class="row ${kv.emphasis ? 'emph' : ''}"><span>${esc(kv.label)}</span><span class="r">${esc(kv.value)}</span></div>`
+}
+
 function buildHtml(t: ReceiptTicket): string {
   const h = t.header
-  const headerMeta = [h.nit ? `NIT ${esc(h.nit)}` : '', h.address ? esc(h.address) : '']
+  const headerMeta = [
+    h.taxId ? `<div class="meta">${esc(h.taxId)}</div>` : '',
+    h.taxRegime ? `<div class="regime">${esc(h.taxRegime)}</div>` : '',
+    h.address ? `<div class="meta">${esc(h.address)}</div>` : '',
+    h.city ? `<div class="meta">${esc(h.city)}</div>` : '',
+    h.phone ? `<div class="meta">Tel: ${esc(h.phone)}</div>` : '',
+  ]
     .filter(Boolean)
-    .map((m) => `<div class="meta">${m}</div>`)
+    .join('')
+
+  const info = (t.meta ?? [])
+    .map((m) => `<div class="k">${esc(m.label)}${m.value ? `: ${esc(m.value)}` : ''}</div>`)
     .join('')
 
   const lines = t.lines
     .map((l) => {
-      const qty = l.qty != null && l.qty !== 1 ? ` x${l.qty}` : ''
-      return `<div class="row line"><span class="nm">${esc(l.name)}${qty}</span><span class="r">${esc(l.amount)}</span></div>`
+      const qty = l.qty != null ? `${l.qty} ` : ''
+      return `<div class="row line"><span class="nm">${esc(qty)}${esc(l.name)}</span><span class="r">${esc(l.amount)}</span></div>`
     })
     .join('')
 
-  const summary = t.summary
-    .map(
-      (s) =>
-        `<div class="row ${s.emphasis ? 'total' : ''}"><span>${esc(s.label)}</span><span class="r">${esc(s.value)}</span></div>`,
-    )
-    .join('')
+  const payments = (t.payments ?? []).map(kvRow).join('')
+  const totals = t.totals.map(kvRow).join('')
 
-  const payment = t.payment
-    ? `<hr /><div class="row"><span>Método</span><span class="r emph">${esc(t.payment.method)}</span></div>` +
-      (t.payment.change != null
-        ? `<div class="row"><span>Cambio</span><span class="r">${esc(t.payment.change)}</span></div>`
-        : '')
-    : ''
+  const footerLines = (t.footerLines ?? [])
+    .map((f) => `<div>${esc(f)}</div>`)
+    .join('')
 
   return `<!doctype html><html lang="es"><head><meta charset="utf-8" />
     <title>Recibo</title><style>${TICKET_STYLES}</style></head><body>
     <div class="hdr">
-      <div class="name">${esc(h.companyName)}</div>
+      <div class="name">${esc(h.legalName)}</div>
+      ${h.commercialName ? `<div class="sub">${esc(h.commercialName)}</div>` : ''}
       ${headerMeta}
-      <div class="meta">${esc(h.dateTime)}</div>
-      ${h.cashier ? `<div class="meta">Atiende: ${esc(h.cashier)}</div>` : ''}
     </div>
-    ${t.title ? `<div class="title">${esc(t.title)}</div>` : ''}
-    <hr />
-    ${lines}
-    ${lines ? '<hr />' : ''}
-    ${summary}
-    ${payment}
-    ${t.footer ? `<div class="ftr">${esc(t.footer)}</div>` : ''}
+    ${info ? `<div class="rule"></div><div class="info">${info}</div>` : ''}
+    ${
+      lines
+        ? `<div class="sec">Detalle</div>` +
+          `<div class="row colhead"><span class="nm">Cant · Artículo</span><span class="r">Total</span></div>` +
+          `<div class="dash"></div>${lines}` +
+          (t.linesTotal ? `<div class="dash"></div>${kvRow(t.linesTotal)}` : '')
+        : ''
+    }
+    ${payments ? `<div class="sec">Medio de pago</div>${payments}` : ''}
+    <div class="rule"></div>
+    ${totals}
+    <div class="rule"></div>
+    <div class="ftr">
+      ${footerLines}
+      ${t.thanks ? `<div class="thanks">${esc(t.thanks)}</div>` : ''}
+      <div class="stars">${'*'.repeat(32)}</div>
+      ${t.note ? `<div class="note">${esc(t.note)}</div>` : ''}
+    </div>
   </body></html>`
 }
 

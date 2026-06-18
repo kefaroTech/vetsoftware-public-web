@@ -5,8 +5,18 @@ import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import { formatMoney, type TotalsBreakdown } from '../composables/pricing'
 import type { SaleLine } from '../types/tienda'
 import { useReceiptPrint } from '@/composables/useReceiptPrint'
+import type { ReceiptKeyValue, ReceiptLine } from '@/composables/useReceiptPrint'
 import FeStatusPill from '@/features/facturacion/components/FeStatusPill.vue'
-import type { ElectronicDocumentResponse } from '@/features/facturacion/types/facturacion'
+import {
+  COMPANY_DOCTYPE_LABEL,
+  DOC_TYPE_LABEL,
+  PAYMENT_FORM_LABEL,
+  PAYMENT_MEANS_LABEL,
+  TAX_REGIME_LABEL,
+  type CompanyDocumentType,
+  type ElectronicDocumentResponse,
+  type TaxRegime,
+} from '@/features/facturacion/types/facturacion'
 
 const props = defineProps<{
   open: boolean
@@ -34,34 +44,74 @@ const docNumber = computed(() => {
 
 const { printReceipt } = useReceiptPrint()
 
+// Quita el código DIAN entre paréntesis de las etiquetas (p.ej. "Efectivo (10)" → "Efectivo").
+const cleanLabel = (s: string) => s.replace(/\s*\(\d+\)\s*$/, '')
+
 function onPrint() {
-  const summary = [
-    { label: 'Base gravable', value: formatMoney(props.totals.net) },
-    ...(props.totals.promoSavings > 0
-      ? [{ label: 'Ahorro por promociones', value: `- ${formatMoney(props.totals.promoSavings)}` }]
-      : []),
-    { label: 'IVA (incluido)', value: formatMoney(props.totals.tax) },
-    { label: 'Total', value: formatMoney(props.totals.total), emphasis: true },
+  const doc = props.document
+  const issuer = doc?.issuer
+  const total = doc ? doc.payableAmount : props.totals.total
+
+  // Encabezado fiscal: documento e identidad del emisor (del snapshot del documento).
+  const taxId = issuer
+    ? `${cleanLabel(COMPANY_DOCTYPE_LABEL[issuer.documentType as CompanyDocumentType] ?? issuer.documentType)} ` +
+      `${issuer.documentId}${issuer.verificationDigit ? `-${issuer.verificationDigit}` : ''}`
+    : undefined
+  const taxRegime = issuer?.taxRegime
+    ? TAX_REGIME_LABEL[issuer.taxRegime as TaxRegime] ?? issuer.taxRegime
+    : undefined
+
+  const dateTime = doc
+    ? `${doc.issueDate} ${(doc.issueTime ?? '').slice(0, 5)}`.trim()
+    : new Date().toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' })
+
+  // Bloque de datos del documento (izquierda).
+  const meta: ReceiptKeyValue[] = doc
+    ? [
+        { label: (DOC_TYPE_LABEL[doc.documentType] ?? 'Comprobante').toUpperCase(), value: '' },
+        { label: 'No.', value: docNumber.value ?? `Interno ${doc.id}` },
+        { label: 'Fecha', value: dateTime },
+        { label: 'Forma de pago', value: PAYMENT_FORM_LABEL[doc.paymentForm] ?? doc.paymentForm },
+      ]
+    : [{ label: 'Fecha', value: dateTime }]
+
+  // Detalle: líneas del documento (autoritativo) o, en su defecto, del carrito.
+  const lines: ReceiptLine[] = doc
+    ? doc.lines.map((l) => ({ qty: l.quantity, name: l.description, amount: formatMoney(l.totalAmount) }))
+    : props.lines.map((l) => ({ qty: l.qty, name: l.name, amount: formatMoney(l.unitPrice * l.qty) }))
+
+  // Medio(s) de pago.
+  const payments: ReceiptKeyValue[] =
+    doc && doc.payments.length
+      ? doc.payments.map((p) => ({
+          label: cleanLabel(PAYMENT_MEANS_LABEL[p.paymentMeans] ?? p.paymentMeans),
+          value: formatMoney(p.amount),
+        }))
+      : [{ label: cleanLabel(METHOD_LABEL[props.method] ?? props.method), value: formatMoney(total) }]
+
+  // Totales: consumo, total y —cuando hubo efectivo recibido— pago y cambio.
+  const totals: ReceiptKeyValue[] = [
+    { label: 'Total consumo', value: formatMoney(total) },
+    { label: 'Total', value: formatMoney(total), emphasis: true },
   ]
+  if (props.change != null) {
+    totals.push({ label: 'Pago', value: formatMoney(total + props.change) })
+    totals.push({ label: 'Cambio', value: formatMoney(props.change) })
+  }
+
   printReceipt({
     header: {
-      companyName: 'Vetrina',
-      dateTime: new Date().toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }),
+      legalName: issuer?.legalName || 'Vetrina',
+      taxId,
+      taxRegime,
     },
-    title: 'Recibo de venta',
-    lines: props.lines.map((l) => ({
-      name: l.name,
-      qty: l.qty,
-      amount: formatMoney(l.unitPrice * l.qty),
-    })),
-    summary,
-    payment: {
-      method: METHOD_LABEL[props.method] ?? props.method,
-      change: props.change != null ? formatMoney(props.change) : undefined,
-    },
-    footer: docNumber.value
-      ? `Documento ${docNumber.value}`
-      : 'Comprobante de venta — emisión a la DIAN pendiente',
+    meta,
+    lines,
+    linesTotal: { label: 'Vlr total', value: formatMoney(total) },
+    payments,
+    totals,
+    thanks: 'Gracias por su compra, vuelva pronto',
+    note: docNumber.value ? undefined : 'Comprobante de venta · emisión a la DIAN pendiente',
   })
 }
 </script>
