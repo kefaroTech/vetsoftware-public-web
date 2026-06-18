@@ -1,15 +1,21 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { locationsApi } from '../api/locations.api'
 import { registrationApi } from '../api/registration.api'
 import type { City, Country, RegisterUserRequest, State } from '../types'
-import { TAX_REGIME_LABEL, type TaxRegime } from '@/features/facturacion/types/facturacion'
+import {
+  COMPANY_DOCTYPE_LABEL,
+  TAX_REGIME_LABEL,
+  type CompanyDocumentType,
+  type TaxRegime,
+} from '@/features/facturacion/types/facturacion'
 import { getProblemDetailFieldErrors, getProblemDetailMessage } from '@/services/http/http.client'
 
 const emit = defineEmits<{ success: [] }>()
 
 const form = ref({
   companyName: '',
+  documentType: 'NIT' as CompanyDocumentType,
   companyIdentifier: '',
   companyAddress: '',
   companyContactNumber: '',
@@ -23,10 +29,15 @@ const form = ref({
   password: '',
 })
 
-// El régimen tributario se pide; el resto del perfil fiscal (NIT, DV, razón social) lo deriva el backend.
+// El tipo/número de documento, la razón social, el régimen y el correo fiscal arman el perfil fiscal del
+// emisor (el backend lo crea en el signup). El DV del NIT lo calcula el backend.
+const doctypeItems = (Object.entries(COMPANY_DOCTYPE_LABEL) as [CompanyDocumentType, string][]).map(
+  ([value, title]) => ({ value, title }),
+)
 const regimeItems = (Object.entries(TAX_REGIME_LABEL) as [TaxRegime, string][]).map(
   ([value, title]) => ({ value, title }),
 )
+const isNit = computed(() => form.value.documentType === 'NIT')
 
 const formValid = ref(false)
 const formRef = ref()
@@ -50,8 +61,11 @@ const minLen = (n: number) => (v: string) =>
   !v || v.length >= n || `Mínimo ${n} caracteres`
 const emailRule = (v: string) =>
   !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || 'Email inválido'
-const nitRule = (v: string) =>
-  !v || /^\d{5,15}$/.test(v) || 'El NIT debe ser numérico (entre 5 y 15 dígitos)'
+const docNumberRule = (v: string) =>
+  !v ||
+  (isNit.value
+    ? /^\d{5,15}$/.test(v) || 'El NIT debe ser numérico (entre 5 y 15 dígitos)'
+    : /^[A-Za-z0-9]{4,20}$/.test(v) || 'Documento inválido (4–20 caracteres alfanuméricos)')
 
 onMounted(async () => {
   loadingCountries.value = true
@@ -111,6 +125,7 @@ async function submit() {
   try {
     const payload: RegisterUserRequest = {
       companyName: form.value.companyName.trim(),
+      documentType: form.value.documentType,
       companyIdentifier: form.value.companyIdentifier.trim(),
       companyAddress: form.value.companyAddress.trim() || undefined,
       companyContactNumber: form.value.companyContactNumber.trim() || undefined,
@@ -146,26 +161,67 @@ async function submit() {
     <v-form ref="formRef" v-model="formValid" @submit.prevent="submit">
       <div class="text-subtitle-1 font-weight-medium mb-2">Empresa</div>
 
+      <v-row dense>
+        <v-col cols="12" md="5">
+          <v-select
+            v-model="form.documentType"
+            :items="doctypeItems"
+            item-title="title"
+            item-value="value"
+            label="Tipo de documento"
+            :rules="[required]"
+            :error-messages="fieldErrors.documentType"
+          />
+        </v-col>
+        <v-col cols="12" md="7">
+          <v-text-field
+            v-model="form.companyIdentifier"
+            label="Número de documento"
+            :rules="[required, docNumberRule]"
+            :error-messages="fieldErrors.companyIdentifier"
+            maxlength="20"
+            :inputmode="isNit ? 'numeric' : 'text'"
+            counter
+            :hint="isNit ? 'El dígito de verificación se calcula automáticamente' : 'Debe ser único en todo el sistema'"
+            persistent-hint
+          />
+        </v-col>
+      </v-row>
+
       <v-text-field
         v-model="form.companyName"
-        label="Nombre de la empresa"
+        label="Razón social"
         :rules="[required, maxLen(100)]"
         :error-messages="fieldErrors.companyName"
         maxlength="100"
         counter
       />
 
-      <v-text-field
-        v-model="form.companyIdentifier"
-        label="NIT"
-        :rules="[required, nitRule]"
-        :error-messages="fieldErrors.companyIdentifier"
-        maxlength="15"
-        inputmode="numeric"
-        counter
-        hint="Solo dígitos, sin el dígito de verificación (se calcula automáticamente). Debe ser único."
-        persistent-hint
-      />
+      <v-row dense>
+        <v-col cols="12" md="6">
+          <v-select
+            v-model="form.taxRegime"
+            :items="regimeItems"
+            item-title="title"
+            item-value="value"
+            label="Régimen tributario"
+            :rules="[required]"
+            :error-messages="fieldErrors.taxRegime"
+          />
+        </v-col>
+        <v-col cols="12" md="6">
+          <v-text-field
+            v-model="form.fiscalEmail"
+            label="Correo fiscal"
+            type="email"
+            :rules="[required, emailRule, maxLen(255)]"
+            :error-messages="fieldErrors.fiscalEmail"
+            maxlength="255"
+            hint="Correo donde llegan las facturas/documentos electrónicos"
+            persistent-hint
+          />
+        </v-col>
+      </v-row>
 
       <v-text-field
         v-model="form.companyAddress"
@@ -219,32 +275,6 @@ async function submit() {
             :error-messages="fieldErrors.cityId"
             :loading="loadingCities"
             :disabled="!form.stateId || loadingCities"
-          />
-        </v-col>
-      </v-row>
-
-      <v-row dense>
-        <v-col cols="12" md="6">
-          <v-select
-            v-model="form.taxRegime"
-            :items="regimeItems"
-            item-title="title"
-            item-value="value"
-            label="Régimen tributario"
-            :rules="[required]"
-            :error-messages="fieldErrors.taxRegime"
-          />
-        </v-col>
-        <v-col cols="12" md="6">
-          <v-text-field
-            v-model="form.fiscalEmail"
-            label="Correo fiscal"
-            type="email"
-            :rules="[required, emailRule, maxLen(255)]"
-            :error-messages="fieldErrors.fiscalEmail"
-            maxlength="255"
-            hint="Correo donde llegan las facturas/documentos electrónicos"
-            persistent-hint
           />
         </v-col>
       </v-row>

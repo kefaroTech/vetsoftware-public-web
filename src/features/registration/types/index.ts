@@ -1,7 +1,8 @@
-import type { TaxRegime } from '@/features/facturacion/types/facturacion'
+import type { CompanyDocumentType, TaxRegime } from '@/features/facturacion/types/facturacion'
 
 export interface RegisterUserRequest {
   companyName: string
+  documentType: CompanyDocumentType
   companyIdentifier: string
   companyAddress?: string
   companyContactNumber?: string
