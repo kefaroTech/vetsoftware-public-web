@@ -140,7 +140,9 @@ function VetSignupView() {
   const router = useVetRouter();
   const [stage, setStage] = React.useState('form');
   const [form, setForm] = React.useState({
-    companyName: '', companyIdentifier: '', companyAddress: '', companyContactNumber: '',
+    documentType: 'NIT', legalName: '', companyIdentifier: '',
+    taxRegime: 'RESPONSABLE_IVA', fiscalEmail: '',
+    companyAddress: '', companyContactNumber: '',
     countryId: null, stateId: null, cityId: null,
     employeeName: '', employeeEmail: '', password: '',
   });
@@ -192,11 +194,39 @@ function VetSignupView() {
 
         <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--warm-800)', margin: '18px 0 12px' }}>Empresa</div>
 
-        <VetTextField label="Nombre de la empresa" value={form.companyName}
-          onChange={(v) => update({ companyName: v })} maxLength={100} />
-        <VetTextField label="Identificador / NIT" value={form.companyIdentifier}
-          onChange={(v) => update({ companyIdentifier: v })}
-          maxLength={50} hint="Debe ser único en todo el sistema" />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 12 }}>
+          <VetSelect
+            label="Tipo de documento" value={form.documentType}
+            onChange={(v) => update({ documentType: v })}
+            items={[
+              { id: 'NIT', name: 'NIT' },
+              { id: 'CEDULA_CIUDADANIA', name: 'Cédula de ciudadanía' },
+              { id: 'CEDULA_EXTRANJERIA', name: 'Cédula de extranjería' },
+              { id: 'PASAPORTE', name: 'Pasaporte' },
+            ]}
+          />
+          <VetTextField label="Número de documento" value={form.companyIdentifier}
+            onChange={(v) => update({ companyIdentifier: v })}
+            maxLength={50}
+            hint={form.documentType === 'NIT' ? 'El dígito de verificación se calcula automáticamente' : 'Debe ser único en todo el sistema'} />
+        </div>
+
+        <VetTextField label="Razón social" value={form.legalName}
+          onChange={(v) => update({ legalName: v })} maxLength={100} />
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <VetSelect
+            label="Régimen tributario" value={form.taxRegime}
+            onChange={(v) => update({ taxRegime: v })}
+            items={[
+              { id: 'RESPONSABLE_IVA', name: 'Responsable de IVA' },
+              { id: 'NO_RESPONSABLE_IVA', name: 'No responsable de IVA' },
+            ]}
+          />
+          <VetTextField label="Correo fiscal" type="email" value={form.fiscalEmail}
+            onChange={(v) => update({ fiscalEmail: v })} maxLength={100} />
+        </div>
+
         <VetTextField label="Dirección (opcional)" value={form.companyAddress}
           onChange={(v) => update({ companyAddress: v })} maxLength={200} />
         <VetTextField label="Teléfono de contacto (opcional)" value={form.companyContactNumber}
