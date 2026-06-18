@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { locationsApi } from '../api/locations.api'
 import { registrationApi } from '../api/registration.api'
 import type { City, Country, RegisterUserRequest, State } from '../types'
+import { TAX_REGIME_LABEL, type TaxRegime } from '@/features/facturacion/types/facturacion'
 import { getProblemDetailFieldErrors, getProblemDetailMessage } from '@/services/http/http.client'
 
 const emit = defineEmits<{ success: [] }>()
@@ -15,10 +16,17 @@ const form = ref({
   countryId: null as number | null,
   stateId: null as number | null,
   cityId: null as number | null,
+  taxRegime: null as TaxRegime | null,
+  fiscalEmail: '',
   employeeName: '',
   employeeEmail: '',
   password: '',
 })
+
+// El régimen tributario se pide; el resto del perfil fiscal (NIT, DV, razón social) lo deriva el backend.
+const regimeItems = (Object.entries(TAX_REGIME_LABEL) as [TaxRegime, string][]).map(
+  ([value, title]) => ({ value, title }),
+)
 
 const formValid = ref(false)
 const formRef = ref()
@@ -42,6 +50,8 @@ const minLen = (n: number) => (v: string) =>
   !v || v.length >= n || `Mínimo ${n} caracteres`
 const emailRule = (v: string) =>
   !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || 'Email inválido'
+const nitRule = (v: string) =>
+  !v || /^\d{5,15}$/.test(v) || 'El NIT debe ser numérico (entre 5 y 15 dígitos)'
 
 onMounted(async () => {
   loadingCountries.value = true
@@ -95,7 +105,7 @@ async function submit() {
   fieldErrors.value = {}
   const { valid } = await formRef.value.validate()
   if (!valid) return
-  if (form.value.cityId == null) return
+  if (form.value.cityId == null || form.value.taxRegime == null) return
 
   submitting.value = true
   try {
@@ -105,6 +115,8 @@ async function submit() {
       companyAddress: form.value.companyAddress.trim() || undefined,
       companyContactNumber: form.value.companyContactNumber.trim() || undefined,
       cityId: form.value.cityId,
+      taxRegime: form.value.taxRegime,
+      fiscalEmail: form.value.fiscalEmail.trim(),
       employeeName: form.value.employeeName.trim(),
       employeeEmail: form.value.employeeEmail.trim(),
       password: form.value.password,
@@ -145,12 +157,13 @@ async function submit() {
 
       <v-text-field
         v-model="form.companyIdentifier"
-        label="Identificador / NIT"
-        :rules="[required, maxLen(50)]"
+        label="NIT"
+        :rules="[required, nitRule]"
         :error-messages="fieldErrors.companyIdentifier"
-        maxlength="50"
+        maxlength="15"
+        inputmode="numeric"
         counter
-        hint="Debe ser único en todo el sistema"
+        hint="Solo dígitos, sin el dígito de verificación (se calcula automáticamente). Debe ser único."
         persistent-hint
       />
 
@@ -206,6 +219,32 @@ async function submit() {
             :error-messages="fieldErrors.cityId"
             :loading="loadingCities"
             :disabled="!form.stateId || loadingCities"
+          />
+        </v-col>
+      </v-row>
+
+      <v-row dense>
+        <v-col cols="12" md="6">
+          <v-select
+            v-model="form.taxRegime"
+            :items="regimeItems"
+            item-title="title"
+            item-value="value"
+            label="Régimen tributario"
+            :rules="[required]"
+            :error-messages="fieldErrors.taxRegime"
+          />
+        </v-col>
+        <v-col cols="12" md="6">
+          <v-text-field
+            v-model="form.fiscalEmail"
+            label="Correo fiscal"
+            type="email"
+            :rules="[required, emailRule, maxLen(255)]"
+            :error-messages="fieldErrors.fiscalEmail"
+            maxlength="255"
+            hint="Correo donde llegan las facturas/documentos electrónicos"
+            persistent-hint
           />
         </v-col>
       </v-row>

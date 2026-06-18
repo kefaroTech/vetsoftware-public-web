@@ -34,7 +34,6 @@ const submitted = ref(false)
 const form = reactive({
   documentType: 'NIT' as CompanyDocumentType,
   companyDocumentId: '',
-  companyDocumentVerificationDigit: '',
   legalName: '',
   taxRegime: 'RESPONSABLE_IVA' as TaxRegime,
   fiscalEmail: '',
@@ -53,8 +52,6 @@ const activityOptions = computed(() =>
   activities.value.map((a) => ({ value: String(a.id), label: `${a.code} · ${a.name}` })),
 )
 
-const isNit = computed(() => form.documentType === 'NIT')
-
 onMounted(async () => {
   loading.value = true
   try {
@@ -64,7 +61,6 @@ onMounted(async () => {
     if (cfg) {
       form.documentType = cfg.companyDocumentType
       form.companyDocumentId = cfg.companyDocumentId
-      form.companyDocumentVerificationDigit = cfg.companyDocumentVerificationDigit ?? ''
       form.legalName = cfg.legalName
       form.taxRegime = cfg.taxRegime
       form.fiscalEmail = cfg.fiscalEmail
@@ -87,11 +83,10 @@ function toggleResp(code: string) {
 
 const errors = computed(() => ({
   companyDocumentId: form.companyDocumentId.trim() ? null : 'Requerido',
-  companyDocumentVerificationDigit:
-    isNit.value && !form.companyDocumentVerificationDigit.trim() ? 'Requerido para NIT' : null,
   legalName: form.legalName.trim() ? null : 'Requerido',
   fiscalEmail: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.fiscalEmail) ? null : 'Correo inválido',
-  responsibilities: form.responsibilities.length > 0 ? null : 'Selecciona al menos una',
+  // Opcional: solo se materializan en el XML de la factura electrónica; una venta sin FE no las usa.
+  responsibilities: null as string | null,
 }))
 function err(k: keyof typeof errors.value): string | undefined {
   return submitted.value && errors.value[k] ? errors.value[k]! : undefined
@@ -108,7 +103,6 @@ async function save() {
     const payload = {
       documentType: form.documentType,
       companyDocumentId: form.companyDocumentId.trim(),
-      companyDocumentVerificationDigit: isNit.value ? form.companyDocumentVerificationDigit.trim() : null,
       legalName: form.legalName.trim(),
       taxRegime: form.taxRegime,
       fiscalEmail: form.fiscalEmail.trim(),
@@ -147,9 +141,6 @@ async function save() {
         <BaseField label="Número de documento" required :error="err('companyDocumentId')">
           <template #default="{ id }"><BaseInput :id="id" v-model="form.companyDocumentId" :disabled="!canManage" :invalid="!!err('companyDocumentId')" /></template>
         </BaseField>
-        <BaseField v-if="isNit" label="Dígito de verificación" required :error="err('companyDocumentVerificationDigit')">
-          <template #default="{ id }"><BaseInput :id="id" v-model="form.companyDocumentVerificationDigit" :disabled="!canManage" :invalid="!!err('companyDocumentVerificationDigit')" /></template>
-        </BaseField>
         <BaseField label="Razón social" required :error="err('legalName')">
           <template #default="{ id }"><BaseInput :id="id" v-model="form.legalName" :disabled="!canManage" :invalid="!!err('legalName')" /></template>
         </BaseField>
@@ -167,7 +158,7 @@ async function save() {
         </BaseField>
       </div>
 
-      <BaseField label="Responsabilidades RUT" required :error="err('responsibilities')">
+      <BaseField label="Responsabilidades RUT" hint="Opcional · requeridas solo para facturación electrónica" :error="err('responsibilities')">
         <template #default>
           <div class="chips">
             <button

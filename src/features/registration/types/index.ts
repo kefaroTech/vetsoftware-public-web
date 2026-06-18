@@ -1,3 +1,5 @@
+import type { TaxRegime } from '@/features/facturacion/types/facturacion'
+
 export interface RegisterUserRequest {
   companyName: string
   companyIdentifier: string
@@ -7,6 +9,8 @@ export interface RegisterUserRequest {
   employeeName: string
   employeeEmail: string
   password: string
+  taxRegime: TaxRegime
+  fiscalEmail: string
 }
 
 export interface RegistrationResponse {
