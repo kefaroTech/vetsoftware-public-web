@@ -18,20 +18,38 @@ const METHOD_OPTIONS = [
   { value: 'TRANSFERENCIA', label: 'Transferencia' },
 ]
 
+// Al abrir (Efectivo por defecto) el campo arranca con el total a pagar: el caso común es pago exacto.
 watch(
   () => props.open,
   (open) => {
     if (open) {
       form.method = 'EFECTIVO'
-      form.received = ''
+      form.received = String(Math.round(props.total))
     }
   },
 )
 
+// Al volver a Efectivo, re-precarga el total a pagar.
+watch(
+  () => form.method,
+  (method) => {
+    if (method === 'EFECTIVO') form.received = String(props.total)
+  },
+)
+
 const isCash = computed(() => form.method === 'EFECTIVO')
-const receivedNum = computed(() => Number(form.received.replace(',', '.')) || 0)
-const change = computed(() => Math.max(0, receivedNum.value - props.total))
-const canConfirm = computed(() => !isCash.value || receivedNum.value >= props.total)
+// Total a pagar en pesos enteros (COP no maneja centavos en el POS).
+const due = computed(() => Math.round(props.total))
+const receivedNum = computed(() => Number(form.received.replace(/\D/g, '')) || 0)
+// El input se muestra como dinero ($26.400); internamente guardamos solo los dígitos.
+const receivedDisplay = computed({
+  get: () => (form.received === '' ? '' : formatMoney(receivedNum.value)),
+  set: (v: string) => {
+    form.received = v.replace(/\D/g, '')
+  },
+})
+const change = computed(() => Math.max(0, receivedNum.value - due.value))
+const canConfirm = computed(() => !isCash.value || receivedNum.value >= due.value)
 
 function confirm() {
   if (!canConfirm.value) return
@@ -50,7 +68,7 @@ function confirm() {
         </BaseField>
         <BaseField v-if="isCash" label="Efectivo recibido" required>
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="form.received" inputmode="decimal" placeholder="0" />
+            <BaseInput :id="id" v-model="receivedDisplay" inputmode="numeric" placeholder="$0" />
           </template>
         </BaseField>
         <div v-if="isCash && receivedNum > 0" class="change">
