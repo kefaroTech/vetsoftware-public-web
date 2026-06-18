@@ -25,7 +25,6 @@ export type DebitNoteReason = 'INTERESES' | 'GASTOS' | 'CAMBIO_VALOR' | 'OTROS'
 export type CompanyDocumentType = 'NIT' | 'CEDULA_CIUDADANIA' | 'CEDULA_EXTRANJERIA' | 'PASAPORTE'
 export type TaxRegime = 'RESPONSABLE_IVA' | 'NO_RESPONSABLE_IVA'
 export type ProviderType = 'MATIAS'
-export type ProviderEnvironment = 'SANDBOX' | 'PRODUCTION'
 export type PersonType = 'NATURAL' | 'JURIDICA'
 
 // ── Etiquetas legibles + tonos (de data-facturacion.jsx) ─────────────────────
@@ -61,11 +60,6 @@ export const COMPANY_DOCTYPE_LABEL: Record<CompanyDocumentType, string> = {
 export const TAX_REGIME_LABEL: Record<TaxRegime, string> = {
   RESPONSABLE_IVA: 'Responsable de IVA',
   NO_RESPONSABLE_IVA: 'No responsable de IVA',
-}
-
-export const ENVIRONMENT_LABEL: Record<ProviderEnvironment, string> = {
-  SANDBOX: 'Pruebas (Sandbox)',
-  PRODUCTION: 'Producción',
 }
 
 export const PAYMENT_FORM_LABEL: Record<PaymentForm, string> = {
@@ -204,7 +198,6 @@ export interface DianProviderConfigResponse {
   id: number
   companyId: number
   provider: ProviderType
-  environment: ProviderEnvironment
   baseUrl: string
   clientId: string | null
   clientSecretConfigured: boolean
@@ -220,7 +213,6 @@ export interface DianProviderConfigResponse {
 /** Los secretos vacíos/omitidos conservan el valor actual. */
 export interface SaveDianProviderConfigRequest {
   provider: ProviderType
-  environment: ProviderEnvironment
   baseUrl: string
   clientId?: string | null
   clientSecret?: string | null

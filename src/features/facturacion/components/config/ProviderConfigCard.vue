@@ -2,16 +2,14 @@
 import { onMounted, reactive, ref } from 'vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
 import { useFacturacionAccess } from '../../composables/useFacturacionAccess'
 import { PERMISSIONS } from '@/constants/permissions'
 import { dianProviderConfigApi } from '../../api/dianProviderConfig.api'
-import {
-  ENVIRONMENT_LABEL,
-  type DianProviderConfigResponse,
-  type SaveDianProviderConfigRequest,
+import type {
+  DianProviderConfigResponse,
+  SaveDianProviderConfigRequest,
 } from '../../types/facturacion'
 
 const toast = useToast()
@@ -23,7 +21,6 @@ const loading = ref(false)
 const busy = ref(false)
 
 const form = reactive({
-  environment: 'SANDBOX' as 'SANDBOX' | 'PRODUCTION',
   baseUrl: '',
   clientId: '',
   numberingProviderRef: '',
@@ -34,10 +31,6 @@ const form = reactive({
   apiToken: '',
   webhookSecret: '',
 })
-
-const ENV_OPTIONS = (Object.entries(ENVIRONMENT_LABEL) as ['SANDBOX' | 'PRODUCTION', string][]).map(
-  ([value, label]) => ({ value, label }),
-)
 
 const SECRETS = [
   { key: 'clientSecret', label: 'Client Secret', flag: 'clientSecretConfigured' },
@@ -55,7 +48,6 @@ async function load() {
     const cfg = await dianProviderConfigApi.find()
     existing.value = cfg
     if (cfg) {
-      form.environment = cfg.environment
       form.baseUrl = cfg.baseUrl
       form.clientId = cfg.clientId ?? ''
       form.numberingProviderRef = cfg.numberingProviderRef ?? ''
@@ -79,7 +71,6 @@ async function save() {
   busy.value = true
   const payload: SaveDianProviderConfigRequest = {
     provider: 'MATIAS',
-    environment: form.environment,
     baseUrl: form.baseUrl.trim(),
     clientId: form.clientId.trim() || null,
     numberingProviderRef: form.numberingProviderRef.trim() || null,
@@ -116,9 +107,6 @@ async function save() {
     <div v-if="loading" class="muted">Cargando…</div>
     <template v-else>
       <div class="grid2">
-        <BaseField label="Ambiente" required>
-          <template #default="{ id }"><BaseSelect :id="id" v-model="form.environment" :options="ENV_OPTIONS" :disabled="!canManage" /></template>
-        </BaseField>
         <BaseField label="URL base" required>
           <template #default="{ id }"><BaseInput :id="id" v-model="form.baseUrl" :disabled="!canManage" placeholder="https://api.matias.co/v1" /></template>
         </BaseField>
@@ -128,10 +116,6 @@ async function save() {
         <BaseField label="Ref. numeración del proveedor">
           <template #default="{ id }"><BaseInput :id="id" v-model="form.numberingProviderRef" :disabled="!canManage" /></template>
         </BaseField>
-      </div>
-
-      <div v-if="form.environment === 'PRODUCTION'" class="prod-warn">
-        Ambiente <strong>Producción</strong>: las emisiones tienen efectos fiscales reales.
       </div>
 
       <div class="secrets">
@@ -166,10 +150,6 @@ async function save() {
 .muted { font-size: 13px; color: var(--warm-500); }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
-.prod-warn {
-  margin-top: 14px; padding: 10px 13px; border-radius: 9px; font-size: 12.5px;
-  background: oklch(95% 0.06 80); border: 1px solid oklch(88% 0.09 80); color: oklch(42% 0.10 70);
-}
 .secrets { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--warm-100); }
 .secrets-lab { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--warm-500); margin-bottom: 12px; font-weight: 600; }
 .actions { margin-top: 18px; display: flex; justify-content: flex-end; }
