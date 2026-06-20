@@ -51,7 +51,6 @@ const mode = ref<Mode>('producto')
 const query = ref('')
 const cat = ref<string>('')
 const lines = ref<SaleLine[]>([])
-const discount = ref('')
 
 const customer = ref<OwnerResponse | null>(null)
 const custOpen = ref(false)
@@ -202,9 +201,8 @@ function removeLine(line: SaleLine) {
   lines.value = lines.value.filter((l) => !(l.kind === line.kind && l.id === line.id))
 }
 
-const discountNum = computed(() => Math.max(0, Number(discount.value.replace(',', '.')) || 0))
-
-// Subtotal BRUTO (IVA incluido), tras promo, antes del descuento manual.
+// Subtotal BRUTO (IVA incluido), tras promo. No hay descuento manual: el servidor valida cada unitPrice
+// contra el catálogo (precio de lista + promoción activa), así que solo las promociones reducen el precio.
 const grossSubtotal = computed(() => lines.value.reduce((a, l) => a + l.unitPrice * l.qty, 0))
 const promoSavings = computed(() =>
   lines.value.reduce(
@@ -212,17 +210,15 @@ const promoSavings = computed(() =>
     0,
   ),
 )
-const discountedGross = computed(() => Math.max(0, grossSubtotal.value - discountNum.value))
 
-// IVA contenido por tasa, EXTRAÍDO del bruto (descuento manual aplicado proporcionalmente).
+// IVA contenido por tasa, EXTRAÍDO del bruto.
 const taxByRate = computed(() => {
-  const factor = grossSubtotal.value > 0 ? discountedGross.value / grossSubtotal.value : 0
   const groups = new Map<string, { name: string; amount: number }>()
   for (const l of lines.value) {
     const aplicaIva = appliesIva(l.taxTreatment)
     if (!aplicaIva || l.taxPercentage <= 0) continue
     const key = l.taxName ?? `IVA ${l.taxPercentage}%`
-    const lineGross = l.unitPrice * l.qty * factor
+    const lineGross = l.unitPrice * l.qty
     const amount = splitGross(lineGross, aplicaIva, l.taxPercentage).tax
     const g = groups.get(key) ?? { name: key, amount: 0 }
     g.amount += amount
@@ -231,8 +227,8 @@ const taxByRate = computed(() => {
   return Array.from(groups.values()).filter((g) => g.amount > 0)
 })
 const taxTotal = computed(() => taxByRate.value.reduce((a, g) => a + g.amount, 0))
-const total = computed(() => discountedGross.value)
-const baseTotal = computed(() => discountedGross.value - taxTotal.value)
+const total = computed(() => grossSubtotal.value)
+const baseTotal = computed(() => grossSubtotal.value - taxTotal.value)
 const isEmpty = computed(() => lines.value.length === 0)
 
 async function onConfirmPay(method: string, received: number | null) {
@@ -242,16 +238,15 @@ async function onConfirmPay(method: string, received: number | null) {
     net: baseTotal.value,
     tax: taxTotal.value,
     total: totalNow,
-    promoSavings: promoSavings.value + discountNum.value,
+    promoSavings: promoSavings.value,
   }
-  // El descuento manual se reparte proporcional sobre el precio de cada línea, para que el total del
-  // documento (suma de líneas) cuadre con lo cobrado. El backend extrae base/IVA de cada unitPrice.
-  const factor = grossSubtotal.value > 0 ? discountedGross.value / grossSubtotal.value : 1
+  // Cada unitPrice ya viene con la promoción aplicada (entero) por applyPromo; se manda tal cual. El
+  // servidor lo valida contra el catálogo (lista + promo) y extrae base/IVA.
   const saleLines = lines.value.map((l) => ({
     kind: (l.kind === 'service' ? 'SERVICE' : 'PRODUCT') as PosSaleLineKind,
     refId: l.id,
     quantity: l.qty,
-    unitPrice: Math.round(l.unitPrice * factor * 100) / 100,
+    unitPrice: l.unitPrice,
   }))
   const snapshot = lines.value.map((l) => ({ ...l }))
 
@@ -274,7 +269,6 @@ async function onConfirmPay(method: string, received: number | null) {
     payOpen.value = false
     receiptOpen.value = true
     lines.value = []
-    discount.value = ''
     customer.value = null
     if (document.dianStatus === 'VALIDADO') {
       toast.success('Venta registrada', 'Factura validada por la DIAN.')
@@ -440,13 +434,8 @@ function toggleCustomer() {
         </div>
 
         <div class="summary">
-          <div class="disc">
-            <span>Descuento</span>
-            <input v-model="discount" type="text" inputmode="decimal" placeholder="0" />
-          </div>
           <div class="srow"><span>Subtotal (IVA incl.)</span><span>{{ formatMoney(grossSubtotal) }}</span></div>
           <div v-if="promoSavings > 0" class="srow savings"><span>Ahorro por promociones</span><span>−{{ formatMoney(promoSavings) }}</span></div>
-          <div v-if="discountNum > 0" class="srow"><span>Descuento</span><span>−{{ formatMoney(discountNum) }}</span></div>
           <div class="srow"><span>Base gravable</span><span>{{ formatMoney(baseTotal) }}</span></div>
           <div v-for="r in taxByRate" :key="r.name" class="srow"><span>{{ r.name }} (incluido)</span><span>{{ formatMoney(r.amount) }}</span></div>
           <div class="srow grand"><span>Total</span><span>{{ formatMoney(total) }}</span></div>
@@ -558,9 +547,6 @@ function toggleCustomer() {
 .line-x:hover { background: oklch(94% 0.05 25); color: oklch(48% 0.18 25); }
 
 .summary { border-top: 1px solid var(--warm-200); padding: 14px 18px; display: flex; flex-direction: column; gap: 7px; }
-.disc { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; font-size: 12.5px; color: var(--warm-600); }
-.disc input { width: 90px; text-align: right; border: 1px solid var(--warm-200); border-radius: 7px; padding: 5px 9px; font-family: inherit; font-size: 13px; outline: none; }
-.disc input:focus { border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
 .srow { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--warm-600); }
 .srow.savings { color: oklch(45% 0.13 150); }
 .srow.grand { font-size: 17px; font-weight: 600; color: var(--warm-900); padding-top: 7px; margin-top: 3px; border-top: 1px solid var(--warm-150); }
