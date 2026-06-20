@@ -85,9 +85,12 @@ async function addCatalogItem(itemId: number) {
   }
 }
 
-const canAddGeneral = computed(
-  () => general.name.trim().length >= 2 && Number(general.unitAmount.replace(',', '.')) > 0,
-)
+const canAddGeneral = computed(() => {
+  const raw = general.unitAmount.trim().replace(',', '.')
+  const amount = Number(raw)
+  // Monto libre por diseño (sin catálogo): se permite 0, pero exige un valor explícito.
+  return general.name.trim().length >= 2 && raw !== '' && Number.isFinite(amount) && amount >= 0
+})
 
 async function addGeneral() {
   if (!canAddGeneral.value || busy.value) return
