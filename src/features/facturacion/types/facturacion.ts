@@ -16,7 +16,7 @@
 
 export type DianStatus = 'PENDIENTE' | 'VALIDADO' | 'RECHAZADO' | 'CONTINGENCIA' | 'NO_ELECTRONICO'
 export type ElectronicDocumentType = 'FE_VENTA' | 'DOC_EQUIV_POS' | 'NOTA_CREDITO' | 'NOTA_DEBITO'
-export type PaymentForm = 'CONTADO' | 'CREDITO'
+export type PaymentForm = 'CONTADO'
 export type PaymentMeans = 'EFECTIVO' | 'TARJETA_DEBITO' | 'TARJETA_CREDITO' | 'TRANSFERENCIA'
 export type TaxCategory = 'GRAVADO' | 'EXENTO' | 'EXCLUIDO' | 'INC'
 export type TaxScheme = 'IVA' | 'INC'
@@ -64,7 +64,6 @@ export const TAX_REGIME_LABEL: Record<TaxRegime, string> = {
 
 export const PAYMENT_FORM_LABEL: Record<PaymentForm, string> = {
   CONTADO: 'Contado',
-  CREDITO: 'Crédito',
 }
 
 export const PAYMENT_MEANS_LABEL: Record<PaymentMeans, string> = {
@@ -173,7 +172,6 @@ export interface ElectronicDocumentResponse {
   reteIcaAmount: number
   netPayableAmount: number
   paymentForm: PaymentForm
-  paymentDueDate: string | null
   lines: DocumentLine[]
   payments: DocumentPayment[]
   taxTotalsByRate: TaxTotalByRate[]
