@@ -156,17 +156,22 @@ function VetFeConciliacion({ docs }) {
 // ============================================================================
 
 function VetFacturacionView() {
-  /* global vetFeHasModule, VetFeUpsell, VetFeReadyBoard, VetFePerfilFiscal, VetFeProveedor,
-     VetFeNumeracion, VetFeRetenciones, VetFeDocsView, vetFeCan */
-  const [tab, setTab] = React.useState('tablero');
+  /* global vetFeHasModule, VetFeUpsell, useVetFeEnablement, VetFeStatusPanel, VetFeWizard, vetFeCan */
+  const store = useVetFeEnablement();
+  const [view, setView] = React.useState('panel');   // 'panel' | 'wizard' | 'reportes'
+  const [wizStep, setWizStep] = React.useState(1);
 
   if (!vetFeHasModule()) return <VetFeUpsell />;
 
-  const tabs = [
-    { k: 'tablero', label: 'Tablero', icon: VetIcons.ShieldCheck },
-    { k: 'reportes', label: 'Reportes', icon: VetIcons.BarChart3, perm: 'salesReport.read' },
-    { k: 'config', label: 'Configuración', icon: VetIcons.Settings },
-  ].filter((t) => !t.perm || vetFeCan(t.perm));
+  function openWizard(stepFromReq) { setWizStep(stepFromReq || 1); setView('wizard'); }
+
+  if (view === 'wizard') {
+    return (
+      <div className="vet-fe-page">
+        <VetFeWizard store={store} initialStep={wizStep} onExit={() => setView('panel')} />
+      </div>
+    );
+  }
 
   return (
     <div className="vet-fe-page">
@@ -178,16 +183,18 @@ function VetFacturacionView() {
       </header>
 
       <div className="vet-lab-tabs" role="tablist">
-        {tabs.map((t) => (
-          <button key={t.k} type="button" role="tab" className={'vet-lab-tab' + (tab === t.k ? ' active' : '')} onClick={() => setTab(t.k)}>
-            <t.icon size={15} strokeWidth={1.7} /> <span>{t.label}</span>
+        <button type="button" role="tab" className={'vet-lab-tab' + (view === 'panel' ? ' active' : '')} onClick={() => setView('panel')}>
+          <VetIcons.ShieldCheck size={15} strokeWidth={1.7} /> <span>Estado de habilitación</span>
+        </button>
+        {vetFeCan('salesReport.read') && (
+          <button type="button" role="tab" className={'vet-lab-tab' + (view === 'reportes' ? ' active' : '')} onClick={() => setView('reportes')}>
+            <VetIcons.BarChart3 size={15} strokeWidth={1.7} /> <span>Reportes</span>
           </button>
-        ))}
+        )}
       </div>
 
-      {tab === 'tablero' && <VetFeReadyBoard onGo={(sub) => { setTab('config'); window.__feConfigTab = sub; }} />}
-      {tab === 'reportes' && <VetFeReportes />}
-      {tab === 'config' && <VetFeConfigTabs />}
+      {view === 'panel' && <VetFeStatusPanel store={store} onOpenWizard={() => openWizard(1)} onEditStep={openWizard} />}
+      {view === 'reportes' && <VetFeReportes />}
     </div>
   );
 }

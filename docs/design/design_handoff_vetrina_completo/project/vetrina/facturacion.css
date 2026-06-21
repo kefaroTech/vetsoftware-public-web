@@ -202,3 +202,110 @@
 .vet-fe-upsell-item { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--warm-800); }
 .vet-fe-upsell-item svg { color: oklch(50% 0.14 150); flex-shrink: 0; }
 .vet-fe-upsell-cta { margin: 0 auto; }
+
+/* ===== Status panel extras ===== */
+.vet-fe-sandboxbanner { display: flex; align-items: center; gap: 9px; padding: 11px 14px; border-radius: 11px; font-size: 12.5px; background: oklch(94% 0.07 80); border: 1px solid oklch(88% 0.09 80); color: oklch(42% 0.12 70); }
+.vet-fe-alertrow { display: flex; align-items: center; gap: 9px; padding: 10px 14px; border-radius: 11px; font-size: 12.5px; background: oklch(96% 0.05 25); border: 1px solid oklch(89% 0.07 25); color: oklch(46% 0.16 25); }
+.vet-fe-alertcta { margin-left: auto; padding: 5px 11px; border-radius: 7px; border: 1px solid currentColor; background: transparent; color: inherit; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.vet-fe-checkrow.static { cursor: default; }
+.vet-fe-checkrow.static:hover { border-color: var(--warm-200); }
+.vet-fe-check-ic.att { background: oklch(94% 0.06 25); color: oklch(50% 0.16 25); }
+.vet-fe-reqbadge { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 1px 8px; border-radius: 999px; }
+.vet-fe-reqbadge.ok { background: oklch(92% 0.08 150); color: oklch(42% 0.13 150); }
+.vet-fe-reqbadge.pend { background: var(--warm-200); color: var(--warm-600); }
+.vet-fe-reqbadge.att { background: oklch(94% 0.06 25); color: oklch(50% 0.16 25); }
+.vet-fe-check-verified { color: var(--warm-400); }
+.vet-fe-readycard-sub { font-size: 13px; color: var(--warm-600); margin-top: 2px; }
+
+/* ===== Wizard ===== */
+.vet-fe-wizard { display: flex; flex-direction: column; gap: 18px; max-width: 880px; }
+.vet-fe-wiz-top { display: flex; align-items: center; gap: 12px; }
+.vet-fe-wiz-exit { display: inline-flex; align-items: center; gap: 6px; background: none; border: none; font-family: inherit; font-size: 13px; color: var(--warm-600); cursor: pointer; padding: 0; }
+.vet-fe-wiz-exit:hover { color: var(--amatista-700); }
+.vet-fe-wiz-title { font-family: var(--font-serif); font-size: 22px; color: var(--warm-900); }
+.vet-fe-wiz-envbadge { margin-left: auto; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 10px; border-radius: 999px; background: oklch(94% 0.07 80); color: oklch(45% 0.13 70); }
+.vet-fe-wiz-stepper { display: flex; align-items: center; }
+.vet-fe-wstep { display: flex; align-items: center; gap: 8px; background: none; border: none; font-family: inherit; cursor: pointer; padding: 0; }
+.vet-fe-wstep-dot { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 600; background: var(--warm-150); color: var(--warm-500); border: 1px solid var(--warm-200); flex-shrink: 0; }
+.vet-fe-wstep.done .vet-fe-wstep-dot { background: oklch(92% 0.08 150); color: oklch(42% 0.13 150); border-color: transparent; }
+.vet-fe-wstep.cur .vet-fe-wstep-dot { background: var(--amatista-600); color: white; border-color: transparent; }
+.vet-fe-wstep-lbl { font-size: 12.5px; color: var(--warm-500); white-space: nowrap; }
+.vet-fe-wstep.cur .vet-fe-wstep-lbl { color: var(--warm-900); font-weight: 600; }
+.vet-fe-wstep-bar { flex: 1; height: 2px; background: var(--warm-200); margin: 0 12px; min-width: 18px; }
+.vet-fe-wstep-bar.done { background: oklch(70% 0.10 150); }
+.vet-fe-wizfoot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.vet-fe-wizfoot-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.vet-fe-draftnote { font-size: 11.5px; color: var(--warm-400); }
+.vet-fe-help { font-size: 11.5px; color: var(--warm-500); line-height: 1.5; margin: 5px 0 0; }
+
+/* Ambiente selector */
+.vet-fe-envsel { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.vet-fe-envbtn { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 11px; cursor: pointer; font-family: inherit; text-align: left; background: var(--warm-50); border: 1.5px solid var(--warm-200); }
+.vet-fe-envbtn.on { background: var(--amatista-50); border-color: var(--amatista-400); }
+.vet-fe-envbtn.prod.on { background: oklch(96% 0.05 25); border-color: oklch(80% 0.12 25); }
+.vet-fe-envbtn-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--warm-300); flex-shrink: 0; }
+.vet-fe-envbtn.on .vet-fe-envbtn-dot { border-color: var(--amatista-600); background: var(--amatista-600); box-shadow: inset 0 0 0 3px var(--warm-50); }
+.vet-fe-envbtn-t { font-size: 13.5px; font-weight: 600; color: var(--warm-900); }
+.vet-fe-envbtn-s { font-size: 11.5px; color: var(--warm-500); margin-top: 1px; }
+.vet-fe-conntest { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+.vet-fe-conn-ok { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: oklch(45% 0.13 150); }
+
+/* DV box */
+.vet-fe-dv { text-align: center; padding-bottom: 2px; }
+.vet-fe-dv-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--warm-400); }
+.vet-fe-dv-val { width: 44px; height: 40px; border-radius: 8px; background: var(--warm-150); border: 1px solid var(--warm-200); display: grid; place-items: center; font-size: 17px; font-weight: 700; color: var(--amatista-700); font-variant-numeric: tabular-nums; margin-top: 3px; }
+
+/* Actividad económica autocomplete */
+.vet-fe-actpick { position: relative; }
+.vet-fe-actlist { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 4px); background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 10px; box-shadow: 0 12px 30px -10px rgba(20,15,30,.25); max-height: 200px; overflow-y: auto; }
+.vet-fe-actrow { display: block; width: 100%; text-align: left; padding: 9px 13px; background: none; border: none; font-family: inherit; font-size: 12.5px; color: var(--warm-700); cursor: pointer; }
+.vet-fe-actrow:hover { background: var(--warm-100); }
+.vet-fe-actrow.empty { color: var(--warm-400); cursor: default; }
+
+/* Responsabilidades */
+.vet-fe-resplist { display: flex; flex-direction: column; gap: 6px; }
+.vet-fe-respitem { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 12.5px; color: var(--warm-700); background: var(--warm-50); border: 1.5px solid var(--warm-200); text-align: left; }
+.vet-fe-respitem.on { background: var(--amatista-50); border-color: var(--amatista-400); color: var(--amatista-800); }
+.vet-fe-respbox { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--warm-300); display: grid; place-items: center; flex-shrink: 0; color: white; }
+.vet-fe-respitem.on .vet-fe-respbox { background: var(--amatista-600); border-color: var(--amatista-600); }
+
+/* Resoluciones (paso 3) */
+.vet-fe-resgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 720px) { .vet-fe-resgrid, .vet-fe-envsel { grid-template-columns: 1fr; } }
+.vet-fe-rescard { background: var(--warm-50); border: 1.5px solid var(--warm-200); border-radius: 13px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.vet-fe-rescard.set { border-color: oklch(88% 0.06 150); }
+.vet-fe-rescard-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.vet-fe-rescard-type { font-size: 14px; font-weight: 600; color: var(--warm-900); display: flex; align-items: center; gap: 7px; }
+.vet-fe-keyreq { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: oklch(45% 0.13 70); background: oklch(94% 0.07 80); padding: 1px 6px; border-radius: 4px; }
+.vet-fe-rescard-meta { font-size: 12px; color: var(--warm-600); }
+.vet-fe-rescard-empty { font-size: 12.5px; color: var(--warm-400); }
+.vet-fe-rescard-btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 5px; margin-top: 2px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--warm-200); background: var(--warm-50); color: var(--warm-700); font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.vet-fe-rescard-btn.add { background: var(--amatista-600); color: white; border-color: transparent; }
+
+/* Revisión */
+.vet-fe-reviewcard { display: flex; flex-direction: column; gap: 12px; }
+.vet-fe-review-head { display: flex; align-items: center; justify-content: space-between; }
+.vet-fe-review-title { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600; color: var(--warm-900); }
+.vet-fe-review-badge { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.vet-fe-review-badge.ok { background: oklch(92% 0.08 150); color: oklch(42% 0.13 150); }
+.vet-fe-review-badge.pend { background: oklch(94% 0.06 25); color: oklch(50% 0.16 25); }
+.vet-fe-review-rows { display: flex; flex-direction: column; gap: 6px; }
+.vet-fe-review-rows > div { display: flex; justify-content: space-between; gap: 14px; font-size: 12.5px; }
+.vet-fe-review-rows span { color: var(--warm-500); }
+.vet-fe-review-rows strong { color: var(--warm-800); font-weight: 500; text-align: right; }
+.vet-fe-testemit { display: flex; align-items: center; gap: 14px; }
+.vet-fe-activatebox { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-radius: 14px; background: var(--warm-50); border: 1.5px solid var(--warm-200); }
+.vet-fe-activatebox.on { background: oklch(94% 0.06 150); border-color: oklch(85% 0.08 150); }
+.vet-fe-activatebox.blocked { opacity: 0.92; }
+.vet-fe-activate-title { font-size: 15px; font-weight: 600; color: var(--warm-900); }
+.vet-fe-activate-sub { font-size: 12.5px; color: var(--warm-600); margin-top: 2px; }
+.vet-fe-blocklist { margin: 8px 0 0; padding-left: 18px; font-size: 12px; color: oklch(50% 0.16 25); }
+.vet-fe-switch { width: 50px; height: 28px; border-radius: 999px; border: none; background: var(--warm-300); cursor: pointer; position: relative; flex-shrink: 0; transition: background .15s; }
+.vet-fe-switch.on { background: oklch(58% 0.14 150); }
+.vet-fe-switch:disabled { opacity: 0.5; cursor: not-allowed; }
+.vet-fe-switch-knob { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: white; transition: transform .15s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.vet-fe-switch.on .vet-fe-switch-knob { transform: translateX(22px); }
+.vet-fe-successbox { display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-radius: 14px; background: linear-gradient(135deg, oklch(95% 0.05 150), oklch(96% 0.03 160)); border: 1px solid oklch(85% 0.08 150); }
+.vet-fe-success-ic { width: 46px; height: 46px; border-radius: 12px; background: oklch(90% 0.09 150); color: oklch(42% 0.14 150); display: grid; place-items: center; flex-shrink: 0; }
+.vet-fe-success-title { font-size: 15px; font-weight: 700; color: oklch(35% 0.12 150); }
+.vet-fe-success-sub { font-size: 12.5px; color: oklch(40% 0.08 150); margin-top: 2px; }
