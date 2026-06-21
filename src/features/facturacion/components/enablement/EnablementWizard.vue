@@ -2,7 +2,6 @@
 import { computed, ref } from 'vue'
 import { ArrowLeft, Check } from 'lucide-vue-next'
 import { useFacturacionEnablement } from '../../composables/useFacturacionEnablement'
-import ProviderStep from './ProviderStep.vue'
 import IdentityStep from './IdentityStep.vue'
 import ResolutionsStep from './ResolutionsStep.vue'
 import ReviewStep from './ReviewStep.vue'
@@ -10,26 +9,24 @@ import ReviewStep from './ReviewStep.vue'
 const props = withDefaults(defineProps<{ initialStep?: number }>(), { initialStep: 1 })
 const emit = defineEmits<{ exit: [] }>()
 
-const { providerOk, profileOk, invoiceResolutionOk } = useFacturacionEnablement()
+const { profileOk, invoiceResolutionOk } = useFacturacionEnablement()
 
 const STEPS = [
-  { n: 1, label: 'Proveedor' },
-  { n: 2, label: 'Identidad fiscal' },
-  { n: 3, label: 'Resoluciones' },
-  { n: 4, label: 'Revisión' },
+  { n: 1, label: 'Identidad fiscal' },
+  { n: 2, label: 'Resoluciones' },
+  { n: 3, label: 'Revisión' },
 ]
 
-const step = ref(Math.min(4, Math.max(1, props.initialStep)))
+const step = ref(Math.min(3, Math.max(1, props.initialStep)))
 
 const okByStep = computed<Record<number, boolean>>(() => ({
-  1: providerOk.value,
-  2: profileOk.value,
-  3: invoiceResolutionOk.value,
-  4: false,
+  1: profileOk.value,
+  2: invoiceResolutionOk.value,
+  3: false,
 }))
 
 function go(n: number) {
-  if (n >= 1 && n <= 4) step.value = n
+  if (n >= 1 && n <= 3) step.value = n
 }
 </script>
 
@@ -61,9 +58,8 @@ function go(n: number) {
     </div>
 
     <div class="wiz-body">
-      <ProviderStep v-if="step === 1" @back="emit('exit')" @next="go(2)" />
-      <IdentityStep v-else-if="step === 2" @back="go(1)" @next="go(3)" />
-      <ResolutionsStep v-else-if="step === 3" @back="go(2)" @next="go(4)" />
+      <IdentityStep v-if="step === 1" @back="emit('exit')" @next="go(2)" />
+      <ResolutionsStep v-else-if="step === 2" @back="go(1)" @next="go(3)" />
       <ReviewStep v-else @edit-step="go" @exit="emit('exit')" />
     </div>
   </div>

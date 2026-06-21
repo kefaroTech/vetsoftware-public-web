@@ -20,8 +20,7 @@ const LOW_RANGE_PCT = 0.1
  */
 export function useFacturacionEnablement() {
   const store = useFacturacionEnablementStore()
-  const { profile, provider, resolutions, withholding, loading, error, loaded } =
-    storeToRefs(store)
+  const { profile, resolutions, withholding, loading, error, loaded } = storeToRefs(store)
 
   const enabledResolutions = computed(() => resolutions.value.filter((r) => r.enabled))
 
@@ -33,15 +32,16 @@ export function useFacturacionEnablement() {
   })
 
   const profileOk = computed(() => !!profile.value)
-  const providerOk = computed(() => !!provider.value && !!provider.value.baseUrl)
   // La factura electrónica de venta (FE_VENTA) es el mínimo para poder facturar.
   const invoiceResolutionOk = computed(() => !!resolutionByType.value.FE_VENTA)
   const resolutionsOk = computed(() => enabledResolutions.value.length > 0)
 
-  /** "Lista para facturar": el back gatea por permisos; esto deriva la completitud de config. */
-  const ready = computed(
-    () => profileOk.value && providerOk.value && invoiceResolutionOk.value,
-  )
+  /**
+   * "Lista para facturar": el back gatea por permisos; esto deriva la completitud de la
+   * config visible para el cliente (perfil + resolución FE). El proveedor DIAN se gestiona
+   * aparte (panel admin) y no es prerrequisito en esta UI.
+   */
+  const ready = computed(() => profileOk.value && invoiceResolutionOk.value)
 
   const resolutionAlerts = computed<ResolutionAlert[]>(() => {
     const today = new Date()
@@ -63,7 +63,6 @@ export function useFacturacionEnablement() {
   return {
     // estado
     profile,
-    provider,
     resolutions,
     withholding,
     loading,
@@ -73,7 +72,6 @@ export function useFacturacionEnablement() {
     resolutionByType,
     // prerrequisitos derivados
     profileOk,
-    providerOk,
     invoiceResolutionOk,
     resolutionsOk,
     ready,
@@ -83,7 +81,6 @@ export function useFacturacionEnablement() {
     ensureLoaded: store.ensureLoaded,
     loadAll: store.loadAll,
     saveProfile: store.saveProfile,
-    saveProvider: store.saveProvider,
     upsertResolution: store.upsertResolution,
     saveWithholding: store.saveWithholding,
   }

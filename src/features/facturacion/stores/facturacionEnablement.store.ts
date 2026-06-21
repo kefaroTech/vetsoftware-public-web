@@ -1,28 +1,24 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { companyTaxProfileApi } from '../api/companyTaxProfile.api'
-import { dianProviderConfigApi } from '../api/dianProviderConfig.api'
 import { numberingResolutionApi } from '../api/numberingResolution.api'
 import { withholdingConfigApi } from '../api/withholdingConfig.api'
 import type {
   CompanyTaxProfileResponse,
-  DianProviderConfigResponse,
   NumberingResolutionResponse,
   SaveCompanyTaxProfileRequest,
-  SaveDianProviderConfigRequest,
   SaveNumberingResolutionRequest,
   SaveWithholdingConfigRequest,
   WithholdingConfigResponse,
 } from '../types/facturacion'
 
 /**
- * Estado de habilitación fiscal de la empresa (singletons + resoluciones).
- * Centraliza la carga de los 4 recursos de configuración para componer el
- * tablero "¿lista para facturar?" y el wizard de habilitación.
+ * Estado de habilitación fiscal de la empresa (perfil fiscal + resoluciones + retenciones).
+ * El proveedor DIAN NO se gestiona aquí: lo controla un panel administrativo aparte, fuera
+ * del alcance del cliente/clínica.
  */
 export const useFacturacionEnablementStore = defineStore('facturacionEnablement', () => {
   const profile = ref<CompanyTaxProfileResponse | null>(null)
-  const provider = ref<DianProviderConfigResponse | null>(null)
   const resolutions = ref<NumberingResolutionResponse[]>([])
   const withholding = ref<WithholdingConfigResponse | null>(null)
 
@@ -35,14 +31,12 @@ export const useFacturacionEnablementStore = defineStore('facturacionEnablement'
     loading.value = true
     error.value = null
     try {
-      const [p, pr, res, wh] = await Promise.all([
+      const [p, res, wh] = await Promise.all([
         companyTaxProfileApi.find(),
-        dianProviderConfigApi.find(),
         numberingResolutionApi.listAll(),
         withholdingConfigApi.find(),
       ])
       profile.value = p
-      provider.value = pr
       resolutions.value = res
       withholding.value = wh
       loaded.value = true
@@ -71,16 +65,6 @@ export const useFacturacionEnablementStore = defineStore('facturacionEnablement'
     return saved
   }
 
-  async function saveProvider(
-    payload: SaveDianProviderConfigRequest,
-  ): Promise<DianProviderConfigResponse> {
-    const saved = provider.value
-      ? await dianProviderConfigApi.update(payload)
-      : await dianProviderConfigApi.create(payload)
-    provider.value = saved
-    return saved
-  }
-
   async function upsertResolution(
     id: number | null,
     payload: SaveNumberingResolutionRequest,
@@ -105,7 +89,6 @@ export const useFacturacionEnablementStore = defineStore('facturacionEnablement'
 
   return {
     profile,
-    provider,
     resolutions,
     withholding,
     loading,
@@ -114,7 +97,6 @@ export const useFacturacionEnablementStore = defineStore('facturacionEnablement'
     loadAll,
     ensureLoaded,
     saveProfile,
-    saveProvider,
     upsertResolution,
     saveWithholding,
   }

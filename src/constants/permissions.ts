@@ -82,8 +82,10 @@ export const PERMISSIONS = {
   /** Permiso elevado: anular un cargo ya registrado (con motivo). */
   CHARGE_OPEN_ACCOUNT_VOID: 'chargeOpenAccount.delete',
 
-  // Facturación electrónica (DIAN) — módulo premium. El front muestra el módulo
-  // si el usuario tiene AL MENOS uno de estos permisos (no hay bandera en /me).
+  // Facturación electrónica (DIAN) — módulo premium. El front muestra/usa el módulo
+  // SOLO si el usuario tiene `electronicbilling.create` (submódulo BILLING de la membresía).
+  // Los permisos granulares de abajo se conservan para usos puntuales.
+  ELECTRONIC_BILLING_CREATE: 'electronicbilling.create',
   ELECTRONIC_DOCUMENT_READ: 'electronicDocument.read',
   ELECTRONIC_DOCUMENT_EMIT: 'electronicDocument.emit',
   ELECTRONIC_DOCUMENT_TRANSMIT: 'electronicDocument.transmit',

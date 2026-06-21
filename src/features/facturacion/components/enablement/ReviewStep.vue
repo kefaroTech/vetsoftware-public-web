@@ -11,7 +11,7 @@ import SectionHead from './SectionHead.vue'
 
 const emit = defineEmits<{ editStep: [step: number]; exit: [] }>()
 
-const { profile, provider, enabledResolutions, profileOk, providerOk, invoiceResolutionOk, ready } =
+const { profile, enabledResolutions, profileOk, invoiceResolutionOk, ready } =
   useFacturacionEnablement()
 
 interface ReviewRow {
@@ -35,27 +35,18 @@ const sections = computed(() => {
         { label: 'Responsabilidades', value: (p.responsibilities ?? []).join(', ') || '—' },
       ]
     : []
-  const providerRows: ReviewRow[] = provider.value
-    ? [
-        { label: 'Proveedor', value: provider.value.provider },
-        { label: 'URL base', value: provider.value.baseUrl },
-        { label: 'Client ID', value: provider.value.clientId ?? '—' },
-      ]
-    : []
   const resolutionRows: ReviewRow[] = enabledResolutions.value.map((r) => ({
     label: DOC_TYPE_LABEL[r.documentType],
     value: `${r.prefix ?? ''} ${r.rangeFrom.toLocaleString('es')}–${r.rangeTo.toLocaleString('es')}`.trim(),
   }))
   return [
-    { step: 1, ok: providerOk.value, title: 'Proveedor DIAN', rows: providerRows },
-    { step: 2, ok: profileOk.value, title: 'Identidad fiscal', rows: identityRows },
-    { step: 3, ok: invoiceResolutionOk.value, title: 'Resoluciones', rows: resolutionRows },
+    { step: 1, ok: profileOk.value, title: 'Identidad fiscal', rows: identityRows },
+    { step: 2, ok: invoiceResolutionOk.value, title: 'Resoluciones', rows: resolutionRows },
   ]
 })
 
 const missing = computed(() => {
   const m: string[] = []
-  if (!providerOk.value) m.push('Falta configurar el proveedor DIAN')
   if (!profileOk.value) m.push('Identidad fiscal incompleta')
   if (!invoiceResolutionOk.value) m.push('Falta la resolución de factura electrónica (FEV)')
   return m

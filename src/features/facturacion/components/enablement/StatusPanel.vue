@@ -3,7 +3,6 @@ import { computed } from 'vue'
 import {
   ShieldCheck,
   FileText,
-  Settings,
   User,
   Receipt,
   Check,
@@ -17,11 +16,9 @@ import { DOC_TYPE_LABEL } from '../../types/facturacion'
 const emit = defineEmits<{ openWizard: [step: number]; openRetenciones: [] }>()
 
 const {
-  provider,
   profile,
   withholding,
   enabledResolutions,
-  providerOk,
   profileOk,
   invoiceResolutionOk,
   ready,
@@ -31,16 +28,8 @@ const {
 
 const reqs = computed(() => [
   {
-    key: 'provider',
-    step: 1,
-    icon: Settings,
-    ok: providerOk.value,
-    title: 'Proveedor DIAN',
-    desc: providerOk.value ? provider.value?.baseUrl ?? 'Configurado' : 'Conexión con MATIAS',
-  },
-  {
     key: 'profile',
-    step: 2,
+    step: 1,
     icon: User,
     ok: profileOk.value,
     title: 'Identidad fiscal de la empresa',
@@ -48,7 +37,7 @@ const reqs = computed(() => [
   },
   {
     key: 'res',
-    step: 3,
+    step: 2,
     icon: FileText,
     ok: invoiceResolutionOk.value,
     attention: needsAttention.value,
@@ -105,7 +94,7 @@ function alertText(kind: string, prefix: string | null, type: string, validTo: s
           a.resolution.rangeTo - a.resolution.currentNumber,
         )
       }}</span>
-      <button type="button" class="alertcta" @click="emit('openWizard', 3)">Revisar</button>
+      <button type="button" class="alertcta" @click="emit('openWizard', 2)">Revisar</button>
     </div>
 
     <div class="checklist">

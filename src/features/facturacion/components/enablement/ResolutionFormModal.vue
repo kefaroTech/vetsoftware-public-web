@@ -107,20 +107,12 @@ const errors = computed(() => {
       : draft.validTo < draft.validFrom
         ? 'No puede ser anterior a "desde"'
         : null,
-    technicalKey: isInvoice.value && !draft.technicalKey.trim() ? 'Requerida para FEV' : null,
   }
 })
 
 const isValid = computed(() => Object.values(errors.value).every((e) => !e))
 
-type ErrorKey =
-  | 'resolutionNumber'
-  | 'prefix'
-  | 'rangeFrom'
-  | 'rangeTo'
-  | 'validFrom'
-  | 'validTo'
-  | 'technicalKey'
+type ErrorKey = 'resolutionNumber' | 'prefix' | 'rangeFrom' | 'rangeTo' | 'validFrom' | 'validTo'
 function err(field: ErrorKey): string | undefined {
   return submitted.value && errors.value[field] ? errors.value[field]! : undefined
 }
@@ -227,20 +219,19 @@ function submit() {
           </template>
         </BaseField>
         <div v-if="isInvoice" class="span-2">
-          <BaseField label="Clave técnica (DIAN)" required :error="err('technicalKey')">
+          <BaseField
+            label="Clave técnica (DIAN)"
+            hint="Solo para DIAN directa/producción. Con el proveedor MATIAS (sandbox) déjala vacía."
+          >
             <template #default="{ id }">
-              <BaseInput
-                :id="id"
-                v-model="draft.technicalKey"
-                :invalid="!!err('technicalKey')"
-              />
+              <BaseInput :id="id" v-model="draft.technicalKey" />
             </template>
           </BaseField>
         </div>
       </div>
       <p class="help">
-        La <strong>clave técnica</strong> es obligatoria solo para la factura electrónica (FEV);
-        la entrega la DIAN al habilitar el rango.
+        La <strong>clave técnica</strong> la entrega la DIAN para la factura electrónica directa.
+        Con el proveedor MATIAS no es necesaria: déjala vacía.
       </p>
     </template>
 
