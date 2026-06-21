@@ -1,22 +1,101 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
-import { CreditCard } from 'lucide-vue-next'
+import { computed, reactive, ref, watch } from 'vue'
+import { CreditCard, FileText, ShieldCheck, X } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import { formatMoney } from '../composables/pricing'
+import { useToast } from '@/composables/useToast'
+import { getProblemDetailMessage } from '@/services/http/http.client'
+import { useFeUvt } from '@/features/facturacion/composables/useFeUvt'
+import {
+  feFiscalChecklist,
+  type FiscalCustomer,
+} from '@/features/facturacion/composables/feFiscalChecklist'
+import FeThresholdBanner from '@/features/facturacion/components/FeThresholdBanner.vue'
+import FeFiscalCustomerCard from '@/features/facturacion/components/FeFiscalCustomerCard.vue'
+import FeCustomerFiscalModal from '@/features/facturacion/components/FeCustomerFiscalModal.vue'
+import {
+  ownerApi,
+  type OwnerResponse,
+  type UpdateOwnerRequest,
+} from '@/features/dashboard/views/consulta/nueva/api/owner.api'
 
-const props = defineProps<{ open: boolean; total: number }>()
-const emit = defineEmits<{ close: []; confirm: [method: string, received: number | null] }>()
+const props = defineProps<{ open: boolean; total: number; customer: OwnerResponse | null }>()
+const emit = defineEmits<{
+  close: []
+  confirm: [method: string, received: number | null]
+  selectCustomer: []
+  customerUpdated: [owner: OwnerResponse]
+}>()
 
 const form = reactive({ method: 'EFECTIVO', received: '' })
+const toast = useToast()
 
 const METHOD_OPTIONS = [
   { value: 'EFECTIVO', label: 'Efectivo' },
   { value: 'TARJETA', label: 'Tarjeta' },
   { value: 'TRANSFERENCIA', label: 'Transferencia' },
 ]
+
+// ── FE obligatoria por superar 5 UVT ──────────────────────────────────────────
+const { isOverThreshold } = useFeUvt()
+const overUvt = computed(() => isOverThreshold(props.total))
+const localOwner = ref<OwnerResponse | null>(null)
+const fiscalModalOpen = ref(false)
+
+const feCustomer = computed<FiscalCustomer | null>(() =>
+  localOwner.value ? toFiscalCustomer(localOwner.value) : null,
+)
+const feComplete = computed(
+  () => !overUvt.value || (!!feCustomer.value && feFiscalChecklist(feCustomer.value).complete),
+)
+
+function toFiscalCustomer(o: OwnerResponse): FiscalCustomer {
+  return {
+    name: o.name,
+    documentType: o.documentType ?? null,
+    documentId: o.document,
+    verificationDigit: o.verificationDigit ?? null,
+    personType: o.personType ?? null,
+    legalName: o.legalName ?? null,
+    email: o.email ?? null,
+    cityId: o.city?.id ?? null,
+    cityName: o.city?.name ?? null,
+    taxRegime: o.taxRegime ?? null,
+    withholdingAgent: o.withholdingAgent ?? false,
+  }
+}
+
+async function onSaveFiscal(data: Partial<FiscalCustomer>) {
+  const o = localOwner.value
+  if (!o) return
+  const payload: UpdateOwnerRequest = {
+    name: o.name,
+    email: data.email ?? o.email,
+    document: data.documentId ?? o.document,
+    address: o.address,
+    phone: o.phone,
+    cityId: o.city.id,
+    companyId: o.company.id,
+    documentType: data.documentType ?? o.documentType ?? undefined,
+    personType: data.personType ?? o.personType ?? undefined,
+    verificationDigit: data.verificationDigit ?? null,
+    legalName: data.legalName ?? null,
+    withholdingAgent: data.withholdingAgent ?? false,
+    taxRegime: data.taxRegime ?? null,
+  }
+  try {
+    const updated = await ownerApi.update(o.id, payload)
+    localOwner.value = updated
+    emit('customerUpdated', updated)
+    fiscalModalOpen.value = false
+    toast.success('Datos fiscales guardados', 'El cliente quedó listo para facturar.')
+  } catch (e) {
+    toast.error('No se pudieron guardar', getProblemDetailMessage(e))
+  }
+}
 
 // Al abrir (Efectivo por defecto) el campo arranca con el total a pagar: el caso común es pago exacto.
 watch(
@@ -25,10 +104,17 @@ watch(
     if (open) {
       form.method = 'EFECTIVO'
       form.received = String(Math.round(props.total))
+      localOwner.value = props.customer
+      fiscalModalOpen.value = false
     }
   },
 )
-
+watch(
+  () => props.customer,
+  (c) => {
+    localOwner.value = c
+  },
+)
 // Al volver a Efectivo, re-precarga el total a pagar.
 watch(
   () => form.method,
@@ -38,10 +124,8 @@ watch(
 )
 
 const isCash = computed(() => form.method === 'EFECTIVO')
-// Total a pagar en pesos enteros (COP no maneja centavos en el POS).
 const due = computed(() => Math.round(props.total))
 const receivedNum = computed(() => Number(form.received.replace(/\D/g, '')) || 0)
-// El input se muestra como dinero ($26.400); internamente guardamos solo los dígitos.
 const receivedDisplay = computed({
   get: () => (form.received === '' ? '' : formatMoney(receivedNum.value)),
   set: (v: string) => {
@@ -49,7 +133,9 @@ const receivedDisplay = computed({
   },
 })
 const change = computed(() => Math.max(0, receivedNum.value - due.value))
-const canConfirm = computed(() => !isCash.value || receivedNum.value >= due.value)
+const cashOk = computed(() => !isCash.value || receivedNum.value >= due.value)
+const canConfirm = computed(() => cashOk.value && feComplete.value)
+const confirmLabel = computed(() => (overUvt.value ? 'Emitir factura electrónica' : 'Confirmar cobro'))
 
 function confirm() {
   if (!canConfirm.value) return
@@ -58,9 +144,33 @@ function confirm() {
 </script>
 
 <template>
-  <ModalShell :open="open" title="Cobrar" :subtitle="`Total: ${formatMoney(total)}`" :icon="CreditCard" :width="440" @close="emit('close')">
+  <ModalShell
+    :open="open"
+    :title="overUvt ? 'Cobrar y facturar' : 'Cobrar'"
+    :subtitle="`Total: ${formatMoney(total)}`"
+    :icon="CreditCard"
+    :width="overUvt ? 560 : 440"
+    @close="emit('close')"
+  >
     <template #body>
       <div class="form">
+        <template v-if="overUvt">
+          <FeThresholdBanner :total="total" />
+          <div class="doctypesel">
+            <div class="doctype on"><FileText :size="15" :stroke-width="1.8" /> Factura electrónica</div>
+            <div class="doctype off" title="No disponible por encima de 5 UVT">
+              <ShieldCheck :size="14" :stroke-width="1.8" style="opacity: 0.5" /> Documento POS
+              <span class="lock"><X :size="11" :stroke-width="2.4" /></span>
+            </div>
+          </div>
+          <FeFiscalCustomerCard
+            :customer="feCustomer"
+            selectable
+            @select="emit('selectCustomer')"
+            @complete="fiscalModalOpen = true"
+          />
+        </template>
+
         <BaseField label="Método de pago" required>
           <template #default="{ id }">
             <BaseSelect :id="id" v-model="form.method" :options="METHOD_OPTIONS" />
@@ -79,15 +189,29 @@ function confirm() {
     </template>
     <template #footer-actions>
       <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn-primary" :disabled="!canConfirm" @click="confirm">Confirmar cobro</button>
+      <button type="button" class="btn-primary" :disabled="!canConfirm" @click="confirm">
+        {{ confirmLabel }}
+      </button>
     </template>
   </ModalShell>
+
+  <FeCustomerFiscalModal
+    :open="fiscalModalOpen"
+    :customer="feCustomer"
+    @save="onSaveFiscal"
+    @close="fiscalModalOpen = false"
+  />
 </template>
 
 <style scoped>
 .form { display: flex; flex-direction: column; gap: 16px; }
 .change { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--amatista-50); border-radius: 10px; font-size: 14px; color: var(--warm-800); }
 .change strong { font-size: 17px; color: var(--amatista-700); }
+.doctypesel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.doctype { display: flex; align-items: center; gap: 7px; padding: 11px 13px; border-radius: 10px; font-size: 13px; font-weight: 600; position: relative; }
+.doctype.on { background: var(--amatista-50); border: 1.5px solid var(--amatista-400); color: var(--amatista-700); }
+.doctype.off { background: var(--warm-100); border: 1.5px solid var(--warm-200); color: var(--warm-400); cursor: not-allowed; }
+.lock { margin-left: auto; width: 18px; height: 18px; border-radius: 50%; background: var(--warm-200); color: var(--warm-500); display: grid; place-items: center; }
 .btn-primary {
   font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
   border: none; color: white;

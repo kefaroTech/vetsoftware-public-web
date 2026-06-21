@@ -1,4 +1,6 @@
 import { http } from '@/services/http/http.client'
+import type { PersonType, TaxRegime } from '@/features/facturacion/types/facturacion'
+import type { OwnerDocumentType } from '@/features/facturacion/composables/feFiscalChecklist'
 
 export interface CitySummary {
   id: number
@@ -21,6 +23,15 @@ export interface OwnerResponse {
   city: CitySummary
   company: CompanySummary
   createdDate: string
+  // ── Datos fiscales (espejo del Owner del backend; usados por FE > 5 UVT) ──
+  documentType?: OwnerDocumentType | null
+  personType?: PersonType | null
+  verificationDigit?: string | null
+  legalName?: string | null
+  withholdingAgent?: boolean
+  taxRegime?: TaxRegime | null
+  /** Código de responsabilidad RUT (p. ej. "R-99-PN"); opcional, backend default. */
+  fiscalResponsibility?: string | null
 }
 
 export interface CreateOwnerRequest {
@@ -31,6 +42,15 @@ export interface CreateOwnerRequest {
   phone: string
   cityId: number
   companyId: number
+  // Campos fiscales (opcionales en el tipo del front; el backend exige
+  // documentType/personType al crear — la captura fiscal vive en FE > 5 UVT y en OwnerForm).
+  documentType?: OwnerDocumentType
+  personType?: PersonType
+  verificationDigit?: string | null
+  legalName?: string | null
+  withholdingAgent?: boolean
+  taxRegime?: TaxRegime | null
+  fiscalResponsibility?: string | null
 }
 
 export interface UpdateOwnerRequest extends CreateOwnerRequest {}

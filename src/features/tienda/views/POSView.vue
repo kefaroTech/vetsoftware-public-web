@@ -17,6 +17,7 @@ import PageHeader from '@/components/ui/PageHeader.vue'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import OwnerPicker from '@/features/cuentas/components/OwnerPicker.vue'
 import PayModal from '../components/PayModal.vue'
+import { useFeUvt } from '@/features/facturacion/composables/useFeUvt'
 import ReceiptModal from '../components/ReceiptModal.vue'
 import { useTienda } from '../composables/useTienda'
 import { appliesIva, applyPromo, formatMoney, splitGross, stockState } from '../composables/pricing'
@@ -54,6 +55,7 @@ const lines = ref<SaleLine[]>([])
 
 const customer = ref<OwnerResponse | null>(null)
 const custOpen = ref(false)
+const { isOverThreshold } = useFeUvt()
 const payOpen = ref(false)
 const paying = ref(false)
 const receiptOpen = ref(false)
@@ -252,9 +254,11 @@ async function onConfirmPay(method: string, received: number | null) {
 
   paying.value = true
   try {
+    // > 5 UVT: la DIAN obliga a Factura electrónica (no POS) con cliente identificado.
+    const electronic = isOverThreshold(totalNow)
     const document = await posSaleApi.register({
-      documentType: 'DOC_EQUIV_POS',
-      finalConsumer: !customer.value,
+      documentType: electronic ? 'FE_VENTA' : 'DOC_EQUIV_POS',
+      finalConsumer: electronic ? false : !customer.value,
       customerOwnerId: customer.value?.id ?? null,
       lines: saleLines,
       payments: [{ means: MEANS_BY_METHOD[method] ?? 'EFECTIVO', amount: totalNow }],
@@ -459,7 +463,15 @@ function toggleCustomer() {
       </template>
     </ModalShell>
 
-    <PayModal :open="payOpen" :total="total" @close="payOpen = false" @confirm="onConfirmPay" />
+    <PayModal
+      :open="payOpen"
+      :total="total"
+      :customer="customer"
+      @close="payOpen = false"
+      @confirm="onConfirmPay"
+      @select-customer="custOpen = true"
+      @customer-updated="(o) => (customer = o)"
+    />
     <ReceiptModal
       v-if="receipt"
       :open="receiptOpen"

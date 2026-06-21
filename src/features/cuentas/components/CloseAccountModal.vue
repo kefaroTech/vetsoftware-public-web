@@ -1,10 +1,23 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { Check, Printer, Receipt, X } from 'lucide-vue-next'
+import { Check, Printer, Receipt, X, FileText, ShieldCheck } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
+import { useFeUvt } from '@/features/facturacion/composables/useFeUvt'
+import {
+  feFiscalChecklist,
+  type FiscalCustomer,
+} from '@/features/facturacion/composables/feFiscalChecklist'
+import FeThresholdBanner from '@/features/facturacion/components/FeThresholdBanner.vue'
+import FeFiscalCustomerCard from '@/features/facturacion/components/FeFiscalCustomerCard.vue'
+import FeCustomerFiscalModal from '@/features/facturacion/components/FeCustomerFiscalModal.vue'
+import {
+  ownerApi,
+  type OwnerResponse,
+  type UpdateOwnerRequest,
+} from '@/features/dashboard/views/consulta/nueva/api/owner.api'
 import { useCuentas } from '../composables/useCuentas'
 import { formatMoney } from '@/features/tienda/composables/pricing'
 import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
@@ -45,6 +58,83 @@ const busy = ref(false)
 const docType = ref<FeDocType>('DOC_EQUIV_POS')
 const finalConsumer = ref(false)
 
+// ── FE obligatoria por superar 5 UVT ──────────────────────────────────────────
+// El umbral se evalúa sobre el TOTAL de la cuenta (valor del documento), no el saldo.
+const { isOverThreshold } = useFeUvt()
+const overUvt = computed(
+  () => canEmit.value && isOverThreshold(props.account?.totalAmount ?? 0),
+)
+const ownerFull = ref<OwnerResponse | null>(null)
+const feCustomer = ref<FiscalCustomer | null>(null)
+const fiscalModalOpen = ref(false)
+const loadingOwner = ref(false)
+const feComplete = computed(() =>
+  overUvt.value && motivo.value === 'COBRADA'
+    ? feFiscalChecklist(feCustomer.value).complete
+    : true,
+)
+
+function toFiscalCustomer(o: OwnerResponse): FiscalCustomer {
+  return {
+    name: o.name,
+    documentType: o.documentType ?? null,
+    documentId: o.document,
+    verificationDigit: o.verificationDigit ?? null,
+    personType: o.personType ?? null,
+    legalName: o.legalName ?? null,
+    email: o.email ?? null,
+    cityId: o.city?.id ?? null,
+    cityName: o.city?.name ?? null,
+    taxRegime: o.taxRegime ?? null,
+    withholdingAgent: o.withholdingAgent ?? false,
+  }
+}
+
+async function loadOwnerFiscal() {
+  const ownerId = props.account?.owner.id
+  if (!ownerId) return
+  loadingOwner.value = true
+  try {
+    const o = await ownerApi.findById(ownerId)
+    ownerFull.value = o
+    feCustomer.value = toFiscalCustomer(o)
+  } catch {
+    // Si falla, el checklist queda incompleto y el botón bloqueado (reintentable).
+    feCustomer.value = null
+  } finally {
+    loadingOwner.value = false
+  }
+}
+
+async function onSaveFiscal(data: Partial<FiscalCustomer>) {
+  const o = ownerFull.value
+  if (!o) return
+  const payload: UpdateOwnerRequest = {
+    name: o.name,
+    email: data.email ?? o.email,
+    document: data.documentId ?? o.document,
+    address: o.address,
+    phone: o.phone,
+    cityId: o.city.id,
+    companyId: o.company.id,
+    documentType: data.documentType ?? o.documentType ?? undefined,
+    personType: data.personType ?? o.personType ?? undefined,
+    verificationDigit: data.verificationDigit ?? null,
+    legalName: data.legalName ?? null,
+    withholdingAgent: data.withholdingAgent ?? false,
+    taxRegime: data.taxRegime ?? null,
+  }
+  try {
+    const updated = await ownerApi.update(o.id, payload)
+    ownerFull.value = updated
+    feCustomer.value = toFiscalCustomer(updated)
+    fiscalModalOpen.value = false
+    toast.success('Datos fiscales guardados', 'El cliente quedó listo para facturar.')
+  } catch (e) {
+    toast.error('No se pudieron guardar', getProblemDetailMessage(e))
+  }
+}
+
 const DOC_TYPE_OPTIONS: { value: FeDocType; label: string }[] = [
   { value: 'DOC_EQUIV_POS', label: 'Documento POS' },
   { value: 'FE_VENTA', label: 'Factura electrónica' },
@@ -79,12 +169,19 @@ const note = computed(() => {
 })
 
 const primaryLabel = computed(() =>
-  motivo.value === 'COBRADA' ? 'Cobrar y cerrar' : 'Cancelar cuenta',
+  motivo.value === 'CANCELADA'
+    ? 'Cancelar cuenta'
+    : overUvt.value
+      ? 'Emitir factura electrónica'
+      : 'Cobrar y cerrar',
 )
 
-// El motivo es obligatorio al cancelar (lo exige también el backend).
+// El motivo es obligatorio al cancelar; si supera 5 UVT, el cliente debe tener datos fiscales completos.
 const canConfirm = computed(
-  () => !busy.value && !(motivo.value === 'CANCELADA' && reason.value.trim() === ''),
+  () =>
+    !busy.value &&
+    !(motivo.value === 'CANCELADA' && reason.value.trim() === '') &&
+    feComplete.value,
 )
 
 // El abono ya se registró pero el cierre falló: el reintento solo cambia el estado.
@@ -149,6 +246,10 @@ watch(
     paymentRequestId.value = crypto.randomUUID()
     docType.value = 'DOC_EQUIV_POS'
     finalConsumer.value = false
+    ownerFull.value = null
+    feCustomer.value = null
+    fiscalModalOpen.value = false
+    if (canEmit.value && isOverThreshold(props.account?.totalAmount ?? 0)) void loadOwnerFiscal()
   },
 )
 
@@ -171,8 +272,8 @@ async function confirm() {
       accountId,
       motivo.value === 'CANCELADA' ? 'CANCEL' : 'CLOSE',
       motivo.value === 'CANCELADA' ? reason.value.trim() : undefined,
-      emitting ? docType.value : undefined,
-      emitting ? finalConsumer.value : undefined,
+      emitting ? (overUvt.value ? 'FE_VENTA' : docType.value) : undefined,
+      emitting ? (overUvt.value ? false : finalConsumer.value) : undefined,
       // Si se acaba de registrar el abono del saldo (sin refrescar), la versión cacheada quedó vieja:
       // omitir el chequeo temprano para no provocar un 409 falso (el optimistic lock al flush protege).
       !paymentDone.value,
@@ -274,24 +375,42 @@ function onShellClose() {
         </BaseField>
 
         <!-- Facturación electrónica: solo si el usuario puede emitir (módulo premium). -->
-        <div v-if="motivo === 'COBRADA' && canEmit" class="fe-block">
-          <div class="field-lab">Facturación electrónica</div>
-          <BaseField label="Tipo de documento" required>
-            <template #default="{ id }">
-              <BaseSelect :id="id" v-model="docType" :options="DOC_TYPE_OPTIONS" />
-            </template>
-          </BaseField>
-          <button
-            type="button"
-            class="fc-toggle"
-            :class="{ on: finalConsumer }"
-            @click="finalConsumer = !finalConsumer"
-          >
-            <span class="fc-box"><Check v-if="finalConsumer" :size="12" :stroke-width="2.6" /></span>
-            Consumidor final
-          </button>
-          <p class="fe-hint">Se emite a la DIAN al cerrar la venta. La validación es asíncrona.</p>
-        </div>
+        <template v-if="motivo === 'COBRADA' && canEmit">
+          <!-- FE OBLIGATORIA por superar 5 UVT -->
+          <div v-if="overUvt" class="fe-block uvt">
+            <FeThresholdBanner :total="account?.totalAmount ?? 0" />
+            <div class="doctypesel">
+              <div class="doctype on">
+                <FileText :size="15" :stroke-width="1.8" /> Factura electrónica
+              </div>
+              <div class="doctype off" title="No disponible por encima de 5 UVT">
+                <ShieldCheck :size="14" :stroke-width="1.8" style="opacity: 0.5" /> Documento POS
+                <span class="lock"><X :size="11" :stroke-width="2.4" /></span>
+              </div>
+            </div>
+            <div v-if="loadingOwner" class="fe-loading">Cargando datos del cliente…</div>
+            <FeFiscalCustomerCard v-else :customer="feCustomer" @complete="fiscalModalOpen = true" />
+          </div>
+          <!-- Caso normal (≤ 5 UVT): tipo de documento + consumidor final -->
+          <div v-else class="fe-block">
+            <div class="field-lab">Facturación electrónica</div>
+            <BaseField label="Tipo de documento" required>
+              <template #default="{ id }">
+                <BaseSelect :id="id" v-model="docType" :options="DOC_TYPE_OPTIONS" />
+              </template>
+            </BaseField>
+            <button
+              type="button"
+              class="fc-toggle"
+              :class="{ on: finalConsumer }"
+              @click="finalConsumer = !finalConsumer"
+            >
+              <span class="fc-box"><Check v-if="finalConsumer" :size="12" :stroke-width="2.6" /></span>
+              Consumidor final
+            </button>
+            <p class="fe-hint">Se emite a la DIAN al cerrar la venta. La validación es asíncrona.</p>
+          </div>
+        </template>
 
         <BaseField v-if="motivo === 'CANCELADA'" label="Motivo de la cancelación" required>
           <template #default="{ id }">
@@ -358,6 +477,13 @@ function onShellClose() {
       </button>
     </template>
   </ModalShell>
+
+  <FeCustomerFiscalModal
+    :open="fiscalModalOpen"
+    :customer="feCustomer"
+    @save="onSaveFiscal"
+    @close="fiscalModalOpen = false"
+  />
 </template>
 
 <style scoped>
@@ -398,6 +524,13 @@ function onShellClose() {
 .fc-box { width: 18px; height: 18px; border-radius: 5px; display: grid; place-items: center; border: 1px solid var(--warm-300); background: white; color: white; }
 .fc-toggle.on .fc-box { background: var(--amatista-600); border-color: var(--amatista-600); }
 .fe-hint { margin: 0; font-size: 11.5px; color: var(--warm-500); }
+.fe-block.uvt { background: transparent; border: none; padding: 0; gap: 12px; }
+.doctypesel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.doctype { display: flex; align-items: center; gap: 7px; padding: 11px 13px; border-radius: 10px; font-size: 13px; font-weight: 600; position: relative; }
+.doctype.on { background: var(--amatista-50); border: 1.5px solid var(--amatista-400); color: var(--amatista-700); }
+.doctype.off { background: var(--warm-100); border: 1.5px solid var(--warm-200); color: var(--warm-400); cursor: not-allowed; }
+.lock { margin-left: auto; width: 18px; height: 18px; border-radius: 50%; background: var(--warm-200); color: var(--warm-500); display: grid; place-items: center; }
+.fe-loading { font-size: 12.5px; color: var(--warm-500); padding: 12px 14px; border-radius: 11px; background: var(--warm-50); border: 1px solid var(--warm-200); }
 .retry-hint {
   margin: 0; padding: 11px 14px; border-radius: 10px; font-size: 12.5px; line-height: 1.4;
   background: oklch(95% 0.06 80); border: 1px solid oklch(88% 0.09 80); color: oklch(40% 0.10 70);
