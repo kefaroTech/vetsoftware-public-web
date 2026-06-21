@@ -23,7 +23,6 @@ import {
   BadgePercent,
   ShoppingBag,
   Wallet,
-  Settings,
 } from 'lucide-vue-next'
 import SidebarBrand from './SidebarBrand.vue'
 import SidebarNavItem from './SidebarNavItem.vue'
@@ -298,6 +297,13 @@ function onNotifications() {
         @click="router.push({ name: 'cuentas' })"
       />
       <SidebarNavItem
+        v-if="feCanConfig"
+        label="Facturación electrónica"
+        :icon="ShieldCheck"
+        :active="route.name === 'facturacion-habilitacion'"
+        @click="router.push({ name: 'facturacion-habilitacion' })"
+      />
+      <SidebarNavItem
         v-if="feCanDocuments"
         label="Documentos"
         :icon="FileText"
@@ -310,13 +316,6 @@ function onNotifications() {
         :icon="BarChart3"
         :active="route.name === 'facturacion-reportes'"
         @click="router.push({ name: 'facturacion-reportes' })"
-      />
-      <SidebarNavItem
-        v-if="feCanConfig"
-        label="Configuración DIAN"
-        :icon="Settings"
-        :active="route.name === 'facturacion-configuracion'"
-        @click="router.push({ name: 'facturacion-configuracion' })"
       />
     </template>
 

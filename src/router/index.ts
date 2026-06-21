@@ -198,9 +198,9 @@ const router = createRouter({
           meta: { permission: PERMISSIONS.SALES_REPORT_READ },
         },
         {
-          path: 'facturacion/configuracion',
-          name: 'facturacion-configuracion',
-          component: () => import('@/features/facturacion/views/ConfiguracionView.vue'),
+          path: 'facturacion/habilitacion',
+          name: 'facturacion-habilitacion',
+          component: () => import('@/features/facturacion/views/HabilitacionView.vue'),
           meta: {
             permissionsAny: [
               PERMISSIONS.DIAN_PROVIDER_CONFIG_MANAGE,

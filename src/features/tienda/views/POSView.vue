@@ -88,7 +88,7 @@ async function checkTaxProfile() {
 }
 
 function goToTaxProfile() {
-  router.push({ name: 'facturacion-configuracion' })
+  router.push({ name: 'facturacion-habilitacion' })
 }
 
 // Al cambiar de modo, limpia búsqueda y categoría.
