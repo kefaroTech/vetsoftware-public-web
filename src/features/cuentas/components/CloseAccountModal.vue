@@ -173,6 +173,9 @@ async function confirm() {
       motivo.value === 'CANCELADA' ? reason.value.trim() : undefined,
       emitting ? docType.value : undefined,
       emitting ? finalConsumer.value : undefined,
+      // Si se acaba de registrar el abono del saldo (sin refrescar), la versión cacheada quedó vieja:
+      // omitir el chequeo temprano para no provocar un 409 falso (el optimistic lock al flush protege).
+      !paymentDone.value,
     )
     result.value = {
       account: updated,

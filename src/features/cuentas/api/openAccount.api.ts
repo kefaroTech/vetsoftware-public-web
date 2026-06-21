@@ -40,12 +40,15 @@ export const openAccountApi = {
     // Solo relevantes al CERRAR (CLOSE): disparan la auto-emisión del documento DIAN.
     documentType?: 'FE_VENTA' | 'DOC_EQUIV_POS',
     finalConsumer?: boolean,
+    // Versión esperada de la cuenta (opt-in): detección temprana de conflicto de concurrencia (409).
+    expectedVersion?: number,
   ): Promise<OpenAccountResponse> {
     const { data } = await http.patch<OpenAccountResponse>(`/open-accounts/${id}/status`, {
       status,
       reason,
       documentType,
       finalConsumer,
+      expectedVersion,
     })
     return data
   },

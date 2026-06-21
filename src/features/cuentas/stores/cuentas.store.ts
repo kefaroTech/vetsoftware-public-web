@@ -272,6 +272,10 @@ export const useCuentasStore = defineStore('cuentas', () => {
     // Al CERRAR (CLOSE) dispara la auto-emisión del documento DIAN (best-effort en el backend).
     documentType?: 'FE_VENTA' | 'DOC_EQUIV_POS',
     finalConsumer?: boolean,
+    // Detección temprana de conflicto (opt-in): envía la versión cacheada como expectedVersion. Debe ser
+    // `false` cuando justo antes se registró un abono SIN refrescar (cierre cobrado): esa versión cacheada
+    // quedó vieja y dispararía un 409 falso; ahí el optimistic lock del backend al flush sigue protegiendo.
+    checkConflict = true,
   ): Promise<OpenAccountResponse> {
     const updated = await openAccountApi.changeStatus(
       accountId,
@@ -279,6 +283,7 @@ export const useCuentasStore = defineStore('cuentas', () => {
       reason,
       documentType,
       finalConsumer,
+      checkConflict ? accountVersion(accountId) : undefined,
     )
     upsertAccount(updated)
     return updated
