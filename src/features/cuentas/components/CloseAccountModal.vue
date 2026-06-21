@@ -217,6 +217,14 @@ function finish() {
   if (result.value) emit('closed', result.value.account)
   emit('close')
 }
+
+// Cerrar con la X / Escape debe comportarse según el paso, igual que un botón:
+// - paso 'recibo' (la cuenta YA se cerró) → propagar 'closed' para que la lista se refresque (como "Listo").
+// - paso 'cobro' (aún no se cerró) → solo cerrar el modal.
+function onShellClose() {
+  if (result.value) finish()
+  else emit('close')
+}
 </script>
 
 <template>
@@ -226,7 +234,7 @@ function finish() {
     :subtitle="`${ownerName} · saldo ${formatMoney(outstanding)}`"
     :icon="Receipt"
     :width="520"
-    @close="emit('close')"
+    @close="onShellClose"
   >
     <!-- PASO COBRO -->
     <template v-if="step === 'cobro'" #body>
