@@ -74,6 +74,12 @@ export interface OpenAccountResponse {
   closedBy?: EmployeeSummary | null
   closedAt?: string | null
   closeReason?: string | null
+  /**
+   * Versión optimista (@Version del backend). Se reenvía como `expectedVersion` en las mutaciones
+   * de la cuenta para detección temprana de conflicto: si otra operación la modificó desde que el
+   * front la leyó, el backend responde 409 CONCURRENT_MODIFICATION sin tocar datos.
+   */
+  version: number
 }
 
 export interface OpenAccountSearchCriteria {
@@ -143,12 +149,20 @@ export interface CreateProductChargePayload {
   animalId: number
   productId: number
   openAccountId: number
+  /** Idempotency key (UUID) opcional: deduplica reintentos del mismo cargo en el backend. */
+  clientRequestId?: string
+  /** Versión esperada de la cuenta (opt-in): detección temprana de conflicto de concurrencia. */
+  expectedVersion?: number
 }
 
 export interface CreateServiceChargePayload {
   animalId: number
   serviceId: number
   openAccountId: number
+  /** Idempotency key (UUID) opcional: deduplica reintentos del mismo cargo en el backend. */
+  clientRequestId?: string
+  /** Versión esperada de la cuenta (opt-in): detección temprana de conflicto de concurrencia. */
+  expectedVersion?: number
 }
 
 export interface CreateGeneralChargePayload {
@@ -158,6 +172,10 @@ export interface CreateGeneralChargePayload {
   taxId?: number | null
   hasTax: boolean
   openAccountId: number
+  /** Idempotency key (UUID) opcional: deduplica reintentos del mismo cargo en el backend. */
+  clientRequestId?: string
+  /** Versión esperada de la cuenta (opt-in): detección temprana de conflicto de concurrencia. */
+  expectedVersion?: number
 }
 
 // ── Pagos / abonos (DebtOpenAccount) ─────────────────────────────────────────
@@ -192,6 +210,8 @@ export interface CreateDebtPayload {
   openAccountId: number
   /** Idempotency key (UUID) opcional para deduplicar reintentos del mismo cobro. */
   clientRequestId?: string
+  /** Versión esperada de la cuenta (opt-in): detección temprana de conflicto de concurrencia. */
+  expectedVersion?: number
 }
 
 // ── Vista unificada de un cargo (para agrupar por mascota en la UI) ──────────

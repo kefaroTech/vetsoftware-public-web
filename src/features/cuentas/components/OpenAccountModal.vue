@@ -56,8 +56,8 @@ const cart = ref<CartLine[]>([])
 // La cuenta se crea una sola vez y cada cargo (un POST por unidad) se marca al
 // persistirse; tras un fallo parcial, reintentar continúa sin duplicar nada.
 type ChargeOp =
-  | { type: 'product' | 'service'; animalId: number; refId: number; done: boolean }
-  | { type: 'general'; payload: Omit<CreateGeneralChargePayload, 'openAccountId'>; done: boolean }
+  | { type: 'product' | 'service'; animalId: number; refId: number; reqId: string; done: boolean }
+  | { type: 'general'; payload: Omit<CreateGeneralChargePayload, 'openAccountId'>; reqId: string; done: boolean }
 const createdAccount = ref<OpenAccountResponse | null>(null)
 const pendingOps = ref<ChargeOp[]>([])
 
@@ -212,11 +212,13 @@ function buildOps(): ChargeOp[] {
           taxId: l.taxId ? Number(l.taxId) : null,
           hasTax: !!l.hasTax,
         },
+        // Idempotency key estable por op: un reintento tras fallo parcial reusa la clave → el backend no duplica.
+        reqId: crypto.randomUUID(),
         done: false,
       })
     } else if (l.refId != null && l.animalId != null) {
       for (let i = 0; i < l.qty; i++) {
-        ops.push({ type: l.kind, animalId: l.animalId, refId: l.refId, done: false })
+        ops.push({ type: l.kind, animalId: l.animalId, refId: l.refId, reqId: crypto.randomUUID(), done: false })
       }
     }
   }
@@ -238,9 +240,9 @@ async function confirm() {
     for (const op of pendingOps.value) {
       if (op.done) continue
       if (op.type === 'general') {
-        await store.addGeneralChargeNoRefresh({ ...op.payload, openAccountId: accountId })
+        await store.addGeneralChargeNoRefresh({ ...op.payload, openAccountId: accountId, clientRequestId: op.reqId })
       } else {
-        await store.addChargeUnit(accountId, op.animalId, op.type, op.refId)
+        await store.addChargeUnit(accountId, op.animalId, op.type, op.refId, op.reqId)
       }
       op.done = true
     }

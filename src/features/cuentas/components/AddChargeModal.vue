@@ -69,8 +69,10 @@ async function addCatalogItem(itemId: number) {
   busy.value = true
   try {
     const animalId = selectedPet.value as number
-    if (tab.value === 'service') await cuentas.addServiceCharge(props.accountId, animalId, itemId)
-    else await cuentas.addProductCharge(props.accountId, animalId, itemId)
+    // Idempotency key por click: si el POST se reintenta (respuesta perdida), el backend no duplica el cargo.
+    const reqId = crypto.randomUUID()
+    if (tab.value === 'service') await cuentas.addServiceCharge(props.accountId, animalId, itemId, reqId)
+    else await cuentas.addProductCharge(props.accountId, animalId, itemId, reqId)
     toast.success('Cargo agregado', 'Se añadió a la cuenta.')
     emit('added')
   } catch (e) {
@@ -103,6 +105,7 @@ async function addGeneral() {
       taxId: general.taxId ? Number(general.taxId) : null,
       hasTax: general.taxId !== '',
       openAccountId: props.accountId,
+      clientRequestId: crypto.randomUUID(),
     })
     toast.success('Cargo agregado', 'Cargo general añadido a la cuenta.')
     Object.assign(general, { name: '', unitAmount: '', quantity: '1', taxId: '' })

@@ -95,6 +95,15 @@ export const useCuentasStore = defineStore('cuentas', () => {
     else accounts.value = [acc, ...accounts.value]
   }
 
+  /**
+   * Última versión optimista conocida de la cuenta (la que el front leyó por última vez). Se reenvía
+   * como `expectedVersion` en las mutaciones de un solo disparo para detección temprana de conflicto.
+   * `undefined` si la cuenta no está cacheada → el backend omite el chequeo (cae al optimistic lock).
+   */
+  function accountVersion(accountId: number): number | undefined {
+    return accounts.value.find((a) => a.id === accountId)?.version
+  }
+
   /** Mascotas distintas referenciadas en los cargos de la cuenta seleccionada. */
   const petsInCharges = computed(() => {
     const map = new Map<number, string>()
@@ -156,16 +165,25 @@ export const useCuentasStore = defineStore('cuentas', () => {
     await loadDetail(accountId)
   }
 
-  async function addProductCharge(accountId: number, animalId: number, productId: number) {
-    await productChargeApi.create({ animalId, productId, openAccountId: accountId })
+  async function addProductCharge(accountId: number, animalId: number, productId: number, clientRequestId?: string) {
+    await productChargeApi.create({
+      animalId, productId, openAccountId: accountId, clientRequestId,
+      expectedVersion: accountVersion(accountId),
+    })
     await refreshAccount(accountId)
   }
-  async function addServiceCharge(accountId: number, animalId: number, serviceId: number) {
-    await serviceChargeApi.create({ animalId, serviceId, openAccountId: accountId })
+  async function addServiceCharge(accountId: number, animalId: number, serviceId: number, clientRequestId?: string) {
+    await serviceChargeApi.create({
+      animalId, serviceId, openAccountId: accountId, clientRequestId,
+      expectedVersion: accountVersion(accountId),
+    })
     await refreshAccount(accountId)
   }
   async function addGeneralCharge(payload: CreateGeneralChargePayload) {
-    await generalChargeApi.create(payload)
+    await generalChargeApi.create({
+      ...payload,
+      expectedVersion: payload.expectedVersion ?? accountVersion(payload.openAccountId),
+    })
     await refreshAccount(payload.openAccountId)
   }
 
@@ -179,11 +197,12 @@ export const useCuentasStore = defineStore('cuentas', () => {
     animalId: number,
     kind: 'service' | 'product',
     refId: number,
+    clientRequestId?: string,
   ): Promise<void> {
     if (kind === 'service') {
-      await serviceChargeApi.create({ animalId, serviceId: refId, openAccountId: accountId })
+      await serviceChargeApi.create({ animalId, serviceId: refId, openAccountId: accountId, clientRequestId })
     } else {
-      await productChargeApi.create({ animalId, productId: refId, openAccountId: accountId })
+      await productChargeApi.create({ animalId, productId: refId, openAccountId: accountId, clientRequestId })
     }
   }
 
@@ -203,10 +222,11 @@ export const useCuentasStore = defineStore('cuentas', () => {
   ): Promise<void> {
     for (const it of items) {
       for (let i = 0; i < it.qty; i++) {
+        // Idempotency key por unidad: protege reintentos de transporte de duplicar el cargo en el backend.
         if (it.kind === 'service') {
-          await serviceChargeApi.create({ animalId, serviceId: it.id, openAccountId: accountId })
+          await serviceChargeApi.create({ animalId, serviceId: it.id, openAccountId: accountId, clientRequestId: crypto.randomUUID() })
         } else {
-          await productChargeApi.create({ animalId, productId: it.id, openAccountId: accountId })
+          await productChargeApi.create({ animalId, productId: it.id, openAccountId: accountId, clientRequestId: crypto.randomUUID() })
         }
       }
     }
@@ -219,7 +239,10 @@ export const useCuentasStore = defineStore('cuentas', () => {
     paymentMethod: PaymentMethod,
     clientRequestId?: string,
   ) {
-    await debtOpenAccountApi.create({ amount, paymentMethod, openAccountId: accountId, clientRequestId })
+    await debtOpenAccountApi.create({
+      amount, paymentMethod, openAccountId: accountId, clientRequestId,
+      expectedVersion: accountVersion(accountId),
+    })
     await refreshAccount(accountId)
   }
 
@@ -267,7 +290,7 @@ export const useCuentasStore = defineStore('cuentas', () => {
    * queda visible tachado y deja de contar en el saldo. Refresca cuenta + detalle.
    */
   async function voidPayment(accountId: number, debtId: number, reason: string) {
-    await debtOpenAccountApi.voidPayment(debtId, reason)
+    await debtOpenAccountApi.voidPayment(debtId, reason, accountVersion(accountId))
     await refreshAccount(accountId)
   }
 
@@ -277,9 +300,10 @@ export const useCuentasStore = defineStore('cuentas', () => {
    * queda visible tachado y deja de contar en el total. Refresca cuenta + detalle.
    */
   async function voidCharge(accountId: number, charge: UnifiedCharge, reason: string) {
-    if (charge.kind === 'product') await productChargeApi.voidCharge(charge.id, reason)
-    else if (charge.kind === 'service') await serviceChargeApi.voidCharge(charge.id, reason)
-    else await generalChargeApi.voidCharge(charge.id, reason)
+    const ev = accountVersion(accountId)
+    if (charge.kind === 'product') await productChargeApi.voidCharge(charge.id, reason, ev)
+    else if (charge.kind === 'service') await serviceChargeApi.voidCharge(charge.id, reason, ev)
+    else await generalChargeApi.voidCharge(charge.id, reason, ev)
     await refreshAccount(accountId)
   }
 
