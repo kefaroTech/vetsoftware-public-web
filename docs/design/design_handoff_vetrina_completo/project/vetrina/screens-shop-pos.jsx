@@ -17,7 +17,9 @@ function VetShopPOSView({ shop }) {
   const [cat, setCat] = React.useState('');
   const [cart, setCart] = React.useState([]);      // [{ kind:'product'|'service'|'bundle', id, qty }]
   const [customer, setCustomer] = React.useState(null);
+  const [fiscalCustomer, setFiscalCustomer] = React.useState(null);
   const [custOpen, setCustOpen] = React.useState(false);
+  const [custPurpose, setCustPurpose] = React.useState('assoc'); // 'assoc' | 'fiscal'
   const [discount, setDiscount] = React.useState('');
   const [payOpen, setPayOpen] = React.useState(false);
   const [receipt, setReceipt] = React.useState(null);
@@ -124,7 +126,7 @@ function VetShopPOSView({ shop }) {
     });
     setPayOpen(false);
     setReceipt({ code, paymentMethod: method, discount: T.disc, savings: promoSavings, customerId: customer?.owner?.id ?? null, items, taxConfig: shop.taxConfig });
-    setCart([]); setCustomer(null); setDiscount('');
+    setCart([]); setCustomer(null); setFiscalCustomer(null); setDiscount('');
   }
 
   return (
@@ -197,7 +199,7 @@ function VetShopPOSView({ shop }) {
           <span>Ticket de venta</span>
         </header>
 
-        <button type="button" className="vet-shop-customer" onClick={() => customer ? setCustomer(null) : setCustOpen(true)}>
+        <button type="button" className="vet-shop-customer" onClick={() => { if (customer) { setCustomer(null); setFiscalCustomer(null); } else { setCustPurpose('assoc'); setCustOpen(true); } }}>
           <VetIcons.User size={14} strokeWidth={1.7} />
           <span>{customer ? customer.owner.name : 'Asociar propietario (opcional)'}</span>
           {customer && <VetIcons.X size={13} strokeWidth={1.8} style={{ marginLeft: 'auto' }} />}
@@ -255,12 +257,23 @@ function VetShopPOSView({ shop }) {
         </div>
       </aside>
 
-      <VetModalShell open={custOpen} title="Asociar propietario" subtitle="Vincula la venta a un cliente (opcional)"
+      <VetModalShell open={custOpen} title={custPurpose === 'fiscal' ? 'Seleccionar cliente a facturar' : 'Asociar propietario'} subtitle={custPurpose === 'fiscal' ? 'La factura electrónica irá a su nombre' : 'Vincula la venta a un cliente (opcional)'}
         icon={VetIcons.User} accent="amatista" width={520} onClose={() => setCustOpen(false)}>
-        <VetPatientCascadePicker onSelect={(sel) => { setCustomer(sel); setCustOpen(false); }} />
+        <VetPatientCascadePicker onSelect={(sel) => {
+          setCustomer(sel);
+          if (custPurpose === 'fiscal') {
+            const o = sel.owner;
+            setFiscalCustomer({ name: o.name, documentType: o.documentType || 'CEDULA_CIUDADANIA', documentId: o.document || o.documentId || '', personType: 'NATURAL', email: o.email || '', cityId: '', taxRegime: 'NO_RESPONSABLE_IVA', verificationDigit: null, legalName: null });
+          }
+          setCustOpen(false);
+        }} />
       </VetModalShell>
 
-      <VetShopPayModal open={payOpen} total={total} onClose={() => setPayOpen(false)} onConfirm={confirmPay} />
+      <VetShopPayModal open={payOpen} total={total}
+        customer={fiscalCustomer}
+        onSelectCustomer={() => { setCustPurpose('fiscal'); setCustOpen(true); }}
+        onUpdateCustomer={(c) => setFiscalCustomer((p) => ({ ...p, ...c }))}
+        onClose={() => setPayOpen(false)} onConfirm={confirmPay} />
       <VetShopReceiptModal open={!!receipt} sale={receipt} products={shop.products} taxConfig={shop.taxConfig} onClose={() => setReceipt(null)} />
     </div>
   );

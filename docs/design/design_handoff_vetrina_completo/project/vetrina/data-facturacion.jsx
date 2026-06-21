@@ -33,6 +33,32 @@ const VET_FE_STATUS = {
 };
 const VET_FE_COMPANY_DOCTYPE = { NIT: 'NIT (31)', CEDULA_CIUDADANIA: 'Cédula (13)', CEDULA_EXTRANJERIA: 'C. extranjería (22)', PASAPORTE: 'Pasaporte (41)' };
 const VET_FE_TAX_REGIME = { RESPONSABLE_IVA: 'Responsable de IVA', NO_RESPONSABLE_IVA: 'No responsable de IVA' };
+
+// UVT vigente (COP) y umbral de 5 UVT para FE obligatoria. Dinámico (lo da el backend).
+const VET_FE_UVT_VALUE = 49799;
+const VET_FE_UVT_THRESHOLD_QTY = 5;
+function vetFeThreshold() { return VET_FE_UVT_VALUE * VET_FE_UVT_THRESHOLD_QTY; }
+function vetFeOverThreshold(total) { return total > vetFeThreshold(); }
+
+// Tipos de documento del CLIENTE (incluye PEP) con código DIAN
+const VET_FE_CUSTOMER_DOCTYPE = {
+  CEDULA_CIUDADANIA: 'Cédula de ciudadanía (13)',
+  NIT: 'NIT (31)',
+  CEDULA_EXTRANJERIA: 'Cédula de extranjería (22)',
+  PASAPORTE: 'Pasaporte (41)',
+  PEP: 'PEP (47)',
+};
+
+// Ciudades con código DANE (una sin código para el estado de error)
+const VET_FE_CITIES = [
+  { id: '11001', name: 'Bogotá D.C.', dane: '11001' },
+  { id: '05001', name: 'Medellín', dane: '05001' },
+  { id: '76001', name: 'Cali', dane: '76001' },
+  { id: '08001', name: 'Barranquilla', dane: '08001' },
+  { id: '68001', name: 'Bucaramanga', dane: '68001' },
+  { id: '66001', name: 'Pereira', dane: '66001' },
+  { id: '00000', name: 'Corregimiento El Edén', dane: null },
+];
 const VET_FE_ENVIRONMENT = { SANDBOX: 'Pruebas (Sandbox)', PRODUCTION: 'Producción' };
 const VET_FE_PAYMENT_MEANS = { EFECTIVO: 'Efectivo (10)', TARJETA_DEBITO: 'T. débito (48)', TARJETA_CREDITO: 'T. crédito (49)', TRANSFERENCIA: 'Transferencia (42)' };
 const VET_FE_CREDIT_REASON = { DEVOLUCION: 'Devolución (1)', ANULACION: 'Anulación (2)', REBAJA: 'Rebaja (3)', AJUSTE_PRECIO: 'Ajuste de precio (4)', OTROS: 'Otros (5)' };
@@ -146,6 +172,8 @@ function vetFeMoney(n) {
 Object.assign(window, {
   VET_FE_PERMISSIONS, vetFeCan, vetFeHasModule,
   VET_FE_DOC_TYPE, VET_FE_STATUS, VET_FE_COMPANY_DOCTYPE, VET_FE_TAX_REGIME, VET_FE_ENVIRONMENT,
+  VET_FE_UVT_VALUE, VET_FE_UVT_THRESHOLD_QTY, vetFeThreshold, vetFeOverThreshold,
+  VET_FE_CUSTOMER_DOCTYPE, VET_FE_CITIES,
   VET_FE_PAYMENT_MEANS, VET_FE_CREDIT_REASON, VET_FE_DEBIT_REASON, VET_FE_RESPONSABILITIES, VET_FE_ECONOMIC_ACTIVITIES,
   VET_FE_TAX_PROFILE, VET_FE_PROVIDER, VET_FE_RESOLUTIONS, VET_FE_WITHHOLDING,
   VET_FE_DOCUMENTS, VET_FE_BILLABLE_ACCOUNTS, vetFeMoney,

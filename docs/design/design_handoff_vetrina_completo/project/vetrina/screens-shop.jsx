@@ -181,34 +181,57 @@ function VetShopServiceCard({ service, priceInfo, onAdd }) {
 // Payment modal
 // ============================================================================
 
-function VetShopPayModal({ open, total, onClose, onConfirm }) {
+function VetShopPayModal({ open, total, customer, onSelectCustomer, onUpdateCustomer, onClose, onConfirm }) {
   const [method, setMethod] = React.useState('EFECTIVO');
   const [received, setReceived] = React.useState('');
-  React.useEffect(() => { if (open) { setMethod('EFECTIVO'); setReceived(''); } }, [open]);
+  const [fiscalOpen, setFiscalOpen] = React.useState(false);
+  React.useEffect(() => { if (open) { setMethod('EFECTIVO'); setReceived(''); setFiscalOpen(false); } }, [open]);
 
   const recv = Number(received) || 0;
   const change = method === 'EFECTIVO' ? Math.max(0, recv - total) : 0;
-  const canConfirm = method !== 'EFECTIVO' || recv >= total;
+  const overUvt = vetFeOverThreshold(total);
+  const checklist = overUvt ? vetFeCustomerChecklist(customer) : { complete: true };
+  const cashOk = method !== 'EFECTIVO' || recv >= total;
+  const canConfirm = cashOk && (!overUvt || (customer && checklist.complete));
+
+  const confirmLabel = overUvt ? 'Emitir factura electrónica' : 'Confirmar pago';
 
   return (
     <VetModalShell
       open={open} onClose={onClose}
-      title="Cobrar venta"
+      title={overUvt ? 'Cobrar y facturar' : 'Cobrar venta'}
       subtitle={`Total a pagar: ${vetMoney(total)}`}
-      icon={VetIcons.Receipt} accent="amatista" width={460}
+      icon={VetIcons.Receipt} accent="amatista" width={overUvt ? 560 : 460}
       footerActions={
         <>
           <button type="button" className="vet-btn-ghost-modal" onClick={onClose}>Cancelar</button>
           <button type="button" className="vet-btn-primary-modal"
             disabled={!canConfirm}
             style={!canConfirm ? { opacity: 0.5, cursor: 'not-allowed' } : null}
-            onClick={() => onConfirm({ method, received: recv })}>
-            Confirmar pago
+            onClick={() => onConfirm({ method, received: recv, electronic: overUvt })}>
+            {confirmLabel}
           </button>
         </>
       }
     >
       <div className="vet-action-modal-body">
+        {overUvt && <VetFeThresholdBanner total={total} />}
+
+        {overUvt && (
+          <>
+            <div className="vet-fe-doctypesel">
+              <div className="vet-fe-doctype on"><VetIcons.FileText size={15} strokeWidth={1.8} /> Factura electrónica</div>
+              <div className="vet-fe-doctype off" title="No disponible por encima de 5 UVT">
+                <VetIcons.ShieldCheck size={14} strokeWidth={1.8} style={{ opacity: 0.5 }} /> Documento POS
+                <span className="vet-fe-lock"><VetIcons.X size={11} strokeWidth={2.4} /></span>
+              </div>
+            </div>
+            <VetFeCustomerBlock customer={customer}
+              onSelect={onSelectCustomer}
+              onComplete={() => setFiscalOpen(true)} />
+          </>
+        )}
+
         <VetBaseField label="Método de pago" required>
           {({ id }) => <VetBaseSelect id={id} value={method} onChange={setMethod}
             options={Object.entries(VET_SHOP_PAY).map(([k, v]) => ({ value: k, label: v }))} />}
@@ -225,6 +248,10 @@ function VetShopPayModal({ open, total, onClose, onConfirm }) {
           </>
         )}
       </div>
+
+      <VetFeCustomerFiscalModal open={fiscalOpen} customer={customer}
+        onClose={() => setFiscalOpen(false)}
+        onSave={(c) => { onUpdateCustomer && onUpdateCustomer(c); setFiscalOpen(false); }} />
     </VetModalShell>
   );
 }

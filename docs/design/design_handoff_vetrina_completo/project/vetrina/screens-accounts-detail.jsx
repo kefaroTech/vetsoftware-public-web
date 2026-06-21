@@ -142,6 +142,11 @@ function VetAccountDetail({ account, store, onBack }) {
 // Cerrar y cobrar cuenta — 2 pasos: cobro (método + desglose) → recibo
 // ============================================================================
 
+function vetFeFromOwner(owner) {
+  if (!owner) return null;
+  return { name: owner.name, documentType: owner.documentType || 'CEDULA_CIUDADANIA', documentId: owner.document || owner.documentId || '', personType: 'NATURAL', email: owner.email || '', cityId: '', taxRegime: 'NO_RESPONSABLE_IVA', verificationDigit: null, legalName: null };
+}
+
 function VetAcctCerrarModal({ open, account, owner, pets, saldo, pagado, onClose, onConfirm }) {
   const [step, setStep] = React.useState('cobro');   // 'cobro' | 'recibo'
   const [motivo, setMotivo] = React.useState('COBRADA'); // 'COBRADA' | 'CANCELADA'
@@ -151,8 +156,10 @@ function VetAcctCerrarModal({ open, account, owner, pets, saldo, pagado, onClose
   const [reciboData, setReciboData] = React.useState(null);
   const [feDocType, setFeDocType] = React.useState('DOC_EQUIV_POS');
   const [feFinalConsumer, setFeFinalConsumer] = React.useState(false);
+  const [feCustomer, setFeCustomer] = React.useState(null);
+  const [fiscalOpen, setFiscalOpen] = React.useState(false);
 
-  React.useEffect(() => { if (open) { setStep('cobro'); setMotivo('COBRADA'); setMetodo('EFECTIVO'); setRecibido(''); setNota(''); setReciboData(null); setFeDocType('DOC_EQUIV_POS'); setFeFinalConsumer(false); } }, [open]);
+  React.useEffect(() => { if (open) { setStep('cobro'); setMotivo('COBRADA'); setMetodo('EFECTIVO'); setRecibido(''); setNota(''); setReciboData(null); setFeDocType('DOC_EQUIV_POS'); setFeFinalConsumer(false); setFeCustomer(null); setFiscalOpen(false); } }, [open]);
 
   // Desglose por impuesto (hook SIEMPRE antes de cualquier early return)
   const breakdown = React.useMemo(() => {
@@ -176,14 +183,16 @@ function VetAcctCerrarModal({ open, account, owner, pets, saldo, pagado, onClose
   const recNum = Number(recibido) || 0;
   const cambio = metodo === 'EFECTIVO' ? Math.max(0, recNum - saldo) : 0;
   const falta = metodo === 'EFECTIVO' && recNum > 0 && recNum < saldo;
-  const canConfirm = esCancelada ? nota.trim().length > 0 : (metodo !== 'EFECTIVO' || recNum >= saldo);
+  const overUvt = vetFeOverThreshold(saldo);
+  const feOk = !overUvt || (feCustomer && vetFeCustomerChecklist(feCustomer).complete);
+  const canConfirm = esCancelada ? nota.trim().length > 0 : ((metodo !== 'EFECTIVO' || recNum >= saldo) && feOk);
 
   function confirmar() {
     if (esCancelada) {
       setReciboData({ motivo: 'CANCELADA', monto: 0, nota: nota.trim(), fecha: '2026-06-05' });
     } else {
       const code = 'REC-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 9000) + 1000);
-      setReciboData({ motivo: 'COBRADA', monto: saldo, metodo, recibido: metodo === 'EFECTIVO' ? recNum : saldo, cambio, code, fecha: '2026-06-05', feDocType, feFinalConsumer });
+      setReciboData({ motivo: 'COBRADA', monto: saldo, metodo, recibido: metodo === 'EFECTIVO' ? recNum : saldo, cambio, code, fecha: '2026-06-05', feDocType: overUvt ? 'FE_VENTA' : feDocType, feFinalConsumer: overUvt ? false : feFinalConsumer });
     }
     setStep('recibo');
   }
@@ -252,7 +261,7 @@ function VetAcctCerrarModal({ open, account, owner, pets, saldo, pagado, onClose
           <button type="button" className="vet-btn-primary-modal" disabled={!canConfirm}
             style={!canConfirm ? { opacity: 0.5, cursor: 'not-allowed' } : null}
             onClick={confirmar}>
-            {esCancelada ? 'Cancelar cuenta' : 'Cobrar y cerrar'}
+            {esCancelada ? 'Cancelar cuenta' : overUvt ? 'Emitir factura electrónica' : 'Cobrar y cerrar'}
           </button>
         </>
       }>
@@ -321,32 +330,50 @@ function VetAcctCerrarModal({ open, account, owner, pets, saldo, pagado, onClose
             )}
 
             {/* Documento fiscal — auto-emisión al cerrar */}
-            <div className="vet-fe-closesec">
-              <div className="vet-acct-fieldlabel" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <VetIcons.Receipt size={13} strokeWidth={1.8} /> Documento electrónico
-              </div>
-              <div className="vet-fe-closedocs">
-                <button type="button" className={'vet-fe-doctype' + (feDocType === 'DOC_EQUIV_POS' ? ' on' : '')} onClick={() => setFeDocType('DOC_EQUIV_POS')}>
-                  <span className="vet-fe-doctype-rb">{feDocType === 'DOC_EQUIV_POS' && <span />}</span>
-                  Documento POS
-                </button>
-                <button type="button" className={'vet-fe-doctype' + (feDocType === 'FE_VENTA' ? ' on' : '')} onClick={() => setFeDocType('FE_VENTA')}>
-                  <span className="vet-fe-doctype-rb">{feDocType === 'FE_VENTA' && <span />}</span>
-                  Factura electrónica
-                </button>
-              </div>
-              <button type="button" className={'vet-fe-toggle' + (feFinalConsumer ? ' on' : '')} style={{ marginTop: 8 }} onClick={() => setFeFinalConsumer((v) => !v)}>
-                <span className="vet-fe-toggle-box">{feFinalConsumer && <VetIcons.Check size={12} strokeWidth={2.6} />}</span>
-                Consumidor final
-              </button>
-              {feDocType === 'FE_VENTA' && !feFinalConsumer && (
-                <div className="vet-fe-clientwarn" style={{ marginTop: 8 }}>
-                  <VetIcons.User size={14} strokeWidth={1.8} />
-                  <span>Verifica que <strong>{owner?.name.split(' ')[0]}</strong> tenga documento, tipo y ciudad completos en su ficha fiscal.</span>
+            {overUvt ? (
+              <div className="vet-fe-closesec">
+                <VetFeThresholdBanner total={saldo} />
+                <div className="vet-fe-doctypesel" style={{ marginTop: 10 }}>
+                  <div className="vet-fe-doctype on"><VetIcons.FileText size={15} strokeWidth={1.8} /> Factura electrónica</div>
+                  <div className="vet-fe-doctype off" title="No disponible por encima de 5 UVT">
+                    <VetIcons.ShieldCheck size={14} strokeWidth={1.8} style={{ opacity: 0.5 }} /> Documento POS
+                    <span className="vet-fe-lock"><VetIcons.X size={11} strokeWidth={2.4} /></span>
+                  </div>
                 </div>
-              )}
-              <p className="vet-fe-closehelp"><VetIcons.History size={12} strokeWidth={1.8} /> La emisión es <strong>automática</strong> al cerrar la venta y <strong>asíncrona</strong>: el documento nace <em>Validando…</em> sin bloquear el cobro.</p>
-            </div>
+                <div style={{ marginTop: 10 }}>
+                  <VetFeCustomerBlock customer={feCustomer}
+                    onSelect={() => setFeCustomer(vetFeFromOwner(owner))}
+                    onComplete={() => setFiscalOpen(true)} />
+                </div>
+              </div>
+            ) : (
+              <div className="vet-fe-closesec">
+                <div className="vet-acct-fieldlabel" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <VetIcons.Receipt size={13} strokeWidth={1.8} /> Documento electrónico
+                </div>
+                <div className="vet-fe-closedocs">
+                  <button type="button" className={'vet-fe-doctype' + (feDocType === 'DOC_EQUIV_POS' ? ' on' : '')} onClick={() => setFeDocType('DOC_EQUIV_POS')}>
+                    <span className="vet-fe-doctype-rb">{feDocType === 'DOC_EQUIV_POS' && <span />}</span>
+                    Documento POS
+                  </button>
+                  <button type="button" className={'vet-fe-doctype' + (feDocType === 'FE_VENTA' ? ' on' : '')} onClick={() => setFeDocType('FE_VENTA')}>
+                    <span className="vet-fe-doctype-rb">{feDocType === 'FE_VENTA' && <span />}</span>
+                    Factura electrónica
+                  </button>
+                </div>
+                <button type="button" className={'vet-fe-toggle' + (feFinalConsumer ? ' on' : '')} style={{ marginTop: 8 }} onClick={() => setFeFinalConsumer((v) => !v)}>
+                  <span className="vet-fe-toggle-box">{feFinalConsumer && <VetIcons.Check size={12} strokeWidth={2.6} />}</span>
+                  Consumidor final
+                </button>
+                {feDocType === 'FE_VENTA' && !feFinalConsumer && (
+                  <div className="vet-fe-clientwarn" style={{ marginTop: 8 }}>
+                    <VetIcons.User size={14} strokeWidth={1.8} />
+                    <span>Verifica que <strong>{owner?.name.split(' ')[0]}</strong> tenga documento, tipo y ciudad completos en su ficha fiscal.</span>
+                  </div>
+                )}
+                <p className="vet-fe-closehelp"><VetIcons.History size={12} strokeWidth={1.8} /> La emisión es <strong>automática</strong> al cerrar la venta y <strong>asíncrona</strong>: el documento nace <em>Validando…</em> sin bloquear el cobro.</p>
+              </div>
+            )}
           </>
         )}
 
@@ -356,6 +383,10 @@ function VetAcctCerrarModal({ open, account, owner, pets, saldo, pagado, onClose
             : <>{account.charges.length} cargos. Al cobrar, la cuenta pasa a <strong>CERRADA</strong> y se genera el recibo con el desglose de impuestos.</>}
         </p>
       </div>
+
+      <VetFeCustomerFiscalModal open={fiscalOpen} customer={feCustomer}
+        onClose={() => setFiscalOpen(false)}
+        onSave={(c) => { setFeCustomer((p) => ({ ...(p || {}), ...c })); setFiscalOpen(false); }} />
     </VetModalShell>
   );
 }
