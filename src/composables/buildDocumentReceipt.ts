@@ -99,6 +99,7 @@ export function buildDocumentReceiptTicket(
     ? {
         sealLabel: doc.cufe ? 'CUFE' : 'CUDE',
         seal,
+        qrUrl: doc.qrUrl ?? undefined,
         info: doc.dianValidationDate
           ? [`Validado DIAN ${doc.dianValidationDate.slice(0, 16).replace('T', ' ')}`]
           : undefined,

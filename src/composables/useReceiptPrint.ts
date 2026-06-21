@@ -36,6 +36,8 @@ export interface ReceiptDian {
   /** "CUFE" o "CUDE". */
   sealLabel: string
   seal: string
+  /** URL pública de la imagen del QR DIAN (la que devuelve el proveedor). Se imprime sobre el CUFE/CUDE. */
+  qrUrl?: string
   /** Líneas extra: "Validado DIAN ...", "Ambiente: Producción". */
   info?: string[]
 }
@@ -138,6 +140,8 @@ const TICKET_STYLES = `
                 font-size: 10.5px; font-weight: 700; padding: 3px 11px; border-radius: 999px; }
 
   .r-dian { padding: 4px 0; }
+  .r-qr-wrap { text-align: center; margin-bottom: 6px; }
+  .r-qr { width: 36mm; height: 36mm; image-rendering: pixelated; }
   .r-dian-info { font-family: var(--mono); font-size: 8.5px; color: var(--ink-soft); line-height: 1.5; text-align: center; }
   .r-dian-info b { color: var(--ink); display: block; font-size: 9px; letter-spacing: .04em; }
   .r-cufe { word-break: break-all; }
@@ -156,6 +160,7 @@ const TICKET_STYLES = `
   .w58 .r-tot .row.grand { font-size: 11px; }
   .w58 .r-line .qty { width: 16px; }
   .w58 .r-line .desc .sub { display: none; }
+  .w58 .r-qr { width: 30mm; height: 30mm; }
 `
 
 /** Escapa texto para insertarlo de forma segura en el HTML del ticket. */
@@ -209,7 +214,11 @@ function buildHtml(t: ReceiptTicket): string {
     : ''
 
   const dian = t.dian
-    ? `<hr class="r-sep" /><div class="r-dian"><div class="r-dian-info"><b>${esc(t.dian.sealLabel)}</b>` +
+    ? `<hr class="r-sep" /><div class="r-dian">` +
+      (t.dian.qrUrl
+        ? `<div class="r-qr-wrap"><img class="r-qr" src="${esc(t.dian.qrUrl)}" alt="QR DIAN" /></div>`
+        : '') +
+      `<div class="r-dian-info"><b>${esc(t.dian.sealLabel)}</b>` +
       `<span class="r-cufe">${esc(t.dian.seal)}</span>` +
       (t.dian.info && t.dian.info.length
         ? `<div style="margin-top:3px">${t.dian.info.map(esc).join('<br />')}</div>`
@@ -281,9 +290,35 @@ export function useReceiptPrint() {
         cleanup()
         return
       }
-      win.onafterprint = cleanup
-      win.focus()
-      win.print()
+      const doPrint = () => {
+        win.onafterprint = cleanup
+        win.focus()
+        win.print()
+      }
+      // Espera a que las imágenes (p.ej. el QR DIAN remoto) terminen de cargar; si no,
+      // el navegador imprime el ticket antes de bajar la imagen y el QR sale en blanco.
+      const pending = Array.from(win.document.images).filter((img) => !img.complete)
+      if (pending.length === 0) {
+        doPrint()
+        return
+      }
+      let fired = false
+      const fire = () => {
+        if (fired) return
+        fired = true
+        doPrint()
+      }
+      let remaining = pending.length
+      const onSettled = () => {
+        remaining -= 1
+        if (remaining === 0) fire()
+      }
+      pending.forEach((img) => {
+        img.addEventListener('load', onSettled)
+        img.addEventListener('error', onSettled)
+      })
+      // Tope de seguridad: no esperar indefinidamente si la imagen no responde.
+      win.setTimeout(fire, 1500)
     }
 
     const doc = iframe.contentWindow?.document

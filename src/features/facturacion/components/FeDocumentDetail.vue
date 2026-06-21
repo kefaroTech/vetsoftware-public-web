@@ -238,7 +238,10 @@ function copyId() {
     </div>
 
     <div v-if="validated && idValue" class="card cufebox">
-      <div class="qr"><ScanLine :size="48" :stroke-width="1.2" /></div>
+      <div class="qr">
+        <img v-if="doc.qrUrl" :src="doc.qrUrl" alt="Código QR DIAN" class="qr-img" />
+        <ScanLine v-else :size="48" :stroke-width="1.2" />
+      </div>
       <div class="cufe-text">
         <div class="card-title">{{ idLabel }}</div>
         <div class="cufeval">{{ idValue }}</div>
@@ -519,14 +522,23 @@ function copyId() {
   gap: 18px;
 }
 .qr {
-  width: 80px;
-  height: 80px;
+  width: 110px;
+  height: 110px;
   border-radius: 12px;
   display: grid;
   place-items: center;
   background: var(--warm-100);
   color: var(--warm-700);
   flex-shrink: 0;
+  overflow: hidden;
+}
+.qr-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+  padding: 6px;
+  border-radius: 12px;
 }
 .cufe-text {
   flex: 1;
