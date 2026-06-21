@@ -20,9 +20,9 @@ export const productChargeApi = {
     return data
   },
   /** Anula un cargo con motivo obligatorio (queda visible tachado; permiso chargeOpenAccount.delete). */
-  async voidCharge(id: number, reason: string): Promise<ProductChargeResponse> {
+  async voidCharge(id: number, reason: string, expectedVersion?: number): Promise<ProductChargeResponse> {
     const { data } = await http.patch<ProductChargeResponse>(
-      `/product-charge-open-accounts/${id}/void`, { reason },
+      `/product-charge-open-accounts/${id}/void`, { reason, expectedVersion },
     )
     return data
   },
@@ -40,9 +40,9 @@ export const serviceChargeApi = {
     return data
   },
   /** Anula un cargo con motivo obligatorio (queda visible tachado; permiso chargeOpenAccount.delete). */
-  async voidCharge(id: number, reason: string): Promise<ServiceChargeResponse> {
+  async voidCharge(id: number, reason: string, expectedVersion?: number): Promise<ServiceChargeResponse> {
     const { data } = await http.patch<ServiceChargeResponse>(
-      `/service-charge-open-accounts/${id}/void`, { reason },
+      `/service-charge-open-accounts/${id}/void`, { reason, expectedVersion },
     )
     return data
   },
@@ -60,9 +60,9 @@ export const generalChargeApi = {
     return data
   },
   /** Anula un cargo con motivo obligatorio (queda visible tachado; permiso chargeOpenAccount.delete). */
-  async voidCharge(id: number, reason: string): Promise<GeneralChargeResponse> {
+  async voidCharge(id: number, reason: string, expectedVersion?: number): Promise<GeneralChargeResponse> {
     const { data } = await http.patch<GeneralChargeResponse>(
-      `/general-charge-open-accounts/${id}/void`, { reason },
+      `/general-charge-open-accounts/${id}/void`, { reason, expectedVersion },
     )
     return data
   },
