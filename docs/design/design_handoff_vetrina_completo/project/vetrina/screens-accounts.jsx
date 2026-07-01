@@ -118,22 +118,34 @@ function VetAcctOwnerPicker({ selected, onSelect, onClear }) {
 
 function VetAcctCreateModal({ open, existing, onClose, onCreate }) {
   const [owner, setOwner] = React.useState(null);
-  const [origen, setOrigen] = React.useState('hospitalizacion');
+  const [pet, setPet] = React.useState(null);          // mascota opcional creada
+  const [petName, setPetName] = React.useState('');
+  const [petSpecie, setPetSpecie] = React.useState('Canino');
+  const [petForm, setPetForm] = React.useState(false);
 
-  React.useEffect(() => { if (open) { setOwner(null); setOrigen('hospitalizacion'); } }, [open]);
+  React.useEffect(() => { if (open) { setOwner(null); setPet(null); setPetName(''); setPetSpecie('Canino'); setPetForm(false); } }, [open]);
+  React.useEffect(() => { setPet(null); setPetForm(false); setPetName(''); }, [owner]);
+
+  const existingPets = owner ? (window.VET_MOCK_PETS?.[owner.id] || []) : [];
 
   // Una cuenta es por propietario: duplicado si el dueño ya tiene cuenta abierta
   const dup = owner && existing.some((a) => a.ownerId === owner.id && a.estado === 'ABIERTA');
 
+  function savePet() {
+    if (!petName.trim()) return;
+    setPet({ id: 'newp-' + Date.now().toString(36), name: petName.trim(), specie: { name: petSpecie }, breed: { name: '—' } });
+    setPetForm(false);
+  }
+
   return (
-    <VetModalShell open={open} onClose={onClose} title="Abrir cuenta" subtitle="Selecciona el propietario y el origen"
+    <VetModalShell open={open} onClose={onClose} title="Abrir cuenta" subtitle="Selecciona el propietario"
       icon={VetIcons.Plus} accent="amatista" width={580}
       footerActions={
         <>
           <button type="button" className="vet-btn-ghost-modal" onClick={onClose}>Cancelar</button>
           <button type="button" className="vet-btn-primary-modal" disabled={!owner || dup}
             style={(!owner || dup) ? { opacity: 0.5, cursor: 'not-allowed' } : null}
-            onClick={() => onCreate({ ownerId: owner.id, origen })}>
+            onClick={() => onCreate({ ownerId: owner.id, origen: 'general', pet })}>
             Abrir cuenta
           </button>
         </>
@@ -141,7 +153,22 @@ function VetAcctCreateModal({ open, existing, onClose, onCreate }) {
       <div className="vet-action-modal-body">
         <div>
           <div className="vet-acct-fieldlabel">Propietario</div>
-          <VetAcctOwnerPicker selected={owner} onSelect={setOwner} onClear={() => setOwner(null)} />
+          {owner ? (
+            <div className="vet-picker-picked">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div className="vet-picker-badge"><VetIcons.User size={13} strokeWidth={1.7} /></div>
+                <div>
+                  <div className="vet-picker-picked-name">{owner.name}</div>
+                  <div className="vet-picker-picked-meta">{owner.documentId || owner.document || '—'}</div>
+                </div>
+              </div>
+              <button type="button" className="vet-picker-link" onClick={() => setOwner(null)}>
+                <VetIcons.X size={12} strokeWidth={1.8} /> Cambiar
+              </button>
+            </div>
+          ) : (
+            <VetCustomerPicker mode="basic" onPick={(c) => setOwner({ id: c.id, name: c.name, documentId: c.documentId })} />
+          )}
           <p className="vet-acct-orighelp" style={{ marginTop: 8 }}>
             La cuenta es del propietario. Los cargos de sus distintas mascotas se agrupan dentro de la misma cuenta.
           </p>
@@ -152,25 +179,62 @@ function VetAcctCreateModal({ open, existing, onClose, onCreate }) {
             </div>
           )}
         </div>
-        <div>
-          <div className="vet-acct-fieldlabel">Origen de la cuenta</div>
-          <div className="vet-acct-origseg">
-            {VET_ACCT_ORIGENES.map((o) => {
-              const Ic = VetIcons[o.icon] || VetIcons.Receipt;
-              return (
-                <button key={o.value} type="button"
-                  className={'vet-acct-srcbtn' + (origen === o.value ? ' active' : '')}
-                  onClick={() => setOrigen(o.value)}>
-                  <Ic size={15} strokeWidth={1.8} />
-                  <span>{o.label}</span>
+
+        {owner && !dup && (
+          <div>
+            <div className="vet-acct-fieldlabel">Mascota <span className="vet-cpk-opttag">opcional</span></div>
+            {pet ? (
+              <div className="vet-picker-picked">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div className="vet-picker-badge"><VetIcons.PawPrint size={13} strokeWidth={1.7} /></div>
+                  <div>
+                    <div className="vet-picker-picked-name">{pet.name}</div>
+                    <div className="vet-picker-picked-meta">{pet.specie.name}</div>
+                  </div>
+                </div>
+                <button type="button" className="vet-picker-link" onClick={() => setPet(null)}>
+                  <VetIcons.X size={12} strokeWidth={1.8} /> Quitar
                 </button>
-              );
-            })}
+              </div>
+            ) : petForm ? (
+              <div className="vet-acct-petform">
+                <div className="vet-form-grid-2">
+                  <VetBaseField label="Nombre de la mascota" required>
+                    {({ id }) => <VetBaseInput id={id} value={petName} onChange={setPetName} placeholder="Ej. Luna" autoFocus />}
+                  </VetBaseField>
+                  <VetBaseField label="Especie">
+                    {({ id }) => <VetBaseSelect id={id} value={petSpecie} onChange={setPetSpecie}
+                      options={['Canino', 'Felino', 'Ave', 'Conejo', 'Otro'].map((s) => ({ value: s, label: s }))} />}
+                  </VetBaseField>
+                </div>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 10 }}>
+                  <button type="button" className="vet-btn-ghost-modal" onClick={() => { setPetForm(false); setPetName(''); }}>Cancelar</button>
+                  <button type="button" className="vet-btn-primary-modal" disabled={!petName.trim()}
+                    style={!petName.trim() ? { opacity: 0.5, cursor: 'not-allowed' } : null} onClick={savePet}>
+                    Registrar mascota
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {existingPets.length > 0 && (
+                  <div className="vet-acct-petexist">
+                    {existingPets.map((p) => (
+                      <span key={p.id} className="vet-acct-petchip-ro"><VetIcons.PawPrint size={11} strokeWidth={1.8} /> {p.name}</span>
+                    ))}
+                    <span className="vet-acct-petexist-note">ya registradas</span>
+                  </div>
+                )}
+                <button type="button" className="vet-cpk-newbtn" style={{ padding: '9px 14px' }} onClick={() => setPetForm(true)}>
+                  <VetIcons.Plus size={15} strokeWidth={2.2} /> Registrar mascota nueva
+                </button>
+                <p className="vet-acct-orighelp" style={{ marginTop: 8 }}>
+                  Opcional. Puedes abrir la cuenta sin mascota y asociarla al agregar cargos.
+                </p>
+              </>
+            )}
           </div>
-          <p className="vet-acct-orighelp">
-            La cuenta queda <strong>abierta</strong> y acumula cargos día a día hasta que la cierres y cobres el saldo.
-          </p>
-        </div>
+        )}
       </div>
     </VetModalShell>
   );

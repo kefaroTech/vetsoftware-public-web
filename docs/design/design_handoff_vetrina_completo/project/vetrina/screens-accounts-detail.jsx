@@ -412,6 +412,11 @@ function VetAcctChargeModal({ open, account, onClose, onSave }) {
 
   const [d, setD] = React.useState({ source: 'servicio', pickId: '', kind: 'servicio', concepto: '', unitPrice: '', qty: 1, taxId: 'excluido', priceIncludesTax: true, petId: firstPetId });
   const [query, setQuery] = React.useState('');
+  const [petForm, setPetForm] = React.useState(false);
+  const [petName, setPetName] = React.useState('');
+  const [petSpecie, setPetSpecie] = React.useState('Canino');
+  const [extraPets, setExtraPets] = React.useState([]);
+  React.useEffect(() => { if (open) { setPetForm(false); setPetName(''); setExtraPets([]); } }, [open]);
   React.useEffect(() => { if (open) { setD({ source: 'servicio', pickId: '', kind: 'servicio', concepto: '', unitPrice: '', qty: 1, taxId: 'excluido', priceIncludesTax: true, petId: firstPetId }); setQuery(''); } }, [open, firstPetId]);
   const u = (p) => setD((x) => ({ ...x, ...p }));
 
@@ -455,7 +460,7 @@ function VetAcctChargeModal({ open, account, onClose, onSave }) {
         <div>
           <div className="vet-acct-fieldlabel">¿Para cuál mascota?</div>
           <div className="vet-acct-petchips">
-            {ownerPets.map((p) => (
+            {ownerPets.concat(extraPets).map((p) => (
               <button key={p.id} type="button"
                 className={'vet-acct-petchip' + (d.petId === p.id ? ' active' : '')}
                 onClick={() => u({ petId: p.id })}>
@@ -469,7 +474,35 @@ function VetAcctChargeModal({ open, account, onClose, onSave }) {
               <span className="vet-acct-petchip-av general"><VetIcons.Package size={12} strokeWidth={1.8} /></span>
               General
             </button>
+            <button type="button" className="vet-acct-petchip addnew" onClick={() => setPetForm(true)}>
+              <span className="vet-acct-petchip-av addnew"><VetIcons.Plus size={12} strokeWidth={2.4} /></span>
+              Nueva mascota
+            </button>
           </div>
+          {petForm && (
+            <div className="vet-acct-petform" style={{ marginTop: 8 }}>
+              <div className="vet-form-grid-2">
+                <VetBaseField label="Nombre de la mascota" required>
+                  {({ id }) => <VetBaseInput id={id} value={petName} onChange={setPetName} placeholder="Ej. Luna" autoFocus />}
+                </VetBaseField>
+                <VetBaseField label="Especie">
+                  {({ id }) => <VetBaseSelect id={id} value={petSpecie} onChange={setPetSpecie}
+                    options={['Canino', 'Felino', 'Ave', 'Conejo', 'Otro'].map((s) => ({ value: s, label: s }))} />}
+                </VetBaseField>
+              </div>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 10 }}>
+                <button type="button" className="vet-btn-ghost-modal" onClick={() => { setPetForm(false); setPetName(''); }}>Cancelar</button>
+                <button type="button" className="vet-btn-primary-modal" disabled={!petName.trim()}
+                  style={!petName.trim() ? { opacity: 0.5, cursor: 'not-allowed' } : null}
+                  onClick={() => {
+                    const np = { id: 'newp-' + Date.now().toString(36), name: petName.trim(), specie: { name: petSpecie }, breed: { name: '—' } };
+                    setExtraPets((a) => [...a, np]); u({ petId: np.id }); setPetForm(false); setPetName('');
+                  }}>
+                  Registrar y usar
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="vet-acct-srcseg" role="tablist">

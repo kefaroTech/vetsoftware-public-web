@@ -219,6 +219,11 @@
 .vet-fe-doctype-rb span { width: 8px; height: 8px; border-radius: 50%; background: var(--amatista-600); }
 .vet-fe-doctypehint { font-size: 11.5px; color: var(--warm-500); margin-top: 7px; line-height: 1.5; }
 .vet-fe-preloadhint { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--warm-500); margin-top: 7px; }
+.vet-acct-petform { padding: 12px; border-radius: 11px; background: var(--warm-50); border: 1px solid var(--warm-200); }
+.vet-acct-petexist { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 10px; }
+.vet-acct-petchip-ro { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; background: var(--warm-100); color: var(--warm-700); font-size: 12px; font-weight: 500; }
+.vet-acct-petchip.addnew { border-style: dashed; }
+.vet-acct-petchip-av.addnew { background: var(--amatista-100); color: var(--amatista-700); }
 .vet-fe-lock { margin-left: auto; width: 18px; height: 18px; border-radius: 50%; background: var(--warm-200); color: var(--warm-500); display: grid; place-items: center; }
 .vet-fe-custempty { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; background: var(--warm-50); border: 1.5px dashed var(--warm-300); }
 .vet-fe-custempty-ic { width: 40px; height: 40px; border-radius: 10px; background: var(--warm-150); color: var(--warm-500); display: grid; place-items: center; flex-shrink: 0; }
