@@ -10,8 +10,11 @@ import { serviceCategoryTone } from '../composables/categoryTone'
 import { useToast } from '@/composables/useToast'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
-import { getProblemDetailMessage } from '@/services/http/http.client'
+import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 import type { ServiceResponse } from '../types/tienda'
+
+const CONFLICT_MESSAGE =
+  'El registro fue modificado por otra operación; se recargó la información. Revisa y reintenta.'
 
 const store = useTienda()
 const toast = useToast()
@@ -87,13 +90,18 @@ async function onConfirmDelete() {
   }
 }
 
-async function onCategoryUpsert(p: { id: number | null; name: string; description: string }) {
+async function onCategoryUpsert(p: { id: number | null; name: string; description: string; version?: number }) {
   try {
-    if (p.id) await store.updateServiceCategory(p.id, p.name, p.description)
+    if (p.id) await store.updateServiceCategory(p.id, p.name, p.description, p.version ?? 0)
     else await store.createServiceCategory(p.name, p.description)
     toast.success('Categoría guardada')
   } catch (e) {
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo guardar la categoría'))
+    if (isConcurrencyConflict(e)) {
+      await store.refresh()
+      toast.warn('Conflicto de concurrencia', CONFLICT_MESSAGE)
+    } else {
+      toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo guardar la categoría'))
+    }
   }
 }
 async function onCategoryRemove(id: number) {

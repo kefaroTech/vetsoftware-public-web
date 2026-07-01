@@ -35,6 +35,8 @@ export interface TaxResponse extends TaxSummary {
   company: CompanySummary
   createdDate: string
   enabled: boolean
+  /** Optimistic locking (@Version): se reenvía en el PUT para detectar ediciones concurrentes. */
+  version: number
 }
 
 /**
@@ -58,11 +60,15 @@ export interface CategoryResponse {
   company?: CompanySummary
   createdDate?: string
   enabled?: boolean
+  /** Optimistic locking (@Version): se reenvía en el PUT para detectar ediciones concurrentes. */
+  version: number
 }
 
 export interface CategoryPayload {
   name: string
   description: string
+  /** Solo en UPDATE (PUT). El CREATE (POST) no la envía. */
+  version?: number
 }
 
 // ── Productos ──────────────────────────────────────────────────────────────
@@ -77,14 +83,18 @@ export interface ProductResponse {
   minStock: number
   provider: string | null
   taxTreatment: TaxTreatment
-  /** Bandera: el producto maneja fecha de vencimiento (el backend no persiste la fecha). */
-  expireDate: boolean
+  /** Fecha real de vencimiento (ISO `yyyy-MM-dd`); null = no vence / no se rastrea. Opcional. */
+  expireDate: string | null
+  /** Número de lote/batch; null si no aplica. Opcional. */
+  lotNumber: string | null
   notes: string | null
   productCategory: CategorySummary
   tax: TaxSummary | null
   company: CompanySummary
   createdDate: string
   enabled: boolean
+  /** Optimistic locking (@Version): se reenvía en el PUT para detectar ediciones concurrentes. */
+  version: number
 }
 
 export interface ProductPayload {
@@ -96,10 +106,13 @@ export interface ProductPayload {
   minStock: number
   provider?: string | null
   taxTreatment: TaxTreatment
-  expireDate: boolean
+  expireDate?: string | null
+  lotNumber?: string | null
   notes?: string | null
   productCategoryId: number
   taxId?: number | null
+  /** Solo en UPDATE (PUT). El CREATE (POST) no la envía. */
+  version?: number
 }
 
 export interface ProductSearchCriteria {
@@ -124,6 +137,8 @@ export interface ServiceResponse {
   company: CompanySummary
   createdDate: string
   enabled: boolean
+  /** Optimistic locking (@Version): se reenvía en el PUT para detectar ediciones concurrentes. */
+  version: number
 }
 
 export interface ServicePayload {
@@ -133,6 +148,8 @@ export interface ServicePayload {
   notes?: string | null
   serviceCategoryId: number
   taxId?: number | null
+  /** Solo en UPDATE (PUT). El CREATE (POST) no la envía. */
+  version?: number
 }
 
 export interface ServiceSearchCriteria {

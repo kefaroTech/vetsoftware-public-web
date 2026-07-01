@@ -11,8 +11,11 @@ import { productCategoryTone } from '../composables/categoryTone'
 import { useToast } from '@/composables/useToast'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
-import { getProblemDetailMessage } from '@/services/http/http.client'
+import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 import type { ProductPayload, ProductResponse, StockState } from '../types/tienda'
+
+const CONFLICT_MESSAGE =
+  'El registro fue modificado por otra operación; se recargó la información. Revisa y reintenta.'
 
 const store = useTienda()
 const toast = useToast()
@@ -80,6 +83,13 @@ function onFormClose() {
   editing.value = null
 }
 
+/** Formatea la fecha de vencimiento ISO `yyyy-MM-dd` a `dd/MM/yyyy`; '—' si no tiene. */
+function formatExpire(d: string | null): string {
+  if (!d) return '—'
+  const [y, m, day] = d.split('-')
+  return y && m && day ? `${day}/${m}/${y}` : '—'
+}
+
 function toPayload(p: ProductResponse, currentStock: number): ProductPayload {
   return {
     name: p.name,
@@ -91,9 +101,11 @@ function toPayload(p: ProductResponse, currentStock: number): ProductPayload {
     provider: p.provider,
     taxTreatment: p.taxTreatment,
     expireDate: p.expireDate,
+    lotNumber: p.lotNumber,
     notes: p.notes,
     productCategoryId: p.productCategory.id,
     taxId: p.tax?.id ?? null,
+    version: p.version,
   }
 }
 
@@ -105,17 +117,28 @@ async function onRestock(qty: number) {
     toast.success('Stock actualizado', `Se agregaron ${qty} u. a ${p.name}.`)
     restockFor.value = null
   } catch (e) {
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo reabastecer'))
+    if (isConcurrencyConflict(e)) {
+      await store.refresh()
+      toast.warn('Conflicto de concurrencia', CONFLICT_MESSAGE)
+      restockFor.value = null
+    } else {
+      toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo reabastecer'))
+    }
   }
 }
 
-async function onCategoryUpsert(p: { id: number | null; name: string; description: string }) {
+async function onCategoryUpsert(p: { id: number | null; name: string; description: string; version?: number }) {
   try {
-    if (p.id) await store.updateProductCategory(p.id, p.name, p.description)
+    if (p.id) await store.updateProductCategory(p.id, p.name, p.description, p.version ?? 0)
     else await store.createProductCategory(p.name, p.description)
     toast.success('Categoría guardada')
   } catch (e) {
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo guardar la categoría'))
+    if (isConcurrencyConflict(e)) {
+      await store.refresh()
+      toast.warn('Conflicto de concurrencia', CONFLICT_MESSAGE)
+    } else {
+      toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo guardar la categoría'))
+    }
   }
 }
 async function onCategoryRemove(id: number) {
@@ -207,7 +230,7 @@ async function onCategoryRemove(id: number) {
           <td class="ttax">{{ taxTreatmentLabel(p.taxTreatment) }}</td>
           <td class="tstock">{{ p.currentStock }} u</td>
           <td><StockStatePill :state="stockState(p)" /></td>
-          <td class="texp">{{ p.expireDate ? 'Sí' : '—' }}</td>
+          <td class="texp">{{ formatExpire(p.expireDate) }}</td>
           <td @click.stop>
             <button v-if="canUpdate" type="button" class="restock" @click="restockFor = p">Reabastecer</button>
           </td>

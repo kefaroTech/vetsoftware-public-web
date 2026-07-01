@@ -131,8 +131,8 @@ export const useTiendaStore = defineStore('tienda', () => {
     upsert(productCategories, created)
     return created
   }
-  async function updateProductCategory(id: number, name: string, description: string) {
-    const updated = await productCategoryApi.update(id, { name, description })
+  async function updateProductCategory(id: number, name: string, description: string, version: number) {
+    const updated = await productCategoryApi.update(id, { name, description, version })
     upsert(productCategories, updated)
     return updated
   }
@@ -146,8 +146,8 @@ export const useTiendaStore = defineStore('tienda', () => {
     upsert(serviceCategories, created)
     return created
   }
-  async function updateServiceCategory(id: number, name: string, description: string) {
-    const updated = await serviceCategoryApi.update(id, { name, description })
+  async function updateServiceCategory(id: number, name: string, description: string, version: number) {
+    const updated = await serviceCategoryApi.update(id, { name, description, version })
     upsert(serviceCategories, updated)
     return updated
   }

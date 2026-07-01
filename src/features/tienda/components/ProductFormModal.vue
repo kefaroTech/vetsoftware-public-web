@@ -6,9 +6,14 @@ import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
-import { getProblemDetailMessage } from '@/services/http/http.client'
+import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
+import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
+import { useToast } from '@/composables/useToast'
 import { useTienda } from '../composables/useTienda'
 import type { ProductPayload, ProductResponse, TaxScheme, TaxTreatment } from '../types/tienda'
+
+const CONFLICT_MESSAGE =
+  'El registro fue modificado por otra operación; se recargó la información. Revisa y reintenta.'
 
 const TAX_TREATMENT_OPTIONS: { value: TaxTreatment; label: string }[] = [
   { value: 'GRAVADO', label: 'Gravado' },
@@ -38,6 +43,7 @@ const emit = defineEmits<{
 }>()
 
 const store = useTienda()
+const toast = useToast()
 
 interface Draft {
   name: string
@@ -47,18 +53,45 @@ interface Draft {
   currentStock: string
   minStock: string
   provider: string
-  expireDate: boolean
+  /** Fecha de vencimiento ISO `yyyy-MM-dd`; '' = sin fecha. Opcional. */
+  expireDate: string
+  /** Número de lote; opcional. */
+  lotNumber: string
   notes: string
   productCategoryId: string
   taxTreatment: TaxTreatment
   taxId: string
+  /** Versión (@Version) del item en edición; null en creación. Se reenvía en el PUT. */
+  version: number | null
 }
 
 function emptyDraft(): Draft {
   return {
     name: '', code: '', purchasePrice: '', salePrice: '', currentStock: '0', minStock: '0',
-    provider: '', expireDate: false, notes: '', productCategoryId: '', taxTreatment: 'GRAVADO', taxId: '',
+    provider: '', expireDate: '', lotNumber: '', notes: '', productCategoryId: '',
+    taxTreatment: 'GRAVADO', taxId: '',
+    version: null,
   }
+}
+
+/** Carga el draft desde un producto existente (apertura en modo edición o re-hidratación tras 409). */
+function hydrate(it: ProductResponse) {
+  Object.assign(draft, {
+    name: it.name,
+    code: it.code,
+    purchasePrice: String(it.purchasePrice),
+    salePrice: String(it.salePrice),
+    currentStock: String(it.currentStock),
+    minStock: String(it.minStock),
+    provider: it.provider ?? '',
+    expireDate: it.expireDate ?? '',
+    lotNumber: it.lotNumber ?? '',
+    notes: it.notes ?? '',
+    productCategoryId: String(it.productCategory.id),
+    taxTreatment: it.taxTreatment,
+    taxId: it.tax ? String(it.tax.id) : '',
+    version: it.version,
+  } satisfies Draft)
 }
 
 const draft = reactive<Draft>(emptyDraft())
@@ -103,25 +136,8 @@ watch(
     if (!open) return
     submitted.value = false
     saveError.value = null
-    const it = props.initial
-    if (it) {
-      Object.assign(draft, {
-        name: it.name,
-        code: it.code,
-        purchasePrice: String(it.purchasePrice),
-        salePrice: String(it.salePrice),
-        currentStock: String(it.currentStock),
-        minStock: String(it.minStock),
-        provider: it.provider ?? '',
-        expireDate: it.expireDate,
-        notes: it.notes ?? '',
-        productCategoryId: String(it.productCategory.id),
-        taxTreatment: it.taxTreatment,
-        taxId: it.tax ? String(it.tax.id) : '',
-      } satisfies Draft)
-    } else {
-      Object.assign(draft, emptyDraft())
-    }
+    if (props.initial) hydrate(props.initial)
+    else Object.assign(draft, emptyDraft())
   },
 )
 
@@ -160,11 +176,14 @@ async function submit() {
     minStock: num(draft.minStock),
     provider: draft.provider.trim() || null,
     taxTreatment: draft.taxTreatment,
-    expireDate: draft.expireDate,
+    expireDate: draft.expireDate || null,
+    lotNumber: draft.lotNumber.trim() || null,
     notes: draft.notes.trim() || null,
     productCategoryId: Number(draft.productCategoryId),
     taxId: requiresTaxRate(draft.taxTreatment) && draft.taxId ? Number(draft.taxId) : null,
   }
+  // En edición reenviamos la versión leída (@Version) para que el backend detecte conflictos.
+  if (props.initial && draft.version != null) payload.version = draft.version
   try {
     const saved = props.initial
       ? await store.updateProduct(props.initial.id, payload)
@@ -172,7 +191,16 @@ async function submit() {
     emit('saved', saved)
     emit('close')
   } catch (e) {
-    saveError.value = getProblemDetailMessage(e, 'No se pudo guardar el producto')
+    if (isConcurrencyConflict(e)) {
+      // Recargamos el catálogo para obtener la versión fresca y re-hidratamos el form para reintentar.
+      await store.refresh()
+      const fresh = props.initial ? store.products.value.find((p) => p.id === props.initial!.id) : null
+      if (fresh) hydrate(fresh)
+      saveError.value = CONFLICT_MESSAGE
+      toast.warn('Conflicto de concurrencia', CONFLICT_MESSAGE)
+    } else {
+      saveError.value = getProblemDetailMessage(e, 'No se pudo guardar el producto')
+    }
   } finally {
     busy.value = false
   }
@@ -229,6 +257,16 @@ async function submit() {
         <BaseField label="Proveedor">
           <template #default="{ id }">
             <BaseInput :id="id" v-model="draft.provider" placeholder="Opcional" />
+          </template>
+        </BaseField>
+        <BaseField label="Fecha de vencimiento">
+          <template #default="{ id }">
+            <DateInput :id="id" v-model="draft.expireDate" placeholder="Opcional" />
+          </template>
+        </BaseField>
+        <BaseField label="Lote">
+          <template #default="{ id }">
+            <BaseInput :id="id" v-model="draft.lotNumber" placeholder="Opcional" />
           </template>
         </BaseField>
         <BaseField label="Tratamiento de IVA" required>

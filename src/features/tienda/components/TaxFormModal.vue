@@ -5,9 +5,14 @@ import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
-import { getProblemDetailMessage } from '@/services/http/http.client'
+import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
+import { useToast } from '@/composables/useToast'
 import { useTienda } from '../composables/useTienda'
+import type { TaxPayload } from '../api/tax.api'
 import type { TaxResponse, TaxScheme } from '../types/tienda'
+
+const CONFLICT_MESSAGE =
+  'El registro fue modificado por otra operación; se recargó la información. Revisa y reintenta.'
 
 const TAX_SCHEME_OPTIONS: { value: TaxScheme; label: string }[] = [
   { value: 'IVA', label: 'IVA' },
@@ -25,19 +30,30 @@ const emit = defineEmits<{
 }>()
 
 const store = useTienda()
+const toast = useToast()
 
 interface Draft {
   name: string
   pct: string
   taxScheme: TaxScheme
+  /** Versión (@Version) del item en edición; null en creación. Se reenvía en el PUT. */
+  version: number | null
 }
 
-const draft = reactive<Draft>({ name: '', pct: '', taxScheme: 'IVA' })
+const draft = reactive<Draft>({ name: '', pct: '', taxScheme: 'IVA', version: null })
 const submitted = ref(false)
 const busy = ref(false)
 const saveError = ref<string | null>(null)
 
 const isEdit = computed(() => props.initial !== null)
+
+/** Carga el draft desde un impuesto existente (apertura en modo edición o re-hidratación tras 409). */
+function hydrate(it: TaxResponse) {
+  draft.name = it.name
+  draft.pct = String(it.percentage)
+  draft.taxScheme = it.taxScheme
+  draft.version = it.version
+}
 
 watch(
   () => props.open,
@@ -46,13 +62,12 @@ watch(
     submitted.value = false
     saveError.value = null
     if (props.initial) {
-      draft.name = props.initial.name
-      draft.pct = String(props.initial.percentage)
-      draft.taxScheme = props.initial.taxScheme
+      hydrate(props.initial)
     } else {
       draft.name = ''
       draft.pct = ''
       draft.taxScheme = 'IVA'
+      draft.version = null
     }
   },
 )
@@ -77,7 +92,9 @@ async function submit() {
   if (!isValid.value || busy.value) return
   busy.value = true
   saveError.value = null
-  const payload = { name: draft.name.trim(), percentage: num(draft.pct), taxScheme: draft.taxScheme }
+  const payload: TaxPayload = { name: draft.name.trim(), percentage: num(draft.pct), taxScheme: draft.taxScheme }
+  // En edición reenviamos la versión leída (@Version) para que el backend detecte conflictos.
+  if (props.initial && draft.version != null) payload.version = draft.version
   try {
     const saved = props.initial
       ? await store.updateTax(props.initial.id, payload)
@@ -85,7 +102,16 @@ async function submit() {
     emit('saved', saved)
     emit('close')
   } catch (e) {
-    saveError.value = getProblemDetailMessage(e, 'No se pudo guardar el impuesto')
+    if (isConcurrencyConflict(e)) {
+      // Recargamos el catálogo para obtener la versión fresca y re-hidratamos el form para reintentar.
+      await store.refresh()
+      const fresh = props.initial ? store.taxes.value.find((t) => t.id === props.initial!.id) : null
+      if (fresh) hydrate(fresh)
+      saveError.value = CONFLICT_MESSAGE
+      toast.warn('Conflicto de concurrencia', CONFLICT_MESSAGE)
+    } else {
+      saveError.value = getProblemDetailMessage(e, 'No se pudo guardar el impuesto')
+    }
   } finally {
     busy.value = false
   }

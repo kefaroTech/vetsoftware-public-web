@@ -6,9 +6,13 @@ import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
-import { getProblemDetailMessage } from '@/services/http/http.client'
+import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
+import { useToast } from '@/composables/useToast'
 import { useTienda } from '../composables/useTienda'
 import type { ServicePayload, ServiceResponse, TaxScheme, TaxTreatment } from '../types/tienda'
+
+const CONFLICT_MESSAGE =
+  'El registro fue modificado por otra operación; se recargó la información. Revisa y reintenta.'
 
 const TAX_TREATMENT_OPTIONS: { value: TaxTreatment; label: string }[] = [
   { value: 'GRAVADO', label: 'Gravado' },
@@ -38,6 +42,7 @@ const emit = defineEmits<{
 }>()
 
 const store = useTienda()
+const toast = useToast()
 
 interface Draft {
   name: string
@@ -46,10 +51,25 @@ interface Draft {
   serviceCategoryId: string
   taxTreatment: TaxTreatment
   taxId: string
+  /** Versión (@Version) del item en edición; null en creación. Se reenvía en el PUT. */
+  version: number | null
 }
 
 function emptyDraft(): Draft {
-  return { name: '', price: '', notes: '', serviceCategoryId: '', taxTreatment: 'GRAVADO', taxId: '' }
+  return { name: '', price: '', notes: '', serviceCategoryId: '', taxTreatment: 'GRAVADO', taxId: '', version: null }
+}
+
+/** Carga el draft desde un servicio existente (apertura en modo edición o re-hidratación tras 409). */
+function hydrate(it: ServiceResponse) {
+  Object.assign(draft, {
+    name: it.name,
+    price: String(it.price),
+    notes: it.notes ?? '',
+    serviceCategoryId: String(it.serviceCategory.id),
+    taxTreatment: it.taxTreatment,
+    taxId: it.tax ? String(it.tax.id) : '',
+    version: it.version,
+  } satisfies Draft)
 }
 
 const draft = reactive<Draft>(emptyDraft())
@@ -94,19 +114,8 @@ watch(
     if (!open) return
     submitted.value = false
     saveError.value = null
-    const it = props.initial
-    if (it) {
-      Object.assign(draft, {
-        name: it.name,
-        price: String(it.price),
-        notes: it.notes ?? '',
-        serviceCategoryId: String(it.serviceCategory.id),
-        taxTreatment: it.taxTreatment,
-        taxId: it.tax ? String(it.tax.id) : '',
-      } satisfies Draft)
-    } else {
-      Object.assign(draft, emptyDraft())
-    }
+    if (props.initial) hydrate(props.initial)
+    else Object.assign(draft, emptyDraft())
   },
 )
 
@@ -140,6 +149,8 @@ async function submit() {
     serviceCategoryId: Number(draft.serviceCategoryId),
     taxId: requiresTaxRate(draft.taxTreatment) && draft.taxId ? Number(draft.taxId) : null,
   }
+  // En edición reenviamos la versión leída (@Version) para que el backend detecte conflictos.
+  if (props.initial && draft.version != null) payload.version = draft.version
   try {
     const saved = props.initial
       ? await store.updateService(props.initial.id, payload)
@@ -147,7 +158,16 @@ async function submit() {
     emit('saved', saved)
     emit('close')
   } catch (e) {
-    saveError.value = getProblemDetailMessage(e, 'No se pudo guardar el servicio')
+    if (isConcurrencyConflict(e)) {
+      // Recargamos el catálogo para obtener la versión fresca y re-hidratamos el form para reintentar.
+      await store.refresh()
+      const fresh = props.initial ? store.services.value.find((s) => s.id === props.initial!.id) : null
+      if (fresh) hydrate(fresh)
+      saveError.value = CONFLICT_MESSAGE
+      toast.warn('Conflicto de concurrencia', CONFLICT_MESSAGE)
+    } else {
+      saveError.value = getProblemDetailMessage(e, 'No se pudo guardar el servicio')
+    }
   } finally {
     busy.value = false
   }

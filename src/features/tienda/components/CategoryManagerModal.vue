@@ -14,7 +14,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: []
-  upsert: [payload: { id: number | null; name: string; description: string }]
+  upsert: [payload: { id: number | null; name: string; description: string; version?: number }]
   remove: [id: number]
 }>()
 
@@ -54,7 +54,10 @@ function cancelEdit() {
 }
 function saveEdit(id: number) {
   if (editName.value.trim().length < 2) return
-  emit('upsert', { id, name: editName.value.trim(), description: editDesc.value.trim() })
+  // La versión (@Version) se lee de la lista reactiva en el momento del guardado; tras un 409 el
+  // padre refresca `categories`, así que un reintento envía la versión fresca sin cerrar el editor.
+  const version = props.categories.find((c) => c.id === id)?.version
+  emit('upsert', { id, name: editName.value.trim(), description: editDesc.value.trim(), version })
   editingId.value = null
 }
 
