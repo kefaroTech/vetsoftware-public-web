@@ -82,7 +82,7 @@ function useVetHistoriaSelection() { return React.useContext(VetHistoriaCtx); }
 // ModalShell — components/ui/ModalShell.vue
 // ============================================================================
 
-function VetModalShell({ open, title, subtitle, icon: IconComp, width = 720, accent = 'amatista', onClose, children, footerLeft, footerActions }) {
+function VetModalShell({ open, title, subtitle, icon: IconComp, width = 720, accent = 'amatista', z, onClose, children, footerLeft, footerActions }) {
   React.useEffect(() => {
     if (!open) return;
     const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
@@ -101,7 +101,7 @@ function VetModalShell({ open, title, subtitle, icon: IconComp, width = 720, acc
   return (
     <div
       role="dialog" aria-modal="true"
-      style={vetCoreStyles.overlay}
+      style={z ? { ...vetCoreStyles.overlay, zIndex: z } : vetCoreStyles.overlay}
     >
       <div style={{ ...vetCoreStyles.modalCard, width: `min(${width + 180}px, calc(100vw - 48px))`, maxWidth: 'calc(100vw - 48px)' }}>
         <header style={vetCoreStyles.modalHead}>

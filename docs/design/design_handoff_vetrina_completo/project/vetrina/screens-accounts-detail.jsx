@@ -158,8 +158,9 @@ function VetAcctCerrarModal({ open, account, owner, pets, saldo, pagado, onClose
   const [feFinalConsumer, setFeFinalConsumer] = React.useState(false);
   const [feCustomer, setFeCustomer] = React.useState(null);
   const [fiscalOpen, setFiscalOpen] = React.useState(false);
+  const [custPickOpen, setCustPickOpen] = React.useState(false);
 
-  React.useEffect(() => { if (open) { setStep('cobro'); setMotivo('COBRADA'); setMetodo('EFECTIVO'); setRecibido(''); setNota(''); setReciboData(null); setFeDocType('DOC_EQUIV_POS'); setFeFinalConsumer(false); setFeCustomer(null); setFiscalOpen(false); } }, [open]);
+  React.useEffect(() => { if (open) { setStep('cobro'); setMotivo('COBRADA'); setMetodo('EFECTIVO'); setRecibido(''); setNota(''); setReciboData(null); setFeDocType('DOC_EQUIV_POS'); setFeFinalConsumer(false); setFeCustomer(vetFeFromOwner(owner)); setFiscalOpen(false); setCustPickOpen(false); } }, [open, owner]);
 
   // Desglose por impuesto (hook SIEMPRE antes de cualquier early return)
   const breakdown = React.useMemo(() => {
@@ -342,8 +343,11 @@ function VetAcctCerrarModal({ open, account, owner, pets, saldo, pagado, onClose
                 </div>
                 <div style={{ marginTop: 10 }}>
                   <VetFeCustomerBlock customer={feCustomer}
-                    onSelect={() => setFeCustomer(vetFeFromOwner(owner))}
+                    onSelect={() => setCustPickOpen(true)}
                     onComplete={() => setFiscalOpen(true)} />
+                  <div className="vet-fe-preloadhint">
+                    <VetIcons.User size={12} strokeWidth={1.9} /> Precargado con el titular de la cuenta. Puedes cambiarlo si la factura va a otro cliente.
+                  </div>
                 </div>
               </div>
             ) : (
@@ -387,6 +391,12 @@ function VetAcctCerrarModal({ open, account, owner, pets, saldo, pagado, onClose
       <VetFeCustomerFiscalModal open={fiscalOpen} customer={feCustomer}
         onClose={() => setFiscalOpen(false)}
         onSave={(c) => { setFeCustomer((p) => ({ ...(p || {}), ...c })); setFiscalOpen(false); }} />
+
+      <VetModalShell open={custPickOpen} z={1600} title="Cliente a facturar"
+        subtitle="La factura electrónica irá a su nombre" icon={VetIcons.User} accent="amatista" width={640}
+        onClose={() => setCustPickOpen(false)}>
+        <VetCustomerPicker mode="fiscal" onPick={(c) => { setFeCustomer(c); setCustPickOpen(false); }} />
+      </VetModalShell>
     </VetModalShell>
   );
 }

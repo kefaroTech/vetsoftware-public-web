@@ -185,30 +185,32 @@ function VetShopPayModal({ open, total, customer, onSelectCustomer, onUpdateCust
   const [method, setMethod] = React.useState('EFECTIVO');
   const [received, setReceived] = React.useState('');
   const [fiscalOpen, setFiscalOpen] = React.useState(false);
-  React.useEffect(() => { if (open) { setMethod('EFECTIVO'); setReceived(''); setFiscalOpen(false); } }, [open]);
+  const [docType, setDocType] = React.useState('POS');   // 'POS' | 'FE' (elección bajo umbral)
+  const overUvt = vetFeOverThreshold(total);
+  React.useEffect(() => { if (open) { setMethod('EFECTIVO'); setReceived(''); setFiscalOpen(false); setDocType(overUvt ? 'FE' : 'POS'); } }, [open, overUvt]);
 
+  const isFE = overUvt || docType === 'FE';
   const recv = Number(received) || 0;
   const change = method === 'EFECTIVO' ? Math.max(0, recv - total) : 0;
-  const overUvt = vetFeOverThreshold(total);
-  const checklist = overUvt ? vetFeCustomerChecklist(customer) : { complete: true };
+  const checklist = isFE ? vetFeCustomerChecklist(customer) : { complete: true };
   const cashOk = method !== 'EFECTIVO' || recv >= total;
-  const canConfirm = cashOk && (!overUvt || (customer && checklist.complete));
+  const canConfirm = cashOk && (!isFE || (customer && checklist.complete));
 
-  const confirmLabel = overUvt ? 'Emitir factura electrónica' : 'Confirmar pago';
+  const confirmLabel = isFE ? 'Emitir factura electrónica' : 'Confirmar pago';
 
   return (
     <VetModalShell
       open={open} onClose={onClose}
-      title={overUvt ? 'Cobrar y facturar' : 'Cobrar venta'}
+      title={isFE ? 'Cobrar y facturar' : 'Cobrar venta'}
       subtitle={`Total a pagar: ${vetMoney(total)}`}
-      icon={VetIcons.Receipt} accent="amatista" width={overUvt ? 560 : 460}
+      icon={VetIcons.Receipt} accent="amatista" width={isFE ? 560 : 460}
       footerActions={
         <>
           <button type="button" className="vet-btn-ghost-modal" onClick={onClose}>Cancelar</button>
           <button type="button" className="vet-btn-primary-modal"
             disabled={!canConfirm}
             style={!canConfirm ? { opacity: 0.5, cursor: 'not-allowed' } : null}
-            onClick={() => onConfirm({ method, received: recv, electronic: overUvt })}>
+            onClick={() => onConfirm({ method, received: recv, electronic: isFE })}>
             {confirmLabel}
           </button>
         </>
@@ -217,19 +219,44 @@ function VetShopPayModal({ open, total, customer, onSelectCustomer, onUpdateCust
       <div className="vet-action-modal-body">
         {overUvt && <VetFeThresholdBanner total={total} />}
 
-        {overUvt && (
-          <>
-            <div className="vet-fe-doctypesel">
-              <div className="vet-fe-doctype on"><VetIcons.FileText size={15} strokeWidth={1.8} /> Factura electrónica</div>
-              <div className="vet-fe-doctype off" title="No disponible por encima de 5 UVT">
-                <VetIcons.ShieldCheck size={14} strokeWidth={1.8} style={{ opacity: 0.5 }} /> Documento POS
-                <span className="vet-fe-lock"><VetIcons.X size={11} strokeWidth={2.4} /></span>
-              </div>
+        {/* Selector de tipo de documento */}
+        <div>
+          {!overUvt && <div className="vet-acct-fieldlabel">Tipo de documento</div>}
+          <div className="vet-fe-doctypesel">
+            {overUvt ? (
+              <>
+                <div className="vet-fe-doctype on"><VetIcons.FileText size={15} strokeWidth={1.8} /> Factura electrónica</div>
+                <div className="vet-fe-doctype off" title="No disponible por encima de 5 UVT">
+                  <VetIcons.ShieldCheck size={14} strokeWidth={1.8} style={{ opacity: 0.5 }} /> Documento POS
+                  <span className="vet-fe-lock"><VetIcons.X size={11} strokeWidth={2.4} /></span>
+                </div>
+              </>
+            ) : (
+              <>
+                <button type="button" className={'vet-fe-doctype pick' + (docType === 'POS' ? ' on' : '')} onClick={() => setDocType('POS')}>
+                  <span className="vet-fe-doctype-rb">{docType === 'POS' && <span />}</span>
+                  <VetIcons.ShieldCheck size={15} strokeWidth={1.8} /> Documento POS
+                </button>
+                <button type="button" className={'vet-fe-doctype pick' + (docType === 'FE' ? ' on' : '')} onClick={() => setDocType('FE')}>
+                  <span className="vet-fe-doctype-rb">{docType === 'FE' && <span />}</span>
+                  <VetIcons.FileText size={15} strokeWidth={1.8} /> Factura electrónica
+                </button>
+              </>
+            )}
+          </div>
+          {!overUvt && (
+            <div className="vet-fe-doctypehint">
+              {docType === 'FE'
+                ? 'Se emitirá factura electrónica DIAN. Requiere identificar al cliente con sus datos fiscales.'
+                : 'Documento equivalente POS. No requiere datos fiscales del cliente.'}
             </div>
-            <VetFeCustomerBlock customer={customer}
-              onSelect={onSelectCustomer}
-              onComplete={() => setFiscalOpen(true)} />
-          </>
+          )}
+        </div>
+
+        {isFE && (
+          <VetFeCustomerBlock customer={customer}
+            onSelect={onSelectCustomer}
+            onComplete={() => setFiscalOpen(true)} />
         )}
 
         <VetBaseField label="Método de pago" required>

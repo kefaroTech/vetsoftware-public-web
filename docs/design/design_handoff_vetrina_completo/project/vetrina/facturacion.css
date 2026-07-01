@@ -212,6 +212,13 @@
 .vet-fe-doctype { display: flex; align-items: center; gap: 7px; padding: 11px 13px; border-radius: 10px; font-size: 13px; font-weight: 600; position: relative; }
 .vet-fe-doctype.on { background: var(--amatista-50); border: 1.5px solid var(--amatista-400); color: var(--amatista-700); }
 .vet-fe-doctype.off { background: var(--warm-100); border: 1.5px solid var(--warm-200); color: var(--warm-400); cursor: not-allowed; }
+.vet-fe-doctype.pick { cursor: pointer; }
+.vet-fe-doctype.pick:hover:not(.on) { border-color: var(--amatista-300); }
+.vet-fe-doctype-rb { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--warm-300); display: grid; place-items: center; flex-shrink: 0; }
+.vet-fe-doctype.pick.on .vet-fe-doctype-rb { border-color: var(--amatista-600); }
+.vet-fe-doctype-rb span { width: 8px; height: 8px; border-radius: 50%; background: var(--amatista-600); }
+.vet-fe-doctypehint { font-size: 11.5px; color: var(--warm-500); margin-top: 7px; line-height: 1.5; }
+.vet-fe-preloadhint { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--warm-500); margin-top: 7px; }
 .vet-fe-lock { margin-left: auto; width: 18px; height: 18px; border-radius: 50%; background: var(--warm-200); color: var(--warm-500); display: grid; place-items: center; }
 .vet-fe-custempty { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; background: var(--warm-50); border: 1.5px dashed var(--warm-300); }
 .vet-fe-custempty-ic { width: 40px; height: 40px; border-radius: 10px; background: var(--warm-150); color: var(--warm-500); display: grid; place-items: center; flex-shrink: 0; }
@@ -239,6 +246,39 @@
 .vet-fe-agenttoggle.on .vet-fe-agentbox { background: var(--amatista-600); border-color: var(--amatista-600); }
 .vet-fe-agenttoggle strong { font-size: 13px; color: var(--warm-900); display: block; }
 .vet-fe-agenthint { font-size: 11.5px; color: var(--warm-500); display: block; margin-top: 2px; }
+
+/* Customer picker con creación in-situ */
+.vet-cpk { display: flex; flex-direction: column; gap: 12px; }
+.vet-cpk-searchrow { display: flex; gap: 8px; align-items: stretch; }
+.vet-cpk-newbtn { display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; border-radius: 9px; border: 1.5px solid var(--amatista-300); background: var(--amatista-50); color: var(--amatista-700); font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.vet-cpk-newbtn:hover { background: var(--amatista-100); }
+.vet-cpk-hint { font-size: 12.5px; color: var(--warm-500); text-align: center; padding: 18px; }
+.vet-cpk-empty { text-align: center; padding: 22px 16px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.vet-cpk-empty-ic { width: 44px; height: 44px; border-radius: 12px; background: var(--warm-100); color: var(--warm-400); display: grid; place-items: center; margin-bottom: 6px; }
+.vet-cpk-empty-t { font-size: 14px; font-weight: 600; color: var(--warm-900); }
+.vet-cpk-empty-s { font-size: 12px; color: var(--warm-500); margin-bottom: 12px; }
+.vet-cpk-create { display: flex; flex-direction: column; }
+.vet-cpk-back { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; background: none; border: none; font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--amatista-700); cursor: pointer; padding: 0; margin-bottom: 14px; }
+.vet-cpk-failbanner { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 9px; background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.10 25); color: oklch(48% 0.16 25); font-size: 12.5px; margin-bottom: 12px; }
+.vet-cpk-sectlabel { font-size: 12px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: var(--warm-600); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.vet-cpk-reqtag { font-size: 10px; font-weight: 600; letter-spacing: 0; text-transform: none; padding: 2px 8px; border-radius: 999px; background: oklch(95% 0.06 80); color: oklch(45% 0.11 70); }
+.vet-cpk-opttag { font-size: 10px; font-weight: 600; letter-spacing: 0; text-transform: none; padding: 2px 8px; border-radius: 999px; background: var(--warm-150); color: var(--warm-500); }
+.vet-cpk-fiscalbox { padding: 14px; border-radius: 12px; background: var(--warm-50); border: 1px solid var(--warm-200); }
+.vet-cpk-fiscalbox.req { background: oklch(98.5% 0.01 80); border-color: oklch(90% 0.05 80); }
+.vet-cpk-createfoot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--warm-200); }
+.vet-cpk-cityss { position: relative; }
+.vet-cpk-cityfield { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border-radius: 9px; border: 1.5px solid var(--warm-200); background: var(--warm-50); font-family: inherit; font-size: 13px; color: var(--warm-900); cursor: pointer; }
+.vet-cpk-cityph { color: var(--warm-400); }
+.vet-cpk-citymenu { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 20; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 11px; box-shadow: 0 16px 40px rgba(20,15,30,.18); overflow: hidden; }
+.vet-cpk-citylist { max-height: 200px; overflow-y: auto; padding: 0 6px 6px; }
+.vet-cpk-cityopt { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 10px; border-radius: 8px; border: none; background: none; font-family: inherit; font-size: 13px; color: var(--warm-900); cursor: pointer; text-align: left; }
+.vet-cpk-cityopt:hover { background: var(--warm-100); }
+.vet-cpk-citytag { font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: oklch(93% 0.06 150); color: oklch(42% 0.12 150); white-space: nowrap; }
+.vet-cpk-citytag.bad { background: oklch(94% 0.05 25); color: oklch(52% 0.16 25); }
+@media (max-width: 640px) {
+  .vet-cpk-searchrow { flex-direction: column; }
+  .vet-cpk-newbtn { padding: 10px; justify-content: center; }
+}
 
 /* ===== Status panel extras ===== */
 .vet-fe-sandboxbanner { display: flex; align-items: center; gap: 9px; padding: 11px 14px; border-radius: 11px; font-size: 12.5px; background: oklch(94% 0.07 80); border: 1px solid oklch(88% 0.09 80); color: oklch(42% 0.12 70); }

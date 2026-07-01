@@ -257,14 +257,11 @@ function VetShopPOSView({ shop }) {
         </div>
       </aside>
 
-      <VetModalShell open={custOpen} title={custPurpose === 'fiscal' ? 'Seleccionar cliente a facturar' : 'Asociar propietario'} subtitle={custPurpose === 'fiscal' ? 'La factura electrónica irá a su nombre' : 'Vincula la venta a un cliente (opcional)'}
-        icon={VetIcons.User} accent="amatista" width={520} onClose={() => setCustOpen(false)}>
-        <VetPatientCascadePicker onSelect={(sel) => {
-          setCustomer(sel);
-          if (custPurpose === 'fiscal') {
-            const o = sel.owner;
-            setFiscalCustomer({ name: o.name, documentType: o.documentType || 'CEDULA_CIUDADANIA', documentId: o.document || o.documentId || '', personType: 'NATURAL', email: o.email || '', cityId: '', taxRegime: 'NO_RESPONSABLE_IVA', verificationDigit: null, legalName: null });
-          }
+      <VetModalShell open={custOpen} z={1600} title={custPurpose === 'fiscal' ? 'Cliente a facturar' : 'Asociar propietario'} subtitle={custPurpose === 'fiscal' ? 'La factura electrónica irá a su nombre' : 'Vincula la venta a un cliente (opcional)'}
+        icon={VetIcons.User} accent="amatista" width={custPurpose === 'fiscal' ? 640 : 560} onClose={() => setCustOpen(false)}>
+        <VetCustomerPicker mode={custPurpose === 'fiscal' ? 'fiscal' : 'basic'} onPick={(c) => {
+          if (custPurpose === 'fiscal') { setFiscalCustomer(c); setCustomer({ owner: { id: c.id, name: c.name }, animal: null }); }
+          else { setCustomer({ owner: { id: c.id, name: c.name, document: c.documentId, email: c.email }, animal: null }); }
           setCustOpen(false);
         }} />
       </VetModalShell>
