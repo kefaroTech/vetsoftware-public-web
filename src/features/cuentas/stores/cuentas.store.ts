@@ -87,20 +87,22 @@ export const useCuentasStore = defineStore('cuentas', () => {
       const lines: { gross: number; ratePct: number; voided: boolean }[] = []
       for (const c of prod.filter((x) => x.enabled)) {
         // Precio congelado al crear el cargo (snapshot del backend); no se lee del catálogo en vivo.
+        // El total de la línea escala por la cantidad cobrada (unitPrice * quantity).
+        const lineTotal = c.unitPrice * c.quantity
         unified.push({
           id: c.id, kind: 'product', animalId: c.animal.id, animalName: c.animal.name,
-          concept: c.product.name, amount: c.unitPrice, date: c.createdDate,
+          concept: c.product.name, amount: lineTotal, quantity: c.quantity, date: c.createdDate,
           createdByName: c.createdBy?.name ?? '',
           voided: c.voided, voidedByName: c.voidedBy?.name ?? '', voidReason: c.voidReason ?? '',
         })
         const p = tienda.products.find((x) => x.id === c.product.id)
         const rate = p && appliesIva(p.taxTreatment) ? (p.tax?.percentage ?? 0) : 0
-        lines.push({ gross: c.unitPrice, ratePct: rate, voided: c.voided })
+        lines.push({ gross: lineTotal, ratePct: rate, voided: c.voided })
       }
       for (const c of svc.filter((x) => x.enabled)) {
         unified.push({
           id: c.id, kind: 'service', animalId: c.animal.id, animalName: c.animal.name,
-          concept: c.service.name, amount: c.unitPrice, date: c.createdDate,
+          concept: c.service.name, amount: c.unitPrice, quantity: 1, date: c.createdDate,
           createdByName: c.createdBy?.name ?? '',
           voided: c.voided, voidedByName: c.voidedBy?.name ?? '', voidReason: c.voidReason ?? '',
         })
@@ -111,7 +113,7 @@ export const useCuentasStore = defineStore('cuentas', () => {
       for (const c of gen.filter((x) => x.enabled)) {
         unified.push({
           id: c.id, kind: 'general', animalId: null, animalName: null,
-          concept: c.name, amount: c.unitAmount * c.quantity, date: c.createdDate,
+          concept: c.name, amount: c.unitAmount * c.quantity, quantity: c.quantity, date: c.createdDate,
           createdByName: c.createdBy?.name ?? '',
           voided: c.voided, voidedByName: c.voidedBy?.name ?? '', voidReason: c.voidReason ?? '',
         })
@@ -205,9 +207,15 @@ export const useCuentasStore = defineStore('cuentas', () => {
     await loadDetail(accountId)
   }
 
-  async function addProductCharge(accountId: number, animalId: number, productId: number, clientRequestId?: string) {
+  async function addProductCharge(
+    accountId: number,
+    animalId: number,
+    productId: number,
+    quantity = 1,
+    clientRequestId?: string,
+  ) {
     await productChargeApi.create({
-      animalId, productId, openAccountId: accountId, clientRequestId,
+      animalId, productId, openAccountId: accountId, quantity, clientRequestId,
       expectedVersion: accountVersion(accountId),
     })
     await refreshAccount(accountId)

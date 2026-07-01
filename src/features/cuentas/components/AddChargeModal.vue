@@ -33,6 +33,22 @@ const busy = ref(false)
 // Cargo general
 const general = reactive({ name: '', unitAmount: '', quantity: '1', taxId: '' })
 
+// Cantidad por producto del catálogo (entero >= 1). Mismo saneo por dígitos que el cargo general.
+// Solo aplica a la pestaña "Productos": el POST product-charge-open-accounts acepta `quantity`.
+const qtyById = reactive<Record<number, string>>({})
+function qtyStr(id: number): string {
+  return qtyById[id] ?? '1'
+}
+function setQty(id: number, v: string): void {
+  qtyById[id] = v.replace(/\D/g, '')
+}
+function qtyNum(id: number): number {
+  return Number(qtyStr(id).replace(/\D/g, '')) || 0
+}
+function resetQtys(): void {
+  for (const k of Object.keys(qtyById)) delete qtyById[Number(k)]
+}
+
 watch(
   () => props.open,
   (open) => {
@@ -41,6 +57,7 @@ watch(
     selectedPet.value = props.pets[0]?.id ?? 'general'
     tab.value = 'service'
     query.value = ''
+    resetQtys()
     Object.assign(general, { name: '', unitAmount: '', quantity: '1', taxId: '' })
   },
 )
@@ -66,13 +83,19 @@ const isGeneral = computed(() => selectedPet.value === 'general')
 
 async function addCatalogItem(itemId: number) {
   if (isGeneral.value || busy.value) return
+  // Producto: la cantidad va en el POST (>= 1). Servicio: siempre 1 unidad.
+  const qty = tab.value === 'product' ? qtyNum(itemId) : 1
+  if (tab.value === 'product' && qty < 1) return
   busy.value = true
   try {
     const animalId = selectedPet.value as number
     // Idempotency key por click: si el POST se reintenta (respuesta perdida), el backend no duplica el cargo.
     const reqId = crypto.randomUUID()
     if (tab.value === 'service') await cuentas.addServiceCharge(props.accountId, animalId, itemId, reqId)
-    else await cuentas.addProductCharge(props.accountId, animalId, itemId, reqId)
+    else {
+      await cuentas.addProductCharge(props.accountId, animalId, itemId, qty, reqId)
+      delete qtyById[itemId]
+    }
     toast.success('Cargo agregado', 'Se añadió a la cuenta.')
     emit('added')
   } catch (e) {
@@ -185,8 +208,28 @@ async function addGeneral() {
         <ul class="catalog">
           <li v-for="it in catalog" :key="it.id" class="cat-row">
             <span class="cat-name">{{ it.name }}</span>
-            <span class="cat-price">{{ formatMoney(it.price) }}</span>
-            <button type="button" class="add-btn" :disabled="busy" @click="addCatalogItem(it.id)">
+            <span class="cat-price">
+              {{ formatMoney(it.price) }}
+              <span v-if="tab === 'product' && qtyNum(it.id) > 1" class="cat-sub">
+                · {{ formatMoney(it.price * qtyNum(it.id)) }}
+              </span>
+            </span>
+            <input
+              v-if="tab === 'product'"
+              class="qty-input"
+              :class="{ invalid: qtyNum(it.id) < 1 }"
+              type="text"
+              inputmode="numeric"
+              aria-label="Cantidad"
+              :value="qtyStr(it.id)"
+              @input="setQty(it.id, ($event.target as HTMLInputElement).value)"
+            />
+            <button
+              type="button"
+              class="add-btn"
+              :disabled="busy || (tab === 'product' && qtyNum(it.id) < 1)"
+              @click="addCatalogItem(it.id)"
+            >
               <Plus :size="14" :stroke-width="1.9" /> Agregar
             </button>
           </li>
@@ -259,7 +302,15 @@ async function addGeneral() {
 }
 .cat-row:hover { border-color: var(--amatista-300); background: var(--amatista-50); }
 .cat-name { flex: 1; font-size: 13.5px; color: var(--warm-900); }
-.cat-price { font-size: 13px; color: var(--warm-600); }
+.cat-price { font-size: 13px; color: var(--warm-600); font-variant-numeric: tabular-nums; }
+.cat-sub { color: var(--amatista-700); font-weight: 500; }
+.qty-input {
+  width: 46px; text-align: center; font-family: inherit; font-size: 13px; font-weight: 500;
+  color: var(--warm-800); border: 1px solid var(--warm-200); border-radius: 8px; padding: 6px 0;
+  outline: none; background: var(--warm-50); font-variant-numeric: tabular-nums; flex-shrink: 0;
+}
+.qty-input:focus { border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
+.qty-input.invalid { border-color: oklch(60% 0.18 25); box-shadow: 0 0 0 3px oklch(95% 0.06 25); }
 .add-btn {
   display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 12.5px; font-weight: 500;
   border-radius: 8px; cursor: pointer; font-family: inherit;

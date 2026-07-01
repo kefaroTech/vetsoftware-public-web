@@ -111,6 +111,8 @@ export interface ProductChargeResponse extends ChargeVoidInfo {
   product: { id: number; name: string; salePrice?: number }
   /** Precio unitario congelado al crear el cargo (snapshot del backend). */
   unitPrice: number
+  /** Unidades cobradas (>= 1). El total de la línea es `unitPrice * quantity`. */
+  quantity: number
   openAccount: ChargeAccountRef
   createdBy: EmployeeSummary
   createdDate: string
@@ -149,6 +151,8 @@ export interface CreateProductChargePayload {
   animalId: number
   productId: number
   openAccountId: number
+  /** Unidades a cobrar (entero >= 1). Opcional: el backend usa 1 si se omite. */
+  quantity?: number
   /** Idempotency key (UUID) opcional: deduplica reintentos del mismo cargo en el backend. */
   clientRequestId?: string
   /** Versión esperada de la cuenta (opt-in): detección temprana de conflicto de concurrencia. */
@@ -225,7 +229,10 @@ export interface UnifiedCharge {
   animalId: number | null
   animalName: string | null
   concept: string
+  /** Monto total de la línea (unitPrice * quantity para producto; unitAmount * quantity para general). */
   amount: number
+  /** Unidades cobradas (>= 1). Service siempre 1; product/general traen su cantidad real. */
+  quantity: number
   date: string
   /** Autoría del cargo (cajero que lo registró). */
   createdByName: string

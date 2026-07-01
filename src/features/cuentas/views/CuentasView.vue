@@ -399,7 +399,7 @@ async function onChargeVoided() {
               >
                 <component :is="CHARGE_ICON[c.kind]" :size="14" :stroke-width="1.7" class="c-icon" :class="c.kind" />
                 <span class="c-concept">
-                  {{ c.concept }}
+                  {{ c.concept }}<span v-if="c.quantity > 1" class="c-qty">x{{ c.quantity }}</span>
                   <span v-if="c.voided" class="c-void" :title="c.voidReason ? `Motivo: ${c.voidReason}` : ''">
                     Anulado{{ c.voidedByName ? ` por ${c.voidedByName}` : '' }}
                   </span>
@@ -633,6 +633,7 @@ async function onChargeVoided() {
 /* Cargo anulado: queda visible, atenuado y tachado en concepto + monto. */
 .charge.voided .c-concept { color: var(--warm-500); }
 .charge.voided .c-amount { text-decoration: line-through; color: var(--warm-500); }
+.c-qty { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 600; color: var(--amatista-700); font-variant-numeric: tabular-nums; }
 .c-void { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 500; color: oklch(48% 0.16 25); }
 .c-banned { color: oklch(55% 0.16 25); flex-shrink: 0; }
 .c-void-btn { width: 24px; height: 24px; border: 1px solid var(--warm-200); background: transparent; color: var(--warm-500); cursor: pointer; border-radius: 6px; display: grid; place-items: center; flex-shrink: 0; }
