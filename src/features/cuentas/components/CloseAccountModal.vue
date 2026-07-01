@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { Check, Printer, Receipt, X, FileText, ShieldCheck } from 'lucide-vue-next'
+import { Check, Printer, Receipt, X, FileText, ShieldCheck, User } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
@@ -31,6 +31,7 @@ import type { ElectronicDocumentResponse } from '@/features/facturacion/types/fa
 import {
   PAYMENT_METHOD_LABEL,
   type OpenAccountResponse,
+  type OwnerSummary,
   type PaymentMethod,
 } from '../types/cuentas'
 
@@ -68,6 +69,25 @@ const ownerFull = ref<OwnerResponse | null>(null)
 const feCustomer = ref<FiscalCustomer | null>(null)
 const fiscalModalOpen = ref(false)
 const loadingOwner = ref(false)
+const loadError = ref(false)
+
+// Precarga inmediata (sin esperar al fetch) desde el resumen del titular de la cuenta: garantiza que la
+// tarjeta fiscal nunca aparezca vacía pidiendo "Seleccionar cliente". loadOwnerFiscal() la enriquece luego.
+function fromOwnerSummary(o: OwnerSummary): FiscalCustomer {
+  return {
+    name: o.name,
+    documentType: null,
+    documentId: o.document ?? '',
+    verificationDigit: null,
+    personType: null,
+    legalName: null,
+    email: null,
+    cityId: null,
+    cityName: null,
+    taxRegime: null,
+    withholdingAgent: false,
+  }
+}
 const feComplete = computed(() =>
   overUvt.value && motivo.value === 'COBRADA'
     ? feFiscalChecklist(feCustomer.value).complete
@@ -94,21 +114,36 @@ async function loadOwnerFiscal() {
   const ownerId = props.account?.owner.id
   if (!ownerId) return
   loadingOwner.value = true
+  loadError.value = false
   try {
     const o = await ownerApi.findById(ownerId)
     ownerFull.value = o
     feCustomer.value = toFiscalCustomer(o)
   } catch {
-    // Si falla, el checklist queda incompleto y el botón bloqueado (reintentable).
-    feCustomer.value = null
+    // Si falla, se conserva la precarga desde el resumen del titular, pero sin sus datos fiscales completos
+    // (tipo de documento, ciudad, régimen…): el checklist quedaría incompleto. Señalamos el error para que el
+    // usuario reintente en vez de creer que "faltan" datos que en realidad no se cargaron.
+    loadError.value = true
   } finally {
     loadingOwner.value = false
   }
 }
 
 async function onSaveFiscal(data: Partial<FiscalCustomer>) {
-  const o = ownerFull.value
-  if (!o) return
+  const ownerId = props.account?.owner.id
+  if (!ownerId) return
+  // Si el fetch inicial de los datos del titular falló, ownerFull quedó null. Antes esto hacía que el
+  // guardado retornara en silencio ("no hace nada"): recargamos el titular aquí para poder construir el PUT.
+  let o = ownerFull.value
+  if (!o) {
+    try {
+      o = await ownerApi.findById(ownerId)
+      ownerFull.value = o
+    } catch (e) {
+      toast.error('No se pudo guardar', getProblemDetailMessage(e, 'No se pudo cargar el cliente.'))
+      return
+    }
+  }
   const payload: UpdateOwnerRequest = {
     name: o.name,
     email: data.email ?? o.email,
@@ -249,7 +284,12 @@ watch(
     ownerFull.value = null
     feCustomer.value = null
     fiscalModalOpen.value = false
-    if (canEmit.value && isOverThreshold(props.account?.totalAmount ?? 0)) void loadOwnerFiscal()
+    loadError.value = false
+    if (props.account && canEmit.value && isOverThreshold(props.account.totalAmount)) {
+      // Precarga sincrónica con el titular + enriquecido asíncrono con sus datos fiscales completos.
+      feCustomer.value = fromOwnerSummary(props.account.owner)
+      void loadOwnerFiscal()
+    }
   },
 )
 
@@ -267,6 +307,7 @@ async function confirm() {
     }
     // 2. Cambiar el estado (CLOSE/CANCEL). Si esto falla, el marcador evita recobrar.
     //    Al CERRAR, el backend auto-emite el documento DIAN (best-effort) según docType/finalConsumer.
+    //    La factura va SIEMPRE al titular de la cuenta (el endpoint de cierre no acepta otro adquiriente).
     const emitting = motivo.value === 'COBRADA' && canEmit.value
     const updated = await store.changeAccountStatus(
       accountId,
@@ -388,8 +429,16 @@ function onShellClose() {
                 <span class="lock"><X :size="11" :stroke-width="2.4" /></span>
               </div>
             </div>
-            <div v-if="loadingOwner" class="fe-loading">Cargando datos del cliente…</div>
-            <FeFiscalCustomerCard v-else :customer="feCustomer" @complete="fiscalModalOpen = true" />
+            <FeFiscalCustomerCard :customer="feCustomer" @complete="fiscalModalOpen = true" />
+            <p v-if="loadingOwner" class="fe-loading">Cargando datos fiscales del cliente…</p>
+            <div v-else-if="loadError" class="fe-loaderr">
+              <span>No se pudieron cargar los datos fiscales del titular.</span>
+              <button type="button" @click="loadOwnerFiscal">Reintentar</button>
+            </div>
+            <p v-else class="fe-preloadhint">
+              <User :size="12" :stroke-width="1.9" />
+              La factura electrónica se emite a nombre del titular de la cuenta.
+            </p>
           </div>
           <!-- Caso normal (≤ 5 UVT): tipo de documento + consumidor final -->
           <div v-else class="fe-block">
@@ -531,6 +580,10 @@ function onShellClose() {
 .doctype.off { background: var(--warm-100); border: 1.5px solid var(--warm-200); color: var(--warm-400); cursor: not-allowed; }
 .lock { margin-left: auto; width: 18px; height: 18px; border-radius: 50%; background: var(--warm-200); color: var(--warm-500); display: grid; place-items: center; }
 .fe-loading { font-size: 12.5px; color: var(--warm-500); padding: 12px 14px; border-radius: 11px; background: var(--warm-50); border: 1px solid var(--warm-200); }
+.fe-preloadhint { margin: 0; display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--warm-500); }
+.fe-preloadhint svg { flex-shrink: 0; color: var(--warm-400); }
+.fe-loaderr { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; border-radius: 10px; font-size: 12px; background: oklch(96% 0.05 25); border: 1px solid oklch(89% 0.07 25); color: oklch(46% 0.16 25); }
+.fe-loaderr button { font-family: inherit; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 7px; border: 1px solid currentColor; background: transparent; color: inherit; cursor: pointer; flex-shrink: 0; }
 .retry-hint {
   margin: 0; padding: 11px 14px; border-radius: 10px; font-size: 12.5px; line-height: 1.4;
   background: oklch(95% 0.06 80); border: 1px solid oklch(88% 0.09 80); color: oklch(40% 0.10 70);

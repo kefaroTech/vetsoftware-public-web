@@ -15,7 +15,7 @@ import {
 } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import OwnerPicker from '@/features/cuentas/components/OwnerPicker.vue'
+import FeCustomerPicker from '@/features/facturacion/components/FeCustomerPicker.vue'
 import PayModal from '../components/PayModal.vue'
 import { useFeUvt } from '@/features/facturacion/composables/useFeUvt'
 import ReceiptModal from '../components/ReceiptModal.vue'
@@ -55,6 +55,9 @@ const lines = ref<SaleLine[]>([])
 
 const customer = ref<OwnerResponse | null>(null)
 const custOpen = ref(false)
+// 'basic'  → asociar propietario opcional a la venta.
+// 'fiscal' → seleccionar/crear el cliente a facturar (FE > 5 UVT): datos fiscales requeridos.
+const custPurpose = ref<'basic' | 'fiscal'>('basic')
 const { isOverThreshold } = useFeUvt()
 const payOpen = ref(false)
 const paying = ref(false)
@@ -289,13 +292,21 @@ async function onConfirmPay(method: string, received: number | null) {
   }
 }
 
-function onSelectCustomer(owner: OwnerResponse) {
+function onPickCustomer(owner: OwnerResponse) {
   customer.value = owner
   custOpen.value = false
 }
 function toggleCustomer() {
-  if (customer.value) customer.value = null
-  else custOpen.value = true
+  if (customer.value) {
+    customer.value = null
+  } else {
+    custPurpose.value = 'basic'
+    custOpen.value = true
+  }
+}
+function openFiscalPicker() {
+  custPurpose.value = 'fiscal'
+  custOpen.value = true
 }
 </script>
 
@@ -452,14 +463,19 @@ function toggleCustomer() {
 
     <ModalShell
       :open="custOpen"
-      title="Asociar propietario"
-      subtitle="Vincula la venta a un cliente (opcional)"
+      :title="custPurpose === 'fiscal' ? 'Cliente a facturar' : 'Asociar propietario'"
+      :subtitle="
+        custPurpose === 'fiscal'
+          ? 'La factura electrónica irá a su nombre'
+          : 'Vincula la venta a un cliente (opcional)'
+      "
       :icon="User"
-      :width="520"
+      :width="custPurpose === 'fiscal' ? 640 : 560"
+      :elevated="payOpen"
       @close="custOpen = false"
     >
       <template #body>
-        <OwnerPicker @select="onSelectCustomer" />
+        <FeCustomerPicker :mode="custPurpose" @pick="onPickCustomer" />
       </template>
     </ModalShell>
 
@@ -469,7 +485,7 @@ function toggleCustomer() {
       :customer="customer"
       @close="payOpen = false"
       @confirm="onConfirmPay"
-      @select-customer="custOpen = true"
+      @select-customer="openFiscalPicker"
       @customer-updated="(o) => (customer = o)"
     />
     <ReceiptModal

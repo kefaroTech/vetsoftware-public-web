@@ -11,6 +11,8 @@ const props = withDefaults(
     width?: number
     accent?: 'amatista' | 'danger' | 'warn'
     closeOnBackdrop?: boolean
+    /** Sube el z-index para apilarse por encima de otro modal ya abierto (modales anidados). */
+    elevated?: boolean
   }>(),
   {
     width: 720,
@@ -53,6 +55,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
       <div
         v-if="open"
         class="overlay"
+        :class="{ elevated }"
         role="dialog"
         aria-modal="true"
         :aria-labelledby="title"
@@ -111,6 +114,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   place-items: center;
   z-index: 1500;
   font-family: var(--font-sans);
+}
+/* Modal anidado: se apila por encima de otro modal ya abierto. */
+.overlay.elevated {
+  z-index: 1600;
 }
 .modal-fade-enter-active,
 .modal-fade-leave-active {
