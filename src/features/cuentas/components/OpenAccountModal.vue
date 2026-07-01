@@ -1,20 +1,24 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { Minus, Plus, Search, Wallet, X } from 'lucide-vue-next'
+import { Minus, PawPrint, Plus, Search, Wallet, X } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
-import OwnerPicker from './OwnerPicker.vue'
+import PetForm from '@/features/dashboard/views/consulta/nueva/components/PetForm.vue'
+import FeCustomerPicker from '@/features/facturacion/components/FeCustomerPicker.vue'
 import { useTienda } from '@/features/tienda/composables/useTienda'
+import { useAuth } from '@/features/auth/composables/useAuth'
 import { useCuentas } from '../composables/useCuentas'
 import { formatMoney } from '@/features/tienda/composables/pricing'
 import { initials } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import { animalApi } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import { buildCreateAnimalRequest } from '@/features/dashboard/views/consulta/nueva/api/animal.mapper'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
 import type { CreateGeneralChargePayload, OpenAccountResponse } from '../types/cuentas'
 import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
+import type { PetDraft } from '@/features/dashboard/views/consulta/nueva/stores/nuevaConsultaDraft.store'
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: []; created: [account: OpenAccountResponse] }>()
@@ -22,6 +26,7 @@ const emit = defineEmits<{ close: []; created: [account: OpenAccountResponse] }>
 const tienda = useTienda()
 const store = useCuentas()
 const toast = useToast()
+const { companyId } = useAuth()
 
 // ── Carrito de cargos a registrar ────────────────────────────────────────────
 type CartKind = 'service' | 'product' | 'general'
@@ -79,6 +84,9 @@ watch(
     cart.value = []
     createdAccount.value = null
     pendingOps.value = []
+    petCreating.value = false
+    petError.value = null
+    petDraft.value = defaultPetDraft()
     Object.assign(general, { name: '', unitAmount: '', quantity: '1', taxId: '' })
   },
 )
@@ -106,10 +114,61 @@ function changeOwner() {
   ownerPets.value = []
   dupAccount.value = null
   cart.value = []
+  petCreating.value = false
+  petError.value = null
   // Si hubo creación parcial para el dueño anterior, su cuenta persiste en el servidor
   // (aparecerá en la lista); el modal arranca limpio para el nuevo dueño.
   createdAccount.value = null
   pendingOps.value = []
+}
+
+// ── Registrar mascota nueva dentro del modal (opcional) ──────────────────────
+function defaultPetDraft(): PetDraft {
+  return {
+    name: '', chipNumber: '', specieId: '', breedId: '', gender: '', colorId: '',
+    bod: '', animalType: 'NONE', weight: '', weightType: 'KILOGRAMS', size: '', reproductiveState: '',
+  }
+}
+const petCreating = ref(false)
+const petDraft = ref<PetDraft>(defaultPetDraft())
+const petFormRef = ref<{ validate: () => boolean } | null>(null)
+const petBusy = ref(false)
+const petError = ref<string | null>(null)
+
+function startCreatePet() {
+  petDraft.value = defaultPetDraft()
+  petError.value = null
+  petCreating.value = true
+}
+function cancelCreatePet() {
+  petCreating.value = false
+  petError.value = null
+}
+async function submitPet() {
+  const owner = pickedOwner.value
+  if (!owner || petBusy.value) return
+  if (petFormRef.value && !petFormRef.value.validate()) {
+    petError.value = 'Revisa los campos marcados antes de continuar.'
+    return
+  }
+  if (companyId.value == null) {
+    petError.value = 'No se pudo identificar la empresa. Vuelve a iniciar sesión.'
+    return
+  }
+  petBusy.value = true
+  petError.value = null
+  try {
+    const payload = buildCreateAnimalRequest(petDraft.value, String(owner.id), companyId.value)
+    const created = await animalApi.create(payload)
+    ownerPets.value = [...ownerPets.value, { id: created.id, name: created.name }]
+    selectedPet.value = created.id
+    petCreating.value = false
+    toast.success('Mascota registrada', `${created.name} quedó registrada y seleccionada.`)
+  } catch (e) {
+    petError.value = getProblemDetailMessage(e, 'No se pudo registrar la mascota. Intenta nuevamente.')
+  } finally {
+    petBusy.value = false
+  }
 }
 
 const taxOptions = computed(() => [
@@ -190,7 +249,12 @@ function removeLine(line: CartLine) {
 }
 
 const canConfirm = computed(
-  () => !!pickedOwner.value && !dupAccount.value && cart.value.length > 0 && !busy.value,
+  () =>
+    !!pickedOwner.value &&
+    !dupAccount.value &&
+    !petCreating.value &&
+    cart.value.length > 0 &&
+    !busy.value,
 )
 
 // Hubo una creación parcial (la cuenta existe pero faltan cargos por persistir).
@@ -276,8 +340,8 @@ async function confirm() {
     @close="emit('close')"
   >
     <template #body>
-      <!-- Paso 1 · elegir propietario -->
-      <OwnerPicker v-if="!pickedOwner" @select="onOwnerPicked" />
+      <!-- Paso 1 · elegir o crear propietario -->
+      <FeCustomerPicker v-if="!pickedOwner" mode="basic" @pick="onOwnerPicked" />
 
       <!-- Paso 2 · builder de cargos -->
       <template v-else>
@@ -321,9 +385,26 @@ async function confirm() {
               >
                 General
               </button>
+              <button v-if="!petCreating" type="button" class="chip add" @click="startCreatePet">
+                <Plus :size="13" :stroke-width="2.2" /> Registrar mascota
+              </button>
             </div>
           </div>
 
+          <!-- Registrar mascota nueva (form completo) -->
+          <div v-if="petCreating" class="petcreate">
+            <PetForm ref="petFormRef" :model-value="petDraft" />
+            <p v-if="petError" class="pet-err">{{ petError }}</p>
+            <div class="petcreate-actions">
+              <button type="button" class="btn-ghost" @click="cancelCreatePet">Cancelar</button>
+              <button type="button" class="btn-primary" :disabled="petBusy" @click="submitPet">
+                <PawPrint :size="15" :stroke-width="1.9" />
+                {{ petBusy ? 'Registrando…' : 'Registrar mascota' }}
+              </button>
+            </div>
+          </div>
+
+          <template v-else>
           <!-- Catálogo servicios/productos -->
           <template v-if="!isGeneral">
             <div class="tabs">
@@ -410,6 +491,7 @@ async function confirm() {
               cargos restantes.
             </span>
           </div>
+          </template>
         </template>
       </template>
     </template>
@@ -446,6 +528,13 @@ async function confirm() {
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { padding: 7px 14px; border-radius: 999px; font-size: 13px; font-family: inherit; cursor: pointer; background: var(--warm-100); border: 1px solid var(--warm-200); color: var(--warm-700); }
 .chip.active { background: var(--amatista-50); border-color: var(--amatista-400); color: var(--amatista-700); font-weight: 500; }
+.chip.add { display: inline-flex; align-items: center; gap: 5px; background: var(--amatista-50); border: 1.5px dashed var(--amatista-300); color: var(--amatista-700); font-weight: 600; }
+.chip.add:hover { background: var(--amatista-100); }
+
+/* Registrar mascota nueva */
+.petcreate { display: flex; flex-direction: column; gap: 14px; }
+.petcreate-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
+.pet-err { margin: 0; padding: 10px 12px; border-radius: 9px; font-size: 12.5px; background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.1 25); color: oklch(48% 0.16 25); }
 
 /* Tabs + búsqueda */
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--warm-200); margin-bottom: 12px; }
@@ -497,7 +586,7 @@ async function confirm() {
 /* Footer */
 .foottotal { font-size: 13px; color: var(--warm-600); }
 .foottotal strong { font-size: 15px; color: var(--amatista-700); font-variant-numeric: tabular-nums; margin-left: 4px; }
-.btn-primary { font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer; border: none; color: white; background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5))); }
+.btn-primary { display: inline-flex; align-items: center; gap: 6px; font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer; border: none; color: white; background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5))); }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-ghost { font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer; background: transparent; border: 1px solid var(--warm-200); color: var(--warm-700); }
 .btn-ghost:hover { background: var(--warm-100); }

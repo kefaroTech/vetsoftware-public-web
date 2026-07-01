@@ -11,6 +11,7 @@ export function useCuentas() {
     charges,
     payments,
     detailLoading,
+    taxBreakdown,
     petsInCharges,
     chargesByPet,
   } = storeToRefs(store)
@@ -22,6 +23,7 @@ export function useCuentas() {
     charges,
     payments,
     detailLoading,
+    taxBreakdown,
     petsInCharges,
     chargesByPet,
     ensureLoaded: store.ensureLoaded,

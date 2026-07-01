@@ -4,6 +4,8 @@ import { openAccountApi } from '../api/openAccount.api'
 import { generalChargeApi, productChargeApi, serviceChargeApi } from '../api/charges.api'
 import { debtOpenAccountApi } from '../api/debtOpenAccount.api'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { useTiendaStore } from '@/features/tienda/stores/tienda.store'
+import { appliesIva, splitGross } from '@/features/tienda/composables/pricing'
 import type {
   CreateGeneralChargePayload,
   DebtResponse,
@@ -27,6 +29,31 @@ export const useCuentasStore = defineStore('cuentas', () => {
   const payments = ref<DebtResponse[]>([])
   const detailLoading = ref(false)
 
+  // Insumos del desglose fiscal de la cuenta (bruto por línea + su tasa de IVA), para el cierre.
+  // product/service resuelven su tasa contra el catálogo de tienda; general trae la suya.
+  const taxLines = ref<{ gross: number; ratePct: number; voided: boolean }[]>([])
+
+  /**
+   * Desglose fiscal de la cuenta (para el cierre): base gravable+exenta, IVA por tarifa y total,
+   * calculado sobre los cargos NO anulados. El bruto ya incluye IVA (se extrae, no se suma).
+   */
+  const taxBreakdown = computed(() => {
+    let base = 0
+    let total = 0
+    const byRate = new Map<number, number>()
+    for (const l of taxLines.value) {
+      if (l.voided) continue
+      total += l.gross
+      const { base: b, tax } = splitGross(l.gross, l.ratePct > 0, l.ratePct)
+      base += b
+      if (tax > 0) byRate.set(l.ratePct, (byRate.get(l.ratePct) ?? 0) + tax)
+    }
+    const taxRows = Array.from(byRate, ([rate, tax]) => ({ name: `IVA ${rate}%`, tax })).sort(
+      (a, b) => b.tax - a.tax,
+    )
+    return { base, taxRows, total }
+  })
+
   async function loadAccounts(): Promise<void> {
     loading.value = true
     error.value = null
@@ -47,13 +74,17 @@ export const useCuentasStore = defineStore('cuentas', () => {
   async function loadDetail(accountId: number): Promise<void> {
     detailLoading.value = true
     try {
-      const [prod, svc, gen, debts] = await Promise.all([
+      const tienda = useTiendaStore()
+      const [, prod, svc, gen, debts] = await Promise.all([
+        // El catálogo da la tasa de IVA de product/service (el cargo no la congela).
+        tienda.ensureLoaded(),
         productChargeApi.listByOpenAccount(accountId),
         serviceChargeApi.listByOpenAccount(accountId),
         generalChargeApi.listByOpenAccount(accountId),
         debtOpenAccountApi.listByOpenAccount(accountId),
       ])
       const unified: UnifiedCharge[] = []
+      const lines: { gross: number; ratePct: number; voided: boolean }[] = []
       for (const c of prod.filter((x) => x.enabled)) {
         // Precio congelado al crear el cargo (snapshot del backend); no se lee del catálogo en vivo.
         unified.push({
@@ -62,6 +93,9 @@ export const useCuentasStore = defineStore('cuentas', () => {
           createdByName: c.createdBy?.name ?? '',
           voided: c.voided, voidedByName: c.voidedBy?.name ?? '', voidReason: c.voidReason ?? '',
         })
+        const p = tienda.products.find((x) => x.id === c.product.id)
+        const rate = p && appliesIva(p.taxTreatment) ? (p.tax?.percentage ?? 0) : 0
+        lines.push({ gross: c.unitPrice, ratePct: rate, voided: c.voided })
       }
       for (const c of svc.filter((x) => x.enabled)) {
         unified.push({
@@ -70,6 +104,9 @@ export const useCuentasStore = defineStore('cuentas', () => {
           createdByName: c.createdBy?.name ?? '',
           voided: c.voided, voidedByName: c.voidedBy?.name ?? '', voidReason: c.voidReason ?? '',
         })
+        const s = tienda.services.find((x) => x.id === c.service.id)
+        const rate = s && appliesIva(s.taxTreatment) ? (s.tax?.percentage ?? 0) : 0
+        lines.push({ gross: c.unitPrice, ratePct: rate, voided: c.voided })
       }
       for (const c of gen.filter((x) => x.enabled)) {
         unified.push({
@@ -78,8 +115,11 @@ export const useCuentasStore = defineStore('cuentas', () => {
           createdByName: c.createdBy?.name ?? '',
           voided: c.voided, voidedByName: c.voidedBy?.name ?? '', voidReason: c.voidReason ?? '',
         })
+        const rate = c.hasTax ? (c.taxPercentage ?? c.tax?.percentage ?? 0) : 0
+        lines.push({ gross: c.unitAmount * c.quantity, ratePct: rate, voided: c.voided })
       }
       charges.value = unified
+      taxLines.value = lines
       // Los abonos anulados siguen enabled=true (voided=true) y deben verse tachados.
       payments.value = debts.filter((d) => d.enabled)
     } catch (e) {
@@ -319,6 +359,7 @@ export const useCuentasStore = defineStore('cuentas', () => {
     charges,
     payments,
     detailLoading,
+    taxBreakdown,
     petsInCharges,
     chargesByPet,
     ensureLoaded,

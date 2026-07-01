@@ -44,6 +44,8 @@ const emit = defineEmits<{ close: []; closed: [account: OpenAccountResponse]; re
 
 const store = useCuentas()
 const toast = useToast()
+// Desglose fiscal de la cuenta (base gravable+exenta, IVA por tarifa, total) para el paso de cobro.
+const breakdown = store.taxBreakdown
 // Facturación electrónica: solo si el usuario puede emitir (módulo premium). Reactivo.
 const { canEmit } = useFacturacionAccess()
 
@@ -409,6 +411,25 @@ function onShellClose() {
           </button>
         </div>
 
+        <!-- Desglose fiscal de la cuenta -->
+        <div class="desglose">
+          <div class="dg-row"><span>Base gravable + exenta</span><span>{{ formatMoney(breakdown.base) }}</span></div>
+          <div v-for="r in breakdown.taxRows" :key="r.name" class="dg-row dg-tax">
+            <span>{{ r.name }}</span><span>{{ formatMoney(r.tax) }}</span>
+          </div>
+          <div v-if="breakdown.taxRows.length === 0" class="dg-row dg-tax">
+            <span>Impuestos</span><span>Sin impuestos</span>
+          </div>
+          <div class="dg-row dg-total"><span>Total cuenta</span><span>{{ formatMoney(breakdown.total) }}</span></div>
+          <div v-if="(account?.paidAmount ?? 0) > 0" class="dg-row">
+            <span>Ya abonado</span><span>− {{ formatMoney(account?.paidAmount ?? 0) }}</span>
+          </div>
+          <div class="dg-row dg-saldo">
+            <span>{{ motivo === 'CANCELADA' ? 'Saldo a anular' : 'Saldo a cobrar' }}</span>
+            <span>{{ formatMoney(outstanding) }}</span>
+          </div>
+        </div>
+
         <BaseField v-if="motivo === 'COBRADA' && outstanding > 0" label="Método de pago" required>
           <template #default="{ id }">
             <BaseSelect :id="id" v-model="method" :options="METHOD_OPTIONS" />
@@ -580,6 +601,14 @@ function onShellClose() {
 .doctype.off { background: var(--warm-100); border: 1.5px solid var(--warm-200); color: var(--warm-400); cursor: not-allowed; }
 .lock { margin-left: auto; width: 18px; height: 18px; border-radius: 50%; background: var(--warm-200); color: var(--warm-500); display: grid; place-items: center; }
 .fe-loading { font-size: 12.5px; color: var(--warm-500); padding: 12px 14px; border-radius: 11px; background: var(--warm-50); border: 1px solid var(--warm-200); }
+.desglose { display: flex; flex-direction: column; gap: 6px; padding: 13px 15px; border-radius: 12px; background: var(--warm-50); border: 1px solid var(--warm-200); }
+.dg-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--warm-600); }
+.dg-row span:last-child { color: var(--warm-800); font-variant-numeric: tabular-nums; }
+.dg-tax { font-size: 12.5px; color: var(--warm-500); padding-left: 10px; }
+.dg-total { padding-top: 8px; margin-top: 2px; border-top: 1px solid var(--warm-200); }
+.dg-total span { color: var(--warm-900); font-weight: 600; }
+.dg-saldo span { color: var(--warm-900); font-weight: 700; }
+.dg-saldo span:last-child { color: var(--amatista-700); }
 .fe-preloadhint { margin: 0; display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--warm-500); }
 .fe-preloadhint svg { flex-shrink: 0; color: var(--warm-400); }
 .fe-loaderr { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; border-radius: 10px; font-size: 12px; background: oklch(96% 0.05 25); border: 1px solid oklch(89% 0.07 25); color: oklch(46% 0.16 25); }
