@@ -87,12 +87,28 @@ async function addCatalogItem(itemId: number) {
   }
 }
 
-const canAddGeneral = computed(() => {
-  const raw = general.unitAmount.trim().replace(',', '.')
-  const amount = Number(raw)
-  // Monto libre por diseño (sin catálogo): se permite 0, pero exige un valor explícito.
-  return general.name.trim().length >= 2 && raw !== '' && Number.isFinite(amount) && amount >= 0
+// COP en enteros: se descartan no-dígitos (incl. separador de miles) en el valor unitario y se fuerza la
+// cantidad a un entero. Evita `Number("1.500") === 1.5`, cantidades negativas/cero (crédito encubierto) y
+// fracciones que antes pasaban vía `Number("2.5")`.
+const unitAmountDigits = computed(() => general.unitAmount.replace(/\D/g, ''))
+const unitAmountNum = computed(() => Number(unitAmountDigits.value) || 0)
+const unitAmountDisplay = computed({
+  get: () => (general.unitAmount === '' ? '' : formatMoney(unitAmountNum.value)),
+  set: (v: string) => {
+    general.unitAmount = v.replace(/\D/g, '')
+  },
 })
+const quantityNum = computed(() => Number(general.quantity.replace(/\D/g, '')) || 0)
+const quantityDisplay = computed({
+  get: () => general.quantity,
+  set: (v: string) => {
+    general.quantity = v.replace(/\D/g, '')
+  },
+})
+const canAddGeneral = computed(
+  // Monto libre por diseño (sin catálogo): se permite 0, pero exige un valor explícito; la cantidad debe ser entera >= 1.
+  () => general.name.trim().length >= 2 && unitAmountDigits.value !== '' && quantityNum.value >= 1,
+)
 
 async function addGeneral() {
   if (!canAddGeneral.value || busy.value) return
@@ -100,8 +116,8 @@ async function addGeneral() {
   try {
     await cuentas.addGeneralCharge({
       name: general.name.trim(),
-      unitAmount: Number(general.unitAmount.replace(',', '.')),
-      quantity: Number(general.quantity.replace(',', '.')) || 1,
+      unitAmount: unitAmountNum.value,
+      quantity: quantityNum.value,
       taxId: general.taxId ? Number(general.taxId) : null,
       hasTax: general.taxId !== '',
       openAccountId: props.accountId,
@@ -187,12 +203,12 @@ async function addGeneral() {
         <div class="grid">
           <BaseField label="Valor unitario (IVA incl.)" required>
             <template #default="{ id }">
-              <BaseInput :id="id" v-model="general.unitAmount" inputmode="decimal" placeholder="0" />
+              <BaseInput :id="id" v-model="unitAmountDisplay" inputmode="numeric" placeholder="$0" />
             </template>
           </BaseField>
           <BaseField label="Cantidad" required>
             <template #default="{ id }">
-              <BaseInput :id="id" v-model="general.quantity" inputmode="decimal" placeholder="1" />
+              <BaseInput :id="id" v-model="quantityDisplay" inputmode="numeric" placeholder="1" />
             </template>
           </BaseField>
           <BaseField label="Impuesto">

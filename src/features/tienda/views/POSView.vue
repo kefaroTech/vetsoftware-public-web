@@ -61,6 +61,12 @@ const custPurpose = ref<'basic' | 'fiscal'>('basic')
 const { isOverThreshold } = useFeUvt()
 const payOpen = ref(false)
 const paying = ref(false)
+// Idempotency key de la venta: se genera UNA vez al abrir el cobro y se reusa en los reintentos (el modal
+// queda abierto tras un fallo). Así un reintento tras perder la respuesta no registra una segunda venta.
+const saleRequestId = ref('')
+watch(payOpen, (open) => {
+  if (open) saleRequestId.value = crypto.randomUUID()
+})
 const receiptOpen = ref(false)
 const receipt = ref<{
   lines: SaleLine[]
@@ -265,6 +271,7 @@ async function onConfirmPay(method: string, received: number | null) {
       customerOwnerId: customer.value?.id ?? null,
       lines: saleLines,
       payments: [{ means: MEANS_BY_METHOD[method] ?? 'EFECTIVO', amount: totalNow }],
+      clientRequestId: saleRequestId.value,
     })
     receipt.value = {
       lines: snapshot,

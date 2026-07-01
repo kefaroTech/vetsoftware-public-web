@@ -58,6 +58,9 @@ interface ChargeOp {
   animalId: number
   refId: number
   done: boolean
+  // Idempotency key estable por unidad: se reusa en cada reintento para que el backend no duplique el cargo
+  // aunque la respuesta del POST se pierda en transporte (op.done queda false y se reintenta con la misma key).
+  requestId: string
 }
 const createdAccount = ref<OpenAccountResponse | null>(null)
 const pendingOps = ref<ChargeOp[]>([])
@@ -160,7 +163,7 @@ function buildOps(): ChargeOp[] {
   if (props.animalId == null) return ops
   for (const l of items.value) {
     for (let i = 0; i < l.qty; i++) {
-      ops.push({ kind: l.kind, animalId: props.animalId, refId: l.id, done: false })
+      ops.push({ kind: l.kind, animalId: props.animalId, refId: l.id, done: false, requestId: crypto.randomUUID() })
     }
   }
   return ops
@@ -190,7 +193,7 @@ async function confirm() {
     if (pendingOps.value.length === 0) pendingOps.value = buildOps()
     for (const op of pendingOps.value) {
       if (op.done) continue
-      await cuentas.addChargeUnit(accountId, op.animalId, op.kind, op.refId)
+      await cuentas.addChargeUnit(accountId, op.animalId, op.kind, op.refId, op.requestId)
       op.done = true
     }
     if (pendingOps.value.length > 0) await cuentas.refreshAccount(accountId)

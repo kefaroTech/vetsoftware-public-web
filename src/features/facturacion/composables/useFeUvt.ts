@@ -19,6 +19,9 @@ export function useFeUvt() {
   void store.ensureLoaded()
 
   const uvtValue = computed(() => store.uvtValue)
+  // `false` mientras el UVT real no se haya leído del backend (se mantiene el default). Los consumidores que
+  // deciden FE vs POS deben tratar el umbral como incierto si `!loaded` y el total lo supera.
+  const loaded = computed(() => store.loaded)
   const uvtThresholdQty = UVT_THRESHOLD_QTY
   const threshold = computed(() => uvtValue.value * uvtThresholdQty)
 
@@ -34,6 +37,8 @@ export function useFeUvt() {
 
   return {
     uvtValue,
+    loaded,
+    ensureLoaded: store.ensureLoaded,
     uvtThresholdQty,
     threshold,
     isOverThreshold,

@@ -33,6 +33,12 @@ export interface RegisterPosSaleRequest {
   customerOwnerId?: number | null
   lines: PosSaleLineRequest[]
   payments: PosSalePaymentRequest[]
+  /**
+   * Idempotency key (UUID) generada una vez por apertura del cobro y reusada en los reintentos: si el POST se
+   * reintenta tras perder la respuesta, el backend devuelve la venta ya emitida en vez de registrar/transmitir
+   * otra a la DIAN.
+   */
+  clientRequestId?: string
 }
 
 export const posSaleApi = {

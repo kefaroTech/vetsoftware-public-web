@@ -40,8 +40,12 @@ const METHOD_OPTIONS = [
 ]
 
 // ── FE obligatoria por superar 5 UVT ──────────────────────────────────────────
-const { isOverThreshold } = useFeUvt()
+const { isOverThreshold, threshold, loaded: uvtLoaded, ensureLoaded: ensureUvtLoaded } = useFeUvt()
 const overUvt = computed(() => isOverThreshold(props.total))
+// Si el UVT no se leyó del backend, el umbral usa un default. Solo es seguro asumir POS cuando el total NO
+// supera ese umbral (el default 2025 es menor al real, así que si no lo supera tampoco supera el real). Si lo
+// supera y el UVT no cargó, no se puede decidir FE vs POS con certeza → se bloquea el cobro hasta cargarlo.
+const uvtUncertain = computed(() => !uvtLoaded.value && props.total > threshold.value)
 const localOwner = ref<OwnerResponse | null>(null)
 const fiscalModalOpen = ref(false)
 
@@ -106,6 +110,8 @@ watch(
       form.received = String(Math.round(props.total))
       localOwner.value = props.customer
       fiscalModalOpen.value = false
+      // Reintenta cargar el UVT si una lectura previa falló (ensureLoaded es idempotente si ya cargó).
+      void ensureUvtLoaded()
     }
   },
 )
@@ -134,7 +140,7 @@ const receivedDisplay = computed({
 })
 const change = computed(() => Math.max(0, receivedNum.value - due.value))
 const cashOk = computed(() => !isCash.value || receivedNum.value >= due.value)
-const canConfirm = computed(() => cashOk.value && feComplete.value)
+const canConfirm = computed(() => cashOk.value && feComplete.value && !uvtUncertain.value)
 const confirmLabel = computed(() => (overUvt.value ? 'Emitir factura electrónica' : 'Confirmar cobro'))
 
 function confirm() {
@@ -154,6 +160,10 @@ function confirm() {
   >
     <template #body>
       <div class="form">
+        <div v-if="uvtUncertain" class="uvt-warn">
+          No se pudieron cargar los parámetros fiscales (UVT). No es posible determinar si esta venta requiere
+          factura electrónica; reintenta en un momento para cobrar este monto.
+        </div>
         <template v-if="overUvt">
           <FeThresholdBanner :total="total" />
           <div class="doctypesel">
@@ -205,6 +215,7 @@ function confirm() {
 
 <style scoped>
 .form { display: flex; flex-direction: column; gap: 16px; }
+.uvt-warn { padding: 11px 14px; border-radius: 10px; font-size: 12.5px; line-height: 1.4; background: oklch(95% 0.06 80); border: 1px solid oklch(88% 0.09 80); color: oklch(40% 0.10 70); }
 .change { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--amatista-50); border-radius: 10px; font-size: 14px; color: var(--warm-800); }
 .change strong { font-size: 17px; color: var(--amatista-700); }
 .doctypesel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
