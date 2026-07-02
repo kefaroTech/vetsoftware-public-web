@@ -1,0 +1,146 @@
+{
+  "pageErrors": [],
+  "issues": [],
+  "report": [
+    {
+      "viewport": "desktop",
+      "scenario": "login",
+      "stage": "initial",
+      "controlCount": 2,
+      "issues": []
+    },
+    {
+      "viewport": "desktop",
+      "scenario": "signup",
+      "stage": "initial",
+      "controlCount": 13,
+      "issues": []
+    },
+    {
+      "viewport": "desktop",
+      "scenario": "consulta-owner",
+      "stage": "initial",
+      "controlCount": 8,
+      "issues": []
+    },
+    {
+      "viewport": "desktop",
+      "scenario": "empleados-new",
+      "stage": "initial",
+      "controlCount": 4,
+      "issues": []
+    },
+    {
+      "viewport": "desktop",
+      "scenario": "roles-new",
+      "stage": "initial",
+      "controlCount": 2,
+      "issues": []
+    },
+    {
+      "viewport": "desktop",
+      "scenario": "inventario-new",
+      "stage": "initial",
+      "controlCount": 12,
+      "issues": []
+    },
+    {
+      "viewport": "desktop",
+      "scenario": "servicios-new",
+      "stage": "initial",
+      "controlCount": 5,
+      "issues": []
+    },
+    {
+      "viewport": "desktop",
+      "scenario": "promociones-new",
+      "stage": "initial",
+      "controlCount": 8,
+      "issues": []
+    },
+    {
+      "viewport": "desktop",
+      "scenario": "impuestos-new",
+      "stage": "initial",
+      "controlCount": 3,
+      "issues": []
+    },
+    {
+      "viewport": "desktop",
+      "scenario": "cuentas-new",
+      "stage": "initial",
+      "controlCount": 1,
+      "issues": []
+    },
+    {
+      "viewport": "mobile",
+      "scenario": "login",
+      "stage": "initial",
+      "controlCount": 2,
+      "issues": []
+    },
+    {
+      "viewport": "mobile",
+      "scenario": "signup",
+      "stage": "initial",
+      "controlCount": 13,
+      "issues": []
+    },
+    {
+      "viewport": "mobile",
+      "scenario": "consulta-owner",
+      "stage": "initial",
+      "controlCount": 8,
+      "issues": []
+    },
+    {
+      "viewport": "mobile",
+      "scenario": "empleados-new",
+      "stage": "initial",
+      "controlCount": 4,
+      "issues": []
+    },
+    {
+      "viewport": "mobile",
+      "scenario": "roles-new",
+      "stage": "initial",
+      "controlCount": 2,
+      "issues": []
+    },
+    {
+      "viewport": "mobile",
+      "scenario": "inventario-new",
+      "stage": "initial",
+      "controlCount": 12,
+      "issues": []
+    },
+    {
+      "viewport": "mobile",
+      "scenario": "servicios-new",
+      "stage": "initial",
+      "controlCount": 5,
+      "issues": []
+    },
+    {
+      "viewport": "mobile",
+      "scenario": "promociones-new",
+      "stage": "initial",
+      "controlCount": 8,
+      "issues": []
+    },
+    {
+      "viewport": "mobile",
+      "scenario": "impuestos-new",
+      "stage": "initial",
+      "controlCount": 3,
+      "issues": []
+    },
+    {
+      "viewport": "mobile",
+      "scenario": "cuentas-new",
+      "stage": "initial",
+      "controlCount": 1,
+      "issues": []
+    }
+  ]
+}

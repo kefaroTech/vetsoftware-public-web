@@ -12,3 +12,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# TestSprite local config holds the account API key — never commit it
+testsprite_tests/tmp/config.json

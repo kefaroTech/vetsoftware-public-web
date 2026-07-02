@@ -1,0 +1,1944 @@
+[
+  {
+    "id": "TC001",
+    "title": "Sign in and enter the dashboard",
+    "description": "This verifies an employee can authenticate with valid credentials and land in the protected workspace.",
+    "category": "Employee Login",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Fill in employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Save a new consultation from owner to success screen",
+    "description": "This verifies a clinician can create a consultation by selecting or creating an owner and pet, entering anamnesis, adding clinical actions, and saving successfully.",
+    "category": "New Consultation Wizard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Fill in employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to start a new consultation"
+      },
+      {
+        "type": "action",
+        "description": "Create or select an owner"
+      },
+      {
+        "type": "action",
+        "description": "Create or select a pet"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the anamnesis fields with valid consultation details"
+      },
+      {
+        "type": "action",
+        "description": "Add a clinical action"
+      },
+      {
+        "type": "action",
+        "description": "Save the consultation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the consultation saved success screen is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Protect dashboard access without a session",
+    "description": "This verifies an unauthenticated visitor is redirected away from protected workspace routes and back to login.",
+    "category": "Session Guard and Authorization",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the login page is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Create and save a full consultation",
+    "description": "An authorized user can complete the consultation wizard with owner, pet, consultation details, quick actions, and reach the success screen.",
+    "category": "New Consultation Wizard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/consulta/nueva"
+      },
+      {
+        "type": "action",
+        "description": "Complete the owner step with valid owner details and continue"
+      },
+      {
+        "type": "action",
+        "description": "Complete the pet step with valid pet details and continue"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the consultation type field with a valid value"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the anamnesis field with valid consultation notes"
+      },
+      {
+        "type": "action",
+        "description": "Add at least one valid clinical action"
+      },
+      {
+        "type": "action",
+        "description": "Review the consultation summary"
+      },
+      {
+        "type": "action",
+        "description": "Save the consultation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the consultation success screen is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Open an allowed protected workspace after login",
+    "description": "This verifies a signed-in employee can access an authorized protected area and see the requested workspace.",
+    "category": "Session Guard and Authorization",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Fill in employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the agenda workspace"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the agenda workspace is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Complete a product sale and generate an electronic document",
+    "description": "Verifies that POS staff can add products to a sale, complete checkout, and see the resulting electronic document generated.",
+    "category": "Store / Point of Sale",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to the store and point-of-sale screen"
+      },
+      {
+        "type": "action",
+        "description": "Search for a product"
+      },
+      {
+        "type": "action",
+        "description": "Add the product to the sale"
+      },
+      {
+        "type": "action",
+        "description": "Complete the sale"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an electronic document is generated"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Emit a new electronic document",
+    "description": "Verifies that a user can create a new electronic billing document and see it added to the documents list.",
+    "category": "Electronic Billing (DIAN)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/facturacion/documentos"
+      },
+      {
+        "type": "action",
+        "description": "Emit a new electronic document"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a new electronic document is created"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the created document appears in the list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Complete a POS sale and generate the electronic document",
+    "description": "This verifies store staff can complete a point-of-sale sale and reach the electronic document outcome.",
+    "category": "Point-of-sale",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Fill in employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the point-of-sale workspace"
+      },
+      {
+        "type": "action",
+        "description": "Add items to the sale"
+      },
+      {
+        "type": "action",
+        "description": "Complete the sale"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an electronic document is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Apply or reprogram a ward medication dose and discharge the stay",
+    "description": "This verifies staff can manage a ward medication schedule, change a dose when needed, and complete discharge for the hospitalization.",
+    "category": "Hospitalization Ward Board",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Fill in employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the hospitalization ward board"
+      },
+      {
+        "type": "action",
+        "description": "Open a hospitalized patient record"
+      },
+      {
+        "type": "action",
+        "description": "Apply a scheduled medication dose or reprogram it"
+      },
+      {
+        "type": "action",
+        "description": "Discharge the stay"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the hospitalization discharge confirmation is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Review hospitalized pets and open a medication schedule",
+    "description": "Verifies that a clinician can open the hospitalization ward and view an admitted pet’s medication schedule.",
+    "category": "Hospitalization Ward and Medication Administration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to the hospitalization ward"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify hospitalized pets are displayed"
+      },
+      {
+        "type": "action",
+        "description": "Open a hospitalization record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a medication schedule is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Add charges to an open account and confirm the balance updates",
+    "description": "Verifies that a user can add product or service charges to an open account and see the updated balance reflected in the account view.",
+    "category": "Open Accounts",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/cuentas"
+      },
+      {
+        "type": "action",
+        "description": "Search for a customer account"
+      },
+      {
+        "type": "action",
+        "description": "Open the customer account"
+      },
+      {
+        "type": "action",
+        "description": "Add a product charge to the account"
+      },
+      {
+        "type": "action",
+        "description": "Add a service charge to the account"
+      },
+      {
+        "type": "action",
+        "description": "Confirm the account changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated balance is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the added charges are listed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Complete a store sale and generate the document",
+    "description": "A user can complete a POS sale flow and see the electronic document or sale confirmation generated.",
+    "category": "Store POS",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/tienda"
+      },
+      {
+        "type": "action",
+        "description": "Add at least one product or service to the sale"
+      },
+      {
+        "type": "action",
+        "description": "Complete the sale checkout"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the sale confirmation or document generation is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "Review an owner's pet history timeline",
+    "description": "This verifies a user can search an owner, open a pet, and review the unified clinical timeline across visits and procedures.",
+    "category": "Clinical History Browser",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Fill in employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open clinical history"
+      },
+      {
+        "type": "action",
+        "description": "Search for an owner"
+      },
+      {
+        "type": "action",
+        "description": "Open a pet from the selected owner"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the unified clinical timeline is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "Add and close an open account charge",
+    "description": "A user can search an open account, add a charge, and close the account when the balance is settled.",
+    "category": "Open Accounts",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/cuentas"
+      },
+      {
+        "type": "action",
+        "description": "Search for an existing account holder using a valid identifier or name"
+      },
+      {
+        "type": "action",
+        "description": "Open the account"
+      },
+      {
+        "type": "action",
+        "description": "Add a valid charge to the account"
+      },
+      {
+        "type": "action",
+        "description": "Settle the balance and close the account"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the account is marked as closed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC015",
+    "title": "Mark a scheduled dose as applied",
+    "description": "Verifies that a clinician can apply a scheduled hospitalization dose and see it updated as administered.",
+    "category": "Hospitalization Ward and Medication Administration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to the hospitalization ward"
+      },
+      {
+        "type": "action",
+        "description": "Open a hospitalization record"
+      },
+      {
+        "type": "action",
+        "description": "Open a scheduled dose"
+      },
+      {
+        "type": "action",
+        "description": "Confirm the dose application"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dose is marked as applied"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC016",
+    "title": "See login error on invalid credentials",
+    "description": "This verifies the login form shows a validation or credential error when the user submits incorrect credentials.",
+    "category": "Employee Login",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Fill in employee code field with invalid credentials"
+      },
+      {
+        "type": "action",
+        "description": "Fill in password field with invalid credentials"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a credential error message is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC017",
+    "title": "Browse an owner's pet history timeline",
+    "description": "A user can search for an owner, open their pets, select one pet, and view the unified clinical history timeline.",
+    "category": "Clinical History Browser",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/consulta/historial"
+      },
+      {
+        "type": "action",
+        "description": "Search for an owner using a valid identifier or name"
+      },
+      {
+        "type": "action",
+        "description": "Select the owner from the results"
+      },
+      {
+        "type": "action",
+        "description": "Select one of the owner's pets"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the pet's clinical history timeline is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC018",
+    "title": "Search and open a customer account",
+    "description": "Verifies that a user can search for a customer account and open it to review its balance and charge options.",
+    "category": "Open Accounts",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/cuentas"
+      },
+      {
+        "type": "action",
+        "description": "Search for a customer account"
+      },
+      {
+        "type": "action",
+        "description": "Open the customer account"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the account details view is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the account balance is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC019",
+    "title": "Add a charge to an open account and close it when the balance reaches zero",
+    "description": "This verifies billing staff can search an open account, add charges, review the balance, and close the account once settled.",
+    "category": "Open Accounts",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Fill in employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open open accounts"
+      },
+      {
+        "type": "action",
+        "description": "Search for an account"
+      },
+      {
+        "type": "action",
+        "description": "Add a charge to the account"
+      },
+      {
+        "type": "action",
+        "description": "Close the account"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the account is closed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC020",
+    "title": "Discharge a hospitalization stay",
+    "description": "Verifies that a clinician can end a hospitalization and see the stay closed.",
+    "category": "Hospitalization Ward and Medication Administration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to the hospitalization ward"
+      },
+      {
+        "type": "action",
+        "description": "Open a hospitalization record"
+      },
+      {
+        "type": "action",
+        "description": "End the stay with discharge details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the hospitalization is closed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC021",
+    "title": "Create a standalone hospitalization action",
+    "description": "A user can register a hospitalization procedure for a selected pet and see it created successfully.",
+    "category": "Standalone Clinical Actions",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/acciones/hospitalizacion"
+      },
+      {
+        "type": "action",
+        "description": "Select a pet using a valid search result"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the hospitalization details with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Submit the hospitalization action"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the hospitalization action confirmation is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC022",
+    "title": "Block access to a restricted workspace",
+    "description": "This verifies a signed-in employee without the needed permission is redirected away from a restricted route to the dashboard home.",
+    "category": "Session Guard and Authorization",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Fill in employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open a restricted workspace"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard home is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC023",
+    "title": "Review billing readiness in DIAN enablement",
+    "description": "Verifies that a user can review company tax profile and numbering setup and see the billing readiness status.",
+    "category": "Electronic Billing (DIAN)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/facturacion/habilitacion"
+      },
+      {
+        "type": "action",
+        "description": "Review the company tax profile"
+      },
+      {
+        "type": "action",
+        "description": "Review the numbering resolutions"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the billing readiness status is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the configuration review information is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC024",
+    "title": "Review billing documents and reports",
+    "description": "This verifies staff can open billing documents and reporting views to review emitted billing activity.",
+    "category": "Electronic Billing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Fill in employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open billing documents"
+      },
+      {
+        "type": "action",
+        "description": "Open the billing reports view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify billing reports are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC025",
+    "title": "Create a standalone laboratory action",
+    "description": "A user can register a laboratory procedure for a selected pet and see it created successfully.",
+    "category": "Standalone Clinical Actions",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/acciones/laboratorio"
+      },
+      {
+        "type": "action",
+        "description": "Select a pet using a valid search result"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the laboratory test details with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Submit the laboratory action"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the laboratory action confirmation is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC026",
+    "title": "Open the hospitalization ward board",
+    "description": "A user can access the ward board and see the list of current hospitalization stays.",
+    "category": "Hospitalization Ward Board",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/hospital"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify current hospitalization stays are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC027",
+    "title": "View multiple record types in a pet history",
+    "description": "A user can open a pet's history and review the combined consultations and procedures in one timeline.",
+    "category": "Clinical History Browser",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/consulta/historial"
+      },
+      {
+        "type": "action",
+        "description": "Search for an owner using a valid identifier or name"
+      },
+      {
+        "type": "action",
+        "description": "Select the owner from the results"
+      },
+      {
+        "type": "action",
+        "description": "Select one of the owner's pets"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify consultation and procedure records are displayed in the timeline"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC028",
+    "title": "Reprogram a scheduled hospitalization dose",
+    "description": "Verifies that a clinician can change the time of a scheduled dose and see the updated schedule.",
+    "category": "Hospitalization Ward and Medication Administration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to the hospitalization ward"
+      },
+      {
+        "type": "action",
+        "description": "Open a hospitalization record"
+      },
+      {
+        "type": "action",
+        "description": "Open a scheduled dose"
+      },
+      {
+        "type": "action",
+        "description": "Choose a new time for the dose"
+      },
+      {
+        "type": "action",
+        "description": "Reprogram the dose"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the schedule is updated"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC029",
+    "title": "View billing documents and reports",
+    "description": "A user can open the billing area and review generated electronic documents and billing reports.",
+    "category": "Electronic Billing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/facturacion/documentos"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify electronic billing documents are displayed"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/facturacion/reportes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify billing reports are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC030",
+    "title": "Close a zero-balance account",
+    "description": "Verifies that a user can close an account with no balance and see it marked as closed afterward.",
+    "category": "Open Accounts",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/cuentas"
+      },
+      {
+        "type": "action",
+        "description": "Search for a customer account"
+      },
+      {
+        "type": "action",
+        "description": "Open the customer account"
+      },
+      {
+        "type": "action",
+        "description": "Settle the account until the balance is zero"
+      },
+      {
+        "type": "action",
+        "description": "Close the account"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the account is marked as closed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the closed status is visible in the account view"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC031",
+    "title": "Create a company account and first administrator",
+    "description": "This verifies a new clinic can complete the signup flow and create the initial account successfully.",
+    "category": "Registration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /signup"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the company registration fields with valid details"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee administrator fields with valid details"
+      },
+      {
+        "type": "action",
+        "description": "Complete the geographic selections"
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new account creation confirmation is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC032",
+    "title": "Create a standalone vaccination action",
+    "description": "A user can register a vaccination procedure for a selected pet and see it created successfully.",
+    "category": "Standalone Clinical Actions",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/acciones/vacunacion"
+      },
+      {
+        "type": "action",
+        "description": "Select a pet using a valid search result"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the vaccination details with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Submit the vaccination action"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the vaccination action confirmation is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC033",
+    "title": "Review the electronic documents list",
+    "description": "Verifies that a user can open the billing documents area and review the existing electronic documents.",
+    "category": "Electronic Billing (DIAN)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/facturacion/documentos"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify electronic documents are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify document records are visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC034",
+    "title": "Review the employee list and create a new employee",
+    "description": "Verifies that a user can view employees, create a new employee, assign a role, and save the record.",
+    "category": "Employees and Roles Administration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/empleados"
+      },
+      {
+        "type": "action",
+        "description": "Review the employee list"
+      },
+      {
+        "type": "action",
+        "description": "Create a new employee"
+      },
+      {
+        "type": "action",
+        "description": "Assign a role to the employee"
+      },
+      {
+        "type": "action",
+        "description": "Save the employee record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new employee record is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the assigned role is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC035",
+    "title": "Restore a saved consultation draft",
+    "description": "A user can leave the consultation wizard and later return to find the partially completed draft restored.",
+    "category": "New Consultation Wizard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/consulta/nueva"
+      },
+      {
+        "type": "action",
+        "description": "Complete the owner step with valid owner details and continue"
+      },
+      {
+        "type": "action",
+        "description": "Complete the pet step with valid pet details and continue"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the consultation type field with a valid value"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the anamnesis field with valid consultation notes"
+      },
+      {
+        "type": "action",
+        "description": "Leave the wizard"
+      },
+      {
+        "type": "action",
+        "description": "Return to /dashboard/consulta/nueva"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the previously entered draft data is restored"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC036",
+    "title": "Complete DIAN enablement settings",
+    "description": "This verifies an admin can reach the electronic billing enablement area and complete the company tax profile setup workflow.",
+    "category": "Electronic Billing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Fill in employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open billing enablement"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the company tax profile fields with valid details"
+      },
+      {
+        "type": "action",
+        "description": "Save the billing enablement settings"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the billing enablement confirmation is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC037",
+    "title": "Review roles and update permissions",
+    "description": "Verifies that a user can open a role, adjust its permissions, save the configuration, and see the updated permissions.",
+    "category": "Employees and Roles Administration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/roles"
+      },
+      {
+        "type": "action",
+        "description": "Review the available roles"
+      },
+      {
+        "type": "action",
+        "description": "Open a role"
+      },
+      {
+        "type": "action",
+        "description": "Adjust the role permissions"
+      },
+      {
+        "type": "action",
+        "description": "Save the role configuration"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated permissions are visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the role configuration reflects the changes"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC038",
+    "title": "Review sales report data",
+    "description": "Verifies that a user can open billing reports and inspect the reported sales data.",
+    "category": "Electronic Billing (DIAN)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/facturacion/reportes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify sales reports are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify sales book data is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC039",
+    "title": "Review and save product inventory changes",
+    "description": "Verifies that store staff can open inventory management, update a product catalog entry, and save the changes.",
+    "category": "Store / Point of Sale",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to product inventory management"
+      },
+      {
+        "type": "action",
+        "description": "Open a product for editing"
+      },
+      {
+        "type": "action",
+        "description": "Update the product details"
+      },
+      {
+        "type": "action",
+        "description": "Save the inventory changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated inventory item is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC040",
+    "title": "Prevent closing an account with a remaining balance",
+    "description": "Verifies that the UI blocks closing an account when the balance is not zero and shows a validation message.",
+    "category": "Open Accounts",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/cuentas"
+      },
+      {
+        "type": "action",
+        "description": "Search for a customer account"
+      },
+      {
+        "type": "action",
+        "description": "Open the customer account"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to close the account while it still has a balance"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a balance validation message is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC041",
+    "title": "Keep consultation save blocked until required data is complete",
+    "description": "This verifies the new consultation wizard shows validation and does not proceed when required owner, pet, or consultation data is missing.",
+    "category": "New Consultation Wizard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Fill in employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to start a new consultation"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to save the consultation without completing required fields"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify consultation validation messages are visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC042",
+    "title": "Show validation when required consultation data is missing",
+    "description": "A user who tries to proceed without required owner, pet, or consultation data sees validation messages and stays in the wizard.",
+    "category": "New Consultation Wizard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/consulta/nueva"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to continue without completing the required owner information"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify validation errors are displayed for the missing owner data"
+      },
+      {
+        "type": "action",
+        "description": "Complete the owner step with valid owner details and continue without completing the required pet information"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify validation errors are displayed for the missing pet data"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC043",
+    "title": "Search laboratory tests and open a test record",
+    "description": "Verifies that authorized staff can search laboratory tests and open a matching result record.",
+    "category": "Laboratory Workbench",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to the laboratory workbench"
+      },
+      {
+        "type": "action",
+        "description": "Search for a laboratory test"
+      },
+      {
+        "type": "action",
+        "description": "Open the matching test record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the test record details are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC044",
+    "title": "Edit an employee and save the updated details",
+    "description": "Verifies that a user can open an existing employee, change their details, and see the updated record afterward.",
+    "category": "Employees and Roles Administration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/empleados"
+      },
+      {
+        "type": "action",
+        "description": "Open an existing employee"
+      },
+      {
+        "type": "action",
+        "description": "Edit the employee details"
+      },
+      {
+        "type": "action",
+        "description": "Save the changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated employee record is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the changes are reflected in the employee list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC045",
+    "title": "Review and save service catalog changes",
+    "description": "Verifies that store staff can open services management, update a service entry, and save the changes.",
+    "category": "Store / Point of Sale",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to services catalog management"
+      },
+      {
+        "type": "action",
+        "description": "Open a service for editing"
+      },
+      {
+        "type": "action",
+        "description": "Update the service details"
+      },
+      {
+        "type": "action",
+        "description": "Save the service changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated service is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC046",
+    "title": "Prevent opening a second open account for the same owner",
+    "description": "Verifies that the UI shows an account conflict when trying to open another active account for the same owner.",
+    "category": "Open Accounts",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dashboard/cuentas"
+      },
+      {
+        "type": "action",
+        "description": "Search for a customer account"
+      },
+      {
+        "type": "action",
+        "description": "Open the customer account"
+      },
+      {
+        "type": "action",
+        "description": "Start creating another open account for the same owner"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an account conflict message is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC047",
+    "title": "Open a laboratory test file view",
+    "description": "Verifies that authorized staff can open a laboratory test and view its associated result files.",
+    "category": "Laboratory Workbench",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to the laboratory workbench"
+      },
+      {
+        "type": "action",
+        "description": "Search for a laboratory test"
+      },
+      {
+        "type": "action",
+        "description": "Open the matching test record"
+      },
+      {
+        "type": "action",
+        "description": "Open the file section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify laboratory result files are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC048",
+    "title": "Show signup validation for incomplete data",
+    "description": "This verifies incomplete registration data is rejected and the user remains on the signup flow with field validation visible.",
+    "category": "Registration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /signup"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to submit the signup form without completing required fields"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify registration validation messages are visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC049",
+    "title": "Review and save tax changes",
+    "description": "Verifies that store staff can open taxes management, update a tax entry, and save the changes.",
+    "category": "Store / Point of Sale",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to taxes management"
+      },
+      {
+        "type": "action",
+        "description": "Open a tax for editing"
+      },
+      {
+        "type": "action",
+        "description": "Update the tax details"
+      },
+      {
+        "type": "action",
+        "description": "Save the tax changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated tax is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC050",
+    "title": "Review and save promotion changes",
+    "description": "Verifies that store staff can open promotions management, update a promotion, and save the changes.",
+    "category": "Store / Point of Sale",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the employee code field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to promotions management"
+      },
+      {
+        "type": "action",
+        "description": "Open a promotion for editing"
+      },
+      {
+        "type": "action",
+        "description": "Update the promotion details"
+      },
+      {
+        "type": "action",
+        "description": "Save the promotion changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated promotion is displayed"
+      }
+    ],
+    "priority": "Low"
+  }
+]

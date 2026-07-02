@@ -1,0 +1,329 @@
+version: "2"
+type: frontend
+tech_stack:
+  - TypeScript
+  - Vue 3 (script setup, Composition API)
+  - Vite
+  - Vuetify 3
+  - Pinia (state management)
+  - Vue Router 4
+  - Axios (HTTP client, baseURL ${VITE_API_URL}/api/v1)
+routes:
+  - path: /
+    file: src/features/auth/views/LoginView.vue
+    auth_required: false
+    description: Employee login page (guest only). Uses LoginForm with employee code + password.
+  - path: /signup
+    file: src/features/registration/views/SignupView.vue
+    auth_required: false
+    description: Company/employee registration page (guest only).
+  - path: /dashboard
+    file: src/features/dashboard/views/HomeView.vue
+    auth_required: true
+    description: Authenticated dashboard home inside AppLayout shell.
+  - path: /dashboard/agenda
+    file: src/features/agenda/views/AgendaView.vue
+    auth_required: true
+    description: Appointment/agenda calendar view.
+  - path: /dashboard/consulta/nueva
+    file: src/features/dashboard/views/consulta/nueva/NuevaView.vue
+    auth_required: true
+    description: New clinical consultation wizard (permission CONSULTATION_CREATE).
+  - path: /dashboard/consulta/nueva/exito
+    file: src/features/dashboard/views/consulta/nueva/exito/ConsultaGuardada.vue
+    auth_required: true
+    description: Consultation saved success screen.
+  - path: /dashboard/consulta/historial
+    file: src/features/historia-clinica/views/HistoriaClinicaView.vue
+    auth_required: true
+    description: Clinical history browser (owner -> pet -> history steps).
+  - path: /dashboard/consulta/historial/:ownerId/mascotas
+    file: src/features/historia-clinica/views/PetStep.vue
+    auth_required: true
+    description: List of pets for a selected owner in clinical history.
+  - path: /dashboard/consulta/historial/:ownerId/mascotas/:petId
+    file: src/features/historia-clinica/views/HistoryStep.vue
+    auth_required: true
+    description: Full clinical history detail for a specific pet.
+  - path: /dashboard/consulta/vacunacion
+    file: src/features/dashboard/views/consulta/VacunacionView.vue
+    auth_required: true
+    description: Vaccination consultation (permission VACCINATION_CREATE).
+  - path: /dashboard/consulta/hospital
+    file: src/features/dashboard/views/consulta/HospitalView.vue
+    auth_required: true
+    description: Hospitalization consultation (permission HOSPITALIZATION_CREATE).
+  - path: /dashboard/acciones/laboratorio
+    file: src/features/acciones/views/LabListView.vue
+    auth_required: true
+    description: Laboratory action list (permission LABORATORY_TEST_CREATE).
+  - path: /dashboard/acciones/imagen
+    file: src/features/acciones/views/ImagingListView.vue
+    auth_required: true
+    description: Diagnostic imaging action list (permission DIAGNOSTIC_IMAGING_CREATE).
+  - path: /dashboard/acciones/vacunacion
+    file: src/features/acciones/views/VaccineListView.vue
+    auth_required: true
+    description: Vaccination action list (permission VACCINATION_CREATE).
+  - path: /dashboard/acciones/hospitalizacion
+    file: src/features/acciones/views/HospListView.vue
+    auth_required: true
+    description: Hospitalization action list (permission HOSPITALIZATION_CREATE).
+  - path: /dashboard/acciones/desparasitacion
+    file: src/features/acciones/views/DewormListView.vue
+    auth_required: true
+    description: Deworming action list (permission DEWORMING_CREATE).
+  - path: /dashboard/acciones/cirugia
+    file: src/features/acciones/views/SurgeryListView.vue
+    auth_required: true
+    description: Surgery action list (permission SURGERY_CREATE).
+  - path: /dashboard/acciones/spa
+    file: src/features/acciones/views/SpaListView.vue
+    auth_required: true
+    description: Spa/grooming action list (permission SPA_CREATE).
+  - path: /dashboard/laboratorio
+    file: src/features/laboratorio/views/LaboratorioView.vue
+    auth_required: true
+    description: Internal laboratory workbench (permission LABORATORY_TEST_READ).
+  - path: /dashboard/hospital
+    file: src/features/hospitalizacion/views/HospitalizacionView.vue
+    auth_required: true
+    description: Hospitalization ward board (permission HOSPITALIZATION_READ).
+  - path: /dashboard/tienda
+    file: src/features/tienda/views/POSView.vue
+    auth_required: true
+    description: Point-of-sale / store screen (permission PRODUCT_READ).
+  - path: /dashboard/tienda/inventario
+    file: src/features/tienda/views/InventarioView.vue
+    auth_required: true
+    description: Product inventory management (permission PRODUCT_READ).
+  - path: /dashboard/tienda/servicios
+    file: src/features/tienda/views/ServiciosView.vue
+    auth_required: true
+    description: Services catalog management (permission SERVICE_READ).
+  - path: /dashboard/tienda/promociones
+    file: src/features/tienda/views/PromocionesView.vue
+    auth_required: true
+    description: Promotions management (permission PROMOTION_READ).
+  - path: /dashboard/tienda/impuestos
+    file: src/features/tienda/views/ImpuestosView.vue
+    auth_required: true
+    description: Taxes management (permission TAX_READ).
+  - path: /dashboard/cuentas
+    file: src/features/cuentas/views/CuentasView.vue
+    auth_required: true
+    description: Open accounts / customer tabs (permission OPEN_ACCOUNT_READ).
+  - path: /dashboard/facturacion/documentos
+    file: src/features/facturacion/views/DocumentosView.vue
+    auth_required: true
+    description: Electronic billing documents (permission ELECTRONIC_BILLING_CREATE).
+  - path: /dashboard/facturacion/reportes
+    file: src/features/facturacion/views/ReportesView.vue
+    auth_required: true
+    description: Electronic billing reports / sales book (permission ELECTRONIC_BILLING_CREATE).
+  - path: /dashboard/facturacion/habilitacion
+    file: src/features/facturacion/views/HabilitacionView.vue
+    auth_required: true
+    description: DIAN enablement / company tax profile setup (permission ELECTRONIC_BILLING_CREATE).
+  - path: /dashboard/empleados
+    file: src/features/employees/views/EmpleadosView.vue
+    auth_required: true
+    description: Employee management (permission EMPLOYEE_READ).
+  - path: /dashboard/roles
+    file: src/features/roles/views/RolesView.vue
+    auth_required: true
+    description: Roles and permissions management (permission ROLE_PERMISSIONS_READ).
+features:
+  - name: Employee Login
+    description: Authenticate with employee code and password; stores JWT session and hydrates permissions.
+    files:
+      - src/features/auth/views/LoginView.vue
+      - src/features/auth/components/LoginForm.vue
+      - src/features/auth/composables/useAuth.ts
+      - src/features/auth/composables/useAuthorization.ts
+      - src/services/http/http.client.ts
+    entry_route: /
+    user_interactions:
+      - Fill employee code field
+      - Fill password field
+      - Click the login/submit button
+      - See validation or credential error message on failure
+      - On success, get redirected to /dashboard
+    api_calls:
+      - method: POST
+        endpoint: /api/v1/auth/login/employee
+      - method: GET
+        endpoint: /api/v1/auth/me
+      - method: POST
+        endpoint: /api/v1/auth/refresh
+      - method: POST
+        endpoint: /api/v1/auth/logout
+    auth_required: false
+  - name: Session guard and authorization
+    description: Router guard enforces authentication, guestOnly redirects, session expiry handling, and per-route permission checks.
+    files:
+      - src/router/index.ts
+      - src/features/auth/composables/useAuth.ts
+      - src/features/auth/composables/useAuthorization.ts
+      - src/constants/permissions.ts
+    entry_route: /dashboard
+    user_interactions:
+      - Attempt to open a protected route without a session and get redirected to login
+      - Attempt to open a route without the required permission and get redirected to home
+      - See a session-expired toast when the access token is expired without refresh token
+    api_calls:
+      - method: GET
+        endpoint: /api/v1/auth/me
+    auth_required: true
+  - name: New Consultation Wizard
+    description: Multi-step wizard (owner, pet, consultation, summary) that persists a consultation and its associated clinical items via a POST cascade, with resumable partial saves.
+    files:
+      - src/features/dashboard/views/consulta/nueva/NuevaView.vue
+      - src/features/dashboard/composables/useNuevaConsultaDraft.ts
+    entry_route: /dashboard/consulta/nueva
+    user_interactions:
+      - Complete owner step (name, document, phone) and continue
+      - Complete pet step (name, species, breed, gender, weight) and continue
+      - Fill consultation type and anamnesis, add quick actions (prescriptions, lab tests, imaging, vaccination, etc.)
+      - Review summary and click Save consultation
+      - See partial-save banner and retry when a POST fails mid-cascade
+    api_calls:
+      - method: POST
+        endpoint: /api/v1/consultations
+      - method: POST
+        endpoint: /api/v1/prescriptions
+      - method: POST
+        endpoint: /api/v1/medicament-prescriptions
+      - method: POST
+        endpoint: /api/v1/owners
+      - method: POST
+        endpoint: /api/v1/animals
+    auth_required: true
+  - name: Clinical History Browser
+    description: Drill down from owner to pet to full clinical history.
+    files:
+      - src/features/historia-clinica/views/HistoriaClinicaView.vue
+      - src/features/historia-clinica/views/OwnerStep.vue
+      - src/features/historia-clinica/views/PetStep.vue
+      - src/features/historia-clinica/views/HistoryStep.vue
+    entry_route: /dashboard/consulta/historial
+    user_interactions:
+      - Search and select an owner
+      - Select a pet from the owner's pets
+      - View the pet's consultations and clinical records timeline
+    api_calls:
+      - method: GET
+        endpoint: /api/v1/clinical-history
+    auth_required: true
+  - name: Store / Point of Sale
+    description: POS plus catalogs for inventory (products), services, promotions and taxes; can emit an electronic document from a sale.
+    files:
+      - src/features/tienda/views/POSView.vue
+      - src/features/tienda/views/InventarioView.vue
+      - src/features/tienda/views/ServiciosView.vue
+      - src/features/tienda/views/PromocionesView.vue
+      - src/features/tienda/views/ImpuestosView.vue
+    entry_route: /dashboard/tienda
+    user_interactions:
+      - Search products and add them to a sale
+      - Manage inventory, services, promotions and taxes
+      - Emit an electronic document from a completed sale
+    api_calls:
+      - method: GET
+        endpoint: /api/v1/products/search
+      - method: GET
+        endpoint: /api/v1/products
+      - method: GET
+        endpoint: /api/v1/services
+      - method: GET
+        endpoint: /api/v1/promotions
+      - method: POST
+        endpoint: /api/v1/electronic-documents/from-sale
+    auth_required: true
+  - name: Open Accounts
+    description: Manage customer open accounts and their product/service/general/debt charges.
+    files:
+      - src/features/cuentas/views/CuentasView.vue
+    entry_route: /dashboard/cuentas
+    user_interactions:
+      - Search and open a customer account
+      - Add product, service, general or debt charges
+      - Review the account balance
+    api_calls:
+      - method: GET
+        endpoint: /api/v1/open-accounts/search
+      - method: GET
+        endpoint: /api/v1/open-accounts
+      - method: POST
+        endpoint: /api/v1/product-charge-open-accounts
+      - method: POST
+        endpoint: /api/v1/service-charge-open-accounts
+    auth_required: true
+  - name: Electronic Billing (DIAN)
+    description: Emit and manage electronic documents, configure numbering resolutions and company tax profile (DIAN enablement), and view sales reports.
+    files:
+      - src/features/facturacion/views/DocumentosView.vue
+      - src/features/facturacion/views/ReportesView.vue
+      - src/features/facturacion/views/HabilitacionView.vue
+    entry_route: /dashboard/facturacion/documentos
+    user_interactions:
+      - Emit an electronic document
+      - Configure numbering resolutions and company tax profile
+      - View sales book and reconciliation reports
+    api_calls:
+      - method: GET
+        endpoint: /api/v1/electronic-documents
+      - method: POST
+        endpoint: /api/v1/electronic-documents/emit
+      - method: GET
+        endpoint: /api/v1/numbering-resolutions
+      - method: GET
+        endpoint: /api/v1/company-tax-profile
+      - method: GET
+        endpoint: /api/v1/sales-reports/sales-book
+    auth_required: true
+  - name: Employees and Roles Administration
+    description: Manage employees and configure roles/permissions per company.
+    files:
+      - src/features/employees/views/EmpleadosView.vue
+      - src/features/roles/views/RolesView.vue
+    entry_route: /dashboard/empleados
+    user_interactions:
+      - Create and edit employees
+      - Assign roles to employees
+      - Configure role permissions by module/sub-module
+    api_calls:
+      - method: GET
+        endpoint: /api/v1/employees/by-company
+      - method: GET
+        endpoint: /api/v1/roles/by-company
+      - method: GET
+        endpoint: /api/v1/permissions/by-company
+      - method: PUT
+        endpoint: /api/v1/role-permissions
+    auth_required: true
+  - name: Laboratory Workbench
+    description: List, search and attach files to laboratory tests.
+    files:
+      - src/features/laboratorio/views/LaboratorioView.vue
+      - src/features/acciones/views/LabListView.vue
+    entry_route: /dashboard/laboratorio
+    user_interactions:
+      - Search laboratory tests
+      - Open a test and view/attach result files
+    api_calls:
+      - method: GET
+        endpoint: /api/v1/laboratory-tests/search
+      - method: GET
+        endpoint: /api/v1/laboratory-test-files
+    auth_required: true
+known_limitations:
+  - issue: No cross-endpoint rollback in the New Consultation save cascade; a lost response after a successful POST /consultations can duplicate the consultation on retry (no server idempotency key).
+    location: src/features/dashboard/views/consulta/nueva/NuevaView.vue
+    impact: Rare duplicate consultations under transport failures; client-side retry skips already-saved items but cannot dedupe a server-side duplicate.
+  - issue: Backend gaps documented for the store module (no dedicated Venta/POS sale entity nor product bundles).
+    location: src/features/tienda
+    impact: Some POS/store flows are partially UI-driven or rely on workarounds rather than a full backend sale model.
+  - issue: Weight and size values are rounded to integers in the animal mapper.
+    location: src/features/registration
+    impact: Decimal precision for weight (kg) is lost on persistence.
