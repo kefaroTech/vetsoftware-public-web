@@ -4,13 +4,20 @@ import { Pencil, Plus, Tag, Trash2 } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import type { CategoryResponse } from '../types/tienda'
 
-const props = defineProps<{
-  open: boolean
-  title: string
-  categories: CategoryResponse[]
-  /** Mapa { [catId]: nº de ítems usando la categoría } para bloquear borrado. */
-  counts: Record<number, number>
-}>()
+const props = withDefaults(
+  defineProps<{
+    open: boolean
+    title: string
+    categories: CategoryResponse[]
+    /** Mapa { [catId]: nº de ítems usando la categoría } para bloquear borrado. */
+    counts: Record<number, number>
+    /** Gating por permisos (el back exige {productCategory,serviceCategory}.{create,update,delete}). */
+    canCreate?: boolean
+    canUpdate?: boolean
+    canDelete?: boolean
+  }>(),
+  { canCreate: true, canUpdate: true, canDelete: true },
+)
 
 const emit = defineEmits<{
   close: []
@@ -82,11 +89,11 @@ function confirmRemove(id: number) {
   >
     <template #body>
       <div class="manager">
-        <button v-if="!adding" type="button" class="add-btn" @click="startAdd">
+        <button v-if="!adding && canCreate" type="button" class="add-btn" @click="startAdd">
           <Plus :size="15" :stroke-width="1.8" /> Nueva categoría
         </button>
 
-        <div v-else class="editor">
+        <div v-else-if="adding" class="editor">
           <input
             v-model="draftName"
             type="text"
@@ -131,11 +138,12 @@ function confirmRemove(id: number) {
                 <button type="button" class="btn-danger-sm" @click="confirmRemove(cat.id)">Sí</button>
                 <button type="button" class="btn-ghost-sm" @click="confirmingId = null">No</button>
               </div>
-              <div v-else class="row-actions">
-                <button type="button" class="icon-btn" title="Editar" @click="startEdit(cat)">
+              <div v-else-if="canUpdate || canDelete" class="row-actions">
+                <button v-if="canUpdate" type="button" class="icon-btn" title="Editar" @click="startEdit(cat)">
                   <Pencil :size="14" :stroke-width="1.7" />
                 </button>
                 <button
+                  v-if="canDelete"
                   type="button"
                   class="icon-btn danger"
                   :disabled="(counts[cat.id] ?? 0) > 0"

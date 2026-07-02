@@ -30,6 +30,18 @@ export const productApi = {
     return data
   },
 
+  /** Productos pausados (enabled=false) de la empresa, para reactivarlos. */
+  async listDisabled(): Promise<ProductResponse[]> {
+    const { data } = await http.get<ProductResponse[]>('/products/disabled')
+    return data
+  },
+
+  /** Reactiva (enabled=true) un producto pausado. */
+  async enable(id: number): Promise<ProductResponse> {
+    const { data } = await http.patch<ProductResponse>(`/products/${id}/enable`)
+    return data
+  },
+
   async create(payload: ProductPayload): Promise<ProductResponse> {
     const { data } = await http.post<ProductResponse>('/products', payload)
     return data

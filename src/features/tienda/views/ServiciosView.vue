@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { Package, Pencil, Plus, Search, Trash2 } from 'lucide-vue-next'
+import { Package, PauseCircle, Pencil, Plus, RotateCcw, Search } from 'lucide-vue-next'
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
 import ServiceFormModal from '../components/ServiceFormModal.vue'
 import CategoryManagerModal from '../components/CategoryManagerModal.vue'
@@ -18,17 +18,29 @@ const CONFLICT_MESSAGE =
 
 const store = useTienda()
 const toast = useToast()
-const { can } = useAuthorization()
+const { can, canAny } = useAuthorization()
 const canCreate = can(PERMISSIONS.SERVICE_CREATE)
 const canUpdate = can(PERMISSIONS.SERVICE_UPDATE)
 const canDelete = can(PERMISSIONS.SERVICE_DELETE)
+const canCatCreate = can(PERMISSIONS.SERVICE_CATEGORY_CREATE)
+const canCatUpdate = can(PERMISSIONS.SERVICE_CATEGORY_UPDATE)
+const canCatDelete = can(PERMISSIONS.SERVICE_CATEGORY_DELETE)
+const canManageCategories = canAny(
+  PERMISSIONS.SERVICE_CATEGORY_CREATE,
+  PERMISSIONS.SERVICE_CATEGORY_UPDATE,
+  PERMISSIONS.SERVICE_CATEGORY_DELETE,
+)
+
+/** 'active' = catálogo vivo; 'paused' = servicios pausados (enabled=false) para reactivar. */
+const mode = ref<'active' | 'paused'>('active')
 
 const query = ref('')
 const cat = ref('')
 const modalOpen = ref(false)
 const editing = ref<ServiceResponse | null>(null)
-const deleting = ref<ServiceResponse | null>(null)
-const deletingBusy = ref(false)
+const pausing = ref<ServiceResponse | null>(null)
+const pausingBusy = ref(false)
+const pausedLoading = ref(false)
 const categoriesOpen = ref(false)
 
 onMounted(() => store.ensureLoaded())
@@ -62,9 +74,28 @@ const categoryCounts = computed<Record<number, number>>(() => {
   return counts
 })
 
+async function switchMode(m: 'active' | 'paused') {
+  if (mode.value === m) return
+  mode.value = m
+  if (m === 'paused') {
+    pausedLoading.value = true
+    try {
+      await store.loadPausedServices()
+    } catch (e) {
+      toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudieron cargar los pausados'))
+    } finally {
+      pausedLoading.value = false
+    }
+  }
+}
+
 function openNew() {
   editing.value = null
   modalOpen.value = true
+}
+function onRowClick(s: ServiceResponse) {
+  // Fila editable solo con permiso de actualización.
+  if (canUpdate.value) editing.value = s
 }
 function onSaved(item: ServiceResponse) {
   const wasEdit = editing.value !== null
@@ -75,18 +106,28 @@ function onFormClose() {
   editing.value = null
 }
 
-async function onConfirmDelete() {
-  const target = deleting.value
+/** Pausar = soft-delete (DELETE → enabled=false). Recuperable desde "Pausados". */
+async function onConfirmPause() {
+  const target = pausing.value
   if (!target) return
-  deletingBusy.value = true
+  pausingBusy.value = true
   try {
     await store.removeService(target.id)
-    toast.info('Servicio eliminado', 'El servicio fue removido.')
-    deleting.value = null
+    toast.info('Servicio pausado', `${target.name} dejó de aparecer en el punto de venta.`)
+    pausing.value = null
   } catch (e) {
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo eliminar'))
+    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo pausar'))
   } finally {
-    deletingBusy.value = false
+    pausingBusy.value = false
+  }
+}
+
+async function onReactivate(s: ServiceResponse) {
+  try {
+    await store.enableService(s.id)
+    toast.success('Servicio reactivado', `${s.name} volvió al catálogo activo.`)
+  } catch (e) {
+    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo reactivar'))
   }
 }
 
@@ -122,10 +163,14 @@ async function onCategoryRemove(id: number) {
         <h1 class="title">Servicios ofrecidos</h1>
       </div>
       <div class="head-actions">
-        <button type="button" class="ghost-cta" @click="categoriesOpen = true">
+        <div class="seg" role="tablist">
+          <button type="button" :class="{ on: mode === 'active' }" @click="switchMode('active')">Activos</button>
+          <button type="button" :class="{ on: mode === 'paused' }" @click="switchMode('paused')">Pausados</button>
+        </div>
+        <button v-if="canManageCategories" type="button" class="ghost-cta" @click="categoriesOpen = true">
           <Package :size="14" :stroke-width="1.8" /> Categorías
         </button>
-        <button v-if="canCreate" type="button" class="cta" @click="openNew">
+        <button v-if="canCreate && mode === 'active'" type="button" class="cta" @click="openNew">
           <Plus :size="16" :stroke-width="1.8" /> Nuevo servicio
         </button>
       </div>
@@ -133,50 +178,74 @@ async function onCategoryRemove(id: number) {
 
     <div v-if="store.error.value" class="banner error">{{ store.error.value }}</div>
 
-    <div class="filters">
-      <div class="search">
-        <Search :size="15" :stroke-width="1.7" class="s-icon" />
-        <input v-model="query" type="search" placeholder="Buscar servicio…" />
+    <!-- ─────────── Modo ACTIVOS ─────────── -->
+    <template v-if="mode === 'active'">
+      <div class="filters">
+        <div class="search">
+          <Search :size="15" :stroke-width="1.7" class="s-icon" />
+          <input v-model="query" type="search" placeholder="Buscar servicio…" />
+        </div>
+        <select v-model="cat" class="fsel">
+          <option value="">Todas las categorías</option>
+          <option v-for="c in store.serviceCategories.value" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
+        </select>
       </div>
-      <select v-model="cat" class="fsel">
-        <option value="">Todas las categorías</option>
-        <option v-for="c in store.serviceCategories.value" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
-      </select>
-    </div>
 
-    <div v-if="store.loading.value" class="state">Cargando…</div>
-    <div v-else-if="groups.length === 0" class="state">Sin servicios para el filtro.</div>
+      <div v-if="store.loading.value" class="state">Cargando…</div>
+      <div v-else-if="groups.length === 0" class="state">Sin servicios para el filtro.</div>
 
-    <section v-for="g in groups" v-else :key="g.id" class="svc-group">
-      <div class="svc-group-head">
-        <span
-          class="catpill"
-          :style="{
-            background: serviceCategoryTone(g).bg,
-            color: serviceCategoryTone(g).fg,
-          }"
-          >{{ g.name }}</span
-        >
-        <span class="svc-group-count">{{ g.items.length }}</span>
-      </div>
-      <div class="svc-list">
-        <div v-for="s in g.items" :key="s.id" class="svc-row" @click="editing = s">
+      <section v-for="g in groups" v-else :key="g.id" class="svc-group">
+        <div class="svc-group-head">
+          <span
+            class="catpill"
+            :style="{
+              background: serviceCategoryTone(g).bg,
+              color: serviceCategoryTone(g).fg,
+            }"
+            >{{ g.name }}</span
+          >
+          <span class="svc-group-count">{{ g.items.length }}</span>
+        </div>
+        <div class="svc-list">
+          <div v-for="s in g.items" :key="s.id" class="svc-row" @click="onRowClick(s)">
+            <div class="svc-info">
+              <div class="svc-name">{{ s.name }}</div>
+              <div v-if="s.notes" class="svc-notes">{{ s.notes }}</div>
+            </div>
+            <div class="svc-price">{{ formatMoney(s.price) }}</div>
+            <div class="svc-actions" @click.stop>
+              <button v-if="canUpdate" type="button" class="icon-btn" title="Editar" @click="editing = s">
+                <Pencil :size="14" :stroke-width="1.7" />
+              </button>
+              <button v-if="canDelete" type="button" class="icon-btn" title="Pausar" @click="pausing = s">
+                <PauseCircle :size="14" :stroke-width="1.7" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </template>
+
+    <!-- ─────────── Modo PAUSADOS ─────────── -->
+    <template v-else>
+      <p class="paused-hint">Servicios pausados (ocultos del punto de venta). Reactívalos para volver a ofrecerlos.</p>
+      <div v-if="pausedLoading" class="state">Cargando…</div>
+      <div v-else-if="store.pausedServices.value.length === 0" class="state">No hay servicios pausados.</div>
+      <div v-else class="svc-list">
+        <div v-for="s in store.pausedServices.value" :key="s.id" class="svc-row static">
           <div class="svc-info">
             <div class="svc-name">{{ s.name }}</div>
-            <div v-if="s.notes" class="svc-notes">{{ s.notes }}</div>
+            <div class="svc-cat">{{ s.serviceCategory.name }}</div>
           </div>
           <div class="svc-price">{{ formatMoney(s.price) }}</div>
-          <div class="svc-actions" @click.stop>
-            <button v-if="canUpdate" type="button" class="icon-btn" title="Editar" @click="editing = s">
-              <Pencil :size="14" :stroke-width="1.7" />
-            </button>
-            <button v-if="canDelete" type="button" class="icon-btn danger" title="Eliminar" @click="deleting = s">
-              <Trash2 :size="14" :stroke-width="1.7" />
+          <div class="svc-actions">
+            <button v-if="canDelete" type="button" class="reactivate" @click="onReactivate(s)">
+              <RotateCcw :size="14" :stroke-width="1.7" /> Reactivar
             </button>
           </div>
         </div>
       </div>
-    </section>
+    </template>
 
     <ServiceFormModal :open="modalOpen || editing !== null" :initial="editing" @close="onFormClose" @saved="onSaved" />
     <CategoryManagerModal
@@ -184,17 +253,21 @@ async function onCategoryRemove(id: number) {
       title="Categorías de servicio"
       :categories="store.serviceCategories.value"
       :counts="categoryCounts"
+      :can-create="canCatCreate"
+      :can-update="canCatUpdate"
+      :can-delete="canCatDelete"
       @close="categoriesOpen = false"
       @upsert="onCategoryUpsert"
       @remove="onCategoryRemove"
     />
     <ConfirmDeleteDialog
-      :open="deleting !== null"
-      title="Eliminar servicio"
-      :message="deleting ? `${deleting.name} dejará de aparecer en el punto de venta. Las ventas ya registradas no se modifican.` : ''"
-      :busy="deletingBusy"
-      @cancel="deleting = null"
-      @confirm="onConfirmDelete"
+      :open="pausing !== null"
+      title="Pausar servicio"
+      action-label="Pausar"
+      :message="pausing ? `${pausing.name} dejará de aparecer en el punto de venta. Podrás reactivarlo desde la pestaña “Pausados”. Las ventas ya registradas no se modifican.` : ''"
+      :busy="pausingBusy"
+      @cancel="pausing = null"
+      @confirm="onConfirmPause"
     />
   </div>
 </template>
@@ -204,7 +277,10 @@ async function onCategoryRemove(id: number) {
 .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
 .kicker { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--warm-500); font-weight: 500; margin-bottom: 6px; }
 .title { margin: 0; font-family: var(--font-serif); font-size: 36px; font-weight: 400; letter-spacing: -0.015em; line-height: 1.05; color: var(--warm-900); }
-.head-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.head-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
+.seg { display: inline-flex; background: var(--warm-100); border: 1px solid var(--warm-200); border-radius: 9px; padding: 2px; }
+.seg button { border: none; background: transparent; font-family: inherit; font-size: 12.5px; font-weight: 500; color: var(--warm-600); padding: 6px 12px; border-radius: 7px; cursor: pointer; }
+.seg button.on { background: var(--warm-50); color: var(--amatista-700); box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08); }
 .cta {
   display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 9px;
   background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
@@ -217,6 +293,7 @@ async function onCategoryRemove(id: number) {
 }
 .ghost-cta:hover { background: var(--warm-100); }
 .banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
+.paused-hint { margin: 0 0 14px; font-size: 12.5px; color: var(--warm-500); }
 .filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
 .search { display: flex; align-items: center; gap: 9px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 9px; padding: 10px 13px; max-width: 340px; flex: 1; }
 .search:focus-within { border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
@@ -237,12 +314,16 @@ async function onCategoryRemove(id: number) {
 .svc-list { display: flex; flex-direction: column; gap: 6px; }
 .svc-row { display: flex; align-items: center; gap: 14px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 11px; padding: 12px 14px; cursor: pointer; transition: border-color 0.12s ease; }
 .svc-row:hover { border-color: var(--amatista-300); }
+.svc-row.static { cursor: default; }
+.svc-row.static:hover { border-color: var(--warm-200); }
 .svc-info { flex: 1; min-width: 0; }
 .svc-name { font-size: 14px; font-weight: 500; color: var(--warm-900); }
 .svc-notes { font-size: 12px; color: var(--warm-500); margin-top: 2px; }
+.svc-cat { font-size: 12px; color: var(--warm-500); margin-top: 2px; }
 .svc-price { font-size: 15px; font-weight: 600; color: var(--warm-900); white-space: nowrap; }
 .svc-actions { display: flex; gap: 4px; flex-shrink: 0; align-items: center; }
 .icon-btn { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--warm-200); background: transparent; color: var(--warm-700); cursor: pointer; }
 .icon-btn:hover { background: var(--warm-100); }
-.icon-btn.danger:hover { background: oklch(95% 0.06 25); color: oklch(40% 0.18 25); border-color: oklch(85% 0.12 25); }
+.reactivate { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--amatista-200); background: var(--amatista-50); color: var(--amatista-700); font-family: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.reactivate:hover { background: var(--amatista-100); }
 </style>

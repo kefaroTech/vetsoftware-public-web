@@ -41,6 +41,11 @@ export const useTiendaStore = defineStore('tienda', () => {
   const serviceCategories = ref<CategoryResponse[]>([])
   const taxes = ref<TaxResponse[]>([])
 
+  // Ítems PAUSADOS (enabled=false). Se cargan bajo demanda al abrir la vista "Pausados".
+  const pausedProducts = ref<ProductResponse[]>([])
+  const pausedServices = ref<ServiceResponse[]>([])
+  const pausedTaxes = ref<TaxResponse[]>([])
+
   const loading = ref(false)
   const error = ref<string | null>(null)
   let loadedOnce = false
@@ -95,6 +100,17 @@ export const useTiendaStore = defineStore('tienda', () => {
     await productApi.remove(id)
     removeFrom(products, id)
   }
+  /** Carga (bajo demanda) los productos pausados para la vista de reactivación. */
+  async function loadPausedProducts() {
+    pausedProducts.value = await productApi.listDisabled()
+  }
+  /** Reactiva un producto pausado: sale de la lista de pausados y vuelve al catálogo activo. */
+  async function enableProduct(id: number) {
+    const activated = await productApi.enable(id)
+    removeFrom(pausedProducts, id)
+    upsert(products, activated)
+    return activated
+  }
 
   async function createService(payload: ServicePayload) {
     const created = await serviceApi.create(payload)
@@ -109,6 +125,15 @@ export const useTiendaStore = defineStore('tienda', () => {
   async function removeService(id: number) {
     await serviceApi.remove(id)
     removeFrom(services, id)
+  }
+  async function loadPausedServices() {
+    pausedServices.value = await serviceApi.listDisabled()
+  }
+  async function enableService(id: number) {
+    const activated = await serviceApi.enable(id)
+    removeFrom(pausedServices, id)
+    upsert(services, activated)
+    return activated
   }
 
   async function createPromotion(payload: PromotionPayload) {
@@ -170,6 +195,15 @@ export const useTiendaStore = defineStore('tienda', () => {
     await taxApi.remove(id)
     removeFrom(taxes, id)
   }
+  async function loadPausedTaxes() {
+    pausedTaxes.value = await taxApi.listDisabled()
+  }
+  async function enableTax(id: number) {
+    const activated = await taxApi.enable(id)
+    removeFrom(pausedTaxes, id)
+    upsert(taxes, activated)
+    return activated
+  }
 
   return {
     products,
@@ -178,6 +212,9 @@ export const useTiendaStore = defineStore('tienda', () => {
     productCategories,
     serviceCategories,
     taxes,
+    pausedProducts,
+    pausedServices,
+    pausedTaxes,
     loading,
     error,
     ensureLoaded,
@@ -185,9 +222,13 @@ export const useTiendaStore = defineStore('tienda', () => {
     createProduct,
     updateProduct,
     removeProduct,
+    loadPausedProducts,
+    enableProduct,
     createService,
     updateService,
     removeService,
+    loadPausedServices,
+    enableService,
     createPromotion,
     updatePromotion,
     removePromotion,
@@ -200,5 +241,7 @@ export const useTiendaStore = defineStore('tienda', () => {
     createTax,
     updateTax,
     removeTax,
+    loadPausedTaxes,
+    enableTax,
   }
 })

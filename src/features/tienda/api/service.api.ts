@@ -29,6 +29,18 @@ export const serviceApi = {
     return data
   },
 
+  /** Servicios pausados (enabled=false) de la empresa, para reactivarlos. */
+  async listDisabled(): Promise<ServiceResponse[]> {
+    const { data } = await http.get<ServiceResponse[]>('/services/disabled')
+    return data
+  },
+
+  /** Reactiva (enabled=true) un servicio pausado. */
+  async enable(id: number): Promise<ServiceResponse> {
+    const { data } = await http.patch<ServiceResponse>(`/services/${id}/enable`)
+    return data
+  },
+
   async create(payload: ServicePayload): Promise<ServiceResponse> {
     const { data } = await http.post<ServiceResponse>('/services', payload)
     return data

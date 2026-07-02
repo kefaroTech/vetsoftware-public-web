@@ -9,6 +9,7 @@ import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
 import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
 import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
+import { formatMoney } from '../composables/pricing'
 import { useTienda } from '../composables/useTienda'
 import type { ProductPayload, ProductResponse, TaxScheme, TaxTreatment } from '../types/tienda'
 
@@ -95,7 +96,19 @@ function hydrate(it: ProductResponse) {
 }
 
 const draft = reactive<Draft>(emptyDraft())
-const submitted = ref(false)
+
+type FieldKey = 'name' | 'code' | 'purchasePrice' | 'salePrice' | 'currentStock' | 'minStock' | 'productCategoryId' | 'taxId'
+const touched = reactive<Record<FieldKey, boolean>>({
+  name: false, code: false, purchasePrice: false, salePrice: false,
+  currentStock: false, minStock: false, productCategoryId: false, taxId: false,
+})
+function resetTouched() {
+  ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = false))
+}
+function markTouched(field: FieldKey) {
+  touched[field] = true
+}
+
 const busy = ref(false)
 const saveError = ref<string | null>(null)
 
@@ -134,7 +147,7 @@ watch(
   () => props.open,
   (open) => {
     if (!open) return
-    submitted.value = false
+    resetTouched()
     saveError.value = null
     if (props.initial) hydrate(props.initial)
     else Object.assign(draft, emptyDraft())
@@ -156,15 +169,34 @@ const errors = computed(() => ({
   taxId: requiresTaxRate(draft.taxTreatment) && !draft.taxId ? 'Selecciona la tarifa' : null,
 }))
 
-function err(field: string): string | undefined {
-  return submitted.value ? (errors.value as Record<string, string | null>)[field] ?? undefined : undefined
+function err(field: FieldKey): string | undefined {
+  return touched[field] ? errors.value[field] ?? undefined : undefined
 }
 
 const isValid = computed(() => Object.values(errors.value).every((e) => e === null))
 
+/** Valida marcando todos los campos como tocados; expuesto para el patrón `defineExpose(validate)`. */
+function validate(): boolean {
+  ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = true))
+  return isValid.value
+}
+defineExpose({ validate })
+
+/** Margen/utilidad en vivo a partir de precio de compra y venta (ambos con IVA incluido). */
+const marginInfo = computed(() => {
+  const purchase = num(draft.purchasePrice)
+  const sale = num(draft.salePrice)
+  if (!(sale > 0) || !(purchase >= 0)) return null
+  return {
+    pct: Math.round(((sale - purchase) / sale) * 100),
+    utility: sale - purchase,
+    below: sale < purchase,
+  }
+})
+
 async function submit() {
-  submitted.value = true
-  if (!isValid.value || busy.value) return
+  if (busy.value) return
+  if (!validate()) return
   busy.value = true
   saveError.value = null
   const payload: ProductPayload = {
@@ -221,37 +253,41 @@ async function submit() {
       <div class="grid">
         <BaseField label="Nombre" required :error="err('name')" class="col-2">
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.name" :invalid="!!err('name')" placeholder="Alimento premium 2kg" />
+            <BaseInput :id="id" v-model="draft.name" :invalid="!!err('name')" placeholder="Alimento premium 2kg" @blur="markTouched('name')" />
           </template>
         </BaseField>
         <BaseField label="Código / SKU" required :error="err('code')">
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.code" :invalid="!!err('code')" placeholder="SKU-001" />
+            <BaseInput :id="id" v-model="draft.code" :invalid="!!err('code')" placeholder="SKU-001" @blur="markTouched('code')" />
           </template>
         </BaseField>
         <BaseField label="Categoría" required :error="err('productCategoryId')">
           <template #default="{ id }">
-            <BaseSelect :id="id" v-model="draft.productCategoryId" :options="categoryOptions" :invalid="!!err('productCategoryId')" placeholder="Selecciona…" />
+            <BaseSelect :id="id" v-model="draft.productCategoryId" :options="categoryOptions" :invalid="!!err('productCategoryId')" placeholder="Selecciona…" @blur="markTouched('productCategoryId')" />
           </template>
         </BaseField>
         <BaseField label="Precio de compra" required :error="err('purchasePrice')">
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.purchasePrice" :invalid="!!err('purchasePrice')" inputmode="decimal" placeholder="0" />
+            <BaseInput :id="id" v-model="draft.purchasePrice" :invalid="!!err('purchasePrice')" inputmode="decimal" placeholder="0" @blur="markTouched('purchasePrice')" />
           </template>
         </BaseField>
         <BaseField label="Precio de venta (IVA incl.)" required :error="err('salePrice')">
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.salePrice" :invalid="!!err('salePrice')" inputmode="decimal" placeholder="0" />
+            <BaseInput :id="id" v-model="draft.salePrice" :invalid="!!err('salePrice')" inputmode="decimal" placeholder="0" @blur="markTouched('salePrice')" />
           </template>
         </BaseField>
+        <div v-if="marginInfo" class="margin-hint col-2" :class="{ below: marginInfo.below }">
+          <template v-if="marginInfo.below">⚠ Se vende bajo costo — utilidad {{ formatMoney(marginInfo.utility) }}</template>
+          <template v-else>Margen {{ marginInfo.pct }}% · utilidad {{ formatMoney(marginInfo.utility) }} por unidad</template>
+        </div>
         <BaseField label="Stock actual" required :error="err('currentStock')">
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.currentStock" :invalid="!!err('currentStock')" inputmode="numeric" placeholder="0" />
+            <BaseInput :id="id" v-model="draft.currentStock" :invalid="!!err('currentStock')" inputmode="numeric" placeholder="0" @blur="markTouched('currentStock')" />
           </template>
         </BaseField>
         <BaseField label="Stock mínimo" required :error="err('minStock')">
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.minStock" :invalid="!!err('minStock')" inputmode="numeric" placeholder="0" />
+            <BaseInput :id="id" v-model="draft.minStock" :invalid="!!err('minStock')" inputmode="numeric" placeholder="0" @blur="markTouched('minStock')" />
           </template>
         </BaseField>
         <BaseField label="Proveedor">
@@ -276,7 +312,7 @@ async function submit() {
         </BaseField>
         <BaseField v-if="showTaxRate" label="Tarifa de impuesto" required :error="err('taxId')">
           <template #default="{ id }">
-            <BaseSelect :id="id" v-model="draft.taxId" :options="taxOptions" :invalid="!!err('taxId')" placeholder="Selecciona tarifa…" />
+            <BaseSelect :id="id" v-model="draft.taxId" :options="taxOptions" :invalid="!!err('taxId')" placeholder="Selecciona tarifa…" @blur="markTouched('taxId')" />
           </template>
         </BaseField>
         <BaseField label="Notas" class="col-2">
@@ -299,6 +335,8 @@ async function submit() {
 <style scoped>
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; }
 .col-2 { grid-column: 1 / -1; }
+.margin-hint { font-size: 12.5px; font-weight: 500; color: var(--amatista-700); background: var(--amatista-50); border: 1px solid var(--amatista-200); border-radius: 8px; padding: 8px 12px; margin-top: -4px; }
+.margin-hint.below { color: oklch(45% 0.18 25); background: oklch(96% 0.04 25); border-color: oklch(85% 0.12 25); }
 .checks { display: flex; gap: 24px; flex-wrap: wrap; }
 .check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--warm-800); cursor: pointer; }
 .check input { width: 16px; height: 16px; accent-color: var(--amatista-600); }

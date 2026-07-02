@@ -41,7 +41,16 @@ interface Draft {
 }
 
 const draft = reactive<Draft>({ name: '', pct: '', taxScheme: 'IVA', version: null })
-const submitted = ref(false)
+
+type FieldKey = 'name' | 'pct'
+const touched = reactive<Record<FieldKey, boolean>>({ name: false, pct: false })
+function resetTouched() {
+  ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = false))
+}
+function markTouched(field: FieldKey) {
+  touched[field] = true
+}
+
 const busy = ref(false)
 const saveError = ref<string | null>(null)
 
@@ -59,7 +68,7 @@ watch(
   () => props.open,
   (open) => {
     if (!open) return
-    submitted.value = false
+    resetTouched()
     saveError.value = null
     if (props.initial) {
       hydrate(props.initial)
@@ -81,15 +90,22 @@ const errors = computed(() => ({
   pct: !(num(draft.pct) >= 0) || draft.pct.trim() === '' ? 'Porcentaje ≥ 0' : null,
 }))
 
-function err(field: 'name' | 'pct'): string | undefined {
-  return submitted.value ? errors.value[field] ?? undefined : undefined
+function err(field: FieldKey): string | undefined {
+  return touched[field] ? errors.value[field] ?? undefined : undefined
 }
 
 const isValid = computed(() => Object.values(errors.value).every((e) => e === null))
 
+/** Valida marcando todos los campos como tocados; expuesto para el patrón `defineExpose(validate)`. */
+function validate(): boolean {
+  ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = true))
+  return isValid.value
+}
+defineExpose({ validate })
+
 async function submit() {
-  submitted.value = true
-  if (!isValid.value || busy.value) return
+  if (busy.value) return
+  if (!validate()) return
   busy.value = true
   saveError.value = null
   const payload: TaxPayload = { name: draft.name.trim(), percentage: num(draft.pct), taxScheme: draft.taxScheme }
@@ -132,13 +148,13 @@ async function submit() {
       <div class="form">
         <BaseField label="Nombre" required :error="err('name')">
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.name" :invalid="!!err('name')" placeholder="Ej. IVA 19%, Impoconsumo 8%, Exento…" />
+            <BaseInput :id="id" v-model="draft.name" :invalid="!!err('name')" placeholder="Ej. IVA 19%, Impoconsumo 8%, Exento…" @blur="markTouched('name')" />
           </template>
         </BaseField>
         <BaseField label="Porcentaje" required :error="err('pct')">
           <template #default="{ id }">
             <div class="pct">
-              <BaseInput :id="id" v-model="draft.pct" :invalid="!!err('pct')" inputmode="decimal" placeholder="19" />
+              <BaseInput :id="id" v-model="draft.pct" :invalid="!!err('pct')" inputmode="decimal" placeholder="19" @blur="markTouched('pct')" />
               <span class="pct-sign">%</span>
             </div>
           </template>

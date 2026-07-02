@@ -73,7 +73,18 @@ function hydrate(it: ServiceResponse) {
 }
 
 const draft = reactive<Draft>(emptyDraft())
-const submitted = ref(false)
+
+type FieldKey = 'name' | 'price' | 'serviceCategoryId' | 'taxId'
+const touched = reactive<Record<FieldKey, boolean>>({
+  name: false, price: false, serviceCategoryId: false, taxId: false,
+})
+function resetTouched() {
+  ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = false))
+}
+function markTouched(field: FieldKey) {
+  touched[field] = true
+}
+
 const busy = ref(false)
 const saveError = ref<string | null>(null)
 
@@ -112,7 +123,7 @@ watch(
   () => props.open,
   (open) => {
     if (!open) return
-    submitted.value = false
+    resetTouched()
     saveError.value = null
     if (props.initial) hydrate(props.initial)
     else Object.assign(draft, emptyDraft())
@@ -130,15 +141,22 @@ const errors = computed(() => ({
   taxId: requiresTaxRate(draft.taxTreatment) && !draft.taxId ? 'Selecciona la tarifa' : null,
 }))
 
-function err(field: string): string | undefined {
-  return submitted.value ? (errors.value as Record<string, string | null>)[field] ?? undefined : undefined
+function err(field: FieldKey): string | undefined {
+  return touched[field] ? errors.value[field] ?? undefined : undefined
 }
 
 const isValid = computed(() => Object.values(errors.value).every((e) => e === null))
 
+/** Valida marcando todos los campos como tocados; expuesto para el patrón `defineExpose(validate)`. */
+function validate(): boolean {
+  ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = true))
+  return isValid.value
+}
+defineExpose({ validate })
+
 async function submit() {
-  submitted.value = true
-  if (!isValid.value || busy.value) return
+  if (busy.value) return
+  if (!validate()) return
   busy.value = true
   saveError.value = null
   const payload: ServicePayload = {
@@ -188,17 +206,17 @@ async function submit() {
       <div class="grid">
         <BaseField label="Nombre" required :error="err('name')" class="col-2">
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.name" :invalid="!!err('name')" placeholder="Consulta general" />
+            <BaseInput :id="id" v-model="draft.name" :invalid="!!err('name')" placeholder="Consulta general" @blur="markTouched('name')" />
           </template>
         </BaseField>
         <BaseField label="Categoría" required :error="err('serviceCategoryId')">
           <template #default="{ id }">
-            <BaseSelect :id="id" v-model="draft.serviceCategoryId" :options="categoryOptions" :invalid="!!err('serviceCategoryId')" placeholder="Selecciona…" />
+            <BaseSelect :id="id" v-model="draft.serviceCategoryId" :options="categoryOptions" :invalid="!!err('serviceCategoryId')" placeholder="Selecciona…" @blur="markTouched('serviceCategoryId')" />
           </template>
         </BaseField>
         <BaseField label="Precio (IVA incl.)" required :error="err('price')">
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.price" :invalid="!!err('price')" inputmode="decimal" placeholder="0" />
+            <BaseInput :id="id" v-model="draft.price" :invalid="!!err('price')" inputmode="decimal" placeholder="0" @blur="markTouched('price')" />
           </template>
         </BaseField>
         <BaseField label="Tratamiento de IVA" required>
@@ -208,7 +226,7 @@ async function submit() {
         </BaseField>
         <BaseField v-if="showTaxRate" label="Tarifa de impuesto" required :error="err('taxId')">
           <template #default="{ id }">
-            <BaseSelect :id="id" v-model="draft.taxId" :options="taxOptions" :invalid="!!err('taxId')" placeholder="Selecciona tarifa…" />
+            <BaseSelect :id="id" v-model="draft.taxId" :options="taxOptions" :invalid="!!err('taxId')" placeholder="Selecciona tarifa…" @blur="markTouched('taxId')" />
           </template>
         </BaseField>
         <BaseField label="Notas" class="col-2">

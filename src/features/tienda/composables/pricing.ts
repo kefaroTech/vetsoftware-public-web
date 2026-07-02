@@ -174,3 +174,23 @@ export function stockState(product: ProductResponse): StockState {
   if (product.currentStock <= product.minStock) return 'BAJO'
   return 'OK'
 }
+
+// ── Margen / utilidad ────────────────────────────────────────────────────────
+
+type Priced = { purchasePrice: number; salePrice: number }
+
+/** Utilidad bruta por unidad = precio de venta − precio de compra. */
+export function unitMargin(p: Priced): number {
+  return p.salePrice - p.purchasePrice
+}
+
+/** Margen % sobre el precio de venta; `null` si no hay precio de venta (>0). */
+export function marginPct(p: Priced): number | null {
+  if (!(p.salePrice > 0)) return null
+  return ((p.salePrice - p.purchasePrice) / p.salePrice) * 100
+}
+
+/** ¿Se vende bajo costo? (precio de venta menor que el de compra). */
+export function isBelowCost(p: Priced): boolean {
+  return p.salePrice < p.purchasePrice
+}
