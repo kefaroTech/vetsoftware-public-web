@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch, type Component } from 'vue'
+import { onMounted, onUnmounted, ref, useId, watch, type Component } from 'vue'
 import { X } from 'lucide-vue-next'
 
 const props = withDefaults(
@@ -25,6 +25,7 @@ const props = withDefaults(
 const emit = defineEmits<{ close: [] }>()
 
 const closeBtn = ref<HTMLButtonElement | null>(null)
+const titleId = useId()
 
 function onKey(e: KeyboardEvent) {
   if (!props.open) return
@@ -58,20 +59,20 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
         :class="{ elevated }"
         role="dialog"
         aria-modal="true"
-        :aria-labelledby="title"
+        :aria-labelledby="titleId"
         @click.self="onBackdrop"
       >
         <div
           class="card"
           :class="`accent-${accent}`"
-          :style="{ width: `min(${width + 180}px, calc(100vw - 48px))`, maxHeight: 'calc(100vh - 48px)' }"
+          :style="{ width: `min(${width + 180}px, calc(100vw - 32px))`, maxHeight: 'calc(100vh - 32px)' }"
         >
           <header class="head">
             <div v-if="icon" class="icon-box">
               <component :is="icon" :size="20" :stroke-width="1.7" />
             </div>
             <div class="head-text">
-              <h2 class="title">{{ title }}</h2>
+              <h2 :id="titleId" class="title">{{ title }}</h2>
               <p v-if="subtitle" class="subtitle">{{ subtitle }}</p>
             </div>
             <button
@@ -226,5 +227,34 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .foot-actions {
   display: flex;
   gap: 8px;
+}
+@media (max-width: 560px) {
+  .card {
+    border-radius: 14px;
+  }
+  .head {
+    padding: 18px 20px 14px;
+  }
+  .body {
+    padding: 18px 20px;
+  }
+  .foot {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 12px 20px 14px;
+  }
+  .foot-left {
+    flex: none;
+    width: 100%;
+    line-height: 1.35;
+  }
+  .foot-actions {
+    width: 100%;
+  }
+  .foot-actions :deep(button) {
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+  }
 }
 </style>

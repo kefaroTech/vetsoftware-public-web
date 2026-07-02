@@ -217,7 +217,7 @@ function medErr(i: number, k: keyof MedDraft): string | undefined {
     :icon="Pill"
     title="Nueva receta"
     :subtitle="subtitle"
-    :width="640"
+    :width="860"
     @close="emit('close')"
   >
     <template #body>

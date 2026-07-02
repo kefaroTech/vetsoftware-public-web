@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
 
-defineProps<{
-  title?: string
-  subtitle?: string
-  icon?: Component
-  accent?: boolean
-  padded?: boolean
-}>()
+withDefaults(
+  defineProps<{
+    title?: string
+    subtitle?: string
+    icon?: Component
+    accent?: boolean
+    padded?: boolean
+  }>(),
+  {
+    accent: false,
+    padded: true,
+  },
+)
 </script>
 
 <template>
@@ -24,7 +30,7 @@ defineProps<{
         <slot name="action" />
       </div>
     </header>
-    <div :class="['body', { padded: padded !== false }]">
+    <div :class="['body', { padded }]">
       <slot />
     </div>
   </section>

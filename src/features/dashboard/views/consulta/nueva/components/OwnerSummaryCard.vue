@@ -99,12 +99,17 @@ function formatLocation(owner: Owner): string {
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(16px, 1vw + 8px, 24px) clamp(20px, 3cqi + 8px, 56px);
+  gap: 12px;
 }
 .row {
   display: flex;
   align-items: flex-start;
   gap: 12px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--warm-150);
+  border-radius: 11px;
+  background: color-mix(in oklch, var(--warm-100) 62%, transparent);
 }
 @container (max-width: 520px) {
   .grid {
@@ -121,6 +126,9 @@ function formatLocation(owner: Owner): string {
   place-items: center;
   flex-shrink: 0;
 }
+.row > div:last-child {
+  min-width: 0;
+}
 .lab {
   font-size: 11px;
   color: var(--warm-500);
@@ -131,7 +139,8 @@ function formatLocation(owner: Owner): string {
   font-size: 13px;
   color: var(--warm-900);
   margin-top: 2px;
-  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
 }
 .banner {
   margin-top: 18px;

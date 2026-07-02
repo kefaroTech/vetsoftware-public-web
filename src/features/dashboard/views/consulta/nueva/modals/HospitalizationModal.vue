@@ -168,7 +168,7 @@ function save() {
     title="Ingresar a hospitalización"
     :subtitle="subtitle"
     accent="warn"
-    :width="640"
+    :width="860"
     @close="emit('close')"
   >
     <template #body>

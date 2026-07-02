@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useToast } from '@/composables/useToast'
+import { popLoader, pushLoader } from '@/composables/useGlobalLoader'
 import { PERMISSIONS } from '@/constants/permissions'
 
 const router = createRouter({
@@ -220,7 +221,9 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach(async (to) => {
+router.beforeEach(async (to, from) => {
+  if (to.fullPath !== from.fullPath) pushLoader()
+
   const { isAuthenticated, isExpired, session, clearSession, refreshMe } = useAuth()
 
   // Access token vencido y SIN refresh token → no se puede renovar: limpiamos y avisamos.
@@ -258,6 +261,14 @@ router.beforeEach(async (to) => {
     return { name: 'home' }
   }
   return true
+})
+
+router.afterEach(() => {
+  popLoader()
+})
+
+router.onError(() => {
+  popLoader()
 })
 
 export default router

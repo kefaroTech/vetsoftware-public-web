@@ -159,7 +159,7 @@ function save() {
     :icon="ImageIcon"
     title="Solicitar imagen diagnóstica"
     :subtitle="subtitle"
-    :width="640"
+    :width="860"
     @close="emit('close')"
   >
     <template #body>

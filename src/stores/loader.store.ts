@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-const SHOW_DELAY_MS = 200
-const MIN_VISIBLE_MS = 300
+const SHOW_DELAY_MS = 120
+const MIN_VISIBLE_MS = 420
 
 export const useLoaderStore = defineStore('loader', () => {
   const pending = ref(0)

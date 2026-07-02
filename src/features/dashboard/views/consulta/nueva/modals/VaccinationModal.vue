@@ -193,7 +193,7 @@ function save() {
     :icon="Shield"
     title="Aplicar vacuna"
     :subtitle="subtitle"
-    :width="640"
+    :width="860"
     @close="emit('close')"
   >
     <template #body>
@@ -306,12 +306,12 @@ function save() {
                 <DateInput v-model="v.nextVaccination" :min="draft.date" />
               </template>
             </BaseField>
-            <BaseField label="Notas">
+            <BaseField label="Notas" class="notes-field">
               <template #default="{ id }">
                 <BaseTextarea
                   :id="id"
                   v-model="v.notes"
-                  :rows="2"
+                  :rows="3"
                   placeholder="Reacciones, vía de aplicación, indicaciones…"
                 />
               </template>
@@ -418,17 +418,26 @@ function save() {
 }
 .vac-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 2fr;
-  gap: 12px;
+  grid-template-columns: minmax(280px, 2fr) minmax(180px, 1fr) minmax(220px, 1fr);
+  gap: 16px 18px;
+}
+.notes-field {
+  grid-column: 1 / -1;
 }
 @media (max-width: 980px) {
   .vac-grid {
     grid-template-columns: 1fr 1fr;
   }
+  .notes-field {
+    grid-column: 1 / -1;
+  }
 }
 @media (max-width: 640px) {
   .vac-grid {
     grid-template-columns: 1fr;
+  }
+  .notes-field {
+    grid-column: auto;
   }
 }
 .add-btn {
