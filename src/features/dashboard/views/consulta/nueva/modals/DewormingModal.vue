@@ -97,10 +97,18 @@ const errors = computed(() => ({
   type: !draft.type ? 'Selecciona el tipo' : null,
   product: !draft.product.trim() ? 'Indica el producto' : null,
   dosage: !draft.dosage.trim() ? 'Indica la dosis' : null,
+  lastDeworming:
+    draft.lastDeworming && draft.lastDeworming > draft.date
+      ? 'No puede ser posterior a la aplicación'
+      : null,
+  nextControl:
+    draft.nextControl && draft.nextControl < draft.date
+      ? 'Debe ser posterior a la aplicación'
+      : null,
 }))
 
-const valid = computed<boolean>(
-  () => !errors.value.type && !errors.value.product && !errors.value.dosage,
+const valid = computed<boolean>(() =>
+  Object.values(errors.value).every((e) => !e),
 )
 
 function err<K extends keyof typeof errors.value>(k: K): string | undefined {
@@ -230,14 +238,30 @@ function save() {
             />
           </template>
         </BaseField>
-        <BaseField label="Última desparasitación" hint="Si se conoce">
+        <BaseField
+          label="Última desparasitación"
+          hint="Si se conoce"
+          :error="err('lastDeworming')"
+        >
           <template #default>
-            <DateInput v-model="draft.lastDeworming" :max="draft.date" />
+            <DateInput
+              v-model="draft.lastDeworming"
+              :max="draft.date"
+              :invalid="!!err('lastDeworming')"
+            />
           </template>
         </BaseField>
-        <BaseField label="Próximo control" hint="Recomendado">
+        <BaseField
+          label="Próximo control"
+          hint="Recomendado"
+          :error="err('nextControl')"
+        >
           <template #default>
-            <DateInput v-model="draft.nextControl" :min="draft.date" />
+            <DateInput
+              v-model="draft.nextControl"
+              :min="draft.date"
+              :invalid="!!err('nextControl')"
+            />
           </template>
         </BaseField>
       </div>

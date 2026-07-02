@@ -95,8 +95,9 @@ const errors = computed(() => ({
     ? 'Selecciona un tipo de estudio'
     : null,
   studyType: !draft.studyType.trim() ? 'Indica la región o protocolo' : null,
-  clinicalSigns:
-    draft.clinicalSigns.trim().length < 4
+  clinicalSigns: !draft.clinicalSigns.trim()
+    ? 'Indica los signos clínicos'
+    : draft.clinicalSigns.trim().length < 4
       ? 'Mínimo 4 caracteres'
       : null,
   diagnosis: !draft.diagnosis.trim() ? 'Indica el diagnóstico presuntivo' : null,

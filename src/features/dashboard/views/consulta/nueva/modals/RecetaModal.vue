@@ -127,7 +127,8 @@ const errors = computed(() => {
       presentation: !m.presentation.trim() ? 'Indica la presentación' : null,
       quantity: !m.quantity.trim()
         ? 'Indica la cantidad'
-        : Number(m.quantity.replace(',', '.')) <= 0
+        : !Number.isFinite(Number(m.quantity.replace(',', '.'))) ||
+            Number(m.quantity.replace(',', '.')) <= 0
           ? 'Cantidad inválida'
           : null,
       posology: !m.posology.trim() ? 'Indica la posología' : null,

@@ -94,7 +94,9 @@ const errors = computed(() => ({
   tests: draft.tests.map((t) => ({
     testTypeId: !t.testTypeId ? 'Selecciona un tipo' : null,
     quantity:
-      !t.quantity.trim() || Number(t.quantity) < 1
+      !t.quantity.trim() ||
+      !Number.isFinite(Number(t.quantity)) ||
+      Number(t.quantity) < 1
         ? 'Cantidad inválida'
         : null,
     diagnosis: !t.diagnosis.trim() ? 'Indica el diagnóstico presuntivo' : null,

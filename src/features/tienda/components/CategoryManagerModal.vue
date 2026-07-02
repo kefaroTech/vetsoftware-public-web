@@ -35,7 +35,14 @@ const editDesc = ref('')
 
 const confirmingId = ref<number | null>(null)
 
-const canSaveNew = computed(() => draftName.value.trim().length >= 2)
+const canSaveNew = computed(
+  () => draftName.value.trim().length >= 2 && draftDesc.value.trim().length >= 1,
+)
+// Espejo de canSaveNew para el editor: refleja el guard de saveEdit (nombre ≥ 2, descripción ≥ 1)
+// para deshabilitar "Guardar" en vez de que retorne en silencio.
+const canSaveEdit = computed(
+  () => editName.value.trim().length >= 2 && editDesc.value.trim().length >= 1,
+)
 
 function startAdd() {
   adding.value = true
@@ -60,7 +67,7 @@ function cancelEdit() {
   editingId.value = null
 }
 function saveEdit(id: number) {
-  if (editName.value.trim().length < 2) return
+  if (editName.value.trim().length < 2 || editDesc.value.trim().length < 1) return
   // La versión (@Version) se lee de la lista reactiva en el momento del guardado; tras un 409 el
   // padre refresca `categories`, así que un reintento envía la versión fresca sin cerrar el editor.
   const version = props.categories.find((c) => c.id === id)?.version
@@ -105,7 +112,7 @@ function confirmRemove(id: number) {
             v-model="draftDesc"
             type="text"
             class="ed-input"
-            placeholder="Descripción (opcional)"
+            placeholder="Descripción"
             @keyup.enter="saveNew"
           />
           <div class="ed-actions">
@@ -124,7 +131,7 @@ function confirmRemove(id: number) {
                 <input v-model="editDesc" type="text" class="ed-input" placeholder="Descripción" @keyup.enter="saveEdit(cat.id)" />
                 <div class="ed-actions">
                   <button type="button" class="btn-ghost" @click="cancelEdit">Cancelar</button>
-                  <button type="button" class="btn-primary" @click="saveEdit(cat.id)">Guardar</button>
+                  <button type="button" class="btn-primary" :disabled="!canSaveEdit" @click="saveEdit(cat.id)">Guardar</button>
                 </div>
               </div>
             </template>
@@ -179,7 +186,7 @@ function confirmRemove(id: number) {
 .editor.inline { width: 100%; }
 .ed-input {
   width: 100%; background: var(--warm-50); border: 1px solid var(--warm-200);
-  border-radius: 8px; padding: 9px 12px; font-family: inherit; font-size: 13px; color: var(--warm-900); outline: none;
+  border-radius: 8px; padding: 10px 14px; font-family: inherit; font-size: 13.5px; color: var(--warm-900); outline: none;
 }
 .ed-input:focus { border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
 .ed-actions { display: flex; justify-content: flex-end; gap: 8px; }
