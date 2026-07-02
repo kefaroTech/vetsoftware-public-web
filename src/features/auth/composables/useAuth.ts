@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores/auth.store'
 /** Wrapper sobre el store de Pinia `auth` (mantiene la API previa de useAuth). */
 export function useAuth() {
   const store = useAuthStore()
-  const { session, isAuthenticated, me, bootLoading, companyId, subjectId } =
+  const { session, isAuthenticated, me, bootLoading, companyId, subjectId, isExpired } =
     storeToRefs(store)
   return {
     session,
@@ -13,8 +13,10 @@ export function useAuth() {
     bootLoading,
     companyId,
     subjectId,
+    isExpired,
     login: store.login,
     logout: store.logout,
+    clearSession: store.clearSession,
     refreshMe: store.refreshMe,
   }
 }

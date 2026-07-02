@@ -38,8 +38,8 @@ async function submit() {
       employeeCode: form.value.employeeCode.trim(),
       password: form.value.password,
     }
-    const { token, type } = await authApi.loginEmployee(payload)
-    await login({ token, type })
+    const { token, type, refreshToken } = await authApi.loginEmployee(payload)
+    await login({ token, type, refreshToken })
     router.push({ name: 'home' })
   } catch (e) {
     fieldErrors.value = getProblemDetailFieldErrors(e)

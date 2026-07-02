@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { locationsApi } from '../api/locations.api'
 import { registrationApi } from '../api/registration.api'
 import type { City, Country, RegisterUserRequest, State } from '../types'
@@ -9,9 +10,12 @@ import {
   type CompanyDocumentType,
   type TaxRegime,
 } from '@/features/facturacion/types/facturacion'
+import { useAuth } from '@/features/auth/composables/useAuth'
+import type { AuthSubjectType } from '@/features/auth/types'
 import { getProblemDetailFieldErrors, getProblemDetailMessage } from '@/services/http/http.client'
 
-const emit = defineEmits<{ success: [] }>()
+const router = useRouter()
+const { login } = useAuth()
 
 const form = ref({
   companyName: '',
@@ -151,8 +155,15 @@ async function submit() {
       employeeEmail: form.value.employeeEmail.trim(),
       password: form.value.password,
     }
-    await registrationApi.register(payload)
-    emit('success')
+    const res = await registrationApi.register(payload)
+    // El backend ya emite un token válido en el signup: establecemos sesión directamente
+    // (auto-login) y entramos al dashboard sin obligar a pasar por el login manual.
+    await login({
+      token: res.token,
+      type: res.tokenType as AuthSubjectType,
+      refreshToken: res.refreshToken,
+    })
+    await router.push({ name: 'home' })
   } catch (e) {
     fieldErrors.value = getProblemDetailFieldErrors(e)
     submitError.value = getProblemDetailMessage(e, 'No se pudo crear la cuenta')

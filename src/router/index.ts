@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
+import { useToast } from '@/composables/useToast'
 import { PERMISSIONS } from '@/constants/permissions'
 
 const router = createRouter({
@@ -220,7 +221,17 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  const { isAuthenticated, refreshMe } = useAuth()
+  const { isAuthenticated, isExpired, session, clearSession, refreshMe } = useAuth()
+
+  // Access token vencido y SIN refresh token → no se puede renovar: limpiamos y avisamos.
+  // Si hay refresh token, dejamos pasar: el `/auth/me` de refreshMe disparará el 401 →
+  // el interceptor lo refresca y reintenta de forma transparente.
+  if (isAuthenticated.value && isExpired.value && !session.value?.refreshToken) {
+    clearSession()
+    useToast().warn('Sesión expirada', 'Por seguridad, vuelve a iniciar sesión.')
+    return to.name === 'login' ? true : { name: 'login' }
+  }
+
   if (isAuthenticated.value) {
     await refreshMe()
   }

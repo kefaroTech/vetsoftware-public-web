@@ -19,6 +19,7 @@ export interface RegistrationResponse {
   employeeId: number
   token: string
   tokenType: string
+  refreshToken: string
 }
 
 export interface Country {

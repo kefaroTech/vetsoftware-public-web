@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { AUTH_STORAGE_KEY } from '@/services/http/http.client'
+import { AUTH_STORAGE_KEY, setRefreshHandler } from '@/services/http/http.client'
 import { authApi } from '../api/auth.api'
 import type { AuthSession, MeResponse } from '../types'
 
@@ -39,7 +39,7 @@ function loadInitial(): AuthSession | null {
   try {
     const parsed = JSON.parse(raw) as Partial<AuthSession>
     if (parsed?.token && parsed?.type) {
-      return { token: parsed.token, type: parsed.type }
+      return { token: parsed.token, type: parsed.type, refreshToken: parsed.refreshToken }
     }
     return null
   } catch {
@@ -69,6 +69,15 @@ export const useAuthStore = defineStore('auth', () => {
     return Number.isFinite(n) ? n : null
   })
 
+  // `exp` del JWT en milisegundos (el claim viene en segundos epoch).
+  const expiresAt = computed<number | null>(() =>
+    claims.value?.exp ? claims.value.exp * 1000 : null,
+  )
+  // Expiración proactiva en cliente: permite expulsar/refrescar sin esperar al 401.
+  const isExpired = computed<boolean>(
+    () => expiresAt.value !== null && Date.now() >= expiresAt.value,
+  )
+
   async function fetchMe(): Promise<void> {
     try {
       me.value = await authApi.me()
@@ -89,13 +98,54 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  function logout() {
+  /** Limpia sesión y storage sin redirigir (útil para expiración proactiva vía router). */
+  function clearSession() {
     try { localStorage.clear() } catch { /* ignore */ }
     try { sessionStorage.clear() } catch { /* ignore */ }
     session.value = null
     me.value = null
+  }
+
+  async function logout() {
+    // Logout server-side (best-effort): revoca los refresh tokens del usuario. Aunque falle,
+    // limpiamos la sesión local igual.
+    try { await authApi.logout() } catch { /* ignore */ }
+    clearSession()
     window.location.assign('/login')
   }
+
+  // Single-flight: si varias requests 401 llegan a la vez, comparten un único /auth/refresh.
+  let refreshInFlight: Promise<string | null> | null = null
+
+  /** Rota el refresh token y actualiza la sesión; devuelve el nuevo access token o null si falla. */
+  async function refreshSession(): Promise<string | null> {
+    if (refreshInFlight) return refreshInFlight
+    const currentRefresh = session.value?.refreshToken
+    if (!currentRefresh) return null
+    refreshInFlight = authApi
+      .refresh(currentRefresh)
+      .then((res) => {
+        const next: AuthSession = {
+          token: res.token,
+          type: res.type,
+          refreshToken: res.refreshToken,
+        }
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(next))
+        session.value = next
+        return res.token
+      })
+      .catch(() => {
+        clearSession()
+        return null
+      })
+      .finally(() => {
+        refreshInFlight = null
+      })
+    return refreshInFlight
+  }
+
+  // El interceptor de axios usa este handler para refrescar ante un 401 TOKEN_EXPIRED.
+  setRefreshHandler(refreshSession)
 
   async function refreshMe(): Promise<void> {
     if (!session.value) return
@@ -103,10 +153,7 @@ export const useAuthStore = defineStore('auth', () => {
     bootLoading.value = true
     bootInFlight = fetchMe()
       .catch(() => {
-        try { localStorage.clear() } catch { /* ignore */ }
-        try { sessionStorage.clear() } catch { /* ignore */ }
-        session.value = null
-        me.value = null
+        clearSession()
       })
       .finally(() => {
         bootLoading.value = false
@@ -122,8 +169,11 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     companyId,
     subjectId,
+    expiresAt,
+    isExpired,
     login,
     logout,
+    clearSession,
     refreshMe,
   }
 })

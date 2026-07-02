@@ -5,6 +5,8 @@ import { popLoader, pushLoader } from '@/composables/useGlobalLoader'
 declare module 'axios' {
   export interface AxiosRequestConfig {
     skipGlobalLoader?: boolean
+    /** Marca interna: la request ya se reintentó tras un refresh (evita bucles). */
+    _retry?: boolean
   }
 }
 
@@ -14,6 +16,23 @@ export const http = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL ?? ''}/api/v1`,
   headers: { 'Content-Type': 'application/json' },
 })
+
+/** Limpia el token y fuerza el ir a login (hard redirect). Usado cuando el refresh no es posible. */
+function redirectToLogin() {
+  localStorage.removeItem(AUTH_STORAGE_KEY)
+  if (window.location.pathname !== '/login') {
+    window.location.href = '/login'
+  }
+}
+
+// Handler de refresh registrado por el store de auth. Se inyecta así (en vez de importar el
+// store aquí) para no crear un ciclo http.client ↔ store. Devuelve el nuevo access token, o
+// `null` si el refresh falló. Debe deduplicar llamadas concurrentes (single-flight).
+type RefreshHandler = () => Promise<string | null>
+let refreshHandler: RefreshHandler | null = null
+export function setRefreshHandler(handler: RefreshHandler) {
+  refreshHandler = handler
+}
 
 http.interceptors.request.use((config) => {
   const raw = localStorage.getItem(AUTH_STORAGE_KEY)
@@ -36,16 +55,27 @@ http.interceptors.response.use(
     if (!response.config.skipGlobalLoader) popLoader()
     return response
   },
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
     if (!error.config?.skipGlobalLoader) popLoader()
     const status = error.response?.status
-    const url = error.config?.url ?? ''
-    const isLoginCall = url.includes('/auth/login/')
-    if (status === 401 && !isLoginCall) {
-      localStorage.removeItem(AUTH_STORAGE_KEY)
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login'
+    const original = error.config
+    const url = original?.url ?? ''
+    // Las llamadas de auth no entran al flujo de refresh (evita recursión).
+    const isAuthCall =
+      url.includes('/auth/login') || url.includes('/auth/refresh') || url.includes('/auth/logout')
+
+    if (status === 401 && original && !isAuthCall) {
+      const code = getProblemDetailCode(error)
+      // Solo el access expirado se intenta refrescar; token inválido/revocado → a login.
+      if (code === 'TOKEN_EXPIRED' && !original._retry && refreshHandler) {
+        original._retry = true
+        const newToken = await refreshHandler()
+        if (newToken) {
+          original.headers.set('Authorization', `Bearer ${newToken}`)
+          return http(original)
+        }
       }
+      redirectToLogin()
     }
     return Promise.reject(error)
   },

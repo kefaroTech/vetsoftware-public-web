@@ -11,4 +11,13 @@ export const authApi = {
     const { data } = await http.get<MeResponse>('/auth/me')
     return data
   },
+
+  async refresh(refreshToken: string): Promise<TokenResponse> {
+    const { data } = await http.post<TokenResponse>('/auth/refresh', { refreshToken })
+    return data
+  },
+
+  async logout(): Promise<void> {
+    await http.post('/auth/logout')
+  },
 }

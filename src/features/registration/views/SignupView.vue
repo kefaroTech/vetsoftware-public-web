@@ -1,16 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import SignupForm from '../components/SignupForm.vue'
-import SignupSuccessCard from '../components/SignupSuccessCard.vue'
-
-const stage = ref<'form' | 'success'>('form')
 </script>
 
 <template>
   <v-main class="vet-auth-shell">
     <v-container class="py-16 d-flex justify-center">
-      <SignupForm v-if="stage === 'form'" @success="stage = 'success'" />
-      <SignupSuccessCard v-else />
+      <!-- Tras registrarse, SignupForm establece la sesión (auto-login) y navega al
+           dashboard; ya no hay pantalla intermedia de éxito. -->
+      <SignupForm />
     </v-container>
   </v-main>
 </template>
