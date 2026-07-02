@@ -22,6 +22,10 @@ export interface OwnerDraft {
   document: string
   phone: string
   email: string
+  // Datos fiscales requeridos por el backend al crear (OwnerDocumentType / PersonType).
+  // Se guardan como string (valor del select) por consistencia con countryId, etc.
+  documentType: string
+  personType: string
   countryId: string
   stateId: string
   cityId: string
@@ -193,6 +197,8 @@ export const useNuevaConsultaDraftStore = defineStore('nuevaConsultaDraft', () =
       document: '',
       phone: '',
       email: '',
+      documentType: '',
+      personType: '',
       countryId: '',
       stateId: '',
       cityId: '',

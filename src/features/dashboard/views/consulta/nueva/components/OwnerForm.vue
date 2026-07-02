@@ -5,7 +5,12 @@ import SectionCard from '@/features/dashboard/components/ui/SectionCard.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
+import SegmentedRadio from '@/features/dashboard/components/ui/SegmentedRadio.vue'
 import { useGeoCascade } from '../composables/useGeoCascade'
+import {
+  OWNER_DOCTYPE_LABEL,
+  type OwnerDocumentType,
+} from '@/features/facturacion/composables/feFiscalChecklist'
 import type { OwnerDraft } from '../composables/useNuevaConsultaDraft'
 
 const props = defineProps<{ modelValue: OwnerDraft }>()
@@ -43,11 +48,21 @@ watch(
   },
 )
 
+const docTypeOptions = (Object.keys(OWNER_DOCTYPE_LABEL) as OwnerDocumentType[]).map(
+  (k) => ({ value: k, label: OWNER_DOCTYPE_LABEL[k] }),
+)
+const personTypeOptions = [
+  { value: 'NATURAL', label: 'Natural' },
+  { value: 'JURIDICA', label: 'Jurídica' },
+]
+
 type FieldKey =
   | 'name'
   | 'document'
   | 'phone'
   | 'email'
+  | 'documentType'
+  | 'personType'
   | 'countryId'
   | 'stateId'
   | 'cityId'
@@ -57,6 +72,8 @@ const touched = reactive<Record<FieldKey, boolean>>({
   document: false,
   phone: false,
   email: false,
+  documentType: false,
+  personType: false,
   countryId: false,
   stateId: false,
   cityId: false,
@@ -104,6 +121,8 @@ const errors = computed(() => ({
   document: validateDocument(draft.value.document),
   phone: validatePhone(draft.value.phone),
   email: validateEmail(draft.value.email),
+  documentType: validateRequiredSelect(draft.value.documentType, 'El tipo de documento'),
+  personType: validateRequiredSelect(draft.value.personType, 'El tipo de persona'),
   countryId: validateRequiredSelect(draft.value.countryId, 'El país'),
   stateId: validateRequiredSelect(draft.value.stateId, 'El estado'),
   cityId: validateRequiredSelect(draft.value.cityId, 'La ciudad'),
@@ -215,6 +234,25 @@ defineExpose({ validate })
               @blur="markTouched('email')"
             />
           </template>
+        </BaseField>
+        <BaseField
+          label="Tipo de documento"
+          required
+          :error="err('documentType')"
+        >
+          <template #default="{ id }">
+            <BaseSelect
+              :id="id"
+              v-model="draft.documentType"
+              :options="docTypeOptions"
+              placeholder="Selecciona tipo"
+              :invalid="!!err('documentType')"
+              @blur="markTouched('documentType')"
+            />
+          </template>
+        </BaseField>
+        <BaseField label="Tipo de persona" required :error="err('personType')">
+          <SegmentedRadio v-model="draft.personType" :options="personTypeOptions" />
         </BaseField>
       </div>
     </SectionCard>

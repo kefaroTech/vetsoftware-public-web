@@ -78,6 +78,8 @@ const nextDisabled = computed(() => {
         o.name.trim() &&
         o.document.trim() &&
         o.phone.trim() &&
+        o.documentType &&
+        o.personType &&
         o.countryId &&
         o.stateId &&
         o.cityId

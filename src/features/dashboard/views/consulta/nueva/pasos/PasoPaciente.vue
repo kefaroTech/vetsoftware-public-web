@@ -21,6 +21,8 @@ import { buildCreateAnimalRequest, mapAnimalResponse } from '../api/animal.mappe
 import { useNuevaConsultaDraft } from '../composables/useNuevaConsultaDraft'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import type { OwnerDocumentType } from '@/features/facturacion/composables/feFiscalChecklist'
+import type { PersonType } from '@/features/facturacion/types/facturacion'
 import type { Animal, Owner } from '@/types/domain'
 
 const draft = useNuevaConsultaDraft()
@@ -80,6 +82,8 @@ async function submitOwner(): Promise<boolean> {
       document: o.document.trim(),
       phone: o.phone.trim(),
       email: o.email.trim(),
+      documentType: o.documentType as OwnerDocumentType,
+      personType: o.personType as PersonType,
       address: o.address.trim(),
       cityId: cityIdNum,
       companyId: companyId.value,
