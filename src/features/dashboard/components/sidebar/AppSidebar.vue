@@ -448,4 +448,46 @@ function onNotifications() {
   color: oklch(95% 0.02 var(--hue));
   font-weight: 500;
 }
+
+@media (max-width: 760px) {
+  .sidebar {
+    width: 72px;
+    padding: 18px 10px;
+    align-items: center;
+  }
+
+  .section-label {
+    width: 32px;
+    height: 1px;
+    margin: 8px 0;
+    padding: 0;
+    overflow: hidden;
+    background: oklch(75% 0.04 var(--hue) / 0.18);
+    color: transparent;
+    font-size: 0;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+
+  .sub-list {
+    align-items: center;
+    padding-left: 0;
+    margin: 3px 0 0;
+  }
+
+  .sub-item-btn,
+  .notif-item {
+    width: 44px;
+    height: 38px;
+    justify-content: center;
+    padding: 0;
+    gap: 0;
+  }
+
+  .sub-item-btn span,
+  .notif-label,
+  .notif-badge {
+    display: none;
+  }
+}
 </style>

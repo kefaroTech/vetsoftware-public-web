@@ -336,7 +336,7 @@ function save() {
     grid-template-columns: 1fr;
   }
 }
-:slotted(.field) + :slotted(.field) {
+.field + .field {
   margin-top: 14px;
 }
 .btn-ghost,

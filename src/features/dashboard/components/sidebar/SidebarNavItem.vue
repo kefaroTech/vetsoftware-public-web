@@ -22,6 +22,7 @@ defineEmits<{
     class="nav-item"
     :class="{ active, disabled }"
     :disabled="disabled"
+    :title="label"
     @click="!disabled && $emit('click')"
   >
     <component :is="icon" :size="17" :stroke-width="1.5" />
@@ -98,5 +99,21 @@ defineEmits<{
 }
 .chevron.collapsed {
   transform: rotate(-90deg);
+}
+
+@media (max-width: 760px) {
+  .nav-item {
+    width: 44px;
+    height: 38px;
+    justify-content: center;
+    padding: 0;
+    gap: 0;
+  }
+
+  .label,
+  .badge,
+  .chevron {
+    display: none;
+  }
 }
 </style>

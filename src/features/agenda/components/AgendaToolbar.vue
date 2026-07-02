@@ -163,4 +163,31 @@ function selectView(v: ViewMode) {
   color: var(--warm-900);
   box-shadow: 0 1px 2px rgba(20, 15, 30, 0.08);
 }
+
+@media (max-width: 760px) {
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .left {
+    flex-wrap: wrap;
+  }
+
+  .cursor-label {
+    flex: 1 1 90px;
+    margin-left: 0;
+    text-align: center;
+  }
+
+  .right,
+  .view-toggle {
+    width: 100%;
+  }
+
+  .view-btn {
+    flex: 1;
+    padding: 6px 8px;
+  }
+}
 </style>

@@ -45,4 +45,14 @@ const fullBleed = computed(() => Boolean(route.meta.fullBleed))
   display: flex;
   flex-direction: column;
 }
+
+@media (max-width: 760px) {
+  .app-content {
+    padding: 18px;
+  }
+
+  .app-content.fullbleed {
+    padding: 0;
+  }
+}
 </style>

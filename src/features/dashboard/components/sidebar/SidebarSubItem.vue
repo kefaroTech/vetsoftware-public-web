@@ -15,6 +15,7 @@ defineProps<{
     :to="to"
     class="sub-item"
     :class="{ active }"
+    :title="label"
   >
     <component :is="icon" :size="14" :stroke-width="1.5" />
     <span>{{ label }}</span>
@@ -42,5 +43,19 @@ defineProps<{
   background: oklch(50% 0.10 var(--hue) / 0.25);
   color: oklch(95% 0.02 var(--hue));
   font-weight: 500;
+}
+
+@media (max-width: 760px) {
+  .sub-item {
+    width: 44px;
+    height: 34px;
+    justify-content: center;
+    padding: 0;
+    gap: 0;
+  }
+
+  .sub-item span {
+    display: none;
+  }
 }
 </style>

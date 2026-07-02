@@ -588,4 +588,35 @@ function openFiscalPicker() {
 .charge { margin-top: 10px; padding: 12px; border-radius: 10px; border: none; background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5))); color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .charge:hover:not(:disabled) { filter: brightness(1.05); }
 .charge:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media (max-width: 760px) {
+  .catalog,
+  .catalog-head,
+  .search,
+  .cats,
+  .grid {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .modetabs {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-self: stretch;
+    width: 100%;
+  }
+
+  .modetab {
+    justify-content: center;
+    padding: 7px 8px;
+  }
+
+  .grid-empty {
+    padding: 28px 14px;
+  }
+
+  .ticket {
+    position: static;
+  }
+}
 </style>

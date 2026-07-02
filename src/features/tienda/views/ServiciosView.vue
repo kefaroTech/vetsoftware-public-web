@@ -326,4 +326,43 @@ async function onCategoryRemove(id: number) {
 .icon-btn:hover { background: var(--warm-100); }
 .reactivate { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--amatista-200); background: var(--amatista-50); color: var(--amatista-700); font-family: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; white-space: nowrap; }
 .reactivate:hover { background: var(--amatista-100); }
+
+@media (max-width: 760px) {
+  .head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .head-actions,
+  .filters {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .seg,
+  .ghost-cta,
+  .cta,
+  .search,
+  .fsel {
+    width: 100%;
+    max-width: none;
+  }
+
+  .seg button,
+  .ghost-cta,
+  .cta {
+    justify-content: center;
+  }
+
+  .svc-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .svc-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
 </style>

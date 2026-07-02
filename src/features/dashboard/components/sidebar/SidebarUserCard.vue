@@ -79,4 +79,16 @@ const fullName = computed(() => `${props.firstName} ${props.lastName}`)
   opacity: 0.5;
   flex-shrink: 0;
 }
+
+@media (max-width: 760px) {
+  .user-card {
+    justify-content: center;
+    padding: 8px 0;
+  }
+
+  .info,
+  .chev {
+    display: none;
+  }
+}
 </style>

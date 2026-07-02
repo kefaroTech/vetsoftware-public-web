@@ -51,4 +51,15 @@ defineProps<{
   color: oklch(80% 0.04 var(--hue) / 0.7);
   margin-top: 2px;
 }
+
+@media (max-width: 760px) {
+  .brand {
+    justify-content: center;
+    padding: 8px 0 18px;
+  }
+
+  .text {
+    display: none;
+  }
+}
 </style>

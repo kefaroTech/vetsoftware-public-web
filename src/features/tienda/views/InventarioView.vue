@@ -475,4 +475,38 @@ async function onCategoryRemove(id: number) {
 .pag-ctrl button { width: 30px; height: 30px; border: 1px solid var(--warm-200); background: var(--warm-50); border-radius: 7px; color: var(--warm-700); cursor: pointer; display: grid; place-items: center; }
 .pag-ctrl button:disabled { opacity: 0.4; cursor: not-allowed; }
 .pag-ctrl button:hover:not(:disabled) { background: var(--warm-100); }
+
+@media (max-width: 760px) {
+  .head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .head-actions,
+  .filters {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .seg,
+  .ghost-cta,
+  .cta,
+  .search,
+  .fsel {
+    width: 100%;
+    max-width: none;
+  }
+
+  .seg button,
+  .ghost-cta,
+  .cta {
+    justify-content: center;
+  }
+
+  .table {
+    display: block;
+    overflow-x: auto;
+  }
+}
 </style>
