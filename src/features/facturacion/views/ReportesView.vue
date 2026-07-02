@@ -15,6 +15,7 @@ import {
 } from '../types/facturacion'
 import FeStatusPill from '../components/FeStatusPill.vue'
 import FeUpsell from '../components/FeUpsell.vue'
+import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
 
 const { hasModule } = useFacturacionAccess()
 
@@ -99,9 +100,9 @@ onMounted(() => {
         </button>
       </div>
       <div class="daterange">
-        <input v-model="from" type="date" @change="load" />
+        <DateInput v-model="from" :max="to" @update:model-value="load" />
         <span class="sep">→</span>
-        <input v-model="to" type="date" @change="load" />
+        <DateInput v-model="to" :min="from" @update:model-value="load" />
       </div>
     </div>
 
@@ -268,14 +269,8 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
 }
-.daterange input {
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 8px;
-  padding: 7px 10px;
-  font-size: 12.5px;
-  font-family: inherit;
-  color: var(--warm-800);
+.daterange :deep(.date-wrap) {
+  width: 170px;
 }
 .sep {
   color: var(--warm-400);
