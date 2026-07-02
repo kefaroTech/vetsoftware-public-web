@@ -66,6 +66,21 @@ const docNumberRule = (v: string) =>
   (isNit.value
     ? /^\d{5,15}$/.test(v) || 'El NIT debe ser numérico (entre 5 y 15 dígitos)'
     : /^[A-Za-z0-9]{4,20}$/.test(v) || 'Documento inválido (4–20 caracteres alfanuméricos)')
+const phoneRule = (v: string) => {
+  if (!v) return true
+  const digits = v.match(/\d/g)?.length ?? 0
+  return (
+    (/^[+\d\s\-()]+$/.test(v) && digits >= 7 && digits <= 15) ||
+    'Teléfono inválido (7 a 15 dígitos)'
+  )
+}
+// Sanitizadores en vivo: documento alfanumérico, teléfono solo [+\d\s\-()].
+function sanitizeIdentifier(v: string) {
+  form.value.companyIdentifier = (v ?? '').replace(/[^A-Za-z0-9]/g, '')
+}
+function sanitizeContactNumber(v: string) {
+  form.value.companyContactNumber = (v ?? '').replace(/[^+\d\s\-()]/g, '')
+}
 
 onMounted(async () => {
   loadingCountries.value = true
@@ -168,7 +183,7 @@ async function submit() {
             :items="doctypeItems"
             item-title="title"
             item-value="value"
-            label="Tipo de documento"
+            label="Tipo de documento *"
             :rules="[required]"
             :error-messages="fieldErrors.documentType"
           />
@@ -176,12 +191,13 @@ async function submit() {
         <v-col cols="12" md="7">
           <v-text-field
             v-model="form.companyIdentifier"
-            label="Número de documento"
+            label="Número de documento *"
             :rules="[required, docNumberRule]"
             :error-messages="fieldErrors.companyIdentifier"
             maxlength="20"
             :inputmode="isNit ? 'numeric' : 'text'"
             counter
+            @update:model-value="sanitizeIdentifier"
             :hint="isNit ? 'El dígito de verificación se calcula automáticamente' : 'Debe ser único en todo el sistema'"
             persistent-hint
           />
@@ -190,7 +206,7 @@ async function submit() {
 
       <v-text-field
         v-model="form.companyName"
-        label="Razón social"
+        label="Razón social *"
         :rules="[required, maxLen(100)]"
         :error-messages="fieldErrors.companyName"
         maxlength="100"
@@ -204,7 +220,7 @@ async function submit() {
             :items="regimeItems"
             item-title="title"
             item-value="value"
-            label="Régimen tributario"
+            label="Régimen tributario *"
             :rules="[required]"
             :error-messages="fieldErrors.taxRegime"
           />
@@ -212,7 +228,7 @@ async function submit() {
         <v-col cols="12" md="6">
           <v-text-field
             v-model="form.fiscalEmail"
-            label="Correo fiscal"
+            label="Correo fiscal *"
             type="email"
             :rules="[required, emailRule, maxLen(255)]"
             :error-messages="fieldErrors.fiscalEmail"
@@ -234,9 +250,11 @@ async function submit() {
       <v-text-field
         v-model="form.companyContactNumber"
         label="Teléfono de contacto (opcional)"
-        :rules="[maxLen(30)]"
+        :rules="[maxLen(30), phoneRule]"
         :error-messages="fieldErrors.companyContactNumber"
         maxlength="30"
+        inputmode="tel"
+        @update:model-value="sanitizeContactNumber"
       />
 
       <v-row dense>
@@ -246,7 +264,7 @@ async function submit() {
             :items="countries"
             item-title="name"
             item-value="id"
-            label="País"
+            label="País *"
             :rules="[required]"
             :loading="loadingCountries"
             :disabled="loadingCountries"
@@ -258,7 +276,7 @@ async function submit() {
             :items="states"
             item-title="name"
             item-value="id"
-            label="Estado / Departamento"
+            label="Estado / Departamento *"
             :rules="[required]"
             :loading="loadingStates"
             :disabled="!form.countryId || loadingStates"
@@ -270,7 +288,7 @@ async function submit() {
             :items="cities"
             item-title="name"
             item-value="id"
-            label="Ciudad"
+            label="Ciudad *"
             :rules="[required]"
             :error-messages="fieldErrors.cityId"
             :loading="loadingCities"
@@ -285,7 +303,7 @@ async function submit() {
 
       <v-text-field
         v-model="form.employeeName"
-        label="Nombre completo"
+        label="Nombre completo *"
         :rules="[required, maxLen(100)]"
         :error-messages="fieldErrors.employeeName"
         maxlength="100"
@@ -293,7 +311,7 @@ async function submit() {
 
       <v-text-field
         v-model="form.employeeEmail"
-        label="Email"
+        label="Email *"
         type="email"
         :rules="[required, emailRule, maxLen(100)]"
         :error-messages="fieldErrors.employeeEmail"
@@ -302,7 +320,7 @@ async function submit() {
 
       <v-text-field
         v-model="form.password"
-        label="Contraseña"
+        label="Contraseña *"
         type="password"
         :rules="[required, minLen(8), maxLen(100)]"
         :error-messages="fieldErrors.password"

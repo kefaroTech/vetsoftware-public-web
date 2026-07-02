@@ -58,7 +58,7 @@ async function submit() {
 
     <v-text-field
       v-model="form.employeeCode"
-      label="Código de empleado"
+      label="Código de empleado *"
       :rules="[required, maxLen(50)]"
       :error-messages="fieldErrors.employeeCode"
       maxlength="50"
@@ -68,7 +68,7 @@ async function submit() {
 
     <v-text-field
       v-model="form.password"
-      label="Contraseña"
+      label="Contraseña *"
       :type="showPassword ? 'text' : 'password'"
       :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
       :rules="[required, maxLen(100)]"
