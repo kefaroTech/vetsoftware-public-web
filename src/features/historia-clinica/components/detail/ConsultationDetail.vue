@@ -160,7 +160,7 @@ const childrenCountLabel = computed(() =>
 .child-id {
   font-size: 11px;
   color: var(--warm-400);
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
 }
 .child-summary {
   font-size: 13px;

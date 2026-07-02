@@ -259,7 +259,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocClick))
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   font-size: 13.5px;
   font-family: inherit;
   color: var(--warm-800);

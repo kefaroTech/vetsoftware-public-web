@@ -442,7 +442,7 @@ async function onCategoryRemove(id: number) {
 .search input { flex: 1; border: none; outline: none; background: transparent; font-family: inherit; font-size: 13.5px; color: var(--warm-900); min-width: 0; }
 .fsel {
   appearance: none; border: 1px solid var(--warm-200); background: var(--warm-50); border-radius: 9px;
-  padding: 9px 30px 9px 12px; font-family: inherit; font-size: 13px; color: var(--warm-800); cursor: pointer;
+  padding: 10px 30px 10px 14px; font-family: inherit; font-size: 13.5px; color: var(--warm-800); cursor: pointer;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23999' stroke-width='1.5' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 11px center;
 }

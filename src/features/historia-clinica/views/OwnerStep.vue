@@ -52,7 +52,7 @@ function pick(owner: Owner) {
   margin-bottom: 6px;
 }
 .title {
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-serif);
   font-size: 32px;
   font-weight: 400;
   letter-spacing: -0.015em;

@@ -78,8 +78,8 @@ function handleUpdate(v: Date | null) {
   --dp-border-color-focus: var(--amatista-500);
   --dp-background-color: var(--warm-50);
   --dp-text-color: var(--warm-900);
-  --dp-input-padding: 8px 12px 8px 36px;
-  --dp-input-icon-padding: 12px;
+  --dp-input-padding: 10px 14px 10px 40px;
+  --dp-input-icon-padding: 14px;
   --dp-font-size: 13.5px;
   --dp-primary-color: var(--amatista-600);
   --dp-primary-text-color: white;
@@ -114,7 +114,7 @@ function handleUpdate(v: Date | null) {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 8px;
-  padding: 8px 12px 8px 36px;
+  padding: 10px 14px 10px 40px;
   font-size: 13.5px;
   color: var(--warm-900);
   transition: border-color 0.15s, box-shadow 0.15s;

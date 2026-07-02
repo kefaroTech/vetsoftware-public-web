@@ -116,7 +116,7 @@ function handleClick() {
 .source {
   font-size: 11px;
   color: var(--warm-400);
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
 }
 .summary {
   font-size: 13.5px;

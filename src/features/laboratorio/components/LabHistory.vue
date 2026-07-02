@@ -223,12 +223,12 @@ onMounted(() => history.fetch())
 .chip button:hover { background: var(--amatista-100); }
 .select {
   font-family: inherit;
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--warm-900);
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 9px;
-  padding: 9px 12px;
+  padding: 10px 14px;
   cursor: pointer;
 }
 .select:focus {

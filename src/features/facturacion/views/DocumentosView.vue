@@ -183,8 +183,8 @@ function shortId(cufe: string | null, cude: string | null): string {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 8px;
-  padding: 8px 30px 8px 12px;
-  font-size: 13px;
+  padding: 10px 30px 10px 14px;
+  font-size: 13.5px;
   color: var(--warm-800);
   font-family: inherit;
   cursor: pointer;

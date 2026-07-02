@@ -125,7 +125,7 @@ defineProps<{ data: PrescriptionResponse }>()
 .med-qty {
   font-size: 12.5px;
   color: var(--warm-600);
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
 }
 .med-line {
   display: flex;

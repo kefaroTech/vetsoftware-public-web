@@ -186,8 +186,8 @@ function isHighlighted(text: string): boolean {
   color: var(--warm-900);
 }
 .native {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   accent-color: var(--amatista-600);
   cursor: pointer;
   flex-shrink: 0;

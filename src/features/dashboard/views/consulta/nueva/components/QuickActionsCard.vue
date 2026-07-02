@@ -129,6 +129,7 @@ function pick(action: QuickAction) {
   border-width: 1.5px;
   border-color: var(--amatista-500);
   background: var(--amatista-50);
+  padding: 11.5px;
 }
 .ic {
   width: 34px;
