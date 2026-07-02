@@ -44,8 +44,11 @@ defineEmits<{
   line-height: 1.55;
   color: var(--warm-900);
   resize: vertical;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
   box-sizing: border-box;
+}
+.textarea:hover:not(:focus):not(:disabled):not(.invalid) {
+  border-color: var(--warm-300);
 }
 .textarea:focus {
   outline: none;

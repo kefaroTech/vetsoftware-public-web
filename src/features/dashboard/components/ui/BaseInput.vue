@@ -59,11 +59,17 @@ defineEmits<{
   padding: 10px 14px;
   font-size: 13.5px;
   cursor: text;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.input:hover:not(.disabled):not(.invalid):not(:focus-within) {
+  border-color: var(--warm-300);
 }
 .input:focus-within {
   border-color: var(--amatista-500);
   box-shadow: 0 0 0 3px var(--amatista-50);
+}
+.input:focus-within .icon {
+  color: var(--amatista-500);
 }
 .input.disabled {
   background: var(--warm-100);
@@ -91,6 +97,7 @@ defineEmits<{
 .icon {
   color: var(--warm-500);
   flex-shrink: 0;
+  transition: color 0.15s ease;
 }
 input {
   flex: 1;

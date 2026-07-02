@@ -256,7 +256,10 @@ onBeforeUnmount(() => {
   font-size: 13.5px;
   color: var(--warm-900);
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.select:not(.open):not(.disabled):not(.invalid) .trigger:hover {
+  border-color: var(--warm-300);
 }
 .select.open .trigger,
 .trigger:focus-visible {
@@ -303,6 +306,11 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
   color: var(--warm-500);
   pointer-events: none;
+  transition: transform 0.18s ease, color 0.15s ease;
+}
+.select.open .chev {
+  transform: rotate(180deg);
+  color: var(--amatista-500);
 }
 </style>
 
