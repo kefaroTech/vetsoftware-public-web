@@ -17,6 +17,7 @@ export function mapAnimalResponse(r: AnimalResponse): Animal {
     bod: r.bod,
     color: r.color?.name,
     weight: r.weight,
+    weightMeasuredAt: r.weightMeasuredAt,
     weightType: r.weightType,
     size: r.size ?? undefined,
     animalType: r.animalType,
@@ -35,7 +36,9 @@ export function buildCreateAnimalRequest(
     throw new Error('Pet draft is incomplete')
   }
   const code = p.chipNumber.trim() || `VTR-${String(Date.now()).slice(-6)}`
-  const weightNum = Math.round(Number(p.weight.replace(',', '.')))
+  // El backend ahora almacena el peso como decimal (BigDecimal) → no redondeamos; conserva la
+  // precisión clínica. Se registra como primer punto del historial de peso del animal.
+  const weightNum = p.weight.trim() ? Number(p.weight.replace(',', '.')) : null
   const sizeNum = p.size.trim()
     ? Math.round(Number(p.size.replace(',', '.')))
     : null

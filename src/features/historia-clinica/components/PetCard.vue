@@ -14,6 +14,7 @@ const initials = computed(() => initialsFromName(props.pet.name))
 const sexLabel = computed(() => (props.pet.gender === 'FEMALE' ? 'Hembra' : 'Macho'))
 
 const weightLabel = computed(() => {
+  if (props.pet.weight == null) return 'Sin registro'
   const unit =
     props.pet.weightType === 'GRAMS'
       ? 'g'

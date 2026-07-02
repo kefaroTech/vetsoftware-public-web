@@ -76,7 +76,9 @@ export interface Animal {
   gender: Gender
   bod: string
   color?: string
-  weight: number
+  // Peso actual derivado del último registro de peso (null si aún no hay registros).
+  weight: number | null
+  weightMeasuredAt?: string | null
   weightType: WeightUnit
   size?: number
   animalType: AnimalType
@@ -196,6 +198,8 @@ export interface Hospitalization {
   reasonLeaving: ReasonLeaving | ''
   reason: string
   observations: string
+  // Peso opcional al ingreso (en la unidad preferida de la mascota) → historial de peso.
+  weight: string
 }
 
 export interface Deworming {

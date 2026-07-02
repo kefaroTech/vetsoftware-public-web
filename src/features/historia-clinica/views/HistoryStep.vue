@@ -5,6 +5,7 @@ import { ArrowLeft, Download, Plus, Search } from 'lucide-vue-next'
 import PawLoader from '@/components/ui/PawLoader.vue'
 import MonthTimelineGroup from '../components/MonthTimelineGroup.vue'
 import EventDetailModal from '../components/EventDetailModal.vue'
+import WeightHistoryPanel from '../components/WeightHistoryPanel.vue'
 import { useHistoriaSelection } from '../composables/useHistoriaSelection'
 import { useClinicalHistory } from '../composables/useClinicalHistory'
 import { useClinicalHistoryExport } from '../composables/useClinicalHistoryExport'
@@ -25,6 +26,7 @@ const { state, setOwner, setPet } = useHistoriaSelection()
 const draft = useNuevaConsultaDraft()
 const { can } = useAuthorization()
 const canCreateConsultation = can(PERMISSIONS.CONSULTATION_CREATE)
+const canEditWeight = can(PERMISSIONS.ANIMAL_CREATE)
 
 const ownerIdParam = computed(() => String(route.params.ownerId ?? ''))
 const petIdParam = computed(() => {
@@ -62,6 +64,18 @@ async function hydrate() {
 
 onMounted(hydrate)
 watch([ownerIdParam, petIdParam], hydrate)
+
+// Tras registrar/eliminar un peso, refresca la mascota para reflejar el peso actual derivado.
+async function refreshPet() {
+  const petNum = Number(petIdParam.value ?? '')
+  if (!Number.isFinite(petNum)) return
+  try {
+    const a = await animalApi.findById(petNum)
+    setPet(mapAnimalResponse(a))
+  } catch {
+    /* el panel ya muestra su propio error; el header queda con el valor previo */
+  }
+}
 
 const { events, loading, error } = useClinicalHistory(petIdParam)
 
@@ -110,6 +124,7 @@ const sexLabel = computed(() => (state.pet?.gender === 'FEMALE' ? 'Hembra' : 'Ma
 const weightLabel = computed(() => {
   const p = state.pet
   if (!p) return ''
+  if (p.weight == null) return 'Sin registro'
   const unit =
     p.weightType === 'GRAMS' ? 'g' : p.weightType === 'POUNDS' ? 'lb' : 'kg'
   return `${p.weight} ${unit}`
@@ -248,6 +263,15 @@ function goNuevaConsulta() {
       </div>
     </header>
 
+    <div v-if="state.pet" class="weight-section">
+      <WeightHistoryPanel
+        :animal-id="Number(state.pet.id)"
+        :default-unit="state.pet.weightType"
+        :can-edit="canEditWeight"
+        @changed="refreshPet"
+      />
+    </div>
+
     <div class="filters">
       <div class="chips">
         <button
@@ -370,14 +394,14 @@ function goNuevaConsulta() {
   font-weight: 600;
   font-size: 22px;
   flex-shrink: 0;
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-serif);
 }
 .patient-body {
   flex: 1;
   min-width: 0;
 }
 .patient-name {
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-serif);
   font-size: 32px;
   font-weight: 400;
   letter-spacing: -0.015em;
@@ -447,6 +471,9 @@ function goNuevaConsulta() {
   cursor: not-allowed;
 }
 
+.weight-section {
+  padding: 18px 36px 0;
+}
 .filters {
   padding: 18px 36px 0;
 }

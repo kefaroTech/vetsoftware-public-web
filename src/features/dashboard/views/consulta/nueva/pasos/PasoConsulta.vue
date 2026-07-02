@@ -20,6 +20,7 @@ import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
 import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
 import QuickActionsCard from '../components/QuickActionsCard.vue'
 import { useConsultationTypes } from '../composables/useConsultationTypes'
+import { weightUnitLabel } from '../composables/format'
 import {
   useNuevaConsultaDraft,
   type ActionKind,
@@ -43,6 +44,7 @@ import type {
 
 const draft = useNuevaConsultaDraft()
 const c = computed(() => draft.state.consultation)
+const pet = computed(() => draft.state.pet)
 
 const open = reactive<Record<ActionKind, boolean>>({
   receta: false,
@@ -105,6 +107,52 @@ const {
   findById: findConsultationTypeById,
 } = useConsultationTypes()
 
+// ── Validación (tipo + fecha + anamnesis son obligatorios) ───────────────────
+type FieldKey = 'date' | 'typeId' | 'anamnesis'
+const touched = reactive<Record<FieldKey, boolean>>({
+  date: false,
+  typeId: false,
+  anamnesis: false,
+})
+
+function validateDate(v: string): string | null {
+  if (!v) return 'La fecha es obligatoria.'
+  if (Number.isNaN(new Date(v).getTime())) return 'Fecha inválida.'
+  return null
+}
+function validateType(v: string): string | null {
+  return v ? null : 'Selecciona un tipo de consulta.'
+}
+function validateAnamnesis(v: string): string | null {
+  return v.trim() ? null : 'La anamnesis es obligatoria.'
+}
+
+const errors = computed(() => ({
+  date: validateDate(c.value.date),
+  typeId: validateType(c.value.typeId),
+  anamnesis: validateAnamnesis(c.value.anamnesis),
+}))
+
+function err(field: FieldKey): string | undefined {
+  return touched[field] && errors.value[field] ? errors.value[field]! : undefined
+}
+function markTouched(field: FieldKey) {
+  touched[field] = true
+}
+function validate(): boolean {
+  ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = true))
+  return (Object.keys(errors.value) as FieldKey[]).every((k) => !errors.value[k])
+}
+defineExpose({ validate })
+
+// Peso en consulta: opcional, pero sanitiza en vivo a dígitos + separador decimal.
+const weightModel = computed({
+  get: () => c.value.weight,
+  set: (v) => {
+    c.value.weight = v.replace(/[^\d.,]/g, '')
+  },
+})
+
 watch(
   [() => c.value.typeId, consultationTypesList],
   ([id]) => {
@@ -141,12 +189,17 @@ watch(
     <div class="stack">
       <SectionCard accent :icon="Stethoscope" title="Información general">
         <div class="grid-1-2">
-          <BaseField label="Fecha" required>
+          <BaseField label="Fecha" required :error="err('date')">
             <template #default="{ id }">
-              <DateInput :id="id" v-model="c.date" />
+              <DateInput
+                :id="id"
+                v-model="c.date"
+                :invalid="!!err('date')"
+                @blur="markTouched('date')"
+              />
             </template>
           </BaseField>
-          <BaseField label="Tipo de consulta" required>
+          <BaseField label="Tipo de consulta" required :error="err('typeId')">
             <template #default="{ id }">
               <BaseSelect
                 :id="id"
@@ -154,6 +207,24 @@ watch(
                 :options="typeOptions"
                 :placeholder="loadingTypes ? 'Cargando…' : 'Selecciona un tipo'"
                 :disabled="loadingTypes"
+                :invalid="!!err('typeId')"
+                @blur="markTouched('typeId')"
+              />
+            </template>
+          </BaseField>
+        </div>
+        <div class="weight-row">
+          <BaseField
+            label="Peso en la consulta"
+            hint="Opcional · se registra en el historial de peso del paciente"
+          >
+            <template #default="{ id }">
+              <BaseInput
+                :id="id"
+                v-model="weightModel"
+                inputmode="decimal"
+                placeholder="Ej. 12.5"
+                :suffix="pet ? weightUnitLabel(pet.weightType) : undefined"
               />
             </template>
           </BaseField>
@@ -163,13 +234,19 @@ watch(
       <SectionCard
         :icon="ClipboardList"
         title="Anamnesis"
-        subtitle="Lo que reporta el dueño · Antecedentes"
+        subtitle="Lo que reporta el dueño · Antecedentes · Obligatorio"
       >
         <BaseTextarea
           v-model="c.anamnesis"
           :rows="4"
           placeholder="Motivo de consulta, signos observados, antecedentes relevantes…"
+          :invalid="!!err('anamnesis')"
+          @blur="markTouched('anamnesis')"
         />
+        <p v-if="err('anamnesis')" class="field-error">
+          <TriangleAlert :size="11" :stroke-width="1.8" />
+          <span>{{ err('anamnesis') }}</span>
+        </p>
       </SectionCard>
 
       <SectionCard
@@ -331,6 +408,10 @@ watch(
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
   gap: clamp(14px, 1.2vw + 4px, 28px);
 }
+.weight-row {
+  margin-top: clamp(14px, 1.2vw + 4px, 28px);
+  max-width: 320px;
+}
 .planes {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -356,5 +437,13 @@ watch(
 }
 .actions-banner strong {
   font-weight: 600;
+}
+.field-error {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  color: oklch(55% 0.18 25);
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 </style>

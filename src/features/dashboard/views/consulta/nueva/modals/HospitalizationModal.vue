@@ -3,6 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { BedDouble, X, Pencil } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
+import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
 import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
@@ -13,7 +14,12 @@ import type {
   ReasonLeaving,
 } from '@/types/domain'
 import type { HospitalizationDraftItem } from '../composables/useNuevaConsultaDraft'
-import { todayISO, formatDateLong, formatDateShort } from '../composables/format'
+import {
+  todayISO,
+  formatDateLong,
+  formatDateShort,
+  weightUnitLabel,
+} from '../composables/format'
 
 const props = defineProps<{
   open: boolean
@@ -52,6 +58,7 @@ const draft = reactive({
   reasonLeaving: '' as ReasonLeaving | '',
   reason: '',
   observations: '',
+  weight: '',
 })
 const submitted = ref(false)
 const editingIndex = ref<number | null>(null)
@@ -65,6 +72,7 @@ function resetDraft() {
     reasonLeaving: '',
     reason: '',
     observations: '',
+    weight: '',
   })
   submitted.value = false
 }
@@ -90,6 +98,7 @@ function startEditing(idx: number) {
     reasonLeaving: item.reasonLeaving,
     reason: item.reason,
     observations: item.observations,
+    weight: item.weight ?? '',
   })
   editingIndex.value = idx
   submitted.value = false
@@ -140,6 +149,7 @@ function save() {
     reasonLeaving: draft.reasonLeaving,
     reason: draft.reason.trim(),
     observations: draft.observations.trim(),
+    weight: draft.weight.trim(),
   }
   if (editingIndex.value !== null) {
     emit('update-existing', editingIndex.value, item)
@@ -248,6 +258,20 @@ function save() {
               :id="id"
               v-model="draft.reasonLeaving"
               :options="reasonLeavingOptions"
+            />
+          </template>
+        </BaseField>
+        <BaseField
+          label="Peso al ingreso"
+          hint="Opcional · se registra en el historial de peso"
+        >
+          <template #default="{ id }">
+            <BaseInput
+              :id="id"
+              v-model="draft.weight"
+              inputmode="decimal"
+              placeholder="Ej. 12.5"
+              :suffix="props.pet ? weightUnitLabel(props.pet.weightType) : undefined"
             />
           </template>
         </BaseField>

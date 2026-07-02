@@ -120,6 +120,10 @@ async function handleNext() {
     goStep(2)
     return
   }
+  if (pasoRef.value?.validate && !pasoRef.value.validate()) {
+    saveError.value = 'Revisa los campos marcados antes de continuar.'
+    return
+  }
   await saveConsultation()
 }
 
@@ -223,6 +227,10 @@ async function persistConsultationItems(consultationId: number, animalId: number
       animalId,
       consultationId,
       companyId,
+      weight: h.weight?.trim()
+        ? Number(h.weight.trim().replace(',', '.'))
+        : null,
+      weightUnit: h.weight?.trim() ? draft.state.pet?.weightType ?? null : null,
     })
     draft.markHospitalizationSaved(i, created.id)
   }
@@ -281,18 +289,22 @@ async function saveConsultation(keepOwner = false) {
     // 1. Crear o reutilizar consulta. Si un intento anterior creó la
     //    consulta pero falló al guardar items, reutilizamos el id para
     //    no duplicarla — diagnosis/therapeuticPlan/diagnosisPlan son
-    //    @NotBlank en backend, por eso van como '-' cuando vacíos.
+    //    opcionales en backend, por eso van como null cuando vacíos.
     let consultationId = draft.state.consultationCreatedId
     if (!consultationId) {
       const consultation = await consultationApi.create({
         date: cDraft.date,
         consultationTypeId: Number(consultationType.id),
         anamnesis: cDraft.anamnesis.trim(),
-        diagnosis: cDraft.diagnosis.trim() || '-',
-        therapeuticPlan: cDraft.therapeuticPlan.trim() || '-',
-        diagnosisPlan: cDraft.diagnosticPlan.trim() || '-',
+        diagnosis: cDraft.diagnosis.trim() || null,
+        therapeuticPlan: cDraft.therapeuticPlan.trim() || null,
+        diagnosisPlan: cDraft.diagnosticPlan.trim() || null,
         nextControl: cDraft.nextControlDate || null,
         animalId: Number(pet.id),
+        weight: cDraft.weight.trim()
+          ? Number(cDraft.weight.trim().replace(',', '.'))
+          : null,
+        weightUnit: cDraft.weight.trim() ? pet.weightType : null,
       })
       consultationId = consultation.id
       draft.markConsultationCreated(consultationId)

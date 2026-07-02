@@ -43,7 +43,9 @@ defineEmits<{ select: [] }>()
       </div>
       <div>
         <div class="lab">Peso</div>
-        <div class="val">{{ pet.weight }} {{ weightUnitLabel(pet.weightType) }}</div>
+        <div class="val">
+          {{ pet.weight != null ? `${pet.weight} ${weightUnitLabel(pet.weightType)}` : 'Sin registro' }}
+        </div>
       </div>
       <div>
         <div class="lab">Última consulta</div>

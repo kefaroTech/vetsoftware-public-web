@@ -52,6 +52,9 @@ export interface ConsultationDraft {
   therapeuticPlan: string
   nextControlDate: string
   nextControlNotes: string
+  // Peso opcional registrado en esta consulta (en la unidad preferida de la mascota). Se guarda como
+  // punto del historial de peso del animal. Ver WeightRecord (backend).
+  weight: string
 }
 
 export type MedicamentDraftItem = MedicamentPrescription & { savedId?: number }
@@ -113,6 +116,7 @@ function emptyConsultation(): ConsultationDraft {
     therapeuticPlan: '',
     nextControlDate: '',
     nextControlNotes: '',
+    weight: '',
   }
 }
 

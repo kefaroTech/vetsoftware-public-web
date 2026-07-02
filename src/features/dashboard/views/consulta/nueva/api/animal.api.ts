@@ -42,7 +42,10 @@ export interface AnimalResponse {
   reproductiveState: ReproductiveState
   color: AnimalColorSummary
   bod: string
-  weight: number
+  // Peso ACTUAL derivado del último registro de peso (null si el animal aún no tiene registros).
+  // La serie completa se consulta vía weightRecordApi. weightType es la unidad de ese último registro.
+  weight: number | null
+  weightMeasuredAt: string | null
   size: number | null
   deceased: boolean
   deceasedDate: string | null
@@ -62,7 +65,9 @@ export interface CreateAnimalRequest {
   reproductiveState: ReproductiveState
   colorId: number
   bod: string | null
-  weight: number
+  // Peso inicial opcional: si viene, el backend lo registra como primer punto del historial de peso
+  // (en la unidad weightType). El peso posterior se gestiona vía weightRecordApi.
+  weight: number | null
   size: number | null
   deceased: boolean
   deceasedDate: string | null

@@ -4,11 +4,14 @@ export interface CreateConsultationPayload {
   date: string
   consultationTypeId: number
   anamnesis: string
-  diagnosis: string
-  therapeuticPlan: string
-  diagnosisPlan: string
+  diagnosis: string | null
+  therapeuticPlan: string | null
+  diagnosisPlan: string | null
   nextControl: string | null
   animalId: number
+  // Peso opcional capturado en la consulta → historial de peso del animal.
+  weight?: number | null
+  weightUnit?: string | null
 }
 
 export interface ConsultationTypeSummary {
@@ -33,9 +36,9 @@ export interface ConsultationResponse {
   date: string
   consultationType: ConsultationTypeSummary
   anamnesis: string
-  diagnosis: string
-  therapeuticPlan: string
-  diagnosisPlan: string
+  diagnosis: string | null
+  therapeuticPlan: string | null
+  diagnosisPlan: string | null
   nextControl: string | null
   animal: ConsultationAnimalSummary
   company: ConsultationCompanySummary
