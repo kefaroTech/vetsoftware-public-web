@@ -40,7 +40,7 @@ watch(
     @close="emit('close')"
   >
     <template #body>
-      <BaseField label="Motivo del alta" required>
+      <BaseField label="Motivo del alta">
         <template #default="{ id }">
           <BaseSelect :id="id" v-model="reason" :options="reasonOptions" />
         </template>

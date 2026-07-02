@@ -56,6 +56,9 @@ const step = ref<'cobro' | 'recibo'>('cobro')
 const motivo = ref<Motivo>('COBRADA')
 const method = ref<PaymentMethod>('CASH')
 const reason = ref('')
+// Feedback a nivel de campo del motivo de cancelación (espejo de VoidChargeModal): el error
+// solo se muestra tras intentar guardar. El botón sigue gateado por `canConfirm`.
+const submitted = ref(false)
 const busy = ref(false)
 // Documento DIAN a auto-emitir al cerrar (solo COBRADA). Default: documento POS.
 const docType = ref<FeDocType>('DOC_EQUIV_POS')
@@ -213,6 +216,12 @@ const primaryLabel = computed(() =>
       : 'Cobrar y cerrar',
 )
 
+const reasonError = computed(() =>
+  motivo.value === 'CANCELADA' && reason.value.trim() === ''
+    ? 'Indica el motivo de la cancelación'
+    : null,
+)
+
 // El motivo es obligatorio al cancelar; si supera 5 UVT, el cliente debe tener datos fiscales completos.
 const canConfirm = computed(
   () =>
@@ -275,6 +284,7 @@ watch(
     motivo.value = 'COBRADA'
     method.value = 'CASH'
     reason.value = ''
+    submitted.value = false
     busy.value = false
     result.value = null
     feDocument.value = null
@@ -296,7 +306,8 @@ watch(
 )
 
 async function confirm() {
-  if (!props.account || busy.value) return
+  submitted.value = true
+  if (!props.account || busy.value || !canConfirm.value) return
   const accountId = props.account.id
   busy.value = true
   try {
@@ -464,7 +475,7 @@ function onShellClose() {
           <!-- Caso normal (≤ 5 UVT): tipo de documento + consumidor final -->
           <div v-else class="fe-block">
             <div class="field-lab">Facturación electrónica</div>
-            <BaseField label="Tipo de documento" required>
+            <BaseField label="Tipo de documento">
               <template #default="{ id }">
                 <BaseSelect :id="id" v-model="docType" :options="DOC_TYPE_OPTIONS" />
               </template>
@@ -482,11 +493,17 @@ function onShellClose() {
           </div>
         </template>
 
-        <BaseField v-if="motivo === 'CANCELADA'" label="Motivo de la cancelación" required>
+        <BaseField
+          v-if="motivo === 'CANCELADA'"
+          label="Motivo de la cancelación"
+          required
+          :error="submitted ? reasonError ?? undefined : undefined"
+        >
           <template #default="{ id }">
             <BaseInput
               :id="id"
               v-model="reason"
+              :invalid="submitted && !!reasonError"
               placeholder="Ej. cortesía, garantía, error de facturación…"
             />
           </template>

@@ -117,13 +117,16 @@ const isDiscrete = computed(
 
 const errors = computed(() => ({
   name: draft.name.trim().length < 2 ? 'Indica el nombre' : null,
-  dose: isMed.value && draft.dose.trim().length < 1 ? 'Indica la dosis' : null,
   durationQuantity: durationQuantityError(),
 }))
 
 function durationQuantityError(): string | null {
   if (!needsQuantity.value) return null
-  const n = Number(draft.durationQuantity)
+  // Backend acepta durationQuantity nulo → opcional; solo validamos el rango
+  // (número positivo, y ≥ tomas ya aplicadas) cuando el usuario escribe un valor.
+  const raw = draft.durationQuantity.trim()
+  if (!raw) return null
+  const n = Number(raw)
   if (!(n > 0)) return 'Indica un número mayor a 0'
   if (draft.durationMeasure === 'DOSES' && hasApplied.value && n < appliedCount.value) {
     return `Debe ser ≥ ${appliedCount.value} (tomas ya aplicadas)`
@@ -131,9 +134,7 @@ function durationQuantityError(): string | null {
   return null
 }
 
-const valid = computed(
-  () => !errors.value.name && !errors.value.dose && !errors.value.durationQuantity,
-)
+const valid = computed(() => !errors.value.name && !errors.value.durationQuantity)
 
 function err<K extends keyof typeof errors.value>(k: K): string | undefined {
   return submitted.value ? (errors.value[k] ?? undefined) : undefined
@@ -218,31 +219,30 @@ function confirmImpact() {
             />
           </template>
         </BaseField>
-        <BaseField v-if="isMed" label="Dosis" required :error="err('dose')">
+        <BaseField v-if="isMed" label="Dosis">
           <template #default="{ id }">
             <BaseInput
               :id="id"
               v-model="draft.dose"
-              :invalid="!!err('dose')"
               placeholder="Ej. 22 mg/kg"
             />
           </template>
         </BaseField>
-        <BaseField label="Frecuencia" required>
+        <BaseField label="Frecuencia">
           <template #default="{ id }">
             <BaseSelect :id="id" v-model="draft.frequency" :options="frequencyOptions" />
           </template>
         </BaseField>
       </div>
 
-      <BaseField label="Pauta" required>
+      <BaseField label="Pauta">
         <template #default>
           <SegmentedRadio v-model="draft.guidelineType" :options="guidelineOptions" />
         </template>
       </BaseField>
       <div class="pauta-help">{{ guidelineHelp }}</div>
 
-      <BaseField label="Duración" required>
+      <BaseField label="Duración">
         <template #default>
           <SegmentedRadio v-model="draft.durationMeasure" :options="durationOptions" />
         </template>
@@ -251,7 +251,6 @@ function confirmImpact() {
         <BaseField
           v-if="needsQuantity"
           :label="draft.durationMeasure === 'DAYS' ? 'Número de días' : 'Número de tomas'"
-          required
           :error="err('durationQuantity')"
         >
           <template #default="{ id }">
@@ -267,7 +266,6 @@ function confirmImpact() {
         </BaseField>
         <BaseField
           :label="hasApplied ? 'Fecha de inicio 🔒' : 'Fecha de inicio'"
-          required
           :hint="hasApplied ? 'Bloqueada: inicio histórico' : undefined"
         >
           <template #default>
@@ -276,7 +274,6 @@ function confirmImpact() {
         </BaseField>
         <BaseField
           :label="hasApplied ? 'Hora de inicio 🔒' : 'Hora de inicio'"
-          required
           :hint="hasApplied ? 'Bloqueada: inicio histórico' : undefined"
         >
           <template #default="{ id }">

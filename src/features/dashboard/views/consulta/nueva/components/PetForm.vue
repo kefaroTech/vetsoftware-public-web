@@ -99,7 +99,7 @@ function validateChipNumber(v: string): string | null {
   return null
 }
 function validateBod(v: string): string | null {
-  if (!v) return 'La fecha de nacimiento es obligatoria.'
+  if (!v) return null
   const d = new Date(v)
   if (Number.isNaN(d.getTime())) return 'Fecha inválida.'
   if (d.getTime() > Date.now()) return 'No puede ser una fecha futura.'
@@ -107,7 +107,7 @@ function validateBod(v: string): string | null {
 }
 function validateWeight(v: string): string | null {
   const t = v.trim()
-  if (!t) return 'El peso es obligatorio.'
+  if (!t) return null
   const n = Number(t.replace(',', '.'))
   if (!Number.isFinite(n)) return 'Debe ser un número válido.'
   if (n <= 0) return 'Debe ser mayor que 0.'
@@ -292,7 +292,6 @@ defineExpose({ validate })
         </BaseField>
         <BaseField
           label="Fecha de nacimiento"
-          required
           hint="Aproximada si no se conoce con exactitud"
           :error="err('bod')"
         >
@@ -320,7 +319,7 @@ defineExpose({ validate })
 
     <SectionCard :icon="Scale" title="Características físicas y reproductivas">
       <div class="grid-3">
-        <BaseField label="Peso" required :error="err('weight')">
+        <BaseField label="Peso" hint="Opcional" :error="err('weight')">
           <template #default="{ id }">
             <BaseInput
               :id="id"

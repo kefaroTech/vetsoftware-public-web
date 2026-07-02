@@ -60,7 +60,9 @@ const emailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(draft.ema
 const errors = computed(() => ({
   documentId: draft.documentId.trim() ? null : 'Requerido',
   legalName: isJuridica.value && !draft.legalName.trim() ? 'Requerido para persona jurídica' : null,
-  email: !draft.email.trim() ? 'Requerido' : emailValid.value ? null : 'Correo inválido',
+  // Backend (UpdateOwnerRequest): email es @Email (solo formato) sin @NotBlank y la columna es nullable →
+  // opcional. El email del adquiriente en la FE es un snapshot best-effort (nullable, el proveedor tolera null).
+  email: draft.email.trim() && !emailValid.value ? 'Correo inválido' : null,
 }))
 const isValid = computed(() => Object.values(errors.value).every((e) => !e))
 
@@ -151,7 +153,6 @@ function save() {
 
       <BaseField
         label="Correo electrónico"
-        required
         :error="err('email')"
         hint="Se enviará la representación gráfica de la factura."
       >

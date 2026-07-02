@@ -248,10 +248,10 @@ con borde amatista.
 
 1. `POST /consultations` con `{date, consultationTypeId, anamnesis,
    diagnosis, therapeuticPlan, diagnosisPlan, nextControl, animalId}` →
-   devuelve `consultationId`. Los campos `@NotBlank` del backend
-   (diagnosis, therapeuticPlan, diagnosisPlan) se mandan como `'-'` cuando
-   están vacíos en el draft (la UX dice que solo tipo + anamnesis son
-   obligatorios pero el back es más estricto).
+   devuelve `consultationId`. `diagnosis`, `therapeuticPlan` y
+   `diagnosisPlan` son opcionales en el backend: se mandan como `null`
+   cuando están vacíos en el draft (solo tipo + anamnesis son
+   obligatorios, alineado con la UX).
 2. Por cada item del draft, POST a su endpoint con `{...item, animalId,
    consultationId, companyId}`. `companyId` sale del JWT vía
    `useAuth().companyId`.

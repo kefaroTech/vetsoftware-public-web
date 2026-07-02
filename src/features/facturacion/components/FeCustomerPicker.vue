@@ -107,6 +107,17 @@ const isNit = computed(() => draft.documentType === 'NIT')
 const isJuridica = computed(() => draft.personType === 'JURIDICA')
 const dv = computed(() => (isNit.value ? calcVerificationDigit(draft.documentId) : ''))
 const emailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(draft.email))
+// Teléfono: opcional (backend nullable), pero si se ingresa debe respetar el formato
+// convencional (solo [+\d\s\-()], entre 7 y 15 dígitos). Se sanitiza en vivo.
+const phoneDigits = (v: string) => (v.match(/\d/g) ?? []).length
+const phoneValid = computed(() => {
+  const v = draft.phone.trim()
+  return /^[+\d\s\-()]+$/.test(v) && phoneDigits(v) >= 7 && phoneDigits(v) <= 15
+})
+const phoneModel = computed({
+  get: () => draft.phone,
+  set: (v: string) => (draft.phone = v.replace(/[^+\d\s\-()]/g, '')),
+})
 
 type FieldKey = 'name' | 'documentId' | 'phone' | 'email' | 'cityId' | 'legalName'
 const touched = reactive<Record<FieldKey, boolean>>({
@@ -123,16 +134,12 @@ const submitError = ref<string | null>(null)
 const errors = computed<Record<FieldKey, string | null>>(() => ({
   name: draft.name.trim() ? null : 'Requerido',
   documentId: draft.documentId.trim() ? null : 'Requerido',
-  phone: draft.phone.trim() ? null : 'Requerido',
-  email: fiscal.value
-    ? !draft.email.trim()
-      ? 'Requerido'
-      : emailValid.value
-        ? null
-        : 'Correo inválido'
-    : draft.email.trim() && !emailValid.value
-      ? 'Correo inválido'
-      : null,
+  // Backend (CreateOwnerRequest): phone es @Size(max=30) sin @NotBlank y la columna es nullable → opcional.
+  // Si el usuario lo ingresa, validamos el formato (solo [+\d\s\-()], 7–15 dígitos).
+  phone: draft.phone.trim() && !phoneValid.value ? 'Teléfono inválido (7 a 15 dígitos)' : null,
+  // Backend: email es @Email (solo formato) sin @NotBlank y la columna es nullable → opcional en ambos modos.
+  // El email del adquiriente en la FE es un snapshot best-effort (columna nullable, el proveedor tolera null).
+  email: draft.email.trim() && !emailValid.value ? 'Correo inválido' : null,
   cityId: draft.cityId ? null : 'Requerida',
   legalName: fiscal.value && isJuridica.value && !draft.name.trim() ? 'Requerido' : null,
 }))
@@ -267,12 +274,13 @@ async function submit() {
           />
         </template>
       </BaseField>
-      <BaseField label="Teléfono" required :error="err('phone')">
+      <BaseField label="Teléfono" :error="err('phone')">
         <template #default="{ id }">
           <BaseInput
             :id="id"
-            v-model="draft.phone"
+            v-model="phoneModel"
             placeholder="+57 …"
+            inputmode="tel"
             :invalid="!!err('phone')"
             @blur="markTouched('phone')"
           />
@@ -300,7 +308,6 @@ async function submit() {
 
       <BaseField
         :label="fiscal ? 'Correo electrónico' : 'Correo (opcional)'"
-        :required="fiscal"
         :error="err('email')"
       >
         <template #default="{ id }">
@@ -441,7 +448,7 @@ async function submit() {
 .s-loader { position: absolute; right: 10px; }
 .search input {
   width: 100%; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 9px;
-  padding: 10px 14px 10px 34px; font-family: inherit; font-size: 13px; color: var(--warm-900); outline: none;
+  padding: 10px 14px 10px 34px; font-family: inherit; font-size: 13.5px; color: var(--warm-900); outline: none;
 }
 .search input:focus { border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
 .newbtn {

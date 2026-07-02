@@ -94,7 +94,9 @@ const errors = computed(() => {
   const to = Number(draft.rangeTo)
   return {
     resolutionNumber: draft.resolutionNumber.trim() ? null : 'Requerido',
-    prefix: draft.prefix.trim() ? null : 'Requerido',
+    // Backend (Create/UpdateNumberingResolutionRequest): prefix es @Size(max=10) sin @NotBlank y la columna
+    // es nullable (el dominio solo valida longitud) → opcional (p.ej. documento POS sin prefijo).
+    prefix: null,
     rangeFrom: !draft.rangeFrom || from < 1 ? 'Debe ser ≥ 1' : null,
     rangeTo: !draft.rangeTo
       ? 'Requerido'
@@ -157,7 +159,7 @@ function submit() {
             />
           </template>
         </BaseField>
-        <BaseField label="Prefijo" required :error="err('prefix')">
+        <BaseField label="Prefijo" :error="err('prefix')">
           <template #default="{ id }">
             <BaseInput
               :id="id"
@@ -208,9 +210,13 @@ function submit() {
             />
           </template>
         </BaseField>
-        <BaseField label="Vigente desde" required>
+        <BaseField label="Vigente desde" required :error="err('validFrom')">
           <template #default="{ id }">
-            <DateInput :id="id" v-model="draft.validFrom" />
+            <DateInput
+              :id="id"
+              v-model="draft.validFrom"
+              :invalid="!!err('validFrom')"
+            />
           </template>
         </BaseField>
         <BaseField label="Vigente hasta" required :error="err('validTo')">

@@ -239,7 +239,7 @@ const subtitleText = computed(() =>
           />
         </BaseField>
 
-        <BaseField v-if="isEditing" label="Estado" required>
+        <BaseField v-if="isEditing" label="Estado">
           <SegmentedRadio v-model="draft.status" :options="statusOptions" />
         </BaseField>
       </div>

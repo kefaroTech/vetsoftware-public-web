@@ -82,11 +82,18 @@ watch(
 const errors = computed(() => ({
   patient: patientId.value == null ? 'Selecciona un paciente' : null,
   typeId: !draft.typeId ? 'Selecciona el tipo de estudio' : null,
+  studyType: !draft.studyType.trim() ? 'Indica la región / protocolo' : null,
   clinicalSigns: !draft.clinicalSigns.trim() ? 'Describe los signos clínicos' : null,
+  diagnosis: !draft.diagnosis.trim() ? 'Indica el diagnóstico' : null,
 }))
 
 const valid = computed(
-  () => !errors.value.patient && !errors.value.typeId && !errors.value.clinicalSigns,
+  () =>
+    !errors.value.patient &&
+    !errors.value.typeId &&
+    !errors.value.studyType &&
+    !errors.value.clinicalSigns &&
+    !errors.value.diagnosis,
 )
 
 function err(field: keyof typeof errors.value): string | undefined {
@@ -188,8 +195,12 @@ async function save() {
             create-label="Crear tipo de imagen"
           />
         </BaseField>
-        <BaseField label="Región / protocolo">
-          <BaseInput v-model="draft.studyType" placeholder="Ej. tórax lateral" />
+        <BaseField label="Región / protocolo" required :error="err('studyType')">
+          <BaseInput
+            v-model="draft.studyType"
+            :invalid="!!err('studyType')"
+            placeholder="Ej. tórax lateral"
+          />
         </BaseField>
         <BaseField label="Signos clínicos" required :error="err('clinicalSigns')" class="full">
           <BaseTextarea
@@ -199,8 +210,12 @@ async function save() {
             placeholder="Razón clínica del estudio"
           />
         </BaseField>
-        <BaseField label="Diagnóstico" class="full">
-          <BaseTextarea v-model="draft.diagnosis" :rows="2" />
+        <BaseField label="Diagnóstico" required :error="err('diagnosis')" class="full">
+          <BaseTextarea
+            v-model="draft.diagnosis"
+            :rows="2"
+            :invalid="!!err('diagnosis')"
+          />
         </BaseField>
         <BaseField label="Observaciones" class="full">
           <BaseTextarea v-model="draft.observations" :rows="2" />

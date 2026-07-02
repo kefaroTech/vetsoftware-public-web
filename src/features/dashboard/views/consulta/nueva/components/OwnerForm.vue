@@ -80,7 +80,7 @@ function validateDocument(v: string): string | null {
 }
 function validatePhone(v: string): string | null {
   const t = v.trim()
-  if (!t) return 'El teléfono es obligatorio.'
+  if (!t) return null
   if (!/^[+\d\s\-()]+$/.test(t))
     return 'Solo se permiten dígitos, espacios, +, - y paréntesis.'
   const digits = t.replace(/\D/g, '')
@@ -182,7 +182,7 @@ defineExpose({ validate })
             />
           </template>
         </BaseField>
-        <BaseField label="Teléfono" required :error="err('phone')">
+        <BaseField label="Teléfono" hint="Opcional" :error="err('phone')">
           <template #default="{ id }">
             <BaseInput
               :id="id"

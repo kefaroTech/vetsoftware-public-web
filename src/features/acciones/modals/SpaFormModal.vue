@@ -79,9 +79,19 @@ watch(
 const errors = computed(() => ({
   patient: patientId.value == null ? 'Selecciona un paciente' : null,
   typeId: !draft.typeId ? 'Selecciona el tipo de servicio' : null,
+  reason: !draft.reason.trim() ? 'Indica el motivo' : null,
+  details: !draft.details.trim() ? 'Indica los detalles' : null,
+  observations: !draft.observations.trim() ? 'Indica las observaciones' : null,
 }))
 
-const valid = computed(() => !errors.value.patient && !errors.value.typeId)
+const valid = computed(
+  () =>
+    !errors.value.patient &&
+    !errors.value.typeId &&
+    !errors.value.reason &&
+    !errors.value.details &&
+    !errors.value.observations,
+)
 
 function err(field: keyof typeof errors.value): string | undefined {
   return submitted.value ? errors.value[field] ?? undefined : undefined
@@ -180,14 +190,27 @@ async function save() {
             create-label="Crear tipo de servicio"
           />
         </BaseField>
-        <BaseField label="Motivo" class="full">
-          <BaseInput v-model="draft.reason" placeholder="Mantenimiento mensual, Dermatitis, etc." />
+        <BaseField label="Motivo" required :error="err('reason')" class="full">
+          <BaseInput
+            v-model="draft.reason"
+            :invalid="!!err('reason')"
+            placeholder="Mantenimiento mensual, Dermatitis, etc."
+          />
         </BaseField>
-        <BaseField label="Detalles" class="full">
-          <BaseTextarea v-model="draft.details" :rows="2" placeholder="Productos, técnica, tiempos" />
+        <BaseField label="Detalles" required :error="err('details')" class="full">
+          <BaseTextarea
+            v-model="draft.details"
+            :rows="2"
+            :invalid="!!err('details')"
+            placeholder="Productos, técnica, tiempos"
+          />
         </BaseField>
-        <BaseField label="Observaciones" class="full">
-          <BaseTextarea v-model="draft.observations" :rows="2" />
+        <BaseField label="Observaciones" required :error="err('observations')" class="full">
+          <BaseTextarea
+            v-model="draft.observations"
+            :rows="2"
+            :invalid="!!err('observations')"
+          />
         </BaseField>
       </div>
     </template>

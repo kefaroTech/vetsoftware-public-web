@@ -33,6 +33,12 @@ const search = ref('')
 const expandedSubModules = ref<Set<number>>(new Set())
 const saving = ref(false)
 const submitError = ref<string | null>(null)
+// Marca de intento de guardado: activa el estado inválido del nombre (borde rojo) sin esperar
+// al banner de error del footer.
+const attempted = ref(false)
+const nameError = computed(() =>
+  draftName.value.trim() ? null : 'El nombre del rol es obligatorio.',
+)
 
 const isCreate = computed(() => props.role === null)
 const color = computed<RoleColor>(() => props.color ?? 'amatista')
@@ -136,6 +142,7 @@ const usedSubModulesCount = computed(() => {
 
 function init() {
   submitError.value = null
+  attempted.value = false
   saving.value = false
   search.value = ''
   if (props.role) {
@@ -223,6 +230,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 
 async function save() {
   if (props.readOnly) return
+  attempted.value = true
   if (!draftName.value.trim()) {
     submitError.value = 'El nombre del rol es obligatorio.'
     return
@@ -289,11 +297,13 @@ async function save() {
               <div class="head-content">
                 <div class="kicker">
                   {{ readOnly ? 'Ver rol' : isCreate ? 'Crear rol' : 'Editar rol' }}
+                  <span v-if="!readOnly" class="req" title="Campo obligatorio">*</span>
                 </div>
                 <input
                   v-model="draftName"
                   type="text"
                   class="name-input"
+                  :class="{ invalid: attempted && !!nameError }"
                   placeholder="Nombre del rol"
                   spellcheck="false"
                   autocomplete="off"
@@ -510,8 +520,17 @@ async function save() {
   outline: none;
   line-height: 1.1;
 }
+.kicker .req {
+  color: oklch(55% 0.18 25);
+  margin-left: 3px;
+  font-weight: 600;
+}
 .name-input:focus {
   border-bottom-color: var(--amatista-300);
+}
+.name-input.invalid {
+  border-bottom-style: solid;
+  border-bottom-color: oklch(55% 0.18 25);
 }
 .name-input::placeholder {
   color: var(--warm-400);

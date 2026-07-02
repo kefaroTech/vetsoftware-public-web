@@ -82,7 +82,9 @@ const errors = computed(() => ({
     : emailValid.value
       ? null
       : 'Correo inválido',
-  responsibilities: draft.responsibilities.length ? null : 'Selecciona al menos una',
+  // Backend (Create/UpdateCompanyTaxProfileRequest): responsibilities es List sin @NotEmpty; el dominio
+  // hace default a lista vacía y la tabla hija admite 0 filas → opcional (no se exige al menos una).
+  responsibilities: null,
 }))
 const isValid = computed(() => Object.values(errors.value).every((e) => !e))
 
@@ -231,7 +233,7 @@ async function save() {
 
       <div class="resp">
         <div class="resp-label">
-          Responsabilidades fiscales (RUT) <span class="req">*</span>
+          Responsabilidades fiscales (RUT)
         </div>
         <p class="help" style="margin: 4px 0 10px">Selecciona las que apliquen según tu RUT.</p>
         <div class="resplist">
