@@ -155,7 +155,9 @@ watch(
 )
 
 function num(v: string): number {
-  return Number(String(v).replace(',', '.'))
+  // Pesos COP y stock son enteros: se descartan no-dígitos (incl. separador de miles) para
+  // evitar que `Number("50.000") === 50` trunque el valor. Alineado con formatMoney/AddChargeModal.
+  return Number(String(v).replace(/\D/g, ''))
 }
 
 const errors = computed(() => ({

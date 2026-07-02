@@ -69,6 +69,25 @@ const pendingOps = ref<ChargeOp[]>([])
 // Cargo general (mini-form)
 const general = reactive({ name: '', unitAmount: '', quantity: '1', taxId: '' })
 
+// COP en enteros: se descartan no-dígitos (incl. separador de miles) en el valor unitario y se fuerza la
+// cantidad a un entero. Evita `Number("50.000") === 50` y fracciones/cantidades inválidas que antes pasaban
+// vía `Number(x.replace(',', '.'))`.
+const unitAmountDigits = computed(() => general.unitAmount.replace(/\D/g, ''))
+const unitAmountNum = computed(() => Number(unitAmountDigits.value) || 0)
+const unitAmountDisplay = computed({
+  get: () => (general.unitAmount === '' ? '' : formatMoney(unitAmountNum.value)),
+  set: (v: string) => {
+    general.unitAmount = v.replace(/\D/g, '')
+  },
+})
+const quantityNum = computed(() => Number(general.quantity.replace(/\D/g, '')) || 0)
+const quantityDisplay = computed({
+  get: () => general.quantity,
+  set: (v: string) => {
+    general.quantity = v.replace(/\D/g, '')
+  },
+})
+
 watch(
   () => props.open,
   (open) => {
@@ -211,12 +230,10 @@ function addCatalogItem(item: { id: number; name: string; price: number; soldOut
     })
 }
 
-const canAddGeneral = computed(() => {
-  const raw = general.unitAmount.trim().replace(',', '.')
-  const amount = Number(raw)
-  // Monto libre por diseño (sin catálogo): se permite 0, pero exige un valor explícito.
-  return general.name.trim().length >= 2 && raw !== '' && Number.isFinite(amount) && amount >= 0
-})
+const canAddGeneral = computed(
+  // Monto libre por diseño (sin catálogo): se permite 0, pero exige un valor explícito; la cantidad debe ser entera >= 1.
+  () => general.name.trim().length >= 2 && unitAmountDigits.value !== '' && quantityNum.value >= 1,
+)
 
 function addGeneralToCart() {
   if (!canAddGeneral.value) return
@@ -224,8 +241,8 @@ function addGeneralToCart() {
     kind: 'general',
     refId: null,
     name: general.name.trim(),
-    unitPrice: Number(general.unitAmount.replace(',', '.')),
-    qty: Number(general.quantity.replace(',', '.')) || 1,
+    unitPrice: unitAmountNum.value,
+    qty: quantityNum.value || 1,
     animalId: null,
     animalName: null,
     taxId: general.taxId ? Number(general.taxId) : null,
@@ -438,12 +455,12 @@ async function confirm() {
             <div class="grid">
               <BaseField label="Valor unitario" required>
                 <template #default="{ id }">
-                  <BaseInput :id="id" v-model="general.unitAmount" inputmode="decimal" placeholder="0" />
+                  <BaseInput :id="id" v-model="unitAmountDisplay" inputmode="numeric" placeholder="0" />
                 </template>
               </BaseField>
               <BaseField label="Cantidad" required>
                 <template #default="{ id }">
-                  <BaseInput :id="id" v-model="general.quantity" inputmode="decimal" placeholder="1" />
+                  <BaseInput :id="id" v-model="quantityDisplay" inputmode="numeric" placeholder="1" />
                 </template>
               </BaseField>
               <BaseField label="Impuesto">

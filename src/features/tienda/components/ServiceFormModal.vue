@@ -131,7 +131,9 @@ watch(
 )
 
 function num(v: string): number {
-  return Number(String(v).replace(',', '.'))
+  // Precio en pesos COP es entero: se descartan no-dígitos (incl. separador de miles) para
+  // evitar que `Number("50.000") === 50` trunque el valor. Alineado con formatMoney/AddChargeModal.
+  return Number(String(v).replace(/\D/g, ''))
 }
 
 const errors = computed(() => ({
@@ -247,7 +249,7 @@ async function submit() {
 </template>
 
 <style scoped>
-.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; align-items: end; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; align-items: start; }
 .col-2 { grid-column: 1 / -1; }
 .check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--warm-800); cursor: pointer; padding-bottom: 10px; }
 .check input { width: 16px; height: 16px; accent-color: var(--amatista-600); }
