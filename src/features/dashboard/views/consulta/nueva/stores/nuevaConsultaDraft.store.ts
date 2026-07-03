@@ -54,11 +54,24 @@ export interface ConsultationDraft {
   diagnosis: string
   diagnosticPlan: string
   therapeuticPlan: string
+  // Pronóstico (AVMA) — opcional.
+  prognosis: string
   nextControlDate: string
   nextControlNotes: string
   // Peso opcional registrado en esta consulta (en la unidad preferida de la mascota). Se guarda como
   // punto del historial de peso del animal. Ver WeightRecord (backend).
   weight: string
+  // Examen físico / constantes vitales (la "O" de SOAP) — todos opcionales. Strings de formulario.
+  temperature: string
+  heartRate: string
+  respiratoryRate: string
+  mucousMembranes: string
+  capillaryRefill: string
+  hydration: string
+  bodyConditionScore: string
+  painScore: string
+  attitude: string
+  examFindings: string
 }
 
 export type MedicamentDraftItem = MedicamentPrescription & { savedId?: number }
@@ -118,9 +131,20 @@ function emptyConsultation(): ConsultationDraft {
     diagnosis: '',
     diagnosticPlan: '',
     therapeuticPlan: '',
+    prognosis: '',
     nextControlDate: '',
     nextControlNotes: '',
     weight: '',
+    temperature: '',
+    heartRate: '',
+    respiratoryRate: '',
+    mucousMembranes: '',
+    capillaryRefill: '',
+    hydration: '',
+    bodyConditionScore: '',
+    painScore: '',
+    attitude: '',
+    examFindings: '',
   }
 }
 
@@ -151,6 +175,9 @@ function load(): NuevaConsultaDraft {
     if (!raw) return defaultDraft()
     const parsed = JSON.parse(raw) as Partial<NuevaConsultaDraft>
     const merged = { ...defaultDraft(), ...parsed }
+    // Deep-merge de la consulta: drafts LEGACY no traen los campos de examen físico /
+    // pronóstico (Fase 3); sin esto quedarían `undefined` y romperían los v-model.
+    merged.consultation = { ...emptyConsultation(), ...(parsed.consultation ?? {}) }
     // Paso persistido del wizard actual (1 o 2), preservado tal cual. Además,
     // drafts LEGACY de 4 pasos (3/4) colapsan al paso 2. `>= 2` cubre ambos:
     // conserva el paso 2 ACTUAL (antes se perdía) y mapea los antiguos 3/4.

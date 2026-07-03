@@ -8,6 +8,7 @@ import {
   FlaskConical,
   Calendar,
   Sparkles,
+  Activity,
 } from 'lucide-vue-next'
 import ContentWrap from '../components/ContentWrap.vue'
 import PageHeading from '../components/PageHeading.vue'
@@ -108,11 +109,21 @@ const {
 } = useConsultationTypes()
 
 // ── Validación (tipo + fecha + anamnesis son obligatorios) ───────────────────
-type FieldKey = 'date' | 'typeId' | 'anamnesis'
+// Las constantes vitales son OPCIONALES: solo se validan (rango) cuando traen valor.
+type FieldKey =
+  | 'date'
+  | 'typeId'
+  | 'anamnesis'
+  | 'temperature'
+  | 'heartRate'
+  | 'respiratoryRate'
 const touched = reactive<Record<FieldKey, boolean>>({
   date: false,
   typeId: false,
   anamnesis: false,
+  temperature: false,
+  heartRate: false,
+  respiratoryRate: false,
 })
 
 function validateDate(v: string): string | null {
@@ -126,11 +137,23 @@ function validateType(v: string): string | null {
 function validateAnamnesis(v: string): string | null {
   return v.trim() ? null : 'La anamnesis es obligatoria.'
 }
+// Rango opcional: vacío => válido; con valor => dentro de rango fisiológico.
+function validateRange(v: string, min: number, max: number, msg: string): string | null {
+  const raw = v.trim().replace(',', '.')
+  if (!raw) return null
+  const n = Number(raw)
+  if (!Number.isFinite(n)) return 'Valor inválido.'
+  if (n < min || n > max) return msg
+  return null
+}
 
 const errors = computed(() => ({
   date: validateDate(c.value.date),
   typeId: validateType(c.value.typeId),
   anamnesis: validateAnamnesis(c.value.anamnesis),
+  temperature: validateRange(c.value.temperature, 0, 60, 'Debe estar entre 0 y 60 °C.'),
+  heartRate: validateRange(c.value.heartRate, 0, 1000, 'Debe estar entre 0 y 1000 lpm.'),
+  respiratoryRate: validateRange(c.value.respiratoryRate, 0, 1000, 'Debe estar entre 0 y 1000 rpm.'),
 }))
 
 function err(field: FieldKey): string | undefined {
@@ -152,6 +175,36 @@ const weightModel = computed({
     c.value.weight = v.replace(/[^\d.,]/g, '')
   },
 })
+
+// ── Examen físico: sanitizado en vivo (temperatura acepta decimal; FC/FR solo dígitos) ──
+const temperatureModel = computed({
+  get: () => c.value.temperature,
+  set: (v) => {
+    c.value.temperature = v.replace(/[^\d.,]/g, '')
+  },
+})
+const heartRateModel = computed({
+  get: () => c.value.heartRate,
+  set: (v) => {
+    c.value.heartRate = v.replace(/\D/g, '')
+  },
+})
+const respiratoryRateModel = computed({
+  get: () => c.value.respiratoryRate,
+  set: (v) => {
+    c.value.respiratoryRate = v.replace(/\D/g, '')
+  },
+})
+
+// Selects guiados: condición corporal 1–9, escala de dolor 0–10.
+const bcsOptions = Array.from({ length: 9 }, (_, i) => ({
+  value: String(i + 1),
+  label: String(i + 1),
+}))
+const painOptions = Array.from({ length: 11 }, (_, i) => ({
+  value: String(i),
+  label: String(i),
+}))
 
 watch(
   [() => c.value.typeId, consultationTypesList],
@@ -250,15 +303,121 @@ watch(
       </SectionCard>
 
       <SectionCard
+        :icon="Activity"
+        title="Examen físico"
+        subtitle="Constantes vitales y hallazgos · Todo opcional"
+      >
+        <div class="vitals-grid">
+          <BaseField label="Temperatura" :error="err('temperature')">
+            <template #default="{ id }">
+              <BaseInput
+                :id="id"
+                v-model="temperatureModel"
+                inputmode="decimal"
+                placeholder="Ej. 38.5"
+                suffix="°C"
+                :invalid="!!err('temperature')"
+                @blur="markTouched('temperature')"
+              />
+            </template>
+          </BaseField>
+          <BaseField label="Frec. cardíaca" :error="err('heartRate')">
+            <template #default="{ id }">
+              <BaseInput
+                :id="id"
+                v-model="heartRateModel"
+                inputmode="numeric"
+                placeholder="Ej. 90"
+                suffix="lpm"
+                :invalid="!!err('heartRate')"
+                @blur="markTouched('heartRate')"
+              />
+            </template>
+          </BaseField>
+          <BaseField label="Frec. respiratoria" :error="err('respiratoryRate')">
+            <template #default="{ id }">
+              <BaseInput
+                :id="id"
+                v-model="respiratoryRateModel"
+                inputmode="numeric"
+                placeholder="Ej. 24"
+                suffix="rpm"
+                :invalid="!!err('respiratoryRate')"
+                @blur="markTouched('respiratoryRate')"
+              />
+            </template>
+          </BaseField>
+          <BaseField label="Mucosas">
+            <template #default="{ id }">
+              <BaseInput :id="id" v-model="c.mucousMembranes" placeholder="Ej. rosadas, húmedas" />
+            </template>
+          </BaseField>
+          <BaseField label="Llenado capilar">
+            <template #default="{ id }">
+              <BaseInput :id="id" v-model="c.capillaryRefill" placeholder="Ej. < 2 s" />
+            </template>
+          </BaseField>
+          <BaseField label="Hidratación">
+            <template #default="{ id }">
+              <BaseInput :id="id" v-model="c.hydration" placeholder="Ej. normal, 5%" />
+            </template>
+          </BaseField>
+          <BaseField label="Condición corporal" hint="Escala 1–9">
+            <template #default="{ id }">
+              <BaseSelect
+                :id="id"
+                v-model="c.bodyConditionScore"
+                :options="bcsOptions"
+                placeholder="—"
+              />
+            </template>
+          </BaseField>
+          <BaseField label="Escala de dolor" hint="0–10">
+            <template #default="{ id }">
+              <BaseSelect :id="id" v-model="c.painScore" :options="painOptions" placeholder="—" />
+            </template>
+          </BaseField>
+          <BaseField label="Actitud">
+            <template #default="{ id }">
+              <BaseInput :id="id" v-model="c.attitude" placeholder="Ej. alerta, decaído" />
+            </template>
+          </BaseField>
+        </div>
+        <div class="findings-row">
+          <BaseField label="Hallazgos al examen">
+            <template #default="{ id }">
+              <BaseTextarea
+                :id="id"
+                v-model="c.examFindings"
+                :rows="3"
+                placeholder="Hallazgos por sistema: cardiorrespiratorio, abdomen, piel, linfonodos…"
+              />
+            </template>
+          </BaseField>
+        </div>
+      </SectionCard>
+
+      <SectionCard
         :icon="TriangleAlert"
         title="Diagnóstico"
-        subtitle="Presuntivo o definitivo · Diferenciales"
+        subtitle="Presuntivo o definitivo · Diferenciales · Pronóstico"
       >
         <BaseTextarea
           v-model="c.diagnosis"
           :rows="3"
           placeholder="Diagnóstico presuntivo, diagnósticos diferenciales considerados…"
         />
+        <div class="prognosis-row">
+          <BaseField label="Pronóstico" hint="Opcional">
+            <template #default="{ id }">
+              <BaseInput
+                :id="id"
+                v-model="c.prognosis"
+                placeholder="Ej. favorable, reservado, grave"
+              />
+            </template>
+          </BaseField>
+        </div>
       </SectionCard>
 
       <div class="planes">
@@ -417,9 +576,29 @@ watch(
   grid-template-columns: 1fr 1fr;
   gap: clamp(12px, 1vw + 4px, 22px);
 }
+.vitals-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 1vw + 4px, 20px);
+}
+.findings-row {
+  margin-top: clamp(12px, 1vw + 4px, 20px);
+}
+.prognosis-row {
+  margin-top: clamp(12px, 1vw + 4px, 18px);
+  max-width: 420px;
+}
 @media (max-width: 880px) {
   .grid-1-2,
   .planes {
+    grid-template-columns: 1fr;
+  }
+  .vitals-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 560px) {
+  .vitals-grid {
     grid-template-columns: 1fr;
   }
 }

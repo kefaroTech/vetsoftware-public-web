@@ -7,11 +7,23 @@ export interface CreateConsultationPayload {
   diagnosis: string | null
   therapeuticPlan: string | null
   diagnosisPlan: string | null
+  prognosis: string | null
   nextControl: string | null
   animalId: number
   // Peso opcional capturado en la consulta → historial de peso del animal.
   weight?: number | null
   weightUnit?: string | null
+  // Examen físico / constantes vitales (Fase 3) — todos opcionales.
+  temperature?: number | null
+  heartRate?: number | null
+  respiratoryRate?: number | null
+  mucousMembranes?: string | null
+  capillaryRefill?: string | null
+  hydration?: string | null
+  bodyConditionScore?: number | null
+  painScore?: number | null
+  attitude?: string | null
+  examFindings?: string | null
 }
 
 export interface ConsultationTypeSummary {
@@ -39,10 +51,21 @@ export interface ConsultationResponse {
   diagnosis: string | null
   therapeuticPlan: string | null
   diagnosisPlan: string | null
+  prognosis: string | null
   nextControl: string | null
   animal: ConsultationAnimalSummary
   company: ConsultationCompanySummary
   createdDate: string
+  temperature: number | null
+  heartRate: number | null
+  respiratoryRate: number | null
+  mucousMembranes: string | null
+  capillaryRefill: string | null
+  hydration: string | null
+  bodyConditionScore: number | null
+  painScore: number | null
+  attitude: string | null
+  examFindings: string | null
 }
 
 export const consultationApi = {

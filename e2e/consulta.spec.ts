@@ -889,6 +889,102 @@ test.describe('H · Procedimientos de la consulta', () => {
 })
 
 // ════════════════════════════════════════════════════════════════════════════
+// F2. Examen físico + pronóstico (Fase 3) — sanitización, rango y guardado
+//     campo a campo. Todos [data]: requieren propietario + mascota para el paso 2.
+// ════════════════════════════════════════════════════════════════════════════
+test.describe('F2 · Examen físico y pronóstico', () => {
+  test.beforeEach(async ({ page }) => {
+    await gotoNuevaConsulta(page)
+    await irAPasoConsulta(page)
+  })
+
+  test('[data] temperatura sanitiza no-numérico (deja dígitos + separador)', async ({ page }) => {
+    const t = page.getByLabel(/Temperatura/)
+    await t.fill('38a.5x')
+    await expect(t).toHaveValue('38.5')
+  })
+
+  test('[data] frec. cardíaca solo acepta dígitos', async ({ page }) => {
+    const hr = page.getByLabel(/Frec\. cardíaca/)
+    await hr.fill('9a0 lpm')
+    await expect(hr).toHaveValue('90')
+  })
+
+  test('[data] frec. respiratoria solo acepta dígitos', async ({ page }) => {
+    const rr = page.getByLabel(/Frec\. respiratoria/)
+    await rr.fill('2b4rpm')
+    await expect(rr).toHaveValue('24')
+  })
+
+  test('[data] temperatura fuera de rango (>60) muestra error de rango', async ({ page }) => {
+    const t = page.getByLabel(/Temperatura/)
+    await t.fill('61')
+    await t.blur()
+    await expect(page.getByText('Debe estar entre 0 y 60 °C.')).toBeVisible()
+  })
+
+  test('[data] temperatura válida (38.5) no muestra error', async ({ page }) => {
+    const t = page.getByLabel(/Temperatura/)
+    await t.fill('38.5')
+    await t.blur()
+    await expect(page.getByText(/Debe estar entre 0 y 60/)).toHaveCount(0)
+  })
+
+  test('[data] frec. cardíaca fuera de rango (>1000) muestra error', async ({ page }) => {
+    const hr = page.getByLabel(/Frec\. cardíaca/)
+    await hr.fill('1001')
+    await hr.blur()
+    await expect(page.getByText('Debe estar entre 0 y 1000 lpm.')).toBeVisible()
+  })
+
+  test('[data] condición corporal lista la escala 1–9', async ({ page }) => {
+    await page.getByRole('combobox', { name: /Condición corporal/ }).click()
+    const lb = page.getByRole('listbox')
+    await expect(lb.getByRole('option', { name: '1', exact: true })).toBeVisible()
+    await expect(lb.getByRole('option', { name: '9', exact: true })).toBeVisible()
+  })
+
+  test('[data] escala de dolor lista 0–10', async ({ page }) => {
+    await page.getByRole('combobox', { name: /Escala de dolor/ }).click()
+    const lb = page.getByRole('listbox')
+    await expect(lb.getByRole('option', { name: '0', exact: true })).toBeVisible()
+    await expect(lb.getByRole('option', { name: '10', exact: true })).toBeVisible()
+  })
+
+  test('[data] temperatura inválida bloquea "Guardar consulta" (valida y no confirma)', async ({
+    page,
+  }) => {
+    await pickSelect(page, /Tipo de consulta/)
+    await anamnesis(page).fill('Consulta con una constante fuera de rango.')
+    await page.getByLabel(/Temperatura/).fill('80')
+    await footerNext(page, 'Guardar consulta').click()
+    await expect(page.getByText(REVISA_CAMPOS_MSG)).toBeVisible()
+    await expect(page.getByRole('alertdialog')).toHaveCount(0)
+  })
+
+  test('[data] happy path: consulta con examen físico + pronóstico guarda (servicios 2xx)', async ({
+    page,
+  }) => {
+    const api = trackApiWrites(page)
+    await pickSelect(page, /Tipo de consulta/)
+    await anamnesis(page).fill('Paciente estable, control de rutina.')
+    await page.getByLabel(/Temperatura/).fill('38.5')
+    await page.getByLabel(/Frec\. cardíaca/).fill('90')
+    await page.getByLabel(/Frec\. respiratoria/).fill('24')
+    await page.getByLabel(/Mucosas/).fill('Rosadas, húmedas')
+    await page.getByLabel(/Llenado capilar/).fill('< 2 s')
+    await page.getByLabel(/Hidratación/).fill('Normal')
+    await pickSelect(page, /Condición corporal/, /^5$/)
+    await pickSelect(page, /Escala de dolor/, /^1$/)
+    await page.getByLabel(/Actitud/).fill('Alerta')
+    await page.getByLabel(/Hallazgos al examen/).fill('Auscultación cardiopulmonar normal.')
+    await page.getByLabel(/Pronóstico/).fill('Favorable')
+    await guardarConsulta(page, 'solo-guardar')
+    api.assertAllOk()
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════
 // G. Flujo completo + borrador
 // ════════════════════════════════════════════════════════════════════════════
 test.describe('G · Flujo completo y borrador', () => {
@@ -1135,7 +1231,24 @@ test.describe('J · Campos obligatorios (*) vs opcionales', () => {
     await irAPasoConsulta(page)
     const { required, optional } = await asteriskAudit(page)
     expect(required).toEqual(['Fecha', 'Tipo de consulta'])
-    expect(optional).toEqual(['Fecha sugerida', 'Notas para el control', 'Peso en la consulta'])
+    // Fase 3: el examen físico (constantes vitales) y el pronóstico son TODOS opcionales
+    // (sin *). Se suman a los 3 opcionales previos del paso de consulta.
+    expect(optional).toEqual([
+      'Actitud',
+      'Condición corporal',
+      'Escala de dolor',
+      'Fecha sugerida',
+      'Frec. cardíaca',
+      'Frec. respiratoria',
+      'Hallazgos al examen',
+      'Hidratación',
+      'Llenado capilar',
+      'Mucosas',
+      'Notas para el control',
+      'Peso en la consulta',
+      'Pronóstico',
+      'Temperatura',
+    ])
     // La anamnesis es obligatoria pero se marca en el encabezado de su sección
     // (no es un BaseField con *): su sección lo declara "Obligatorio".
     await expect(page.getByText(/Obligatorio/).first()).toBeVisible()

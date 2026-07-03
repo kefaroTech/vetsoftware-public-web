@@ -261,6 +261,18 @@ async function persistConsultationItems(consultationId: number, animalId: number
   }
 }
 
+// Convierte un campo de texto opcional del examen físico a número (o null si vacío/invalido).
+function numOrNull(raw: string): number | null {
+  const v = raw.trim().replace(',', '.')
+  if (!v) return null
+  const n = Number(v)
+  return Number.isFinite(n) ? n : null
+}
+function intOrNull(raw: string): number | null {
+  const n = numOrNull(raw)
+  return n == null ? null : Math.trunc(n)
+}
+
 async function saveConsultation(keepOwner = false) {
   saveError.value = null
   const pet = draft.state.pet
@@ -289,12 +301,24 @@ async function saveConsultation(keepOwner = false) {
         diagnosis: cDraft.diagnosis.trim() || null,
         therapeuticPlan: cDraft.therapeuticPlan.trim() || null,
         diagnosisPlan: cDraft.diagnosticPlan.trim() || null,
+        prognosis: cDraft.prognosis.trim() || null,
         nextControl: cDraft.nextControlDate || null,
         animalId: Number(pet.id),
         weight: cDraft.weight.trim()
           ? Number(cDraft.weight.trim().replace(',', '.'))
           : null,
         weightUnit: cDraft.weight.trim() ? pet.weightType : null,
+        // Examen físico / constantes vitales (Fase 3) — opcionales; van null si vacíos.
+        temperature: numOrNull(cDraft.temperature),
+        heartRate: intOrNull(cDraft.heartRate),
+        respiratoryRate: intOrNull(cDraft.respiratoryRate),
+        mucousMembranes: cDraft.mucousMembranes.trim() || null,
+        capillaryRefill: cDraft.capillaryRefill.trim() || null,
+        hydration: cDraft.hydration.trim() || null,
+        bodyConditionScore: intOrNull(cDraft.bodyConditionScore),
+        painScore: intOrNull(cDraft.painScore),
+        attitude: cDraft.attitude.trim() || null,
+        examFindings: cDraft.examFindings.trim() || null,
       })
       consultationId = consultation.id
       draft.markConsultationCreated(consultationId)
