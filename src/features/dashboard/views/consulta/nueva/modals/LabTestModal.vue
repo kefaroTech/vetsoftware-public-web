@@ -313,7 +313,6 @@ function save() {
       <button
         type="button"
         class="btn-primary"
-        :disabled="submitted && !valid"
         @click="save"
       >
         {{ editingIndex !== null ? 'Guardar cambios' : 'Guardar solicitud' }}

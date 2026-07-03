@@ -179,6 +179,26 @@ async function submitPet(): Promise<boolean> {
   }
 }
 
+// ── Validación de la SELECCIÓN (paso 1, modo elegir owner+pet) ───────────────
+// El botón "Continuar a la consulta" siempre está activo; si falta propietario o
+// mascota, al hacer click mostramos un banner guía (mismo patrón `submitted` de
+// los modales de acciones) y no avanzamos.
+const selectionSubmitted = ref(false)
+const selectionError = computed<string | null>(() => {
+  if (!draft.state.owner) return 'Selecciona un propietario para continuar.'
+  if (!draft.state.pet) return 'Selecciona una mascota para continuar.'
+  return null
+})
+function validateSelection(): boolean {
+  selectionSubmitted.value = true
+  return !selectionError.value
+}
+// Al elegir/crear propietario o mascota, limpiamos el intento previo: el banner
+// de selección solo reaparece si el usuario vuelve a pulsar "Continuar" sin completar.
+watch([() => draft.state.owner, () => draft.state.pet], () => {
+  selectionSubmitted.value = false
+})
+
 // ── Submit unificado (lo invoca el footer del wizard) ────────────────────────
 async function submit(): Promise<boolean> {
   if (draft.state.ownerCreating) return submitOwner()
@@ -186,12 +206,22 @@ async function submit(): Promise<boolean> {
   return true
 }
 
-defineExpose({ submit })
+defineExpose({ submit, validateSelection })
 
-const banner = computed(() => ownerSubmitError.value ?? petSubmitError.value ?? petsError.value)
+const banner = computed(
+  () =>
+    ownerSubmitError.value ??
+    petSubmitError.value ??
+    // El error de selección solo aplica en modo elegir (no creando) y tras intentar avanzar.
+    (selectionSubmitted.value && !draft.state.ownerCreating && !draft.state.petCreating
+      ? selectionError.value
+      : null) ??
+    petsError.value,
+)
 function clearBanner() {
   ownerSubmitError.value = null
   petSubmitError.value = null
+  selectionSubmitted.value = false
 }
 </script>
 

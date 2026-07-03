@@ -362,6 +362,7 @@ defineExpose({ validate })
         <SegmentedRadio
           v-model="draft.reproductiveState"
           :options="reproductiveOptions"
+          :invalid="!!err('reproductiveState')"
         />
       </BaseField>
     </SectionCard>

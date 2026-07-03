@@ -250,7 +250,11 @@ defineExpose({ validate })
           </template>
         </BaseField>
         <BaseField label="Tipo de persona" required :error="err('personType')">
-          <SegmentedRadio v-model="draft.personType" :options="personTypeOptions" />
+          <SegmentedRadio
+            v-model="draft.personType"
+            :options="personTypeOptions"
+            :invalid="!!err('personType')"
+          />
         </BaseField>
       </div>
     </SectionCard>

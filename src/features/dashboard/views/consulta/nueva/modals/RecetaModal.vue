@@ -443,7 +443,6 @@ function medErr(i: number, k: keyof MedDraft): string | undefined {
       <button
         type="button"
         class="btn-primary"
-        :disabled="submitted && !valid"
         @click="save"
       >
         {{ editingIndex !== null ? 'Guardar cambios' : 'Guardar receta' }}

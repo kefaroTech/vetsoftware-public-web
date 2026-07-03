@@ -34,6 +34,7 @@ const submittingStep = ref(false)
 const saveError = ref<string | null>(null)
 const pasoRef = ref<{
   validate?: () => boolean
+  validateSelection?: () => boolean
   submit?: () => Promise<boolean> | boolean
 } | null>(null)
 
@@ -75,45 +76,17 @@ const nextVariant = computed<'primary' | 'success'>(() =>
   step.value === 2 ? 'success' : 'primary',
 )
 
-const nextDisabled = computed(() => {
-  const s = draft.state
-  if (step.value === 1) {
-    if (s.ownerCreating) {
-      const o = s.ownerCreating
-      return !(
-        o.name.trim() &&
-        o.document.trim() &&
-        o.phone.trim() &&
-        o.documentType &&
-        o.personType &&
-        o.countryId &&
-        o.stateId &&
-        o.cityId
-      )
-    }
-    if (s.petCreating) {
-      const p = s.petCreating
-      return !(
-        p.name.trim() &&
-        p.specieId &&
-        p.breedId &&
-        p.colorId &&
-        p.gender &&
-        p.reproductiveState
-      )
-    }
-    return !(s.owner && s.pet)
-  }
-  // paso 2: datos de la consulta
-  return !(s.consultation.typeId && s.consultation.anamnesis.trim())
-})
+// El botón de avanzar/guardar SIEMPRE está activo (no se deshabilita por campos
+// faltantes). Al hacer click, si faltan requeridos, cada paso dispara su propia
+// validación animada (shake + bordes rojos + banner) y NO se avanza. Mismo patrón
+// `submitted` que los modales de acciones clínicas. Solo se bloquea mientras hay
+// una operación en curso (nextLoading), no por validez.
 
 async function handleNext() {
   if (step.value === 1) {
     // En el paso 1 unificado, si el usuario está creando propietario o
-    // mascota, el botón confirma esa creación y permanecemos en el paso 1
-    // (ahora con el propietario/mascota ya seleccionado). Solo avanzamos a
-    // la consulta cuando ambos están seleccionados.
+    // mascota, el botón confirma esa creación (submit valida el form y, si
+    // falta algo, dispara el shake). Permanecemos en el paso 1.
     if (draft.state.ownerCreating || draft.state.petCreating) {
       submittingStep.value = true
       try {
@@ -121,6 +94,11 @@ async function handleNext() {
       } finally {
         submittingStep.value = false
       }
+      return
+    }
+    // Modo selección: exigimos propietario + mascota seleccionados. Si falta
+    // alguno, validateSelection muestra el banner guía y no avanzamos.
+    if (pasoRef.value?.validateSelection && !pasoRef.value.validateSelection()) {
       return
     }
     goStep(2)
@@ -418,12 +396,8 @@ function onKey(e: KeyboardEvent) {
     attemptCancel()
     return
   }
-  if (
-    step.value === 2 &&
-    (e.metaKey || e.ctrlKey) &&
-    e.key === 'Enter' &&
-    !nextDisabled.value
-  ) {
+  if (step.value === 2 && (e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    // Ctrl/Cmd+Enter intenta guardar; handleNext valida y dispara el shake si falta algo.
     e.preventDefault()
     handleNext()
   }
@@ -482,7 +456,6 @@ onUnmounted(() => {
       :show-back="step > 1"
       :next-label="nextLabel"
       :next-variant="nextVariant"
-      :next-disabled="nextDisabled"
       :next-loading="(saving && step === 2) || submittingStep"
       @back="handleBack"
       @next="handleNext"

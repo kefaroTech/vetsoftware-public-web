@@ -8,13 +8,19 @@ defineProps<{
   modelValue: string | null
   options: Option[]
   name?: string
+  invalid?: boolean
 }>()
 
 defineEmits<{ 'update:modelValue': [value: string] }>()
 </script>
 
 <template>
-  <div class="segmented" role="radiogroup">
+  <div
+    class="segmented"
+    :class="{ invalid }"
+    role="radiogroup"
+    :aria-invalid="invalid || undefined"
+  >
     <button
       v-for="opt in options"
       :key="opt.value"
@@ -59,5 +65,20 @@ defineEmits<{ 'update:modelValue': [value: string] }>()
 .seg:focus-visible {
   outline: 2px solid var(--amatista-700);
   outline-offset: 2px;
+}
+/* Estado inválido: borde rojo en los botones + shake del grupo (mismo lenguaje
+   visual que BaseInput/BaseSelect al fallar la validación al intentar avanzar). */
+.segmented.invalid {
+  animation: seg-shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+.segmented.invalid .seg:not(.active) {
+  border-color: oklch(60% 0.20 25);
+  background: oklch(98.5% 0.02 25);
+}
+@keyframes seg-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-3px); }
+  40%, 60% { transform: translateX(3px); }
 }
 </style>

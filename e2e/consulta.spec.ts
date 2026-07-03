@@ -8,6 +8,8 @@ import {
   unlikelyTerm,
   startCreateOwnerFromEmpty,
   footerNext,
+  expectFormBlocked,
+  REVISA_CAMPOS_MSG,
   pickSelect,
   fillValidOwner,
   createAndSelectOwner,
@@ -265,24 +267,34 @@ test.describe('C · Propietario nuevo · validación de campos', () => {
     )
   })
 
-  // --- Gating del botón + cascada geo ---
-  test('[det] "Guardar propietario" está deshabilitado al inicio', async ({ page }) => {
-    await expect(footerNext(page, 'Guardar propietario')).toBeDisabled()
+  // --- Botón SIEMPRE activo + validación animada al click + cascada geo ---
+  test('[det] "Guardar propietario" está SIEMPRE activo; click vacío valida y no avanza', async ({ page }) => {
+    const btn = footerNext(page, 'Guardar propietario')
+    await expect(btn).toBeEnabled()
+    await btn.click()
+    // No avanza: seguimos en el form, banner-guía y controles en rojo (shake).
+    await expectFormBlocked(page, /Registrar nuevo propietario/)
   })
 
-  test('[data] con todo lleno pero SIN tipo de persona, el botón sigue deshabilitado', async ({ page }) => {
+  test('[data] con todo lleno pero SIN tipo de persona, el click valida y no crea; al completar, crea', async ({ page }) => {
     // Llena nombre/doc/teléfono + tipo de documento + geo, pero NO el tipo de persona.
+    const doc = `SP${uniqueSuffix()}`.slice(0, 20)
     await page.getByLabel(/Nombre completo/).fill('Sin Persona E2E')
-    await page.getByLabel(/Documento de identidad/).fill('SP123456')
+    await page.getByLabel(/Documento de identidad/).fill(doc)
     await page.getByLabel(/Teléfono/).fill('3001234567')
     await pickSelect(page, /Tipo de documento/)
     await pickSelect(page, /País/)
     await pickSelect(page, /Estado/)
     await pickSelect(page, /Ciudad/)
-    await expect(footerNext(page, 'Guardar propietario')).toBeDisabled()
-    // Al elegir el tipo de persona, ya se habilita.
+    // Falta tipo de persona → click valida (el SegmentedRadio marca inválido) y no avanza.
+    await footerNext(page, 'Guardar propietario').click()
+    await expect(page.getByText(REVISA_CAMPOS_MSG)).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Registrar nuevo propietario/ })).toBeVisible()
+    await expect(page.locator('.segmented.invalid')).toBeVisible()
+    // Al elegir el tipo de persona y reintentar, crea y avanza a la mascota.
     await page.getByRole('radio', { name: 'Natural' }).click()
-    await expect(footerNext(page, 'Guardar propietario')).toBeEnabled()
+    await footerNext(page, 'Guardar propietario').click()
+    await expect(page.getByRole('heading', { name: /Selecciona la mascota/ })).toBeVisible()
   })
 
   test('[det] Estado está deshabilitado hasta elegir País', async ({ page }) => {
@@ -298,12 +310,16 @@ test.describe('C · Propietario nuevo · validación de campos', () => {
     await expect(page.getByRole('heading', { name: /Quién es el propietario/ })).toBeVisible()
   })
 
-  test('[data] datos válidos + geo completa (SIN email ni dirección) habilitan "Guardar propietario"', async ({
+  test('[data] datos válidos + geo completa (SIN email ni dirección) → el click CREA el propietario', async ({
     page,
   }) => {
     // fillValidOwner NO llena email ni dirección → confirma que ambos son opcionales.
     await fillValidOwner(page)
     await expect(footerNext(page, 'Guardar propietario')).toBeEnabled()
+    await footerNext(page, 'Guardar propietario').click()
+    // Crea y avanza a la selección de mascota (sin banner de error).
+    await expect(page.getByRole('heading', { name: /Selecciona la mascota/ })).toBeVisible()
+    await expect(page.getByText(REVISA_CAMPOS_MSG)).toHaveCount(0)
   })
 })
 
@@ -319,10 +335,16 @@ test.describe('D · Selección de mascota', () => {
     await expect(page.getByRole('button', { name: 'Registrar primera mascota' })).toBeVisible()
   })
 
-  test('[data] "Continuar a la consulta" está deshabilitado sin mascota', async ({ page }) => {
+  test('[data] "Continuar a la consulta" activo sin mascota; click muestra banner-guía y no avanza', async ({ page }) => {
     await gotoNuevaConsulta(page)
     await createAndSelectOwner(page)
-    await expect(footerNext(page, /Continuar a la consulta|Guardar mascota/)).toBeDisabled()
+    const btn = footerNext(page, 'Continuar a la consulta')
+    await expect(btn).toBeEnabled()
+    await btn.click()
+    // Sin mascota seleccionada: banner guía y seguimos en el paso 1.
+    await expect(page.getByText('Selecciona una mascota para continuar.')).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Selecciona la mascota/ })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Datos de la consulta/ })).toHaveCount(0)
   })
 
   test('[data] cambiar de propietario vuelve a la búsqueda', async ({ page }) => {
@@ -414,29 +436,40 @@ test.describe('E · Mascota nueva · validación de campos', () => {
     await expect(page.getByRole('combobox', { name: /Raza/ })).toBeDisabled()
   })
 
-  test('[data] "Guardar mascota" está deshabilitado hasta completar requeridos', async ({ page }) => {
-    await expect(footerNext(page, 'Guardar mascota')).toBeDisabled()
+  test('[data] "Guardar mascota" está SIEMPRE activo; click vacío valida y no crea', async ({ page }) => {
+    const btn = footerNext(page, 'Guardar mascota')
+    await expect(btn).toBeEnabled()
+    await btn.click()
+    await expectFormBlocked(page, /Registrar nueva mascota/)
   })
 
-  test('[data] con SOLO los requeridos (sin fecha, peso, unidad ni tamaño) se habilita "Guardar mascota"', async ({
+  test('[data] con SOLO los requeridos (sin fecha, peso, unidad ni tamaño) el click CREA la mascota', async ({
     page,
   }) => {
     // Prueba que fecha de nacimiento, peso, unidad de peso y tamaño son OPCIONALES.
     await fillRequiredPet(page)
-    await expect(footerNext(page, 'Guardar mascota')).toBeEnabled()
+    await footerNext(page, 'Guardar mascota').click()
+    // Crea y vuelve a la selección de mascota (ya con la nueva seleccionada).
+    await expect(page.getByRole('heading', { name: /Selecciona la mascota/ })).toBeVisible()
+    await expect(page.getByText(REVISA_CAMPOS_MSG)).toHaveCount(0)
   })
 
-  test('[data] sin estado reproductivo, "Guardar mascota" sigue deshabilitado', async ({ page }) => {
-    // Todo lo requerido MENOS el estado reproductivo → debe seguir deshabilitado.
+  test('[data] sin estado reproductivo, el click valida (shake) y no crea; al completar, crea', async ({ page }) => {
+    // Todo lo requerido MENOS el estado reproductivo (SegmentedRadio).
     await page.getByLabel(/^Nombre/).fill('Mascota Req E2E')
     await pickSelect(page, /Especie/)
     await pickSelect(page, /Raza/)
     await pickSelect(page, /Color/)
     await pickSelect(page, /Género/, 'Macho')
-    await expect(footerNext(page, 'Guardar mascota')).toBeDisabled()
-    // Al elegir el estado reproductivo, se habilita.
+    await footerNext(page, 'Guardar mascota').click()
+    // No crea: banner + el SegmentedRadio del estado reproductivo marcado inválido.
+    await expect(page.getByText(REVISA_CAMPOS_MSG)).toBeVisible()
+    await expect(page.locator('.segmented.invalid')).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Registrar nueva mascota/ })).toBeVisible()
+    // Al elegir el estado reproductivo y reintentar, crea.
     await page.getByRole('radio', { name: 'Desconocido' }).click()
-    await expect(footerNext(page, 'Guardar mascota')).toBeEnabled()
+    await footerNext(page, 'Guardar mascota').click()
+    await expect(page.getByRole('heading', { name: /Selecciona la mascota/ })).toBeVisible()
   })
 
   test('[data] género ofrece Hembra y Macho', async ({ page }) => {
@@ -462,10 +495,13 @@ test.describe('F · Datos de la consulta', () => {
     await expect(footerNext(page, 'Guardar consulta')).toHaveCount(0)
   })
 
-  test('[data] anamnesis vacía deja "Guardar consulta" deshabilitado', async ({ page }) => {
+  test('[data] anamnesis vacía: click "Guardar consulta" valida y NO abre confirmación', async ({ page }) => {
     await irAPasoConsulta(page)
     await pickSelect(page, /Tipo de consulta/)
-    await expect(footerNext(page, 'Guardar consulta')).toBeDisabled()
+    await expect(footerNext(page, 'Guardar consulta')).toBeEnabled()
+    await footerNext(page, 'Guardar consulta').click()
+    await expect(page.getByText(REVISA_CAMPOS_MSG)).toBeVisible()
+    await expect(page.getByRole('alertdialog')).toHaveCount(0)
   })
 
   test('[data] anamnesis en blanco (blur) muestra "La anamnesis es obligatoria."', async ({ page }) => {
@@ -475,39 +511,48 @@ test.describe('F · Datos de la consulta', () => {
     await expect(page.getByText('La anamnesis es obligatoria.')).toBeVisible()
   })
 
-  test('[data] anamnesis solo-espacios cuenta como vacía y no habilita "Guardar consulta"', async ({
+  test('[data] anamnesis solo-espacios cuenta como vacía: valida y NO abre confirmación', async ({
     page,
   }) => {
     await irAPasoConsulta(page)
     await pickSelect(page, /Tipo de consulta/)
     await anamnesis(page).fill('    ')
-    await expect(footerNext(page, 'Guardar consulta')).toBeDisabled()
+    await footerNext(page, 'Guardar consulta').click()
+    await expect(page.getByText(REVISA_CAMPOS_MSG)).toBeVisible()
+    await expect(page.getByRole('alertdialog')).toHaveCount(0)
   })
 
-  test('[data] tipo + anamnesis habilitan "Guardar consulta"', async ({ page }) => {
+  test('[data] tipo + anamnesis: click "Guardar consulta" abre el modal de confirmación', async ({ page }) => {
     await irAPasoConsulta(page)
     await pickSelect(page, /Tipo de consulta/)
     await anamnesis(page).fill('Paciente decaído, inapetencia de 2 días.')
-    await expect(footerNext(page, 'Guardar consulta')).toBeEnabled()
+    await footerNext(page, 'Guardar consulta').click()
+    await expect(page.getByRole('alertdialog')).toBeVisible()
+    await expect(page.getByRole('alertdialog')).toContainText(/Guardar la consulta/)
   })
 
-  test('[data] sin tipo de consulta (solo anamnesis) "Guardar consulta" sigue deshabilitado', async ({
+  test('[data] sin tipo de consulta (solo anamnesis): valida y no confirma; al elegir tipo, confirma', async ({
     page,
   }) => {
     await irAPasoConsulta(page)
     await anamnesis(page).fill('Anamnesis completa pero sin tipo.')
-    await expect(footerNext(page, 'Guardar consulta')).toBeDisabled()
-    // Al elegir el tipo, se habilita → confirma que el tipo es obligatorio.
+    await footerNext(page, 'Guardar consulta').click()
+    // Falta el tipo (obligatorio) → banner + no confirmación.
+    await expect(page.getByText(REVISA_CAMPOS_MSG)).toBeVisible()
+    await expect(page.getByRole('alertdialog')).toHaveCount(0)
+    // Al elegir el tipo y reintentar, abre la confirmación → confirma que el tipo es obligatorio.
     await pickSelect(page, /Tipo de consulta/)
-    await expect(footerNext(page, 'Guardar consulta')).toBeEnabled()
+    await footerNext(page, 'Guardar consulta').click()
+    await expect(page.getByRole('alertdialog')).toBeVisible()
   })
 
-  test('[data] diagnóstico y planes vacíos NO bloquean (son opcionales)', async ({ page }) => {
+  test('[data] diagnóstico y planes vacíos NO bloquean (opcionales): confirma con solo tipo + anamnesis', async ({ page }) => {
     // Solo tipo + anamnesis; diagnóstico, planes y próximo control quedan vacíos.
     await irAPasoConsulta(page)
     await pickSelect(page, /Tipo de consulta/)
     await anamnesis(page).fill('Motivo de consulta de prueba.')
-    await expect(footerNext(page, 'Guardar consulta')).toBeEnabled()
+    await footerNext(page, 'Guardar consulta').click()
+    await expect(page.getByRole('alertdialog')).toBeVisible()
   })
 
   test('[data] "Peso en la consulta" solo acepta numérico (opcional)', async ({ page }) => {
@@ -1041,12 +1086,14 @@ test.describe('J · Campos obligatorios (*) vs opcionales', () => {
     await startCreateOwnerFromEmpty(page)
     // fillValidOwner llena los requeridos y deja email + dirección VACÍOS.
     await fillValidOwner(page)
-    await expect(footerNext(page, 'Guardar propietario')).toBeEnabled() // opcionales vacíos ⇒ OK
-    // Vaciar un requerido (nombre) ⇒ se deshabilita.
+    // Vaciar un requerido (nombre) ⇒ al intentar guardar, bloquea (banner + campo en rojo).
     await page.getByLabel(/Nombre completo/).fill('')
-    await expect(footerNext(page, 'Guardar propietario')).toBeDisabled()
+    await footerNext(page, 'Guardar propietario').click()
+    await expectFormBlocked(page, /Registrar nuevo propietario/)
+    // Rehacer el nombre ⇒ ahora SÍ guarda (email/dirección vacíos NO bloquean ⇒ opcionales).
     await page.getByLabel(/Nombre completo/).fill('Rehecho E2E')
-    await expect(footerNext(page, 'Guardar propietario')).toBeEnabled()
+    await footerNext(page, 'Guardar propietario').click()
+    await expect(page.getByRole('heading', { name: /Selecciona la mascota/ })).toBeVisible()
   })
 
   test('[det] Propietario: nombre solo-espacios cuenta como vacío (obligatorio)', async ({ page }) => {

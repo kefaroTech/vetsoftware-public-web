@@ -15,8 +15,11 @@ import { login } from './auth'
  *   teleportado a body: se abren con click y la opción es role="option".
  * - Documento/teléfono/chip/peso/tamaño se SANITIZAN al teclear (los chars
  *   inválidos se eliminan), por eso los casos de error atacan longitud/valor.
- * - El botón del footer se DESHABILITA hasta completar los requeridos; las
- *   validaciones de formato aparecen al hacer blur del campo.
+ * - El botón del footer SIEMPRE está activo (no se deshabilita por campos
+ *   faltantes): al hacer click, si faltan requeridos, cada paso dispara su
+ *   validación animada (shake + bordes rojos + banner) y NO avanza. Mismo patrón
+ *   `submitted` de los modales de acciones. Las validaciones de formato también
+ *   aparecen al hacer blur del campo.
  */
 
 export const NUEVA_CONSULTA_URL = '/dashboard/consulta/nueva'
@@ -55,6 +58,23 @@ export async function startCreateOwnerFromEmpty(page: Page): Promise<void> {
 /** El botón del footer del wizard (label cambia según el sub-estado). */
 export function footerNext(page: Page, label: RegExp | string): Locator {
   return page.getByRole('button', { name: label })
+}
+
+/** Banner-guía que muestran OwnerForm/PetForm/PasoConsulta al intentar avanzar
+ *  con requeridos faltantes (mismo texto en los 3). */
+export const REVISA_CAMPOS_MSG = 'Revisa los campos marcados antes de continuar.'
+
+/**
+ * Verifica que un paso de FORMULARIO del wizard (crear propietario / crear
+ * mascota / datos de consulta) bloqueó el avance tras click en el botón activo:
+ *  1. banner-guía visible,
+ *  2. al menos un control marcado inválido (`.invalid` → borde rojo + shake),
+ *  3. seguimos en el mismo paso (heading esperado visible).
+ */
+export async function expectFormBlocked(page: Page, staysHeading: RegExp): Promise<void> {
+  await expect(page.getByText(REVISA_CAMPOS_MSG)).toBeVisible()
+  await expect(page.locator('.invalid').first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: staysHeading })).toBeVisible()
 }
 
 /** Abre un BaseSelect por el label de su campo y elige una opción. */
@@ -245,8 +265,8 @@ export async function pickBirthDate(page: Page): Promise<void> {
 /**
  * Rellena SOLO los 6 campos REQUERIDOS de la mascota (nombre, especie, raza,
  * color, género, estado reproductivo) — deja fuera los OPCIONALES (fecha de
- * nacimiento, peso, unidad de peso, tamaño, tipo). Con esto el botón "Guardar
- * mascota" ya debe habilitarse. DEPENDE de catálogos sembrados.
+ * nacimiento, peso, unidad de peso, tamaño, tipo). Con esto "Guardar mascota"
+ * valida OK al click (el botón siempre está activo). DEPENDE de catálogos sembrados.
  */
 export async function fillRequiredPet(page: Page, data: PetData = randomPet()): Promise<void> {
   await page.getByLabel(/^Nombre/).fill(data.name)
