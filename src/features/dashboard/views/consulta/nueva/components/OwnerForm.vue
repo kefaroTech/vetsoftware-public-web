@@ -97,12 +97,10 @@ function validateDocument(v: string): string | null {
 }
 function validatePhone(v: string): string | null {
   const t = v.trim()
-  if (!t) return null
-  if (!/^[+\d\s\-()]+$/.test(t))
-    return 'Solo se permiten dígitos, espacios, +, - y paréntesis.'
-  const digits = t.replace(/\D/g, '')
-  if (digits.length < 7) return 'Debe tener al menos 7 dígitos.'
-  if (digits.length > 15) return 'No puede superar los 15 dígitos.'
+  if (!t) return 'El teléfono es obligatorio.'
+  if (!/^\d+$/.test(t)) return 'Solo se permiten dígitos.'
+  if (t.length < 7) return 'Debe tener al menos 7 dígitos.'
+  if (t.length > 15) return 'No puede superar los 15 dígitos.'
   return null
 }
 function validateEmail(v: string): string | null {
@@ -140,7 +138,7 @@ function sanitizeDocument(v: string): string {
   return v.replace(/[^A-Za-z0-9]/g, '')
 }
 function sanitizePhone(v: string): string {
-  return v.replace(/[^+\d\s\-()]/g, '')
+  return v.replace(/\D/g, '')
 }
 
 const documentModel = computed({
@@ -201,16 +199,16 @@ defineExpose({ validate })
             />
           </template>
         </BaseField>
-        <BaseField label="Teléfono" hint="Opcional" :error="err('phone')">
+        <BaseField label="Teléfono" required :error="err('phone')">
           <template #default="{ id }">
             <BaseInput
               :id="id"
               v-model="phoneModel"
-              placeholder="+51 …"
+              placeholder="Ej. 3001234567"
               :icon="Phone"
               autocomplete="tel"
               type="tel"
-              inputmode="tel"
+              inputmode="numeric"
               :invalid="!!err('phone')"
               @blur="markTouched('phone')"
             />

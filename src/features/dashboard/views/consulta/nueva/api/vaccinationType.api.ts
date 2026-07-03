@@ -22,7 +22,7 @@ export const vaccinationTypeApi = {
     payload: CreateVaccinationTypePayload,
   ): Promise<VaccinationTypeResponse> {
     const { data } = await http.post<VaccinationTypeResponse>(
-      '/vaccination-types/available',
+      '/vaccination-types',
       payload,
     )
     return data

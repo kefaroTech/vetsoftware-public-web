@@ -19,7 +19,7 @@ export const testTypeApi = {
   },
 
   async create(payload: CreateTestTypePayload): Promise<TestTypeResponse> {
-    const { data } = await http.post<TestTypeResponse>('/laboratory-test-types/available', payload)
+    const { data } = await http.post<TestTypeResponse>('/laboratory-test-types', payload)
     return data
   },
 }

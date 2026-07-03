@@ -332,7 +332,7 @@ defineExpose({ validate })
             />
           </template>
         </BaseField>
-        <BaseField label="Unidad de peso" required>
+        <BaseField label="Unidad de peso">
           <template #default="{ id }">
             <BaseSelect
               :id="id"

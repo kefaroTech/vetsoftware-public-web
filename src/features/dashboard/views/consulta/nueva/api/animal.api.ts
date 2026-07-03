@@ -32,7 +32,7 @@ export interface AnimalCompanySummary {
 export interface AnimalResponse {
   id: number
   name: string
-  code: string
+  code: string | null
   specie: AnimalSpecieSummary
   breed: AnimalBreedSummary
   owner: AnimalOwnerSummary
@@ -55,7 +55,7 @@ export interface AnimalResponse {
 
 export interface CreateAnimalRequest {
   name: string
-  code: string
+  code: string | null
   specieId: number
   breedId: number
   ownerId: number

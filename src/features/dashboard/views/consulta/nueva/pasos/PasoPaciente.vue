@@ -223,7 +223,7 @@ function clearBanner() {
       <template v-if="ownerMode === 'search'">
         <PageHeading
           title="¿Quién es el propietario?"
-          subtitle="Busca por nombre, documento, teléfono o email. Si es nuevo, regístralo."
+          subtitle="Busca por nombre, documento o email. Si es nuevo, regístralo."
         />
         <SectionCard :padded="false">
           <div class="search-wrap">
@@ -239,7 +239,7 @@ function clearBanner() {
             <div class="empty-ic"><User :size="26" :stroke-width="1.6" /></div>
             <div class="empty-title">Empieza buscando un propietario</div>
             <p class="empty-desc">
-              Escribe el nombre, documento o teléfono. Si no existe, podrás crearlo
+              Escribe el nombre, documento o email. Si no existe, podrás crearlo
               desde aquí mismo.
             </p>
             <button type="button" class="btn-create" @click="startCreateOwner">

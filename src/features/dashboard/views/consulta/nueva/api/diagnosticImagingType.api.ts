@@ -24,7 +24,7 @@ export const diagnosticImagingTypeApi = {
     payload: CreateDiagnosticImagingTypePayload,
   ): Promise<DiagnosticImagingTypeResponse> {
     const { data } = await http.post<DiagnosticImagingTypeResponse>(
-      '/diagnostic-imaging-types/available',
+      '/diagnostic-imaging-types',
       payload,
     )
     return data

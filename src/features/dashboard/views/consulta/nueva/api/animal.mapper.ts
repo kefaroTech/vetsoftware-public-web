@@ -35,7 +35,9 @@ export function buildCreateAnimalRequest(
   if (!p.gender || !p.reproductiveState) {
     throw new Error('Pet draft is incomplete')
   }
-  const code = p.chipNumber.trim() || `VTR-${String(Date.now()).slice(-6)}`
+  // `code` es opcional: si el usuario cargó el chip lo usamos, si no va null.
+  // No autogeneramos ningún código (el backend permite code null y ya no hay unicidad).
+  const code = p.chipNumber.trim() || null
   // El backend ahora almacena el peso como decimal (BigDecimal) → no redondeamos; conserva la
   // precisión clínica. Se registra como primer punto del historial de peso del animal.
   const weightNum = p.weight.trim() ? Number(p.weight.replace(',', '.')) : null

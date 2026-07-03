@@ -40,7 +40,7 @@ const focused = ref(false)
       ref="inputEl"
       :value="modelValue"
       type="text"
-      placeholder="Buscar propietario por nombre, documento, teléfono…"
+      placeholder="Buscar propietario por nombre, documento o email…"
       autocomplete="off"
       @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       @focus="focused = true"

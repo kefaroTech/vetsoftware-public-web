@@ -26,7 +26,7 @@ watch(query, (q) => {
         v-model="query"
         type="text"
         autofocus
-        placeholder="Buscar por nombre, documento, email o teléfono…"
+        placeholder="Buscar por nombre, documento o email…"
         class="search-input"
       />
       <span v-if="loading" class="loader-inline">

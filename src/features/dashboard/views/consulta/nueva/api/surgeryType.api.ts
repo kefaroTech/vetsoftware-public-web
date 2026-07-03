@@ -19,7 +19,7 @@ export const surgeryTypeApi = {
   },
 
   async create(payload: CreateSurgeryTypePayload): Promise<SurgeryTypeResponse> {
-    const { data } = await http.post<SurgeryTypeResponse>('/surgery-types/available', payload)
+    const { data } = await http.post<SurgeryTypeResponse>('/surgery-types', payload)
     return data
   },
 }

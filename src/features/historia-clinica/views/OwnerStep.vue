@@ -28,7 +28,7 @@ function pick(owner: Owner) {
     <div class="step-label">Paso 1 de 3</div>
     <h1 class="title">¿De quién es la mascota?</h1>
     <p class="sub">
-      Busca al propietario por nombre, documento, email o teléfono.
+      Busca al propietario por nombre, documento o email.
     </p>
     <OwnerSearchList @select="pick" />
   </div>

@@ -93,8 +93,6 @@ const nextDisabled = computed(() => {
         p.breedId &&
         p.colorId &&
         p.gender &&
-        p.bod &&
-        p.weight.trim() &&
         p.reproductiveState
       )
     }

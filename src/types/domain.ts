@@ -69,7 +69,7 @@ export interface Owner {
 
 export interface Animal {
   id: string
-  code: string
+  code: string | null
   name: string
   specie: Specie
   breed: Breed
