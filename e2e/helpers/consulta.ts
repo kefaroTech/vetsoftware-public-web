@@ -273,6 +273,31 @@ export function anamnesis(page: Page): Locator {
 }
 
 /**
+ * Auditoría "gráfica" del marcador de obligatorio: recorre los BaseField (`.field`)
+ * visibles y separa las etiquetas que muestran el asterisco `*` (`.required`) de
+ * las que no. Sirve para verificar que el `*` marca EXACTAMENTE los campos
+ * obligatorios y ninguno de los opcionales. Devuelve ambos sets ordenados.
+ */
+export async function asteriskAudit(
+  page: Page,
+): Promise<{ required: string[]; optional: string[] }> {
+  const fields = page.locator('.field:visible')
+  const n = await fields.count()
+  const required: string[] = []
+  const optional: string[] = []
+  for (let i = 0; i < n; i++) {
+    const f = fields.nth(i)
+    const label = (await f.locator('label.label').first().innerText().catch(() => ''))
+      .replace('*', '')
+      .trim()
+    if (!label) continue
+    const hasStar = (await f.locator('label.label .required').count()) > 0
+    ;(hasStar ? required : optional).push(label)
+  }
+  return { required: required.sort(), optional: optional.sort() }
+}
+
+/**
  * Rastrea las respuestas de ESCRITURA del API (`/api/…`, métodos no-GET) y
  * permite asertar que TODAS dieron un código HTTP exitoso (< 400). Sirve para
  * verificar de punta a punta que los servicios respondieron OK. Instálalo al
@@ -295,9 +320,17 @@ export function trackApiWrites(page: Page): { assertAllOk: () => void } {
   }
 }
 
+/** Confirma el modal de "¿Guardar la consulta?" que abre el botón "Guardar consulta". */
+export async function confirmarGuardarConsulta(page: Page): Promise<void> {
+  await footerNext(page, 'Guardar consulta').click()
+  const confirm = page.getByRole('alertdialog')
+  await expect(confirm).toBeVisible()
+  await confirm.getByRole('button', { name: 'Confirmar y guardar' }).click()
+}
+
 /**
- * Cierra el flujo de guardado de consulta atravesando el modal de FACTURACIÓN
- * integrado que abre "Guardar consulta", y espera la pantalla de éxito.
+ * Cierra el flujo de guardado: confirma el modal "¿Guardar la consulta?", luego
+ * atraviesa el modal de FACTURACIÓN integrado, y espera la pantalla de éxito.
  *  - 'solo-guardar' (default): elige "Solo guardar la consulta" (sin cobro).
  *  - 'abrir-cuenta': confirma "Guardar y abrir cuenta" (crea cuenta + cargo "Consulta").
  */
@@ -305,7 +338,7 @@ export async function guardarConsulta(
   page: Page,
   modo: 'solo-guardar' | 'abrir-cuenta' = 'solo-guardar',
 ): Promise<void> {
-  await footerNext(page, 'Guardar consulta').click()
+  await confirmarGuardarConsulta(page)
   const billing = page.getByRole('dialog', { name: /Facturación/ })
   await expect(billing).toBeVisible()
   if (modo === 'solo-guardar') {

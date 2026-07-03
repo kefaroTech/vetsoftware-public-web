@@ -24,6 +24,7 @@ import {
   fillReceta,
   guardarConsulta,
   trackApiWrites,
+  asteriskAudit,
   type OwnerData,
 } from './helpers/consulta'
 
@@ -175,6 +176,18 @@ test.describe('C · Propietario nuevo · validación de campos', () => {
     await expect(page.getByText('No puede superar los 15 dígitos.')).toBeVisible()
   })
 
+  test('[det] teléfono de exactamente 7 dígitos es válido (límite inferior)', async ({ page }) => {
+    await page.getByLabel(/Teléfono/).fill('1234567')
+    await page.getByLabel(/Nombre completo/).click()
+    await expect(page.getByText(/Debe tener al menos 7 dígitos/)).toHaveCount(0)
+  })
+
+  test('[det] teléfono de 6 dígitos muestra error (justo debajo del límite)', async ({ page }) => {
+    await page.getByLabel(/Teléfono/).fill('123456')
+    await page.getByLabel(/Nombre completo/).click()
+    await expect(page.getByText('Debe tener al menos 7 dígitos.')).toBeVisible()
+  })
+
   // --- Email (matriz) ---
   const emailBad = ['abc', 'a@b', 'a@b.c', 'sin-arroba.com', '@dominio.com']
   for (const v of emailBad) {
@@ -210,6 +223,12 @@ test.describe('C · Propietario nuevo · validación de campos', () => {
     await page.getByLabel(/Documento de identidad/).fill('ABC12')
     await page.getByLabel(/Nombre completo/).click()
     await expect(page.getByText(/Debe tener al menos 5 caracteres/)).toHaveCount(0)
+  })
+
+  test('[det] documento de 20 caracteres es válido (límite superior)', async ({ page }) => {
+    await page.getByLabel(/Documento de identidad/).fill('A'.repeat(20))
+    await page.getByLabel(/Nombre completo/).click()
+    await expect(page.getByText(/No puede superar los 20 caracteres/)).toHaveCount(0)
   })
 
   test('[det] teléfono de 10 dígitos es válido', async ({ page }) => {
@@ -342,6 +361,12 @@ test.describe('E · Mascota nueva · validación de campos', () => {
     await expect(page.getByText(/exactamente 15 dígitos/)).toBeVisible()
   })
 
+  test('[data] chip de 15 dígitos exactos es válido (opcional pero con formato)', async ({ page }) => {
+    await page.getByLabel(/Número de chip/).fill('985112345678901')
+    await page.getByLabel(/^Nombre/).click()
+    await expect(page.getByText(/exactamente 15 dígitos/)).toHaveCount(0)
+  })
+
   test('[data] chip sanitiza no-dígitos y recorta a 15', async ({ page }) => {
     await page.getByLabel(/Número de chip/).fill('98-51a1234567890123456')
     await expect(page.getByLabel(/Número de chip/)).toHaveValue('985112345678901')
@@ -450,6 +475,15 @@ test.describe('F · Datos de la consulta', () => {
     await expect(page.getByText('La anamnesis es obligatoria.')).toBeVisible()
   })
 
+  test('[data] anamnesis solo-espacios cuenta como vacía y no habilita "Guardar consulta"', async ({
+    page,
+  }) => {
+    await irAPasoConsulta(page)
+    await pickSelect(page, /Tipo de consulta/)
+    await anamnesis(page).fill('    ')
+    await expect(footerNext(page, 'Guardar consulta')).toBeDisabled()
+  })
+
   test('[data] tipo + anamnesis habilitan "Guardar consulta"', async ({ page }) => {
     await irAPasoConsulta(page)
     await pickSelect(page, /Tipo de consulta/)
@@ -486,6 +520,39 @@ test.describe('F · Datos de la consulta', () => {
   test('[data] abrir la acción rápida de receta muestra su modal', async ({ page }) => {
     await irAPasoConsulta(page)
     await openQuickAction(page, /Receta/, 'Nueva receta')
+  })
+
+  test('[data] "Guardar consulta" abre un modal de confirmación (no guarda directo)', async ({
+    page,
+  }) => {
+    await irAPasoConsulta(page)
+    await pickSelect(page, /Tipo de consulta/)
+    await anamnesis(page).fill('Consulta a confirmar E2E.')
+    await footerNext(page, 'Guardar consulta').click()
+    const confirm = page.getByRole('alertdialog')
+    await expect(confirm).toBeVisible()
+    await expect(confirm.getByText('¿Guardar la consulta?')).toBeVisible()
+    // Aún no navegó a éxito ni abrió facturación.
+    await expect(page).not.toHaveURL(/exito/)
+    await expect(page.getByRole('dialog', { name: /Facturación/ })).toHaveCount(0)
+  })
+
+  test('[data] confirmación: "Seguir editando" cierra el modal sin guardar', async ({ page }) => {
+    await irAPasoConsulta(page)
+    await pickSelect(page, /Tipo de consulta/)
+    await anamnesis(page).fill('Consulta a confirmar E2E.')
+    await footerNext(page, 'Guardar consulta').click()
+    const confirm = page.getByRole('alertdialog')
+    await expect(confirm).toBeVisible()
+    await confirm.getByRole('button', { name: 'Seguir editando' }).click()
+    await expect(confirm).toBeHidden()
+    await expect(page.getByRole('heading', { name: /Datos de la consulta/ })).toBeVisible()
+    await expect(page).not.toHaveURL(/exito/)
+  })
+
+  test('[data] ya NO existe el botón "Guardar y crear otra"', async ({ page }) => {
+    await irAPasoConsulta(page)
+    await expect(page.getByRole('button', { name: /Guardar y crear otra/ })).toHaveCount(0)
   })
 })
 
@@ -855,12 +922,16 @@ test.describe('G · Flujo completo y borrador', () => {
     await pickSelect(page, /Tipo de consulta/)
     await anamnesis(page).fill('Consulta con cobro a cuenta, E2E.')
 
-    // POST /consultations debe responder 2xx.
+    // "Guardar consulta" abre el modal de confirmación; el POST /consultations
+    // dispara al confirmar. Debe responder 2xx.
+    await footerNext(page, 'Guardar consulta').click()
+    const confirm = page.getByRole('alertdialog')
+    await expect(confirm).toBeVisible()
     const [consultaResp] = await Promise.all([
       page.waitForResponse(
         (r) => new URL(r.url()).pathname.endsWith('/consultations') && r.request().method() === 'POST',
       ),
-      footerNext(page, 'Guardar consulta').click(),
+      confirm.getByRole('button', { name: 'Confirmar y guardar' }).click(),
     ])
     expect(consultaResp.ok(), `POST /consultations → ${consultaResp.status()}`).toBeTruthy()
 
@@ -937,6 +1008,90 @@ test.describe('I · Draft, banner y paciente existente', () => {
     } finally {
       await page2.close()
     }
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════
+// J. Auditoría de obligatorios (*) vs opcionales — verificación GRÁFICA del
+//    marcador `*` y de que se comporta acorde (los * bloquean; los sin-* no).
+// ════════════════════════════════════════════════════════════════════════════
+test.describe('J · Campos obligatorios (*) vs opcionales', () => {
+  test('[det] Propietario: el * marca EXACTAMENTE los campos obligatorios', async ({ page }) => {
+    await gotoNuevaConsulta(page)
+    await startCreateOwnerFromEmpty(page)
+    const { required, optional } = await asteriskAudit(page)
+    expect(required).toEqual([
+      'Ciudad',
+      'Documento de identidad',
+      'Estado / Departamento',
+      'Nombre completo',
+      'País',
+      'Teléfono',
+      'Tipo de documento',
+      'Tipo de persona',
+    ])
+    // Email y Dirección NO llevan * → deben ser opcionales.
+    expect(optional).toEqual(['Dirección', 'Email'])
+  })
+
+  test('[data] Propietario: los * bloquean el guardado y los opcionales (email/dirección) no', async ({
+    page,
+  }) => {
+    await gotoNuevaConsulta(page)
+    await startCreateOwnerFromEmpty(page)
+    // fillValidOwner llena los requeridos y deja email + dirección VACÍOS.
+    await fillValidOwner(page)
+    await expect(footerNext(page, 'Guardar propietario')).toBeEnabled() // opcionales vacíos ⇒ OK
+    // Vaciar un requerido (nombre) ⇒ se deshabilita.
+    await page.getByLabel(/Nombre completo/).fill('')
+    await expect(footerNext(page, 'Guardar propietario')).toBeDisabled()
+    await page.getByLabel(/Nombre completo/).fill('Rehecho E2E')
+    await expect(footerNext(page, 'Guardar propietario')).toBeEnabled()
+  })
+
+  test('[det] Propietario: nombre solo-espacios cuenta como vacío (obligatorio)', async ({ page }) => {
+    await gotoNuevaConsulta(page)
+    await startCreateOwnerFromEmpty(page)
+    await page.getByLabel(/Nombre completo/).fill('   ')
+    await page.getByLabel(/Documento de identidad/).click() // blur
+    await expect(page.getByText('El nombre es obligatorio.')).toBeVisible()
+  })
+
+  test('[data] Mascota: el * marca EXACTAMENTE los campos obligatorios', async ({ page }) => {
+    await gotoNuevaConsulta(page)
+    await createAndSelectOwner(page)
+    await startCreatePet(page)
+    const { required, optional } = await asteriskAudit(page)
+    expect(required).toEqual([
+      'Color',
+      'Especie',
+      'Estado reproductivo',
+      'Género',
+      'Nombre',
+      'Raza',
+    ])
+    // Chip, fecha de nacimiento, tipo, peso, unidad de peso y tamaño NO llevan *.
+    expect(optional).toEqual([
+      'Fecha de nacimiento',
+      'Número de chip',
+      'Peso',
+      'Tamaño (cm)',
+      'Tipo',
+      'Unidad de peso',
+    ])
+  })
+
+  test('[data] Consulta: solo Fecha y Tipo de consulta llevan * (el resto opcional)', async ({
+    page,
+  }) => {
+    await gotoNuevaConsulta(page)
+    await irAPasoConsulta(page)
+    const { required, optional } = await asteriskAudit(page)
+    expect(required).toEqual(['Fecha', 'Tipo de consulta'])
+    expect(optional).toEqual(['Fecha sugerida', 'Notas para el control', 'Peso en la consulta'])
+    // La anamnesis es obligatoria pero se marca en el encabezado de su sección
+    // (no es un BaseField con *): su sección lo declara "Obligatorio".
+    await expect(page.getByText(/Obligatorio/).first()).toBeVisible()
   })
 })
 
