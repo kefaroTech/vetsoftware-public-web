@@ -1,0 +1,313 @@
+/* Interactive states (hover, active, disabled) — supplementing inline styles */
+
+/* Sidebar nav items */
+.vet-nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 4px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: oklch(88% 0.03 var(--hue) / 0.85);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease;
+}
+.vet-nav-item:hover:not(.active):not(.disabled) {
+  background: oklch(70% 0.04 var(--hue) / 0.08);
+}
+.vet-nav-item.active {
+  background: oklch(45% 0.16 var(--hue) / 0.4);
+  color: oklch(98% 0.01 var(--hue));
+  box-shadow: inset 0 0 0 1px oklch(70% 0.14 var(--hue) / 0.3);
+  font-weight: 500;
+}
+.vet-nav-item.disabled {
+  color: oklch(70% 0.03 var(--hue) / 0.4);
+  cursor: not-allowed;
+}
+.vet-nav-badge {
+  font-size: 9.5px;
+  padding: 2px 6px;
+  background: oklch(70% 0.04 var(--hue) / 0.18);
+  color: oklch(78% 0.04 var(--hue) / 0.7);
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* Sidebar sub items (router-link) */
+.vet-sub-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 3px 10px;
+  gap: 9px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: oklch(82% 0.04 var(--hue) / 0.72);
+  text-decoration: none;
+  font-weight: 400;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.vet-sub-item:hover:not(.active) {
+  background: oklch(70% 0.04 var(--hue) / 0.08);
+}
+.vet-sub-item.active {
+  background: oklch(50% 0.10 var(--hue) / 0.25);
+  color: oklch(95% 0.02 var(--hue));
+  font-weight: 500;
+}
+
+/* Sidebar sub item button (nueva consulta) */
+.vet-sub-item-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: oklch(82% 0.04 var(--hue) / 0.72);
+  background: transparent;
+  border: none;
+  font-weight: 400;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease;
+}
+.vet-sub-item-btn:hover:not(.active) {
+  background: oklch(70% 0.04 var(--hue) / 0.08);
+}
+.vet-sub-item-btn.active {
+  background: oklch(50% 0.10 var(--hue) / 0.25);
+  color: oklch(95% 0.02 var(--hue));
+  font-weight: 500;
+}
+
+.vet-user-card:hover {
+  background: oklch(40% 0.10 var(--hue) / 0.5) !important;
+}
+
+/* Topbar icon button */
+.vet-icon-btn { transition: background 0.12s ease; }
+.vet-icon-btn:hover { background: var(--warm-100) !important; }
+
+/* Topbar user menu */
+.vet-user-menu { transition: background 0.12s ease; font-family: var(--font-sans); }
+.vet-user-menu:hover { background: var(--warm-100) !important; }
+
+/* ===== Buttons (Vuetify-style v-btn) ===== */
+.vet-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: filter 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+  text-decoration: none;
+}
+.vet-btn-primary {
+  background: var(--amatista-600);
+  color: white;
+  box-shadow: 0 1px 2px rgba(50,20,80,0.08);
+}
+.vet-btn-primary:hover { background: var(--amatista-700); }
+.vet-btn-primary:disabled {
+  background: var(--warm-200); color: var(--warm-500); cursor: not-allowed;
+}
+.vet-btn-secondary {
+  background: var(--warm-50);
+  color: var(--warm-800);
+  border-color: var(--warm-200);
+}
+.vet-btn-secondary:hover { background: var(--warm-100); }
+.vet-btn-ghost {
+  background: transparent;
+  color: var(--warm-700);
+}
+.vet-btn-ghost:hover { background: var(--warm-150); }
+.vet-btn-block { display: flex; width: 100%; }
+.vet-btn-large { padding: 12px 22px; font-size: 14px; }
+
+/* ===== Vuetify-style text field ===== */
+.vet-tf {
+  display: flex; flex-direction: column; gap: 4px;
+  margin-bottom: 14px;
+}
+.vet-tf-label {
+  font-size: 13px;
+  color: var(--warm-700);
+  font-weight: 400;
+}
+.vet-tf-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--warm-300);
+  border-radius: 8px;
+  background: var(--warm-50);
+  padding: 0 12px;
+  height: 44px;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.vet-tf-input-wrap:focus-within {
+  border-color: var(--v-primary);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--v-primary) 20%, transparent);
+}
+.vet-tf-input-wrap.error {
+  border-color: var(--v-error);
+}
+.vet-tf-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--warm-900);
+  height: 100%;
+}
+.vet-tf-icon-btn {
+  border: none; background: transparent;
+  color: var(--warm-500); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 4px;
+}
+.vet-tf-icon-btn:hover { color: var(--warm-800); }
+.vet-tf-error {
+  font-size: 12px;
+  color: var(--v-error);
+}
+
+/* ===== Vuetify-style card (v-card) ===== */
+.vet-card {
+  background: var(--v-surface);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px -6px rgba(0,0,0,0.08);
+  padding: 24px;
+}
+
+/* ===== Vuetify-style alert (v-alert) ===== */
+.vet-alert {
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px;
+}
+.vet-alert-error {
+  background: color-mix(in oklab, var(--v-error) 12%, white);
+  color: var(--v-error);
+  border: 1px solid color-mix(in oklab, var(--v-error) 25%, white);
+}
+
+/* ===== Generic placeholder route ===== */
+.vet-placeholder {
+  max-width: 720px;
+  margin: 60px auto;
+  background: var(--warm-50);
+  border: 1px dashed var(--warm-300);
+  border-radius: 16px;
+  padding: 36px 40px;
+  text-align: center;
+  color: var(--warm-700);
+  font-family: var(--font-sans);
+}
+.vet-placeholder h2 {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 28px;
+  margin: 0 0 8px;
+  color: var(--amatista-700);
+  font-weight: 400;
+}
+.vet-placeholder p { margin: 0 0 4px; font-size: 14px; }
+.vet-placeholder code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--warm-100);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--warm-700);
+}
+.vet-placeholder .vet-ph-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 16px;
+  margin-top: 20px;
+  text-align: left;
+  font-size: 12.5px;
+}
+.vet-placeholder .vet-ph-list li {
+  list-style: none;
+  padding: 8px 12px;
+  background: var(--warm-100);
+  border-radius: 6px;
+  color: var(--warm-700);
+}
+
+/* Auth page wrappers */
+.vet-auth-shell {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--v-bg);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 64px 16px;
+}
+.vet-auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--v-surface);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -8px rgba(0,0,0,0.12);
+  padding: 32px;
+}
+.vet-auth-title {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+.vet-auth-sub {
+  margin: 0 0 18px;
+  font-size: 13.5px;
+  color: var(--v-secondary);
+}
+.vet-auth-footer {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--v-secondary);
+}
+.vet-auth-footer a {
+  color: var(--v-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+.vet-auth-footer a:hover { text-decoration: underline; }
+
+/* Scrollbar */
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--warm-300);
+  border-radius: 6px;
+  border: 2px solid var(--warm-100);
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--warm-400); }

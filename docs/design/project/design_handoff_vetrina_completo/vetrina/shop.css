@@ -1,0 +1,494 @@
+/* Tienda (Petshop) — POS + Inventario */
+
+.vet-shop-kicker {
+  font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--warm-500); font-weight: 500; margin-bottom: 6px;
+}
+.vet-shop-title {
+  margin: 0; font-family: var(--font-serif);
+  font-size: 36px; font-weight: 400; letter-spacing: -0.015em; line-height: 1.05;
+}
+.vet-shop-cta {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: 9px;
+  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  color: #fff; border: none; font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+  box-shadow: 0 1px 2px rgba(50,20,80,0.08), 0 6px 16px -6px oklch(40% 0.18 var(--hue)/0.45);
+}
+.vet-shop-cta:hover { filter: brightness(1.05); }
+
+/* ===== POS ===== */
+.vet-shop-pos {
+  display: grid; grid-template-columns: 1fr 380px; gap: 18px;
+  height: 100%; min-height: 0;
+}
+@media (max-width: 1100px) { .vet-shop-pos { grid-template-columns: 1fr 340px; } }
+
+.vet-shop-catalog { display: flex; flex-direction: column; min-height: 0; }
+.vet-shop-catalog-head { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+.vet-shop-search {
+  display: flex; align-items: center; gap: 9px;
+  background: var(--warm-50); border: 1px solid var(--warm-200);
+  border-radius: 9px; padding: 10px 13px;
+}
+.vet-shop-search.inv { max-width: 340px; flex: 1; }
+.vet-shop-search:focus-within { border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
+.vet-shop-search input { flex: 1; border: none; outline: none; background: transparent; font-family: inherit; font-size: 13.5px; color: var(--warm-900); min-width: 0; }
+.vet-shop-cats { display: flex; flex-wrap: wrap; gap: 6px; }
+.vet-shop-cat {
+  padding: 6px 13px; border-radius: 999px;
+  background: var(--warm-50); border: 1px solid var(--warm-200);
+  font-family: inherit; font-size: 12.5px; color: var(--warm-700); cursor: pointer;
+}
+.vet-shop-cat:hover { border-color: var(--amatista-300); }
+.vet-shop-cat.active { background: var(--amatista-700); color: #fff; border-color: var(--amatista-700); font-weight: 500; }
+
+.vet-shop-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px; overflow-y: auto; align-content: start; padding-right: 4px;
+}
+.vet-shop-grid-empty { grid-column: 1/-1; padding: 40px; text-align: center; color: var(--warm-500); font-size: 13px; }
+.vet-shop-pcard {
+  display: flex; flex-direction: column; gap: 8px;
+  background: var(--warm-50); border: 1px solid var(--warm-200);
+  border-radius: 12px; padding: 12px; cursor: pointer; font-family: inherit; text-align: left;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.vet-shop-pcard:hover:not(.disabled) { border-color: var(--amatista-300); box-shadow: 0 4px 14px -8px rgba(20,15,30,0.18); }
+.vet-shop-pcard.disabled { opacity: 0.55; cursor: not-allowed; }
+.vet-shop-pcard-thumb { height: 56px; border-radius: 9px; display: grid; place-items: center; }
+.vet-shop-pcard-name { font-size: 13px; font-weight: 500; color: var(--warm-900); line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 34px; }
+.vet-shop-pcard-foot { display: flex; align-items: center; justify-content: space-between; }
+.vet-shop-pcard-price { font-size: 14px; font-weight: 600; color: var(--warm-900); }
+.vet-shop-pcard-stock { font-size: 11px; padding: 2px 7px; border-radius: 999px; background: var(--warm-150); color: var(--warm-600); }
+.vet-shop-pcard-stock.st-BAJO { background: oklch(94% 0.07 80); color: oklch(45% 0.13 70); }
+.vet-shop-pcard-stock.st-AGOTADO { background: oklch(93% 0.06 25); color: oklch(48% 0.19 25); }
+.vet-shop-pcard-svc { font-size: 11px; padding: 2px 7px; border-radius: 999px; background: var(--amatista-50); color: var(--amatista-700); }
+
+/* Mode tabs (Productos / Servicios) */
+.vet-shop-modetabs { display: inline-flex; gap: 3px; background: var(--warm-150); border: 1px solid var(--warm-200); border-radius: 9px; padding: 3px; align-self: flex-start; }
+.vet-shop-modetab { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: none; background: transparent; border-radius: 7px; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--warm-600); cursor: pointer; }
+.vet-shop-modetab.active { background: var(--warm-50); color: var(--amatista-700); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+
+/* Línea de servicio en el ticket */
+.vet-shop-line-tag { display: inline-block; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; color: var(--amatista-700); background: var(--amatista-50); padding: 1px 5px; border-radius: 4px; margin-right: 6px; vertical-align: middle; }
+
+/* ===== Ticket ===== */
+.vet-shop-ticket {
+  display: flex; flex-direction: column; min-height: 0;
+  background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 14px; overflow: hidden;
+}
+.vet-shop-ticket-head {
+  display: flex; align-items: center; gap: 9px;
+  padding: 15px 18px; border-bottom: 1px solid var(--warm-200);
+  font-size: 14px; font-weight: 500; color: var(--warm-900);
+}
+.vet-shop-ticket-head svg { color: var(--amatista-600); }
+.vet-shop-customer {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 11px 18px; border: none; border-bottom: 1px solid var(--warm-150);
+  background: var(--warm-100); font-family: inherit; font-size: 12.5px; color: var(--warm-700); cursor: pointer;
+}
+.vet-shop-customer:hover { background: var(--warm-150); }
+.vet-shop-lines { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+.vet-shop-lines-empty {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  color: var(--warm-400); font-size: 13px; padding: 40px 20px; text-align: center;
+}
+.vet-shop-line { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 9px; }
+.vet-shop-line:hover { background: var(--warm-100); }
+.vet-shop-line-name { font-size: 13px; font-weight: 500; color: var(--warm-900); }
+.vet-shop-line-price { font-size: 11px; color: var(--warm-500); margin-top: 1px; }
+.vet-shop-qty { display: flex; align-items: center; gap: 0; border: 1px solid var(--warm-200); border-radius: 7px; overflow: hidden; }
+.vet-shop-qty button { width: 24px; height: 26px; border: none; background: var(--warm-100); color: var(--warm-700); cursor: pointer; font-size: 14px; }
+.vet-shop-qty button:hover { background: var(--warm-200); }
+.vet-shop-qty span { min-width: 26px; text-align: center; font-size: 13px; font-weight: 500; }
+.vet-shop-line-total { font-size: 13px; font-weight: 600; color: var(--warm-900); min-width: 64px; text-align: right; }
+.vet-shop-line-x { width: 26px; height: 26px; border: none; background: transparent; color: var(--warm-400); cursor: pointer; border-radius: 6px; display: grid; place-items: center; }
+.vet-shop-line-x:hover { background: oklch(94% 0.05 25); color: oklch(48% 0.18 25); }
+
+.vet-shop-summary { border-top: 1px solid var(--warm-200); padding: 14px 18px; display: flex; flex-direction: column; gap: 7px; }
+.vet-shop-disc { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; font-size: 12.5px; color: var(--warm-600); }
+.vet-shop-disc input { width: 90px; text-align: right; border: 1px solid var(--warm-200); border-radius: 7px; padding: 5px 9px; font-family: inherit; font-size: 13px; outline: none; }
+.vet-shop-disc input:focus { border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
+.vet-shop-srow { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--warm-600); }
+.vet-shop-srow.grand { font-size: 17px; font-weight: 600; color: var(--warm-900); padding-top: 7px; margin-top: 3px; border-top: 1px solid var(--warm-150); }
+.vet-shop-charge {
+  margin-top: 10px; padding: 12px; border-radius: 10px; border: none;
+  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.vet-shop-charge:hover { filter: brightness(1.05); }
+
+.vet-shop-change { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; background: var(--amatista-50); border-radius: 9px; font-size: 13px; color: var(--warm-700); }
+.vet-shop-change strong { font-size: 16px; color: var(--amatista-700); }
+
+/* ===== Receipt ===== */
+.vet-shop-receipt { display: flex; flex-direction: column; gap: 12px; }
+.vet-shop-receipt-cust { font-size: 12.5px; color: var(--warm-600); }
+.vet-shop-receipt-lines { display: flex; flex-direction: column; gap: 6px; padding-bottom: 12px; border-bottom: 1px dashed var(--warm-300); }
+.vet-shop-receipt-line { display: flex; justify-content: space-between; font-size: 13px; color: var(--warm-800); }
+.vet-shop-receipt-totals { display: flex; flex-direction: column; gap: 5px; }
+.vet-shop-receipt-totals > div { display: flex; justify-content: space-between; font-size: 13px; color: var(--warm-600); }
+.vet-shop-receipt-grand { font-size: 16px !important; font-weight: 600; color: var(--warm-900) !important; padding-top: 7px; border-top: 1px solid var(--warm-200); }
+
+/* ===== Inventario ===== */
+.vet-shop-inv-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.vet-shop-alert {
+  display: flex; align-items: center; gap: 9px; padding: 11px 14px; margin-bottom: 16px;
+  background: oklch(96% 0.04 80); border: 1px solid oklch(88% 0.08 80); border-radius: 10px;
+  font-size: 13px; color: oklch(40% 0.10 70);
+}
+.vet-shop-alert strong { color: oklch(35% 0.13 70); }
+.vet-shop-inv-filters { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.vet-shop-fsel {
+  appearance: none; border: 1px solid var(--warm-200); background: var(--warm-50);
+  border-radius: 9px; padding: 9px 30px 9px 12px; font-family: inherit; font-size: 13px; color: var(--warm-800); cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23999' stroke-width='1.5' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 11px center;
+}
+.vet-shop-fsel:focus { outline: none; border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
+
+.vet-shop-table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 12px; overflow: hidden; }
+.vet-shop-table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--warm-500); font-weight: 600; padding: 11px 14px; background: var(--warm-100); border-bottom: 1px solid var(--warm-200); }
+.vet-shop-trow { cursor: pointer; }
+.vet-shop-trow:hover { background: var(--warm-100); }
+.vet-shop-table td { padding: 11px 14px; border-bottom: 1px solid var(--warm-150); color: var(--warm-800); vertical-align: middle; }
+.vet-shop-table tbody tr:last-child td { border-bottom: none; }
+.vet-shop-table-empty { text-align: center !important; padding: 40px !important; color: var(--warm-500); }
+.vet-shop-tname { font-weight: 500; color: var(--warm-900); }
+.vet-shop-tsku { font-family: var(--font-mono); font-size: 12px; color: var(--warm-600); }
+.vet-shop-tstock { font-weight: 600; }
+.vet-shop-texp.soon { color: oklch(48% 0.15 70); font-weight: 500; }
+.vet-shop-catpill, .vet-shop-stpill { display: inline-flex; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.vet-shop-restock { padding: 5px 11px; border-radius: 7px; border: 1px solid var(--warm-200); background: var(--warm-50); color: var(--warm-700); font-family: inherit; font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.vet-shop-restock:hover { background: var(--amatista-50); border-color: var(--amatista-300); color: var(--amatista-700); }
+
+.vet-shop-pag { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; font-size: 12.5px; color: var(--warm-500); }
+.vet-shop-pag-ctrl { display: flex; gap: 6px; }
+.vet-shop-pag-ctrl button { width: 30px; height: 30px; border: 1px solid var(--warm-200); background: var(--warm-50); border-radius: 7px; color: var(--warm-700); cursor: pointer; display: grid; place-items: center; }
+.vet-shop-pag-ctrl button:disabled { opacity: 0.4; cursor: not-allowed; }
+.vet-shop-pag-ctrl button:hover:not(:disabled) { background: var(--warm-100); }
+
+/* ===== Servicios (admin) ===== */
+.vet-svc-group { margin-bottom: 18px; }
+.vet-svc-group-head { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+.vet-svc-group-count { font-size: 12px; color: var(--warm-500); }
+.vet-svc-list { display: flex; flex-direction: column; gap: 6px; }
+.vet-svc-row {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--warm-50); border: 1px solid var(--warm-200);
+  border-radius: 11px; padding: 12px 14px; cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+.vet-svc-row:hover { border-color: var(--amatista-300); }
+.vet-svc-name { font-size: 14px; font-weight: 500; color: var(--warm-900); }
+.vet-svc-notes { font-size: 12px; color: var(--warm-500); margin-top: 2px; }
+.vet-svc-price { font-size: 15px; font-weight: 600; color: var(--warm-900); white-space: nowrap; }
+.vet-svc-actions { display: flex; gap: 4px; flex-shrink: 0; align-items: center; }
+
+/* ===== Promociones (badges, precios tachados, paquetes) ===== */
+.vet-shop-pcard { position: relative; }
+.vet-shop-promo-badge {
+  position: absolute; top: 8px; right: 8px; z-index: 1;
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 2px 7px; border-radius: 999px;
+  background: oklch(58% 0.18 25); color: #fff;
+}
+.vet-shop-price-old { font-size: 11px; color: var(--warm-400); text-decoration: line-through; margin-right: 6px; font-weight: 400; }
+.vet-shop-bundle { border-color: var(--amatista-200); }
+.vet-shop-bundle-items { display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--warm-500); margin-top: -2px; }
+.vet-shop-srow.savings { color: oklch(45% 0.13 150); }
+.vet-shop-receipt-savings { color: oklch(45% 0.13 150) !important; }
+.vet-promo-active { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--warm-700); cursor: pointer; }
+.vet-promo-bundle { display: flex; flex-direction: column; gap: 9px; padding: 12px; border: 1px solid var(--warm-200); border-radius: 10px; background: var(--warm-100); }
+.vet-promo-bundle-add { display: flex; gap: 8px; align-items: center; }
+.vet-promo-bundle-list { display: flex; flex-direction: column; gap: 5px; }
+.vet-promo-bundle-item { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--warm-800); background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 8px; padding: 7px 11px; }
+.vet-promo-bundle-item button { width: 22px; height: 22px; border: none; background: transparent; color: var(--warm-400); cursor: pointer; border-radius: 5px; display: grid; place-items: center; }
+.vet-promo-bundle-item button:hover { background: oklch(94% 0.05 25); color: oklch(48% 0.18 25); }
+.vet-promo-bundle-orig { font-size: 12px; color: var(--warm-500); text-align: right; }
+
+/* ===== Impuestos ===== */
+.vet-tax-config { background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 12px; padding: 16px 18px; margin-bottom: 22px; }
+.vet-tax-config-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.vet-tax-config-title { font-size: 14px; font-weight: 500; color: var(--warm-900); }
+.vet-tax-config-sub { font-size: 12.5px; color: var(--warm-600); margin-top: 3px; max-width: 460px; line-height: 1.45; }
+.vet-tax-rates-head { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--warm-500); font-weight: 600; margin-bottom: 10px; }
+.vet-tax-pct { display: inline-flex; align-items: center; gap: 6px; max-width: 110px; }
+.vet-tax-pct .vet-base-input { width: 70px; }
+.vet-tax-note { font-size: 12.5px; color: var(--warm-500); line-height: 1.55; margin-top: 16px; max-width: 640px; }
+
+/* ===== Cuentas abiertas ===== */
+.vet-catm-add {
+  display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px;
+  border-radius: 9px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600;
+  background: var(--amatista-700); color: white; border: none;
+}
+.vet-catm-add:hover { background: var(--amatista-800); }
+.vet-catm-form { background: var(--warm-100); border-radius: 10px; padding: 12px; }
+.vet-catm-formrow { display: flex; gap: 8px; align-items: stretch; margin-top: 6px; }
+.vet-catm-formrow .vet-base-input { flex: 1; }
+.vet-catm-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.vet-catm-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 12px; border-radius: 9px; background: var(--warm-50); border: 1px solid var(--warm-200);
+}
+.vet-catm-row.danger { border-color: oklch(80% 0.10 25); background: oklch(97% 0.03 25); }
+.vet-catm-info { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.vet-catm-name { font-size: 13.5px; font-weight: 600; color: var(--warm-900); }
+.vet-catm-count { font-size: 11.5px; color: var(--warm-500); }
+.vet-catm-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.vet-catm-iconbtn {
+  width: 28px; height: 28px; display: grid; place-items: center; border-radius: 7px;
+  background: var(--warm-50); border: 1px solid var(--warm-200); color: var(--warm-600); cursor: pointer; font-size: 12px;
+}
+.vet-catm-iconbtn:hover { background: var(--warm-100); }
+.vet-catm-iconbtn.danger:hover { background: oklch(94% 0.06 25); color: oklch(50% 0.16 25); border-color: oklch(82% 0.10 25); }
+.vet-catm-delq { font-size: 12px; color: oklch(50% 0.16 25); font-weight: 600; }
+.vet-catm-del {
+  padding: 5px 12px; border-radius: 7px; border: none; cursor: pointer; font-family: inherit; font-size: 12.5px; font-weight: 600;
+  background: oklch(55% 0.18 25); color: white;
+}
+.vet-catm-del:hover { background: oklch(48% 0.18 25); }
+.vet-acct-petchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.vet-acct-petchip {
+  display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px 6px 7px;
+  border-radius: 999px; cursor: pointer; font-family: inherit; font-size: 12.5px; font-weight: 500;
+  color: var(--warm-700); background: var(--warm-50); border: 1.5px solid var(--warm-200); transition: all 0.12s ease;
+}
+.vet-acct-petchip:hover { border-color: var(--warm-300); }
+.vet-acct-petchip.active { background: var(--amatista-50); border-color: var(--amatista-400); color: var(--amatista-700); }
+.vet-acct-petchip-av {
+  width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0;
+  background: var(--amatista-100); color: var(--amatista-700); font-size: 9.5px; font-weight: 700;
+}
+.vet-acct-petchip-av.general { background: var(--warm-200); color: var(--warm-600); }
+.vet-acct-petgroup { margin-bottom: 14px; }
+.vet-acct-petgroup:last-child { margin-bottom: 0; }
+.vet-acct-petgroup-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 7px 2px 8px; border-bottom: 1.5px solid var(--warm-200); margin-bottom: 4px;
+}
+.vet-acct-petgroup-id { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.vet-acct-petavatar {
+  width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0;
+  background: var(--amatista-100); color: var(--amatista-700); font-size: 10.5px; font-weight: 700;
+}
+.vet-acct-petavatar.general { background: var(--warm-200); color: var(--warm-600); }
+.vet-acct-petname { font-size: 13.5px; font-weight: 600; color: var(--warm-900); }
+.vet-acct-pettaxa { font-size: 11.5px; color: var(--warm-500); }
+.vet-acct-petgroup-sub { font-size: 13px; font-weight: 700; color: var(--amatista-700); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vet-acct-charge-date { font-size: 11px; color: var(--warm-400); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* Facturación de consulta — billing modal */
+.vet-bill-acct {
+  display: flex; align-items: center; gap: 9px;
+  padding: 11px 13px; border-radius: 9px; font-size: 13px; line-height: 1.45;
+}
+.vet-bill-acct.has { background: oklch(94% 0.06 150); border: 1px solid oklch(88% 0.07 150); color: oklch(38% 0.12 150); }
+.vet-bill-acct.none { background: oklch(94% 0.07 80); border: 1px solid oklch(88% 0.09 80); color: oklch(40% 0.10 70); }
+.vet-bill-dest { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.vet-bill-dest.three { grid-template-columns: 1fr 1fr 1fr; }
+.vet-bill-acctcard {
+  background: oklch(94% 0.06 150); border: 1px solid oklch(88% 0.07 150); border-radius: 10px; padding: 12px 13px;
+}
+.vet-bill-acctcard-top { display: flex; align-items: center; gap: 11px; }
+.vet-bill-acctcard-ic {
+  width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0; display: grid; place-items: center;
+  background: oklch(90% 0.08 150); color: oklch(40% 0.13 150);
+}
+.vet-bill-acctcard-title { font-size: 13.5px; font-weight: 600; color: oklch(34% 0.12 150); }
+.vet-bill-acctcard-sub { font-size: 11.5px; color: oklch(45% 0.08 150); margin-top: 2px; }
+.vet-bill-acctcard-saldo { text-align: right; flex-shrink: 0; }
+.vet-bill-acctcard-saldo span { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; color: oklch(45% 0.08 150); }
+.vet-bill-acctcard-saldo strong { font-size: 16px; color: oklch(36% 0.13 150); font-variant-numeric: tabular-nums; }
+.vet-bill-destopt {
+  display: flex; align-items: flex-start; gap: 9px; text-align: left;
+  padding: 12px; border-radius: 10px; cursor: pointer; font-family: inherit;
+  background: var(--warm-50); border: 1.5px solid var(--warm-200); transition: all 0.12s ease;
+}
+.vet-bill-destopt:hover { border-color: var(--warm-300); }
+.vet-bill-destopt.active { background: var(--amatista-50); border-color: var(--amatista-400); }
+.vet-bill-destcheck { flex-shrink: 0; margin-top: 1px; color: var(--warm-300); }
+.vet-bill-destopt.active .vet-bill-destcheck { color: var(--amatista-600); }
+.vet-bill-desttitle { font-size: 13px; font-weight: 600; color: var(--warm-900); }
+.vet-bill-destsub { font-size: 11.5px; color: var(--warm-500); margin-top: 2px; line-height: 1.4; }
+.vet-bill-cols { display: grid; grid-template-columns: 1fr 1.1fr; gap: 12px; }
+.vet-bill-catalog { display: flex; flex-direction: column; min-width: 0; }
+.vet-bill-catlist {
+  display: flex; flex-direction: column; gap: 3px; max-height: 230px; overflow-y: auto;
+  border: 1px solid var(--warm-200); border-radius: 9px; padding: 5px;
+}
+.vet-bill-selected {
+  display: flex; flex-direction: column; min-width: 0;
+  background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 10px; padding: 10px;
+}
+.vet-bill-selhead { font-size: 12px; font-weight: 600; color: var(--warm-600); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 8px; }
+.vet-bill-selempty { flex: 1; display: grid; place-items: center; text-align: center; font-size: 12.5px; color: var(--warm-400); line-height: 1.6; padding: 20px 0; }
+.vet-bill-sellist { display: flex; flex-direction: column; gap: 6px; }
+.vet-bill-selrow { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 8px; background: var(--warm-100); }
+.vet-bill-selinfo { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.vet-bill-selname { font-size: 12.5px; font-weight: 500; color: var(--warm-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vet-bill-selkind { font-size: 11px; color: var(--warm-500); }
+.vet-bill-stepper button { width: 26px; height: 26px; font-size: 15px; }
+.vet-bill-stepper input { width: 36px; height: 26px; font-size: 12.5px; }
+.vet-bill-sellinetotal { font-size: 12.5px; font-weight: 700; color: var(--amatista-700); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vet-bill-selremove { width: 24px; height: 24px; border: none; background: none; cursor: pointer; color: var(--warm-400); display: grid; place-items: center; border-radius: 6px; }
+.vet-bill-selremove:hover { background: oklch(94% 0.06 25); color: oklch(50% 0.16 25); }
+.vet-bill-foottotal { font-size: 13px; color: var(--warm-600); }
+.vet-bill-foottotal strong { color: var(--amatista-700); font-size: 15px; }
+.vet-bill-existing { margin-bottom: 10px; }
+.vet-bill-existing-lab {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--warm-400); font-weight: 600; margin-bottom: 6px;
+}
+.vet-bill-selrow.locked { background: var(--warm-50); border: 1px dashed var(--warm-200); opacity: 0.85; }
+.vet-bill-existing-div {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--amatista-600); font-weight: 600; margin: 10px 0 6px;
+  padding-top: 8px; border-top: 1px dashed var(--warm-200);
+}
+.vet-acct-fieldlabel { font-size: 12px; font-weight: 600; color: var(--warm-600); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.03em; }
+.vet-acct-origseg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.vet-acct-orighelp { margin: 10px 0 0; font-size: 12.5px; color: var(--warm-500); line-height: 1.5; }
+.vet-acct-dupwarn {
+  display: flex; align-items: center; gap: 8px; margin-top: 10px;
+  padding: 9px 12px; border-radius: 9px; font-size: 12.5px;
+  background: oklch(94% 0.07 80); border: 1px solid oklch(88% 0.09 80); color: oklch(40% 0.10 70);
+}
+/* Agregar cargo — segmented + catálogo */
+.vet-acct-srcseg { display: flex; gap: 6px; }
+.vet-acct-srcbtn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 10px 8px; border-radius: 9px; cursor: pointer; font-family: inherit;
+  font-size: 13px; font-weight: 500; color: var(--warm-600);
+  background: var(--warm-50); border: 1px solid var(--warm-200);
+  transition: all 0.12s ease;
+}
+.vet-acct-srcbtn:hover { border-color: var(--warm-300); color: var(--warm-800); }
+.vet-acct-srcbtn.active {
+  background: var(--amatista-50); border-color: var(--amatista-400);
+  color: var(--amatista-700);
+}
+.vet-acct-search {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; border-radius: 9px;
+  background: var(--warm-50); border: 1px solid var(--warm-200);
+  color: var(--warm-500);
+}
+.vet-acct-search input {
+  flex: 1; border: none; outline: none; background: none;
+  font-family: inherit; font-size: 13.5px; color: var(--warm-900);
+}
+.vet-acct-catalog {
+  display: flex; flex-direction: column; gap: 4px;
+  max-height: 360px; overflow-y: auto;
+  border: 1px solid var(--warm-200); border-radius: 9px; padding: 6px;
+}
+.vet-acct-catalog-empty { padding: 24px; text-align: center; color: var(--warm-400); font-size: 13px; }
+.vet-acct-catrow {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 10px 12px; border-radius: 8px; cursor: pointer; font-family: inherit;
+  background: none; border: 1px solid transparent; text-align: left;
+  transition: background 0.1s ease;
+}
+.vet-acct-catrow:hover { background: var(--warm-100); }
+.vet-acct-catrow.selected { background: var(--amatista-50); border-color: var(--amatista-300); }
+.vet-acct-catrow.out { opacity: 0.5; cursor: not-allowed; }
+.vet-acct-catrow-main { flex: 1; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.vet-acct-catrow-name { font-size: 13.5px; font-weight: 500; color: var(--warm-900); }
+.vet-acct-catrow-cat { font-size: 11px; color: var(--warm-500); background: var(--warm-100); padding: 1px 7px; border-radius: 999px; }
+.vet-acct-catrow-out { font-size: 11px; color: oklch(50% 0.16 25); font-weight: 600; }
+.vet-acct-catrow-price { font-size: 13px; font-weight: 600; color: var(--warm-700); font-variant-numeric: tabular-nums; }
+.vet-acct-catrow-check { color: var(--amatista-600); }
+.vet-acct-qtyrow {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px; border-radius: 9px; background: var(--warm-100);
+}
+.vet-acct-qtylabel { font-size: 13px; font-weight: 500; color: var(--warm-700); }
+.vet-acct-stepper { display: flex; align-items: center; gap: 0; }
+.vet-acct-stepper button {
+  width: 32px; height: 32px; border: 1px solid var(--warm-300); background: var(--warm-50);
+  cursor: pointer; font-size: 17px; color: var(--warm-700); display: grid; place-items: center;
+}
+.vet-acct-stepper button:first-child { border-radius: 8px 0 0 8px; }
+.vet-acct-stepper button:last-child { border-radius: 0 8px 8px 0; }
+.vet-acct-stepper button:hover { background: var(--warm-100); }
+.vet-acct-stepper input {
+  width: 48px; height: 32px; border: 1px solid var(--warm-300); border-left: none; border-right: none;
+  text-align: center; font-family: inherit; font-size: 13.5px; color: var(--warm-900); outline: none;
+}
+.vet-acct-linetotal { margin-left: auto; font-size: 15px; font-weight: 700; color: var(--amatista-700); font-variant-numeric: tabular-nums; }
+.vet-acct-taxinfo {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; border-radius: 9px;
+  background: var(--warm-100); color: var(--warm-700); font-size: 12.5px;
+}
+.vet-acct-taxinfo-hint { margin-left: auto; font-size: 11px; color: var(--warm-400); font-style: italic; }
+.vet-acct-close { display: flex; flex-direction: column; gap: 7px; }
+.vet-acct-close-row { display: flex; justify-content: space-between; font-size: 13.5px; color: var(--warm-700); font-variant-numeric: tabular-nums; }
+.vet-acct-close-tax { color: var(--warm-500); font-size: 12.5px; }
+.vet-acct-close-total { border-top: 1px solid var(--warm-200); padding-top: 8px; margin-top: 2px; font-weight: 600; color: var(--warm-900); }
+.vet-acct-close-saldo { font-size: 16px; font-weight: 700; color: var(--amatista-700); border-top: 1px solid var(--warm-200); padding-top: 8px; }
+.vet-acct-close-note { margin: 6px 0 0; font-size: 12px; color: var(--warm-500); line-height: 1.5; }
+.vet-acct-paymethods { display: flex; flex-wrap: wrap; gap: 6px; }
+.vet-acct-paybtn {
+  padding: 8px 14px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 500;
+  background: var(--warm-50); border: 1.5px solid var(--warm-200); color: var(--warm-700); transition: all 0.12s ease;
+}
+.vet-acct-paybtn:hover { border-color: var(--warm-300); }
+.vet-acct-paybtn.active { background: var(--amatista-50); border-color: var(--amatista-400); color: var(--amatista-700); }
+.vet-acct-cash { display: flex; gap: 14px; align-items: flex-end; }
+.vet-acct-cash-falta { font-size: 12px; color: oklch(55% 0.16 25); margin-top: 4px; font-weight: 500; }
+.vet-acct-cash-change {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+  background: var(--warm-100); border-radius: 10px; padding: 8px 14px; min-width: 120px;
+}
+.vet-acct-cash-change span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--warm-500); }
+.vet-acct-cash-change strong { font-size: 18px; color: var(--amatista-700); font-variant-numeric: tabular-nums; }
+.vet-acct-receipt { text-align: center; padding: 8px 0; }
+.vet-acct-receipt-badge {
+  width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 12px;
+  background: oklch(92% 0.08 150); color: oklch(48% 0.15 150);
+}
+.vet-acct-receipt-title { font-size: 15px; font-weight: 600; color: var(--warm-900); }
+.vet-acct-receipt-amt { font-size: 30px; font-weight: 700; color: var(--amatista-700); margin: 4px 0 16px; font-variant-numeric: tabular-nums; }
+.vet-acct-receipt-rows { text-align: left; background: var(--warm-100); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 7px; }
+.vet-acct-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.vet-acct-card { display: flex; flex-direction: column; gap: 11px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 14px; padding: 16px; cursor: pointer; font-family: inherit; text-align: left; transition: border-color 0.12s ease, box-shadow 0.12s ease; }
+.vet-acct-card:hover { border-color: var(--amatista-300); box-shadow: 0 4px 14px -8px rgba(20,15,30,0.18); }
+.vet-acct-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.vet-acct-card-pet { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.vet-acct-avatar { width: 42px; height: 42px; border-radius: 11px; background: var(--amatista-100); color: var(--amatista-700); display: grid; place-items: center; font-family: var(--font-serif); font-size: 16px; font-weight: 500; flex-shrink: 0; }
+.vet-acct-name { font-size: 15px; font-weight: 500; color: var(--warm-900); }
+.vet-acct-owner { font-size: 12px; color: var(--warm-500); margin-top: 1px; }
+.vet-acct-card-meta { font-size: 12px; color: var(--warm-500); }
+.vet-acct-card-totals { display: flex; flex-direction: column; gap: 4px; padding-top: 11px; border-top: 1px solid var(--warm-150); }
+.vet-acct-card-totals > div { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--warm-600); }
+.vet-acct-card-totals strong { color: var(--warm-900); }
+.vet-acct-saldo { font-size: 14px !important; padding-top: 5px; margin-top: 2px; border-top: 1px dashed var(--warm-200); }
+.vet-acct-saldo strong { color: oklch(45% 0.13 70) !important; font-size: 15px; }
+
+/* Detalle */
+.vet-acct-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+.vet-acct-sum-box { background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 12px; padding: 14px 16px; }
+.vet-acct-sum-box.alert { background: oklch(96% 0.04 80); border-color: oklch(88% 0.08 80); }
+.vet-acct-sum-lab { font-size: 11.5px; color: var(--warm-500); margin-bottom: 5px; }
+.vet-acct-sum-val { font-family: var(--font-serif); font-size: 24px; color: var(--warm-900); letter-spacing: -0.02em; }
+.vet-acct-sum-box.alert .vet-acct-sum-val { color: oklch(45% 0.13 70); }
+.vet-acct-cols { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; align-items: start; }
+@media (max-width: 1000px) { .vet-acct-cols { grid-template-columns: 1fr; } .vet-acct-summary { grid-template-columns: 1fr; } }
+.vet-acct-charges { padding: 8px 18px 16px; }
+.vet-acct-daygroup { margin-top: 10px; }
+.vet-acct-dayhead { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--warm-500); font-weight: 600; padding: 6px 0; border-bottom: 1px solid var(--warm-150); }
+.vet-acct-daysum { color: var(--warm-700); }
+.vet-acct-charge { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--warm-100); }
+.vet-acct-charge-name { flex: 1; min-width: 0; font-size: 13px; color: var(--warm-800); }
+.vet-acct-charge-amt { font-size: 13px; font-weight: 500; color: var(--warm-900); }
+.vet-acct-charge-x { width: 22px; height: 22px; border: none; background: transparent; color: var(--warm-400); cursor: pointer; border-radius: 5px; display: grid; place-items: center; }
+.vet-acct-charge-x:hover { background: oklch(94% 0.05 25); color: oklch(48% 0.18 25); }
+.vet-acct-pagos { padding: 12px 18px 16px; display: flex; flex-direction: column; gap: 8px; }
+.vet-acct-pago { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--warm-100); border-radius: 9px; }
+.vet-acct-pago-amt { font-size: 14px; font-weight: 600; color: var(--warm-900); }
+.vet-acct-pago-meta { font-size: 11.5px; color: var(--warm-500); margin-top: 1px; }
