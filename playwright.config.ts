@@ -23,7 +23,22 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    // Proyecto de SEMBRADO: crea una sola vez (contra el backend real) el
+    // paciente con historia clínica + el propietario sin mascotas y los persiste
+    // a un JSON. Usa el contexto managed de Playwright (el login del wizard solo
+    // funciona ahí). Se auto-salta si el run no incluye historia (ver el archivo).
+    { name: 'setup', testMatch: /historia\.setup\.ts/, use: { ...devices['Desktop Chrome'] } },
+    // TODAS las specs (auth, consulta, acciones, historia) corren bajo ESTE único
+    // proyecto → en `--ui` se ven juntas en un solo nodo. Depende de `setup` para
+    // que el sembrado esté listo antes de los casos de historia.
+    {
+      name: 'chromium',
+      testIgnore: /historia\.setup\.ts/,
+      dependencies: ['setup'],
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
   // Reusa el server si ya está arriba; si no, lo levanta.
   webServer: {
     command: 'npm run dev',

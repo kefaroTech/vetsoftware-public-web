@@ -21,3 +21,6 @@ testsprite_tests/tmp/config.json
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Artefactos de sembrado e2e (no versionar)
+e2e/.artifacts/
