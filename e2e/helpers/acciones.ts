@@ -115,6 +115,31 @@ export async function expectCreated(
   return status
 }
 
+/**
+ * Sube (vía API REST real) un archivo de resultado a una solicitud de
+ * laboratorio, autenticando con el token de la sesión del navegador (Bearer en
+ * localStorage). Se usa para sembrar el "documento de resultado ya cargado" que
+ * luego se ve/descarga desde el detalle. Asevera que el POST responda 2xx.
+ */
+export async function uploadLabResultFile(
+  page: Page,
+  laboratoryTestId: number,
+  fileName: string,
+  buffer: Buffer,
+  mimeType = 'application/pdf',
+): Promise<void> {
+  const raw = await page.evaluate(() => localStorage.getItem('vetsoft.auth'))
+  const token = raw ? ((JSON.parse(raw) as { token?: string }).token ?? '') : ''
+  const res = await page.request.post('/api/v1/laboratory-test-files', {
+    headers: { Authorization: `Bearer ${token}` },
+    multipart: {
+      laboratoryTestId: String(laboratoryTestId),
+      file: { name: fileName, mimeType, buffer },
+    },
+  })
+  expect(res.ok(), `POST /laboratory-test-files → ${res.status()}`).toBeTruthy()
+}
+
 export const PICKER_SEARCH = /Buscar por nombre, documento o email/
 
 export async function gotoAccion(page: Page, key: AccionKey): Promise<void> {

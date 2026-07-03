@@ -61,7 +61,7 @@ const props = withDefaults(
   }>(),
   { children: () => [] },
 )
-const emit = defineEmits<{ close: [] }>()
+const emit = defineEmits<{ close: []; selectEvent: [event: ClinicalEvent] }>()
 
 type Payload =
   | { type: 'VACCINATION'; data: VaccinationResponse }
@@ -204,6 +204,7 @@ const subtitle = computed(() => {
           v-else-if="payload.type === 'CONSULTATION'"
           :data="payload.data"
           :children="props.children"
+          @select="emit('selectEvent', $event)"
         />
         <SpaDetail v-else-if="payload.type === 'SPA'" :data="payload.data" />
       </template>

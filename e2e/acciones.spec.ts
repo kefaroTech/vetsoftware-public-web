@@ -1,6 +1,7 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
 import { PASSWORD } from './helpers/auth'
-import { trackApiWrites } from './helpers/consulta'
+import { trackApiWrites, uniqueSuffix } from './helpers/consulta'
 import {
   ACCIONES,
   type AccionKey,
@@ -14,6 +15,7 @@ import {
   modalAsteriskAudit,
   expectCreated,
   dismissBilling,
+  uploadLabResultFile,
   FILLERS,
   EXPECTED_REQUIRED,
   type SeededPatient,
@@ -199,5 +201,129 @@ test.describe('Acciones · casos de borde por tipo de dato', () => {
   test('[data] laboratorio: el campo Cantidad es de tipo numérico', async ({ page }) => {
     await openNueva(page, 'laboratorio')
     await expect(modalControl(page, 'Cantidad')).toHaveAttribute('type', 'number')
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════
+// Documento de resultado de laboratorio — VER (preview) y DESCARGAR
+// Verifica de punta a punta (backend + frontend) que un documento YA cargado se
+// puede previsualizar en pestaña nueva y descargar con nombre/tipo/contenido
+// correctos. Rigor: asevera status HTTP, headers (Content-Type/Disposition),
+// bytes descargados idénticos a los subidos, y apertura de la pestaña blob:.
+// ════════════════════════════════════════════════════════════════════════════
+test.describe('Laboratorio · documento de resultado (ver / descargar)', () => {
+  const FILE_RE = /\/laboratory-test-files\/\d+\/download/
+
+  /**
+   * Crea un paciente + una solicitud de laboratorio, sube un PDF de resultado por
+   * API y abre el detalle. Devuelve el dialog, el nombre y los bytes del archivo.
+   */
+  async function seedTestWithResultFile(
+    page: Page,
+  ): Promise<{ dialog: ReturnType<Page['getByRole']>; fileName: string; pdf: Buffer }> {
+    await gotoAccion(page, 'laboratorio')
+    await pickerCreateOwnerAndPet(page)
+
+    await openNueva(page, 'laboratorio')
+    await FILLERS.laboratorio(page)
+    const [createResp] = await Promise.all([
+      page.waitForResponse(
+        (r) =>
+          r.request().method() === 'POST' &&
+          new URL(r.url()).pathname.endsWith('/laboratory-tests'),
+        { timeout: 15000 },
+      ),
+      modalSave(page).click(),
+    ])
+    expect(createResp.ok(), `POST /laboratory-tests → ${createResp.status()}`).toBeTruthy()
+    const testId = (await createResp.json()).id as number
+    await dismissBilling(page)
+
+    const fileName = `resultado-${uniqueSuffix()}.pdf`
+    const pdf = Buffer.from('%PDF-1.4\n% documento de resultado E2E\n%%EOF\n')
+    await uploadLabResultFile(page, testId, fileName, pdf)
+
+    // Abrir el detalle del examen (única fila) → el panel de adjuntos carga el archivo.
+    await page.locator('tr.clickable-row').first().click()
+    const dialog = page.getByRole('dialog', { name: 'Detalle del examen' })
+    await expect(dialog).toBeVisible()
+    return { dialog, fileName, pdf }
+  }
+
+  test('[data] el detalle muestra el documento adjunto con acciones Ver/Descargar', async ({ page }) => {
+    const { dialog, fileName } = await seedTestWithResultFile(page)
+    await expect(dialog.getByText('Resultados adjuntos')).toBeVisible()
+    await expect(dialog.getByText(fileName)).toBeVisible()
+    await expect(dialog.getByRole('button', { name: 'Ver', exact: true })).toBeVisible()
+    await expect(dialog.getByRole('button', { name: 'Descargar', exact: true })).toBeVisible()
+  })
+
+  test('[data] DESCARGAR: baja el archivo con nombre, tipo y contenido correctos', async ({ page }) => {
+    const { dialog, fileName, pdf } = await seedTestWithResultFile(page)
+
+    const [download, dlResp] = await Promise.all([
+      page.waitForEvent('download'),
+      page.waitForResponse((r) => FILE_RE.test(r.url())),
+      dialog.getByRole('button', { name: 'Descargar', exact: true }).click(),
+    ])
+    // Backend: 200 + application/pdf + Content-Disposition attachment con el nombre.
+    expect(dlResp.status(), 'GET /download → 200').toBe(200)
+    expect(dlResp.headers()['content-type']).toContain('application/pdf')
+    expect(dlResp.headers()['content-disposition']).toContain('attachment')
+    expect(dlResp.headers()['content-disposition']).toContain(fileName)
+    // Frontend: el archivo descargado conserva el nombre y los bytes exactos del PDF.
+    expect(download.suggestedFilename()).toBe(fileName)
+    const savedPath = await download.path()
+    const bytes = await readFile(savedPath)
+    expect(bytes.equals(pdf), 'el contenido descargado coincide byte a byte con el subido').toBeTruthy()
+  })
+
+  test('[data] VER: abre el documento en una pestaña nueva (preview inline)', async ({ page }) => {
+    const { dialog } = await seedTestWithResultFile(page)
+
+    // "Ver" hace GET del documento y abre una pestaña nueva con el blob.
+    const [popup, viewResp] = await Promise.all([
+      page.context().waitForEvent('page'),
+      page.waitForResponse((r) => FILE_RE.test(r.url())),
+      dialog.getByRole('button', { name: 'Ver', exact: true }).click(),
+    ])
+    // El GET responde 200 application/pdf → el contenido previsualizado es el PDF real.
+    expect(viewResp.status(), 'GET /download → 200').toBe(200)
+    expect(viewResp.headers()['content-type']).toContain('application/pdf')
+    // Se abrió una pestaña nueva de preview (recurso blob del cliente, NO una
+    // navegación dentro del app). Chromium reporta la URL del visor de PDF como
+    // un blob/valor no-http; basta con confirmar que no es una ruta del app.
+    expect(popup, 'se abrió una pestaña de preview').toBeTruthy()
+    expect(popup.url().startsWith('http://localhost')).toBeFalsy()
+    await popup.close()
+  })
+
+  test('[data] un examen SIN documento NO muestra la sección de adjuntos', async ({ page }) => {
+    await gotoAccion(page, 'laboratorio')
+    await pickerCreateOwnerAndPet(page)
+    await openNueva(page, 'laboratorio')
+    await FILLERS.laboratorio(page)
+    const [resp] = await Promise.all([
+      page.waitForResponse(
+        (r) =>
+          r.request().method() === 'POST' &&
+          new URL(r.url()).pathname.endsWith('/laboratory-tests'),
+        { timeout: 15000 },
+      ),
+      modalSave(page).click(),
+    ])
+    expect(resp.ok()).toBeTruthy()
+    await dismissBilling(page)
+
+    // Esperamos que el panel consulte los adjuntos (respuesta vacía) antes de asertar.
+    const [filesResp] = await Promise.all([
+      page.waitForResponse((r) => /\/laboratory-test-files\/by-laboratory-test\/\d+/.test(r.url())),
+      page.locator('tr.clickable-row').first().click(),
+    ])
+    expect(filesResp.ok()).toBeTruthy()
+    const dialog = page.getByRole('dialog', { name: 'Detalle del examen' })
+    await expect(dialog).toBeVisible()
+    // Sin archivos → el panel de adjuntos no se renderiza.
+    await expect(dialog.getByText('Resultados adjuntos')).toHaveCount(0)
   })
 })

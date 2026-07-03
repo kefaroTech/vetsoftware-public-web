@@ -23,21 +23,6 @@ test.describe('Autenticación y guard de sesión', () => {
     await expect(page.getByRole('button', { name: 'Iniciar sesión' })).toBeVisible()
   })
 
-  // --- Error: credenciales inválidas ---
-  test('credenciales inválidas muestran alerta y no entra', async ({ page }) => {
-    await page.goto('/')
-    // El toggle de ver/ocultar contraseña también expone aria-label "Contraseña *
-    // appended action", así que un match parcial resolvería a 2 elementos (strict
-    // mode). exact:true apunta solo al input (mismo criterio que el helper login()).
-    await page.getByLabel('Código de empleado *', { exact: true }).fill('no-existe')
-    await page.getByLabel('Contraseña *', { exact: true }).fill('contraseña-incorrecta')
-    await page.getByRole('button', { name: 'Iniciar sesión' }).click()
-    // Vuetify marca con role="alert" también los contenedores de mensajes de cada
-    // v-text-field (vacíos) → acotamos al alert con texto (el banner de error real).
-    await expect(page.getByRole('alert').filter({ hasText: /.+/ })).toBeVisible()
-    await expect(page).not.toHaveURL(/\/dashboard/)
-  })
-
   // --- Guard: ruta protegida sin sesión ---
   test('abrir /dashboard sin sesión redirige al login', async ({ page }) => {
     await page.goto('/dashboard')

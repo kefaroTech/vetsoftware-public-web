@@ -40,6 +40,8 @@ const emit = defineEmits<{ close: []; edit: [] }>()
           :span="f.span"
         />
       </div>
+      <!-- Contenido extra bajo los campos (p. ej. adjuntos de resultado). -->
+      <slot />
     </template>
 
     <template #footer-actions>

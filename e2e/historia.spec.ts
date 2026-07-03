@@ -12,6 +12,7 @@ import {
   seedPlainPatient,
   ownerSearchInput,
   weightPanel,
+  openWeightPanel,
   historyUrl,
   type SeededPatient,
 } from './helpers/historia'
@@ -262,6 +263,49 @@ test.describe('G · Detalle de evento', () => {
     await expect(dialog).toContainText('Procedimientos asociados')
   })
 
+  test('un procedimiento asociado es clickeable y abre su detalle', async ({ page }) => {
+    await openHistoryFor(page, patient)
+    await page.locator('.event-row', { hasText: 'Consulta' }).first().locator('.card').click()
+    const consulta = page.getByRole('dialog', { name: /Consulta/ })
+    await expect(consulta).toBeVisible()
+    await expect(consulta).toContainText('Procedimientos asociados')
+    // El procedimiento de vacunación asociado es un botón navegable (con chevron).
+    const proc = consulta.locator('.child', { hasText: 'Vacunación' })
+    await expect(proc).toHaveClass(/navigable/)
+    // Al clickearlo, el modal pasa a mostrar el detalle de la vacunación (su lote real).
+    await proc.click()
+    const vacuna = page.getByRole('dialog', { name: /Vacunación/ })
+    await expect(vacuna).toBeVisible()
+    await expect(vacuna).toContainText(VACC_LOT_SEED)
+  })
+
+  test('cerrar un procedimiento asociado vuelve a la consulta (no cierra el modal)', async ({ page }) => {
+    await openHistoryFor(page, patient)
+    await page.locator('.event-row', { hasText: 'Consulta' }).first().locator('.card').click()
+    const consulta = page.getByRole('dialog', { name: /Consulta/ })
+    await consulta.locator('.child', { hasText: 'Vacunación' }).click()
+    const vacuna = page.getByRole('dialog', { name: /Vacunación/ })
+    await expect(vacuna).toBeVisible()
+    // "Cerrar" el procedimiento vuelve al detalle de la consulta.
+    await vacuna.locator('button.btn-close').click()
+    const consultaOtraVez = page.getByRole('dialog', { name: /Consulta/ })
+    await expect(consultaOtraVez).toBeVisible()
+    await expect(consultaOtraVez).toContainText('Procedimientos asociados')
+    // Ahora sí, cerrar la consulta cierra el modal por completo.
+    await consultaOtraVez.locator('button.btn-close').click()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+  })
+
+  test('cerrar el procedimiento con Escape también vuelve a la consulta', async ({ page }) => {
+    await openHistoryFor(page, patient)
+    await page.locator('.event-row', { hasText: 'Consulta' }).first().locator('.card').click()
+    const consulta = page.getByRole('dialog', { name: /Consulta/ })
+    await consulta.locator('.child', { hasText: 'Vacunación' }).click()
+    await expect(page.getByRole('dialog', { name: /Vacunación/ })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog', { name: /Consulta/ })).toBeVisible()
+  })
+
   test('abrir la vacunación muestra el lote real sembrado', async ({ page }) => {
     await openHistoryFor(page, patient)
     await page.locator('.event-row', { hasText: 'Vacunación' }).first().locator('.card').click()
@@ -302,8 +346,20 @@ test.describe('G · Detalle de evento', () => {
 // H · Historial de peso — lectura, validaciones y round-trip (POST/DELETE reales)
 // ════════════════════════════════════════════════════════════════════════════
 test.describe('H · Historial de peso', () => {
+  test('arranca COLAPSADO y se despliega con el botón', async ({ page }) => {
+    await openHistoryFor(page, patient)
+    // De entrada solo está el botón; el panel no se muestra.
+    await expect(page.getByRole('button', { name: 'Ver historial de peso' })).toBeVisible()
+    await expect(weightPanel(page)).toHaveCount(0)
+    // Al abrirlo aparece el panel; el botón pasa a "Ocultar…".
+    await openWeightPanel(page)
+    await expect(weightPanel(page)).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Ocultar historial de peso' })).toBeVisible()
+  })
+
   test('la mascota sembrada muestra al menos un registro de peso', async ({ page }) => {
     await openHistoryFor(page, patient)
+    await openWeightPanel(page)
     const wp = weightPanel(page)
     await expect(wp.getByText('Historial de peso')).toBeVisible()
     await expect(wp.locator('.wp-item').first()).toBeVisible()
@@ -312,6 +368,7 @@ test.describe('H · Historial de peso', () => {
   // ── Validaciones del formulario de alta (de pantalla; no dependen de red) ──
   test('validación: guardar sin peso muestra "Ingresa el peso"', async ({ page }) => {
     await openHistoryFor(page, patient)
+    await openWeightPanel(page)
     const wp = weightPanel(page)
     await wp.getByRole('button', { name: 'Registrar peso' }).click()
     await wp.getByRole('button', { name: 'Guardar' }).click()
@@ -320,6 +377,7 @@ test.describe('H · Historial de peso', () => {
 
   test('validación: peso 0 muestra "El peso debe ser mayor a 0"', async ({ page }) => {
     await openHistoryFor(page, patient)
+    await openWeightPanel(page)
     const wp = weightPanel(page)
     await wp.getByRole('button', { name: 'Registrar peso' }).click()
     await wp.getByLabel(/^Peso/).fill('0')
@@ -329,6 +387,7 @@ test.describe('H · Historial de peso', () => {
 
   test('validación de tipo: peso no numérico se rechaza y marca el campo inválido', async ({ page }) => {
     await openHistoryFor(page, patient)
+    await openWeightPanel(page)
     const wp = weightPanel(page)
     await wp.getByRole('button', { name: 'Registrar peso' }).click()
     await wp.getByLabel(/^Peso/).fill('abc')
@@ -339,6 +398,7 @@ test.describe('H · Historial de peso', () => {
 
   test('cancelar cierra el formulario de alta sin guardar', async ({ page }) => {
     await openHistoryFor(page, patient)
+    await openWeightPanel(page)
     const wp = weightPanel(page)
     await wp.getByRole('button', { name: 'Registrar peso' }).click()
     await expect(wp.locator('.wp-form')).toBeVisible()
@@ -352,6 +412,7 @@ test.describe('H · Historial de peso', () => {
     const dedicated = await seedPlainPatient(page)
     await page.goto(HISTORIAL_URL)
     await pickOwnerAndPet(page, dedicated)
+    await openWeightPanel(page)
     const wp = weightPanel(page)
 
     const before = await wp.locator('.wp-item').count()
@@ -420,6 +481,7 @@ test.describe('J · Botones de acción', () => {
 
   test('"Registrar peso" y "Exportar PDF" están habilitados', async ({ page }) => {
     await openHistoryFor(page, patient)
+    await openWeightPanel(page)
     await expect(weightPanel(page).getByRole('button', { name: 'Registrar peso' })).toBeEnabled()
     await expect(page.getByRole('button', { name: /Exportar PDF/ })).toBeEnabled()
   })

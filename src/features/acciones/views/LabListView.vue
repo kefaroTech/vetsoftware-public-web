@@ -7,6 +7,7 @@ import OwnerAnimalBreadcrumb from '../components/OwnerAnimalBreadcrumb.vue'
 import LabFormModal from '../modals/LabFormModal.vue'
 import LabStatusPill from '../components/LabStatusPill.vue'
 import AccionDetailModal, { type DetailFieldDef } from '../modals/AccionDetailModal.vue'
+import LabResultAttachments from '../components/LabResultAttachments.vue'
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { useToast } from '@/composables/useToast'
@@ -252,7 +253,10 @@ function searchFn(item: LaboratoryTestResponse, q: string) {
       :can-edit="canUpdate"
       @close="closeViewing"
       @edit="editFromViewing"
-    />
+    >
+      <!-- Adjuntos de resultado (ver / descargar) si el examen ya tiene documento. -->
+      <LabResultAttachments v-if="viewing" :key="viewing.id" :test-id="viewing.id" />
+    </AccionDetailModal>
   </div>
 </template>
 

@@ -61,6 +61,17 @@ export function ownerSearchInput(page: Page): Locator {
 export function weightPanel(page: Page): Locator {
   return page.locator('.wpanel')
 }
+
+/** El historial de peso arranca colapsado: lo despliega (click en "Ver historial
+ *  de peso") y espera a que el panel sea visible. */
+export async function openWeightPanel(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Ver historial de peso' }).click()
+  const wp = weightPanel(page)
+  await expect(wp).toBeVisible()
+  // El panel se monta on-demand y carga /weight-records; esperamos a que el
+  // loader desaparezca para que los conteos de registros sean estables.
+  await expect(wp.locator('.wp-loading')).toHaveCount(0)
+}
 export function historyUrl(ownerId: string, petId: string): string {
   return `${HISTORIAL_URL}/${ownerId}/mascotas/${petId}`
 }

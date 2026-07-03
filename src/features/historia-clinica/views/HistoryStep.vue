@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, Download, Plus, Search } from 'lucide-vue-next'
+import { ArrowLeft, ChevronDown, Download, Plus, Search, TrendingUp } from 'lucide-vue-next'
 import PawLoader from '@/components/ui/PawLoader.vue'
 import MonthTimelineGroup from '../components/MonthTimelineGroup.vue'
 import EventDetailModal from '../components/EventDetailModal.vue'
@@ -27,6 +27,10 @@ const draft = useNuevaConsultaDraft()
 const { can } = useAuthorization()
 const canCreateConsultation = can(PERMISSIONS.CONSULTATION_CREATE)
 const canEditWeight = can(PERMISSIONS.ANIMAL_CREATE)
+
+// El historial de peso arranca COLAPSADO: se muestra solo si el usuario lo abre
+// (el panel se monta on-demand, difiriendo la carga de /weight-records).
+const showWeight = ref(false)
 
 const ownerIdParam = computed(() => String(route.params.ownerId ?? ''))
 const petIdParam = computed(() => {
@@ -143,14 +147,33 @@ function tokensFor(type: ClinicalEventType) {
 
 const detailModalOpen = ref(false)
 const selectedEvent = ref<ClinicalEvent | null>(null)
+// Evento "padre" (la consulta) cuando se entra a un procedimiento asociado desde
+// su detalle: al cerrar el procedimiento se vuelve a la consulta, no se cierra todo.
+const parentEvent = ref<ClinicalEvent | null>(null)
 
+// Apertura de nivel superior (desde la timeline): resetea la pila de navegación.
 function openEvent(ev: ClinicalEvent) {
   if (!EVENT_TYPE_DETAILABLE.has(ev.eventType)) return
+  parentEvent.value = null
   selectedEvent.value = ev
   detailModalOpen.value = true
 }
 
+// Apertura de un procedimiento asociado DESDE el detalle de una consulta:
+// recuerda la consulta como padre para poder volver al cerrarlo.
+function openChildEvent(child: ClinicalEvent) {
+  if (!EVENT_TYPE_DETAILABLE.has(child.eventType)) return
+  parentEvent.value = selectedEvent.value
+  selectedEvent.value = child
+}
+
 function closeEventDetail() {
+  // Si venimos de una consulta, "cerrar" el procedimiento vuelve a ella.
+  if (parentEvent.value) {
+    selectedEvent.value = parentEvent.value
+    parentEvent.value = null
+    return
+  }
   detailModalOpen.value = false
 }
 
@@ -264,7 +287,20 @@ function goNuevaConsulta() {
     </header>
 
     <div v-if="state.pet" class="weight-section">
+      <button
+        type="button"
+        class="weight-toggle"
+        :class="{ open: showWeight }"
+        :aria-expanded="showWeight"
+        @click="showWeight = !showWeight"
+      >
+        <TrendingUp :size="15" :stroke-width="1.8" />
+        <span>{{ showWeight ? 'Ocultar historial de peso' : 'Ver historial de peso' }}</span>
+        <ChevronDown class="chev" :size="15" :stroke-width="1.8" />
+      </button>
+
       <WeightHistoryPanel
+        v-if="showWeight"
         :animal-id="Number(state.pet.id)"
         :default-unit="state.pet.weightType"
         :can-edit="canEditWeight"
@@ -346,6 +382,7 @@ function goNuevaConsulta() {
       :event="selectedEvent"
       :children="selectedEventChildren"
       @close="closeEventDetail"
+      @select-event="openChildEvent"
     />
   </div>
 </template>
@@ -473,6 +510,37 @@ function goNuevaConsulta() {
 
 .weight-section {
   padding: 18px 36px 0;
+}
+.weight-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--warm-700);
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+.weight-toggle:hover {
+  border-color: var(--amatista-300);
+  color: var(--amatista-700);
+}
+.weight-toggle.open {
+  color: var(--amatista-700);
+  border-color: var(--amatista-300);
+  background: var(--amatista-50);
+  margin-bottom: 12px;
+}
+.weight-toggle .chev {
+  transition: transform 0.15s ease;
+}
+.weight-toggle.open .chev {
+  transform: rotate(180deg);
 }
 .filters {
   padding: 18px 36px 0;
