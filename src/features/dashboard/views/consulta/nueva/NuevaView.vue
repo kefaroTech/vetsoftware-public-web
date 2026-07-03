@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, X } from 'lucide-vue-next'
 import WizardFooter from './components/WizardFooter.vue'
 import DiscardConsultaDialog from './components/DiscardConsultaDialog.vue'
+import SaveConsultaConfirmDialog from './components/SaveConsultaConfirmDialog.vue'
 import PasoPaciente from './pasos/PasoPaciente.vue'
 import PasoConsulta from './pasos/PasoConsulta.vue'
 import { useNuevaConsultaDraft, type WizardStep } from './composables/useNuevaConsultaDraft'
@@ -27,6 +28,7 @@ const draft = useNuevaConsultaDraft()
 const auth = useAuth()
 
 const discardOpen = ref(false)
+const confirmSaveOpen = ref(false)
 const saving = ref(false)
 const submittingStep = ref(false)
 const saveError = ref<string | null>(null)
@@ -38,7 +40,11 @@ const pasoRef = ref<{
 const step = computed<WizardStep>(() => draft.state.step)
 
 function syncStepFromQuery() {
-  const raw = Number(route.query.paso ?? 1)
+  // Si la URL no trae ?paso (p. ej. un reload directo), respetamos el paso
+  // PERSISTIDO del draft en vez de forzar el paso 1: así el reload retoma donde
+  // estabas (los datos ya persistían; ahora también la posición del wizard).
+  const q = route.query.paso
+  const raw = q == null ? draft.state.step : Number(q)
   const s = ([1, 2].includes(raw) ? raw : 1) as WizardStep
   if (s !== draft.state.step) draft.setStep(s)
 }
@@ -124,6 +130,12 @@ async function handleNext() {
     saveError.value = 'Revisa los campos marcados antes de continuar.'
     return
   }
+  // Antes de guardar, pedimos confirmación explícita (modal).
+  confirmSaveOpen.value = true
+}
+
+async function confirmSave() {
+  confirmSaveOpen.value = false
   await saveConsultation()
 }
 
@@ -353,10 +365,6 @@ async function saveConsultation(keepOwner = false) {
   }
 }
 
-function handleSaveAndCreateAnother() {
-  saveConsultation(true)
-}
-
 function attemptCancel() {
   if (draft.isEmpty.value) {
     confirmCancel()
@@ -429,7 +437,10 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 }
 
 onMounted(() => {
-  syncStepFromQuery()
+  // Al montar (incluye reload) la fuente de verdad es el paso PERSISTIDO en el
+  // draft, no la URL: reconciliamos ?paso hacia el draft en vez de dejar que un
+  // ?paso viejo (que no siempre se sincroniza al avanzar) baje el wizard al paso 1.
+  // A runtime, el watch de route.query.paso sigue permitiendo back/forward del browser.
   pushStepToQuery(step.value)
   window.addEventListener('keydown', onKey)
   window.addEventListener('beforeunload', onBeforeUnload)
@@ -494,17 +505,6 @@ onUnmounted(() => {
           Descartar
         </button>
       </template>
-      <template #endExtra>
-        <button
-          v-if="step === 2"
-          type="button"
-          class="btn-keep-owner"
-          :disabled="saving"
-          @click="handleSaveAndCreateAnother"
-        >
-          Guardar y crear otra
-        </button>
-      </template>
     </WizardFooter>
 
     <DiscardConsultaDialog
@@ -512,6 +512,14 @@ onUnmounted(() => {
       :pet-name="draft.state.pet?.name"
       @cancel="discardOpen = false"
       @confirm="confirmCancel"
+    />
+
+    <SaveConsultaConfirmDialog
+      :open="confirmSaveOpen"
+      :pet-name="draft.state.pet?.name"
+      :saving="saving"
+      @cancel="confirmSaveOpen = false"
+      @confirm="confirmSave"
     />
   </div>
 </template>
