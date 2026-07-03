@@ -151,10 +151,11 @@ function load(): NuevaConsultaDraft {
     if (!raw) return defaultDraft()
     const parsed = JSON.parse(raw) as Partial<NuevaConsultaDraft>
     const merged = { ...defaultDraft(), ...parsed }
-    // Migración 4→2 pasos: antiguos pasos 1 (propietario) y 2 (mascota) ahora
-    // viven en el paso 1 unificado; los antiguos 3/4 mapean al nuevo paso 2.
+    // Paso persistido del wizard actual (1 o 2), preservado tal cual. Además,
+    // drafts LEGACY de 4 pasos (3/4) colapsan al paso 2. `>= 2` cubre ambos:
+    // conserva el paso 2 ACTUAL (antes se perdía) y mapea los antiguos 3/4.
     const rawStep = Number((parsed as { step?: number }).step ?? 1)
-    merged.step = rawStep >= 3 ? 2 : 1
+    merged.step = rawStep >= 2 ? 2 : 1
     return merged
   } catch {
     return defaultDraft()
