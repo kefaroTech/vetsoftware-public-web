@@ -11,6 +11,12 @@ const props = withDefaults(
     width?: number
     accent?: 'amatista' | 'danger' | 'warn'
     closeOnBackdrop?: boolean
+    /**
+     * Cuando es `false` el modal es NO descartable: se oculta la X y Escape deja de
+     * cerrarlo. Úsalo para decisiones forzadas donde el usuario debe elegir una acción
+     * del footer para salir (p.ej. la facturación tras guardar la consulta).
+     */
+    closable?: boolean
     /** Sube el z-index para apilarse por encima de otro modal ya abierto (modales anidados). */
     elevated?: boolean
   }>(),
@@ -19,6 +25,7 @@ const props = withDefaults(
     accent: 'amatista',
     // Regla global: los modales NO se cierran al hacer click fuera (solo con la X / Escape).
     closeOnBackdrop: false,
+    closable: true,
   },
 )
 
@@ -29,7 +36,7 @@ const titleId = useId()
 
 function onKey(e: KeyboardEvent) {
   if (!props.open) return
-  if (e.key === 'Escape') {
+  if (e.key === 'Escape' && props.closable) {
     e.preventDefault()
     emit('close')
   }
@@ -76,6 +83,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               <p v-if="subtitle" class="subtitle">{{ subtitle }}</p>
             </div>
             <button
+              v-if="closable"
               ref="closeBtn"
               type="button"
               class="close"

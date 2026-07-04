@@ -156,8 +156,8 @@ export async function seedPatientWithHistory(page: Page): Promise<SeededPatient>
   await pickSelect(page, /Tipo de consulta/)
   await anamnesis(page).fill(ANAMNESIS_SEED)
 
-  // Receta (medicamentos) → evento PRESCRIPTION.
-  let d = await openQuickAction(page, /Receta/, 'Nueva receta')
+  // Receta (medicamentos) → evento PRESCRIPTION. La tile ahora se llama "Plan terapéutico".
+  let d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
   await fillReceta(page)
   await d.getByRole('button', { name: 'Guardar receta' }).click()
   await expect(d).toBeHidden()
@@ -178,7 +178,7 @@ export async function seedPatientWithHistory(page: Page): Promise<SeededPatient>
   const billing = page.getByRole('dialog', { name: /Facturación/ })
   await expect(billing).toBeVisible({ timeout: 20_000 })
   await billing.getByRole('button', { name: /Solo guardar la consulta/ }).click()
-  await billing.getByRole('button', { name: 'Guardar consulta' }).click()
+  await billing.getByRole('button', { name: 'Salir' }).click()
   await expect(page).toHaveURL(/exito|consulta-nueva-exito/, { timeout: 20_000 })
 
   return { owner, petName: pet.name, ownerId: ids.ownerId, petId: ids.petId }

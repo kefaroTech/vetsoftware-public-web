@@ -5,6 +5,7 @@ export interface CreateMedicamentPrescriptionPayload {
   presentation: string
   quantity: number
   posology: string
+  observation: string | null
   prescriptionId: number
 }
 
@@ -14,6 +15,7 @@ export interface MedicamentPrescriptionResponse {
   presentation: string
   quantity: number
   posology: string
+  observation: string | null
   createdDate: string
 }
 

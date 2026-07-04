@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { Printer } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import PawLoader from '@/components/ui/PawLoader.vue'
+import { usePrescriptionExport } from '@/features/dashboard/views/consulta/nueva/composables/usePrescriptionExport'
 import { EVENT_TYPES } from '../constants/eventTypes'
 import { formatEventDate } from '../composables/format'
 import type { ClinicalEvent } from '../types/historia'
@@ -160,6 +162,12 @@ const subtitle = computed(() => {
   if (!props.event) return ''
   return `${formatEventDate(props.event.eventDate)} · #${props.event.sourceId}`
 })
+
+// Imprimir la fórmula médica veterinaria (solo cuando el detalle es una receta).
+const { exporting: printing, exportPdf: exportPrescription } = usePrescriptionExport()
+function printReceta() {
+  if (payload.value?.type === 'PRESCRIPTION') exportPrescription(payload.value.data.id)
+}
 </script>
 
 <template>
@@ -211,6 +219,16 @@ const subtitle = computed(() => {
     </template>
 
     <template #footer-actions>
+      <button
+        v-if="payload?.type === 'PRESCRIPTION'"
+        type="button"
+        class="btn-print"
+        :disabled="printing"
+        @click="printReceta"
+      >
+        <Printer :size="14" :stroke-width="1.8" />
+        <span>{{ printing ? 'Generando…' : 'Imprimir receta' }}</span>
+      </button>
       <button type="button" class="btn-close" @click="emit('close')">Cerrar</button>
     </template>
   </ModalShell>
@@ -229,6 +247,27 @@ const subtitle = computed(() => {
   background: oklch(97% 0.02 25);
   color: oklch(48% 0.18 25);
   border: 1px solid oklch(85% 0.06 25);
+}
+.btn-print {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--warm-50);
+  color: var(--amatista-700);
+  border: 1px solid var(--amatista-300);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-print:hover:not(:disabled) {
+  background: var(--amatista-50);
+}
+.btn-print:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 .btn-close {
   padding: 8px 16px;

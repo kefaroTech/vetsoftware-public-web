@@ -189,7 +189,7 @@ test.describe('Acciones · casos de borde por tipo de dato', () => {
   test('[data] laboratorio: cantidad 0 es inválida (mínimo 1) y bloquea el guardado', async ({ page }) => {
     const dialog = await openNueva(page, 'laboratorio')
     const writes = trackApiWrites(page)
-    // Llena tipo + diagnóstico válidos pero cantidad = 0.
+    // Llena el tipo válido pero fuerza cantidad = 0.
     await FILLERS.laboratorio(page)
     await modalControl(page, 'Cantidad').fill('0')
     await modalSave(page).click()

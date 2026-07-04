@@ -1,19 +1,27 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { Check, ArrowRight, Plus } from 'lucide-vue-next'
+import { Check, ArrowRight, Plus, Printer } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { formatDateLong } from '../composables/format'
+import { usePrescriptionExport } from '../composables/usePrescriptionExport'
 
 const router = useRouter()
 
+interface SavedPrescription {
+  id: number
+  label: string
+}
 interface SuccessState {
   ownerName?: string
   petName?: string
   consultationType?: string
   date?: string
+  prescriptions?: SavedPrescription[]
 }
 
 const state = ref<SuccessState>({})
+const { exporting: printing, exportPdf } = usePrescriptionExport()
+const prescriptions = computed<SavedPrescription[]>(() => state.value.prescriptions ?? [])
 
 const code = computed(() => {
   const n = String(Math.floor(Math.random() * 9000) + 1000)
@@ -28,6 +36,7 @@ onMounted(() => {
     petName: s.petName ?? '—',
     consultationType: s.consultationType ?? '',
     date: s.date ?? '',
+    prescriptions: Array.isArray(s.prescriptions) ? s.prescriptions : [],
   }
 })
 
@@ -54,6 +63,28 @@ function createAnother() {
         <span v-if="state.consultationType"> · {{ state.consultationType }}</span>
         <span> · {{ code }}</span>
       </p>
+      <div v-if="prescriptions.length" class="rx-block">
+        <div class="rx-title">
+          {{ prescriptions.length === 1 ? 'Receta de esta consulta' : 'Recetas de esta consulta' }}
+        </div>
+        <div class="rx-buttons">
+          <button
+            v-for="rx in prescriptions"
+            :key="rx.id"
+            type="button"
+            class="btn rx"
+            :disabled="printing"
+            @click="exportPdf(rx.id)"
+          >
+            <Printer :size="13" :stroke-width="1.8" />
+            <span>
+              {{ printing ? 'Generando…' : 'Imprimir receta' }}
+              <template v-if="prescriptions.length > 1"> · {{ rx.label }}</template>
+            </span>
+          </button>
+        </div>
+      </div>
+
       <div class="actions">
         <button type="button" class="btn primary" @click="goDetail">
           <span>Ver detalle</span>
@@ -112,6 +143,39 @@ function createAnother() {
   margin: 0 0 28px;
   font-size: 13px;
   color: var(--warm-500);
+}
+.rx-block {
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 12px;
+}
+.rx-title {
+  font-size: 11.5px;
+  color: var(--warm-500);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+.rx-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.btn.rx {
+  background: white;
+  border-color: var(--amatista-300);
+  color: var(--amatista-700);
+}
+.btn.rx:hover:not(:disabled) {
+  background: var(--amatista-50);
+}
+.btn.rx:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 .actions {
   display: flex;

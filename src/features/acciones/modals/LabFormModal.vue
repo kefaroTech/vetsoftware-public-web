@@ -101,7 +101,7 @@ const errors = computed(() => ({
     testTypeId: !r.testTypeId ? 'Selecciona un tipo' : null,
     quantity:
       !r.quantity.trim() || Number(r.quantity) < 1 ? 'Cantidad inválida' : null,
-    diagnosis: !r.diagnosis.trim() ? 'Indica el diagnóstico presuntivo' : null,
+    diagnosis: null, // Observaciones es opcional.
   })),
 }))
 
@@ -271,12 +271,12 @@ async function save() {
                 :invalid="!!rowErr(i, 'quantity')"
               />
             </BaseField>
-            <BaseField label="Diagnóstico presuntivo" required :error="rowErr(i, 'diagnosis')" class="full">
+            <BaseField label="Observaciones" :error="rowErr(i, 'diagnosis')" class="full">
               <BaseTextarea
                 v-model="row.diagnosis"
                 :rows="2"
                 :invalid="!!rowErr(i, 'diagnosis')"
-                placeholder="Sospecha clínica que motiva el examen"
+                placeholder="Observaciones sobre el examen solicitado"
               />
             </BaseField>
           </div>

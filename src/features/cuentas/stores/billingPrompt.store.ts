@@ -9,6 +9,8 @@ export interface BillingPromptOptions {
   heading?: string
   subtitle?: string
   autoConsulta?: boolean
+  /** `false` → modal no descartable (sin X, sin Cancelar, sin Escape): el usuario debe elegir una acción. */
+  dismissible?: boolean
   onFinish?: () => void
   /** Se invoca al cerrar el modal (por finish o por cierre directo). */
   onClose?: () => void
@@ -30,6 +32,7 @@ export const useBillingPromptStore = defineStore('billingPrompt', () => {
     heading: 'Facturación',
     subtitle: '',
     autoConsulta: false,
+    dismissible: true,
     onFinish: null,
     onClose: null,
   })
@@ -42,6 +45,7 @@ export const useBillingPromptStore = defineStore('billingPrompt', () => {
     state.heading = opts.heading ?? 'Facturación'
     state.subtitle = opts.subtitle ?? ''
     state.autoConsulta = opts.autoConsulta ?? false
+    state.dismissible = opts.dismissible ?? true
     state.onFinish = opts.onFinish ?? null
     state.onClose = opts.onClose ?? null
     state.open = true

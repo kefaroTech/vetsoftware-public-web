@@ -138,7 +138,18 @@ function typeLabel(t: HospitalizationType): string {
   return typeOptions.find((o) => o.value === t)?.label ?? t
 }
 
+// Un formulario nuevo "vacío" (nada escrito) no cuenta como ítem a agregar.
+function isNewDraftEmpty(): boolean {
+  return !draft.reason.trim() && !draft.observations.trim() && !draft.weight.trim()
+}
+
 function save() {
+  // Si ya hay ítems agregados y el formulario nuevo está vacío, no se valida ni se crea
+  // vacío: solo se cierra. La obligatoriedad solo aplica cuando aún no hay ítems.
+  if (editingIndex.value === null && props.existing.length > 0 && isNewDraftEmpty()) {
+    emit('close')
+    return
+  }
   submitted.value = true
   if (!valid.value) return
   const item: Hospitalization = {
@@ -172,7 +183,10 @@ function save() {
     @close="emit('close')"
   >
     <template #body>
-      <section v-if="props.existing.length > 0" class="existing-section">
+      <section
+        v-if="props.existing.length > 0 && editingIndex === null"
+        class="existing-section"
+      >
         <h4 class="existing-title">Ya agregadas ({{ props.existing.length }})</h4>
         <ul class="existing-list">
           <li
@@ -213,14 +227,6 @@ function save() {
           </li>
         </ul>
       </section>
-
-      <div v-if="editingIndex !== null" class="editing-banner">
-        <Pencil :size="14" :stroke-width="1.7" />
-        <span>Editando hospitalización #{{ editingIndex + 1 }}</span>
-        <button type="button" class="editing-cancel" @click="cancelEditing">
-          Cancelar
-        </button>
-      </div>
 
       <div class="grid-2">
         <BaseField label="Tipo" required :error="err('type')">

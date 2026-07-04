@@ -25,7 +25,7 @@ export const EVENT_TYPES: Record<ClinicalEventType, EventTypeMeta> = {
   HOSPITALIZATION: { label: 'Hospitalización', color: 'amber', icon: '🏥' },
   LABORATORY_TEST: { label: 'Laboratorio', color: 'blue', icon: '🧪' },
   DIAGNOSTIC_IMAGING: { label: 'Imagen Dx', color: 'indigo', icon: '🩻' },
-  PRESCRIPTION: { label: 'Receta', color: 'pink', icon: '💊' },
+  PRESCRIPTION: { label: 'Plan terapéutico', color: 'pink', icon: '💊' },
   SPA: { label: 'Spa', color: 'gray', icon: '🛁' },
 }
 

@@ -2,7 +2,8 @@ import { http } from '@/services/http/http.client'
 
 export interface CreatePrescriptionPayload {
   date: string
-  diagnosis: string
+  // El diagnóstico se toma de la consulta (opcional); ya no se escribe en la receta.
+  diagnosis: string | null
   observations: string
   animalId: number
   consultationId: number
@@ -15,6 +16,7 @@ export interface PrescriptionMedicamentSummary {
   presentation: string
   quantity: number
   posology: string
+  observation: string | null
 }
 
 export interface PrescriptionAnimalSummary {
@@ -37,7 +39,7 @@ export interface PrescriptionCompanySummary {
 export interface PrescriptionResponse {
   id: number
   date: string
-  diagnosis: string
+  diagnosis: string | null
   observations: string
   animal: PrescriptionAnimalSummary
   consultation: PrescriptionConsultationSummary
@@ -54,6 +56,13 @@ export const prescriptionApi = {
 
   async findById(id: number): Promise<PrescriptionResponse> {
     const { data } = await http.get<PrescriptionResponse>(`/prescriptions/${id}`)
+    return data
+  },
+
+  async exportPdf(id: number): Promise<Blob> {
+    const { data } = await http.get<Blob>(`/prescriptions/${id}/export.pdf`, {
+      responseType: 'blob',
+    })
     return data
   },
 }

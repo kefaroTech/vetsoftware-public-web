@@ -203,15 +203,15 @@ test.describe('E · Timeline de eventos', () => {
     await expect(page.locator('.month-group').first()).toBeVisible()
   })
 
-  test('aparecen los chips de los tipos sembrados (consulta, vacuna, receta)', async ({ page }) => {
+  test('aparecen los chips de los tipos sembrados (consulta, vacuna, plan terapéutico)', async ({ page }) => {
     await openHistoryFor(page, patient)
     await expect(page.getByRole('button', { name: /Todos ·/ })).toBeVisible()
     await expect(page.getByRole('button', { name: /Consulta ·/ })).toBeVisible()
     await expect(page.getByRole('button', { name: /Vacunación ·/ })).toBeVisible()
-    await expect(page.getByRole('button', { name: /Receta ·/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Plan terapéutico ·/ })).toBeVisible()
   })
 
-  test('la vacunación y la receta se anidan bajo su consulta', async ({ page }) => {
+  test('la vacunación y el plan terapéutico se anidan bajo su consulta', async ({ page }) => {
     await openHistoryFor(page, patient)
     // Ambos procedimientos comparten consultationId ⇒ aparecen anidados.
     await expect(page.locator('.event-row.nested').first()).toBeVisible()
@@ -226,10 +226,10 @@ test.describe('F · Filtros y búsqueda de eventos', () => {
     await openHistoryFor(page, patient)
   })
 
-  test('filtrar por "Vacunación" oculta la receta', async ({ page }) => {
+  test('filtrar por "Vacunación" oculta el plan terapéutico', async ({ page }) => {
     await page.getByRole('button', { name: /Vacunación ·/ }).click()
     await expect(page.locator('.event-row', { hasText: 'Vacunación' }).first()).toBeVisible()
-    await expect(page.locator('.event-row', { hasText: 'Receta' })).toHaveCount(0)
+    await expect(page.locator('.event-row', { hasText: 'Plan terapéutico' })).toHaveCount(0)
   })
 
   test('el filtro activo se resalta', async ({ page }) => {
@@ -241,7 +241,7 @@ test.describe('F · Filtros y búsqueda de eventos', () => {
   test('buscar por etiqueta del tipo filtra los eventos', async ({ page }) => {
     await page.getByPlaceholder(/Buscar en eventos/).fill('vacun')
     await expect(page.locator('.event-row', { hasText: 'Vacunación' }).first()).toBeVisible()
-    await expect(page.locator('.event-row', { hasText: 'Receta' })).toHaveCount(0)
+    await expect(page.locator('.event-row', { hasText: 'Plan terapéutico' })).toHaveCount(0)
   })
 
   test('una búsqueda sin coincidencias muestra el mensaje de filtros', async ({ page }) => {

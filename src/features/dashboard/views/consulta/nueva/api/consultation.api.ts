@@ -5,8 +5,6 @@ export interface CreateConsultationPayload {
   consultationTypeId: number
   anamnesis: string
   diagnosis: string | null
-  therapeuticPlan: string | null
-  diagnosisPlan: string | null
   prognosis: string | null
   nextControl: string | null
   animalId: number
@@ -49,8 +47,6 @@ export interface ConsultationResponse {
   consultationType: ConsultationTypeSummary
   anamnesis: string
   diagnosis: string | null
-  therapeuticPlan: string | null
-  diagnosisPlan: string | null
   prognosis: string | null
   nextControl: string | null
   animal: ConsultationAnimalSummary

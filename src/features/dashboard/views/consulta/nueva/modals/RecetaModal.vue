@@ -27,6 +27,7 @@ interface MedDraft {
   presentation: string
   quantity: string
   posology: string
+  observation: string
 }
 
 interface MedCatalogEntry {
@@ -46,12 +47,11 @@ const MED_CATALOG: MedCatalogEntry[] = [
 ]
 
 function emptyMed(): MedDraft {
-  return { name: '', presentation: '', quantity: '', posology: '' }
+  return { name: '', presentation: '', quantity: '', posology: '', observation: '' }
 }
 
 const draft = reactive({
   date: todayISO(),
-  diagnosis: '',
   observations: '',
   medicaments: [emptyMed()] as MedDraft[],
 })
@@ -63,7 +63,6 @@ const editingIndex = ref<number | null>(null)
 function resetDraft() {
   Object.assign(draft, {
     date: todayISO(),
-    diagnosis: '',
     observations: '',
     medicaments: [emptyMed()],
   })
@@ -86,13 +85,13 @@ function startEditing(idx: number) {
   if (!item) return
   Object.assign(draft, {
     date: item.date,
-    diagnosis: item.diagnosis,
     observations: item.observations,
     medicaments: item.medicaments.map<MedDraft>((m) => ({
       name: m.name,
       presentation: m.presentation,
       quantity: String(m.quantity),
       posology: m.posology,
+      observation: m.observation ?? '',
     })),
   })
   if (draft.medicaments.length === 0) draft.medicaments.push(emptyMed())
@@ -117,11 +116,6 @@ const subtitle = computed(() => {
 
 const errors = computed(() => {
   const e = {
-    diagnosis: !draft.diagnosis.trim()
-      ? 'Indica el diagnóstico'
-      : draft.diagnosis.trim().length < 3
-        ? 'Mínimo 3 caracteres'
-        : null,
     medicaments: draft.medicaments.map((m) => ({
       name: !m.name.trim() ? 'Indica el medicamento' : null,
       presentation: !m.presentation.trim() ? 'Indica la presentación' : null,
@@ -138,7 +132,6 @@ const errors = computed(() => {
 })
 
 const valid = computed<boolean>(() => {
-  if (errors.value.diagnosis) return false
   return errors.value.medicaments.every(
     (m) => !m.name && !m.presentation && !m.quantity && !m.posology,
   )
@@ -158,6 +151,7 @@ function pickFromCatalog(i: number, item: MedCatalogEntry) {
     presentation: item.presentation,
     quantity: String(item.quantity),
     posology: item.posology,
+    observation: draft.medicaments[i]?.observation ?? '',
   }
   searchIdx.value = null
 }
@@ -177,18 +171,39 @@ function suggestionsFor(i: number) {
   return MED_CATALOG.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 5)
 }
 
+// Un formulario nuevo "vacío" (nada escrito) no cuenta como ítem a agregar.
+function isNewDraftEmpty(): boolean {
+  return (
+    !draft.observations.trim() &&
+    draft.medicaments.every(
+      (m) =>
+        !m.name.trim() &&
+        !m.presentation.trim() &&
+        !m.quantity.trim() &&
+        !m.posology.trim() &&
+        !m.observation.trim(),
+    )
+  )
+}
+
 function save() {
+  // Si ya hay ítems agregados y el formulario nuevo está vacío, no se valida ni se crea
+  // vacío: solo se cierra. La obligatoriedad solo aplica cuando aún no hay ítems.
+  if (editingIndex.value === null && props.existing.length > 0 && isNewDraftEmpty()) {
+    emit('close')
+    return
+  }
   submitted.value = true
   if (!valid.value) return
   const prescription: Prescription = {
     date: draft.date,
-    diagnosis: draft.diagnosis.trim(),
     observations: draft.observations.trim(),
     medicaments: draft.medicaments.map<MedicamentPrescription>((m) => ({
       name: m.name.trim(),
       presentation: m.presentation.trim(),
       quantity: Number(m.quantity.replace(',', '.')),
       posology: m.posology.trim(),
+      observation: m.observation.trim() || undefined,
     })),
   }
   if (editingIndex.value !== null) {
@@ -200,12 +215,11 @@ function save() {
   }
 }
 
-function err<K extends 'diagnosis'>(k: K): string | undefined {
-  if (!submitted.value) return undefined
-  return errors.value[k] ?? undefined
-}
-
-function medErr(i: number, k: keyof MedDraft): string | undefined {
+// observation es opcional (sin validación) → medErr solo cubre los campos requeridos.
+function medErr(
+  i: number,
+  k: 'name' | 'presentation' | 'quantity' | 'posology',
+): string | undefined {
   if (!submitted.value) return undefined
   return errors.value.medicaments[i]?.[k] ?? undefined
 }
@@ -221,7 +235,10 @@ function medErr(i: number, k: keyof MedDraft): string | undefined {
     @close="emit('close')"
   >
     <template #body>
-      <section v-if="props.existing.length > 0" class="existing-section">
+      <section
+        v-if="props.existing.length > 0 && editingIndex === null"
+        class="existing-section"
+      >
         <h4 class="existing-title">Ya agregadas ({{ props.existing.length }})</h4>
         <ul class="existing-list">
           <li
@@ -232,7 +249,7 @@ function medErr(i: number, k: keyof MedDraft): string | undefined {
             <div class="existing-summary">
               <div class="existing-main">
                 {{ formatDateShort(item.date) }} ·
-                {{ item.diagnosis || 'Sin diagnóstico' }}
+                {{ item.medicaments[0]?.name || 'Receta' }}
               </div>
               <div class="existing-sub">
                 {{ item.medicaments.length }} medicamento{{
@@ -268,30 +285,7 @@ function medErr(i: number, k: keyof MedDraft): string | undefined {
         </ul>
       </section>
 
-      <div v-if="editingIndex !== null" class="editing-banner">
-        <Pencil :size="14" :stroke-width="1.7" />
-        <span>Editando receta #{{ editingIndex + 1 }}</span>
-        <button type="button" class="editing-cancel" @click="cancelEditing">
-          Cancelar
-        </button>
-      </div>
-
-      <div class="grid-2">
-        <BaseField
-          label="Diagnóstico"
-          required
-          hint="Se imprime en la receta"
-          :error="err('diagnosis')"
-        >
-          <template #default="{ id }">
-            <BaseTextarea
-              :id="id"
-              v-model="draft.diagnosis"
-              :rows="2"
-              placeholder="Ej. Gastroenteritis aguda inespecífica"
-            />
-          </template>
-        </BaseField>
+      <div class="grid-1">
         <BaseField
           label="Observaciones"
           hint="Indicaciones adicionales para el propietario"
@@ -419,6 +413,20 @@ function medErr(i: number, k: keyof MedDraft): string | undefined {
               </template>
             </BaseField>
           </div>
+          <div class="med-obs">
+            <BaseField
+              label="Observación"
+              hint="Nota específica de este medicamento (opcional)"
+            >
+              <template #default="{ id }">
+                <BaseInput
+                  :id="id"
+                  v-model="m.observation"
+                  placeholder="Ej. administrar con alimento; suspender si hay vómito"
+                />
+              </template>
+            </BaseField>
+          </div>
         </div>
       </div>
 
@@ -452,16 +460,14 @@ function medErr(i: number, k: keyof MedDraft): string | undefined {
 </template>
 
 <style scoped>
-.grid-2 {
+.grid-1 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 18px;
   margin-bottom: 22px;
 }
-@media (max-width: 880px) {
-  .grid-2 {
-    grid-template-columns: 1fr;
-  }
+.med-obs {
+  margin-top: 12px;
 }
 .meds-head {
   display: flex;

@@ -99,7 +99,7 @@ const errors = computed(() => ({
       Number(t.quantity) < 1
         ? 'Cantidad inválida'
         : null,
-    diagnosis: !t.diagnosis.trim() ? 'Indica el diagnóstico presuntivo' : null,
+    diagnosis: null, // Observaciones es opcional.
   })),
 }))
 
@@ -135,7 +135,18 @@ function testErr(i: number, k: keyof TestDraft): string | undefined {
   return errors.value.tests[i]?.[k] ?? undefined
 }
 
+// Un formulario nuevo "vacío" (nada escrito) no cuenta como ítem a agregar.
+function isNewDraftEmpty(): boolean {
+  return draft.tests.every((t) => !t.testTypeId && !t.diagnosis.trim())
+}
+
 function save() {
+  // Si ya hay ítems agregados y el formulario nuevo está vacío, no se valida ni se crea
+  // vacío: solo se cierra. La obligatoriedad solo aplica cuando aún no hay ítems.
+  if (editingIndex.value === null && props.existing.length > 0 && isNewDraftEmpty()) {
+    emit('close')
+    return
+  }
   submitted.value = true
   if (!valid.value) return
   const items: LaboratoryTest[] = draft.tests.map((t) => ({
@@ -169,7 +180,10 @@ function save() {
     <template #body>
       <div v-if="typesError" class="catalog-error">{{ typesError }}</div>
 
-      <section v-if="props.existing.length > 0" class="existing-section">
+      <section
+        v-if="props.existing.length > 0 && editingIndex === null"
+        class="existing-section"
+      >
         <h4 class="existing-title">Ya solicitados ({{ props.existing.length }})</h4>
         <ul class="existing-list">
           <li
@@ -183,7 +197,7 @@ function save() {
               </div>
               <div class="existing-sub">
                 {{ item.quantity }} unidad{{ item.quantity === 1 ? '' : 'es' }}
-                · {{ item.diagnosis || 'sin diagnóstico' }}
+                · {{ item.diagnosis || 'sin observaciones' }}
               </div>
             </div>
             <span v-if="item.savedId" class="saved-chip">✓ Guardado</span>
@@ -213,14 +227,6 @@ function save() {
           </li>
         </ul>
       </section>
-
-      <div v-if="editingIndex !== null" class="editing-banner">
-        <Pencil :size="14" :stroke-width="1.7" />
-        <span>Editando examen #{{ editingIndex + 1 }}</span>
-        <button type="button" class="editing-cancel" @click="cancelEditing">
-          Cancelar
-        </button>
-      </div>
 
       <div class="tests-list">
         <div v-for="(t, i) in draft.tests" :key="i" class="test-card">
@@ -271,8 +277,7 @@ function save() {
               </template>
             </BaseField>
             <BaseField
-              label="Diagnóstico presuntivo"
-              required
+              label="Observaciones"
               :error="testErr(i, 'diagnosis')"
             >
               <template #default="{ id }">
@@ -280,7 +285,7 @@ function save() {
                   :id="id"
                   v-model="t.diagnosis"
                   :rows="2"
-                  placeholder="Sospecha clínica que justifica el examen"
+                  placeholder="Observaciones sobre el examen solicitado"
                 />
               </template>
             </BaseField>

@@ -4,8 +4,6 @@ import {
   Stethoscope,
   ClipboardList,
   TriangleAlert,
-  Pill,
-  FlaskConical,
   Calendar,
   Sparkles,
   Activity,
@@ -419,31 +417,6 @@ watch(
           </BaseField>
         </div>
       </SectionCard>
-
-      <div class="planes">
-        <SectionCard
-          :icon="FlaskConical"
-          title="Plan diagnóstico"
-          subtitle="Exámenes complementarios"
-        >
-          <BaseTextarea
-            v-model="c.diagnosticPlan"
-            :rows="4"
-            placeholder="Hemograma, bioquímica, ecografía abdominal…"
-          />
-        </SectionCard>
-        <SectionCard
-          :icon="Pill"
-          title="Plan terapéutico"
-          subtitle="Tratamiento e indicaciones"
-        >
-          <BaseTextarea
-            v-model="c.therapeuticPlan"
-            :rows="4"
-            placeholder="Medicación, indicaciones para el dueño, dieta…"
-          />
-        </SectionCard>
-      </div>
 
       <SectionCard :icon="Calendar" title="Próximo control" subtitle="Opcional">
         <div class="grid-1-2">

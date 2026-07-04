@@ -132,7 +132,8 @@ async function persistConsultationItems(consultationId: number, animalId: number
     if (!prescriptionId) {
       const created = await prescriptionApi.create({
         date: p.date,
-        diagnosis: p.diagnosis,
+        // El diagnóstico de la receta es el de la consulta (no se reescribe en la receta).
+        diagnosis: s.consultation.diagnosis.trim() || null,
         observations: p.observations,
         animalId,
         consultationId,
@@ -149,6 +150,7 @@ async function persistConsultationItems(consultationId: number, animalId: number
         presentation: m.presentation,
         quantity: m.quantity,
         posology: m.posology,
+        observation: m.observation?.trim() || null,
         prescriptionId,
       })
       draft.markMedicamentSaved(i, j, createdMed.id)
@@ -299,8 +301,6 @@ async function saveConsultation(keepOwner = false) {
         consultationTypeId: Number(consultationType.id),
         anamnesis: cDraft.anamnesis.trim(),
         diagnosis: cDraft.diagnosis.trim() || null,
-        therapeuticPlan: cDraft.therapeuticPlan.trim() || null,
-        diagnosisPlan: cDraft.diagnosticPlan.trim() || null,
         prognosis: cDraft.prognosis.trim() || null,
         nextControl: cDraft.nextControlDate || null,
         animalId: Number(pet.id),
@@ -339,6 +339,11 @@ async function saveConsultation(keepOwner = false) {
       petName: pet.name,
       consultationType: consultationType.name,
       date,
+      // Recetas guardadas → la pantalla de éxito ofrece imprimir su fórmula. Se lee ANTES
+      // del draft.reset() de abajo (aquí los savedId todavía están presentes).
+      prescriptions: draft.state.prescriptions
+        .filter((p) => p.savedId)
+        .map((p) => ({ id: p.savedId as number, label: p.medicaments[0]?.name ?? 'Receta' })),
     }
     const billOwnerId = owner ? Number(owner.id) : null
     const billAnimalId = Number(pet.id)
@@ -353,6 +358,9 @@ async function saveConsultation(keepOwner = false) {
       animalName: billPetName,
       heading: 'Facturación · Consulta',
       autoConsulta: true,
+      // Tras guardar, la facturación es una decisión forzada: sin X, sin Cancelar y
+      // sin cierre por backdrop/Escape. El usuario sale eligiendo una acción del footer.
+      dismissible: false,
       onClose: () => {
         router.push({ name: 'consulta-nueva-exito', state: successState })
       },

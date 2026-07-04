@@ -125,8 +125,6 @@ const childrenCountLabel = computed(() =>
       :value="data.prognosis"
       span="full"
     />
-    <DetailField label="Plan diagnóstico" :value="clean(data.diagnosisPlan)" span="full" />
-    <DetailField label="Plan terapéutico" :value="clean(data.therapeuticPlan)" span="full" />
 
     <div class="children-section">
       <div class="children-head">

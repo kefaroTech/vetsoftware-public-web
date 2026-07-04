@@ -363,7 +363,8 @@ export async function guardarConsulta(
   await expect(billing).toBeVisible()
   if (modo === 'solo-guardar') {
     await billing.getByRole('button', { name: /Solo guardar la consulta/ }).click()
-    await billing.getByRole('button', { name: 'Guardar consulta' }).click()
+    // Consulta ya guardada → el primario en "solo guardar" dice "Salir".
+    await billing.getByRole('button', { name: 'Salir' }).click()
   } else {
     // Destino por defecto 'new' con el servicio "Consulta" precargado (autoConsulta).
     await billing.getByRole('button', { name: /Guardar y abrir cuenta/ }).click()
@@ -414,13 +415,16 @@ export async function createInSearchable(
   await expect(field.locator('button.trigger')).toContainText(name)
 }
 
-/** Llena (sin guardar) los campos requeridos de un medicamento en el modal de receta. */
+/**
+ * Llena (sin guardar) los campos requeridos de un medicamento en el modal de receta.
+ * El diagnóstico ya NO se captura en la receta (se toma de la consulta), por eso no se llena aquí.
+ * `opts.diagnosis` se mantiene por compatibilidad pero se ignora.
+ */
 export async function fillReceta(
   page: Page,
   opts: { diagnosis?: string; medName?: string } = {},
 ): Promise<void> {
   const d = page.getByRole('dialog', { name: 'Nueva receta' })
-  await d.getByLabel(/Diagnóstico/).fill(opts.diagnosis ?? 'Gastroenteritis aguda')
   await d.getByLabel(/Nombre del medicamento/).first().fill(opts.medName ?? 'Amoxicilina')
   await d.getByLabel(/Presentación/).first().fill('Comprimido 250 mg')
   await d.getByLabel(/Cantidad/).first().fill('14')

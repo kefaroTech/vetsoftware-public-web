@@ -100,8 +100,6 @@ export interface Consultation {
   type: ConsultationType | null
   anamnesis: string
   diagnosis: string
-  diagnosticPlan: string
-  therapeuticPlan: string
   nextControlDate: string
   nextControlNotes: string
   ownerId: string
@@ -144,11 +142,13 @@ export interface MedicamentPrescription {
   presentation: string
   quantity: number
   posology: string
+  // Observación por medicamento (opcional).
+  observation?: string
 }
 
 export interface Prescription {
   date: string
-  diagnosis: string
+  // El diagnóstico ya no se captura en la receta: es el de la consulta a la que pertenece.
   observations: string
   medicaments: MedicamentPrescription[]
 }

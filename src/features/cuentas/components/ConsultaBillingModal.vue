@@ -20,8 +20,10 @@ const props = withDefaults(
     subtitle?: string
     /** `true` en consulta (precarga servicio "consulta"); `false` en procedimientos. */
     autoConsulta?: boolean
+    /** `false` → modal no descartable: sin X, sin Cancelar, sin backdrop/Escape. */
+    dismissible?: boolean
   }>(),
-  { heading: 'Facturación', subtitle: '', autoConsulta: false },
+  { heading: 'Facturación', subtitle: '', autoConsulta: false, dismissible: true },
 )
 
 const emit = defineEmits<{ close: []; finish: [] }>()
@@ -136,7 +138,9 @@ function removeLine(line: CartLine) {
 
 const selectedHeading = computed(() => (destino.value === 'existing' ? 'Cargos de la cuenta' : 'Cargos de esta consulta'))
 const primaryLabel = computed(() => {
-  if (destino.value === 'nada') return 'Guardar consulta'
+  // La consulta/procedimiento YA se guardó antes de abrir este modal: en 'nada' el
+  // primario solo cierra → "Salir".
+  if (destino.value === 'nada') return 'Salir'
   if (destino.value === 'existing') return 'Guardar y agregar a cuenta'
   return 'Guardar y abrir cuenta'
 })
@@ -222,6 +226,7 @@ async function confirm() {
     :subtitle="subtitle || (animalName ? `${animalName} · ${ownerName}` : ownerName)"
     :icon="Receipt"
     :width="700"
+    :closable="dismissible"
     @close="emit('close')"
   >
     <template #body>
@@ -366,7 +371,7 @@ async function confirm() {
       <span v-if="showCharges && items.length" class="foottotal">Total cargos <strong>{{ formatMoney(total) }}</strong></span>
     </template>
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
+      <button v-if="dismissible" type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
       <button type="button" class="btn-primary" :disabled="!canConfirm" @click="confirm">
         {{ busy ? 'Guardando…' : primaryLabel }}
       </button>

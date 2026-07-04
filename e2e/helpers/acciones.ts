@@ -258,8 +258,7 @@ export async function modalAsteriskAudit(
 export const FILLERS: Record<AccionKey, (page: Page) => Promise<void>> = {
   async laboratorio(page) {
     await createInSearchable(page, 'Tipo de examen', `Examen E2E ${uniqueSuffix()}`)
-    // Cantidad viene con default "1" (válido). Diagnóstico presuntivo:
-    await modalControl(page, 'Diagnóstico presuntivo').fill('Sospecha de anemia regenerativa')
+    // Cantidad viene con default "1" (válido). Observaciones es opcional → no se llena.
   },
   async imagen(page) {
     await createInSearchable(page, 'Tipo de estudio', `Estudio E2E ${uniqueSuffix()}`)
@@ -294,7 +293,7 @@ export const FILLERS: Record<AccionKey, (page: Page) => Promise<void>> = {
 
 /** Los `*` obligatorios esperados en cada modal (para la auditoría gráfica). */
 export const EXPECTED_REQUIRED: Record<AccionKey, string[]> = {
-  laboratorio: ['Cantidad', 'Diagnóstico presuntivo', 'Fecha', 'Tipo de examen'],
+  laboratorio: ['Cantidad', 'Fecha', 'Tipo de examen'],
   imagen: ['Diagnóstico', 'Fecha', 'Región / protocolo', 'Signos clínicos', 'Tipo de estudio'],
   vacunacion: ['Fecha de aplicación', 'Lote', 'Tipo de vacuna'],
   hospitalizacion: ['Fecha de registro', 'Inicio', 'Razón de ingreso', 'Tipo'],

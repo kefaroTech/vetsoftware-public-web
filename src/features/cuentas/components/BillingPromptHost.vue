@@ -15,6 +15,7 @@ const { state, closeBilling, finishBilling } = useBillingPrompt()
     :heading="state.heading"
     :subtitle="state.subtitle"
     :auto-consulta="state.autoConsulta"
+    :dismissible="state.dismissible"
     @finish="finishBilling"
     @close="closeBilling"
   />

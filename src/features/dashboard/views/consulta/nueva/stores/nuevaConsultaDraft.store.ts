@@ -52,8 +52,6 @@ export interface ConsultationDraft {
   typeId: string
   anamnesis: string
   diagnosis: string
-  diagnosticPlan: string
-  therapeuticPlan: string
   // Pronóstico (AVMA) — opcional.
   prognosis: string
   nextControlDate: string
@@ -129,8 +127,6 @@ function emptyConsultation(): ConsultationDraft {
     typeId: '',
     anamnesis: '',
     diagnosis: '',
-    diagnosticPlan: '',
-    therapeuticPlan: '',
     prognosis: '',
     nextControlDate: '',
     nextControlNotes: '',
@@ -307,8 +303,6 @@ export const useNuevaConsultaDraftStore = defineStore('nuevaConsultaDraft', () =
       !!c.typeId ||
       !!c.anamnesis.trim() ||
       !!c.diagnosis.trim() ||
-      !!c.diagnosticPlan.trim() ||
-      !!c.therapeuticPlan.trim() ||
       !!c.nextControlDate ||
       !!c.nextControlNotes.trim()
     return !hasOwner && !hasPet && !hasConsultationData && actionsCount.value === 0
@@ -476,8 +470,6 @@ export function buildConsultation(
     type: draft.consultationType,
     anamnesis: draft.consultation.anamnesis,
     diagnosis: draft.consultation.diagnosis,
-    diagnosticPlan: draft.consultation.diagnosticPlan,
-    therapeuticPlan: draft.consultation.therapeuticPlan,
     nextControlDate: draft.consultation.nextControlDate,
     nextControlNotes: draft.consultation.nextControlNotes,
     ownerId,

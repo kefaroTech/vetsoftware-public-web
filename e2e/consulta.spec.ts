@@ -564,7 +564,7 @@ test.describe('F · Datos de la consulta', () => {
 
   test('[data] abrir la acción rápida de receta muestra su modal', async ({ page }) => {
     await irAPasoConsulta(page)
-    await openQuickAction(page, /Receta/, 'Nueva receta')
+    await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
   })
 
   test('[data] "Guardar consulta" abre un modal de confirmación (no guarda directo)', async ({
@@ -632,9 +632,8 @@ test.describe('H · Procedimientos de la consulta', () => {
 
   // ── Receta (medicamentos) ──────────────────────────────────────────────────
   test('[data] Receta: guardar vacío muestra los requeridos', async ({ page }) => {
-    const d = await openQuickAction(page, /Receta/, 'Nueva receta')
+    const d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
     await d.getByRole('button', { name: 'Guardar receta' }).click()
-    await expect(d.getByText('Indica el diagnóstico')).toBeVisible()
     await expect(d.getByText('Indica el medicamento')).toBeVisible()
     await expect(d.getByText('Indica la presentación')).toBeVisible()
     await expect(d.getByText('Indica la cantidad')).toBeVisible()
@@ -643,7 +642,7 @@ test.describe('H · Procedimientos de la consulta', () => {
   })
 
   test('[data] Receta: cantidad no numérica muestra "Cantidad inválida"', async ({ page }) => {
-    const d = await openQuickAction(page, /Receta/, 'Nueva receta')
+    const d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
     await d.getByLabel(/Cantidad/).fill('abc')
     await d.getByRole('button', { name: 'Guardar receta' }).click()
     await expect(d.getByText('Cantidad inválida')).toBeVisible()
@@ -652,19 +651,19 @@ test.describe('H · Procedimientos de la consulta', () => {
   test('[data] Receta: guardar sube el contador y queda en el draft (round-trip)', async ({
     page,
   }) => {
-    const d = await openQuickAction(page, /Receta/, 'Nueva receta')
+    const d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
     await fillReceta(page)
     await d.getByRole('button', { name: 'Guardar receta' }).click()
     await expect(d).toBeHidden()
     // El tile refleja el conteo…
     await expect(page.getByText('1 generada · click para añadir más')).toBeVisible()
     // …y al reabrir, la receta persiste en el draft ("Ya agregadas").
-    const d2 = await openQuickAction(page, /Receta/, 'Nueva receta')
+    const d2 = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
     await expect(d2.getByText('Ya agregadas (1)')).toBeVisible()
   })
 
   test('[data] Receta: agregar y quitar un segundo medicamento', async ({ page }) => {
-    const d = await openQuickAction(page, /Receta/, 'Nueva receta')
+    const d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
     await expect(d.getByText('1 en la receta')).toBeVisible()
     await d.getByRole('button', { name: 'Agregar otro medicamento' }).click()
     await expect(d.getByText('2 en la receta')).toBeVisible()
@@ -672,38 +671,75 @@ test.describe('H · Procedimientos de la consulta', () => {
     await expect(d.getByText('1 en la receta')).toBeVisible()
   })
 
-  test('[data] Receta: editar una ya agregada actualiza su diagnóstico', async ({ page }) => {
-    let d = await openQuickAction(page, /Receta/, 'Nueva receta')
-    await fillReceta(page, { diagnosis: 'Diagnóstico inicial' })
+  test('[data] Receta: editar una ya agregada actualiza el medicamento', async ({ page }) => {
+    let d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
+    await fillReceta(page, { medName: 'Amoxicilina' })
     await d.getByRole('button', { name: 'Guardar receta' }).click()
     await expect(d).toBeHidden()
-    d = await openQuickAction(page, /Receta/, 'Nueva receta')
+    d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
     await d.getByRole('button', { name: 'Editar receta' }).click()
-    await expect(d.getByText(/Editando receta #1/)).toBeVisible()
-    await d.getByLabel(/Diagnóstico/).fill('Diagnóstico corregido')
+    // Sin banner "Editando…": el modo edición se refleja en el botón de guardar.
+    await expect(d.getByRole('button', { name: 'Guardar cambios' })).toBeVisible()
+    await d.getByLabel(/Nombre del medicamento/).first().fill('Cefalexina')
     await d.getByRole('button', { name: 'Guardar cambios' }).click()
     await expect(d.getByText('Ya agregadas (1)')).toBeVisible()
-    await expect(d.getByText('Diagnóstico corregido')).toBeVisible()
+    await expect(d.getByText('Cefalexina')).toBeVisible()
   })
 
-  test('[data] Receta: eliminar una ya agregada la quita del draft', async ({ page }) => {
-    let d = await openQuickAction(page, /Receta/, 'Nueva receta')
+  // ── Fase 3: diagnóstico desde la consulta + observación por medicamento ──────
+  test('[data] Receta: ya NO pide diagnóstico (se toma de la consulta)', async ({ page }) => {
+    const d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
+    await expect(d.getByLabel(/Diagnóstico/)).toHaveCount(0)
+  })
+
+  test('[data] Receta: la observación por medicamento persiste (round-trip)', async ({ page }) => {
+    let d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
+    await fillReceta(page)
+    await d.getByLabel(/Observación/).first().fill('Administrar con alimento')
+    await d.getByRole('button', { name: 'Guardar receta' }).click()
+    await expect(d).toBeHidden()
+    d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
+    await d.getByRole('button', { name: 'Editar receta' }).click()
+    await expect(d.getByLabel(/Observación/).first()).toHaveValue('Administrar con alimento')
+  })
+
+  test('[data] Receta: con un ítem ya agregado, guardar el form vacío NO exige campos ni crea vacío', async ({
+    page,
+  }) => {
+    // Agrega una receta…
+    let d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
     await fillReceta(page)
     await d.getByRole('button', { name: 'Guardar receta' }).click()
     await expect(d).toBeHidden()
-    d = await openQuickAction(page, /Receta/, 'Nueva receta')
+    // …reabre: ya hay 1. Guardar con el formulario nuevo vacío no valida ni crea vacío → cierra.
+    d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
+    await expect(d.getByText('Ya agregadas (1)')).toBeVisible()
+    await d.getByRole('button', { name: 'Guardar receta' }).click()
+    await expect(d).toBeHidden()
+    await expect(d.getByText('Indica el medicamento')).toHaveCount(0)
+    // El contador sigue en 1: no se creó un ítem vacío.
+    await expect(page.getByText('1 generada · click para añadir más')).toBeVisible()
+  })
+
+  test('[data] Receta: eliminar una ya agregada la quita del draft', async ({ page }) => {
+    let d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
+    await fillReceta(page)
+    await d.getByRole('button', { name: 'Guardar receta' }).click()
+    await expect(d).toBeHidden()
+    d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
     await expect(d.getByText('Ya agregadas (1)')).toBeVisible()
     await d.getByRole('button', { name: 'Eliminar receta' }).click()
     await expect(d.getByText(/Ya agregadas/)).toHaveCount(0)
   })
 
   // ── Examen de laboratorio (catálogo creable) ────────────────────────────────
-  test('[data] Examen lab: guardar vacío exige tipo y diagnóstico presuntivo', async ({ page }) => {
+  test('[data] Examen lab: guardar vacío exige el tipo (Observaciones es opcional)', async ({ page }) => {
     const d = await openQuickAction(page, /Examen lab/, 'Solicitar examen de laboratorio')
     await d.getByRole('button', { name: 'Guardar solicitud' }).click()
     // "Selecciona un tipo" también es el placeholder del select → acotamos al <p class="error">.
     await expect(d.locator('p.error', { hasText: 'Selecciona un tipo' })).toBeVisible()
-    await expect(d.getByText('Indica el diagnóstico presuntivo')).toBeVisible()
+    // Observaciones ya NO es obligatorio: no debe aparecer ningún error de ese campo.
+    await expect(d.getByText('Indica las observaciones')).toHaveCount(0)
     await expect(d).toBeVisible()
   })
 
@@ -714,14 +750,14 @@ test.describe('H · Procedimientos de la consulta', () => {
     await expect(d.getByText('Cantidad inválida')).toBeVisible()
   })
 
-  test('[data] Examen lab: crear tipo (sin descripción) + diagnóstico guarda; POST del tipo 2xx', async ({
+  test('[data] Examen lab: crear tipo (sin descripción) guarda SIN Observaciones (opcional); POST del tipo 2xx', async ({
     page,
   }) => {
     const api = trackApiWrites(page)
     const d = await openQuickAction(page, /Examen lab/, 'Solicitar examen de laboratorio')
     // createInSearchable NO llena descripción → verifica que description es OPCIONAL.
     await createInSearchable(page, 'Tipo de examen', `Hemograma E2E ${uniqueSuffix()}`)
-    await d.getByLabel(/Diagnóstico presuntivo/).fill('Sospecha de anemia')
+    // NO llenamos Observaciones: es opcional → debe guardar igual.
     await d.getByRole('button', { name: 'Guardar solicitud' }).click()
     await expect(d).toBeHidden()
     api.assertAllOk() // el POST de creación del tipo respondió 2xx
@@ -869,19 +905,19 @@ test.describe('H · Procedimientos de la consulta', () => {
 
   // ── Cierre de modales (regla UX: solo X / Escape; el backdrop NO cierra) ─────
   test('[data] el modal se cierra con Escape', async ({ page }) => {
-    const d = await openQuickAction(page, /Receta/, 'Nueva receta')
+    const d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
     await page.keyboard.press('Escape')
     await expect(d).toBeHidden()
   })
 
   test('[data] el modal se cierra con la X (Cerrar)', async ({ page }) => {
-    const d = await openQuickAction(page, /Receta/, 'Nueva receta')
+    const d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
     await d.getByRole('button', { name: 'Cerrar' }).click()
     await expect(d).toBeHidden()
   })
 
   test('[data] el modal NO se cierra al hacer click en el backdrop', async ({ page }) => {
-    const d = await openQuickAction(page, /Receta/, 'Nueva receta')
+    const d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
     // Click en la esquina del overlay (fuera de la tarjeta) → debe seguir abierto.
     await page.locator('.overlay').click({ position: { x: 5, y: 5 } })
     await expect(d).toBeVisible()
@@ -982,6 +1018,190 @@ test.describe('F2 · Examen físico y pronóstico', () => {
     await guardarConsulta(page, 'solo-guardar')
     api.assertAllOk()
   })
+
+  test('[data] temperatura 60 °C (límite superior) es válida', async ({ page }) => {
+    const t = page.getByLabel(/Temperatura/)
+    await t.fill('60')
+    await t.blur()
+    await expect(page.getByText(/Debe estar entre 0 y 60/)).toHaveCount(0)
+  })
+
+  test('[data] frec. cardíaca 1000 (límite superior) es válida', async ({ page }) => {
+    const hr = page.getByLabel(/Frec\. cardíaca/)
+    await hr.fill('1000')
+    await hr.blur()
+    await expect(page.getByText(/Debe estar entre 0 y 1000/)).toHaveCount(0)
+  })
+
+  test('[data] frec. respiratoria fuera de rango (>1000) muestra error', async ({ page }) => {
+    const rr = page.getByLabel(/Frec\. respiratoria/)
+    await rr.fill('1001')
+    await rr.blur()
+    await expect(page.getByText('Debe estar entre 0 y 1000 rpm.')).toBeVisible()
+  })
+
+  test('[data] ya no hay cajas de plan; el plan vive en las acciones ("Plan Diagnóstico y Terapéutico")', async ({
+    page,
+  }) => {
+    // Las cajas de texto libre de plan diagnóstico/terapéutico se eliminaron (por su placeholder).
+    await expect(page.getByPlaceholder(/Hemograma, bioquímica/)).toHaveCount(0)
+    await expect(page.getByPlaceholder(/Medicación, indicaciones/)).toHaveCount(0)
+    // La sección de acciones es ahora "Plan Diagnóstico y Terapéutico" y la tile de receta "Plan terapéutico".
+    await expect(page.getByText(/Plan Diagnóstico y Terapéutico/)).toBeVisible()
+    await expect(page.getByRole('button', { name: /Plan terapéutico/ })).toBeVisible()
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════
+// F3. Consumo de servicio (Fase 3): examen físico, pronóstico, diagnóstico de
+//     receta desde la consulta y observación por medicamento. Intercepta el
+//     payload de escritura y verifica TIPOS de dato, valores, opcionales en null
+//     y respuesta 2xx. Todos [data] (llegan al paso 2 y persisten en backend).
+// ════════════════════════════════════════════════════════════════════════════
+test.describe('F3 · Consumo de servicio (Fase 3)', () => {
+  test.beforeEach(async ({ page }) => {
+    await gotoNuevaConsulta(page)
+    await irAPasoConsulta(page)
+  })
+
+  const isConsultationsPost = (r: import('@playwright/test').Request | import('@playwright/test').Response) => {
+    const req = 'request' in r ? r.request() : r
+    return new URL(req.url()).pathname.endsWith('/consultations') && req.method() === 'POST'
+  }
+
+  test('[data] POST /consultations envía los tipos correctos del examen físico y responde 2xx', async ({
+    page,
+  }) => {
+    await pickSelect(page, /Tipo de consulta/)
+    await anamnesis(page).fill('Consulta con constantes completas.')
+    await page.getByLabel(/Temperatura/).fill('38.5')
+    await page.getByLabel(/Frec\. cardíaca/).fill('90')
+    await page.getByLabel(/Frec\. respiratoria/).fill('24')
+    await page.getByLabel(/Mucosas/).fill('Rosadas')
+    await page.getByLabel(/Llenado capilar/).fill('< 2 s')
+    await page.getByLabel(/Hidratación/).fill('Normal')
+    await pickSelect(page, /Condición corporal/, /^5$/)
+    await pickSelect(page, /Escala de dolor/, /^2$/)
+    await page.getByLabel(/Actitud/).fill('Alerta')
+    await page.getByLabel(/Hallazgos al examen/).fill('Sin hallazgos relevantes.')
+    await page.getByLabel(/Pronóstico/).fill('Favorable')
+
+    await footerNext(page, 'Guardar consulta').click()
+    const confirm = page.getByRole('alertdialog')
+    await expect(confirm).toBeVisible()
+    const [req, resp] = await Promise.all([
+      page.waitForRequest((r) => isConsultationsPost(r)),
+      page.waitForResponse((r) => isConsultationsPost(r)),
+      confirm.getByRole('button', { name: 'Confirmar y guardar' }).click(),
+    ])
+    const body = req.postDataJSON()
+    // Tipos de dato exactos que el backend espera (BigDecimal/Integer).
+    expect(typeof body.temperature).toBe('number')
+    expect(body.temperature).toBe(38.5)
+    expect(Number.isInteger(body.heartRate)).toBeTruthy()
+    expect(body.heartRate).toBe(90)
+    expect(body.respiratoryRate).toBe(24)
+    expect(body.mucousMembranes).toBe('Rosadas')
+    expect(body.capillaryRefill).toBe('< 2 s')
+    expect(body.hydration).toBe('Normal')
+    expect(body.bodyConditionScore).toBe(5)
+    expect(body.painScore).toBe(2)
+    expect(body.attitude).toBe('Alerta')
+    expect(body.examFindings).toBe('Sin hallazgos relevantes.')
+    expect(body.prognosis).toBe('Favorable')
+    // Los planes de texto se eliminaron: no deben viajar en el payload.
+    expect(body).not.toHaveProperty('therapeuticPlan')
+    expect(body).not.toHaveProperty('diagnosisPlan')
+    expect(resp.ok(), `POST /consultations → ${resp.status()}`).toBeTruthy()
+  })
+
+  test('[data] POST /consultations SIN examen físico manda los vitales en null y responde 2xx', async ({
+    page,
+  }) => {
+    await pickSelect(page, /Tipo de consulta/)
+    await anamnesis(page).fill('Consulta sin constantes (todo opcional).')
+    await footerNext(page, 'Guardar consulta').click()
+    const confirm = page.getByRole('alertdialog')
+    await expect(confirm).toBeVisible()
+    const [req, resp] = await Promise.all([
+      page.waitForRequest((r) => isConsultationsPost(r)),
+      page.waitForResponse((r) => isConsultationsPost(r)),
+      confirm.getByRole('button', { name: 'Confirmar y guardar' }).click(),
+    ])
+    const body = req.postDataJSON()
+    // Todos los campos del examen físico son OPCIONALES → viajan como null.
+    expect(body.temperature).toBeNull()
+    expect(body.heartRate).toBeNull()
+    expect(body.respiratoryRate).toBeNull()
+    expect(body.mucousMembranes).toBeNull()
+    expect(body.capillaryRefill).toBeNull()
+    expect(body.hydration).toBeNull()
+    expect(body.bodyConditionScore).toBeNull()
+    expect(body.painScore).toBeNull()
+    expect(body.attitude).toBeNull()
+    expect(body.examFindings).toBeNull()
+    expect(body.prognosis).toBeNull()
+    expect(resp.ok()).toBeTruthy()
+  })
+
+  test('[data] receta: el POST /prescriptions usa el diagnóstico de la CONSULTA', async ({ page }) => {
+    await pickSelect(page, /Tipo de consulta/)
+    await anamnesis(page).fill('Consulta cuyo diagnóstico alimenta la receta.')
+    await page.getByPlaceholder(/Diagnóstico presuntivo/).fill('Gastroenteritis aguda inespecífica')
+    const d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
+    await fillReceta(page)
+    await d.getByRole('button', { name: 'Guardar receta' }).click()
+    await expect(d).toBeHidden()
+    const rxReqP = page.waitForRequest(
+      (r) => new URL(r.url()).pathname.endsWith('/prescriptions') && r.method() === 'POST',
+    )
+    await guardarConsulta(page, 'solo-guardar')
+    const body = (await rxReqP).postDataJSON()
+    expect(body.diagnosis).toBe('Gastroenteritis aguda inespecífica')
+  })
+
+  test('[data] receta: el POST /medicament-prescriptions incluye observación y cantidad numérica', async ({
+    page,
+  }) => {
+    await pickSelect(page, /Tipo de consulta/)
+    await anamnesis(page).fill('Consulta con receta observada.')
+    const d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
+    await fillReceta(page)
+    await d.getByLabel(/Observación/).first().fill('Administrar con alimento')
+    await d.getByRole('button', { name: 'Guardar receta' }).click()
+    await expect(d).toBeHidden()
+    const medReqP = page.waitForRequest(
+      (r) =>
+        new URL(r.url()).pathname.endsWith('/medicament-prescriptions') && r.method() === 'POST',
+    )
+    await guardarConsulta(page, 'solo-guardar')
+    const body = (await medReqP).postDataJSON()
+    expect(body.observation).toBe('Administrar con alimento')
+    expect(typeof body.quantity).toBe('number')
+    expect(body.quantity).toBe(14)
+  })
+
+  test('[data] éxito: "Imprimir receta" descarga el PDF (GET /prescriptions/{id}/export.pdf 2xx)', async ({
+    page,
+  }) => {
+    await pickSelect(page, /Tipo de consulta/)
+    await anamnesis(page).fill('Consulta con receta imprimible.')
+    const d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
+    await fillReceta(page)
+    await d.getByRole('button', { name: 'Guardar receta' }).click()
+    await expect(d).toBeHidden()
+    await guardarConsulta(page, 'solo-guardar') // navega a la pantalla de éxito
+    // La pantalla de éxito ofrece imprimir la fórmula; el click dispara el GET del PDF.
+    const [resp] = await Promise.all([
+      page.waitForResponse((r) => {
+        const p = new URL(r.url()).pathname
+        return p.includes('/prescriptions/') && p.endsWith('/export.pdf')
+      }),
+      page.getByRole('button', { name: /Imprimir receta/ }).first().click(),
+    ])
+    expect(resp.ok(), `GET export.pdf → ${resp.status()}`).toBeTruthy()
+    expect(resp.headers()['content-type']).toContain('pdf')
+  })
 })
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1016,7 +1236,7 @@ test.describe('G · Flujo completo y borrador', () => {
     await pickSelect(page, /Tipo de consulta/)
     await anamnesis(page).fill('Consulta con procedimientos, E2E.')
 
-    let d = await openQuickAction(page, /Receta/, 'Nueva receta')
+    let d = await openQuickAction(page, /Plan terapéutico/, 'Nueva receta')
     await fillReceta(page)
     await d.getByRole('button', { name: 'Guardar receta' }).click()
     await expect(d).toBeHidden()
@@ -1045,11 +1265,38 @@ test.describe('G · Flujo completo y borrador', () => {
     await anamnesis(page).fill('Consulta con examen de laboratorio, E2E.')
     const d = await openQuickAction(page, /Examen lab/, 'Solicitar examen de laboratorio')
     await createInSearchable(page, 'Tipo de examen', `Hemograma E2E ${uniqueSuffix()}`)
-    await d.getByLabel(/Diagnóstico presuntivo/).fill('Sospecha de anemia')
+    await d.getByLabel(/Observaciones/).fill('Sospecha de anemia')
     await d.getByRole('button', { name: 'Guardar solicitud' }).click()
     await expect(d).toBeHidden()
     // Guardar consulta → modal de facturación → "Solo guardar" → éxito.
     await guardarConsulta(page, 'solo-guardar')
+  })
+
+  test('[data] facturación: modal forzado (sin X, sin Cancelar, Escape no cierra) y primario "Salir"', async ({
+    page,
+  }) => {
+    await gotoNuevaConsulta(page)
+    await irAPasoConsulta(page)
+    await pickSelect(page, /Tipo de consulta/)
+    await anamnesis(page).fill('Consulta para validar el modal de facturación forzado.')
+    await footerNext(page, 'Guardar consulta').click()
+    const confirm = page.getByRole('alertdialog')
+    await expect(confirm).toBeVisible()
+    await confirm.getByRole('button', { name: 'Confirmar y guardar' }).click()
+
+    const billing = page.getByRole('dialog', { name: /Facturación/ })
+    await expect(billing).toBeVisible()
+    // No descartable: sin botón de cerrar (X) ni "Cancelar".
+    await expect(billing.getByRole('button', { name: 'Cerrar' })).toHaveCount(0)
+    await expect(billing.getByRole('button', { name: 'Cancelar' })).toHaveCount(0)
+    // Escape tampoco lo cierra.
+    await page.keyboard.press('Escape')
+    await expect(billing).toBeVisible()
+    // Al elegir "Solo guardar la consulta", el primario dice "Salir".
+    await billing.getByRole('button', { name: /Solo guardar la consulta/ }).click()
+    await expect(billing.getByRole('button', { name: 'Salir' })).toBeVisible()
+    await billing.getByRole('button', { name: 'Salir' }).click()
+    await expect(page).toHaveURL(/exito|consulta-nueva-exito/)
   })
 
   test('[data] facturación integrada: guardar + abrir cuenta con cargos, servicios responden 2xx', async ({
@@ -1253,6 +1500,165 @@ test.describe('J · Campos obligatorios (*) vs opcionales', () => {
     // (no es un BaseField con *): su sección lo declara "Obligatorio".
     await expect(page.getByText(/Obligatorio/).first()).toBeVisible()
   })
+})
+
+// ════════════════════════════════════════════════════════════════════════════
+// K. Edición enfocada + guarda de "form vacío" para las 7 acciones rápidas.
+//    Data-driven: por cada acción se siembra 1 ítem y se verifica que
+//     (1) al editar se oculta la lista "Ya agregadas" y aparece "Guardar cambios";
+//     (2) con un ítem ya agregado, pulsar guardar con el form nuevo vacío NO
+//         dispara la obligatoriedad ni crea un ítem vacío: solo cierra.
+// ════════════════════════════════════════════════════════════════════════════
+interface QuickActionCase {
+  name: string
+  tile: RegExp
+  dialog: string | RegExp
+  save: { name: string; exact?: boolean }
+  editLabel: string
+  seed: (page: import('@playwright/test').Page) => Promise<void>
+}
+
+const QUICK_ACTIONS: QuickActionCase[] = [
+  {
+    name: 'Plan terapéutico',
+    tile: /Plan terapéutico/,
+    dialog: 'Nueva receta',
+    save: { name: 'Guardar receta' },
+    editLabel: 'Editar receta',
+    seed: async (page) => {
+      await fillReceta(page)
+    },
+  },
+  {
+    name: 'Vacunación',
+    tile: /Vacunación/,
+    dialog: 'Aplicar vacuna',
+    save: { name: 'Registrar vacunación' },
+    editLabel: 'Editar vacuna',
+    seed: async (page) => {
+      await createInSearchable(page, 'Tipo de vacuna', `Vac E2E ${uniqueSuffix()}`)
+      await page.getByRole('dialog').getByLabel(/Lote/).fill('L-2026-01')
+    },
+  },
+  {
+    name: 'Examen lab',
+    tile: /Examen lab/,
+    dialog: 'Solicitar examen de laboratorio',
+    save: { name: 'Guardar solicitud' },
+    editLabel: 'Editar examen',
+    seed: async (page) => {
+      await createInSearchable(page, 'Tipo de examen', `Ex E2E ${uniqueSuffix()}`)
+      await page.getByRole('dialog').getByLabel(/Observaciones/).fill('Sospecha de anemia')
+    },
+  },
+  {
+    name: 'Imagen Dx',
+    tile: /Imagen Dx/,
+    dialog: 'Solicitar imagen diagnóstica',
+    save: { name: 'Guardar solicitud' },
+    editLabel: 'Editar estudio',
+    seed: async (page) => {
+      await createInSearchable(page, 'Tipo de estudio', `Rx E2E ${uniqueSuffix()}`)
+      const d = page.getByRole('dialog')
+      await d.getByLabel(/Región \/ Protocolo/).fill('Tórax LL')
+      await d.getByLabel(/Signos clínicos/).fill('Tos productiva de 5 días')
+      await d.getByLabel(/Diagnóstico presuntivo/).fill('Neumonía bacteriana')
+    },
+  },
+  {
+    name: 'Hospitalización',
+    tile: /Hospitalización/,
+    dialog: 'Ingresar a hospitalización',
+    save: { name: 'Guardar', exact: true },
+    editLabel: 'Editar hospitalización',
+    seed: async (page) => {
+      await page
+        .getByRole('dialog')
+        .getByLabel(/Motivo de hospitalización/)
+        .fill('Gastroenteritis hemorrágica severa')
+    },
+  },
+  {
+    name: 'Desparasitación',
+    tile: /Desparasitación/,
+    dialog: 'Registrar desparasitación',
+    save: { name: 'Guardar', exact: true },
+    editLabel: 'Editar desparasitación',
+    seed: async (page) => {
+      const d = page.getByRole('dialog')
+      await d.getByLabel(/Producto/).fill('Drontal Plus')
+      await d.getByLabel(/Dosis/).fill('1 comp. por cada 10 kg')
+    },
+  },
+  {
+    name: 'Cirugía',
+    tile: /Cirugía/,
+    dialog: 'Programar cirugía',
+    save: { name: 'Guardar', exact: true },
+    editLabel: 'Editar cirugía',
+    seed: async (page) => {
+      await createInSearchable(page, 'Tipo de cirugía', `Cx E2E ${uniqueSuffix()}`)
+      await page
+        .getByRole('dialog')
+        .getByLabel(/Descripción del procedimiento/)
+        .fill('Ovariohisterectomía por laparotomía')
+    },
+  },
+]
+
+test.describe('K · Edición enfocada y guardas de las acciones rápidas', () => {
+  let sharedOwner: OwnerData
+  let sharedPetName: string
+
+  test.beforeAll(async ({ browser }) => {
+    const page = await browser.newPage()
+    try {
+      await gotoNuevaConsulta(page)
+      const { owner, pet } = await createOwnerWithPet(page)
+      sharedOwner = owner
+      sharedPetName = pet.name
+    } finally {
+      await page.close()
+    }
+  })
+
+  test.beforeEach(async ({ page }) => {
+    await selectExistingOwnerAndPet(page, sharedOwner, sharedPetName)
+  })
+
+  for (const qa of QUICK_ACTIONS) {
+    test(`[data] ${qa.name}: al editar se oculta la lista y aparece "Guardar cambios"`, async ({
+      page,
+    }) => {
+      let d = await openQuickAction(page, qa.tile, qa.dialog)
+      await qa.seed(page)
+      await d.getByRole('button', { name: qa.save.name, exact: qa.save.exact }).click()
+      await expect(d).toBeHidden()
+
+      d = await openQuickAction(page, qa.tile, qa.dialog)
+      await expect(d.getByText(/Ya agregad[ao]s \(1\)/)).toBeVisible()
+      await d.getByRole('button', { name: qa.editLabel }).click()
+      // Al editar, la lista "Ya agregadas" desaparece (foco en el formulario)…
+      await expect(d.getByText(/Ya agregad[ao]s/)).toHaveCount(0)
+      // …y el botón primario pasa a "Guardar cambios".
+      await expect(d.getByRole('button', { name: 'Guardar cambios' })).toBeVisible()
+    })
+
+    test(`[data] ${qa.name}: con ítem agregado, guardar el form vacío no valida ni crea vacío`, async ({
+      page,
+    }) => {
+      let d = await openQuickAction(page, qa.tile, qa.dialog)
+      await qa.seed(page)
+      await d.getByRole('button', { name: qa.save.name, exact: qa.save.exact }).click()
+      await expect(d).toBeHidden()
+
+      // Reabre: ya hay 1. El form nuevo está vacío → pulsar guardar solo cierra.
+      d = await openQuickAction(page, qa.tile, qa.dialog)
+      await expect(d.getByText(/Ya agregad[ao]s \(1\)/)).toBeVisible()
+      await d.getByRole('button', { name: qa.save.name, exact: qa.save.exact }).click()
+      await expect(d).toBeHidden()
+    })
+  }
 })
 
 // ── util local ───────────────────────────────────────────────────────────────

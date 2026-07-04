@@ -28,7 +28,7 @@ interface QuickAction {
 }
 
 const actions: QuickAction[] = [
-  { kind: 'receta', icon: Pill, label: 'Receta', sub: 'Medicamentos' },
+  { kind: 'receta', icon: Pill, label: 'Plan terapéutico', sub: 'Medicamentos / receta' },
   { kind: 'lab', icon: Beaker, label: 'Examen lab.', sub: 'Solicitud' },
   { kind: 'imaging', icon: ImageIcon, label: 'Imagen Dx', sub: 'Rayos X / Eco' },
   { kind: 'vaccination', icon: Shield, label: 'Vacunación', sub: 'Aplicar dosis' },
@@ -48,8 +48,8 @@ function pick(action: QuickAction) {
   <SectionCard
     accent
     :icon="Zap"
-    title="Acciones rápidas"
-    subtitle="Genera registros vinculados a esta consulta."
+    title="Plan Diagnóstico y Terapéutico"
+    subtitle="Exámenes, imágenes, receta y procedimientos vinculados a la consulta."
   >
     <div class="grid">
       <button
