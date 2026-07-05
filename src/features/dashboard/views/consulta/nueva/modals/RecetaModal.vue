@@ -5,9 +5,11 @@ import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
+import SearchableSelect from '@/features/dashboard/components/ui/SearchableSelect.vue'
 import type { Animal, Prescription, MedicamentPrescription } from '@/types/domain'
 import type { PrescriptionDraftItem } from '../composables/useNuevaConsultaDraft'
 import { todayISO, formatDateLong, formatDateShort } from '../composables/format'
+import { useMedicaments } from '../composables/useMedicaments'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
@@ -24,31 +26,36 @@ const emit = defineEmits<{
 }>()
 
 interface MedDraft {
-  name: string
+  // Id del medicamento en el catálogo (valor del SearchableSelect).
+  medicamentId: string
   presentation: string
   quantity: string
   posology: string
   observation: string
 }
 
-interface MedCatalogEntry {
-  name: string
-  presentation: string
-  posology: string
-  quantity: number
+const {
+  options: medOptions,
+  loading: loadingMeds,
+  error: medsError,
+  create: createMedicament,
+} = useMedicaments()
+
+function medLabel(id: string): string {
+  return medOptions.value.find((o) => o.value === id)?.label ?? ''
 }
 
-const MED_CATALOG: MedCatalogEntry[] = [
-  { name: 'Amoxicilina + Clavulánico', presentation: 'Comprimido 250 mg', posology: '1 comp. cada 12h por 7 días', quantity: 14 },
-  { name: 'Meloxicam', presentation: 'Suspensión oral 1.5 mg/ml', posology: '0.1 mg/kg cada 24h por 5 días', quantity: 1 },
-  { name: 'Metronidazol', presentation: 'Comprimido 250 mg', posology: '1 comp. cada 12h por 5 días', quantity: 10 },
-  { name: 'Omeprazol', presentation: 'Cápsula 20 mg', posology: '1 cáp. cada 24h en ayunas por 10 días', quantity: 10 },
-  { name: 'Sucralfato', presentation: 'Suspensión 200 mg/ml', posology: '1 ml cada 8h antes de las comidas', quantity: 1 },
-  { name: 'Maropitant', presentation: 'Comprimido 16 mg', posology: '1 comp. cada 24h por 3 días', quantity: 3 },
-]
+async function onCreateMedicament(data: { name: string; description: string }) {
+  const created = await createMedicament(data)
+  return {
+    value: String(created.id),
+    label: created.name,
+    hint: created.description ?? undefined,
+  }
+}
 
 function emptyMed(): MedDraft {
-  return { name: '', presentation: '', quantity: '', posology: '', observation: '' }
+  return { medicamentId: '', presentation: '', quantity: '', posology: '', observation: '' }
 }
 
 const draft = reactive({
@@ -58,7 +65,6 @@ const draft = reactive({
 })
 
 const submitted = ref(false)
-const searchIdx = ref<number | null>(null)
 const editingIndex = ref<number | null>(null)
 
 function resetDraft() {
@@ -68,7 +74,6 @@ function resetDraft() {
     medicaments: [emptyMed()],
   })
   submitted.value = false
-  searchIdx.value = null
 }
 
 watch(
@@ -88,7 +93,7 @@ function startEditing(idx: number) {
     date: item.date,
     observations: item.observations,
     medicaments: item.medicaments.map<MedDraft>((m) => ({
-      name: m.name,
+      medicamentId: String(m.medicamentId),
       presentation: m.presentation,
       quantity: String(m.quantity),
       posology: m.posology,
@@ -98,7 +103,6 @@ function startEditing(idx: number) {
   if (draft.medicaments.length === 0) draft.medicaments.push(emptyMed())
   editingIndex.value = idx
   submitted.value = false
-  searchIdx.value = null
 }
 
 function cancelEditing() {
@@ -118,7 +122,7 @@ const subtitle = computed(() => {
 const errors = computed(() => {
   const e = {
     medicaments: draft.medicaments.map((m) => ({
-      name: !m.name.trim() ? 'Indica el medicamento' : null,
+      medicamentId: !m.medicamentId ? 'Selecciona un medicamento' : null,
       presentation: !m.presentation.trim() ? 'Indica la presentación' : null,
       quantity: !m.quantity.trim()
         ? 'Indica la cantidad'
@@ -134,7 +138,7 @@ const errors = computed(() => {
 
 const valid = computed<boolean>(() => {
   return errors.value.medicaments.every(
-    (m) => !m.name && !m.presentation && !m.quantity && !m.posology,
+    (m) => !m.medicamentId && !m.presentation && !m.quantity && !m.posology,
   )
 })
 
@@ -146,39 +150,13 @@ function removeMed(i: number) {
   draft.medicaments.splice(i, 1)
 }
 
-function pickFromCatalog(i: number, item: MedCatalogEntry) {
-  draft.medicaments[i] = {
-    name: item.name,
-    presentation: item.presentation,
-    quantity: String(item.quantity),
-    posology: item.posology,
-    observation: draft.medicaments[i]?.observation ?? '',
-  }
-  searchIdx.value = null
-}
-
-function onSuggestBlur() {
-  setTimeout(() => {
-    searchIdx.value = null
-  }, 150)
-}
-
-function showSuggestionsFor(i: number) {
-  return searchIdx.value === i && draft.medicaments[i].name.trim().length >= 1
-}
-
-function suggestionsFor(i: number) {
-  const q = draft.medicaments[i].name.trim().toLowerCase()
-  return MED_CATALOG.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 5)
-}
-
 // Un formulario nuevo "vacío" (nada escrito) no cuenta como ítem a agregar.
 function isNewDraftEmpty(): boolean {
   return (
     !draft.observations.trim() &&
     draft.medicaments.every(
       (m) =>
-        !m.name.trim() &&
+        !m.medicamentId &&
         !m.presentation.trim() &&
         !m.quantity.trim() &&
         !m.posology.trim() &&
@@ -203,7 +181,8 @@ function save() {
     date: draft.date,
     observations: draft.observations.trim(),
     medicaments: draft.medicaments.map<MedicamentPrescription>((m) => ({
-      name: m.name.trim(),
+      medicamentId: Number(m.medicamentId),
+      name: medLabel(m.medicamentId),
       presentation: m.presentation.trim(),
       quantity: Number(m.quantity.replace(',', '.')),
       posology: m.posology.trim(),
@@ -222,7 +201,7 @@ function save() {
 // observation es opcional (sin validación) → medErr solo cubre los campos requeridos.
 function medErr(
   i: number,
-  k: 'name' | 'presentation' | 'quantity' | 'posology',
+  k: 'medicamentId' | 'presentation' | 'quantity' | 'posology',
 ): string | undefined {
   if (!submitted.value) return undefined
   return errors.value.medicaments[i]?.[k] ?? undefined
@@ -233,17 +212,20 @@ function medErr(
   <ModalShell
     :open="open"
     :icon="Pill"
-    title="Nueva receta"
+    title="Nuevo plan terapéutico"
     :subtitle="subtitle"
-    :width="860"
+    :width-vw="90"
+    :height-vh="90"
     @close="emit('close')"
   >
     <template #body>
+      <div v-if="medsError" class="catalog-error">{{ medsError }}</div>
+
       <section
         v-if="props.existing.length > 0 && editingIndex === null"
         class="existing-section"
       >
-        <h4 class="existing-title">Ya agregadas ({{ props.existing.length }})</h4>
+        <h4 class="existing-title">Ya agregados ({{ props.existing.length }})</h4>
         <ul class="existing-list">
           <li
             v-for="(item, idx) in props.existing"
@@ -253,7 +235,7 @@ function medErr(
             <div class="existing-summary">
               <div class="existing-main">
                 {{ formatDateShort(item.date) }} ·
-                {{ item.medicaments[0]?.name || 'Receta' }}
+                {{ item.medicaments[0]?.name || 'Plan terapéutico' }}
               </div>
               <div class="existing-sub">
                 {{ item.medicaments.length }} medicamento{{
@@ -267,7 +249,7 @@ function medErr(
                 type="button"
                 class="edit-existing"
                 :class="{ active: editingIndex === idx }"
-                aria-label="Editar receta"
+                aria-label="Editar plan terapéutico"
                 :disabled="editingIndex !== null && editingIndex !== idx"
                 @click="
                   editingIndex === idx ? cancelEditing() : startEditing(idx)
@@ -278,7 +260,7 @@ function medErr(
               <button
                 type="button"
                 class="remove-existing"
-                aria-label="Eliminar receta"
+                aria-label="Eliminar plan terapéutico"
                 :disabled="editingIndex !== null"
                 @click="emit('remove-existing', idx)"
               >
@@ -307,7 +289,7 @@ function medErr(
 
       <div class="meds-head">
         <div class="meds-title">Medicamentos prescritos</div>
-        <div class="meds-count">{{ draft.medicaments.length }} en la receta</div>
+        <div class="meds-count">{{ draft.medicaments.length }} en el plan</div>
       </div>
 
       <div class="meds-list">
@@ -319,7 +301,7 @@ function medErr(
           <div class="med-head">
             <div class="med-num">{{ i + 1 }}</div>
             <div class="med-name-preview">
-              {{ m.name || 'Nuevo medicamento' }}
+              {{ medLabel(m.medicamentId) || 'Nuevo medicamento' }}
             </div>
             <button
               v-if="draft.medicaments.length > 1"
@@ -336,40 +318,18 @@ function medErr(
             <BaseField
               label="Nombre del medicamento"
               required
-              :error="medErr(i, 'name')"
+              :error="medErr(i, 'medicamentId')"
             >
-              <template #default="{ id }">
-                <div
-                  class="suggest-wrap"
-                  @focusin="searchIdx = i"
-                  @focusout="onSuggestBlur"
-                >
-                  <BaseInput
-                    :id="id"
-                    v-model="m.name"
-                    placeholder="Ej. Amoxicilina"
-                    :invalid="!!medErr(i, 'name')"
-                  />
-                  <div v-if="showSuggestionsFor(i)" class="suggest">
-                    <button
-                      v-for="(c, ci) in suggestionsFor(i)"
-                      :key="ci"
-                      type="button"
-                      class="suggest-item"
-                      @mousedown.prevent="pickFromCatalog(i, c)"
-                    >
-                      <div class="suggest-name">{{ c.name }}</div>
-                      <div class="suggest-hint">{{ c.presentation }}</div>
-                    </button>
-                    <div
-                      v-if="suggestionsFor(i).length === 0"
-                      class="suggest-empty"
-                    >
-                      Sin coincidencias · se guardará como
-                      <strong>"{{ m.name.trim() }}"</strong>
-                    </div>
-                  </div>
-                </div>
+              <template #default>
+                <SearchableSelect
+                  v-model="m.medicamentId"
+                  :options="medOptions"
+                  :loading="loadingMeds"
+                  placeholder="Busca o crea un medicamento"
+                  create-label="Crear medicamento"
+                  :invalid="!!medErr(i, 'medicamentId')"
+                  :on-create="onCreateMedicament"
+                />
               </template>
             </BaseField>
             <BaseField
@@ -457,13 +417,22 @@ function medErr(
         class="btn-primary"
         @click="save"
       >
-        {{ editingIndex !== null ? 'Guardar cambios' : 'Guardar receta' }}
+        {{ editingIndex !== null ? 'Guardar cambios' : 'Guardar plan terapéutico' }}
       </button>
     </template>
   </ModalShell>
 </template>
 
 <style scoped>
+.catalog-error {
+  background: oklch(94% 0.06 25);
+  border: 1px solid oklch(85% 0.10 25);
+  color: oklch(35% 0.15 25);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  margin-bottom: 14px;
+}
 .grid-1 {
   display: grid;
   grid-template-columns: 1fr;

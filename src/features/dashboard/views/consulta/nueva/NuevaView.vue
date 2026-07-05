@@ -146,7 +146,7 @@ async function persistConsultationItems(consultationId: number, animalId: number
       const m = p.medicaments[j]
       if (m.savedId) continue
       const createdMed = await medicamentPrescriptionApi.create({
-        name: m.name,
+        medicamentId: m.medicamentId,
         presentation: m.presentation,
         quantity: m.quantity,
         posology: m.posology,

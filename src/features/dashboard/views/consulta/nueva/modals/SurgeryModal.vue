@@ -178,7 +178,8 @@ function save() {
     title="Programar cirugía"
     :subtitle="subtitle"
     accent="danger"
-    :width="860"
+    :width-vw="90"
+    :height-vh="90"
     @close="emit('close')"
   >
     <template #body>

@@ -163,7 +163,8 @@ function save() {
     :icon="Bug"
     title="Registrar desparasitación"
     :subtitle="subtitle"
-    :width="860"
+    :width-vw="90"
+    :height-vh="90"
     @close="emit('close')"
   >
     <template #body>

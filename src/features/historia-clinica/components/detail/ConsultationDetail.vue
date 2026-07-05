@@ -173,7 +173,7 @@ const childrenCountLabel = computed(() =>
 .detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px 24px;
+  gap: 10px 24px;
 }
 @media (max-width: 560px) {
   .detail-grid {

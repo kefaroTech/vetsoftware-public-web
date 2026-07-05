@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, useId, watch, type Component } from 'vue'
+import { computed, onMounted, onUnmounted, ref, useId, watch, type Component } from 'vue'
 import { X } from 'lucide-vue-next'
 
 const props = withDefaults(
@@ -8,7 +8,29 @@ const props = withDefaults(
     title: string
     subtitle?: string
     icon?: Component
+    /**
+     * Ancho fijo en px (aprox.). SOLO se usa en modo `compact`; los modales
+     * normales ocupan un % del viewport (ver `widthVw`) e ignoran `width`.
+     */
     width?: number
+    /**
+     * Ancho relativo al viewport (en %). Por defecto los modales ocupan 90% del
+     * ancho de pantalla (acotado a 1600px en monitores ultra-anchos). Pasa un
+     * valor para usar otro %. Ignorado en modo `compact`.
+     */
+    widthVw?: number
+    /**
+     * Alto relativo al viewport (en %). Por defecto los modales ocupan 90% del
+     * alto de pantalla (el cuerpo scrollea dentro). Pasa un valor para otro %.
+     * Ignorado en modo `compact`.
+     */
+    heightVh?: number
+    /**
+     * Modo compacto: el modal se dimensiona por CONTENIDO con ancho fijo `width`
+     * (px). Úsalo solo para diálogos pequeños de confirmación/alerta (sí/no),
+     * donde ocupar el 90% de la pantalla se vería roto.
+     */
+    compact?: boolean
     accent?: 'amatista' | 'danger' | 'warn'
     closeOnBackdrop?: boolean
     /**
@@ -33,6 +55,25 @@ const emit = defineEmits<{ close: [] }>()
 
 const closeBtn = ref<HTMLButtonElement | null>(null)
 const titleId = useId()
+
+// Regla global: TODOS los modales ocupan ~90% del viewport (ancho y alto), salvo
+// los `compact` (confirmaciones/alertas), que se dimensionan por contenido con
+// ancho fijo `width`. `widthVw`/`heightVh` permiten ajustar el % por modal.
+const cardWidth = computed(() =>
+  props.compact
+    ? `min(${props.width + 180}px, calc(100vw - 32px))`
+    : `min(${props.widthVw ?? 90}vw, 1600px, calc(100vw - 32px))`,
+)
+
+// Alto: SIEMPRE lo define el contenido, acotado por un máximo. En modo normal el
+// tope es un % del viewport (los formularios cortos se ajustan a su contenido; los
+// largos crecen hasta el tope y el cuerpo scrollea). En compact el tope es casi la
+// pantalla completa (pero igual manda el contenido).
+const cardMaxHeight = computed(() =>
+  props.compact
+    ? 'calc(100vh - 32px)'
+    : `min(${props.heightVh ?? 90}vh, calc(100vh - 24px))`,
+)
 
 function onKey(e: KeyboardEvent) {
   if (!props.open) return
@@ -72,7 +113,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
         <div
           class="card"
           :class="`accent-${accent}`"
-          :style="{ width: `min(${width + 180}px, calc(100vw - 32px))`, maxHeight: 'calc(100vh - 32px)' }"
+          :style="{ width: cardWidth, maxHeight: cardMaxHeight }"
         >
           <header class="head">
             <div v-if="icon" class="icon-box">

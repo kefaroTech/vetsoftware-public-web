@@ -175,7 +175,7 @@ function printReceta() {
     :open="open"
     :title="title"
     :subtitle="subtitle"
-    :width="640"
+    :width="1120"
     @close="emit('close')"
   >
     <template #body>

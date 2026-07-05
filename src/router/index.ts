@@ -212,6 +212,12 @@ const router = createRouter({
           component: () => import('@/features/roles/views/RolesView.vue'),
           meta: { permission: PERMISSIONS.ROLE_PERMISSIONS_READ },
         },
+        {
+          path: 'catalogos/medicamentos',
+          name: 'medicamentos',
+          component: () => import('@/features/medicamentos/views/MedicamentosView.vue'),
+          meta: { permission: PERMISSIONS.PRESCRIPTION_CREATE },
+        },
       ],
     },
     {

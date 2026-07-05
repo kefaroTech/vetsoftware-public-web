@@ -26,6 +26,9 @@ export const PERMISSIONS = {
 
   CONSULTATION_CREATE: 'consultation.create',
   PRESCRIPTION_CREATE: 'prescription.create',
+  PRESCRIPTION_READ: 'prescription.read',
+  PRESCRIPTION_UPDATE: 'prescription.update',
+  PRESCRIPTION_DELETE: 'prescription.delete',
   MEDICAMENT_PRESCRIPTION_CREATE: 'medicamentPrescription.create',
 
   VACCINATION_CREATE: 'vaccination.create',

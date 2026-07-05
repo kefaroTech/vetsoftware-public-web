@@ -23,6 +23,7 @@ import {
   BadgePercent,
   ShoppingBag,
   Wallet,
+  Pill,
 } from 'lucide-vue-next'
 import SidebarBrand from './SidebarBrand.vue'
 import SidebarNavItem from './SidebarNavItem.vue'
@@ -71,6 +72,7 @@ const canSurgery = can(PERMISSIONS.SURGERY_CREATE)
 const canSpa = can(PERMISSIONS.SPA_CREATE)
 const canEmployees = can(PERMISSIONS.EMPLOYEE_READ)
 const canRoles = can(PERMISSIONS.ROLE_PERMISSIONS_READ)
+const canMedicaments = can(PERMISSIONS.PRESCRIPTION_CREATE)
 const canLabProcess = can(PERMISSIONS.LABORATORY_TEST_READ)
 const canHospitalWard = can(PERMISSIONS.HOSPITALIZATION_READ)
 const canInventory = can(PERMISSIONS.PRODUCT_READ)
@@ -129,7 +131,7 @@ const accionesItems = computed(() => [
 ].filter((item) => item.show))
 
 const showAccionesSection = computed(() => accionesItems.value.length > 0)
-const showAdminSection = computed(() => canEmployees.value || canRoles.value)
+const showAdminSection = computed(() => canEmployees.value || canRoles.value || canMedicaments.value)
 
 const tiendaSubRoutes = [
   'tienda-pos',
@@ -334,6 +336,13 @@ function onNotifications() {
         :icon="ShieldCheck"
         :active="route.name === 'roles'"
         @click="router.push({ name: 'roles' })"
+      />
+      <SidebarNavItem
+        v-if="canMedicaments"
+        label="Medicamentos"
+        :icon="Pill"
+        :active="route.name === 'medicamentos'"
+        @click="router.push({ name: 'medicamentos' })"
       />
     </template>
 

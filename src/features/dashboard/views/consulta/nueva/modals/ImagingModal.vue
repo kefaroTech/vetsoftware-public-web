@@ -180,7 +180,8 @@ function save() {
     :icon="ImageIcon"
     title="Solicitar imagen diagnóstica"
     :subtitle="subtitle"
-    :width="860"
+    :width-vw="90"
+    :height-vh="90"
     @close="emit('close')"
   >
     <template #body>

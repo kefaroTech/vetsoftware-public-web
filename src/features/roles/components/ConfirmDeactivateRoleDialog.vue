@@ -21,6 +21,7 @@ const emit = defineEmits<{
     :title="role ? `¿Desactivar ${role.name}?` : '¿Desactivar rol?'"
     :icon="TriangleAlert"
     accent="danger"
+    compact
     :width="460"
     @close="emit('cancel')"
   >

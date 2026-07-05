@@ -35,10 +35,40 @@ const emit = defineEmits<{
 }>()
 
 const root = ref<HTMLElement | null>(null)
+const trigger = ref<HTMLButtonElement | null>(null)
+const panel = ref<HTMLElement | null>(null)
 const searchInput = ref<HTMLInputElement | null>(null)
 const newNameInput = ref<HTMLInputElement | null>(null)
+const panelStyle = ref<Record<string, string>>({})
 
 const open = ref(false)
+
+/**
+ * Posiciona el panel (teletransportado a <body>) en coordenadas fijas respecto al
+ * trigger: se abre hacia abajo, o hacia arriba si no hay espacio suficiente abajo,
+ * y acota su alto al espacio disponible. Así nunca lo recorta el modal aunque el
+ * campo quede al fondo. Se recalcula en scroll/resize mientras está abierto.
+ */
+function updatePosition() {
+  const t = trigger.value
+  if (!t) return
+  const r = t.getBoundingClientRect()
+  const spaceBelow = window.innerHeight - r.bottom
+  const spaceAbove = r.top
+  const openUp = spaceBelow < 300 && spaceAbove > spaceBelow
+  panelStyle.value = {
+    position: 'fixed',
+    left: `${Math.round(r.left)}px`,
+    width: `${Math.round(r.width)}px`,
+    maxHeight: `${Math.max(200, Math.round((openUp ? spaceAbove : spaceBelow) - 12))}px`,
+    ...(openUp
+      ? { bottom: `${Math.round(window.innerHeight - r.top + 4)}px` }
+      : { top: `${Math.round(r.bottom + 4)}px` }),
+  }
+}
+function onScrollResize() {
+  if (open.value) updatePosition()
+}
 const q = ref('')
 const creating = ref(false)
 const newName = ref('')
@@ -66,7 +96,11 @@ function toggle() {
 }
 
 function openPanel() {
+  if (props.disabled) return
   open.value = true
+  updatePosition()
+  window.addEventListener('scroll', onScrollResize, true)
+  window.addEventListener('resize', onScrollResize)
   nextTick(() => searchInput.value?.focus())
 }
 
@@ -77,6 +111,8 @@ function close() {
   newName.value = ''
   newHint.value = ''
   createError.value = null
+  window.removeEventListener('scroll', onScrollResize, true)
+  window.removeEventListener('resize', onScrollResize)
 }
 
 function pick(opt: Option) {
@@ -90,7 +126,10 @@ function startCreate() {
   newHint.value = ''
   createError.value = null
   creating.value = true
-  nextTick(() => newNameInput.value?.focus())
+  nextTick(() => {
+    newNameInput.value?.focus()
+    updatePosition()
+  })
 }
 
 async function confirmCreate() {
@@ -123,15 +162,19 @@ function cancelCreate() {
   newName.value = ''
   newHint.value = ''
   createError.value = null
-  nextTick(() => searchInput.value?.focus())
+  nextTick(() => {
+    searchInput.value?.focus()
+    updatePosition()
+  })
 }
 
 function onDocClick(e: MouseEvent) {
   if (!open.value) return
-  if (root.value && !root.value.contains(e.target as Node)) {
-    close()
-    emit('blur')
-  }
+  const target = e.target as Node
+  // El panel está teletransportado a <body>: hay que excluirlo del click-outside.
+  if (root.value?.contains(target) || panel.value?.contains(target)) return
+  close()
+  emit('blur')
 }
 
 watch(
@@ -142,12 +185,17 @@ watch(
 )
 
 onMounted(() => document.addEventListener('mousedown', onDocClick))
-onBeforeUnmount(() => document.removeEventListener('mousedown', onDocClick))
+onBeforeUnmount(() => {
+  document.removeEventListener('mousedown', onDocClick)
+  window.removeEventListener('scroll', onScrollResize, true)
+  window.removeEventListener('resize', onScrollResize)
+})
 </script>
 
 <template>
   <div ref="root" class="ss" :class="{ disabled, invalid, open }">
     <button
+      ref="trigger"
       type="button"
       class="trigger"
       :disabled="disabled"
@@ -161,7 +209,8 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocClick))
       <ChevronDown :size="13" :stroke-width="1.8" class="caret" />
     </button>
 
-    <div v-if="open" class="panel">
+    <Teleport to="body">
+      <div v-if="open" ref="panel" class="panel" :style="panelStyle">
       <template v-if="!creating">
         <div class="search-wrap">
           <Search :size="13" :stroke-width="1.7" class="search-icon" />
@@ -192,7 +241,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocClick))
           v-if="showCreate"
           type="button"
           class="create"
-          @mousedown.prevent="startCreate"
+          @click="startCreate"
         >
           <Plus :size="13" :stroke-width="1.8" />
           <template v-if="q.trim()">
@@ -245,7 +294,8 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocClick))
           </button>
         </div>
       </div>
-    </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -308,16 +358,15 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocClick))
   color: var(--warm-500);
   flex-shrink: 0;
 }
+/* Teletransportado a <body> y posicionado con estilo inline (position: fixed).
+   z-index por encima del overlay del modal (1500/1600). */
 .panel {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
+  box-sizing: border-box;
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 10px;
   box-shadow: 0 12px 32px rgba(40, 20, 80, 0.14);
-  z-index: 50;
+  z-index: 2100;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -344,6 +393,8 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocClick))
   color: var(--warm-900);
 }
 .list {
+  flex: 1 1 auto;
+  min-height: 0;
   max-height: 240px;
   overflow: auto;
   padding: 4px;

@@ -210,7 +210,8 @@ function save() {
     :icon="Shield"
     title="Aplicar vacuna"
     :subtitle="subtitle"
-    :width="860"
+    :width-vw="90"
+    :height-vh="90"
     @close="emit('close')"
   >
     <template #body>

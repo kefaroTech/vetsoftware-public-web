@@ -29,6 +29,7 @@ const emit = defineEmits<{
     :title="title"
     :icon="TriangleAlert"
     accent="danger"
+    compact
     :width="440"
     @close="emit('cancel')"
   >

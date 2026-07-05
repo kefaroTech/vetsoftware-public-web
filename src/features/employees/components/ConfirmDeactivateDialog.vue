@@ -24,6 +24,7 @@ const firstName = computed(() => props.employee?.name.split(' ')[0] ?? '')
     :title="employee ? `¿Desactivar a ${firstName}?` : '¿Desactivar empleado?'"
     :icon="TriangleAlert"
     accent="danger"
+    compact
     :width="440"
     @close="emit('cancel')"
   >

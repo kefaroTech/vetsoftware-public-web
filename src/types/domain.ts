@@ -138,6 +138,8 @@ export type GuidelineType = 'FIXED' | 'INTERVAL'
 export type DurationMeasure = 'DAYS' | 'DOSES' | 'INDEFINITE'
 
 export interface MedicamentPrescription {
+  // Referencia al catálogo de medicamentos (FK). `name` es el snapshot para mostrar.
+  medicamentId: number
   name: string
   presentation: string
   quantity: number

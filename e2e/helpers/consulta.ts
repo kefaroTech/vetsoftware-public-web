@@ -403,29 +403,48 @@ export async function createInSearchable(
 ): Promise<void> {
   const field = page.getByRole('dialog').locator('.field', { hasText: fieldLabel }).first()
   await field.locator('button.trigger').click()
-  await field.getByPlaceholder(/Buscar/).fill(name)
-  // El botón "Crear" abre el form de creación en @mousedown y se desmonta en el
-  // acto; un `.click()` de Playwright reintenta y termina cerrando el panel. Por
-  // eso disparamos SOLO el mousedown (como el press de un usuario real).
-  // `startCreate` ya precarga el campo "Nombre" con lo tecleado en la búsqueda.
-  await field.getByRole('button', { name: /^Crear/ }).dispatchEvent('mousedown')
-  await field.getByRole('button', { name: 'Crear y seleccionar' }).click()
+  // El panel se teletransporta a <body>: se opera a nivel de página.
+  const panel = page.locator('div.panel')
+  await panel.getByPlaceholder(/Buscar/).fill(name)
+  // El botón "Crear" abre el form de creación en @click (`startCreate` precarga
+  // el "Nombre" con lo tecleado en la búsqueda).
+  await panel.locator('button.create').click()
+  await panel.getByRole('button', { name: 'Crear y seleccionar' }).click()
   // El trigger debe quedar mostrando el valor creado → confirma que se seleccionó
   // (si el POST de creación fallara, el panel seguiría abierto en el placeholder).
   await expect(field.locator('button.trigger')).toContainText(name)
 }
 
 /**
- * Llena (sin guardar) los campos requeridos de un medicamento en el modal de receta.
- * El diagnóstico ya NO se captura en la receta (se toma de la consulta), por eso no se llena aquí.
- * `opts.diagnosis` se mantiene por compatibilidad pero se ignora.
+ * Selecciona una opción EXISTENTE en un `SearchableSelect` dentro del modal abierto,
+ * ubicándolo por el label de su BaseField. Abre el trigger, filtra por texto y clickea
+ * la opción (`button.item`). No escribe en la BD.
+ */
+export async function selectInSearchable(
+  page: Page,
+  fieldLabel: string,
+  optionName: string,
+): Promise<void> {
+  const field = page.getByRole('dialog').locator('.field', { hasText: fieldLabel }).first()
+  await field.locator('button.trigger').click()
+  // El panel del SearchableSelect se teletransporta a <body>: se busca a nivel de página.
+  const panel = page.locator('div.panel')
+  await panel.getByPlaceholder(/Buscar/).fill(optionName)
+  await panel.locator('button.item', { hasText: optionName }).first().click()
+  await expect(field.locator('button.trigger')).toContainText(optionName)
+}
+
+/**
+ * Llena (sin guardar) los requeridos de un medicamento en el modal de plan terapéutico.
+ * El nombre ahora es un catálogo (SearchableSelect): se ELIGE un medicamento existente
+ * (por defecto el global sembrado "Meloxicam"). El diagnóstico ya NO se captura aquí.
  */
 export async function fillReceta(
   page: Page,
   opts: { diagnosis?: string; medName?: string } = {},
 ): Promise<void> {
-  const d = page.getByRole('dialog', { name: 'Nueva receta' })
-  await d.getByLabel(/Nombre del medicamento/).first().fill(opts.medName ?? 'Amoxicilina')
+  const d = page.getByRole('dialog', { name: 'Nuevo plan terapéutico' })
+  await selectInSearchable(page, 'Nombre del medicamento', opts.medName ?? 'Meloxicam')
   await d.getByLabel(/Presentación/).first().fill('Comprimido 250 mg')
   await d.getByLabel(/Cantidad/).first().fill('14')
   await d.getByLabel(/Posología/).first().fill('1 comp. cada 12h por 7 días')

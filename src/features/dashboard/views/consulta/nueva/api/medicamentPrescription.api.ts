@@ -1,7 +1,7 @@
 import { http } from '@/services/http/http.client'
 
 export interface CreateMedicamentPrescriptionPayload {
-  name: string
+  medicamentId: number
   presentation: string
   quantity: number
   posology: string
@@ -11,6 +11,7 @@ export interface CreateMedicamentPrescriptionPayload {
 
 export interface MedicamentPrescriptionResponse {
   id: number
+  medicamentId: number
   name: string
   presentation: string
   quantity: number

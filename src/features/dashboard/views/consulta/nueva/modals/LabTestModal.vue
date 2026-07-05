@@ -178,7 +178,8 @@ function save() {
     :icon="Beaker"
     title="Solicitar examen de laboratorio"
     :subtitle="subtitle"
-    :width="860"
+    :width-vw="90"
+    :height-vh="90"
     @close="emit('close')"
   >
     <template #body>
