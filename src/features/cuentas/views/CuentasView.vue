@@ -67,7 +67,7 @@ const STATUS_TONE: Record<OpenAccountStatus, string> = {
   CANCEL: 'cancelled',
 }
 
-onMounted(() => store.ensureLoaded())
+onMounted(() => store.reload())
 
 // Activas = cuentas abiertas (OPEN); Cerradas = cobradas (CLOSE) o canceladas (CANCEL).
 const activeAccounts = computed(() => store.accounts.value.filter((a) => a.status === 'OPEN'))

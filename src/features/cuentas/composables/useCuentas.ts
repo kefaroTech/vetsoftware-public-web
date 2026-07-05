@@ -27,6 +27,7 @@ export function useCuentas() {
     petsInCharges,
     chargesByPet,
     ensureLoaded: store.ensureLoaded,
+    reload: store.reload,
     loadAccounts: store.loadAccounts,
     loadDetail: store.loadDetail,
     refreshAccount: store.refreshAccount,

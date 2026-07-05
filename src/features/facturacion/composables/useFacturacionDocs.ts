@@ -10,6 +10,7 @@ export function useFacturacionDocs() {
     loading,
     error,
     ensureLoaded: store.ensureLoaded,
+    reload: store.reload,
     loadAll: store.loadAll,
     refresh: store.refresh,
     emit: store.emit,

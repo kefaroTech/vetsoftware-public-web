@@ -34,7 +34,7 @@ const deletingBusy = ref(false)
 
 const today = todayISO()
 
-onMounted(() => store.ensureLoaded())
+onMounted(() => store.reload())
 
 const activeCount = computed(
   () => store.promotions.value.filter((p) => promoStatus(p, today) === 'ACTIVA').length,

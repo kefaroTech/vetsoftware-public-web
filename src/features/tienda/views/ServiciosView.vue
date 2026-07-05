@@ -43,7 +43,7 @@ const pausingBusy = ref(false)
 const pausedLoading = ref(false)
 const categoriesOpen = ref(false)
 
-onMounted(() => store.ensureLoaded())
+onMounted(() => store.reload())
 
 const filtered = computed(() => {
   const q = query.value.trim().toLowerCase()

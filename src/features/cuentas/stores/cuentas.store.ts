@@ -71,6 +71,12 @@ export const useCuentasStore = defineStore('cuentas', () => {
     return loadedOnce ? Promise.resolve() : loadAccounts()
   }
 
+  /** Recarga forzada desde el backend, para el montaje de la pantalla de cuentas. */
+  function reload(): Promise<void> {
+    loadedOnce = false
+    return loadAccounts()
+  }
+
   async function loadDetail(accountId: number): Promise<void> {
     detailLoading.value = true
     try {
@@ -371,6 +377,7 @@ export const useCuentasStore = defineStore('cuentas', () => {
     petsInCharges,
     chargesByPet,
     ensureLoaded,
+    reload,
     loadAccounts,
     loadDetail,
     refreshAccount,

@@ -27,7 +27,7 @@ const pausing = ref<TaxResponse | null>(null)
 const pausingBusy = ref(false)
 const pausedLoading = ref(false)
 
-onMounted(() => store.ensureLoaded())
+onMounted(() => store.reload())
 
 /** Nº de productos + servicios que referencian cada impuesto (pre-chequeo cliente de "en uso"). */
 const taxUsage = computed<Record<number, number>>(() => {

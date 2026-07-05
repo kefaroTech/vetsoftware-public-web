@@ -84,7 +84,7 @@ const MEANS_BY_METHOD: Record<string, PaymentMeans> = {
 }
 
 onMounted(() => {
-  store.ensureLoaded()
+  store.reload()
   void checkTaxProfile()
 })
 

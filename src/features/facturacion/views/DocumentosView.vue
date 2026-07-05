@@ -16,7 +16,7 @@ import FeDocumentDetail from '../components/FeDocumentDetail.vue'
 import FeUpsell from '../components/FeUpsell.vue'
 
 const { hasModule, canEmit } = useFacturacionAccess()
-const { documents, loading, error, ensureLoaded } = useFacturacionDocs()
+const { documents, loading, error, reload } = useFacturacionDocs()
 
 const filterType = ref<ElectronicDocumentType | ''>('')
 const filterStatus = ref<DianStatus | ''>('')
@@ -24,7 +24,7 @@ const selectedId = ref<number | null>(null)
 const emitOpen = ref(false)
 
 onMounted(() => {
-  void ensureLoaded()
+  void reload()
 })
 
 const typeOptions = (Object.keys(DOC_TYPE_LABEL) as ElectronicDocumentType[]).map((k) => ({

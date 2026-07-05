@@ -34,6 +34,7 @@ export function useTienda() {
     loading,
     error,
     ensureLoaded: store.ensureLoaded,
+    reload: store.reload,
     refresh: store.refresh,
     createProduct: store.createProduct,
     updateProduct: store.updateProduct,

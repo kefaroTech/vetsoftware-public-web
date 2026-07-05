@@ -55,6 +55,12 @@ export const useFacturacionEnablementStore = defineStore('facturacionEnablement'
     return inflight
   }
 
+  /** Recarga forzada desde el backend, para el montaje de la pantalla de habilitación. */
+  function reload(): Promise<void> {
+    loaded.value = false
+    return ensureLoaded()
+  }
+
   async function saveProfile(
     payload: SaveCompanyTaxProfileRequest,
   ): Promise<CompanyTaxProfileResponse> {
@@ -96,6 +102,7 @@ export const useFacturacionEnablementStore = defineStore('facturacionEnablement'
     loaded,
     loadAll,
     ensureLoaded,
+    reload,
     saveProfile,
     upsertResolution,
     saveWithholding,

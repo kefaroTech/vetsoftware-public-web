@@ -43,6 +43,12 @@ export const useFacturacionDocsStore = defineStore('facturacionDocs', () => {
     return loadedOnce ? Promise.resolve() : loadAll()
   }
 
+  /** Recarga forzada desde el backend, para el montaje de la pantalla de documentos. */
+  function reload(): Promise<void> {
+    loadedOnce = false
+    return loadAll()
+  }
+
   /** Refresca un documento desde el backend (tras transmitir/validar async). */
   async function refresh(id: number): Promise<ElectronicDocumentResponse> {
     const fresh = await electronicDocumentApi.findById(id)
@@ -87,6 +93,7 @@ export const useFacturacionDocsStore = defineStore('facturacionDocs', () => {
     loading,
     error,
     ensureLoaded,
+    reload,
     loadAll,
     refresh,
     emit,

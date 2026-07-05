@@ -50,7 +50,7 @@ const pausing = ref<ProductResponse | null>(null)
 const pausingBusy = ref(false)
 const pausedLoading = ref(false)
 
-onMounted(() => store.ensureLoaded())
+onMounted(() => store.reload())
 
 const lowCount = computed(() => store.products.value.filter((p) => stockState(p) !== 'OK').length)
 

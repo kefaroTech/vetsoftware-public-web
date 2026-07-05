@@ -8,14 +8,15 @@ import RetencionesModal from '../components/enablement/RetencionesModal.vue'
 import FeUpsell from '../components/FeUpsell.vue'
 
 const { hasModule } = useFacturacionAccess()
-const { ensureLoaded, error } = useFacturacionEnablement()
+const { reload, error } = useFacturacionEnablement()
 
 const mode = ref<'panel' | 'wizard'>('panel')
 const wizardStep = ref(1)
 const retencionesOpen = ref(false)
 
 onMounted(() => {
-  void ensureLoaded()
+  // El error se refleja en el ref `error`; ignoramos el rechazo de la promesa.
+  void reload().catch(() => {})
 })
 
 function openWizard(step: number) {

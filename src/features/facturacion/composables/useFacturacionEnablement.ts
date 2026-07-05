@@ -79,6 +79,7 @@ export function useFacturacionEnablement() {
     needsAttention,
     // acciones
     ensureLoaded: store.ensureLoaded,
+    reload: store.reload,
     loadAll: store.loadAll,
     saveProfile: store.saveProfile,
     upsertResolution: store.upsertResolution,

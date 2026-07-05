@@ -11,9 +11,16 @@ export const useAnimalsByOwnerStore = defineStore('animalsByOwner', () => {
   const cache = new Map<string, Animal[]>()
   const inFlight = new Map<string, Promise<Animal[]>>()
 
-  async function load(ownerId: string): Promise<Animal[]> {
+  /**
+   * Carga las mascotas del propietario. Con `force` (al abrir una pantalla) se
+   * ignora la caché completada para traer datos frescos del backend, pero se
+   * sigue reutilizando una petición in-flight para deduplicar llamadas
+   * concurrentes de la misma apertura. La caché se conserva para el insert
+   * optimista de `addPet` dentro del wizard.
+   */
+  async function load(ownerId: string, force = false): Promise<Animal[]> {
     const cached = cache.get(ownerId)
-    if (cached) return cached
+    if (cached && !force) return cached
     const pending = inFlight.get(ownerId)
     if (pending) return pending
     const id = Number(ownerId)

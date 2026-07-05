@@ -86,6 +86,17 @@ export const useTiendaStore = defineStore('tienda', () => {
     return inFlight
   }
 
+  /**
+   * Recarga forzada desde el backend, para el montaje de las pantallas de tienda
+   * (regla: cada pantalla trae datos frescos al abrirse). Reutiliza la petición
+   * in-flight de `ensureLoaded` para deduplicar; `ensureLoaded` sigue sirviendo
+   * la caché a los modales que solo necesitan el catálogo presente.
+   */
+  function reload(): Promise<void> {
+    loadedOnce = false
+    return ensureLoaded()
+  }
+
   async function createProduct(payload: ProductPayload) {
     const created = await productApi.create(payload)
     upsert(products, created)
@@ -218,6 +229,7 @@ export const useTiendaStore = defineStore('tienda', () => {
     loading,
     error,
     ensureLoaded,
+    reload,
     refresh: fetchAll,
     createProduct,
     updateProduct,

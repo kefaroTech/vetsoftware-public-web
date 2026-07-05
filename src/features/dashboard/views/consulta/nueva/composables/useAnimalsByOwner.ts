@@ -12,7 +12,7 @@ export function useAnimalsByOwner(ownerId: Ref<string>) {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  async function refresh(id: string) {
+  async function refresh(id: string, force = false) {
     if (!id) {
       list.value = []
       error.value = null
@@ -21,7 +21,7 @@ export function useAnimalsByOwner(ownerId: Ref<string>) {
     loading.value = true
     error.value = null
     try {
-      list.value = await store.load(id)
+      list.value = await store.load(id, force)
     } catch {
       list.value = []
       error.value = 'No se pudieron cargar las mascotas del propietario.'
@@ -41,12 +41,14 @@ export function useAnimalsByOwner(ownerId: Ref<string>) {
     store.invalidate(id)
   }
 
+  // Al abrir la pantalla (montaje) o al cambiar de propietario, se recarga desde
+  // el backend (force) para no mostrar mascotas cacheadas de una visita previa.
   onMounted(() => {
-    if (ownerId.value) refresh(ownerId.value)
+    if (ownerId.value) refresh(ownerId.value, true)
   })
 
   watch(ownerId, (id) => {
-    refresh(id)
+    refresh(id, true)
   })
 
   return { list, loading, error, refresh, addPet, invalidate }

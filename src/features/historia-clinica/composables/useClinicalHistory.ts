@@ -5,9 +5,9 @@ import type { ClinicalEvent } from '../types/historia'
 const cache = new Map<number, ClinicalEvent[]>()
 const inFlight = new Map<number, Promise<ClinicalEvent[]>>()
 
-async function load(animalId: number): Promise<ClinicalEvent[]> {
+async function load(animalId: number, force = false): Promise<ClinicalEvent[]> {
   const cached = cache.get(animalId)
-  if (cached) return cached
+  if (cached && !force) return cached
   const pending = inFlight.get(animalId)
   if (pending) return pending
   const promise = clinicalHistoryApi
@@ -41,7 +41,7 @@ export function useClinicalHistory(petId: Ref<string | null>) {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  async function refresh(id: string | null) {
+  async function refresh(id: string | null, force = false) {
     const numId = id ? Number(id) : NaN
     if (!Number.isFinite(numId)) {
       events.value = []
@@ -51,7 +51,7 @@ export function useClinicalHistory(petId: Ref<string | null>) {
     loading.value = true
     error.value = null
     try {
-      events.value = await load(numId)
+      events.value = await load(numId, force)
     } catch {
       events.value = []
       error.value = 'No se pudo cargar la historia clínica.'
@@ -65,10 +65,12 @@ export function useClinicalHistory(petId: Ref<string | null>) {
     if (Number.isFinite(numId)) cache.delete(numId)
   }
 
+  // Al abrir la pantalla (immediate) o al cambiar de mascota se recarga desde el
+  // backend (force) para no mostrar eventos cacheados de una visita previa.
   watch(
     petId,
     (id) => {
-      refresh(id)
+      refresh(id, true)
     },
     { immediate: true },
   )
