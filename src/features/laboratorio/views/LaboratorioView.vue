@@ -5,6 +5,7 @@ import LabBoard from '../components/LabBoard.vue'
 import LabHistory from '../components/LabHistory.vue'
 import LabDetailModal from '../modals/LabDetailModal.vue'
 import LabResultsModal from '../modals/LabResultsModal.vue'
+import LabCollectConfirmDialog from '../modals/LabCollectConfirmDialog.vue'
 import { useLabQueue } from '../composables/useLabQueue'
 import { useToast } from '@/composables/useToast'
 import type { LabActionKind } from '../components/LabSampleCard.vue'
@@ -16,12 +17,20 @@ const queue = useLabQueue()
 const tab = ref<'board' | 'history'>('board')
 const viewing = ref<LaboratoryTestResponse | null>(null)
 const resultsFor = ref<LaboratoryTestResponse | null>(null)
+const collectFor = ref<LaboratoryTestResponse | null>(null)
+const collecting = ref(false)
 
 onMounted(() => queue.load())
 
 async function handleAction(item: LaboratoryTestResponse, kind: LabActionKind) {
   if (kind === 'load') {
     resultsFor.value = item
+    if (viewing.value?.id === item.id) viewing.value = null
+    return
+  }
+  if (kind === 'collect') {
+    // Tomar muestra requiere confirmación previa.
+    collectFor.value = item
     if (viewing.value?.id === item.id) viewing.value = null
     return
   }
@@ -39,6 +48,21 @@ async function handleAction(item: LaboratoryTestResponse, kind: LabActionKind) {
     if (viewing.value?.id === item.id) viewing.value = null
   } catch (e) {
     toast.error('Ocurrió un error', e instanceof Error ? e.message : 'No se pudo actualizar la muestra.')
+  }
+}
+
+async function confirmCollect() {
+  const item = collectFor.value
+  if (!item || collecting.value) return
+  collecting.value = true
+  try {
+    await queue.transition(item, 'PENDING_PROCESSING')
+    toast.success('Muestra recolectada', 'La muestra pasó a En cola.')
+    collectFor.value = null
+  } catch (e) {
+    toast.error('Ocurrió un error', e instanceof Error ? e.message : 'No se pudo tomar la muestra.')
+  } finally {
+    collecting.value = false
   }
 }
 
@@ -96,6 +120,14 @@ async function onResultsUploaded() {
       :test="resultsFor"
       @close="resultsFor = null"
       @uploaded="onResultsUploaded"
+    />
+
+    <LabCollectConfirmDialog
+      :open="collectFor !== null"
+      :test="collectFor"
+      :busy="collecting"
+      @confirm="confirmCollect"
+      @close="collectFor = null"
     />
   </div>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Inbox, Microscope, ClipboardCheck } from 'lucide-vue-next'
+import { Syringe, Inbox, Microscope, ClipboardCheck } from 'lucide-vue-next'
 import type { Component } from 'vue'
 import LabSampleCard, { type LabActionKind } from './LabSampleCard.vue'
 import { BOARD_COLUMNS } from '../types/lab'
@@ -19,6 +19,7 @@ interface ColumnMeta {
 }
 
 const COLUMN_META: Record<string, ColumnMeta> = {
+  PENDING_COLLECTION: { icon: Syringe, bg: 'var(--warm-200)', fg: 'var(--warm-700)' },
   PENDING_PROCESSING: { icon: Inbox, bg: 'oklch(94% 0.07 80)', fg: 'oklch(45% 0.13 70)' },
   IN_PROGRESS: { icon: Microscope, bg: 'oklch(94% 0.04 240)', fg: 'oklch(40% 0.15 240)' },
   PENDING_VALIDATION: { icon: ClipboardCheck, bg: 'oklch(94% 0.05 280)', fg: 'oklch(40% 0.16 280)' },
@@ -66,10 +67,13 @@ const columns = computed(() =>
 <style scoped>
 .board {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 }
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
+  .board { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
   .board { grid-template-columns: 1fr; }
 }
 .column {
@@ -80,6 +84,7 @@ const columns = computed(() =>
   padding: 12px;
   min-height: 200px;
 }
+.column[data-status='PENDING_COLLECTION'] { border-top-color: var(--warm-400); }
 .column[data-status='PENDING_PROCESSING'] { border-top-color: oklch(65% 0.15 75); }
 .column[data-status='IN_PROGRESS'] { border-top-color: oklch(55% 0.16 240); }
 .column[data-status='PENDING_VALIDATION'] { border-top-color: oklch(55% 0.18 280); }

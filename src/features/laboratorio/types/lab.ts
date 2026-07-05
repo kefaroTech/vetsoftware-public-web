@@ -22,6 +22,7 @@ export interface LabSearchCriteria {
 
 /** Columnas del tablero activo (Bandeja de muestras), en orden. */
 export const BOARD_COLUMNS: { status: LaboratoryTestStatus; label: string }[] = [
+  { status: 'PENDING_COLLECTION', label: 'Por recolectar' },
   { status: 'PENDING_PROCESSING', label: 'En cola' },
   { status: 'IN_PROGRESS', label: 'En proceso' },
   { status: 'PENDING_VALIDATION', label: 'Por validar' },

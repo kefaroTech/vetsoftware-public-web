@@ -6,7 +6,7 @@ import { labCode } from '../types/lab'
 import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
 
-export type LabActionKind = 'take' | 'load' | 'return' | 'validate'
+export type LabActionKind = 'collect' | 'take' | 'load' | 'return' | 'validate'
 
 const props = defineProps<{ item: LaboratoryTestResponse }>()
 const emit = defineEmits<{ open: []; action: [kind: LabActionKind] }>()
@@ -19,6 +19,8 @@ interface CardAction {
 
 const actions = computed<CardAction[]>(() => {
   switch (props.item.status) {
+    case 'PENDING_COLLECTION':
+      return [{ kind: 'collect', label: 'Tomar muestra', variant: 'primary' }]
     case 'PENDING_PROCESSING':
       return [{ kind: 'take', label: 'Procesar muestra', variant: 'primary' }]
     case 'IN_PROGRESS':

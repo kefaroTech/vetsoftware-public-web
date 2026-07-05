@@ -115,7 +115,15 @@ const showAttachments = computed(
       <button type="button" class="btn-ghost" @click="emit('close')">Cerrar</button>
       <template v-if="test">
         <button
-          v-if="test.status === 'PENDING_PROCESSING'"
+          v-if="test.status === 'PENDING_COLLECTION'"
+          type="button"
+          class="btn-primary"
+          @click="emit('action', 'collect')"
+        >
+          Tomar muestra
+        </button>
+        <button
+          v-else-if="test.status === 'PENDING_PROCESSING'"
           type="button"
           class="btn-primary"
           @click="emit('action', 'take')"
