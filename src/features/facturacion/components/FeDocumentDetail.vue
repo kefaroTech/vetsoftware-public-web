@@ -256,6 +256,7 @@ function copyId() {
 
     <div v-if="doc.lines.length" class="card">
       <div class="card-title">Detalle</div>
+      <div class="tbl-scroll">
       <table class="lines">
         <thead>
           <tr>
@@ -279,6 +280,7 @@ function copyId() {
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <div class="card totals">
@@ -474,8 +476,12 @@ function copyId() {
 }
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
+}
+.tbl-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .card {
   background: var(--warm-50);

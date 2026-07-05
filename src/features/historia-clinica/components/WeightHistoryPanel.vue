@@ -586,4 +586,9 @@ async function remove(id: number) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+@media (max-width: 480px) {
+  .wp-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>

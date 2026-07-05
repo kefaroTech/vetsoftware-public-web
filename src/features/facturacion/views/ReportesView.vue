@@ -121,6 +121,7 @@ onMounted(() => {
       <div class="cols">
         <div class="card">
           <div class="card-title">Impuestos por tarifa</div>
+          <div class="tbl-scroll">
           <table class="minitable">
             <thead>
               <tr><th>Esquema</th><th>Tarifa</th><th style="text-align: right">Base</th><th style="text-align: right">Impuesto</th></tr>
@@ -135,9 +136,11 @@ onMounted(() => {
               <tr v-if="book.taxByRate.length === 0"><td colspan="4" class="empty">Sin datos</td></tr>
             </tbody>
           </table>
+          </div>
         </div>
         <div class="card">
           <div class="card-title">Recaudo por medio de pago</div>
+          <div class="tbl-scroll">
           <table class="minitable">
             <thead><tr><th>Medio</th><th style="text-align: right">Monto</th></tr></thead>
             <tbody>
@@ -148,11 +151,13 @@ onMounted(() => {
               <tr v-if="book.recaudoByMeans.length === 0"><td colspan="2" class="empty">Sin datos</td></tr>
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 
       <div class="card">
         <div class="card-title">Documentos del periodo</div>
+        <div class="tbl-scroll">
         <table class="minitable">
           <thead>
             <tr>
@@ -175,6 +180,7 @@ onMounted(() => {
             <tr v-if="book.entries.length === 0"><td colspan="8" class="empty">Sin documentos en el rango.</td></tr>
           </tbody>
         </table>
+        </div>
       </div>
     </template>
 
@@ -192,7 +198,8 @@ onMounted(() => {
         <div v-if="recon.needsAttention.length === 0" class="empty pad">
           Todos los documentos del periodo están validados.
         </div>
-        <table v-else class="minitable">
+        <div v-else class="tbl-scroll">
+        <table class="minitable">
           <thead><tr><th>Número</th><th>Tipo</th><th>Fecha</th><th>Estado</th></tr></thead>
           <tbody>
             <tr v-for="d in recon.needsAttention" :key="d.id">
@@ -203,6 +210,7 @@ onMounted(() => {
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </template>
   </div>
@@ -295,6 +303,16 @@ onMounted(() => {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
 }
+@media (max-width: 1024px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}
 .rep-card {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
@@ -322,7 +340,7 @@ onMounted(() => {
 }
 .cols {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
 }
 .card {
@@ -338,6 +356,10 @@ onMounted(() => {
   color: var(--warm-500);
   font-weight: 600;
   margin-bottom: 10px;
+}
+.tbl-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .minitable {
   width: 100%;

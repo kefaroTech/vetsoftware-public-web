@@ -1,5 +1,5 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ maxWidth?: number }>(), { maxWidth: 1280 })
+withDefaults(defineProps<{ maxWidth?: number }>(), { maxWidth: 1600 })
 </script>
 
 <template>

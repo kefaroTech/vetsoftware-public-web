@@ -154,6 +154,11 @@ const docLabel = computed(() => {
   grid-template-columns: 1fr 1fr;
   gap: 6px 14px;
 }
+@media (max-width: 420px) {
+  .checklistgrid {
+    grid-template-columns: 1fr;
+  }
+}
 .clitem {
   display: flex;
   align-items: center;

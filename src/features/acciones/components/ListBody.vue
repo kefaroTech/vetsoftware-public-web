@@ -48,14 +48,16 @@ const { slice, page, pageCount, total, pageSize } = usePaged(filtered, props.pag
 
     <div v-if="loading" class="state">Cargando…</div>
     <div v-else-if="total === 0" class="state empty">{{ emptyText }}</div>
-    <table v-else class="table">
-      <thead>
-        <slot name="header" />
-      </thead>
-      <tbody>
-        <slot name="row" v-for="item in slice" :item="item" :key="(item as { id: number }).id" />
-      </tbody>
-    </table>
+    <div v-else class="tbl-scroll">
+      <table class="table">
+        <thead>
+          <slot name="header" />
+        </thead>
+        <tbody>
+          <slot name="row" v-for="item in slice" :item="item" :key="(item as { id: number }).id" />
+        </tbody>
+      </table>
+    </div>
 
     <Pagination
       :page="page"
@@ -74,9 +76,14 @@ const { slice, page, pageCount, total, pageSize } = usePaged(filtered, props.pag
 }
 .search-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   margin-bottom: 14px;
+}
+.tbl-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .search {
   flex: 1;

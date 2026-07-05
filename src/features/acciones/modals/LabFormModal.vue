@@ -413,6 +413,7 @@ async function save() {
 .row-grid .full {
   grid-column: 1 / -1;
 }
+@media (max-width: 760px) { .row-grid { grid-template-columns: 1fr; } }
 .add-row {
   margin-top: 12px;
   background: transparent;

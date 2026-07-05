@@ -87,6 +87,7 @@ function go(p: number) {
 <style scoped>
 .pagination {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 16px;

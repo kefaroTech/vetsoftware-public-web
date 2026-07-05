@@ -595,7 +595,7 @@ async function onChargeVoided() {
 .detail-head .who { align-items: center; gap: 14px; }
 .name-row { display: flex; align-items: center; gap: 11px; }
 .detail-meta { font-size: 13.5px; color: var(--warm-600); margin-top: 3px; }
-.detail-actions { display: flex; gap: 10px; }
+.detail-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 
 .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
 .sum-box { background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 5px; }

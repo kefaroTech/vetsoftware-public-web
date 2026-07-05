@@ -116,7 +116,8 @@ const sorted = computed(() =>
     <div v-if="store.error.value" class="banner error">{{ store.error.value }}</div>
 
     <!-- ─────────── Modo DISPONIBLES ─────────── -->
-    <table v-if="mode === 'active'" class="table">
+    <div v-if="mode === 'active'" class="tbl-scroll">
+    <table class="table">
       <thead>
         <tr>
           <th>Medicamento</th>
@@ -165,9 +166,11 @@ const sorted = computed(() =>
         </tr>
       </tbody>
     </table>
+    </div>
 
     <!-- ─────────── Modo PAUSADOS ─────────── -->
-    <table v-else class="table">
+    <div v-else class="tbl-scroll">
+    <table class="table">
       <thead>
         <tr>
           <th>Medicamento</th>
@@ -193,6 +196,7 @@ const sorted = computed(() =>
         </tr>
       </tbody>
     </table>
+    </div>
 
     <p class="note">
       Los medicamentos <strong>globales</strong> son compartidos por todas las clínicas y son de
@@ -230,7 +234,8 @@ const sorted = computed(() =>
   box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08), 0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.45);
 }
 .banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
-.table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 12px; overflow: hidden; }
+.tbl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 13px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 12px; overflow: hidden; }
 .table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--warm-500); font-weight: 600; padding: 11px 14px; background: var(--warm-100); border-bottom: 1px solid var(--warm-200); }
 .table td { padding: 11px 14px; border-bottom: 1px solid var(--warm-150); color: var(--warm-800); vertical-align: middle; }
 .table tbody tr:last-child td { border-bottom: none; }

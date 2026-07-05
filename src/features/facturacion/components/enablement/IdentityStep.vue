@@ -291,6 +291,11 @@ async function save() {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px 22px;
 }
+@media (max-width: 760px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
 .span-2 {
   grid-column: 1 / -1;
 }

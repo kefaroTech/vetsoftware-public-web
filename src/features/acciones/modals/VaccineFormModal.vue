@@ -264,6 +264,7 @@ async function save() {
   margin-top: 14px;
 }
 .grid .full { grid-column: 1 / -1; }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
 .btn-ghost,
 .btn-primary {
   font-family: inherit; font-size: 13px; font-weight: 500;

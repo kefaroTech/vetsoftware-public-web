@@ -341,6 +341,7 @@ async function submit() {
 <style scoped>
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; }
 .col-2 { grid-column: 1 / -1; }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
 .margin-hint { font-size: 12.5px; font-weight: 500; color: var(--amatista-700); background: var(--amatista-50); border: 1px solid var(--amatista-200); border-radius: 8px; padding: 8px 12px; margin-top: -4px; }
 .margin-hint.below { color: oklch(45% 0.18 25); background: oklch(96% 0.04 25); border-color: oklch(85% 0.12 25); }
 .checks { display: flex; gap: 24px; flex-wrap: wrap; }

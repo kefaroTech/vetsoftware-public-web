@@ -248,10 +248,12 @@ onMounted(() => history.fetch())
 .table-wrap {
   border: 1px solid var(--warm-200);
   border-radius: 12px;
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .table {
   width: 100%;
+  min-width: 640px;
   border-collapse: collapse;
   font-size: 13px;
 }

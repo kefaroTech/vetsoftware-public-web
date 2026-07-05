@@ -59,4 +59,9 @@ const cards = [
     grid-template-columns: repeat(2, 1fr);
   }
 }
+@media (max-width: 440px) {
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+}
 </style>

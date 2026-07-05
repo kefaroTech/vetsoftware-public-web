@@ -91,6 +91,7 @@ function shortId(cufe: string | null, cude: string | null): string {
 
     <p v-if="error" class="error-banner">{{ error }}</p>
 
+    <div class="tbl-scroll">
     <table class="table">
       <thead>
         <tr>
@@ -125,6 +126,7 @@ function shortId(cufe: string | null, cude: string | null): string {
         </tr>
       </tbody>
     </table>
+    </div>
 
     <FeEmitModal
       :open="emitOpen"
@@ -224,6 +226,10 @@ function shortId(cufe: string | null, cude: string | null): string {
   border: 1px solid oklch(85% 0.08 25);
   color: oklch(45% 0.16 25);
   font-size: 13px;
+}
+.tbl-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .table {
   width: 100%;

@@ -82,11 +82,14 @@ function eventsOn(day: Date): AgendaEvent[] {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 12px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 .header-row {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  min-width: 640px;
   background: var(--warm-100);
   border-bottom: 1px solid var(--warm-200);
 }
@@ -121,6 +124,7 @@ function eventsOn(day: Date): AgendaEvent[] {
 .grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  min-width: 640px;
   min-height: 600px;
 }
 .cell {

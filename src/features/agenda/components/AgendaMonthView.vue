@@ -89,11 +89,14 @@ const MAX_VISIBLE = 3
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 12px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 .weekday-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  min-width: 640px;
   background: var(--warm-100);
   border-bottom: 1px solid var(--warm-200);
 }
@@ -109,6 +112,7 @@ const MAX_VISIBLE = 3
 .grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  min-width: 640px;
   grid-auto-rows: minmax(110px, auto);
 }
 .cell {

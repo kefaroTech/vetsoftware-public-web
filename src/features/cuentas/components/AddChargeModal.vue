@@ -323,7 +323,7 @@ async function addGeneral() {
   color: white; border: none; padding: 9px 16px; font-size: 13px; align-self: flex-start;
 }
 .general-form { display: flex; flex-direction: column; gap: 14px; }
-.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
 .check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--warm-800); cursor: pointer; }
 .check input { width: 16px; height: 16px; accent-color: var(--amatista-600); }
 .empty { font-size: 13px; color: var(--warm-500); text-align: center; padding: 16px; }
