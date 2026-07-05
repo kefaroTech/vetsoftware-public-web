@@ -12,6 +12,7 @@ import {
   type NumberingResolutionResponse,
   type SaveNumberingResolutionRequest,
 } from '../../types/facturacion'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
   open: boolean
@@ -121,7 +122,10 @@ function err(field: ErrorKey): string | undefined {
 
 function submit() {
   submitted.value = true
-  if (!isValid.value) return
+  if (!isValid.value) {
+    scrollToFirstError()
+    return
+  }
   const body: SaveNumberingResolutionRequest = {
     documentType: draft.documentType,
     resolutionNumber: draft.resolutionNumber.trim(),

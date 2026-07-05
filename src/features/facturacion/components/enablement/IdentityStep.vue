@@ -18,6 +18,7 @@ import {
 } from '../../types/facturacion'
 import SectionHead from './SectionHead.vue'
 import WizardFooter from './WizardFooter.vue'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const emit = defineEmits<{ back: []; next: [] }>()
 
@@ -106,7 +107,10 @@ function pickActivity(a: EconomicActivity) {
 
 async function save() {
   submitted.value = true
-  if (!isValid.value) return
+  if (!isValid.value) {
+    scrollToFirstError()
+    return
+  }
   saving.value = true
   try {
     const body: SaveCompanyTaxProfileRequest = {

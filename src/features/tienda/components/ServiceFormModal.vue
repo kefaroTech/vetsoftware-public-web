@@ -10,6 +10,7 @@ import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/
 import { useToast } from '@/composables/useToast'
 import { useTienda } from '../composables/useTienda'
 import type { ServicePayload, ServiceResponse, TaxScheme, TaxTreatment } from '../types/tienda'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const CONFLICT_MESSAGE =
   'El registro fue modificado por otra operación; se recargó la información. Revisa y reintenta.'
@@ -158,7 +159,10 @@ defineExpose({ validate })
 
 async function submit() {
   if (busy.value) return
-  if (!validate()) return
+  if (!validate()) {
+    scrollToFirstError()
+    return
+  }
   busy.value = true
   saveError.value = null
   const payload: ServicePayload = {

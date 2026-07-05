@@ -20,6 +20,7 @@ import {
   formatDateShort,
   weightUnitLabel,
 } from '../composables/format'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
   open: boolean
@@ -151,7 +152,10 @@ function save() {
     return
   }
   submitted.value = true
-  if (!valid.value) return
+  if (!valid.value) {
+    scrollToFirstError()
+    return
+  }
   const item: Hospitalization = {
     date: draft.date,
     startDate: draft.startDate,

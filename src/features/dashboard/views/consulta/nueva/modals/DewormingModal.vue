@@ -10,6 +10,7 @@ import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
 import type { Animal, Deworming, DewormingType } from '@/types/domain'
 import type { DewormingDraftItem } from '../composables/useNuevaConsultaDraft'
 import { todayISO, formatDateLong, formatDateShort } from '../composables/format'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
   open: boolean
@@ -133,7 +134,10 @@ function save() {
     return
   }
   submitted.value = true
-  if (!valid.value) return
+  if (!valid.value) {
+    scrollToFirstError()
+    return
+  }
   const item: Deworming = {
     date: draft.date,
     lastDeworming: draft.lastDeworming,

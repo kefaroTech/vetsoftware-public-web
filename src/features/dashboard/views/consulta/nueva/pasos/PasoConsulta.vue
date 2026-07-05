@@ -18,6 +18,7 @@ import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
 import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
 import QuickActionsCard from '../components/QuickActionsCard.vue'
+import { scrollToFirstError } from '@/composables/scrollToError'
 import { useConsultationTypes } from '../composables/useConsultationTypes'
 import { weightUnitLabel } from '../composables/format'
 import {
@@ -162,7 +163,9 @@ function markTouched(field: FieldKey) {
 }
 function validate(): boolean {
   ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = true))
-  return (Object.keys(errors.value) as FieldKey[]).every((k) => !errors.value[k])
+  const ok = (Object.keys(errors.value) as FieldKey[]).every((k) => !errors.value[k])
+  if (!ok) scrollToFirstError()
+  return ok
 }
 defineExpose({ validate })
 

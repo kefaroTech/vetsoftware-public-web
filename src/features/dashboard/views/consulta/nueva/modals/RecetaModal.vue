@@ -8,6 +8,7 @@ import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
 import type { Animal, Prescription, MedicamentPrescription } from '@/types/domain'
 import type { PrescriptionDraftItem } from '../composables/useNuevaConsultaDraft'
 import { todayISO, formatDateLong, formatDateShort } from '../composables/format'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
   open: boolean
@@ -194,7 +195,10 @@ function save() {
     return
   }
   submitted.value = true
-  if (!valid.value) return
+  if (!valid.value) {
+    scrollToFirstError()
+    return
+  }
   const prescription: Prescription = {
     date: draft.date,
     observations: draft.observations.trim(),

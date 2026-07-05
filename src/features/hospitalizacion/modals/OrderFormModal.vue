@@ -23,6 +23,7 @@ import type {
   DurationMeasure,
 } from '@/types/domain'
 import type { CreateHospitalizationMedicationPayload } from '../api/hospitalizationMedication.api'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 type OrderPayload = Omit<CreateHospitalizationMedicationPayload, 'hospitalizationId'>
 
@@ -164,7 +165,10 @@ function buildPayload(): OrderPayload {
 
 function save() {
   submitted.value = true
-  if (!valid.value) return
+  if (!valid.value) {
+    scrollToFirstError()
+    return
+  }
   // Si hay aplicadas, confirmar el impacto antes de persistir.
   if (hasApplied.value) {
     impactOpen.value = true

@@ -12,6 +12,7 @@ import {
   type OwnerDocumentType,
 } from '../composables/feFiscalChecklist'
 import { TAX_REGIME_LABEL, type PersonType, type TaxRegime } from '../types/facturacion'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{ open: boolean; customer: FiscalCustomer | null }>()
 const emit = defineEmits<{ save: [data: Partial<FiscalCustomer>]; close: [] }>()
@@ -73,7 +74,10 @@ function err(field: ErrKey): string | undefined {
 
 function save() {
   submitted.value = true
-  if (!isValid.value) return
+  if (!isValid.value) {
+    scrollToFirstError()
+    return
+  }
   emit('save', {
     documentType: draft.documentType,
     documentId: draft.documentId.trim(),

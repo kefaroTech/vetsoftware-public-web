@@ -11,6 +11,7 @@ import type { Animal, Vaccination } from '@/types/domain'
 import type { VaccinationDraftItem } from '../composables/useNuevaConsultaDraft'
 import { todayISO, formatDateLong, formatDateShort } from '../composables/format'
 import { useVaccinationTypes } from '../composables/useVaccinationTypes'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
   open: boolean
@@ -180,7 +181,10 @@ function save() {
     return
   }
   submitted.value = true
-  if (!valid.value) return
+  if (!valid.value) {
+    scrollToFirstError()
+    return
+  }
   const items: Vaccination[] = draft.vaccinations.map((v) => ({
     date: draft.date,
     vaccinationTypeId: v.vaccinationTypeId,

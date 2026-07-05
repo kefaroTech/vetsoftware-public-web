@@ -10,6 +10,7 @@ import { formatMoney } from '@/features/tienda/composables/pricing'
 import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
 import type { PaymentMethod } from '../types/cuentas'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
   open: boolean
@@ -68,7 +69,10 @@ const newOutstanding = computed(() => Math.max(0, props.outstanding - (amountNum
 
 async function submit() {
   submitted.value = true
-  if (amountError.value || busy.value) return
+  if (amountError.value || busy.value) {
+    scrollToFirstError()
+    return
+  }
   // Capturamos antes del await: addPayment puede refrescar el saldo y cambiar props.outstanding.
   const amount = amountNum.value
   const prev = props.outstanding

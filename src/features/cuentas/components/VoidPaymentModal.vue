@@ -9,6 +9,7 @@ import { formatMoney } from '@/features/tienda/composables/pricing'
 import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
 import { PAYMENT_METHOD_LABEL, type DebtResponse } from '../types/cuentas'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
   open: boolean
@@ -44,7 +45,10 @@ const subtitle = computed(() => {
 
 async function submit() {
   submitted.value = true
-  if (reasonError.value || busy.value || !props.payment) return
+  if (reasonError.value || busy.value || !props.payment) {
+    scrollToFirstError()
+    return
+  }
   busy.value = true
   try {
     await cuentas.voidPayment(props.accountId, props.payment.id, reason.value.trim())

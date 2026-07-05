@@ -347,6 +347,14 @@ test.describe('D · Selección de mascota', () => {
     await expect(page.getByRole('heading', { name: /Datos de la consulta/ })).toHaveCount(0)
   })
 
+  test('[data] "Continuar" sin mascota agita la selección (animación requerido)', async ({ page }) => {
+    await gotoNuevaConsulta(page)
+    await createAndSelectOwner(page)
+    await footerNext(page, 'Continuar a la consulta').click()
+    // La sección de mascota recibe la clase de animación "requerido".
+    await expect(page.locator('.pet-section')).toHaveClass(/pet-shake/)
+  })
+
   test('[data] cambiar de propietario vuelve a la búsqueda', async ({ page }) => {
     await gotoNuevaConsulta(page)
     await createAndSelectOwner(page)
@@ -1297,6 +1305,24 @@ test.describe('G · Flujo completo y borrador', () => {
     await expect(billing.getByRole('button', { name: 'Salir' })).toBeVisible()
     await billing.getByRole('button', { name: 'Salir' }).click()
     await expect(page).toHaveURL(/exito|consulta-nueva-exito/)
+  })
+
+  test('[data] validación de consulta: scroll centrado al primer campo requerido faltante', async ({
+    page,
+  }) => {
+    await gotoNuevaConsulta(page)
+    await irAPasoConsulta(page)
+    // Empuja el scroll para que el primer requerido (Tipo de consulta) quede fuera de vista.
+    await page.mouse.wheel(0, 1400)
+    await footerNext(page, 'Guardar consulta').click()
+    // Tras validar, el primer campo faltante queda centrado verticalmente en el viewport.
+    const field = page.locator('.field', { hasText: 'Tipo de consulta' }).first()
+    const vh = page.viewportSize()!.height
+    await expect.poll(async () => (await field.boundingBox())?.y ?? 0, { timeout: 4000 }).toBeGreaterThan(
+      vh * 0.12,
+    )
+    const y = (await field.boundingBox())!.y
+    expect(y, 'el campo debe quedar en la banda central, no pegado al borde').toBeLessThan(vh * 0.8)
   })
 
   test('[data] facturación integrada: guardar + abrir cuenta con cargos, servicios responden 2xx', async ({

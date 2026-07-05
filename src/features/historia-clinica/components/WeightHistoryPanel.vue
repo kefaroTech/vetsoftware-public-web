@@ -13,6 +13,7 @@ import {
 } from '@/features/dashboard/views/consulta/nueva/api/weightRecord.api'
 import type { WeightUnit } from '@/types/domain'
 import { formatEventDate } from '../composables/format'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
   animalId: number
@@ -153,7 +154,10 @@ function openForm() {
 
 async function submit() {
   submitted.value = true
-  if (valueError.value) return
+  if (valueError.value) {
+    scrollToFirstError()
+    return
+  }
   saving.value = true
   saveError.value = null
   try {

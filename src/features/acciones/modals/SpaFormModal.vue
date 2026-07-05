@@ -16,6 +16,7 @@ import {
   type SpaResponse,
 } from '@/features/dashboard/views/consulta/nueva/api/spa.api'
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
   open: boolean
@@ -108,7 +109,10 @@ async function onCreateType(data: { name: string; description: string }) {
 
 async function save() {
   submitted.value = true
-  if (!valid.value || saving.value) return
+  if (!valid.value || saving.value) {
+    scrollToFirstError()
+    return
+  }
   const cid = companyId.value
   const pid = patientId.value
   if (cid == null || pid == null) {

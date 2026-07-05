@@ -10,6 +10,7 @@ import type { Animal, LaboratoryTest } from '@/types/domain'
 import type { LaboratoryTestDraftItem } from '../composables/useNuevaConsultaDraft'
 import { todayISO, formatDateLong, formatDateShort } from '../composables/format'
 import { useTestTypes } from '../composables/useTestTypes'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
   open: boolean
@@ -148,7 +149,10 @@ function save() {
     return
   }
   submitted.value = true
-  if (!valid.value) return
+  if (!valid.value) {
+    scrollToFirstError()
+    return
+  }
   const items: LaboratoryTest[] = draft.tests.map((t) => ({
     date: draft.date,
     testTypeId: t.testTypeId,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, toRef, watch } from 'vue'
+import { computed, nextTick, ref, toRef, watch } from 'vue'
 import { Plus, User, ArrowRight, PawPrint, TriangleAlert } from 'lucide-vue-next'
 import ContentWrap from '../components/ContentWrap.vue'
 import PageHeading from '../components/PageHeading.vue'
@@ -21,6 +21,7 @@ import { buildCreateAnimalRequest, mapAnimalResponse } from '../api/animal.mappe
 import { useNuevaConsultaDraft } from '../composables/useNuevaConsultaDraft'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { scrollToFirstError } from '@/composables/scrollToError'
 import type { OwnerDocumentType } from '@/features/facturacion/composables/feFiscalChecklist'
 import type { PersonType } from '@/features/facturacion/types/facturacion'
 import type { Animal, Owner } from '@/types/domain'
@@ -63,6 +64,7 @@ async function submitOwner(): Promise<boolean> {
   if (!o) return true
   if (ownerFormRef.value && !ownerFormRef.value.validate()) {
     ownerSubmitError.value = 'Revisa los campos marcados antes de continuar.'
+    scrollToFirstError()
     return false
   }
   if (companyId.value == null) {
@@ -154,6 +156,7 @@ async function submitPet(): Promise<boolean> {
   if (!p || !o) return false
   if (petFormRef.value && !petFormRef.value.validate()) {
     petSubmitError.value = 'Revisa los campos marcados antes de continuar.'
+    scrollToFirstError()
     return false
   }
   if (companyId.value == null) {
@@ -189,9 +192,25 @@ const selectionError = computed<string | null>(() => {
   if (!draft.state.pet) return 'Selecciona una mascota para continuar.'
   return null
 })
+// Referencia a la sección de mascota + flag de animación "requerido" (shake).
+const petSectionRef = ref<HTMLElement | null>(null)
+const petSelectShake = ref(false)
+async function shakePetSelection() {
+  // Re-dispara la animación aunque ya estuviera activa (quita y vuelve a poner la clase).
+  petSelectShake.value = false
+  await nextTick()
+  petSelectShake.value = true
+  petSectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+}
 function validateSelection(): boolean {
   selectionSubmitted.value = true
-  return !selectionError.value
+  const err = selectionError.value
+  if (err) {
+    // Falta propietario → sube al buscador; falta mascota → centra y agita la selección.
+    if (!draft.state.owner) window.scrollTo({ top: 0, behavior: 'smooth' })
+    else if (!draft.state.pet && !draft.state.petCreating) shakePetSelection()
+  }
+  return !err
 }
 // Al elegir/crear propietario o mascota, limpiamos el intento previo: el banner
 // de selección solo reaparece si el usuario vuelve a pulsar "Continuar" sin completar.
@@ -330,7 +349,7 @@ function clearBanner() {
 
       <!-- ══ MASCOTA (solo con propietario seleccionado) ══ -->
       <template v-if="ownerMode === 'selected' && selectedOwner">
-        <div class="pet-section">
+        <div ref="petSectionRef" class="pet-section" :class="{ 'pet-shake': petSelectShake }">
           <template v-if="petMode === 'creating' && draft.state.petCreating">
             <div class="create-head">
               <PageHeading
@@ -435,6 +454,17 @@ function clearBanner() {
 .pet-section {
   margin-top: 28px;
   padding-top: 4px;
+}
+/* Animación "requerido" cuando se intenta continuar sin elegir mascota. Se agita el
+   área seleccionable (grid de tarjetas o estado vacío), no el encabezado. */
+.pet-section.pet-shake :is(.grid, .empty, .add-pet) {
+  animation: pet-shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+@keyframes pet-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
 }
 .search-wrap {
   padding: 16px;

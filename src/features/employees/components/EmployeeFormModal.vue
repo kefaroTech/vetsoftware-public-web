@@ -8,6 +8,7 @@ import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import SegmentedRadio from '@/features/dashboard/components/ui/SegmentedRadio.vue'
 import RoleSelectorGrid from './RoleSelectorGrid.vue'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
   open: boolean
@@ -134,6 +135,7 @@ function submit() {
   ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = true))
   const ok = Object.keys(errors.value).length === 0
   if (!ok) {
+    scrollToFirstError()
     banner.value = true
     return
   }

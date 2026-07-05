@@ -16,6 +16,7 @@ import type {
   PromotionType,
   ValueType,
 } from '../types/tienda'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
   open: boolean
@@ -132,7 +133,10 @@ const isValid = computed(() => Object.values(errors.value).every((e) => e === nu
 
 async function submit() {
   submitted.value = true
-  if (!isValid.value || busy.value) return
+  if (!isValid.value || busy.value) {
+    scrollToFirstError()
+    return
+  }
   busy.value = true
   saveError.value = null
   const payload: PromotionPayload = {

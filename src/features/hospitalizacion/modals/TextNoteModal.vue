@@ -3,6 +3,7 @@ import { ref, watch, type Component } from 'vue'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
   open: boolean
@@ -31,7 +32,10 @@ watch(
 
 function save() {
   submitted.value = true
-  if (text.value.trim().length < 2) return
+  if (text.value.trim().length < 2) {
+    scrollToFirstError()
+    return
+  }
   emit('save', text.value.trim())
 }
 </script>

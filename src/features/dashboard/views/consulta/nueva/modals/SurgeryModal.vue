@@ -11,6 +11,7 @@ import type { Animal, Surgery } from '@/types/domain'
 import type { SurgeryDraftItem } from '../composables/useNuevaConsultaDraft'
 import { todayISO, formatDateLong, formatDateShort } from '../composables/format'
 import { useSurgeryTypes } from '../composables/useSurgeryTypes'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
   open: boolean
@@ -148,7 +149,10 @@ function save() {
     return
   }
   submitted.value = true
-  if (!valid.value) return
+  if (!valid.value) {
+    scrollToFirstError()
+    return
+  }
   const item: Surgery = {
     date: draft.date,
     surgeryTypeId: draft.surgeryTypeId,

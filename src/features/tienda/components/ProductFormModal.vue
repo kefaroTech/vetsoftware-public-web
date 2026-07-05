@@ -12,6 +12,7 @@ import { useToast } from '@/composables/useToast'
 import { formatMoney } from '../composables/pricing'
 import { useTienda } from '../composables/useTienda'
 import type { ProductPayload, ProductResponse, TaxScheme, TaxTreatment } from '../types/tienda'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const CONFLICT_MESSAGE =
   'El registro fue modificado por otra operación; se recargó la información. Revisa y reintenta.'
@@ -198,7 +199,10 @@ const marginInfo = computed(() => {
 
 async function submit() {
   if (busy.value) return
-  if (!validate()) return
+  if (!validate()) {
+    scrollToFirstError()
+    return
+  }
   busy.value = true
   saveError.value = null
   const payload: ProductPayload = {

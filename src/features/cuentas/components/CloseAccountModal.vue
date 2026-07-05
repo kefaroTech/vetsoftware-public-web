@@ -34,6 +34,7 @@ import {
   type OwnerSummary,
   type PaymentMethod,
 } from '../types/cuentas'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
   open: boolean
@@ -307,7 +308,10 @@ watch(
 
 async function confirm() {
   submitted.value = true
-  if (!props.account || busy.value || !canConfirm.value) return
+  if (!props.account || busy.value || !canConfirm.value) {
+    scrollToFirstError()
+    return
+  }
   const accountId = props.account.id
   busy.value = true
   try {

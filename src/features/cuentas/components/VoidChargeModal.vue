@@ -9,6 +9,7 @@ import { formatMoney } from '@/features/tienda/composables/pricing'
 import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
 import type { UnifiedCharge } from '../types/cuentas'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
   open: boolean
@@ -50,7 +51,10 @@ const subtitle = computed(() => {
 
 async function submit() {
   submitted.value = true
-  if (wouldGoNegative.value || reasonError.value || busy.value || !props.charge) return
+  if (wouldGoNegative.value || reasonError.value || busy.value || !props.charge) {
+    scrollToFirstError()
+    return
+  }
   busy.value = true
   try {
     await cuentas.voidCharge(props.accountId, props.charge, reason.value.trim())
