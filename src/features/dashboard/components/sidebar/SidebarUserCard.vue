@@ -80,7 +80,7 @@ const fullName = computed(() => `${props.firstName} ${props.lastName}`)
   flex-shrink: 0;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1024px) {
   .user-card {
     justify-content: center;
     padding: 8px 0;

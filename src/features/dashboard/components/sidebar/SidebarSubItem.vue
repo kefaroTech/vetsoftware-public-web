@@ -45,7 +45,7 @@ defineProps<{
   font-weight: 500;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1024px) {
   .sub-item {
     width: 44px;
     height: 34px;

@@ -101,7 +101,7 @@ defineEmits<{
   transform: rotate(-90deg);
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1024px) {
   .nav-item {
     width: 44px;
     height: 38px;

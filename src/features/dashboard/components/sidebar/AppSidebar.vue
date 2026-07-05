@@ -458,7 +458,7 @@ function onNotifications() {
   font-weight: 500;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1024px) {
   .sidebar {
     width: 72px;
     padding: 18px 10px;

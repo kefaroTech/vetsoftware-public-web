@@ -52,7 +52,7 @@ defineProps<{
   margin-top: 2px;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1024px) {
   .brand {
     justify-content: center;
     padding: 8px 0 18px;
