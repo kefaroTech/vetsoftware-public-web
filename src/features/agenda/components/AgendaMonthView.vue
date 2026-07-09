@@ -9,15 +9,19 @@ import {
   WEEKDAYS_SHORT,
 } from '../composables/dateUtils'
 import AgendaEventChip from './AgendaEventChip.vue'
+import AppointmentChip from './AppointmentChip.vue'
+import { itemsOnDay, type AgendaItem } from '../types/agenda'
 import type { AgendaEvent } from '../types/agenda'
+import type { AppointmentResponse } from '../types/appointment'
 
 const props = defineProps<{
   cursor: Date
-  events: AgendaEvent[]
+  items: AgendaItem[]
 }>()
 
 const emit = defineEmits<{
   'day-click': [d: Date]
+  'appointment-click': [appt: AppointmentResponse]
   'event-click': [ev: AgendaEvent]
 }>()
 
@@ -30,14 +34,8 @@ const days = computed<Date[]>(() => {
 
 const cursorMonth = computed(() => props.cursor.getMonth())
 
-function eventsOn(day: Date): AgendaEvent[] {
-  const iso = isoFromDate(day)
-  return props.events.filter((ev) => {
-    if (ev.endDate && ev.endDate !== ev.date) {
-      return iso >= ev.date && iso <= ev.endDate
-    }
-    return ev.date === iso
-  })
+function on(day: Date): AgendaItem[] {
+  return itemsOnDay(props.items, isoFromDate(day))
 }
 
 const MAX_VISIBLE = 3
@@ -62,21 +60,25 @@ const MAX_VISIBLE = 3
       >
         <div class="day-num">
           <span :class="{ 'today-marker': sameDay(day, today) }">{{ day.getDate() }}</span>
-          <span v-if="eventsOn(day).length > 0" class="day-count">{{ eventsOn(day).length }}</span>
+          <span v-if="on(day).length > 0" class="day-count">{{ on(day).length }}</span>
         </div>
         <div class="events">
-          <AgendaEventChip
-            v-for="ev in eventsOn(day).slice(0, MAX_VISIBLE)"
-            :key="ev.id"
-            :event="ev"
-            dense
-            @click="emit('event-click', ev)"
-          />
-          <div
-            v-if="eventsOn(day).length > MAX_VISIBLE"
-            class="more"
-          >
-            +{{ eventsOn(day).length - MAX_VISIBLE }} más
+          <template v-for="it in on(day).slice(0, MAX_VISIBLE)" :key="it.id">
+            <AppointmentChip
+              v-if="it.kind === 'appointment'"
+              :appt="it.appt"
+              variant="month"
+              @click="emit('appointment-click', it.appt)"
+            />
+            <AgendaEventChip
+              v-else
+              :event="it.event"
+              dense
+              @click="emit('event-click', it.event)"
+            />
+          </template>
+          <div v-if="on(day).length > MAX_VISIBLE" class="more">
+            +{{ on(day).length - MAX_VISIBLE }} más
           </div>
         </div>
       </button>

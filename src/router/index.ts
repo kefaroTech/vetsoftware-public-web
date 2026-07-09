@@ -34,6 +34,7 @@ const router = createRouter({
           path: 'agenda',
           name: 'agenda',
           component: () => import('@/features/agenda/views/AgendaView.vue'),
+          meta: { permission: PERMISSIONS.APPOINTMENT_READ },
         },
         {
           path: 'consulta/nueva',

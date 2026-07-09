@@ -57,6 +57,13 @@ export const PERMISSIONS = {
 
   AGENDA_READ: 'agenda.read',
 
+  // Agendamiento de citas
+  APPOINTMENT_CREATE: 'appointment.create',
+  APPOINTMENT_READ: 'appointment.read',
+  APPOINTMENT_UPDATE: 'appointment.update',
+  APPOINTMENT_DELETE: 'appointment.delete',
+  APPOINTMENT_CANCEL: 'appointment.cancel',
+
   // Tienda
   PRODUCT_CREATE: 'product.create',
   PRODUCT_READ: 'product.read',

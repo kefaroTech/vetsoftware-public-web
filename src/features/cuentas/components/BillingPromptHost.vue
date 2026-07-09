@@ -14,7 +14,6 @@ const { state, closeBilling, finishBilling } = useBillingPrompt()
     :animal-name="state.animalName"
     :heading="state.heading"
     :subtitle="state.subtitle"
-    :auto-consulta="state.autoConsulta"
     :dismissible="state.dismissible"
     @finish="finishBilling"
     @close="closeBilling"

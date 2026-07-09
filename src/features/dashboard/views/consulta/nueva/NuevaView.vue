@@ -357,7 +357,6 @@ async function saveConsultation(keepOwner = false) {
       animalId: billAnimalId,
       animalName: billPetName,
       heading: 'Facturación · Consulta',
-      autoConsulta: true,
       // Tras guardar, la facturación es una decisión forzada: sin X, sin Cancelar y
       // sin cierre por backdrop/Escape. El usuario sale eligiendo una acción del footer.
       dismissible: false,

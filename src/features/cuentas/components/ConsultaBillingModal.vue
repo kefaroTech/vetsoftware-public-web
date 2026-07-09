@@ -18,12 +18,10 @@ const props = withDefaults(
     animalName: string
     heading?: string
     subtitle?: string
-    /** `true` en consulta (precarga servicio "consulta"); `false` en procedimientos. */
-    autoConsulta?: boolean
     /** `false` → modal no descartable: sin X, sin Cancelar, sin backdrop/Escape. */
     dismissible?: boolean
   }>(),
-  { heading: 'Facturación', subtitle: '', autoConsulta: false, dismissible: true },
+  { heading: 'Facturación', subtitle: '', dismissible: true },
 )
 
 const emit = defineEmits<{ close: []; finish: [] }>()
@@ -98,10 +96,6 @@ watch(
       } finally {
         loadingAccount.value = false
       }
-    }
-    if (props.autoConsulta && props.animalId != null) {
-      const consulta = tienda.services.value.find((s) => s.name.toLowerCase().includes('consulta'))
-      if (consulta) addItem('service', consulta.id, consulta.name, consulta.price)
     }
   },
 )

@@ -80,6 +80,7 @@ const canServices = can(PERMISSIONS.SERVICE_READ)
 const canPromotions = can(PERMISSIONS.PROMOTION_READ)
 const canTaxes = can(PERMISSIONS.TAX_READ)
 const canAccounts = can(PERMISSIONS.OPEN_ACCOUNT_READ)
+const canAgenda = can(PERMISSIONS.APPOINTMENT_READ)
 
 // Facturación electrónica (DIAN) — gateada por permisos FE.
 const {
@@ -190,6 +191,7 @@ function onNotifications() {
 
     <div class="section-label">TRABAJO</div>
     <SidebarNavItem
+      v-if="canAgenda"
       label="Agenda"
       :icon="Calendar"
       :active="route.name === 'agenda'"

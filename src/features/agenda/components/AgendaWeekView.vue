@@ -8,15 +8,19 @@ import {
   WEEKDAYS_SHORT,
 } from '../composables/dateUtils'
 import AgendaEventChip from './AgendaEventChip.vue'
+import AppointmentChip from './AppointmentChip.vue'
+import { itemsOnDay, type AgendaItem } from '../types/agenda'
 import type { AgendaEvent } from '../types/agenda'
+import type { AppointmentResponse } from '../types/appointment'
 
 const props = defineProps<{
   cursor: Date
-  events: AgendaEvent[]
+  items: AgendaItem[]
 }>()
 
 const emit = defineEmits<{
   'day-click': [d: Date]
+  'appointment-click': [appt: AppointmentResponse]
   'event-click': [ev: AgendaEvent]
 }>()
 
@@ -27,52 +31,53 @@ const days = computed<Date[]>(() => {
   return Array.from({ length: 7 }, (_, i) => addDays(start, i))
 })
 
-function eventsOn(day: Date): AgendaEvent[] {
-  const iso = isoFromDate(day)
-  return props.events.filter((ev) => {
-    if (ev.endDate && ev.endDate !== ev.date) {
-      return iso >= ev.date && iso <= ev.endDate
-    }
-    return ev.date === iso
-  })
+function on(day: Date): AgendaItem[] {
+  return itemsOnDay(props.items, isoFromDate(day))
+}
+
+function countLabel(n: number): string {
+  return n === 0 ? 'Sin citas' : n === 1 ? '1 cita' : `${n} citas`
 }
 </script>
 
 <template>
   <div class="week">
     <div class="header-row">
-      <div
+      <button
         v-for="(day, i) in days"
         :key="i"
+        type="button"
         class="header-cell"
         :class="{ today: sameDay(day, today) }"
+        @click="emit('day-click', day)"
       >
         <div class="weekday">{{ WEEKDAYS_SHORT[i] }}</div>
         <div class="day-number" :class="{ today: sameDay(day, today) }">
           {{ day.getDate() }}
         </div>
-      </div>
+        <div class="day-count">{{ countLabel(on(day).length) }}</div>
+      </button>
     </div>
     <div class="grid">
-      <button
-        v-for="(day, i) in days"
-        :key="i"
-        type="button"
-        class="cell"
-        :class="{ today: sameDay(day, today) }"
-        @click="emit('day-click', day)"
-      >
+      <div v-for="(day, i) in days" :key="i" class="col" :class="{ today: sameDay(day, today) }">
         <div class="events">
-          <AgendaEventChip
-            v-for="ev in eventsOn(day)"
-            :key="ev.id"
-            :event="ev"
-            dense
-            @click="emit('event-click', ev)"
-          />
-          <div v-if="eventsOn(day).length === 0" class="empty">—</div>
+          <template v-for="it in on(day)" :key="it.id">
+            <AppointmentChip
+              v-if="it.kind === 'appointment'"
+              :appt="it.appt"
+              variant="week"
+              @click="emit('appointment-click', it.appt)"
+            />
+            <AgendaEventChip
+              v-else
+              :event="it.event"
+              dense
+              @click="emit('event-click', it.event)"
+            />
+          </template>
+          <div v-if="on(day).length === 0" class="empty">—</div>
         </div>
-      </button>
+      </div>
     </div>
   </div>
 </template>
@@ -99,6 +104,13 @@ function eventsOn(day: Date): AgendaEvent[] {
   align-items: center;
   padding: 10px 8px;
   gap: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.header-cell:hover {
+  background: var(--warm-150);
 }
 .weekday {
   font-size: 11px;
@@ -121,36 +133,29 @@ function eventsOn(day: Date): AgendaEvent[] {
   display: grid;
   place-items: center;
 }
+.day-count {
+  font-size: 10.5px;
+  color: var(--warm-500);
+}
 .grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   min-width: 640px;
   min-height: 600px;
 }
-.cell {
+.col {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   padding: 10px 8px;
   background: var(--warm-50);
-  border: none;
   border-right: 1px solid var(--warm-150);
-  text-align: left;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.12s ease;
 }
-.cell:nth-child(7n) {
+.col:nth-child(7n) {
   border-right: none;
 }
-.cell:hover {
-  background: var(--warm-100);
-}
-.cell.today {
+.col.today {
   background: var(--amatista-50);
-}
-.cell.today:hover {
-  background: var(--amatista-100);
 }
 .events {
   display: flex;
