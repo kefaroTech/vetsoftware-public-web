@@ -4,7 +4,11 @@ import { useRouter } from 'vue-router'
 import { authApi } from '../api/auth.api'
 import { useAuth } from '../composables/useAuth'
 import type { LoginEmployeeRequest } from '../types'
-import { getProblemDetailFieldErrors, getProblemDetailMessage } from '@/services/http/http.client'
+import {
+  getProblemDetailCode,
+  getProblemDetailFieldErrors,
+  getProblemDetailMessage,
+} from '@/services/http/http.client'
 
 const router = useRouter()
 const { login } = useAuth()
@@ -43,7 +47,13 @@ async function submit() {
     router.push({ name: 'home' })
   } catch (e) {
     fieldErrors.value = getProblemDetailFieldErrors(e)
-    submitError.value = getProblemDetailMessage(e, 'No se pudo iniciar sesión')
+    // Auto-registro Opción B: cuenta sin verificar → 403 EMAIL_NOT_VERIFIED. Mensaje guía en vez del genérico.
+    if (getProblemDetailCode(e) === 'EMAIL_NOT_VERIFIED') {
+      submitError.value =
+        'Tu cuenta aún no está verificada. Abre el enlace que te enviamos por correo para activarla.'
+    } else {
+      submitError.value = getProblemDetailMessage(e, 'No se pudo iniciar sesión')
+    }
   } finally {
     submitting.value = false
   }

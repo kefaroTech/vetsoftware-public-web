@@ -5,8 +5,8 @@ import SignupForm from '../components/SignupForm.vue'
 <template>
   <v-main class="vet-auth-shell">
     <v-container class="py-16 d-flex justify-center">
-      <!-- Tras registrarse, SignupForm establece la sesión (auto-login) y navega al
-           dashboard; ya no hay pantalla intermedia de éxito. -->
+      <!-- Opción B: tras registrarse NO hay auto-login. SignupForm muestra la pantalla
+           "revisa tu correo"; el usuario verifica el email y luego inicia sesión. -->
       <SignupForm />
     </v-container>
   </v-main>

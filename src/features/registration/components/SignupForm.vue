@@ -10,12 +10,17 @@ import {
   type CompanyDocumentType,
   type TaxRegime,
 } from '@/features/facturacion/types/facturacion'
-import { useAuth } from '@/features/auth/composables/useAuth'
-import type { AuthSubjectType } from '@/features/auth/types'
 import { getProblemDetailFieldErrors, getProblemDetailMessage } from '@/services/http/http.client'
+import { useRecaptcha } from '../composables/useRecaptcha'
 
 const router = useRouter()
-const { login } = useAuth()
+
+// reCAPTCHA (widget v2). Se renderiza en onMounted dentro de `recaptchaEl`.
+const recaptcha = useRecaptcha()
+const recaptchaEl = ref<HTMLElement | null>(null)
+
+// Opción B: tras registrar NO hay auto-login. Guardamos el correo para la pantalla "revisa tu correo".
+const registeredEmail = ref<string | null>(null)
 
 const form = ref({
   companyName: '',
@@ -87,6 +92,8 @@ function sanitizeContactNumber(v: string) {
 }
 
 onMounted(async () => {
+  if (recaptchaEl.value) await recaptcha.render(recaptchaEl.value)
+
   loadingCountries.value = true
   try {
     countries.value = await locationsApi.listCountries()
@@ -140,6 +147,13 @@ async function submit() {
   if (!valid) return
   if (form.value.cityId == null || form.value.taxRegime == null) return
 
+  // Captcha: si el widget está activo, exige que el usuario lo complete.
+  const captchaToken = recaptcha.getToken()
+  if (recaptcha.ready.value && !captchaToken) {
+    submitError.value = 'Completa el reCAPTCHA para continuar.'
+    return
+  }
+
   submitting.value = true
   try {
     const payload: RegisterUserRequest = {
@@ -154,27 +168,27 @@ async function submit() {
       employeeName: form.value.employeeName.trim(),
       employeeEmail: form.value.employeeEmail.trim(),
       password: form.value.password,
+      recaptchaToken: captchaToken || undefined,
     }
     const res = await registrationApi.register(payload)
-    // El backend ya emite un token válido en el signup: establecemos sesión directamente
-    // (auto-login) y entramos al dashboard sin obligar a pasar por el login manual.
-    await login({
-      token: res.token,
-      type: res.tokenType as AuthSubjectType,
-      refreshToken: res.refreshToken,
-    })
-    await router.push({ name: 'home' })
+    // Opción B: sin auto-login. Mostramos "revisa tu correo"; el usuario verifica y luego inicia sesión.
+    registeredEmail.value = res.email
   } catch (e) {
     fieldErrors.value = getProblemDetailFieldErrors(e)
     submitError.value = getProblemDetailMessage(e, 'No se pudo crear la cuenta')
+    recaptcha.reset()
   } finally {
     submitting.value = false
   }
 }
+
+function goToLogin() {
+  router.push({ name: 'login' })
+}
 </script>
 
 <template>
-  <v-card class="vet-auth-card mx-auto" max-width="720" :elevation="0">
+  <v-card v-if="!registeredEmail" class="vet-auth-card mx-auto" max-width="720" :elevation="0">
     <h1 class="vet-auth-title">Crear cuenta</h1>
     <p class="vet-auth-sub">
       Registra tu empresa y tu primer usuario administrador.
@@ -340,6 +354,14 @@ async function submit() {
         persistent-hint
       />
 
+      <!-- reCAPTCHA (widget v2). En dev usa la llave de test de Google (siempre pasa). -->
+      <div class="d-flex justify-center mt-6">
+        <div ref="recaptchaEl"></div>
+      </div>
+      <v-alert v-if="recaptcha.failed.value" type="warning" variant="tonal" density="compact" class="mt-3">
+        No se pudo cargar el reCAPTCHA. Verifica tu conexión y recarga la página.
+      </v-alert>
+
       <v-btn
         type="submit"
         color="primary"
@@ -356,6 +378,22 @@ async function submit() {
         <RouterLink :to="{ name: 'login' }">Inicia sesión</RouterLink>
       </div>
     </v-form>
+  </v-card>
+
+  <!-- Opción B: pantalla "revisa tu correo" tras registrar (sin auto-login). -->
+  <v-card v-else class="vet-auth-card mx-auto text-center" max-width="560" :elevation="0">
+    <v-icon size="56" color="primary" class="mb-2">mdi-email-check-outline</v-icon>
+    <h1 class="vet-auth-title">Revisa tu correo</h1>
+    <p class="vet-auth-sub">
+      Te enviamos un enlace de verificación a
+      <strong>{{ registeredEmail }}</strong>. Ábrelo para activar tu cuenta; después podrás iniciar sesión.
+    </p>
+    <p class="vet-auth-sub">
+      ¿No lo ves? Revisa la carpeta de spam. El enlace vence en unas horas.
+    </p>
+    <v-btn color="primary" size="large" block class="mt-4 vet-auth-submit" @click="goToLogin">
+      Ir a iniciar sesión
+    </v-btn>
   </v-card>
 </template>
 

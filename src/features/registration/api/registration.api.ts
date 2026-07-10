@@ -6,4 +6,9 @@ export const registrationApi = {
     const { data } = await http.post<RegistrationResponse>('/register', payload)
     return data
   },
+
+  // Confirma el correo con el token recibido por email (Opción B). 204 No Content si OK.
+  async verifyEmail(token: string): Promise<void> {
+    await http.post('/register/verify', { token })
+  },
 }

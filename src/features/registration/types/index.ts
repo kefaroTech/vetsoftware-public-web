@@ -12,14 +12,16 @@ export interface RegisterUserRequest {
   password: string
   taxRegime: TaxRegime
   fiscalEmail: string
+  // Token del challenge reCAPTCHA. Solo se envía cuando el captcha está habilitado en el front.
+  recaptchaToken?: string
 }
 
+// Auto-registro Opción B: NO hay auto-login. La cuenta queda pendiente de verificar el correo.
 export interface RegistrationResponse {
   companyId: number
   employeeId: number
-  token: string
-  tokenType: string
-  refreshToken: string
+  email: string
+  status: string
 }
 
 export interface Country {
