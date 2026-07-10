@@ -4,14 +4,12 @@ import PublicLayout from '@/components/public/PublicLayout.vue'
 import RegisterForm from '../components/RegisterForm.vue'
 import CheckEmailPanel from '../components/CheckEmailPanel.vue'
 
-// Flujo Opción B: form → check (sin auto-login). El email y el código de acceso pasan a la pantalla 2.
+// Flujo Opción B: form → check (sin auto-login). El email pasa a la pantalla 2.
 const screen = ref<'form' | 'check'>('form')
 const email = ref('')
-const employeeCode = ref('')
 
-function onSuccess(payload: { email: string; employeeCode: string }) {
-  email.value = payload.email
-  employeeCode.value = payload.employeeCode
+function onSuccess(em: string) {
+  email.value = em
   screen.value = 'check'
 }
 </script>
@@ -23,6 +21,6 @@ function onSuccess(payload: { email: string; employeeCode: string }) {
     </template>
 
     <RegisterForm v-if="screen === 'form'" class="pub-reveal" @success="onSuccess" />
-    <CheckEmailPanel v-else :email="email" :employee-code="employeeCode" />
+    <CheckEmailPanel v-else :email="email" />
   </PublicLayout>
 </template>

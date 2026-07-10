@@ -54,7 +54,7 @@ async function submit() {
     if (code === 'EMAIL_NOT_VERIFIED') {
       emailNotVerified.value = true
     } else if (code === 'INVALID_CREDENTIALS') {
-      submitError.value = 'El código de empleado o la contraseña no son correctos. Revísalos e intenta de nuevo.'
+      submitError.value = 'El empleado o la contraseña no son correctos. Revísalos e intenta de nuevo.'
     } else {
       submitError.value = getProblemDetailMessage(e, 'No se pudo iniciar sesión')
     }
@@ -76,7 +76,7 @@ async function submit() {
     </div>
 
     <div class="login-fields">
-      <AuthField label="Código de empleado" required :error="err('employeeCode')">
+      <AuthField label="Empleado" required :error="err('employeeCode')">
         <AuthInput
           v-model="form.employeeCode"
           icon="mdi-card-account-details-outline"

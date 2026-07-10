@@ -3,7 +3,7 @@ import { useRouter } from 'vue-router'
 import PrimaryButton from '@/components/public/PrimaryButton.vue'
 
 /** Pantalla 2 del registro — "Revisa tu correo" (handoff §7.2). Sin auto-login. */
-defineProps<{ email: string; employeeCode: string }>()
+defineProps<{ email: string }>()
 
 const router = useRouter()
 </script>
@@ -19,12 +19,6 @@ const router = useRouter()
       cuenta; después podrás iniciar sesión.
     </p>
     <p class="check-note">¿No lo ves? Revisa la carpeta de spam. El enlace vence en unas horas.</p>
-
-    <div class="check-code">
-      <div class="check-code-label">Tu usuario para iniciar sesión</div>
-      <div class="check-code-value">{{ employeeCode }}</div>
-      <div class="check-code-hint">Guárdalo: lo necesitarás junto con tu contraseña. También te lo enviamos al correo.</div>
-    </div>
 
     <div class="check-actions">
       <PrimaryButton @click="router.push({ name: 'login' })">Ir a iniciar sesión</PrimaryButton>
@@ -78,36 +72,6 @@ const router = useRouter()
   line-height: 1.55;
   margin: 14px auto 0;
   max-width: 400px;
-}
-.check-code {
-  margin: 22px auto 0;
-  max-width: 420px;
-  padding: 16px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #faf5ff, #f3e8ff);
-  border: 1px solid #ecd9fb;
-}
-.check-code-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--pub-ame-700);
-}
-.check-code-value {
-  margin-top: 6px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: var(--pub-ink-900);
-  word-break: break-all;
-}
-.check-code-hint {
-  margin-top: 8px;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--pub-ink-500);
 }
 .check-actions {
   margin-top: 26px;

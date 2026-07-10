@@ -24,9 +24,7 @@ import SectionHead from '@/components/public/SectionHead.vue'
 
 type Opt = { value: string; label: string }
 
-const emit = defineEmits<{
-  (e: 'success', payload: { email: string; employeeCode: string }): void
-}>()
+const emit = defineEmits<{ (e: 'success', email: string): void }>()
 
 type FieldKey =
   | 'companyIdentifier'
@@ -40,7 +38,6 @@ type FieldKey =
   | 'employeeName'
   | 'employeeEmail'
   | 'password'
-  | 'employeeCode'
 
 const form = reactive({
   documentType: 'NIT' as string,
@@ -56,7 +53,6 @@ const form = reactive({
   employeeName: '',
   employeeEmail: '',
   password: '',
-  employeeCode: '',
 })
 
 const touched = reactive<Record<FieldKey, boolean>>({
@@ -71,7 +67,6 @@ const touched = reactive<Record<FieldKey, boolean>>({
   employeeName: false,
   employeeEmail: false,
   password: false,
-  employeeCode: false,
 })
 
 const serverErrors = ref<Record<string, string>>({})
@@ -131,13 +126,6 @@ function validate(key: FieldKey): string | null {
     case 'password':
       if (!v) return 'Ingresa una contraseña.'
       return v.length >= 8 ? null : 'Mínimo 8 caracteres.'
-    case 'employeeCode': {
-      const c = v.trim()
-      if (!c) return 'Elige un usuario de acceso.'
-      if (!CODE_RE.test(c)) return 'Solo letras, números, punto, guion y guion bajo (4 a 50).'
-      if (codeStatus.value === 'taken') return 'Ese usuario ya está en uso. Elige otro.'
-      return null
-    }
     default:
       return null
   }
@@ -154,7 +142,6 @@ const REQUIRED: FieldKey[] = [
   'employeeName',
   'employeeEmail',
   'password',
-  'employeeCode',
 ]
 
 function err(key: FieldKey): string | undefined {
@@ -254,73 +241,6 @@ watch(
   },
 )
 
-// --- Usuario de acceso (Opción A): sugerencia + disponibilidad en vivo ---
-const CODE_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{3,49}$/
-type CodeStatus = 'idle' | 'checking' | 'available' | 'taken'
-const codeStatus = ref<CodeStatus>('idle')
-let codeEdited = false
-let applyingSuggestion = false
-let suggestTimer: ReturnType<typeof setTimeout> | undefined
-let availTimer: ReturnType<typeof setTimeout> | undefined
-
-const codeHint = computed(() => {
-  if (codeStatus.value === 'checking') return 'Verificando disponibilidad…'
-  if (codeStatus.value === 'available') return '✓ Disponible'
-  return 'Con este usuario iniciarás sesión. Puedes editarlo.'
-})
-
-async function fetchSuggestion() {
-  if (codeEdited || !form.companyName.trim() || !form.employeeName.trim()) return
-  try {
-    const suggestion = await registrationApi.suggestCode(
-      form.companyName.trim(),
-      form.employeeName.trim(),
-    )
-    if (codeEdited) return
-    applyingSuggestion = true
-    form.employeeCode = suggestion
-    codeStatus.value = 'available'
-  } catch {
-    /* sin sugerencia: el usuario escribe su propio código */
-  }
-}
-
-async function checkAvailability() {
-  const v = form.employeeCode.trim()
-  if (!v || !CODE_RE.test(v)) {
-    codeStatus.value = 'idle'
-    return
-  }
-  codeStatus.value = 'checking'
-  try {
-    const available = await registrationApi.checkCodeAvailability(v)
-    if (v !== form.employeeCode.trim()) return // el valor cambió mientras respondía
-    codeStatus.value = available ? 'available' : 'taken'
-  } catch {
-    codeStatus.value = 'idle'
-  }
-}
-
-// Autosugerir mientras el usuario no haya editado el código manualmente.
-watch([() => form.companyName, () => form.employeeName], () => {
-  clearTimeout(suggestTimer)
-  suggestTimer = setTimeout(fetchSuggestion, 500)
-})
-
-// Chequeo de disponibilidad al escribir (excepto cuando el valor lo puso la sugerencia).
-watch(
-  () => form.employeeCode,
-  () => {
-    if (applyingSuggestion) {
-      applyingSuggestion = false
-      return
-    }
-    codeEdited = true
-    clearTimeout(availTimer)
-    availTimer = setTimeout(checkAvailability, 450)
-  },
-)
-
 const cardRef = ref<HTMLElement | null>(null)
 
 async function submit() {
@@ -354,17 +274,16 @@ async function submit() {
       employeeName: form.employeeName.trim(),
       employeeEmail: form.employeeEmail.trim(),
       password: form.password,
-      employeeCode: form.employeeCode.trim(),
       recaptchaToken: captchaToken || undefined,
     }
     const res = await registrationApi.register(payload)
-    emit('success', { email: res.email, employeeCode: res.employeeCode })
+    emit('success', res.email)
   } catch (e) {
     serverErrors.value = getProblemDetailFieldErrors(e)
-    // Carrera: el código quedó tomado entre el chequeo en vivo y el submit.
-    if (getProblemDetailCode(e) === 'EMPLOYEE_CODE_TAKEN') {
-      codeStatus.value = 'taken'
-      touched.employeeCode = true
+    // Un email = una veterinaria: si el correo ya está registrado, se marca el campo de email.
+    if (getProblemDetailCode(e) === 'EMAIL_ALREADY_REGISTERED') {
+      serverErrors.value = { ...serverErrors.value, employeeEmail: 'Ese correo ya está registrado.' }
+      touched.employeeEmail = true
     }
     globalError.value = getProblemDetailMessage(e, 'No se pudo crear la cuenta')
     recaptcha.reset()
@@ -548,22 +467,6 @@ async function submit() {
               icon="mdi-account-multiple"
               :invalid="!!err('employeeName')"
               @blur="markTouched('employeeName')"
-            />
-          </AuthField>
-          <AuthField
-            label="Usuario de acceso"
-            required
-            :error="err('employeeCode')"
-            :hint="codeHint"
-          >
-            <AuthInput
-              v-model="form.employeeCode"
-              placeholder="patitas-ana"
-              :maxlength="50"
-              icon="mdi-account-key-outline"
-              autocomplete="off"
-              :invalid="!!err('employeeCode')"
-              @blur="markTouched('employeeCode')"
             />
           </AuthField>
           <div class="reg-grid-2">

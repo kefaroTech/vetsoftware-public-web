@@ -11,22 +11,4 @@ export const registrationApi = {
   async verifyEmail(token: string): Promise<void> {
     await http.post('/register/verify', { token })
   },
-
-  // Opción A: sugiere un usuario de acceso disponible a partir de empresa + nombre.
-  async suggestCode(companyName: string, employeeName: string): Promise<string> {
-    const { data } = await http.get<{ code: string }>('/register/suggest-code', {
-      params: { companyName, employeeName },
-      skipGlobalLoader: true,
-    })
-    return data.code
-  },
-
-  // Opción A: chequeo en vivo de disponibilidad del usuario de acceso.
-  async checkCodeAvailability(code: string): Promise<boolean> {
-    const { data } = await http.get<{ available: boolean }>('/register/code-availability', {
-      params: { code },
-      skipGlobalLoader: true,
-    })
-    return data.available
-  },
 }
