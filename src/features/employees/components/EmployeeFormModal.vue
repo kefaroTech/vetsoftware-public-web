@@ -6,7 +6,6 @@ import { useRoles } from '@/features/roles/composables/useRoles'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import SegmentedRadio from '@/features/dashboard/components/ui/SegmentedRadio.vue'
 import RoleSelectorGrid from './RoleSelectorGrid.vue'
 import { scrollToFirstError } from '@/composables/scrollToError'
 import { employeeApi } from '../api/employee.api'
@@ -56,10 +55,10 @@ let applyingSuggestion = false
 let suggestTimer: ReturnType<typeof setTimeout> | undefined
 let availTimer: ReturnType<typeof setTimeout> | undefined
 
-// El código se bloquea mientras no haya nombre (solo en alta).
-const codeDisabled = computed(() => !isEditing.value && !draft.value.name.trim())
+// En edición el código NO se puede modificar; en alta se bloquea mientras no haya nombre.
+const codeDisabled = computed(() => isEditing.value || !draft.value.name.trim())
 const codeHint = computed<string | undefined>(() => {
-  if (isEditing.value) return undefined
+  if (isEditing.value) return 'El código no se puede modificar una vez creado el empleado.'
   if (codeDisabled.value) return 'Escribe el nombre y se genera automáticamente. Luego puedes editarlo.'
   if (codeStatus.value === 'checking') return 'Verificando disponibilidad…'
   if (codeStatus.value === 'available') return '✓ Disponible'
@@ -237,11 +236,6 @@ function doSubmit() {
   })
 }
 
-const statusOptions = [
-  { value: 'ACTIVE', label: 'Activo' },
-  { value: 'INACTIVE', label: 'Inactivo' },
-]
-
 function onSelectedIdsUpdate(next: Set<number>) {
   selectedRoleIds.value = next
   markTouched('roles')
@@ -349,9 +343,6 @@ const subtitleText = computed(() =>
           />
         </BaseField>
 
-        <BaseField v-if="isEditing" label="Estado">
-          <SegmentedRadio v-model="draft.status" :options="statusOptions" />
-        </BaseField>
         </div>
       </template>
     </template>

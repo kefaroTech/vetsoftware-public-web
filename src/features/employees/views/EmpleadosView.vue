@@ -14,6 +14,7 @@ import ChangeRolesModal, {
   type ChangeRolesConfirm,
 } from '../components/ChangeRolesModal.vue'
 import ConfirmDeactivateDialog from '../components/ConfirmDeactivateDialog.vue'
+import ResendInvitationModal from '../components/ResendInvitationModal.vue'
 import { employeeRolesApi } from '../api/employeeRoles.api'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
@@ -27,8 +28,17 @@ function hasAdminRole(employee: Employee): boolean {
 }
 
 const { companyId } = useAuth()
-const { employees, loading, error, fetchAll, create, update, deactivate, reactivate } =
-  useEmployees()
+const {
+  employees,
+  loading,
+  error,
+  fetchAll,
+  create,
+  update,
+  deactivate,
+  reactivate,
+  resendInvitation,
+} = useEmployees()
 const { list: availableRoles } = useRoles()
 const { can } = useAuthorization()
 const toast = useToast()
@@ -41,6 +51,7 @@ const formOpen = ref(false)
 const formInitial = ref<Employee | null>(null)
 const deactivateTarget = ref<Employee | null>(null)
 const changingRolesTarget = ref<Employee | null>(null)
+const resendTarget = ref<Employee | null>(null)
 const busy = ref(false)
 const submitError = ref<string | null>(null)
 
@@ -147,6 +158,9 @@ async function confirmDeactivate() {
     const msg = getProblemDetailMessage(e, 'No se pudo desactivar al empleado')
     submitError.value = msg
     toast.error('Ocurrió un error', msg)
+    // Estado del front posiblemente desincronizado (empleado ya inexistente/desactivado): resincronizamos.
+    deactivateTarget.value = null
+    await fetchAll().catch(() => {})
   } finally {
     busy.value = false
   }
@@ -160,6 +174,30 @@ async function handleActivate(employee: Employee) {
     toast.success('Empleado activado', `${employee.name} puede iniciar sesión de nuevo.`)
   } catch (e) {
     const msg = getProblemDetailMessage(e, 'No se pudo reactivar al empleado')
+    submitError.value = msg
+    toast.error('Ocurrió un error', msg)
+  } finally {
+    busy.value = false
+  }
+}
+
+function openResend(employee: Employee) {
+  submitError.value = null
+  resendTarget.value = employee
+}
+
+async function onConfirmResend(password: string) {
+  const target = resendTarget.value
+  if (!target || busy.value) return
+  busy.value = true
+  submitError.value = null
+  try {
+    const updated = await resendInvitation(target.id, password)
+    resendTarget.value = null
+    selectedId.value = updated.id
+    toast.success('Invitación reenviada', `Se envió una nueva invitación a ${updated.email}`)
+  } catch (e) {
+    const msg = getProblemDetailMessage(e, 'No se pudo reenviar la invitación')
     submitError.value = msg
     toast.error('Ocurrió un error', msg)
   } finally {
@@ -233,6 +271,7 @@ async function onConfirmChangeRoles(data: ChangeRolesConfirm) {
       @close="closeDrawer"
       @edit="openEdit"
       @change-roles="openChangeRoles"
+      @resend-invitation="openResend"
       @deactivate="askDeactivate"
       @activate="handleActivate"
     />
@@ -260,6 +299,14 @@ async function onConfirmChangeRoles(data: ChangeRolesConfirm) {
       :busy="busy"
       @cancel="deactivateTarget = null"
       @confirm="confirmDeactivate"
+    />
+
+    <ResendInvitationModal
+      :open="resendTarget !== null"
+      :employee="resendTarget"
+      :busy="busy"
+      @close="resendTarget = null"
+      @confirm="onConfirmResend"
     />
   </div>
 </template>

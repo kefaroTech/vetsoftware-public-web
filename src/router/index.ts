@@ -33,6 +33,13 @@ const router = createRouter({
       meta: { guestOnly: true },
     },
     {
+      // Primer login del staff invitado: contraseña temporal → obligado a crear una nueva.
+      path: '/cambiar-contrasena',
+      name: 'cambiar-contrasena',
+      component: () => import('@/features/auth/views/CambiarContrasenaView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/dashboard',
       component: () => import('@/features/dashboard/layouts/AppLayout.vue'),
       meta: { requiresAuth: true },
@@ -241,9 +248,19 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from) => {
-  if (to.fullPath !== from.fullPath) pushLoader()
+  const pushed = to.fullPath !== from.fullPath
+  if (pushed) pushLoader()
 
-  const { isAuthenticated, isExpired, session, clearSession, refreshMe } = useAuth()
+  // Cuando el guard REDIRIGE, Vue Router aborta esta navegación y `afterEach` (que
+  // hace popLoader) no dispara para ella → el push de arriba quedaría huérfano y el
+  // loader global se queda pegado. Balanceamos el push de ESTA invocación antes de
+  // redirigir; la navegación redirigida vuelve a pasar por beforeEach/afterEach normal.
+  const redirect = (loc: { name: string }) => {
+    if (pushed) popLoader()
+    return loc
+  }
+
+  const { isAuthenticated, isExpired, session, clearSession, refreshMe, me } = useAuth()
 
   // Access token vencido y SIN refresh token → no se puede renovar: limpiamos y avisamos.
   // Si hay refresh token, dejamos pasar: el `/auth/me` de refreshMe disparará el 401 →
@@ -251,18 +268,27 @@ router.beforeEach(async (to, from) => {
   if (isAuthenticated.value && isExpired.value && !session.value?.refreshToken) {
     clearSession()
     useToast().warn('Sesión expirada', 'Por seguridad, vuelve a iniciar sesión.')
-    return to.name === 'login' ? true : { name: 'login' }
+    return to.name === 'login' ? true : redirect({ name: 'login' })
   }
 
   if (isAuthenticated.value) {
     await refreshMe()
   }
 
+  // Primer login del staff invitado: con contraseña temporal, no puede hacer nada salvo cambiarla (o salir).
+  const mustChangePassword = isAuthenticated.value && me.value?.mustChangePassword === true
+  if (mustChangePassword && to.name !== 'cambiar-contrasena') {
+    return redirect({ name: 'cambiar-contrasena' })
+  }
+  if (!mustChangePassword && to.name === 'cambiar-contrasena') {
+    return redirect({ name: isAuthenticated.value ? 'home' : 'login' })
+  }
+
   if (to.meta.requiresAuth && !isAuthenticated.value) {
-    return { name: 'login' }
+    return redirect({ name: 'login' })
   }
   if (to.meta.guestOnly && isAuthenticated.value) {
-    return { name: 'home' }
+    return redirect({ name: 'home' })
   }
 
   const { permissions, isAdmin } = useAuthorization()
@@ -270,14 +296,14 @@ router.beforeEach(async (to, from) => {
   const requiredAny = to.meta.permissionsAny as string[] | undefined
 
   if (required && !isAdmin.value && !permissions.value.includes(required)) {
-    return { name: 'home' }
+    return redirect({ name: 'home' })
   }
   if (
     requiredAny &&
     !isAdmin.value &&
     !requiredAny.some((p) => permissions.value.includes(p))
   ) {
-    return { name: 'home' }
+    return redirect({ name: 'home' })
   }
   return true
 })

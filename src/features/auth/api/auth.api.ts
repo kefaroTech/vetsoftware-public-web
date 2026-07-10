@@ -20,4 +20,9 @@ export const authApi = {
   async logout(): Promise<void> {
     await http.post('/auth/logout')
   },
+
+  // Cambio de la propia contraseña (primer login forzado). Limpia mustChangePassword en el backend.
+  async changePassword(newPassword: string): Promise<void> {
+    await http.post('/employees/me/change-password', { newPassword })
+  },
 }

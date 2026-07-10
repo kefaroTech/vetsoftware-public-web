@@ -16,6 +16,7 @@ export function mapEmployeeResponse(r: EmployeeResponse): Employee {
     email: r.email,
     enabled: r.enabled,
     mustChangePassword: r.mustChangePassword,
+    status: r.status,
     companyId: r.company.id,
     createdDate: r.createdDate,
     roles: (r.roles ?? []).map((role) => ({

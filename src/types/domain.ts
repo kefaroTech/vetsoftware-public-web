@@ -1,5 +1,9 @@
 export type EmployeeStatus = 'ACTIVE' | 'INACTIVE'
 
+// Estado del ciclo de invitación (ortogonal a enabled y a mustChangePassword): INVITED = creado por un
+// admin y aún no ha iniciado sesión; ACTIVE = ya inició sesión (o es el dueño auto-registrado).
+export type EmployeeInvitationStatus = 'INVITED' | 'ACTIVE'
+
 export interface EmployeeRole {
   employeeRoleId: number
   id: number
@@ -13,8 +17,10 @@ export interface Employee {
   name: string
   email: string
   enabled: boolean
-  // true = invitado/pendiente (debe cambiar la contraseña en el primer login); false = activo.
+  // true = debe cambiar la contraseña temporal en el primer login (se limpia al cambiarla).
   mustChangePassword: boolean
+  // Estado de la invitación: pasa a ACTIVE en el primer login del empleado.
+  status: EmployeeInvitationStatus
   companyId: number
   createdDate: string
   roles: EmployeeRole[]

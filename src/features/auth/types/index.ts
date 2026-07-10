@@ -23,5 +23,7 @@ export interface MeResponse {
   companyId: number | null
   name: string
   employeeCode: string
+  // true = debe cambiar la contraseña temporal antes de poder usar el panel (primer login).
+  mustChangePassword: boolean
   permissions: string[]
 }

@@ -13,5 +13,6 @@ export function useEmployees() {
     update: store.update,
     deactivate: store.deactivate,
     reactivate: store.reactivate,
+    resendInvitation: store.resendInvitation,
   }
 }

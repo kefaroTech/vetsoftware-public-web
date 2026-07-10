@@ -61,5 +61,23 @@ export const useEmployeesStore = defineStore('employees', () => {
     return mapped
   }
 
-  return { employees, loading, error, fetchAll, create, update, deactivate, reactivate }
+  async function resendInvitation(id: number, password: string): Promise<Employee> {
+    const updated = await employeeApi.resendInvitation(id, password)
+    const mapped = mapEmployeeResponse(updated)
+    // El endpoint devuelve el empleado con sus roles; refrescamos la fila en cache.
+    employees.value = employees.value.map((e) => (e.id === id ? mapped : e))
+    return mapped
+  }
+
+  return {
+    employees,
+    loading,
+    error,
+    fetchAll,
+    create,
+    update,
+    deactivate,
+    reactivate,
+    resendInvitation,
+  }
 })

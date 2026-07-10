@@ -20,6 +20,7 @@ export interface EmployeeResponse {
   email: string
   enabled: boolean
   mustChangePassword: boolean
+  status: 'INVITED' | 'ACTIVE'
   company: EmployeeCompanySummary
   roles: EmployeeRoleSummary[]
   createdDate: string
@@ -95,6 +96,14 @@ export const employeeApi = {
 
   async reactivate(id: number): Promise<EmployeeResponse> {
     const { data } = await http.patch<EmployeeResponse>(`/employees/${id}/enable`)
+    return data
+  },
+
+  // Reenvía la invitación a un empleado invitado con una nueva contraseña provisional.
+  async resendInvitation(id: number, password: string): Promise<EmployeeResponse> {
+    const { data } = await http.post<EmployeeResponse>(`/employees/${id}/resend-invitation`, {
+      password,
+    })
     return data
   },
 }

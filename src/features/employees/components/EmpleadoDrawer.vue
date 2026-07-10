@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
-import { X, Key, Pencil, Power, Check, Lock, ShieldCheck } from 'lucide-vue-next'
+import { X, Key, Pencil, Power, Check, Lock, ShieldCheck, Mail } from 'lucide-vue-next'
 import type { Employee } from '@/types/domain'
 import { colorsForCode } from '../constants/employee-roles'
 import EmployeeAvatar from './EmployeeAvatar.vue'
@@ -22,9 +22,12 @@ const emit = defineEmits<{
   close: []
   edit: [employee: Employee]
   'change-roles': [employee: Employee]
+  'resend-invitation': [employee: Employee]
   deactivate: [employee: Employee]
   activate: [employee: Employee]
 }>()
+
+const isInvited = computed(() => props.employee?.status === 'INVITED')
 
 const open = computed(() => props.employee !== null)
 const headerTokens = computed(() => {
@@ -92,7 +95,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
                     />
                   </template>
                   <span v-else class="no-role">Sin rol asignado</span>
-                  <StatusPill :active="employee.enabled" :invited="employee.mustChangePassword" size="lg" />
+                  <StatusPill :active="employee.enabled" :invited="employee.status === 'INVITED'" size="lg" />
                 </div>
               </div>
             </div>
@@ -104,6 +107,18 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 
           <footer class="foot">
             <button
+              v-if="isInvited && canUpdate"
+              type="button"
+              class="ghost accent"
+              :disabled="busy"
+              title="Enviar de nuevo la invitación con una nueva contraseña provisional"
+              @click="emit('resend-invitation', employee)"
+            >
+              <Mail :size="14" :stroke-width="1.7" />
+              Reenviar invitación
+            </button>
+            <button
+              v-else
               type="button"
               class="ghost"
               disabled
@@ -313,6 +328,15 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .ghost:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+.ghost.accent {
+  color: var(--amatista-700);
+  border-color: var(--amatista-200, oklch(88% 0.05 300));
+  background: var(--amatista-50);
+  font-weight: 500;
+}
+.ghost.accent:hover:not(:disabled) {
+  background: var(--amatista-100, oklch(94% 0.04 300));
 }
 .danger {
   font-weight: 500;
