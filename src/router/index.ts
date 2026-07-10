@@ -40,6 +40,18 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      // "Olvidé mi contraseña": solicitud del enlace por código de usuario.
+      path: '/recuperar-contrasena',
+      name: 'recuperar-contrasena',
+      component: () => import('@/features/auth/views/RecuperarContrasenaView.vue'),
+    },
+    {
+      // Restablecimiento con el token del correo (?token=...).
+      path: '/restablecer-contrasena',
+      name: 'restablecer-contrasena',
+      component: () => import('@/features/auth/views/RestablecerContrasenaView.vue'),
+    },
+    {
       path: '/dashboard',
       component: () => import('@/features/dashboard/layouts/AppLayout.vue'),
       meta: { requiresAuth: true },

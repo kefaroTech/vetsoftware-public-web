@@ -101,6 +101,10 @@ async function submit() {
         />
       </AuthField>
 
+      <div class="login-forgot">
+        <RouterLink :to="{ name: 'recuperar-contrasena' }">¿Olvidaste tu contraseña?</RouterLink>
+      </div>
+
       <PrimaryButton type="submit" :loading="submitting" loading-text="Ingresando…">
         Iniciar sesión <v-icon size="14">mdi-arrow-right</v-icon>
       </PrimaryButton>
@@ -130,6 +134,19 @@ async function submit() {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+.login-forgot {
+  margin-top: -4px;
+  text-align: right;
+}
+.login-forgot a {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--pub-ame-700);
+  text-decoration: none;
+}
+.login-forgot a:hover {
+  text-decoration: underline;
 }
 .login-divider {
   display: flex;

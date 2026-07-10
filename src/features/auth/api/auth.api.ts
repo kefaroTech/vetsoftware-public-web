@@ -25,4 +25,22 @@ export const authApi = {
   async changePassword(newPassword: string): Promise<void> {
     await http.post('/employees/me/change-password', { newPassword })
   },
+
+  // "Olvidé mi contraseña": solicita el enlace por código. El backend responde 204 SIEMPRE (anti-enumeración).
+  async forgotPassword(employeeCode: string): Promise<void> {
+    await http.post('/auth/forgot-password', { employeeCode })
+  },
+
+  // ¿El token del enlace de restablecimiento sigue siendo usable?
+  async validateResetToken(token: string): Promise<boolean> {
+    const { data } = await http.get<{ valid: boolean }>('/auth/reset-password/validate', {
+      params: { token },
+    })
+    return data.valid
+  },
+
+  // Confirma el restablecimiento con el token del correo + la nueva contraseña.
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    await http.post('/auth/reset-password', { token, newPassword })
+  },
 }
