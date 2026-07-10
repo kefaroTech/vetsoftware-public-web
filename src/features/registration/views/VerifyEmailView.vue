@@ -3,117 +3,150 @@ import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { registrationApi } from '../api/registration.api'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import PublicLayout from '@/components/public/PublicLayout.vue'
+import PrimaryButton from '@/components/public/PrimaryButton.vue'
 
+/** Pantalla 3 — Verificación de correo (handoff §7.3). 3 estados: loading | success | error. */
 const route = useRoute()
 const router = useRouter()
 
-type Status = 'verifying' | 'success' | 'error'
-const status = ref<Status>('verifying')
-const errorMessage = ref<string | null>(null)
+type State = 'loading' | 'success' | 'error'
+const state = ref<State>('loading')
+const errorMessage = ref('El enlace de verificación no es válido o expiró.')
 
 onMounted(async () => {
   const raw = route.query.token
   const token = Array.isArray(raw) ? raw[0] : raw
   if (!token) {
-    status.value = 'error'
-    errorMessage.value = 'El enlace de verificación no es válido o está incompleto.'
+    state.value = 'error'
     return
   }
   try {
     await registrationApi.verifyEmail(token)
-    status.value = 'success'
+    state.value = 'success'
   } catch (e) {
-    status.value = 'error'
-    errorMessage.value = getProblemDetailMessage(
-      e,
-      'El enlace de verificación no es válido o expiró.',
-    )
+    errorMessage.value = getProblemDetailMessage(e, 'El enlace de verificación no es válido o expiró.')
+    state.value = 'error'
   }
 })
-
-function goToLogin() {
-  router.push({ name: 'login' })
-}
-function goToSignup() {
-  router.push({ name: 'signup' })
-}
 </script>
 
 <template>
-  <v-main class="vet-auth-shell">
-    <v-container class="py-16 d-flex justify-center">
-      <v-card class="vet-auth-card mx-auto text-center" max-width="520" :elevation="0">
-        <template v-if="status === 'verifying'">
-          <h1 class="vet-auth-title">Verificando tu cuenta…</h1>
-          <p class="vet-auth-sub">Un momento, estamos confirmando tu correo.</p>
-          <v-progress-circular indeterminate color="primary" class="mt-2" />
-        </template>
+  <PublicLayout footer-center>
+    <div class="verify-card pub-reveal">
+      <!-- Verificando -->
+      <template v-if="state === 'loading'">
+        <div class="verify-icon verify-icon--load">
+          <span class="verify-spin" />
+        </div>
+        <h1 class="verify-title">Verificando tu cuenta…</h1>
+        <p class="verify-text">Un momento, estamos confirmando tu correo.</p>
+      </template>
 
-        <template v-else-if="status === 'success'">
-          <v-icon size="56" color="success" class="mb-2">mdi-check-circle-outline</v-icon>
-          <h1 class="vet-auth-title">¡Cuenta verificada!</h1>
-          <p class="vet-auth-sub">Tu correo quedó confirmado. Ya puedes iniciar sesión.</p>
-          <v-btn color="primary" size="large" block class="mt-4 vet-auth-submit" @click="goToLogin">
-            Iniciar sesión
-          </v-btn>
-        </template>
+      <!-- Éxito -->
+      <template v-else-if="state === 'success'">
+        <div class="verify-icon verify-icon--ok">
+          <v-icon size="40">mdi-check-circle-outline</v-icon>
+        </div>
+        <h1 class="verify-title">¡Cuenta verificada!</h1>
+        <p class="verify-text">Tu correo quedó confirmado. Ya puedes iniciar sesión.</p>
+        <div class="verify-actions">
+          <PrimaryButton @click="router.push({ name: 'login' })">Iniciar sesión</PrimaryButton>
+        </div>
+      </template>
 
-        <template v-else>
-          <v-icon size="56" color="error" class="mb-2">mdi-alert-circle-outline</v-icon>
-          <h1 class="vet-auth-title">No pudimos verificar</h1>
-          <p class="vet-auth-sub">{{ errorMessage }}</p>
-          <v-btn color="primary" size="large" block class="mt-4 vet-auth-submit" @click="goToSignup">
-            Volver a registrarme
-          </v-btn>
-          <v-btn variant="text" block class="mt-2" @click="goToLogin">Ir a iniciar sesión</v-btn>
-        </template>
-      </v-card>
-    </v-container>
-  </v-main>
+      <!-- Error -->
+      <template v-else>
+        <div class="verify-icon verify-icon--err">
+          <v-icon size="40">mdi-alert-circle-outline</v-icon>
+        </div>
+        <h1 class="verify-title">No pudimos verificar</h1>
+        <p class="verify-text">{{ errorMessage }}</p>
+        <div class="verify-actions verify-actions--stack">
+          <PrimaryButton @click="router.push({ name: 'signup' })">Volver a registrarme</PrimaryButton>
+          <button type="button" class="verify-textbtn" @click="router.push({ name: 'login' })">
+            Ir a iniciar sesión
+          </button>
+        </div>
+      </template>
+    </div>
+  </PublicLayout>
 </template>
 
 <style scoped>
-.vet-auth-shell {
-  background:
-    radial-gradient(at 25% 0%, oklch(95% 0.04 var(--hue)) 0%, transparent 50%),
-    radial-gradient(at 75% 100%, oklch(95% 0.03 calc(var(--hue) - 20)) 0%, transparent 50%),
-    var(--warm-100);
-  min-height: 100vh;
+.verify-card {
+  width: 100%;
+  max-width: 520px;
+  text-align: center;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--pub-line);
+  box-shadow: var(--pub-card-shadow);
+  padding: clamp(30px, 5vw, 46px) clamp(26px, 5vw, 44px);
 }
-.vet-auth-card {
-  border: 1px solid var(--warm-200) !important;
-  border-radius: 16px !important;
-  padding: 36px !important;
-  background: #ffffff;
-  box-shadow:
-    0 1px 2px rgba(50, 20, 80, 0.04),
-    0 12px 40px -16px oklch(40% 0.18 var(--hue) / 0.18) !important;
+.verify-icon {
+  width: 74px;
+  height: 74px;
+  margin: 0 auto;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
 }
-.vet-auth-title {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: 26px;
+.verify-icon--load {
+  border-radius: 0;
+}
+.verify-icon--ok {
+  background: var(--pub-ok-bg);
+  border: 1px solid var(--pub-ok-bd);
+  color: var(--pub-ok-tx);
+}
+.verify-icon--err {
+  background: var(--pub-err-bg);
+  border: 1px solid var(--pub-err-bd);
+  color: var(--pub-err-tx);
+}
+.verify-spin {
+  width: 46px;
+  height: 46px;
+  border: 4px solid #e9d5ff;
+  border-top-color: var(--pub-ame-700);
+  border-radius: 50%;
+  display: block;
+  animation: pub-spin 0.8s linear infinite;
+}
+.verify-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 30px;
   font-weight: 400;
-  letter-spacing: -0.01em;
-  color: var(--warm-900);
-  line-height: 1.15;
+  margin: 18px 0 0;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
 }
-.vet-auth-sub {
-  margin: 8px 0 0;
-  color: var(--warm-600);
-  font-size: 14px;
-  line-height: 1.5;
+.verify-text {
+  font-size: 14.5px;
+  color: var(--pub-ink-600);
+  line-height: 1.6;
+  margin: 12px auto 0;
+  max-width: 380px;
 }
-.vet-auth-submit {
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5))) !important;
-  color: #ffffff !important;
-  border: none !important;
-  border-radius: 9px !important;
-  letter-spacing: 0;
-  text-transform: none;
+.verify-actions {
+  margin-top: 26px;
+}
+.verify-actions--stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.verify-textbtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--pub-ink-500);
+  font-family: inherit;
+  font-size: 13px;
   font-weight: 500;
 }
-.vet-auth-submit:hover:not(:disabled) {
-  filter: brightness(1.05);
+.verify-textbtn:hover {
+  color: var(--pub-ame-700);
 }
 </style>

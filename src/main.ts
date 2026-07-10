@@ -5,5 +5,6 @@ import router from './router'
 import vuetify from './plugins/vuetify'
 import './assets/styles/tokens.css'
 import './assets/styles/main.css'
+import './assets/styles/public-auth.css'
 
 createApp(App).use(createPinia()).use(router).use(vuetify).mount('#app')

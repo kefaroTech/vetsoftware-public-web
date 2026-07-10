@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { authApi } from '../api/auth.api'
 import { useAuth } from '../composables/useAuth'
@@ -9,48 +9,49 @@ import {
   getProblemDetailFieldErrors,
   getProblemDetailMessage,
 } from '@/services/http/http.client'
+import PrimaryButton from '@/components/public/PrimaryButton.vue'
+import AuthBanner from '@/components/public/AuthBanner.vue'
+import AuthField from '@/components/public/AuthField.vue'
+import AuthInput from '@/components/public/AuthInput.vue'
 
 const router = useRouter()
 const { login } = useAuth()
 
-const form = ref({
-  employeeCode: '',
-  password: '',
-})
-
-const formValid = ref(false)
-const formRef = ref()
-const showPassword = ref(false)
+const form = reactive({ employeeCode: '', password: '' })
+const touched = reactive({ employeeCode: false, password: false })
+const serverErrors = ref<Record<string, string>>({})
 
 const submitting = ref(false)
 const submitError = ref<string | null>(null)
-const fieldErrors = ref<Record<string, string>>({})
+const emailNotVerified = ref(false)
 
-const required = (v: unknown) => (v !== null && v !== undefined && v !== '') || 'Campo requerido'
-const maxLen = (n: number) => (v: string) =>
-  !v || v.length <= n || `Máximo ${n} caracteres`
+function err(key: 'employeeCode' | 'password'): string | undefined {
+  if (touched[key] && !form[key].trim()) return 'Campo requerido'
+  return serverErrors.value[key]
+}
 
 async function submit() {
   submitError.value = null
-  fieldErrors.value = {}
-  const { valid } = await formRef.value.validate()
-  if (!valid) return
+  emailNotVerified.value = false
+  serverErrors.value = {}
+  touched.employeeCode = true
+  touched.password = true
+  if (!form.employeeCode.trim() || !form.password.trim()) return
 
   submitting.value = true
   try {
     const payload: LoginEmployeeRequest = {
-      employeeCode: form.value.employeeCode.trim(),
-      password: form.value.password,
+      employeeCode: form.employeeCode.trim(),
+      password: form.password,
     }
     const { token, type, refreshToken } = await authApi.loginEmployee(payload)
     await login({ token, type, refreshToken })
     router.push({ name: 'home' })
   } catch (e) {
-    fieldErrors.value = getProblemDetailFieldErrors(e)
-    // Auto-registro Opción B: cuenta sin verificar → 403 EMAIL_NOT_VERIFIED. Mensaje guía en vez del genérico.
+    serverErrors.value = getProblemDetailFieldErrors(e)
+    // Auto-registro Opción B: cuenta sin verificar → 403 EMAIL_NOT_VERIFIED (banner específico).
     if (getProblemDetailCode(e) === 'EMAIL_NOT_VERIFIED') {
-      submitError.value =
-        'Tu cuenta aún no está verificada. Abre el enlace que te enviamos por correo para activarla.'
+      emailNotVerified.value = true
     } else {
       submitError.value = getProblemDetailMessage(e, 'No se pudo iniciar sesión')
     }
@@ -61,75 +62,108 @@ async function submit() {
 </script>
 
 <template>
-  <v-form ref="formRef" v-model="formValid" @submit.prevent="submit">
-    <v-alert v-if="submitError" type="error" variant="tonal" class="mb-4" closable>
-      {{ submitError }}
-    </v-alert>
+  <form class="login-form" novalidate @submit.prevent="submit">
+    <div v-if="emailNotVerified" class="login-banner">
+      <AuthBanner tone="error" @close="emailNotVerified = false">
+        Tu cuenta aún no está verificada. Abre el enlace que te enviamos por correo para activarla.
+      </AuthBanner>
+    </div>
+    <div v-else-if="submitError" class="login-banner">
+      <AuthBanner tone="error" @close="submitError = null">{{ submitError }}</AuthBanner>
+    </div>
 
-    <v-text-field
-      v-model="form.employeeCode"
-      label="Código de empleado *"
-      :rules="[required, maxLen(50)]"
-      :error-messages="fieldErrors.employeeCode"
-      maxlength="50"
-      autocomplete="username"
-      autofocus
-    />
+    <div class="login-fields">
+      <AuthField label="Código de empleado" required :error="err('employeeCode')">
+        <AuthInput
+          v-model="form.employeeCode"
+          icon="mdi-card-account-details-outline"
+          placeholder="ADMIN-001"
+          :maxlength="50"
+          autocomplete="username"
+          :invalid="!!err('employeeCode')"
+          @blur="touched.employeeCode = true"
+        />
+      </AuthField>
 
-    <v-text-field
-      v-model="form.password"
-      label="Contraseña *"
-      :type="showPassword ? 'text' : 'password'"
-      :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-      :rules="[required, maxLen(100)]"
-      :error-messages="fieldErrors.password"
-      maxlength="100"
-      autocomplete="current-password"
-      @click:append-inner="showPassword = !showPassword"
-    />
+      <AuthField label="Contraseña" required :error="err('password')">
+        <AuthInput
+          v-model="form.password"
+          type="password"
+          icon="mdi-lock-outline"
+          placeholder="••••••••"
+          :maxlength="100"
+          autocomplete="current-password"
+          :invalid="!!err('password')"
+          @blur="touched.password = true"
+        />
+      </AuthField>
 
-    <v-btn
-      type="submit"
-      color="primary"
-      size="large"
-      block
-      class="mt-4 vet-auth-submit"
-      :loading="submitting"
-    >
-      Iniciar sesión
-    </v-btn>
-  </v-form>
+      <PrimaryButton type="submit" :loading="submitting" loading-text="Ingresando…">
+        Iniciar sesión <v-icon size="14">mdi-arrow-right</v-icon>
+      </PrimaryButton>
+    </div>
+
+    <div class="login-divider">
+      <span class="login-divider-line" />
+      <span class="login-divider-word">o</span>
+      <span class="login-divider-line" />
+    </div>
+
+    <RouterLink :to="{ name: 'signup' }" class="login-secondary">
+      <v-icon size="15">mdi-star-four-points-outline</v-icon>
+      Crear una cuenta nueva
+    </RouterLink>
+  </form>
 </template>
 
 <style scoped>
-.vet-auth-submit {
-  background: linear-gradient(135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))) !important;
-  color: #ffffff !important;
-  border: none !important;
-  border-radius: 9px !important;
-  letter-spacing: 0;
-  text-transform: none;
+.login-form {
+  font-family: 'Inter', sans-serif;
+}
+.login-banner {
+  margin-bottom: 20px;
+}
+.login-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0 18px;
+}
+.login-divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--pub-line);
+}
+.login-divider-word {
+  font-size: 11px;
+  color: #a08bbd;
   font-weight: 500;
-  box-shadow:
-    0 1px 2px rgba(50, 20, 80, 0.08),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.4) !important;
-  transition: filter 0.15s ease;
 }
-.vet-auth-submit:hover:not(:disabled) {
-  filter: brightness(1.05);
+.login-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border-radius: 9px;
+  border: 1px solid var(--pub-line);
+  background: #fff;
+  color: var(--pub-ink-700);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s;
 }
-
-/* Focus ring amatista en los inputs de Vuetify dentro del form */
-.v-text-field :deep(.v-field--focused) .v-field__outline__start,
-.v-text-field :deep(.v-field--focused) .v-field__outline__end,
-.v-text-field :deep(.v-field--focused) .v-field__outline__notch::before,
-.v-text-field :deep(.v-field--focused) .v-field__outline__notch::after {
-  color: var(--amatista-500);
+.login-secondary:hover {
+  border-color: #d6c8ea;
+  background: #faf6ff;
 }
-.v-text-field :deep(.v-field--focused) {
-  box-shadow: 0 0 0 3px var(--amatista-50);
-  border-radius: 4px;
+.login-secondary :deep(.v-icon) {
+  color: var(--pub-ame-700);
 }
 </style>

@@ -10,12 +10,18 @@ const router = createRouter({
   routes: [
     {
       path: '/',
+      name: 'landing',
+      component: () => import('@/features/landing/views/LandingView.vue'),
+      meta: { guestOnly: true },
+    },
+    {
+      path: '/login',
       name: 'login',
       component: () => import('@/features/auth/views/LoginView.vue'),
       meta: { guestOnly: true },
     },
     {
-      path: '/signup',
+      path: '/registro',
       name: 'signup',
       component: () => import('@/features/registration/views/SignupView.vue'),
       meta: { guestOnly: true },

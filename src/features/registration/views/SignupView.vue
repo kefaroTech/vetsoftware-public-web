@@ -1,23 +1,26 @@
 <script setup lang="ts">
-import SignupForm from '../components/SignupForm.vue'
+import { ref } from 'vue'
+import PublicLayout from '@/components/public/PublicLayout.vue'
+import RegisterForm from '../components/RegisterForm.vue'
+import CheckEmailPanel from '../components/CheckEmailPanel.vue'
+
+// Flujo Opción B: form → check (sin auto-login). El email se pasa a la pantalla 2.
+const screen = ref<'form' | 'check'>('form')
+const email = ref('')
+
+function onSuccess(em: string) {
+  email.value = em
+  screen.value = 'check'
+}
 </script>
 
 <template>
-  <v-main class="vet-auth-shell">
-    <v-container class="py-16 d-flex justify-center">
-      <!-- Opción B: tras registrarse NO hay auto-login. SignupForm muestra la pantalla
-           "revisa tu correo"; el usuario verifica el email y luego inicia sesión. -->
-      <SignupForm />
-    </v-container>
-  </v-main>
-</template>
+  <PublicLayout :footer-center="screen === 'check'">
+    <template #topRight>
+      ¿Ya tienes cuenta? <RouterLink :to="{ name: 'login' }">Inicia sesión</RouterLink>
+    </template>
 
-<style scoped>
-.vet-auth-shell {
-  background:
-    radial-gradient(at 25% 0%, oklch(95% 0.04 var(--hue)) 0%, transparent 50%),
-    radial-gradient(at 75% 100%, oklch(95% 0.03 calc(var(--hue) - 20)) 0%, transparent 50%),
-    var(--warm-100);
-  min-height: 100vh;
-}
-</style>
+    <RegisterForm v-if="screen === 'form'" class="pub-reveal" @success="onSuccess" />
+    <CheckEmailPanel v-else :email="email" />
+  </PublicLayout>
+</template>

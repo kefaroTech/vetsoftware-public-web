@@ -1,0 +1,136 @@
+/* ===========================================================================
+   Zona pública / autenticación — tokens y utilidades del handoff
+   (design_handoff_vetsoftware_completo). Aplica SOLO bajo `.pub-scope` para no
+   alterar el resto de la app (que usa Geist + paleta warm). Paleta amatista + Inter.
+   =========================================================================== */
+
+.pub-scope {
+  --pub-ame-300: #d8b4fe;
+  --pub-ame-400: #c084fc;
+  --pub-ame-500: #a855f7;
+  --pub-ame-600: #9333ea;
+  --pub-ame-700: #7e22ce;
+  --pub-ame-800: #6b1fa8;
+  --pub-ame-900: #581c87;
+
+  --pub-ink-900: #1a1325;
+  --pub-ink-700: #3d2e57;
+  --pub-ink-600: #4a3d63;
+  --pub-ink-500: #6b5b80;
+  --pub-ink-400: #8578a0;
+  --pub-ink-300: #a89bbd;
+
+  --pub-line: #ece5f4;
+  --pub-line-2: #f0eaf7;
+  --pub-surface: #ffffff;
+
+  --pub-err-tx: #dc2626;
+  --pub-err-tx-2: #b91c1c;
+  --pub-err-bg: #fef2f2;
+  --pub-err-bd: #fecaca;
+  --pub-ok-tx: #16a34a;
+  --pub-ok-bg: #ecfdf3;
+  --pub-ok-bd: #bbf7d0;
+  --pub-warn-tx: #92600a;
+  --pub-warn-bg: #fffbeb;
+  --pub-warn-bd: #fde68a;
+
+  --pub-card-shadow: 0 24px 48px -18px rgba(91, 33, 182, 0.18),
+    0 4px 12px -4px rgba(91, 33, 182, 0.07);
+  --pub-btn-shadow: 0 4px 12px -2px rgba(126, 34, 206, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  --pub-btn-shadow-hover: 0 8px 20px -4px rgba(126, 34, 206, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--pub-ink-900);
+}
+
+/* Fondo del viewport + capa de blobs decorativos */
+.pub-shell {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(ellipse at top, #f3e8ff 0%, #f5f1fa 50%, #ede8f4 100%);
+}
+.pub-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Cuadrícula sutil (landing) */
+.pub-grid-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: linear-gradient(rgba(126, 34, 206, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(126, 34, 206, 0.045) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 78%);
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 78%);
+}
+
+/* Grids responsivos del formulario de registro */
+.reg-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+.reg-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 15px;
+}
+@media (max-width: 720px) {
+  .reg-grid-2,
+  .reg-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Animaciones */
+@keyframes pub-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes pub-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes pub-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(24px, -18px) scale(1.06);
+  }
+}
+.pub-spin {
+  animation: pub-spin 0.7s linear infinite;
+}
+.pub-reveal {
+  animation: pub-reveal 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.pub-drift {
+  animation: pub-drift 18s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pub-reveal,
+  .pub-drift {
+    animation: none !important;
+  }
+}
