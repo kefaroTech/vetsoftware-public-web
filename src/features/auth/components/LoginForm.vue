@@ -102,6 +102,8 @@ async function submit() {
       </AuthField>
 
       <div class="login-forgot">
+        <RouterLink :to="{ name: 'recuperar-codigo' }">¿Olvidaste tu código?</RouterLink>
+        <span class="login-forgot-sep">·</span>
         <RouterLink :to="{ name: 'recuperar-contrasena' }">¿Olvidaste tu contraseña?</RouterLink>
       </div>
 
@@ -138,6 +140,11 @@ async function submit() {
 .login-forgot {
   margin-top: -4px;
   text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 .login-forgot a {
   font-size: 13px;
@@ -147,6 +154,10 @@ async function submit() {
 }
 .login-forgot a:hover {
   text-decoration: underline;
+}
+.login-forgot-sep {
+  color: var(--pub-line);
+  font-size: 12px;
 }
 .login-divider {
   display: flex;

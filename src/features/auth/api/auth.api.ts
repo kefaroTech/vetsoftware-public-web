@@ -43,4 +43,9 @@ export const authApi = {
   async resetPassword(token: string, newPassword: string): Promise<void> {
     await http.post('/auth/reset-password', { token, newPassword })
   },
+
+  // "Recordar mi código": envía los códigos asociados al correo. Responde 204 SIEMPRE (anti-enumeración).
+  async recoverCode(email: string): Promise<void> {
+    await http.post('/auth/recover-code', { email })
+  },
 }

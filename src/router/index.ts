@@ -46,6 +46,12 @@ const router = createRouter({
       component: () => import('@/features/auth/views/RecuperarContrasenaView.vue'),
     },
     {
+      // "Olvidé mi código de usuario": envío de los códigos por correo.
+      path: '/recuperar-codigo',
+      name: 'recuperar-codigo',
+      component: () => import('@/features/auth/views/RecuperarCodigoView.vue'),
+    },
+    {
       // Restablecimiento con el token del correo (?token=...).
       path: '/restablecer-contrasena',
       name: 'restablecer-contrasena',
