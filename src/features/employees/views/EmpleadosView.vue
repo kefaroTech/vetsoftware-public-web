@@ -101,22 +101,18 @@ async function handleSubmit(data: EmployeeFormData) {
         submitError.value = 'Selecciona al menos un rol para el empleado.'
         return
       }
+      // El backend crea el empleado, le asigna los roles y le envía la invitación por correo (1 transacción).
       const created = await create({
         employeeCode: data.employeeCode.trim(),
         password: data.password,
         name: data.name.trim(),
         email: data.email.trim(),
-        status: 'ACTIVE',
         companyId: cid,
+        roleIds: data.roleIds,
       })
-      await Promise.all(
-        data.roleIds.map((roleId) =>
-          employeeRolesApi.create({ employeeId: created.id, roleId }),
-        ),
-      )
       await fetchAll()
       selectedId.value = created.id
-      toast.success('Empleado creado', created.name)
+      toast.success('Empleado invitado', `Se envió la invitación a ${created.email}`)
     }
     formOpen.value = false
   } catch (e) {

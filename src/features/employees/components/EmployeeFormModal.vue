@@ -9,6 +9,7 @@ import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import SegmentedRadio from '@/features/dashboard/components/ui/SegmentedRadio.vue'
 import RoleSelectorGrid from './RoleSelectorGrid.vue'
 import { scrollToFirstError } from '@/composables/scrollToError'
+import { employeeApi } from '../api/employee.api'
 
 const props = defineProps<{
   open: boolean
@@ -47,6 +48,24 @@ const draft = ref<EmployeeFormData>({
 
 const selectedRoleIds = ref<Set<number>>(new Set())
 
+// --- Autogeneración del código (solo alta): bloqueado hasta escribir el nombre, editable, disp. en vivo ---
+type CodeStatus = 'idle' | 'checking' | 'available' | 'taken'
+const codeStatus = ref<CodeStatus>('idle')
+let codeAuto = true // true hasta que el usuario edite el código a mano
+let applyingSuggestion = false
+let suggestTimer: ReturnType<typeof setTimeout> | undefined
+let availTimer: ReturnType<typeof setTimeout> | undefined
+
+// El código se bloquea mientras no haya nombre (solo en alta).
+const codeDisabled = computed(() => !isEditing.value && !draft.value.name.trim())
+const codeHint = computed<string | undefined>(() => {
+  if (isEditing.value) return undefined
+  if (codeDisabled.value) return 'Escribe el nombre y se genera automáticamente. Luego puedes editarlo.'
+  if (codeStatus.value === 'checking') return 'Verificando disponibilidad…'
+  if (codeStatus.value === 'available') return '✓ Disponible'
+  return 'Puedes editarlo.'
+})
+
 const touched = reactive<Record<FieldKey, boolean>>({
   employeeCode: false,
   name: false,
@@ -83,6 +102,10 @@ function reset() {
   touched.password = false
   touched.roles = false
   banner.value = false
+  confirming.value = false
+  codeStatus.value = 'idle'
+  codeAuto = !props.initial // en edición no autogeneramos
+  applyingSuggestion = false
 }
 
 watch(
@@ -93,11 +116,68 @@ watch(
   { immediate: true },
 )
 
+async function fetchSuggestion() {
+  if (isEditing.value || !codeAuto) return
+  const name = draft.value.name.trim()
+  if (!name) return
+  try {
+    const suggestion = await employeeApi.suggestCode(name)
+    if (isEditing.value || !codeAuto) return
+    applyingSuggestion = true
+    draft.value.employeeCode = suggestion
+    codeStatus.value = 'available'
+  } catch {
+    /* sin sugerencia: el usuario escribe el código a mano */
+  }
+}
+
+async function checkAvailability() {
+  const code = draft.value.employeeCode.trim()
+  if (!code) {
+    codeStatus.value = 'idle'
+    return
+  }
+  codeStatus.value = 'checking'
+  try {
+    const available = await employeeApi.checkCodeAvailability(code)
+    if (code !== draft.value.employeeCode.trim()) return // el valor cambió mientras respondía
+    codeStatus.value = available ? 'available' : 'taken'
+  } catch {
+    codeStatus.value = 'idle'
+  }
+}
+
+// Alta: al escribir el nombre se autogenera el código (mientras no se haya editado a mano).
+watch(
+  () => draft.value.name,
+  () => {
+    if (isEditing.value) return
+    clearTimeout(suggestTimer)
+    suggestTimer = setTimeout(fetchSuggestion, 450)
+  },
+)
+
+// Alta: al editar el código, chequeo de disponibilidad (excepto cuando el valor lo puso la sugerencia).
+watch(
+  () => draft.value.employeeCode,
+  () => {
+    if (isEditing.value) return
+    if (applyingSuggestion) {
+      applyingSuggestion = false
+      return
+    }
+    codeAuto = false
+    clearTimeout(availTimer)
+    availTimer = setTimeout(checkAvailability, 400)
+  },
+)
+
 const errors = computed(() => {
   const e: Partial<Record<FieldKey, string>> = {}
   const code = draft.value.employeeCode.trim()
   if (!code) e.employeeCode = 'El código es requerido'
   else if (code.length > 50) e.employeeCode = 'Máximo 50 caracteres'
+  else if (!isEditing.value && codeStatus.value === 'taken') e.employeeCode = 'Ese código ya está en uso'
 
   const name = draft.value.name.trim()
   if (!name) e.name = 'El nombre es requerido'
@@ -130,6 +210,7 @@ function markTouched(field: FieldKey) {
 }
 
 const banner = ref(false)
+const confirming = ref(false)
 
 function submit() {
   ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = true))
@@ -140,6 +221,16 @@ function submit() {
     return
   }
   banner.value = false
+  // Alta: pedir confirmación antes de crear (se enviará la invitación por correo). Edición: guardar directo.
+  if (!isEditing.value) {
+    confirming.value = true
+    return
+  }
+  doSubmit()
+}
+
+function doSubmit() {
+  confirming.value = false
   emit('submit', {
     ...draft.value,
     roleIds: [...selectedRoleIds.value],
@@ -175,9 +266,20 @@ const subtitleText = computed(() =>
     @close="emit('close')"
   >
     <template #body>
-      <div v-if="banner" class="banner">Revisa los campos marcados antes de continuar.</div>
+      <div v-if="confirming" class="confirm">
+        <p>
+          Se creará la cuenta de <strong>{{ draft.name || 'este empleado' }}</strong> y se enviará una
+          invitación a <strong>{{ draft.email }}</strong> con su usuario
+          (<strong>{{ draft.employeeCode }}</strong>) y la contraseña para el primer ingreso.
+        </p>
+        <p class="confirm-note">
+          Al iniciar sesión por primera vez, el sistema le pedirá crear una contraseña nueva.
+        </p>
+      </div>
 
-      <div class="form">
+      <template v-else>
+        <div v-if="banner" class="banner">Revisa los campos marcados antes de continuar.</div>
+        <div class="form">
         <BaseField label="Nombre completo" required :error="err('name')">
           <BaseInput
             v-model="draft.name"
@@ -189,10 +291,16 @@ const subtitleText = computed(() =>
         </BaseField>
 
         <div class="grid-2">
-          <BaseField label="Código de empleado" required :error="err('employeeCode')">
+          <BaseField
+            label="Código de empleado"
+            required
+            :error="err('employeeCode')"
+            :hint="codeHint"
+          >
             <BaseInput
               v-model="draft.employeeCode"
               placeholder="VET-001"
+              :disabled="codeDisabled"
               :invalid="!!err('employeeCode')"
               @blur="markTouched('employeeCode')"
             />
@@ -244,14 +352,23 @@ const subtitleText = computed(() =>
         <BaseField v-if="isEditing" label="Estado">
           <SegmentedRadio v-model="draft.status" :options="statusOptions" />
         </BaseField>
-      </div>
+        </div>
+      </template>
     </template>
 
     <template #footer-actions>
-      <button type="button" class="ghost" :disabled="busy" @click="emit('close')">Cancelar</button>
-      <button type="button" class="primary" :disabled="busy" @click="submit">
-        {{ isEditing ? 'Guardar cambios' : 'Crear empleado' }}
-      </button>
+      <template v-if="confirming">
+        <button type="button" class="ghost" :disabled="busy" @click="confirming = false">Volver</button>
+        <button type="button" class="primary" :disabled="busy" @click="doSubmit">
+          Confirmar y crear
+        </button>
+      </template>
+      <template v-else>
+        <button type="button" class="ghost" :disabled="busy" @click="emit('close')">Cancelar</button>
+        <button type="button" class="primary" :disabled="busy" @click="submit">
+          {{ isEditing ? 'Guardar cambios' : 'Crear empleado' }}
+        </button>
+      </template>
     </template>
   </ModalShell>
 </template>
@@ -270,6 +387,17 @@ const subtitleText = computed(() =>
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+.confirm p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--warm-700);
+}
+.confirm-note {
+  margin-top: 10px !important;
+  color: var(--warm-500) !important;
+  font-size: 12.5px !important;
 }
 .grid-2 {
   display: grid;

@@ -13,6 +13,8 @@ export interface Employee {
   name: string
   email: string
   enabled: boolean
+  // true = invitado/pendiente (debe cambiar la contraseña en el primer login); false = activo.
+  mustChangePassword: boolean
   companyId: number
   createdDate: string
   roles: EmployeeRole[]

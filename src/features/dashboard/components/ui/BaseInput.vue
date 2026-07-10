@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { Component } from 'vue'
+import { computed, ref, type Component } from 'vue'
+import { Eye, EyeOff } from 'lucide-vue-next'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     modelValue?: string | number | null
     placeholder?: string
@@ -21,6 +22,13 @@ defineEmits<{
   'update:modelValue': [value: string]
   blur: [event: FocusEvent]
 }>()
+
+// Los inputs de contraseña muestran un ojo para ver/ocultar el texto en claro.
+const show = ref(false)
+const isPassword = computed(() => props.type === 'password')
+const effectiveType = computed(() =>
+  isPassword.value ? (show.value ? 'text' : 'password') : props.type,
+)
 </script>
 
 <template>
@@ -34,7 +42,7 @@ defineEmits<{
     />
     <input
       :id="id"
-      :type="type"
+      :type="effectiveType"
       :value="modelValue ?? ''"
       :placeholder="placeholder"
       :disabled="disabled"
@@ -45,6 +53,16 @@ defineEmits<{
       @blur="$emit('blur', $event)"
     />
     <span v-if="suffix" class="suffix">{{ suffix }}</span>
+    <button
+      v-if="isPassword"
+      type="button"
+      class="reveal"
+      tabindex="-1"
+      :aria-label="show ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+      @click.stop="show = !show"
+    >
+      <component :is="show ? EyeOff : Eye" :size="15" :stroke-width="1.6" />
+    </button>
   </label>
 </template>
 
@@ -119,5 +137,23 @@ input:disabled {
   font-size: 11.5px;
   color: var(--warm-500);
   flex-shrink: 0;
+}
+.reveal {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--warm-500);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.reveal:hover {
+  color: var(--warm-700);
+}
+.input.disabled .reveal {
+  cursor: not-allowed;
+  color: var(--warm-400);
 }
 </style>

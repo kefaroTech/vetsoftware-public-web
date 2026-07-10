@@ -19,6 +19,7 @@ export interface EmployeeResponse {
   name: string
   email: string
   enabled: boolean
+  mustChangePassword: boolean
   company: EmployeeCompanySummary
   roles: EmployeeRoleSummary[]
   createdDate: string
@@ -29,8 +30,8 @@ export interface CreateEmployeeRequest {
   password: string
   name: string
   email: string
-  status: 'ACTIVE' | 'INACTIVE'
   companyId: number
+  roleIds: number[]
 }
 
 export interface UpdateEmployeeRequest {
@@ -59,6 +60,24 @@ export const employeeApi = {
   async create(payload: CreateEmployeeRequest): Promise<EmployeeResponse> {
     const { data } = await http.post<EmployeeResponse>('/employees', payload)
     return data
+  },
+
+  // Autogeneración: sugiere un código disponible a partir del nombre (prefijo = iniciales de la empresa).
+  async suggestCode(name: string): Promise<string> {
+    const { data } = await http.get<{ code: string }>('/employees/suggest-code', {
+      params: { name },
+      skipGlobalLoader: true,
+    })
+    return data.code
+  },
+
+  // Chequeo en vivo de disponibilidad del código de empleado.
+  async checkCodeAvailability(code: string): Promise<boolean> {
+    const { data } = await http.get<{ available: boolean }>('/employees/code-availability', {
+      params: { code },
+      skipGlobalLoader: true,
+    })
+    return data.available
   },
 
   async update(id: number, payload: UpdateEmployeeRequest): Promise<EmployeeResponse> {

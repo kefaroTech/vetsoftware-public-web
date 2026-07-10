@@ -45,7 +45,7 @@ defineEmits<{
       <div class="email">{{ employee.email }}</div>
     </div>
     <div class="cell status-cell">
-      <StatusPill :active="employee.enabled" />
+      <StatusPill :active="employee.enabled" :invited="employee.mustChangePassword" />
     </div>
     <div class="cell chev-cell">
       <ChevronRight :size="16" :stroke-width="1.6" />

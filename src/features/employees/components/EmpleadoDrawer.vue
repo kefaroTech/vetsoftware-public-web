@@ -92,7 +92,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
                     />
                   </template>
                   <span v-else class="no-role">Sin rol asignado</span>
-                  <StatusPill :active="employee.enabled" size="lg" />
+                  <StatusPill :active="employee.enabled" :invited="employee.mustChangePassword" size="lg" />
                 </div>
               </div>
             </div>
