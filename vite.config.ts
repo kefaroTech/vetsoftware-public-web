@@ -12,6 +12,9 @@ export default defineConfig({
   },
   server: {
     port: 5174,
+    // Puerto fijo: si 5174 está ocupado, falla en vez de saltar a 5175/5176. Así el enlace de
+    // verificación del backend (verification-base-url → :5174) y el CORS allowlist siempre coinciden.
+    strictPort: true,
     // Proxy API calls to the backend so the browser only ever talks to the
     // Vite origin (no CORS). Enables access from other LAN devices (tablet,
     // phone) via `npm run dev -- --host` without touching the backend's CORS

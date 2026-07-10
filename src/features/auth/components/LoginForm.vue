@@ -49,9 +49,12 @@ async function submit() {
     router.push({ name: 'home' })
   } catch (e) {
     serverErrors.value = getProblemDetailFieldErrors(e)
+    const code = getProblemDetailCode(e)
     // Auto-registro Opción B: cuenta sin verificar → 403 EMAIL_NOT_VERIFIED (banner específico).
-    if (getProblemDetailCode(e) === 'EMAIL_NOT_VERIFIED') {
+    if (code === 'EMAIL_NOT_VERIFIED') {
       emailNotVerified.value = true
+    } else if (code === 'INVALID_CREDENTIALS') {
+      submitError.value = 'El código de empleado o la contraseña no son correctos. Revísalos e intenta de nuevo.'
     } else {
       submitError.value = getProblemDetailMessage(e, 'No se pudo iniciar sesión')
     }

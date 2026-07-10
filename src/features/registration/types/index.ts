@@ -12,15 +12,19 @@ export interface RegisterUserRequest {
   password: string
   taxRegime: TaxRegime
   fiscalEmail: string
+  // Usuario de acceso elegido por el dueño (Opción A). Con este código inicia sesión.
+  employeeCode: string
   // Token del challenge reCAPTCHA. Solo se envía cuando el captcha está habilitado en el front.
   recaptchaToken?: string
 }
 
 // Auto-registro Opción B: NO hay auto-login. La cuenta queda pendiente de verificar el correo.
+// `employeeCode` es el usuario de acceso generado por el backend (se muestra al dueño para iniciar sesión).
 export interface RegistrationResponse {
   companyId: number
   employeeId: number
   email: string
+  employeeCode: string
   status: string
 }
 
