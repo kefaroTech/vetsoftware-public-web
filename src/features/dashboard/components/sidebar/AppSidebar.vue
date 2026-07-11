@@ -29,6 +29,7 @@ import SidebarBrand from './SidebarBrand.vue'
 import SidebarNavItem from './SidebarNavItem.vue'
 import SidebarSubItem from './SidebarSubItem.vue'
 import SidebarUserCard from './SidebarUserCard.vue'
+import BranchSelector from '@/features/branches/components/BranchSelector.vue'
 import { mockUser } from '../../data/mock'
 import { useNuevaConsultaDraft } from '../../views/consulta/nueva/composables/useNuevaConsultaDraft'
 import { showResumeOrNewDialog } from '@/composables/useConsultaResumeGuard'
@@ -188,6 +189,8 @@ function onNotifications() {
 <template>
   <aside class="sidebar">
     <SidebarBrand app-name="Vetrina" :clinic="mockUser.clinic" />
+
+    <BranchSelector />
 
     <div class="section-label">TRABAJO</div>
     <SidebarNavItem

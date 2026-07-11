@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { openAccountApi } from '../api/openAccount.api'
+import { useBranchStore } from '@/features/branches/stores/branch.store'
 import { generalChargeApi, productChargeApi, serviceChargeApi } from '../api/charges.api'
 import { debtOpenAccountApi } from '../api/debtOpenAccount.api'
 import { getProblemDetailMessage } from '@/services/http/http.client'
@@ -70,6 +71,15 @@ export const useCuentasStore = defineStore('cuentas', () => {
   function ensureLoaded(): Promise<void> {
     return loadedOnce ? Promise.resolve() : loadAccounts()
   }
+
+  // Multi-sucursal: al cambiar la sede seleccionada, recargar la lista si ya se había cargado
+  // (evita fetches en background si la pantalla de cuentas nunca se abrió).
+  watch(
+    () => useBranchStore().selectedBranchId,
+    () => {
+      if (loadedOnce) void loadAccounts()
+    },
+  )
 
   /** Recarga forzada desde el backend, para el montaje de la pantalla de cuentas. */
   function reload(): Promise<void> {

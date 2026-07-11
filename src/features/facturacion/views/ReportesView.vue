@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { BarChart3, ShieldCheck } from 'lucide-vue-next'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { useBranches } from '@/features/branches/composables/useBranches'
 import { useFacturacionAccess } from '../composables/useFacturacionAccess'
 import { salesReportApi } from '../api/salesReport.api'
 import { feMoney } from '../composables/feFormat'
@@ -18,6 +19,7 @@ import FeUpsell from '../components/FeUpsell.vue'
 import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
 
 const { hasModule } = useFacturacionAccess()
+const { selectedBranchId } = useBranches()
 
 type Tab = 'libro' | 'concil'
 const tab = ref<Tab>('libro')
@@ -62,6 +64,11 @@ function docTypeLabel(dt: string): string {
 function meansLabel(m: string): string {
   return PAYMENT_MEANS_LABEL[m as PaymentMeans] ?? m
 }
+
+// Multi-sucursal: recargar el reporte al cambiar la sede seleccionada.
+watch(selectedBranchId, () => {
+  if (hasModule) void load()
+})
 
 onMounted(() => {
   if (hasModule) void load()

@@ -1,4 +1,5 @@
 import { http } from '@/services/http/http.client'
+import { withBranchBody, withBranchParam } from '@/features/branches/api/branchContext'
 import type {
   AppointmentResponse,
   AppointmentStatus,
@@ -28,7 +29,7 @@ function buildQuery(params: AppointmentListParams): Record<string, string> {
 export const appointmentApi = {
   async list(params: AppointmentListParams = {}): Promise<AppointmentResponse[]> {
     const { data } = await http.get<AppointmentResponse[]>('/appointments', {
-      params: buildQuery(params),
+      params: withBranchParam(buildQuery(params)),
     })
     return data
   },
@@ -39,7 +40,7 @@ export const appointmentApi = {
   },
 
   async create(payload: CreateAppointmentRequest): Promise<AppointmentResponse> {
-    const { data } = await http.post<AppointmentResponse>('/appointments', payload)
+    const { data } = await http.post<AppointmentResponse>('/appointments', withBranchBody(payload))
     return data
   },
 

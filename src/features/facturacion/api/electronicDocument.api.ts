@@ -1,4 +1,5 @@
 import { http } from '@/services/http/http.client'
+import { withBranchParam } from '@/features/branches/api/branchContext'
 import type {
   CreditNoteReason,
   DebitNoteReason,
@@ -8,7 +9,9 @@ import type {
 
 export const electronicDocumentApi = {
   async listAll(): Promise<ElectronicDocumentResponse[]> {
-    const { data } = await http.get<ElectronicDocumentResponse[]>('/electronic-documents')
+    const { data } = await http.get<ElectronicDocumentResponse[]>('/electronic-documents', {
+      params: withBranchParam({}),
+    })
     return data
   },
 

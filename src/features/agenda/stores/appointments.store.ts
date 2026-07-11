@@ -10,6 +10,7 @@ import type {
   UpdateAppointmentRequest,
 } from '../types/appointment'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { useBranchStore } from '@/features/branches/stores/branch.store'
 
 export type OriginFilter = 'ALL' | 'APPOINTMENTS' | 'CLINICAL'
 
@@ -108,6 +109,13 @@ export const useAppointmentsStore = defineStore('appointments', () => {
   watch([vetFilter, statusFilter], () => {
     void load()
   })
+  // Multi-sucursal: la sede seleccionada es contexto server-side → recargar al cambiarla.
+  watch(
+    () => useBranchStore().selectedBranchId,
+    () => {
+      void load()
+    },
+  )
   // El rango (from/to) lo fija la vista, que dispara load() explícitamente al
   // montar y al navegar — así la pantalla SIEMPRE recarga al abrirse (no se usa
   // caché del store aunque el rango no haya cambiado entre visitas).

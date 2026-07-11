@@ -1,4 +1,5 @@
 import { http } from '@/services/http/http.client'
+import { withBranchBody, withBranchParam } from '@/features/branches/api/branchContext'
 import type {
   OpenAccountResponse,
   OpenAccountSearchCriteria,
@@ -8,7 +9,9 @@ import type {
 
 export const openAccountApi = {
   async listAll(): Promise<OpenAccountResponse[]> {
-    const { data } = await http.get<OpenAccountResponse[]>('/open-accounts')
+    const { data } = await http.get<OpenAccountResponse[]>('/open-accounts', {
+      params: withBranchParam({}),
+    })
     return data
   },
 
@@ -19,7 +22,9 @@ export const openAccountApi = {
     }
     if (criteria.ownerId != null) params.ownerId = criteria.ownerId
     if (criteria.enabled != null) params.enabled = criteria.enabled
-    const { data } = await http.get<PageResponse<OpenAccountResponse>>('/open-accounts/search', { params })
+    const { data } = await http.get<PageResponse<OpenAccountResponse>>('/open-accounts/search', {
+      params: withBranchParam(params),
+    })
     return data
   },
 
@@ -29,7 +34,7 @@ export const openAccountApi = {
   },
 
   async create(ownerId: number): Promise<OpenAccountResponse> {
-    const { data } = await http.post<OpenAccountResponse>('/open-accounts', { ownerId })
+    const { data } = await http.post<OpenAccountResponse>('/open-accounts', withBranchBody({ ownerId }))
     return data
   },
 

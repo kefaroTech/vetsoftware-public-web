@@ -1,4 +1,5 @@
 import { http } from '@/services/http/http.client'
+import { withBranchBody } from '@/features/branches/api/branchContext'
 import type {
   ElectronicDocumentResponse,
   ElectronicDocumentType,
@@ -45,7 +46,7 @@ export const posSaleApi = {
   async register(payload: RegisterPosSaleRequest): Promise<ElectronicDocumentResponse> {
     const { data } = await http.post<ElectronicDocumentResponse>(
       '/electronic-documents/from-sale',
-      payload,
+      withBranchBody(payload),
     )
     return data
   },

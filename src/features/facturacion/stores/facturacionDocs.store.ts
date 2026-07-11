@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { electronicDocumentApi } from '../api/electronicDocument.api'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { useBranchStore } from '@/features/branches/stores/branch.store'
 import type {
   CreditNoteReason,
   DebitNoteReason,
@@ -48,6 +49,15 @@ export const useFacturacionDocsStore = defineStore('facturacionDocs', () => {
     loadedOnce = false
     return loadAll()
   }
+
+  // Multi-sucursal: al cambiar la sede seleccionada, recargar la lista si ya se había cargado alguna vez
+  // (evita fetches en background si la pantalla nunca se abrió).
+  watch(
+    () => useBranchStore().selectedBranchId,
+    () => {
+      if (loadedOnce) void reload()
+    },
+  )
 
   /** Refresca un documento desde el backend (tras transmitir/validar async). */
   async function refresh(id: number): Promise<ElectronicDocumentResponse> {
