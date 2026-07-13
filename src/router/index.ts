@@ -215,6 +215,12 @@ const router = createRouter({
           meta: { permission: PERMISSIONS.TAX_READ },
         },
         {
+          path: 'caja',
+          name: 'caja',
+          component: () => import('@/features/caja/views/CajaView.vue'),
+          meta: { permission: PERMISSIONS.CASHREGISTER_READ },
+        },
+        {
           path: 'cuentas',
           name: 'cuentas',
           component: () => import('@/features/cuentas/views/CuentasView.vue'),

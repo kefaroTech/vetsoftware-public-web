@@ -23,6 +23,7 @@ import {
   BadgePercent,
   ShoppingBag,
   Wallet,
+  Banknote,
   Pill,
   Building2,
 } from 'lucide-vue-next'
@@ -84,6 +85,7 @@ const canMedicaments = can(PERMISSIONS.PRESCRIPTION_CREATE)
 const canLabProcess = can(PERMISSIONS.LABORATORY_TEST_READ)
 const canHospitalWard = can(PERMISSIONS.HOSPITALIZATION_READ)
 const canInventory = can(PERMISSIONS.PRODUCT_READ)
+const canCash = can(PERMISSIONS.CASHREGISTER_READ)
 const canServices = can(PERMISSIONS.SERVICE_READ)
 const canPromotions = can(PERMISSIONS.PROMOTION_READ)
 const canTaxes = can(PERMISSIONS.TAX_READ)
@@ -302,6 +304,14 @@ function onNotifications() {
         />
       </div>
     </template>
+
+    <SidebarNavItem
+      v-if="canCash"
+      label="Caja"
+      :icon="Banknote"
+      :active="route.name === 'caja'"
+      @click="router.push({ name: 'caja' })"
+    />
 
     <template v-if="showFacturacionSection">
       <div class="section-label">FACTURACIÓN</div>

@@ -95,6 +95,11 @@ export const PERMISSIONS = {
   INVENTORY_READ: 'inventory.read',
   INVENTORY_ADJUST: 'inventory.adjust',
   INVENTORY_TRANSFER: 'inventory.transfer',
+
+  // Caja / arqueo (punto 5). Operar = abrir + movimientos manuales; close = cerrar (permiso aparte); read = ver.
+  CASHREGISTER_OPERATE: 'cashregister.operate',
+  CASHREGISTER_CLOSE: 'cashregister.close',
+  CASHREGISTER_READ: 'cashregister.read',
   TAX_CREATE: 'tax.create',
   TAX_READ: 'tax.read',
   TAX_UPDATE: 'tax.update',
