@@ -6,10 +6,8 @@ import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
-import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
 import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
-import { formatMoney } from '../composables/pricing'
 import { useTienda } from '../composables/useTienda'
 import type { ProductPayload, ProductResponse, TaxScheme, TaxTreatment } from '../types/tienda'
 import { scrollToFirstError } from '@/composables/scrollToError'
@@ -50,15 +48,8 @@ const toast = useToast()
 interface Draft {
   name: string
   code: string
-  purchasePrice: string
   salePrice: string
-  currentStock: string
-  minStock: string
   provider: string
-  /** Fecha de vencimiento ISO `yyyy-MM-dd`; '' = sin fecha. Opcional. */
-  expireDate: string
-  /** Número de lote; opcional. */
-  lotNumber: string
   notes: string
   productCategoryId: string
   taxTreatment: TaxTreatment
@@ -69,8 +60,8 @@ interface Draft {
 
 function emptyDraft(): Draft {
   return {
-    name: '', code: '', purchasePrice: '', salePrice: '', currentStock: '0', minStock: '0',
-    provider: '', expireDate: '', lotNumber: '', notes: '', productCategoryId: '',
+    name: '', code: '', salePrice: '',
+    provider: '', notes: '', productCategoryId: '',
     taxTreatment: 'GRAVADO', taxId: '',
     version: null,
   }
@@ -81,13 +72,8 @@ function hydrate(it: ProductResponse) {
   Object.assign(draft, {
     name: it.name,
     code: it.code,
-    purchasePrice: String(it.purchasePrice),
     salePrice: String(it.salePrice),
-    currentStock: String(it.currentStock),
-    minStock: String(it.minStock),
     provider: it.provider ?? '',
-    expireDate: it.expireDate ?? '',
-    lotNumber: it.lotNumber ?? '',
     notes: it.notes ?? '',
     productCategoryId: String(it.productCategory.id),
     taxTreatment: it.taxTreatment,
@@ -98,10 +84,9 @@ function hydrate(it: ProductResponse) {
 
 const draft = reactive<Draft>(emptyDraft())
 
-type FieldKey = 'name' | 'code' | 'purchasePrice' | 'salePrice' | 'currentStock' | 'minStock' | 'productCategoryId' | 'taxId'
+type FieldKey = 'name' | 'code' | 'salePrice' | 'productCategoryId' | 'taxId'
 const touched = reactive<Record<FieldKey, boolean>>({
-  name: false, code: false, purchasePrice: false, salePrice: false,
-  currentStock: false, minStock: false, productCategoryId: false, taxId: false,
+  name: false, code: false, salePrice: false, productCategoryId: false, taxId: false,
 })
 function resetTouched() {
   ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = false))
@@ -164,10 +149,7 @@ function num(v: string): number {
 const errors = computed(() => ({
   name: draft.name.trim().length < 2 ? 'Mínimo 2 caracteres' : null,
   code: draft.code.trim().length < 1 ? 'Requerido' : null,
-  purchasePrice: !(num(draft.purchasePrice) >= 0) ? 'Número ≥ 0' : null,
   salePrice: !(num(draft.salePrice) >= 0) ? 'Número ≥ 0' : null,
-  currentStock: !(Number.isInteger(num(draft.currentStock)) && num(draft.currentStock) >= 0) ? 'Entero ≥ 0' : null,
-  minStock: !(Number.isInteger(num(draft.minStock)) && num(draft.minStock) >= 0) ? 'Entero ≥ 0' : null,
   productCategoryId: !draft.productCategoryId ? 'Selecciona una categoría' : null,
   taxId: requiresTaxRate(draft.taxTreatment) && !draft.taxId ? 'Selecciona la tarifa' : null,
 }))
@@ -185,18 +167,6 @@ function validate(): boolean {
 }
 defineExpose({ validate })
 
-/** Margen/utilidad en vivo a partir de precio de compra y venta (ambos con IVA incluido). */
-const marginInfo = computed(() => {
-  const purchase = num(draft.purchasePrice)
-  const sale = num(draft.salePrice)
-  if (!(sale > 0) || !(purchase >= 0)) return null
-  return {
-    pct: Math.round(((sale - purchase) / sale) * 100),
-    utility: sale - purchase,
-    below: sale < purchase,
-  }
-})
-
 async function submit() {
   if (busy.value) return
   if (!validate()) {
@@ -208,14 +178,9 @@ async function submit() {
   const payload: ProductPayload = {
     name: draft.name.trim(),
     code: draft.code.trim(),
-    purchasePrice: num(draft.purchasePrice),
     salePrice: num(draft.salePrice),
-    currentStock: num(draft.currentStock),
-    minStock: num(draft.minStock),
     provider: draft.provider.trim() || null,
     taxTreatment: draft.taxTreatment,
-    expireDate: draft.expireDate || null,
-    lotNumber: draft.lotNumber.trim() || null,
     notes: draft.notes.trim() || null,
     productCategoryId: Number(draft.productCategoryId),
     taxId: requiresTaxRate(draft.taxTreatment) && draft.taxId ? Number(draft.taxId) : null,
@@ -249,7 +214,7 @@ async function submit() {
   <ModalShell
     :open="open"
     :title="isEdit ? 'Editar producto' : 'Nuevo producto'"
-    subtitle="Datos de inventario y precio"
+    subtitle="Ficha de catálogo · el stock se gestiona en Inventario"
     :icon="Package"
     :width="680"
     @close="emit('close')"
@@ -272,43 +237,14 @@ async function submit() {
             <BaseSelect :id="id" v-model="draft.productCategoryId" :options="categoryOptions" :invalid="!!err('productCategoryId')" placeholder="Selecciona…" @blur="markTouched('productCategoryId')" />
           </template>
         </BaseField>
-        <BaseField label="Precio de compra" required :error="err('purchasePrice')">
-          <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.purchasePrice" :invalid="!!err('purchasePrice')" inputmode="decimal" placeholder="0" @blur="markTouched('purchasePrice')" />
-          </template>
-        </BaseField>
         <BaseField label="Precio de venta (IVA incl.)" required :error="err('salePrice')">
           <template #default="{ id }">
             <BaseInput :id="id" v-model="draft.salePrice" :invalid="!!err('salePrice')" inputmode="decimal" placeholder="0" @blur="markTouched('salePrice')" />
           </template>
         </BaseField>
-        <div v-if="marginInfo" class="margin-hint col-2" :class="{ below: marginInfo.below }">
-          <template v-if="marginInfo.below">⚠ Se vende bajo costo — utilidad {{ formatMoney(marginInfo.utility) }}</template>
-          <template v-else>Margen {{ marginInfo.pct }}% · utilidad {{ formatMoney(marginInfo.utility) }} por unidad</template>
-        </div>
-        <BaseField label="Stock actual" required :error="err('currentStock')">
-          <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.currentStock" :invalid="!!err('currentStock')" inputmode="numeric" placeholder="0" @blur="markTouched('currentStock')" />
-          </template>
-        </BaseField>
-        <BaseField label="Stock mínimo" required :error="err('minStock')">
-          <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.minStock" :invalid="!!err('minStock')" inputmode="numeric" placeholder="0" @blur="markTouched('minStock')" />
-          </template>
-        </BaseField>
         <BaseField label="Proveedor">
           <template #default="{ id }">
             <BaseInput :id="id" v-model="draft.provider" placeholder="Opcional" />
-          </template>
-        </BaseField>
-        <BaseField label="Fecha de vencimiento">
-          <template #default="{ id }">
-            <DateInput :id="id" v-model="draft.expireDate" placeholder="Opcional" />
-          </template>
-        </BaseField>
-        <BaseField label="Lote">
-          <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.lotNumber" placeholder="Opcional" />
           </template>
         </BaseField>
         <BaseField label="Tratamiento de IVA" required>

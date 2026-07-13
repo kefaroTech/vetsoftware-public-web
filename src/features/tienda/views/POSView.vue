@@ -20,6 +20,7 @@ import PayModal from '../components/PayModal.vue'
 import { useFeUvt } from '@/features/facturacion/composables/useFeUvt'
 import ReceiptModal from '../components/ReceiptModal.vue'
 import { useTienda } from '../composables/useTienda'
+import { useBranches } from '@/features/branches/composables/useBranches'
 import { appliesIva, applyPromo, formatMoney, splitGross, stockState } from '../composables/pricing'
 import { productCategoryTone, serviceCategoryTone } from '../composables/categoryTone'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
@@ -37,8 +38,18 @@ import type { ElectronicDocumentResponse, PaymentMeans } from '@/features/factur
 const store = useTienda()
 const toast = useToast()
 const router = useRouter()
+const branches = useBranches()
 const { can } = useFacturacionAccess()
 const today = todayISO()
+
+/** Stock del producto en la sede activa (informativo: el POS no bloquea la venta, solo avisa). */
+function stockCountOf(productId: number): number | null {
+  if (branches.selectedBranchId.value == null) return null
+  return store.stockByProduct.value[productId]?.quantity ?? 0
+}
+function stockMinOf(productId: number): number {
+  return store.stockByProduct.value[productId]?.minStock ?? 0
+}
 
 // Toda venta (tiquete POS o factura) lleva los datos fiscales del emisor, que salen del perfil fiscal de
 // la empresa (CompanyTaxProfile). Sin él, el backend rechaza el registro: bloqueamos el cobro y guiamos a
@@ -85,8 +96,11 @@ const MEANS_BY_METHOD: Record<string, PaymentMeans> = {
 
 onMounted(() => {
   store.reload()
+  void store.loadStock(branches.selectedBranchId.value)
   void checkTaxProfile()
 })
+// Regla: recargar el stock al cambiar la sede activa.
+watch(() => branches.selectedBranchId.value, (id) => void store.loadStock(id))
 
 // Se re-evalúa en cada montaje, así que volver del configurador refleja el perfil recién creado.
 async function checkTaxProfile() {
@@ -146,7 +160,8 @@ const catalog = computed<CatalogCard[]>(() => {
           taxTreatment: p.taxTreatment,
           taxPercentage: appliesIva(p.taxTreatment) ? p.tax?.percentage ?? 0 : 0,
           taxName: p.tax?.name,
-          stockState: stockState(p), stockCount: p.currentStock, isService: false,
+          stockState: stockCountOf(p.id) == null ? null : stockState(stockCountOf(p.id)!, stockMinOf(p.id)),
+          stockCount: stockCountOf(p.id), isService: false,
           toneBg: productCategoryTone(p.productCategory).bg,
           toneFg: productCategoryTone(p.productCategory).fg,
         }
@@ -175,14 +190,10 @@ const catalog = computed<CatalogCard[]>(() => {
 })
 
 function addToTicket(card: CatalogCard) {
-  if (card.stockState === 'AGOTADO') return
+  // POS permite vender sin existencias (stock negativo): no se bloquea por agotado, solo se muestra el aviso.
   const kind = card.isService ? 'service' : 'product'
   const existing = lines.value.find((l) => l.kind === kind && l.id === card.id)
   if (existing) {
-    if (!card.isService && card.stockCount != null && existing.qty >= card.stockCount) {
-      toast.warn('Sin stock', `Solo quedan ${card.stockCount} u.`)
-      return
-    }
     existing.qty += 1
     return
   }
@@ -195,13 +206,7 @@ function addToTicket(card: CatalogCard) {
 }
 
 function inc(line: SaleLine) {
-  if (line.kind === 'product') {
-    const p = store.products.value.find((x) => x.id === line.id)
-    if (p && line.qty >= p.currentStock) {
-      toast.warn('Sin stock', `Solo quedan ${p.currentStock} u.`)
-      return
-    }
-  }
+  // POS permite negativo: no se topa la cantidad al stock disponible.
   line.qty += 1
 }
 function dec(line: SaleLine) {
@@ -386,8 +391,6 @@ function openFiscalPicker() {
             :key="`${mode}-${c.id}`"
             type="button"
             class="pcard"
-            :class="{ disabled: c.stockState === 'AGOTADO' }"
-            :disabled="c.stockState === 'AGOTADO'"
             @click="addToTicket(c)"
           >
             <span v-if="c.promoName" class="promo-badge">Promo</span>

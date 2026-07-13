@@ -206,7 +206,8 @@ const catalog = computed(() => {
   }
   return tienda.products.value
     .filter((p) => !q || p.name.toLowerCase().includes(q) || p.productCategory?.name.toLowerCase().includes(q))
-    .map((p) => ({ id: p.id, name: p.name, price: p.salePrice, soldOut: p.currentStock <= 0 }))
+    // Stock por sede (F4): agotado según el saldo de la sede activa si está cargado; si no, no se marca (el backend valida).
+    .map((p) => ({ id: p.id, name: p.name, price: p.salePrice, soldOut: (tienda.stockByProduct.value[p.id]?.quantity ?? 1) <= 0 }))
 })
 
 const total = computed(() => cart.value.reduce((sum, l) => sum + l.unitPrice * l.qty, 0))

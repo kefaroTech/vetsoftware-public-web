@@ -48,6 +48,7 @@ export interface AppointmentResponse {
   owner: AppointmentOwnerRef | null
   clientName: string | null
   clientPhone: string | null
+  clientEmail: string | null
   employee: AppointmentEmployeeRef
   version: number
   enabled: boolean
@@ -64,6 +65,8 @@ export interface CreateAppointmentRequest {
   ownerId?: number | null
   clientName?: string | null
   clientPhone?: string | null
+  // Correo opcional del contacto libre para enviarle la confirmación.
+  clientEmail?: string | null
   notes?: string | null
   // Sede en la que se agenda. Se elige en el form (default = sede del menú principal); si no viene, el backend
   // usa la sede activa por defecto. Solo aplica al crear (el update no cambia de sede).
@@ -178,6 +181,7 @@ export const APPT_NOTES_MAX = 1000
 export const APPT_REASON_MAX = 300
 export const APPT_CLIENT_NAME_MAX = 120
 export const APPT_CLIENT_PHONE_MAX = 30
+export const APPT_CLIENT_EMAIL_MAX = 150
 
 // ── Lookups / formatters ─────────────────────────────────────────────
 export function apptTypeTokens(type: AppointmentType): EventTypeColorTokens {

@@ -6,6 +6,7 @@ import { promotionApi } from '../api/promotion.api'
 import { productCategoryApi } from '../api/productCategory.api'
 import { serviceCategoryApi } from '../api/serviceCategory.api'
 import { taxApi, type TaxPayload } from '../api/tax.api'
+import { inventoryApi } from '../api/inventory.api'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import type {
   CategoryResponse,
@@ -17,6 +18,15 @@ import type {
   ServiceResponse,
   TaxResponse,
 } from '../types/tienda'
+import type {
+  AdjustStockPayload,
+  ConsumeStockPayload,
+  InventoryAlertsView,
+  InventoryValuationView,
+  ReceiveStockPayload,
+  StockView,
+  TransferStockPayload,
+} from '../types/inventory'
 
 function upsert<T extends { id: number }>(list: { value: T[] }, item: T): void {
   const idx = list.value.findIndex((x) => x.id === item.id)
@@ -46,10 +56,97 @@ export const useTiendaStore = defineStore('tienda', () => {
   const pausedServices = ref<ServiceResponse[]>([])
   const pausedTaxes = ref<TaxResponse[]>([])
 
+  // Inventario por sede (F4): saldo de la sede activa, indexado por productId. El stock ya no vive en el producto.
+  const stockByProduct = ref<Record<number, StockView>>({})
+  const stockBranchId = ref<number | null>(null)
+  const stockLoading = ref(false)
+  // F5: valuación + alertas de la sede activa.
+  const valuation = ref<InventoryValuationView | null>(null)
+  const alerts = ref<InventoryAlertsView | null>(null)
+
   const loading = ref(false)
   const error = ref<string | null>(null)
   let loadedOnce = false
   let inFlight: Promise<void> | null = null
+
+  /**
+   * Carga el saldo de inventario de una sede y lo indexa por producto. Trae una página grande (el catálogo de una
+   * sede rara vez supera unos cientos de SKU); si el backend reporta más, se recorren las páginas restantes.
+   * branchId null (admin "Todas") deja el mapa vacío: el stock es por sede, no agregable en esta vista.
+   */
+  async function loadStock(branchId: number | null): Promise<void> {
+    stockBranchId.value = branchId
+    if (branchId == null) {
+      stockByProduct.value = {}
+      return
+    }
+    stockLoading.value = true
+    try {
+      const map: Record<number, StockView> = {}
+      const pageSize = 500
+      let page = 0
+      let totalPages = 1
+      do {
+        const res = await inventoryApi.searchStock({ branchId, page, pageSize })
+        for (const row of res.content) map[row.productId] = row
+        totalPages = res.totalPages
+        page += 1
+      } while (page < totalPages)
+      stockByProduct.value = map
+    } catch {
+      // Sin permiso (inventory.read) u otro fallo: dejamos el mapa vacío sin romper POS/cuentas. La vista de
+      // Inventario ya gatea su UI de stock en el permiso, así que no muestra ceros engañosos.
+      stockByProduct.value = {}
+    } finally {
+      stockLoading.value = false
+    }
+  }
+
+  async function receiveStock(payload: ReceiveStockPayload): Promise<void> {
+    await inventoryApi.receive(payload)
+    await loadStock(payload.branchId ?? stockBranchId.value)
+    await loadInventoryInsights(payload.branchId ?? stockBranchId.value)
+  }
+  async function adjustStock(payload: AdjustStockPayload): Promise<void> {
+    await inventoryApi.adjust(payload)
+    await loadStock(payload.branchId ?? stockBranchId.value)
+    await loadInventoryInsights(payload.branchId ?? stockBranchId.value)
+  }
+  async function transferStock(payload: TransferStockPayload): Promise<void> {
+    await inventoryApi.transfer(payload)
+    await loadStock(stockBranchId.value)
+    await loadInventoryInsights(stockBranchId.value)
+  }
+  async function setMinStock(productId: number, branchId: number | null, minStock: number): Promise<void> {
+    await inventoryApi.setMinStock(productId, branchId, minStock)
+    await loadStock(branchId ?? stockBranchId.value)
+  }
+
+  /** F5: valuación + alertas de la sede (tragan errores/403 para no romper la vista). */
+  async function loadInventoryInsights(branchId: number | null): Promise<void> {
+    if (branchId == null) {
+      valuation.value = null
+      alerts.value = null
+      return
+    }
+    try {
+      valuation.value = await inventoryApi.valuation(branchId)
+    } catch {
+      valuation.value = null
+    }
+    try {
+      alerts.value = await inventoryApi.alerts(branchId, 30)
+    } catch {
+      alerts.value = null
+    }
+  }
+
+  /** F6: consumo clínico manual; recarga stock + insights de la sede. */
+  async function consumeStock(payload: ConsumeStockPayload): Promise<void> {
+    await inventoryApi.consume(payload)
+    await loadStock(payload.branchId ?? stockBranchId.value)
+    await loadInventoryInsights(payload.branchId ?? stockBranchId.value)
+  }
 
   async function fetchAll(): Promise<void> {
     loading.value = true
@@ -226,6 +323,18 @@ export const useTiendaStore = defineStore('tienda', () => {
     pausedProducts,
     pausedServices,
     pausedTaxes,
+    stockByProduct,
+    stockBranchId,
+    stockLoading,
+    valuation,
+    alerts,
+    loadStock,
+    loadInventoryInsights,
+    receiveStock,
+    adjustStock,
+    transferStock,
+    setMinStock,
+    consumeStock,
     loading,
     error,
     ensureLoaded,

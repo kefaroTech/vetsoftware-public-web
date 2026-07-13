@@ -17,6 +17,7 @@ import {
   APPT_NOTES_MAX,
   APPT_CLIENT_NAME_MAX,
   APPT_CLIENT_PHONE_MAX,
+  APPT_CLIENT_EMAIL_MAX,
   apptClashes,
   apptDate,
   apptTime,
@@ -67,6 +68,7 @@ const ownerName = ref<string | null>(null)
 const animalId = ref<string>('') // '' = por confirmar
 const clientName = ref('')
 const clientPhone = ref('')
+const clientEmail = ref('')
 const notes = ref('')
 const branchId = ref<number | null>(null)
 const defaultBranchId = ref<number | null>(null)
@@ -98,6 +100,7 @@ function resetFromProps() {
     animalId.value = appt.animal ? String(appt.animal.id) : ''
     clientName.value = appt.clientName ?? ''
     clientPhone.value = appt.clientPhone ?? ''
+    clientEmail.value = appt.clientEmail ?? ''
     notes.value = appt.notes ?? ''
     if (ownerId.value) void loadPets(ownerId.value)
   } else {
@@ -111,6 +114,7 @@ function resetFromProps() {
     animalId.value = ''
     clientName.value = ''
     clientPhone.value = ''
+    clientEmail.value = ''
     notes.value = ''
     pets.value = []
   }
@@ -226,6 +230,10 @@ const clientPhoneModel = computed({
   get: () => clientPhone.value,
   set: (v: string) => (clientPhone.value = v.slice(0, APPT_CLIENT_PHONE_MAX)),
 })
+const clientEmailModel = computed({
+  get: () => clientEmail.value,
+  set: (v: string) => (clientEmail.value = v.slice(0, APPT_CLIENT_EMAIL_MAX)),
+})
 
 // ── Validación ───────────────────────────────────────────────────────
 const hasSubject = computed(() =>
@@ -234,13 +242,21 @@ const hasSubject = computed(() =>
     : clientName.value.trim().length > 0,
 )
 const missingSubject = computed(() => !isReschedule.value && !hasSubject.value)
+// Correo del contacto libre: opcional, pero si se escribe debe tener formato válido.
+const clientEmailInvalid = computed(
+  () =>
+    subjectMode.value === 'free' &&
+    clientEmail.value.trim().length > 0 &&
+    !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(clientEmail.value.trim()),
+)
 const valid = computed(
   () =>
     !!date.value &&
     !!time.value &&
     !!type.value &&
     employeeId.value != null &&
-    (isReschedule.value || hasSubject.value),
+    (isReschedule.value || hasSubject.value) &&
+    !clientEmailInvalid.value,
 )
 
 // ── Clash preview ────────────────────────────────────────────────────
@@ -315,6 +331,7 @@ function doEmit() {
     animalId: registered && animalId.value ? Number(animalId.value) : null,
     clientName: !registered ? clientName.value.trim() || null : null,
     clientPhone: !registered ? clientPhone.value.trim() || null : null,
+    clientEmail: !registered ? clientEmail.value.trim() || null : null,
     notes: notes.value.trim() || null,
     // La sede solo se envía al crear (el update no cambia de sede).
     ...(props.mode === 'create' ? { branchId: branchId.value } : {}),
@@ -488,6 +505,16 @@ function doEmit() {
                   <label class="flabel">Teléfono</label>
                   <BaseInput v-model="clientPhoneModel" placeholder="Ej. 300 123 4567" />
                 </div>
+                <div class="field">
+                  <label class="flabel">Correo <span class="opt">(opcional)</span></label>
+                  <BaseInput
+                    v-model="clientEmailModel"
+                    type="email"
+                    :invalid="submitted && clientEmailInvalid"
+                    placeholder="Ej. maria@correo.com"
+                  />
+                  <div class="fhint">Si lo indicas, le enviaremos la confirmación de la cita.</div>
+                </div>
               </template>
 
               <div v-if="submitted && missingSubject" class="banner err">
@@ -601,6 +628,12 @@ function doEmit() {
 }
 .req {
   color: oklch(60% 0.2 25);
+}
+.opt {
+  color: var(--warm-400);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
 }
 .fhint {
   font-size: 11.5px;

@@ -169,28 +169,12 @@ export function applyPromo(
 
 // ── Inventario ───────────────────────────────────────────────────────────────
 
-export function stockState(product: ProductResponse): StockState {
-  if (product.currentStock <= 0) return 'AGOTADO'
-  if (product.currentStock <= product.minStock) return 'BAJO'
+/**
+ * Estado de stock derivado del saldo por sede (F4: el stock ya no vive en el producto). AGOTADO si ≤0, BAJO si
+ * ≤ mínimo, si no OK.
+ */
+export function stockState(quantity: number, minStock: number): StockState {
+  if (quantity <= 0) return 'AGOTADO'
+  if (quantity <= minStock) return 'BAJO'
   return 'OK'
-}
-
-// ── Margen / utilidad ────────────────────────────────────────────────────────
-
-type Priced = { purchasePrice: number; salePrice: number }
-
-/** Utilidad bruta por unidad = precio de venta − precio de compra. */
-export function unitMargin(p: Priced): number {
-  return p.salePrice - p.purchasePrice
-}
-
-/** Margen % sobre el precio de venta; `null` si no hay precio de venta (>0). */
-export function marginPct(p: Priced): number | null {
-  if (!(p.salePrice > 0)) return null
-  return ((p.salePrice - p.purchasePrice) / p.salePrice) * 100
-}
-
-/** ¿Se vende bajo costo? (precio de venta menor que el de compra). */
-export function isBelowCost(p: Priced): boolean {
-  return p.salePrice < p.purchasePrice
 }

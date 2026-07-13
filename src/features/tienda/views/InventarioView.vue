@@ -1,29 +1,36 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Bell, ChevronLeft, ChevronRight, PauseCircle, Package, Plus, RotateCcw, Search } from 'lucide-vue-next'
+import { AlertTriangle, ArrowLeftRight, Bell, BookText, Boxes, ChevronLeft, ChevronRight, PauseCircle, Package, Plus, RotateCcw, Search, SlidersHorizontal, Syringe } from 'lucide-vue-next'
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
 import StockStatePill from '../components/StockStatePill.vue'
 import ProductFormModal from '../components/ProductFormModal.vue'
-import RestockModal from '../components/RestockModal.vue'
+import RestockModal, { type ReceiveDraft } from '../components/RestockModal.vue'
+import AdjustModal, { type AdjustDraft } from '../components/AdjustModal.vue'
+import TransferModal, { type TransferDraft } from '../components/TransferModal.vue'
+import ConsumeModal, { type ConsumeDraft } from '../components/ConsumeModal.vue'
+import StockDetailModal from '../components/StockDetailModal.vue'
+import PurchasesModal from '../components/PurchasesModal.vue'
 import CategoryManagerModal from '../components/CategoryManagerModal.vue'
 import { useTienda } from '../composables/useTienda'
-import { formatMoney, isBelowCost, marginPct, stockState, taxTreatmentLabel } from '../composables/pricing'
+import { useBranches } from '@/features/branches/composables/useBranches'
+import { formatMoney, stockState, taxTreatmentLabel } from '../composables/pricing'
 import { productCategoryTone } from '../composables/categoryTone'
 import { useToast } from '@/composables/useToast'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
-import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
-import type { ProductPayload, ProductResponse, StockState } from '../types/tienda'
-
-const CONFLICT_MESSAGE =
-  'El registro fue modificado por otra operación; se recargó la información. Revisa y reintenta.'
+import { getProblemDetailMessage } from '@/services/http/http.client'
+import type { ProductResponse, StockState } from '../types/tienda'
 
 const store = useTienda()
 const toast = useToast()
+const branches = useBranches()
 const { can, canAny } = useAuthorization()
 const canCreate = can(PERMISSIONS.PRODUCT_CREATE)
 const canUpdate = can(PERMISSIONS.PRODUCT_UPDATE)
 const canDelete = can(PERMISSIONS.PRODUCT_DELETE)
+const canReadStock = can(PERMISSIONS.INVENTORY_READ)
+const canAdjust = can(PERMISSIONS.INVENTORY_ADJUST)
+const canTransfer = can(PERMISSIONS.INVENTORY_TRANSFER)
 const canCatCreate = can(PERMISSIONS.PRODUCT_CATEGORY_CREATE)
 const canCatUpdate = can(PERMISSIONS.PRODUCT_CATEGORY_UPDATE)
 const canCatDelete = can(PERMISSIONS.PRODUCT_CATEGORY_DELETE)
@@ -45,22 +52,69 @@ const PAGE_SIZE = 10
 const modalOpen = ref(false)
 const editing = ref<ProductResponse | null>(null)
 const restockFor = ref<ProductResponse | null>(null)
+const adjustFor = ref<ProductResponse | null>(null)
+const transferFor = ref<ProductResponse | null>(null)
+const consumeFor = ref<ProductResponse | null>(null)
+const detailFor = ref<ProductResponse | null>(null)
+const purchasesOpen = ref(false)
 const categoriesOpen = ref(false)
 const pausing = ref<ProductResponse | null>(null)
 const pausingBusy = ref(false)
 const pausedLoading = ref(false)
 
-onMounted(() => store.reload())
+/** Sede activa (del selector global). null = admin con "Todas" → el stock no se muestra (es por sede). */
+const branchId = computed(() => branches.selectedBranchId.value)
+const branchName = computed(
+  () => branches.visibleBranches.value.find((b) => b.id === branchId.value)?.name ?? '',
+)
+const hasBranch = computed(() => branchId.value != null)
+/** Mostrar stock por sede: requiere sede activa Y permiso de lectura de inventario. */
+const showStock = computed(() => hasBranch.value && canReadStock.value)
 
-const lowCount = computed(() => store.products.value.filter((p) => stockState(p) !== 'OK').length)
+/** Sedes destino para transferir: las visibles menos la de origen. */
+const transferBranchOptions = computed(() =>
+  branches.visibleBranches.value
+    .filter((b) => b.id !== branchId.value)
+    .map((b) => ({ value: String(b.id), label: b.name })),
+)
+
+function stockOf(p: ProductResponse): { quantity: number; minStock: number; lowStock: boolean } {
+  const row = store.stockByProduct.value[p.id]
+  return { quantity: row?.quantity ?? 0, minStock: row?.minStock ?? 0, lowStock: row?.lowStock ?? false }
+}
+function stateOf(p: ProductResponse): StockState {
+  const s = stockOf(p)
+  return stockState(s.quantity, s.minStock)
+}
+
+async function reloadStock() {
+  // loadStock ya traga errores (incl. 403 sin permiso): deja el mapa vacío. Solo tiene sentido si puede leer.
+  if (!canReadStock.value) return
+  await store.loadStock(branchId.value)
+  await store.loadInventoryInsights(branchId.value)
+}
+
+/** Lotes por vencer (≤30 días o vencidos) de la sede activa. */
+const expiringLots = computed(() => (showStock.value ? store.alerts.value?.expiring ?? [] : []))
+const totalValue = computed(() => (showStock.value ? store.valuation.value?.totalValue ?? 0 : 0))
+
+onMounted(async () => {
+  await store.reload()
+  await reloadStock()
+})
+// Regla: recargar al cambiar de sede activa.
+watch(branchId, () => reloadStock())
+
+const lowCount = computed(() =>
+  showStock.value ? store.products.value.filter((p) => stockOf(p).lowStock).length : 0,
+)
 
 const filtered = computed(() => {
   const q = query.value.trim().toLowerCase()
   return store.products.value.filter((p) => {
     if (cat.value && String(p.productCategory.id) !== cat.value) return false
     if (stState.value) {
-      const s = stockState(p)
-      // 'REPONER' agrupa BAJO + AGOTADO (todo lo que no está OK).
+      const s = stateOf(p)
       if (stState.value === 'REPONER' ? s === 'OK' : s !== stState.value) return false
     }
     if (
@@ -113,65 +167,102 @@ function openNew() {
   modalOpen.value = true
 }
 function onRowClick(item: ProductResponse) {
-  // Fila editable solo si el usuario puede actualizar (evita abrir el modal sin permiso).
   if (canUpdate.value) editing.value = item
 }
 function onSaved(item: ProductResponse) {
   const wasEdit = editing.value !== null
-  toast.success('Producto guardado', wasEdit ? 'Los cambios se guardaron.' : `${item.name} se añadió al inventario.`)
+  toast.success('Producto guardado', wasEdit ? 'Los cambios se guardaron.' : `${item.name} se añadió al catálogo.`)
 }
 function onFormClose() {
   modalOpen.value = false
   editing.value = null
 }
 
-/** Formatea la fecha de vencimiento ISO `yyyy-MM-dd` a `dd/MM/yyyy`; '—' si no tiene. */
-function formatExpire(d: string | null): string {
-  if (!d) return '—'
-  const [y, m, day] = d.split('-')
-  return y && m && day ? `${day}/${m}/${y}` : '—'
-}
-
-/** Margen % (sobre precio de venta) formateado; '—' si no calculable. */
-function marginText(p: ProductResponse): string {
-  const m = marginPct(p)
-  return m == null ? '—' : `${Math.round(m)}%`
-}
-
-function toPayload(p: ProductResponse, currentStock: number): ProductPayload {
-  return {
-    name: p.name,
-    code: p.code,
-    purchasePrice: p.purchasePrice,
-    salePrice: p.salePrice,
-    currentStock,
-    minStock: p.minStock,
-    provider: p.provider,
-    taxTreatment: p.taxTreatment,
-    expireDate: p.expireDate,
-    lotNumber: p.lotNumber,
-    notes: p.notes,
-    productCategoryId: p.productCategory.id,
-    taxId: p.tax?.id ?? null,
-    version: p.version,
+/** Entrada de mercancía (recepción) en la sede activa. */
+async function onReceive(draft: ReceiveDraft) {
+  const p = restockFor.value
+  if (!p || branchId.value == null) return
+  try {
+    await store.receiveStock({
+      branchId: branchId.value,
+      productId: p.id,
+      quantity: draft.quantity,
+      unitCost: draft.unitCost,
+      lotNumber: draft.lotNumber,
+      expireDate: draft.expireDate,
+    })
+    toast.success('Entrada registrada', `Ingresaron ${draft.quantity} u. de ${p.name}.`)
+    restockFor.value = null
+  } catch (e) {
+    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo registrar la entrada'))
   }
 }
 
-async function onRestock(qty: number) {
-  const p = restockFor.value
-  if (!p) return
+async function onAdjust(draft: AdjustDraft) {
+  const p = adjustFor.value
+  if (!p || branchId.value == null) return
   try {
-    await store.updateProduct(p.id, toPayload(p, p.currentStock + qty))
-    toast.success('Stock actualizado', `Se agregaron ${qty} u. a ${p.name}.`)
-    restockFor.value = null
+    await store.adjustStock({
+      branchId: branchId.value,
+      productId: p.id,
+      delta: draft.delta,
+      unitCost: draft.unitCost,
+      reason: draft.reason,
+    })
+    toast.success('Ajuste aplicado', `${p.name}: ${draft.delta > 0 ? '+' : ''}${draft.delta} u.`)
+    adjustFor.value = null
   } catch (e) {
-    if (isConcurrencyConflict(e)) {
-      await store.refresh()
-      toast.warn('Conflicto de concurrencia', CONFLICT_MESSAGE)
-      restockFor.value = null
-    } else {
-      toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo reabastecer'))
-    }
+    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo aplicar el ajuste'))
+  }
+}
+
+async function onTransfer(draft: TransferDraft) {
+  const p = transferFor.value
+  if (!p || branchId.value == null) return
+  try {
+    await store.transferStock({
+      fromBranchId: branchId.value,
+      toBranchId: draft.toBranchId,
+      productId: p.id,
+      quantity: draft.quantity,
+      reason: draft.reason,
+    })
+    toast.success('Transferencia realizada', `${draft.quantity} u. de ${p.name} enviadas a otra sede.`)
+    transferFor.value = null
+  } catch (e) {
+    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo transferir'))
+  }
+}
+
+async function onConsume(draft: ConsumeDraft) {
+  const p = consumeFor.value
+  if (!p || branchId.value == null) return
+  try {
+    await store.consumeStock({
+      branchId: branchId.value,
+      productId: p.id,
+      quantity: draft.quantity,
+      reason: draft.reason,
+    })
+    toast.success('Consumo registrado', `${draft.quantity} u. de ${p.name} aplicadas.`)
+    consumeFor.value = null
+  } catch (e) {
+    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo registrar el consumo'))
+  }
+}
+
+/** Fija el mínimo de la sede activa al perder foco. */
+async function onMinStockCommit(p: ProductResponse, ev: Event) {
+  if (branchId.value == null) return
+  const value = Math.max(0, Math.floor(Number((ev.target as HTMLInputElement).value) || 0))
+  const current = stockOf(p).minStock
+  if (value === current) return
+  try {
+    await store.setMinStock(p.id, branchId.value, value)
+    toast.success('Mínimo actualizado', `${p.name}: mínimo ${value} u.`)
+  } catch (e) {
+    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo fijar el mínimo'))
+    await reloadStock()
   }
 }
 
@@ -206,12 +297,7 @@ async function onCategoryUpsert(p: { id: number | null; name: string; descriptio
     else await store.createProductCategory(p.name, p.description)
     toast.success('Categoría guardada')
   } catch (e) {
-    if (isConcurrencyConflict(e)) {
-      await store.refresh()
-      toast.warn('Conflicto de concurrencia', CONFLICT_MESSAGE)
-    } else {
-      toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo guardar la categoría'))
-    }
+    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo guardar la categoría'))
   }
 }
 async function onCategoryRemove(id: number) {
@@ -229,13 +315,19 @@ async function onCategoryRemove(id: number) {
     <header class="head">
       <div>
         <div class="kicker">Tienda · Inventario</div>
-        <h1 class="title">Inventario de productos</h1>
+        <h1 class="title">Inventario por sede</h1>
       </div>
       <div class="head-actions">
+        <select v-if="branches.hasBranches.value" v-model="branches.selectedValue.value" class="fsel branch">
+          <option v-for="o in branches.options.value" :key="o.value" :value="o.value">{{ o.label }}</option>
+        </select>
         <div class="seg" role="tablist">
           <button type="button" :class="{ on: mode === 'active' }" @click="switchMode('active')">Activos</button>
           <button type="button" :class="{ on: mode === 'paused' }" @click="switchMode('paused')">Pausados</button>
         </div>
+        <button v-if="showStock" type="button" class="ghost-cta" @click="purchasesOpen = true">
+          <BookText :size="14" :stroke-width="1.8" /> Compras
+        </button>
         <button v-if="canManageCategories" type="button" class="ghost-cta" @click="categoriesOpen = true">
           <Package :size="14" :stroke-width="1.8" /> Categorías
         </button>
@@ -247,9 +339,28 @@ async function onCategoryRemove(id: number) {
 
     <div v-if="store.error.value" class="banner error">{{ store.error.value }}</div>
 
-    <div v-if="mode === 'active' && lowCount > 0" class="alert" role="button" tabindex="0" @click="showLowStock" @keyup.enter="showLowStock">
+    <div v-if="mode === 'active' && !hasBranch" class="alert info">
+      Selecciona una sede para ver y gestionar su stock.
+    </div>
+
+    <div v-if="mode === 'active' && hasBranch && !canReadStock" class="alert info">
+      No tienes permiso para ver el inventario. Pide a un administrador el permiso <strong>Ver inventario</strong>.
+    </div>
+
+    <div v-if="mode === 'active' && showStock && lowCount > 0" class="alert" role="button" tabindex="0" @click="showLowStock" @keyup.enter="showLowStock">
       <Bell :size="15" :stroke-width="1.8" />
-      <span><strong>{{ lowCount }}</strong> producto(s) con stock bajo o agotado — ver por reponer</span>
+      <span><strong>{{ lowCount }}</strong> producto(s) bajo el mínimo en {{ branchName }} — ver por reponer</span>
+    </div>
+
+    <div v-if="mode === 'active' && showStock && expiringLots.length > 0" class="alert expire">
+      <AlertTriangle :size="15" :stroke-width="1.8" />
+      <span><strong>{{ expiringLots.length }}</strong> lote(s) por vencer o vencidos en {{ branchName }}
+        (más próximo: {{ expiringLots[0].productName }}, {{ expiringLots[0].daysToExpire < 0 ? 'vencido' : `${expiringLots[0].daysToExpire} día(s)` }})</span>
+    </div>
+
+    <div v-if="mode === 'active' && showStock" class="valuation">
+      <span class="v-label">Valor del inventario en {{ branchName }}</span>
+      <strong class="v-amount">{{ formatMoney(totalValue) }}</strong>
     </div>
 
     <!-- ─────────── Modo ACTIVOS ─────────── -->
@@ -279,20 +390,19 @@ async function onCategoryRemove(id: number) {
             <th>Categoría</th>
             <th>SKU</th>
             <th>Precio venta</th>
-            <th>Margen</th>
             <th>IVA</th>
             <th>Stock</th>
+            <th>Mínimo</th>
             <th>Estado</th>
-            <th>Vence</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="store.loading.value">
-            <td colspan="10" class="empty">Cargando…</td>
+            <td colspan="9" class="empty">Cargando…</td>
           </tr>
           <tr v-else-if="slice.length === 0">
-            <td colspan="10" class="empty">Sin productos para el filtro.</td>
+            <td colspan="9" class="empty">Sin productos para el filtro.</td>
           </tr>
           <tr v-for="p in slice" v-else :key="p.id" class="trow" @click="onRowClick(p)">
             <td class="tname">{{ p.name }}</td>
@@ -308,15 +418,34 @@ async function onCategoryRemove(id: number) {
             </td>
             <td class="tsku">{{ p.code }}</td>
             <td>{{ formatMoney(p.salePrice) }}</td>
-            <td class="tmargin" :class="{ below: isBelowCost(p) }" :title="isBelowCost(p) ? 'Se vende por debajo del costo' : ''">
-              {{ marginText(p) }}<span v-if="isBelowCost(p)" class="below-tag">bajo costo</span>
-            </td>
             <td class="ttax">{{ taxTreatmentLabel(p.taxTreatment) }}</td>
-            <td class="tstock">{{ p.currentStock }} u</td>
-            <td><StockStatePill :state="stockState(p)" /></td>
-            <td class="texp">{{ formatExpire(p.expireDate) }}</td>
+            <td class="tstock">{{ showStock ? `${stockOf(p).quantity} u` : '—' }}</td>
+            <td class="tmin" @click.stop>
+              <input
+                v-if="showStock && canAdjust"
+                class="min-input"
+                type="number"
+                min="0"
+                :value="stockOf(p).minStock"
+                @change="onMinStockCommit(p, $event)"
+              />
+              <span v-else>{{ showStock ? stockOf(p).minStock : '—' }}</span>
+            </td>
+            <td><StockStatePill v-if="showStock" :state="stateOf(p)" /><span v-else class="muted">—</span></td>
             <td class="tactions" @click.stop>
-              <button v-if="canUpdate" type="button" class="restock" @click="restockFor = p">Reabastecer</button>
+              <button v-if="showStock" type="button" class="iconbtn" title="Ver lotes y kardex" @click="detailFor = p">
+                <Boxes :size="15" :stroke-width="1.7" />
+              </button>
+              <button v-if="canAdjust && showStock" type="button" class="restock" @click="restockFor = p">Entrada</button>
+              <button v-if="canAdjust && showStock" type="button" class="iconbtn" title="Ajustar" @click="adjustFor = p">
+                <SlidersHorizontal :size="15" :stroke-width="1.7" />
+              </button>
+              <button v-if="canTransfer && showStock && transferBranchOptions.length > 0" type="button" class="iconbtn" title="Transferir" @click="transferFor = p">
+                <ArrowLeftRight :size="15" :stroke-width="1.7" />
+              </button>
+              <button v-if="canAdjust && showStock" type="button" class="iconbtn" title="Consumo clínico" @click="consumeFor = p">
+                <Syringe :size="15" :stroke-width="1.7" />
+              </button>
               <button v-if="canDelete" type="button" class="pause" title="Pausar" @click="pausing = p">
                 <PauseCircle :size="15" :stroke-width="1.7" />
               </button>
@@ -344,16 +473,15 @@ async function onCategoryRemove(id: number) {
             <th>Categoría</th>
             <th>SKU</th>
             <th>Precio venta</th>
-            <th>Stock</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="pausedLoading">
-            <td colspan="6" class="empty">Cargando…</td>
+            <td colspan="5" class="empty">Cargando…</td>
           </tr>
           <tr v-else-if="store.pausedProducts.value.length === 0">
-            <td colspan="6" class="empty">No hay productos pausados.</td>
+            <td colspan="5" class="empty">No hay productos pausados.</td>
           </tr>
           <tr v-for="p in store.pausedProducts.value" v-else :key="p.id">
             <td class="tname">{{ p.name }}</td>
@@ -369,7 +497,6 @@ async function onCategoryRemove(id: number) {
             </td>
             <td class="tsku">{{ p.code }}</td>
             <td>{{ formatMoney(p.salePrice) }}</td>
-            <td class="tstock">{{ p.currentStock }} u</td>
             <td class="tactions">
               <button v-if="canDelete" type="button" class="reactivate" @click="onReactivate(p)">
                 <RotateCcw :size="14" :stroke-width="1.7" /> Reactivar
@@ -381,7 +508,12 @@ async function onCategoryRemove(id: number) {
     </template>
 
     <ProductFormModal :open="modalOpen || editing !== null" :initial="editing" @close="onFormClose" @saved="onSaved" />
-    <RestockModal :open="restockFor !== null" :product="restockFor" @close="restockFor = null" @confirm="onRestock" />
+    <RestockModal :open="restockFor !== null" :product="restockFor" :branch-name="branchName" @close="restockFor = null" @confirm="onReceive" />
+    <AdjustModal :open="adjustFor !== null" :product="adjustFor" :branch-name="branchName" :current="adjustFor ? stockOf(adjustFor).quantity : undefined" @close="adjustFor = null" @confirm="onAdjust" />
+    <TransferModal :open="transferFor !== null" :product="transferFor" :from-branch-name="branchName" :current="transferFor ? stockOf(transferFor).quantity : undefined" :branch-options="transferBranchOptions" @close="transferFor = null" @confirm="onTransfer" />
+    <ConsumeModal :open="consumeFor !== null" :product="consumeFor" :branch-name="branchName" :current="consumeFor ? stockOf(consumeFor).quantity : undefined" @close="consumeFor = null" @confirm="onConsume" />
+    <StockDetailModal :open="detailFor !== null" :product="detailFor" :branch-id="branchId" :branch-name="branchName" @close="detailFor = null" />
+    <PurchasesModal :open="purchasesOpen" :branch-id="branchId" :branch-name="branchName" @close="purchasesOpen = false" />
     <CategoryManagerModal
       :open="categoriesOpen"
       title="Categorías de producto"
@@ -433,7 +565,13 @@ async function onCategoryRemove(id: number) {
   font-size: 13px; color: oklch(40% 0.10 70); cursor: pointer;
 }
 .alert:hover { background: oklch(94% 0.05 80); }
+.alert.info { background: var(--amatista-50); border-color: var(--amatista-200); color: var(--amatista-700); cursor: default; }
+.alert.expire { background: oklch(95% 0.05 25); border-color: oklch(85% 0.12 25); color: oklch(45% 0.16 25); cursor: default; }
+.alert.expire strong { color: oklch(40% 0.18 25); }
 .alert strong { color: oklch(35% 0.13 70); }
+.valuation { display: flex; align-items: baseline; gap: 10px; padding: 12px 16px; margin-bottom: 16px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 10px; }
+.v-label { font-size: 12.5px; color: var(--warm-500); }
+.v-amount { font-size: 20px; font-weight: 600; color: var(--amatista-700); font-variant-numeric: tabular-nums; }
 .paused-hint { margin: 0 0 14px; font-size: 12.5px; color: var(--warm-500); }
 .filters { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
 .search { display: flex; align-items: center; gap: 9px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 9px; padding: 10px 13px; max-width: 340px; flex: 1; }
@@ -446,6 +584,7 @@ async function onCategoryRemove(id: number) {
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23999' stroke-width='1.5' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 11px center;
 }
+.fsel.branch { color: var(--amatista-700); border-color: var(--amatista-200); background-color: var(--amatista-50); font-weight: 500; }
 .fsel:focus { outline: none; border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
 .table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 12px; overflow: hidden; }
 .table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--warm-500); font-weight: 600; padding: 11px 14px; background: var(--warm-100); border-bottom: 1px solid var(--warm-200); }
@@ -458,14 +597,15 @@ async function onCategoryRemove(id: number) {
 .tsku { font-family: var(--font-mono); font-size: 12px; color: var(--warm-600); }
 .tstock { font-weight: 600; }
 .ttax { color: var(--warm-600); font-size: 12.5px; }
-.texp { color: var(--warm-600); }
-.tmargin { font-weight: 600; color: var(--warm-700); white-space: nowrap; }
-.tmargin.below { color: oklch(50% 0.18 25); }
-.below-tag { display: inline-block; margin-left: 6px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: oklch(45% 0.18 25); background: oklch(95% 0.06 25); border-radius: 5px; padding: 1px 5px; }
+.muted { color: var(--warm-400); }
+.min-input { width: 64px; border: 1px solid var(--warm-200); background: var(--warm-50); border-radius: 7px; padding: 5px 8px; font-family: inherit; font-size: 12.5px; color: var(--warm-800); }
+.min-input:focus { outline: none; border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
 .catpill { display: inline-flex; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 500; white-space: nowrap; background: var(--warm-150); color: var(--warm-700); }
 .tactions { display: flex; gap: 6px; align-items: center; }
 .restock { padding: 5px 11px; border-radius: 7px; border: 1px solid var(--warm-200); background: var(--warm-50); color: var(--warm-700); font-family: inherit; font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; }
 .restock:hover { background: var(--amatista-50); border-color: var(--amatista-300); color: var(--amatista-700); }
+.iconbtn { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--warm-200); background: var(--warm-50); color: var(--warm-600); cursor: pointer; }
+.iconbtn:hover { background: var(--amatista-50); border-color: var(--amatista-300); color: var(--amatista-700); }
 .pause { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--warm-200); background: transparent; color: var(--warm-600); cursor: pointer; }
 .pause:hover { background: oklch(96% 0.04 80); color: oklch(45% 0.12 70); border-color: oklch(88% 0.08 80); }
 .reactivate { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--amatista-200); background: var(--amatista-50); color: var(--amatista-700); font-family: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; white-space: nowrap; }
@@ -477,36 +617,10 @@ async function onCategoryRemove(id: number) {
 .pag-ctrl button:hover:not(:disabled) { background: var(--warm-100); }
 
 @media (max-width: 760px) {
-  .head {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .head-actions,
-  .filters {
-    width: 100%;
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .seg,
-  .ghost-cta,
-  .cta,
-  .search,
-  .fsel {
-    width: 100%;
-    max-width: none;
-  }
-
-  .seg button,
-  .ghost-cta,
-  .cta {
-    justify-content: center;
-  }
-
-  .table {
-    display: block;
-    overflow-x: auto;
-  }
+  .head { align-items: stretch; flex-direction: column; }
+  .head-actions, .filters { width: 100%; align-items: stretch; flex-direction: column; }
+  .seg, .ghost-cta, .cta, .search, .fsel { width: 100%; max-width: none; }
+  .seg button, .ghost-cta, .cta { justify-content: center; }
+  .table { display: block; overflow-x: auto; }
 }
 </style>

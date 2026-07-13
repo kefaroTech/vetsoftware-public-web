@@ -73,20 +73,18 @@ export interface CategoryPayload {
 
 // ── Productos ──────────────────────────────────────────────────────────────
 
+/**
+ * Producto = ficha de catálogo. Desde F2 el stock/mínimo/costo/vencimiento/lote NO viven aquí: son del inventario
+ * por sede (ver `types/inventory.ts` + `inventory.api.ts`). El producto solo lleva identidad, precio de venta y
+ * clasificación fiscal.
+ */
 export interface ProductResponse {
   id: number
   name: string
   code: string
-  purchasePrice: number
   salePrice: number
-  currentStock: number
-  minStock: number
   provider: string | null
   taxTreatment: TaxTreatment
-  /** Fecha real de vencimiento (ISO `yyyy-MM-dd`); null = no vence / no se rastrea. Opcional. */
-  expireDate: string | null
-  /** Número de lote/batch; null si no aplica. Opcional. */
-  lotNumber: string | null
   notes: string | null
   productCategory: CategorySummary
   tax: TaxSummary | null
@@ -100,14 +98,9 @@ export interface ProductResponse {
 export interface ProductPayload {
   name: string
   code: string
-  purchasePrice: number
   salePrice: number
-  currentStock: number
-  minStock: number
   provider?: string | null
   taxTreatment: TaxTreatment
-  expireDate?: string | null
-  lotNumber?: string | null
   notes?: string | null
   productCategoryId: number
   taxId?: number | null

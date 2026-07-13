@@ -90,6 +90,11 @@ export const PERMISSIONS = {
   PROMOTION_READ: 'promotion.read',
   PROMOTION_UPDATE: 'promotion.update',
   PROMOTION_DELETE: 'promotion.delete',
+
+  // Inventario por sede (kardex/lotes/saldo). Sembrados en el catálogo por la migración 191.
+  INVENTORY_READ: 'inventory.read',
+  INVENTORY_ADJUST: 'inventory.adjust',
+  INVENTORY_TRANSFER: 'inventory.transfer',
   TAX_CREATE: 'tax.create',
   TAX_READ: 'tax.read',
   TAX_UPDATE: 'tax.update',
