@@ -3,10 +3,12 @@ import { computed, reactive, ref, watch } from 'vue'
 import { UserPlus, Pencil } from 'lucide-vue-next'
 import type { Employee, EmployeeStatus } from '@/types/domain'
 import { useRoles } from '@/features/roles/composables/useRoles'
+import { useSedes } from '@/features/branches/composables/useSedes'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import RoleSelectorGrid from './RoleSelectorGrid.vue'
+import BranchSelectorGrid from './BranchSelectorGrid.vue'
 import { scrollToFirstError } from '@/composables/scrollToError'
 import { employeeApi } from '../api/employee.api'
 
@@ -28,13 +30,15 @@ export interface EmployeeFormData {
   status: EmployeeStatus
   password: string
   roleIds: number[]
+  branchIds: number[]
 }
 
-type FieldKey = 'employeeCode' | 'name' | 'email' | 'password' | 'roles'
+type FieldKey = 'employeeCode' | 'name' | 'email' | 'password' | 'roles' | 'branches'
 
 const isEditing = computed(() => props.initial !== null)
 
 const { list: roles } = useRoles()
+const { activeSedes } = useSedes()
 
 const draft = ref<EmployeeFormData>({
   employeeCode: '',
@@ -43,9 +47,11 @@ const draft = ref<EmployeeFormData>({
   status: 'ACTIVE',
   password: '',
   roleIds: [],
+  branchIds: [],
 })
 
 const selectedRoleIds = ref<Set<number>>(new Set())
+const selectedBranchIds = ref<Set<number>>(new Set())
 
 // --- Autogeneración del código (solo alta): bloqueado hasta escribir el nombre, editable, disp. en vivo ---
 type CodeStatus = 'idle' | 'checking' | 'available' | 'taken'
@@ -71,6 +77,7 @@ const touched = reactive<Record<FieldKey, boolean>>({
   email: false,
   password: false,
   roles: false,
+  branches: false,
 })
 
 function reset() {
@@ -82,8 +89,10 @@ function reset() {
       status: props.initial.enabled ? 'ACTIVE' : 'INACTIVE',
       password: '',
       roleIds: [],
+      branchIds: [],
     }
     selectedRoleIds.value = new Set()
+    selectedBranchIds.value = new Set()
   } else {
     draft.value = {
       employeeCode: '',
@@ -92,14 +101,17 @@ function reset() {
       status: 'ACTIVE',
       password: '',
       roleIds: [],
+      branchIds: [],
     }
     selectedRoleIds.value = new Set()
+    selectedBranchIds.value = new Set()
   }
   touched.employeeCode = false
   touched.name = false
   touched.email = false
   touched.password = false
   touched.roles = false
+  touched.branches = false
   banner.value = false
   confirming.value = false
   codeStatus.value = 'idle'
@@ -195,6 +207,7 @@ const errors = computed(() => {
     else if (pw.length > 100) e.password = 'Máximo 100 caracteres'
 
     if (selectedRoleIds.value.size === 0) e.roles = 'Selecciona al menos un rol'
+    if (selectedBranchIds.value.size === 0) e.branches = 'Selecciona al menos una sede'
   }
 
   return e
@@ -233,12 +246,18 @@ function doSubmit() {
   emit('submit', {
     ...draft.value,
     roleIds: [...selectedRoleIds.value],
+    branchIds: [...selectedBranchIds.value],
   })
 }
 
 function onSelectedIdsUpdate(next: Set<number>) {
   selectedRoleIds.value = next
   markTouched('roles')
+}
+
+function onSelectedBranchIdsUpdate(next: Set<number>) {
+  selectedBranchIds.value = next
+  markTouched('branches')
 }
 
 const titleText = computed(() => (isEditing.value ? 'Editar empleado' : 'Nuevo empleado'))
@@ -340,6 +359,20 @@ const subtitleText = computed(() =>
             :available-roles="roles"
             :selected-ids="selectedRoleIds"
             @update:selected-ids="onSelectedIdsUpdate"
+          />
+        </BaseField>
+
+        <BaseField
+          v-if="!isEditing"
+          label="Sedes"
+          required
+          hint="El empleado solo podrá operar en las sedes que asignes. Debe tener al menos una."
+          :error="err('branches')"
+        >
+          <BranchSelectorGrid
+            :available-branches="activeSedes"
+            :selected-ids="selectedBranchIds"
+            @update:selected-ids="onSelectedBranchIdsUpdate"
           />
         </BaseField>
 

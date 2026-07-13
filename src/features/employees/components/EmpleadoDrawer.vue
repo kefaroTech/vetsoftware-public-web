@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
-import { X, Key, Pencil, Power, Check, Lock, ShieldCheck, Mail } from 'lucide-vue-next'
+import { X, Key, Pencil, Power, Check, Lock, ShieldCheck, Mail, Building2 } from 'lucide-vue-next'
 import type { Employee } from '@/types/domain'
 import { colorsForCode } from '../constants/employee-roles'
 import EmployeeAvatar from './EmployeeAvatar.vue'
@@ -22,6 +22,7 @@ const emit = defineEmits<{
   close: []
   edit: [employee: Employee]
   'change-roles': [employee: Employee]
+  'change-branches': [employee: Employee]
   'resend-invitation': [employee: Employee]
   deactivate: [employee: Employee]
   activate: [employee: Employee]
@@ -146,6 +147,16 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
             >
               <ShieldCheck :size="14" :stroke-width="1.7" />
               Cambiar roles
+            </button>
+            <button
+              v-if="canUpdate"
+              type="button"
+              class="ghost"
+              :disabled="busy"
+              @click="emit('change-branches', employee)"
+            >
+              <Building2 :size="14" :stroke-width="1.7" />
+              Cambiar sedes
             </button>
             <div class="spacer" />
             <span

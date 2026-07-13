@@ -13,9 +13,14 @@ import EmployeeFormModal, {
 import ChangeRolesModal, {
   type ChangeRolesConfirm,
 } from '../components/ChangeRolesModal.vue'
+import ChangeBranchesModal, {
+  type ChangeBranchesConfirm,
+} from '../components/ChangeBranchesModal.vue'
 import ConfirmDeactivateDialog from '../components/ConfirmDeactivateDialog.vue'
 import ResendInvitationModal from '../components/ResendInvitationModal.vue'
 import { employeeRolesApi } from '../api/employeeRoles.api'
+import { employeeBranchesApi } from '../api/employeeBranches.api'
+import { useSedes } from '@/features/branches/composables/useSedes'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import PageHeader from '@/components/ui/PageHeader.vue'
@@ -40,6 +45,7 @@ const {
   resendInvitation,
 } = useEmployees()
 const { list: availableRoles } = useRoles()
+const { activeSedes } = useSedes()
 const { can } = useAuthorization()
 const toast = useToast()
 const canCreate = can(PERMISSIONS.EMPLOYEE_CREATE)
@@ -51,6 +57,7 @@ const formOpen = ref(false)
 const formInitial = ref<Employee | null>(null)
 const deactivateTarget = ref<Employee | null>(null)
 const changingRolesTarget = ref<Employee | null>(null)
+const changingBranchesTarget = ref<Employee | null>(null)
 const resendTarget = ref<Employee | null>(null)
 const busy = ref(false)
 const submitError = ref<string | null>(null)
@@ -88,6 +95,11 @@ function openChangeRoles(employee: Employee) {
   changingRolesTarget.value = employee
 }
 
+function openChangeBranches(employee: Employee) {
+  submitError.value = null
+  changingBranchesTarget.value = employee
+}
+
 async function handleSubmit(data: EmployeeFormData) {
   if (busy.value) return
   busy.value = true
@@ -112,7 +124,11 @@ async function handleSubmit(data: EmployeeFormData) {
         submitError.value = 'Selecciona al menos un rol para el empleado.'
         return
       }
-      // El backend crea el empleado, le asigna los roles y le envía la invitación por correo (1 transacción).
+      if (data.branchIds.length === 0) {
+        submitError.value = 'Selecciona al menos una sede para el empleado.'
+        return
+      }
+      // El backend crea el empleado, le asigna roles y sedes, y le envía la invitación por correo (1 transacción).
       const created = await create({
         employeeCode: data.employeeCode.trim(),
         password: data.password,
@@ -120,6 +136,7 @@ async function handleSubmit(data: EmployeeFormData) {
         email: data.email.trim(),
         companyId: cid,
         roleIds: data.roleIds,
+        branchIds: data.branchIds,
       })
       await fetchAll()
       selectedId.value = created.id
@@ -235,6 +252,26 @@ async function onConfirmChangeRoles(data: ChangeRolesConfirm) {
     busy.value = false
   }
 }
+
+async function onConfirmChangeBranches(data: ChangeBranchesConfirm) {
+  const target = changingBranchesTarget.value
+  if (!target || busy.value) return
+  busy.value = true
+  submitError.value = null
+  try {
+    await employeeBranchesApi.set(target.id, { allBranches: false, branchIds: data.branchIds })
+    selectedId.value = target.id
+    const n = data.branchIds.length
+    toast.success('Sedes actualizadas', `${target.name} opera ahora en ${n} ${n === 1 ? 'sede' : 'sedes'}.`)
+    changingBranchesTarget.value = null
+  } catch (e) {
+    const msg = getProblemDetailMessage(e, 'No se pudieron actualizar las sedes')
+    submitError.value = msg
+    toast.error('Ocurrió un error', msg)
+  } finally {
+    busy.value = false
+  }
+}
 </script>
 
 <template>
@@ -271,6 +308,7 @@ async function onConfirmChangeRoles(data: ChangeRolesConfirm) {
       @close="closeDrawer"
       @edit="openEdit"
       @change-roles="openChangeRoles"
+      @change-branches="openChangeBranches"
       @resend-invitation="openResend"
       @deactivate="askDeactivate"
       @activate="handleActivate"
@@ -291,6 +329,15 @@ async function onConfirmChangeRoles(data: ChangeRolesConfirm) {
       :busy="busy"
       @close="changingRolesTarget = null"
       @confirm="onConfirmChangeRoles"
+    />
+
+    <ChangeBranchesModal
+      :open="changingBranchesTarget !== null"
+      :employee="changingBranchesTarget"
+      :available-branches="activeSedes"
+      :busy="busy"
+      @close="changingBranchesTarget = null"
+      @confirm="onConfirmChangeBranches"
     />
 
     <ConfirmDeactivateDialog

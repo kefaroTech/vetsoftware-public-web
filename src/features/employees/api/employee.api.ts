@@ -33,6 +33,8 @@ export interface CreateEmployeeRequest {
   email: string
   companyId: number
   roleIds: number[]
+  // Sedes a asignar en el alta (al menos una). El backend crea empleado + roles + sedes en una transacción.
+  branchIds: number[]
 }
 
 export interface UpdateEmployeeRequest {
