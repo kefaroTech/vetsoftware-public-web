@@ -24,6 +24,11 @@ export const PERMISSIONS = {
   COMPANY_UPDATE: 'company.update',
   COMPANY_DELETE: 'company.delete',
 
+  // Multi-sucursal: gestión de sedes (sección Empresa). Sembrados en el catálogo por la migración 184.
+  BRANCH_CREATE: 'branch.create',
+  BRANCH_UPDATE: 'branch.update',
+  BRANCH_READ: 'branch.read',
+
   CONSULTATION_CREATE: 'consultation.create',
   PRESCRIPTION_CREATE: 'prescription.create',
   PRESCRIPTION_READ: 'prescription.read',

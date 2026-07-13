@@ -226,6 +226,8 @@ export interface SaveDianProviderConfigRequest {
 export interface NumberingResolutionResponse {
   id: number
   company: { id: number; name: string; identifier: string }
+  /** Multi-sucursal (B-6): sede (prefijo) de la resolución. null = resolución de empresa (todas las sedes). */
+  branchId: number | null
   documentType: ElectronicDocumentType
   resolutionNumber: string
   resolutionDate: string
@@ -250,6 +252,8 @@ export interface SaveNumberingResolutionRequest {
   validFrom: string
   validTo: string
   technicalKey?: string | null
+  /** Sede (opcional): prefijo por sucursal. Omitir/null = resolución de empresa (todas las sedes). */
+  branchId?: number | null
 }
 
 // ── Configuración: retenciones ───────────────────────────────────────────────

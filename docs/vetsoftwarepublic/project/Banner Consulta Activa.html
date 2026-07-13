@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Banner consulta activa · Vetrina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --hue: 300;
+    --amatista-50:  oklch(97% 0.015 var(--hue));
+    --amatista-100: oklch(94% 0.035 var(--hue));
+    --amatista-200: oklch(88% 0.07  var(--hue));
+    --amatista-300: oklch(78% 0.12  var(--hue));
+    --amatista-400: oklch(68% 0.16  var(--hue));
+    --amatista-500: oklch(58% 0.18  var(--hue));
+    --amatista-600: oklch(50% 0.18  var(--hue));
+    --amatista-700: oklch(42% 0.16  var(--hue));
+    --amatista-800: oklch(32% 0.12  var(--hue));
+    --amatista-900: oklch(22% 0.08  var(--hue));
+    --warm-50:  oklch(99% 0.005 60);
+    --warm-100: oklch(97% 0.008 60);
+    --warm-200: oklch(92% 0.012 60);
+    --warm-300: oklch(86% 0.015 60);
+    --warm-400: oklch(72% 0.015 60);
+    --warm-500: oklch(58% 0.012 60);
+    --warm-600: oklch(45% 0.012 60);
+    --warm-700: oklch(35% 0.012 60);
+    --warm-800: oklch(25% 0.012 60);
+    --warm-900: oklch(16% 0.012 60);
+    --amber: oklch(75% 0.15 75);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background: var(--warm-100); font-family: 'Geist', sans-serif; color: var(--warm-900); }
+  .page { max-width: 1280px; margin: 0 auto; padding: 56px 40px 80px; }
+  h1 { font-family: 'Instrument Serif', serif; font-size: 42px; font-weight: 400; letter-spacing: -0.02em; margin: 0 0 6px; }
+  .lede { color: var(--warm-600); font-size: 14.5px; max-width: 680px; line-height: 1.55; margin: 0 0 40px; }
+
+  .grid { display: grid; gap: 28px; }
+  .card { background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 18px; padding: 28px; }
+  .card-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+  .num { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 22px; color: var(--amatista-700); }
+  .title { font-size: 16px; font-weight: 500; }
+  .desc { color: var(--warm-600); font-size: 13px; line-height: 1.55; margin: 0 0 22px; max-width: 760px; }
+
+  /* Banner principal --------------- */
+  .banner {
+    background: linear-gradient(90deg, var(--amatista-700) 0%, var(--amatista-600) 60%, var(--amatista-500) 100%);
+    color: white;
+    padding: 11px 22px;
+    display: flex; align-items: center; gap: 14px;
+    font-size: 13px;
+    position: relative;
+    overflow: hidden;
+  }
+  .banner::before {
+    content:''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 400px 60px at 20% 50%, oklch(75% 0.18 var(--hue) / 0.35), transparent 70%);
+    pointer-events: none;
+  }
+  .banner > * { position: relative; z-index: 1; }
+
+  .b-paw {
+    width: 22px; height: 22px;
+    color: white;
+    flex-shrink: 0;
+  }
+  .b-paw svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .b-paw .pivot {
+    transform-origin: center; transform-box: fill-box;
+    animation: paw-beat 1.2s ease-in-out infinite;
+    filter: drop-shadow(0 0 4px oklch(85% 0.10 var(--hue) / 0.7));
+  }
+  @keyframes paw-beat {
+    0%, 50%, 100% { transform: scale(1); }
+    14%           { transform: scale(1.15); }
+    28%           { transform: scale(1.06); }
+  }
+
+  .b-info { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .b-info b { font-weight: 500; }
+  .b-info .meta { opacity: .78; font-size: 12px; }
+  .b-info .sep { opacity: .4; }
+  .b-pet {
+    background: oklch(100% 0 0 / 0.18);
+    border: 1px solid oklch(100% 0 0 / 0.22);
+    padding: 2px 9px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+
+  .b-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .btn-resume {
+    background: white; color: var(--amatista-800);
+    border: none; border-radius: 6px;
+    padding: 5px 12px; font-size: 12.5px; font-weight: 500;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-ghost {
+    background: transparent;
+    color: oklch(100% 0 0 / 0.85);
+    border: 1px solid oklch(100% 0 0 / 0.3);
+    border-radius: 6px;
+    padding: 4px 10px; font-size: 12px;
+    cursor: pointer;
+  }
+  .btn-icon {
+    background: transparent; border: none;
+    color: oklch(100% 0 0 / 0.7);
+    cursor: pointer; padding: 4px;
+    display: flex; align-items: center;
+  }
+  .btn-icon:hover { color: white; }
+
+  /* Variantes de tono */
+  .banner.warn {
+    background: linear-gradient(90deg, oklch(48% 0.14 75) 0%, oklch(58% 0.16 75) 100%);
+  }
+  .banner.warn::before {
+    background: radial-gradient(ellipse 400px 60px at 20% 50%, oklch(78% 0.18 75 / 0.35), transparent 70%);
+  }
+
+  /* Banner mínimo (compacto) */
+  .banner.compact { padding: 8px 18px; font-size: 12px; }
+  .banner.compact .b-paw { width: 18px; height: 18px; }
+  .banner.compact .btn-resume { padding: 4px 10px; font-size: 12px; }
+
+  /* Stack para múltiples consultas */
+  .multi {
+    background: linear-gradient(90deg, var(--amatista-700), var(--amatista-600));
+    color: white;
+    padding: 10px 18px 10px 22px;
+    display: flex; align-items: center; gap: 14px;
+    font-size: 13px;
+  }
+  .pet-stack { display: flex; align-items: center; }
+  .pet-chip {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 2px solid var(--amatista-700);
+    background: linear-gradient(135deg, oklch(80% 0.10 60), oklch(70% 0.10 80));
+    margin-left: -8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+  .pet-chip:first-child { margin-left: 0; }
+  .pet-chip.more {
+    background: oklch(100% 0 0 / 0.2);
+    color: white;
+    font-size: 10px; font-weight: 600;
+  }
+
+  /* Mock de la app */
+  .shell {
+    border: 1px solid var(--warm-200);
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--warm-50);
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    height: 320px;
+  }
+  .sb {
+    background: linear-gradient(180deg, oklch(28% 0.10 var(--hue)), oklch(22% 0.08 var(--hue)));
+    color: oklch(94% 0.02 var(--hue));
+    padding: 18px 14px;
+    font-size: 12.5px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .sb .brand {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Instrument Serif', serif; font-size: 18px; font-style: italic;
+    margin-bottom: 14px;
+  }
+  .sb .brand-dot {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: oklch(60% 0.18 var(--hue));
+    display: inline-flex; align-items: center; justify-content: center;
+    color: white; font-family: 'Geist'; font-size: 11px; font-weight: 600;
+  }
+  .nav {
+    padding: 7px 10px; border-radius: 7px;
+    color: oklch(88% 0.03 var(--hue) / 0.85);
+    display: flex; align-items: center; gap: 9px;
+    font-size: 12.5px;
+  }
+  .nav.active { background: oklch(45% 0.16 var(--hue) / 0.4); color: white; box-shadow: 0 0 0 1px oklch(70% 0.14 var(--hue) / 0.3) inset;}
+  .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.5; }
+  .main { display: flex; flex-direction: column; }
+  .body {
+    padding: 22px 28px;
+    display: flex; flex-direction: column; gap: 12px;
+    flex: 1;
+    background: var(--warm-100);
+  }
+  .body h3 {
+    margin: 0;
+    font-family: 'Instrument Serif', serif;
+    font-size: 24px; font-weight: 400; letter-spacing: -0.01em;
+  }
+  .row { height: 8px; background: var(--warm-200); border-radius: 4px; max-width: 320px; }
+  .row.short { max-width: 180px; }
+  .row.med { max-width: 240px; }
+  .ph-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 6px;}
+  .ph-card { background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 7px; }
+
+  /* Notas */
+  .recommend {
+    margin-top: 40px;
+    padding: 22px 26px;
+    background: var(--amatista-50);
+    border: 1px solid var(--amatista-200);
+    border-radius: 14px;
+  }
+  .recommend h3 {
+    font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--amatista-700); font-weight: 500; margin: 0 0 8px;
+  }
+  .recommend ul { margin: 0; padding-left: 18px; font-size: 13.5px; color: var(--warm-700); line-height: 1.7; }
+  .standalone {
+    background: var(--warm-100);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--warm-200);
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Banner de consulta activa</h1>
+  <p class="lede">Pulido del patrón <b>03 · Banner persistente arriba</b>. Aparece pegado al borde superior del área de contenido cuando hay una consulta en curso, y desaparece cuando el operario está dentro de "Consulta" o cuando finaliza/cierra la sesión.</p>
+
+  <div class="grid">
+
+    <!-- ============================== -->
+    <!-- A · Banner default + en contexto -->
+    <!-- ============================== -->
+    <div class="card">
+      <div class="card-head"><span class="num">A</span><span class="title">Estado por defecto · dentro de la app</span></div>
+      <p class="desc">Tonalidad amatista (color principal), huella latiendo, contexto del paciente como pill, tiempo transcurrido, botón "Reanudar" y un cerrar opcional. El gradiente sutil + el glow del huella refuerzan la marca sin competir con el contenido.</p>
+      <div class="shell">
+        <div class="sb">
+          <div class="brand"><span class="brand-dot">V</span> vetrina</div>
+          <div class="nav"><span class="dot"></span> Inicio</div>
+          <div class="nav"><span class="dot"></span> Consulta</div>
+          <div class="nav active"><span class="dot"></span> Pacientes</div>
+          <div class="nav"><span class="dot"></span> Agenda</div>
+          <div class="nav"><span class="dot"></span> Reportes</div>
+        </div>
+        <div class="main">
+          <div class="banner">
+            <div class="b-paw">
+              <svg viewBox="-40 -40 200 200">
+                <g class="pivot">
+                  <path fill="currentColor" d="M 60 58 C 80 58, 94 72, 97 90 C 100 105, 92 120, 80 124 C 73 127, 66 124, 60 124 C 54 124, 47 127, 40 124 C 28 120, 20 105, 23 90 C 26 72, 40 58, 60 58 Z"/>
+                  <ellipse fill="currentColor" cx="42" cy="22" rx="14" ry="19"/>
+                  <ellipse fill="currentColor" cx="78" cy="22" rx="14" ry="19"/>
+                  <ellipse fill="currentColor" cx="14" cy="46" rx="12" ry="16" transform="rotate(-25 14 46)"/>
+                  <ellipse fill="currentColor" cx="106" cy="46" rx="12" ry="16" transform="rotate(25 106 46)"/>
+                </g>
+              </svg>
+            </div>
+            <div class="b-info">
+              <b>Consulta en curso</b>
+              <span class="sep">·</span>
+              <span class="b-pet">🐕 Luna · Golden Retriever</span>
+              <span class="meta">Carlos Méndez</span>
+              <span class="sep">·</span>
+              <span class="meta">iniciada hace 32 min</span>
+            </div>
+            <div class="b-actions">
+              <button class="btn-resume">Reanudar →</button>
+              <button class="btn-icon" title="Ocultar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="body">
+            <h3>Pacientes</h3>
+            <div class="row"></div>
+            <div class="row med"></div>
+            <div class="ph-grid">
+              <div class="ph-card"><div class="row short"></div><div class="row"></div></div>
+              <div class="ph-card"><div class="row short"></div><div class="row"></div></div>
+              <div class="ph-card"><div class="row short"></div><div class="row"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================== -->
+    <!-- B · Variantes de estado         -->
+    <!-- ============================== -->
+    <div class="card">
+      <div class="card-head"><span class="num">B</span><span class="title">Variantes de estado</span></div>
+      <p class="desc">El mismo banner muta según el contexto: normal, alerta (consulta sin guardar > 30 min), múltiples consultas, y versión compacta.</p>
+
+      <div class="standalone" style="margin-bottom: 12px">
+        <div style="font-size:11px; color:var(--warm-500); text-transform:uppercase; letter-spacing:.06em; margin-bottom: 8px">Normal</div>
+        <div class="banner" style="border-radius: 8px;">
+          <div class="b-paw">
+            <svg viewBox="-40 -40 200 200">
+              <g class="pivot">
+                <path fill="currentColor" d="M 60 58 C 80 58, 94 72, 97 90 C 100 105, 92 120, 80 124 C 73 127, 66 124, 60 124 C 54 124, 47 127, 40 124 C 28 120, 20 105, 23 90 C 26 72, 40 58, 60 58 Z"/>
+                <ellipse fill="currentColor" cx="42" cy="22" rx="14" ry="19"/>
+                <ellipse fill="currentColor" cx="78" cy="22" rx="14" ry="19"/>
+                <ellipse fill="currentColor" cx="14" cy="46" rx="12" ry="16" transform="rotate(-25 14 46)"/>
+                <ellipse fill="currentColor" cx="106" cy="46" rx="12" ry="16" transform="rotate(25 106 46)"/>
+              </g>
+            </svg>
+          </div>
+          <div class="b-info">
+            <b>Consulta en curso</b><span class="sep">·</span>
+            <span class="b-pet">🐕 Luna</span>
+            <span class="meta">Carlos Méndez · 12 min</span>
+          </div>
+          <div class="b-actions">
+            <button class="btn-resume">Reanudar →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="standalone" style="margin-bottom: 12px">
+        <div style="font-size:11px; color:var(--warm-500); text-transform:uppercase; letter-spacing:.06em; margin-bottom: 8px">Alerta · sin guardar > 30 min</div>
+        <div class="banner warn" style="border-radius: 8px;">
+          <div class="b-paw">
+            <svg viewBox="-40 -40 200 200">
+              <g class="pivot">
+                <path fill="currentColor" d="M 60 58 C 80 58, 94 72, 97 90 C 100 105, 92 120, 80 124 C 73 127, 66 124, 60 124 C 54 124, 47 127, 40 124 C 28 120, 20 105, 23 90 C 26 72, 40 58, 60 58 Z"/>
+                <ellipse fill="currentColor" cx="42" cy="22" rx="14" ry="19"/>
+                <ellipse fill="currentColor" cx="78" cy="22" rx="14" ry="19"/>
+                <ellipse fill="currentColor" cx="14" cy="46" rx="12" ry="16" transform="rotate(-25 14 46)"/>
+                <ellipse fill="currentColor" cx="106" cy="46" rx="12" ry="16" transform="rotate(25 106 46)"/>
+              </g>
+            </svg>
+          </div>
+          <div class="b-info">
+            <b>Consulta sin guardar hace 47 min</b><span class="sep">·</span>
+            <span class="b-pet">🐕 Luna</span>
+            <span class="meta">Recomendamos guardar para no perder cambios</span>
+          </div>
+          <div class="b-actions">
+            <button class="btn-ghost">Guardar borrador</button>
+            <button class="btn-resume">Reanudar →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="standalone" style="margin-bottom: 12px">
+        <div style="font-size:11px; color:var(--warm-500); text-transform:uppercase; letter-spacing:.06em; margin-bottom: 8px">Múltiples consultas (3 simultáneas)</div>
+        <div class="multi" style="border-radius: 8px;">
+          <div class="b-paw">
+            <svg viewBox="-40 -40 200 200">
+              <g class="pivot">
+                <path fill="currentColor" d="M 60 58 C 80 58, 94 72, 97 90 C 100 105, 92 120, 80 124 C 73 127, 66 124, 60 124 C 54 124, 47 127, 40 124 C 28 120, 20 105, 23 90 C 26 72, 40 58, 60 58 Z"/>
+                <ellipse fill="currentColor" cx="42" cy="22" rx="14" ry="19"/>
+                <ellipse fill="currentColor" cx="78" cy="22" rx="14" ry="19"/>
+                <ellipse fill="currentColor" cx="14" cy="46" rx="12" ry="16" transform="rotate(-25 14 46)"/>
+                <ellipse fill="currentColor" cx="106" cy="46" rx="12" ry="16" transform="rotate(25 106 46)"/>
+              </g>
+            </svg>
+          </div>
+          <div class="b-info"><b>3 consultas en curso</b></div>
+          <div class="pet-stack">
+            <div class="pet-chip">🐕</div>
+            <div class="pet-chip">🐈</div>
+            <div class="pet-chip">🐕</div>
+          </div>
+          <div class="b-actions">
+            <button class="btn-ghost">Ver todas</button>
+            <button class="btn-resume">Continuar última →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="standalone">
+        <div style="font-size:11px; color:var(--warm-500); text-transform:uppercase; letter-spacing:.06em; margin-bottom: 8px">Compacto · pantallas pequeñas</div>
+        <div class="banner compact" style="border-radius: 8px;">
+          <div class="b-paw">
+            <svg viewBox="-40 -40 200 200">
+              <g class="pivot">
+                <path fill="currentColor" d="M 60 58 C 80 58, 94 72, 97 90 C 100 105, 92 120, 80 124 C 73 127, 66 124, 60 124 C 54 124, 47 127, 40 124 C 28 120, 20 105, 23 90 C 26 72, 40 58, 60 58 Z"/>
+                <ellipse fill="currentColor" cx="42" cy="22" rx="14" ry="19"/>
+                <ellipse fill="currentColor" cx="78" cy="22" rx="14" ry="19"/>
+                <ellipse fill="currentColor" cx="14" cy="46" rx="12" ry="16" transform="rotate(-25 14 46)"/>
+                <ellipse fill="currentColor" cx="106" cy="46" rx="12" ry="16" transform="rotate(25 106 46)"/>
+              </g>
+            </svg>
+          </div>
+          <div class="b-info"><b>Luna</b><span class="meta">· 32 min</span></div>
+          <div class="b-actions">
+            <button class="btn-resume">Reanudar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="recommend">
+    <h3>Reglas de aparición</h3>
+    <ul>
+      <li><b>Aparece</b> en cualquier ruta que <i>no</i> sea la pantalla de consulta activa, una vez que la consulta tiene al menos un dato (propietario y mascota seleccionados).</li>
+      <li><b>Desaparece</b> automáticamente cuando: el operario entra a la pantalla de la consulta, finaliza/cancela la consulta, o el cierre de sesión.</li>
+      <li><b>Slide-down de 250ms</b> al aparecer; <b>fade-out de 180ms</b> al cerrar manualmente. Si el usuario lo cierra, se oculta por esa sesión pero el item del sidebar sigue marcado.</li>
+      <li><b>Cambia a tono ámbar</b> cuando hay >30 min sin guardar como auto-recordatorio (no error rojo — la consulta no está en peligro, solo es un nudge).</li>
+      <li><b>Click en cualquier zona del banner</b> (excepto el "×") navega a la consulta. El "Reanudar" es solo refuerzo visual.</li>
+      <li>En <b>mobile</b>, la versión compacta sin tags ni meta extras.</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

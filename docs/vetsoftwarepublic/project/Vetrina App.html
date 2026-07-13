@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vetrina · Sistema veterinario</title>
+
+  <!-- Fuentes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="vetrina/tokens.css" />
+  <link rel="stylesheet" href="vetrina/states.css" />
+  <link rel="stylesheet" href="vetrina/public-auth.css" />
+  <link rel="stylesheet" href="vetrina/historia.css" />
+  <link rel="stylesheet" href="vetrina/consulta.css" />
+  <link rel="stylesheet" href="vetrina/empleados.css" />
+  <link rel="stylesheet" href="vetrina/empresa.css" />
+  <link rel="stylesheet" href="vetrina/acciones.css" />
+  <link rel="stylesheet" href="vetrina/roles.css" />
+  <link rel="stylesheet" href="vetrina/agenda.css" />
+  <link rel="stylesheet" href="vetrina/appt.css" />
+  <link rel="stylesheet" href="vetrina/lab.css" />
+  <link rel="stylesheet" href="vetrina/hospital.css" />
+  <link rel="stylesheet" href="vetrina/shop.css" />
+  <link rel="stylesheet" href="vetrina/facturacion.css" />
+  <link rel="stylesheet" href="vetrina/polish.css" />
+  <link rel="stylesheet" href="vetrina/ux-laws.css" />
+
+  <style>
+    /* Default body bg matches signup view */
+    body { background: var(--warm-100); }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Modules in order: icons → data → router → shell → screens → app -->
+  <script type="text/babel" src="vetrina/icons.jsx"></script>
+  <script type="text/babel" src="vetrina/data.jsx"></script>
+  <script type="text/babel" src="vetrina/data-historia.jsx"></script>
+  <script type="text/babel" src="vetrina/router.jsx"></script>
+  <script type="text/babel" src="vetrina/shell.jsx"></script>
+  <script type="text/babel" src="vetrina/toast.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-home.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-auth.jsx"></script>
+  <script type="text/babel" src="vetrina/historia-core.jsx"></script>
+  <script type="text/babel" src="vetrina/historia-details.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-historia.jsx"></script>
+  <script type="text/babel" src="vetrina/consulta-store.jsx"></script>
+  <script type="text/babel" src="vetrina/consulta-ui.jsx"></script>
+  <script type="text/babel" src="vetrina/consulta-pieces.jsx"></script>
+  <script type="text/babel" src="vetrina/consulta-pasos.jsx"></script>
+  <script type="text/babel" src="vetrina/consulta-modals.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-consulta.jsx"></script>
+  <script type="text/babel" src="vetrina/data-employees.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-empleados.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-empresa.jsx"></script>
+  <script type="text/babel" src="vetrina/data-acciones.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-acciones.jsx"></script>
+  <script type="text/babel" src="vetrina/data-roles.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-roles.jsx"></script>
+  <script type="text/babel" src="vetrina/appt-model.jsx"></script>
+  <script type="text/babel" src="vetrina/appt-form.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-agenda.jsx"></script>
+  <script type="text/babel" src="vetrina/data-lab.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-lab.jsx"></script>
+  <script type="text/babel" src="vetrina/data-hospital.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-hospital.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-hospital-detail.jsx"></script>
+  <script type="text/babel" src="vetrina/data-shop.jsx"></script>
+  <script type="text/babel" src="vetrina/data-promos.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-shop.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-shop-categories.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-shop-pos.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-shop-inventory.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-shop-services.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-shop-promos.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-shop-taxes.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-shop-root.jsx"></script>
+  <script type="text/babel" src="vetrina/data-accounts.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-accounts-detail.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-accounts.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-consulta-billing.jsx"></script>
+  <script type="text/babel" src="vetrina/data-facturacion.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-fe-config.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-fe-config2.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-fe-docs.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-fe-detail.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-fe-wizard.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-fe-wizard2.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-fe-wizard3.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-fe-uvt.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-customer-picker.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-fe-reportes.jsx"></script>
+  <script type="text/babel" src="vetrina/screens-placeholders.jsx"></script>
+  <script type="text/babel" src="vetrina/app.jsx"></script>
+</body>
+</html>

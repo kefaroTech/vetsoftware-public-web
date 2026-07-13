@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { FileText, Plus, Pencil } from 'lucide-vue-next'
 import { useToast } from '@/composables/useToast'
+import { useBranches } from '@/features/branches/composables/useBranches'
 import { useFacturacionEnablement } from '../../composables/useFacturacionEnablement'
 import {
   DOC_TYPE_LABEL,
@@ -16,7 +17,14 @@ import ResolutionFormModal from './ResolutionFormModal.vue'
 const emit = defineEmits<{ back: []; next: [] }>()
 
 const { resolutionByType, invoiceResolutionOk, upsertResolution } = useFacturacionEnablement()
+const { options: branchOptions } = useBranches()
 const toast = useToast()
+
+/** Nombre de la sede de una resolución (B-6). null → resolución de empresa (no se etiqueta). */
+function branchName(branchId: number | null): string | null {
+  if (branchId == null) return null
+  return branchOptions.value.find((o) => o.value === String(branchId))?.label ?? `Sede #${branchId}`
+}
 
 // Orden de tipos: FEV primero (obligatoria), luego notas y POS.
 const REQUIRED_TYPES: ElectronicDocumentType[] = [
@@ -86,6 +94,9 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
         </div>
 
         <template v-if="resolutionByType[dt]">
+          <div v-if="branchName(resolutionByType[dt]!.branchId)" class="branchtag">
+            {{ branchName(resolutionByType[dt]!.branchId) }}
+          </div>
           <div class="rescard-meta">
             Res. {{ resolutionByType[dt]!.resolutionNumber }} ·
             <strong>{{ resolutionByType[dt]!.prefix }}</strong>
@@ -213,6 +224,16 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
 .rescard-meta {
   font-size: 12px;
   color: var(--warm-600);
+}
+.branchtag {
+  align-self: flex-start;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--amatista-700);
+  background: var(--amatista-50);
+  border: 1px solid var(--amatista-200);
+  padding: 2px 8px;
+  border-radius: 999px;
 }
 .rescard-empty {
   font-size: 12.5px;

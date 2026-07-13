@@ -12,7 +12,12 @@ import {
   type NumberingResolutionResponse,
   type SaveNumberingResolutionRequest,
 } from '../../types/facturacion'
+import { useBranches, ALL_BRANCHES } from '@/features/branches/composables/useBranches'
 import { scrollToFirstError } from '@/composables/scrollToError'
+
+// Multi-sucursal (B-6): prefijo por sede. "Todas las sedes" (ALL_BRANCHES = '') = resolución de empresa.
+// El selector solo aparece en empresas multi-sede; en empresas de 1 sede la resolución queda company-wide.
+const { options: branchOptions, hasMultipleBranches } = useBranches()
 
 const props = defineProps<{
   open: boolean
@@ -27,6 +32,7 @@ const emit = defineEmits<{
 
 interface Draft {
   documentType: ElectronicDocumentType
+  branchId: string
   resolutionNumber: string
   resolutionDate: string
   prefix: string
@@ -45,6 +51,7 @@ function emptyDraft(): Draft {
     .slice(0, 10)
   return {
     documentType: props.presetType ?? 'FE_VENTA',
+    branchId: ALL_BRANCHES,
     resolutionNumber: '',
     resolutionDate: iso,
     prefix: '',
@@ -75,6 +82,7 @@ watch(
     if (init) {
       Object.assign(draft, {
         documentType: init.documentType,
+        branchId: init.branchId == null ? ALL_BRANCHES : String(init.branchId),
         resolutionNumber: init.resolutionNumber,
         resolutionDate: init.resolutionDate,
         prefix: init.prefix ?? '',
@@ -128,6 +136,7 @@ function submit() {
   }
   const body: SaveNumberingResolutionRequest = {
     documentType: draft.documentType,
+    branchId: draft.branchId === ALL_BRANCHES ? null : Number(draft.branchId),
     resolutionNumber: draft.resolutionNumber.trim(),
     resolutionDate: draft.resolutionDate,
     prefix: draft.prefix.trim() || null,
@@ -153,6 +162,16 @@ function submit() {
   >
     <template #body>
       <div class="grid">
+        <div v-if="hasMultipleBranches" class="span-2">
+          <BaseField
+            label="Sede"
+            hint="El prefijo se emite desde esta sede. «Todas las sedes» = resolución de empresa."
+          >
+            <template #default="{ id }">
+              <BaseSelect :id="id" v-model="draft.branchId" :options="branchOptions" />
+            </template>
+          </BaseField>
+        </div>
         <BaseField label="Tipo de documento" required>
           <template #default="{ id }">
             <BaseSelect

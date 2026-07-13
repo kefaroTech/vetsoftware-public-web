@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { branchApi, type BranchResponse } from '../api/branch.api'
+import { branchApi, type BranchResponse, type SaveBranchRequest } from '../api/branch.api'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 
 /** Sede operativa seleccionada (contexto multi-sucursal). null = "Todas las sedes". */
@@ -53,6 +53,33 @@ export const useBranchStore = defineStore('branch', () => {
     return inFlight
   }
 
+  /** Inserta/actualiza una sede en la cache local (mantiene el selector en sync tras un alta/edición). */
+  function upsert(saved: BranchResponse): void {
+    const idx = branches.value.findIndex((b) => b.id === saved.id)
+    if (idx >= 0) branches.value.splice(idx, 1, saved)
+    else branches.value.push(saved)
+  }
+
+  async function createBranch(payload: SaveBranchRequest): Promise<BranchResponse> {
+    const saved = await branchApi.create(payload)
+    upsert(saved)
+    return saved
+  }
+
+  async function updateBranch(id: number, payload: SaveBranchRequest): Promise<BranchResponse> {
+    const saved = await branchApi.update(id, payload)
+    upsert(saved)
+    return saved
+  }
+
+  async function setBranchActive(id: number, active: boolean): Promise<BranchResponse> {
+    const saved = active ? await branchApi.activate(id) : await branchApi.deactivate(id)
+    upsert(saved)
+    // Si se desactivó la sede que estaba seleccionada como contexto, cae a "Todas las sedes".
+    if (!saved.active && selectedBranchId.value === id) setSelectedBranch(null)
+    return saved
+  }
+
   function setSelectedBranch(id: number | null): void {
     selectedBranchId.value = id
     if (id == null) localStorage.removeItem(SELECTED_BRANCH_KEY)
@@ -66,7 +93,19 @@ export const useBranchStore = defineStore('branch', () => {
     error.value = null
   }
 
-  return { branches, loading, error, loaded, selectedBranchId, fetchAll, setSelectedBranch, clear }
+  return {
+    branches,
+    loading,
+    error,
+    loaded,
+    selectedBranchId,
+    fetchAll,
+    setSelectedBranch,
+    createBranch,
+    updateBranch,
+    setBranchActive,
+    clear,
+  }
 })
 
 /**

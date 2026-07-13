@@ -24,6 +24,7 @@ import {
   ShoppingBag,
   Wallet,
   Pill,
+  Building2,
 } from 'lucide-vue-next'
 import SidebarBrand from './SidebarBrand.vue'
 import SidebarNavItem from './SidebarNavItem.vue'
@@ -41,7 +42,7 @@ import { PERMISSIONS } from '@/constants/permissions'
 const route = useRoute()
 const router = useRouter()
 const draft = useNuevaConsultaDraft()
-const { can } = useAuthorization()
+const { can, canAny } = useAuthorization()
 
 const consultaSubRoutes = [
   'consulta-nueva',
@@ -73,6 +74,12 @@ const canSurgery = can(PERMISSIONS.SURGERY_CREATE)
 const canSpa = can(PERMISSIONS.SPA_CREATE)
 const canEmployees = can(PERMISSIONS.EMPLOYEE_READ)
 const canRoles = can(PERMISSIONS.ROLE_PERMISSIONS_READ)
+const canEmpresa = canAny(
+  PERMISSIONS.COMPANY_READ,
+  PERMISSIONS.BRANCH_CREATE,
+  PERMISSIONS.BRANCH_UPDATE,
+  PERMISSIONS.BRANCH_READ,
+)
 const canMedicaments = can(PERMISSIONS.PRESCRIPTION_CREATE)
 const canLabProcess = can(PERMISSIONS.LABORATORY_TEST_READ)
 const canHospitalWard = can(PERMISSIONS.HOSPITALIZATION_READ)
@@ -133,7 +140,9 @@ const accionesItems = computed(() => [
 ].filter((item) => item.show))
 
 const showAccionesSection = computed(() => accionesItems.value.length > 0)
-const showAdminSection = computed(() => canEmployees.value || canRoles.value || canMedicaments.value)
+const showAdminSection = computed(
+  () => canEmpresa.value || canEmployees.value || canRoles.value || canMedicaments.value,
+)
 
 const tiendaSubRoutes = [
   'tienda-pos',
@@ -328,6 +337,13 @@ function onNotifications() {
 
     <template v-if="showAdminSection">
       <div class="section-label">ADMINISTRACIÓN</div>
+      <SidebarNavItem
+        v-if="canEmpresa"
+        label="Empresa"
+        :icon="Building2"
+        :active="route.name === 'empresa'"
+        @click="router.push({ name: 'empresa' })"
+      />
       <SidebarNavItem
         v-if="canEmployees"
         label="Empleados"

@@ -1,0 +1,404 @@
+/* ===========================================================================
+   Empresa — datos fiscales + gestión de sedes. Paleta warm + amatista.
+   =========================================================================== */
+
+/* Botón "Editar datos" (ghost, en el header) */
+.vet-co-editbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 15px;
+  border-radius: 9px;
+  border: 1px solid var(--warm-300);
+  background: var(--warm-50);
+  color: var(--warm-800);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.14s ease, border-color 0.14s ease;
+  height: fit-content;
+}
+.vet-co-editbtn:hover {
+  background: var(--warm-100);
+  border-color: var(--warm-400);
+}
+
+/* Hero */
+.vet-co-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 24px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--amatista-50), var(--warm-50));
+  border: 1px solid var(--amatista-100);
+  margin-bottom: 20px;
+}
+.vet-co-mark {
+  width: 58px;
+  height: 58px;
+  border-radius: 15px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--amatista-500), var(--amatista-700));
+  color: white;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 30px;
+  box-shadow: 0 6px 16px -6px oklch(45% 0.18 var(--hue) / 0.5);
+}
+.vet-co-heroinfo {
+  flex: 1;
+  min-width: 0;
+}
+.vet-co-heroname {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  color: var(--warm-900);
+  line-height: 1.1;
+}
+.vet-co-herotags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.vet-co-tag {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--warm-150);
+  color: var(--warm-700);
+  font-weight: 500;
+}
+.vet-co-tag.mono {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+.vet-co-tag.amatista {
+  background: var(--amatista-100);
+  color: var(--amatista-700);
+}
+.vet-co-herometa {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  flex-shrink: 0;
+}
+.vet-co-herometa-label {
+  font-size: 11px;
+  color: var(--warm-500);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.vet-co-herometa-value {
+  font-size: 14px;
+  color: var(--warm-800);
+  font-weight: 500;
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Info cards grid */
+.vet-co-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.vet-co-card {
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 14px;
+  padding: 20px 22px;
+}
+.vet-co-cardhead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.vet-co-cardhead h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--warm-800);
+}
+.vet-co-cardic {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: var(--amatista-100);
+  color: var(--amatista-700);
+  flex-shrink: 0;
+}
+.vet-co-rows {
+  display: flex;
+  flex-direction: column;
+}
+.vet-co-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--warm-150);
+}
+.vet-co-row:last-child {
+  border-bottom: none;
+}
+.vet-co-row-label {
+  font-size: 12.5px;
+  color: var(--warm-500);
+  flex-shrink: 0;
+}
+.vet-co-row-value {
+  font-size: 13px;
+  color: var(--warm-900);
+  font-weight: 500;
+  text-align: right;
+}
+.vet-co-row-value.mono {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+.vet-co-empty {
+  color: var(--warm-400);
+}
+.vet-co-hint {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--amatista-700);
+  background: var(--amatista-50);
+  border: 1px solid var(--amatista-100);
+  padding: 8px 12px;
+  border-radius: 9px;
+}
+
+/* Sedes */
+.vet-co-sedes {
+  margin-top: 4px;
+}
+.vet-co-sedeshead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.vet-co-sedestitle h3 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  color: var(--warm-900);
+}
+.vet-co-sedescount {
+  font-size: 12.5px;
+  color: var(--warm-500);
+  margin-top: 2px;
+  display: block;
+}
+.vet-co-sedesgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+.vet-branchcard {
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+.vet-branchcard:hover {
+  border-color: var(--amatista-200);
+  box-shadow: 0 6px 18px -12px oklch(45% 0.12 var(--hue) / 0.4);
+}
+.vet-branchcard.inactive {
+  opacity: 0.72;
+}
+.vet-branchcard-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+.vet-branchcard-ic {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: var(--amatista-100);
+  color: var(--amatista-700);
+}
+.vet-branchcard.inactive .vet-branchcard-ic {
+  background: var(--warm-200);
+  color: var(--warm-500);
+}
+.vet-branchcard-head {
+  flex: 1;
+  min-width: 0;
+}
+.vet-branchcard-name {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--warm-900);
+  line-height: 1.15;
+}
+.vet-branchcard-code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--warm-500);
+  margin-top: 2px;
+}
+.vet-branchcard-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.vet-branchcard-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+.vet-branchcard-badge.principal {
+  background: var(--amatista-100);
+  color: var(--amatista-700);
+}
+.vet-branchcard-badge.active {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+.vet-branchcard-badge.off {
+  background: var(--warm-200);
+  color: var(--warm-600);
+}
+.vet-branchcard-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 14px 0 12px;
+}
+.vet-branchcard-line {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--warm-600);
+}
+.vet-branchcard-line svg {
+  color: var(--warm-400);
+  flex-shrink: 0;
+}
+.vet-branchcard-foot {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--warm-150);
+  display: flex;
+  justify-content: flex-end;
+}
+.vet-branchcard-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--warm-200);
+  background: transparent;
+  color: var(--warm-700);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.vet-branchcard-edit:hover {
+  background: var(--amatista-50);
+  border-color: var(--amatista-300);
+  color: var(--amatista-700);
+}
+
+/* Toggles del form de sede */
+.vet-sede-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+.vet-sede-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  border: 1px solid var(--warm-200);
+  background: var(--warm-50);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.vet-sede-toggle:hover {
+  border-color: var(--amatista-300);
+}
+.vet-sede-toggle.on {
+  border-color: var(--amatista-500);
+  background: var(--amatista-50);
+}
+.vet-sede-tgl-box {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid var(--warm-300);
+  background: var(--warm-50);
+  display: grid;
+  place-items: center;
+  color: white;
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.vet-sede-toggle.on .vet-sede-tgl-box {
+  background: var(--amatista-600);
+  border-color: var(--amatista-600);
+}
+.vet-sede-tgl-text {
+  display: flex;
+  flex-direction: column;
+}
+.vet-sede-tgl-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--warm-900);
+}
+.vet-sede-tgl-desc {
+  font-size: 11.5px;
+  color: var(--warm-500);
+  margin-top: 1px;
+}
+
+@media (max-width: 900px) {
+  .vet-co-grid {
+    grid-template-columns: 1fr;
+  }
+  .vet-co-hero {
+    flex-wrap: wrap;
+  }
+}

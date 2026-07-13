@@ -239,6 +239,19 @@ const router = createRouter({
           meta: { permission: PERMISSIONS.ELECTRONIC_BILLING_CREATE },
         },
         {
+          path: 'empresa',
+          name: 'empresa',
+          component: () => import('@/features/empresa/views/EmpresaView.vue'),
+          meta: {
+            permissionsAny: [
+              PERMISSIONS.COMPANY_READ,
+              PERMISSIONS.BRANCH_CREATE,
+              PERMISSIONS.BRANCH_UPDATE,
+              PERMISSIONS.BRANCH_READ,
+            ],
+          },
+        },
+        {
           path: 'empleados',
           name: 'empleados',
           component: () => import('@/features/employees/views/EmpleadosView.vue'),

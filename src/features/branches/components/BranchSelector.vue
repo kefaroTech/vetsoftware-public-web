@@ -2,13 +2,13 @@
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import { useBranches } from '../composables/useBranches'
 
-// Selector global de sede (contexto multi-sucursal). Solo se muestra en empresas con ≥2 sedes activas;
-// en empresas de una sola sede queda oculto y todo opera contra la Principal por defecto.
-const { options, selectedValue, hasMultipleBranches, loading } = useBranches()
+// Selector global de sede (contexto multi-sucursal). Se muestra si la empresa tiene al menos una sede activa;
+// con una sola sede permite alternar entre "Todas las sedes" y esa sede como contexto de las peticiones.
+const { options, selectedValue, hasBranches, loading } = useBranches()
 </script>
 
 <template>
-  <div v-if="hasMultipleBranches" class="branch-selector">
+  <div v-if="hasBranches" class="branch-selector">
     <span class="bs-label">Sede</span>
     <BaseSelect
       :model-value="selectedValue"

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Recibo · Vetrina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --hue: 300;
+    --amatista-100: oklch(94% 0.035 var(--hue));
+    --amatista-600: oklch(50% 0.18 var(--hue));
+    --amatista-700: oklch(42% 0.16 var(--hue));
+    --ink: #1a1614;
+    --ink-soft: #555049;
+    --ink-faint: #8a847c;
+    --line: #d8d2c8;
+    --paper: #fdfcfa;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Geist', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(at 30% 0%, oklch(96% 0.02 var(--hue)) 0%, transparent 55%),
+      oklch(94% 0.008 60);
+    font-family: var(--sans);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 16px 60px;
+    gap: 22px;
+  }
+  .toolbar {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center;
+  }
+  .toolbar .seg {
+    display: inline-flex; background: white; border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 2px;
+    box-shadow: 0 1px 2px rgba(40,20,60,.05);
+  }
+  .toolbar button {
+    border: none; background: transparent; font-family: var(--sans); font-size: 13px; font-weight: 500;
+    color: var(--ink-soft); padding: 7px 14px; border-radius: 7px; cursor: pointer;
+  }
+  .toolbar button.active { background: var(--amatista-600); color: white; }
+  .toolbar .print {
+    border: none; background: var(--amatista-700); color: white; font-family: var(--sans); font-weight: 600; font-size: 13px;
+    padding: 9px 18px; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+    box-shadow: 0 4px 14px -6px oklch(45% 0.18 var(--hue) / .5);
+  }
+
+  /* ===== Thermal receipt ===== */
+  .receipt {
+    width: var(--w, 320px);
+    background: var(--paper);
+    color: var(--ink);
+    padding: 22px 22px 14px;
+    border-radius: 3px;
+    box-shadow: 0 18px 50px -16px rgba(40,20,60,.28), 0 2px 8px rgba(40,20,60,.08);
+    position: relative;
+    font-variant-numeric: tabular-nums;
+  }
+  /* 58mm variant: narrower paper, tighter padding & type */
+  .receipt.w58 {
+    --w: 228px;
+    padding: 16px 13px 11px;
+  }
+  .receipt.w58 .r-clinic { font-size: 13px; }
+  .receipt.w58 .r-fiscal { font-size: 9px; }
+  .receipt.w58 .r-docno { font-size: 16px; }
+  .receipt.w58 .r-meta,
+  .receipt.w58 .r-line,
+  .receipt.w58 .r-tot { font-size: 10px; }
+  .receipt.w58 .r-tot .row.grand { font-size: 13px; }
+  .receipt.w58 .r-line .qty { width: 18px; }
+  .receipt.w58 .r-line .desc .sub { display: none; }
+  .receipt.w58 .r-dian { flex-direction: column; align-items: center; text-align: center; gap: 7px; }
+  .receipt.w58 .r-dian-info { text-align: center; }
+  /* torn edges */
+  .receipt::before, .receipt::after {
+    content: ''; position: absolute; left: 0; right: 0; height: 8px;
+    background-size: 16px 16px;
+  }
+  .receipt::before {
+    top: -8px;
+    background: radial-gradient(circle at 8px 12px, transparent 0 7px, var(--paper) 7px);
+  }
+  .receipt::after {
+    bottom: -8px;
+    background: radial-gradient(circle at 8px 4px, var(--paper) 7px, transparent 7px);
+  }
+
+  .r-center { text-align: center; }
+  .r-mono { font-family: var(--mono); }
+
+  /* Brand */
+  .r-brand { display: flex; flex-direction: column; align-items: center; gap: 7px; margin-bottom: 10px; }
+  .r-mark {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: var(--amatista-600); color: white;
+    display: grid; place-items: center; font-weight: 700; font-size: 19px;
+    font-family: var(--sans);
+  }
+  .r-clinic { font-size: 15px; font-weight: 700; letter-spacing: .01em; }
+  .r-tagline { font-size: 11px; color: var(--ink-faint); }
+  .r-fiscal { font-family: var(--mono); font-size: 10.5px; color: var(--ink-soft); line-height: 1.7; text-align: center; }
+
+  .r-sep { border: none; border-top: 1px dashed var(--line); margin: 11px 0; }
+  .r-sep.solid { border-top: 1px solid var(--line); }
+
+  .r-doctype {
+    text-align: center; font-family: var(--mono); font-size: 11.5px; font-weight: 600; letter-spacing: .04em;
+    color: var(--amatista-700); text-transform: uppercase;
+  }
+  .r-docno { text-align: center; font-family: var(--mono); font-size: 18px; font-weight: 700; margin-top: 1px; }
+
+  .r-meta { font-family: var(--mono); font-size: 10.5px; color: var(--ink-soft); line-height: 1.85; }
+  .r-meta .row { display: flex; justify-content: space-between; gap: 10px; }
+  .r-meta .row b { color: var(--ink); font-weight: 600; }
+
+  .r-sectlabel {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-faint); text-align: center; margin: 2px 0 7px;
+  }
+
+  /* pet group */
+  .r-petgroup { margin-bottom: 9px; }
+  .r-pethead {
+    display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--amatista-700);
+    margin-bottom: 4px;
+  }
+  .r-pethead .paw { font-size: 12px; }
+  .r-line { display: flex; gap: 8px; font-family: var(--mono); font-size: 11px; line-height: 1.5; padding: 2px 0; }
+  .r-line .qty { width: 22px; flex-shrink: 0; color: var(--ink-soft); }
+  .r-line .desc { flex: 1; min-width: 0; }
+  .r-line .desc .sub { color: var(--ink-faint); font-size: 10px; }
+  .r-line .amt { text-align: right; white-space: nowrap; font-weight: 500; }
+
+  .r-tot { font-family: var(--mono); font-size: 11.5px; line-height: 1.9; }
+  .r-tot .row { display: flex; justify-content: space-between; gap: 10px; color: var(--ink-soft); }
+  .r-tot .row.grand { font-size: 15px; font-weight: 700; color: var(--ink); padding-top: 4px; }
+  .r-tot .row.pay { color: var(--ink); }
+  .r-tot .row.change { color: var(--amatista-700); font-weight: 600; }
+
+  .r-pay-pill {
+    display: inline-flex; align-items: center; gap: 5px; margin: 0 auto;
+    background: var(--amatista-100); color: var(--amatista-700);
+    font-size: 10.5px; font-weight: 600; padding: 3px 11px; border-radius: 999px;
+  }
+
+  /* DIAN block */
+  .r-dian { display: flex; gap: 11px; align-items: center; padding: 9px 0; }
+  .r-qr {
+    width: 62px; height: 62px; flex-shrink: 0; border-radius: 6px; background: #fff; border: 1px solid var(--line);
+    display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(7, 1fr); padding: 5px; gap: 1px;
+  }
+  .r-qr i { background: var(--ink); border-radius: 1px; }
+  .r-qr i.off { background: transparent; }
+  .r-dian-info { font-family: var(--mono); font-size: 8.5px; color: var(--ink-soft); line-height: 1.5; min-width: 0; }
+  .r-dian-info b { color: var(--ink); display: block; font-size: 9px; letter-spacing: .04em; }
+  .r-cufe { word-break: break-all; }
+
+  .r-foot { text-align: center; font-size: 10.5px; color: var(--ink-soft); line-height: 1.7; }
+  .r-foot .thanks { font-weight: 600; color: var(--ink); font-size: 12px; }
+  .r-foot .web { font-family: var(--mono); font-size: 10px; color: var(--amatista-700); margin-top: 3px; }
+  .r-stars { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); letter-spacing: .14em; overflow: hidden; white-space: nowrap; }
+
+  .hidden { display: none; }
+
+  @media print {
+    body { background: white; padding: 0; gap: 0; }
+    .toolbar { display: none; }
+    .receipt { box-shadow: none; border-radius: 0; }
+    .receipt::before, .receipt::after { display: none; }
+    /* default 80mm */
+    body[data-w="80"] .receipt { width: 80mm; }
+    body[data-w="80"] { }
+    /* 58mm */
+    body[data-w="58"] .receipt { width: 58mm; --w: 58mm; }
+  }
+  @page { size: 80mm auto; margin: 0; }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="seg">
+      <button id="tab-pos" class="active" onclick="showVariant('pos')">Venta directa</button>
+      <button id="tab-acct" onclick="showVariant('acct')">Cierre de cuenta</button>
+    </div>
+    <div class="seg">
+      <button id="w-80" class="active" onclick="showWidth('80')">80mm</button>
+      <button id="w-58" onclick="showWidth('58')">58mm</button>
+    </div>
+    <button class="print" onclick="window.print()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Imprimir
+    </button>
+  </div>
+
+  <!-- ===== POS / Venta directa ===== -->
+  <div class="receipt" id="receipt-pos">
+    <div class="r-brand">
+      <div class="r-mark">V</div>
+      <div class="r-clinic">Clínica Veterinaria Norte</div>
+      <div class="r-tagline">Vetrina Norte · Cuidamos a tu familia</div>
+    </div>
+    <div class="r-fiscal">
+      NIT 901.456.789-3 · Responsable de IVA<br />
+      Cra 50 #66-12, Bogotá D.C.<br />
+      Tel: 601 745 8820 · facturacion@clinicanorte.com
+    </div>
+
+    <hr class="r-sep solid" />
+
+    <div class="r-doctype">Documento equivalente POS</div>
+    <div class="r-docno">POS-9621</div>
+
+    <hr class="r-sep" />
+
+    <div class="r-meta">
+      <div class="row"><span>Fecha</span><b>16/06/2026 03:48 PM</b></div>
+      <div class="row"><span>Caja / Cajero</span><b>02 · Mariana R.</b></div>
+      <div class="row"><span>Cliente</span><b>Carla Mendoza</b></div>
+      <div class="row"><span>Documento</span><b>CC 1.024.876.301</b></div>
+    </div>
+
+    <hr class="r-sep" />
+    <div class="r-sectlabel">Detalle</div>
+
+    <div class="r-petgroup">
+      <div class="r-pethead"><span class="paw">🐾</span> Luna · Felino</div>
+      <div class="r-line"><span class="qty">1×</span><span class="desc">Consulta general<span class="sub"> · Servicio</span></span><span class="amt">55.000</span></div>
+      <div class="r-line"><span class="qty">1×</span><span class="desc">Vacuna triple felina<span class="sub"> · Servicio</span></span><span class="amt">65.000</span></div>
+    </div>
+    <div class="r-petgroup">
+      <div class="r-pethead"><span class="paw">🛍️</span> Productos</div>
+      <div class="r-line"><span class="qty">1×</span><span class="desc">Royal Canin Adult 3kg<span class="sub"> · Alimento</span></span><span class="amt">72.000</span></div>
+      <div class="r-line"><span class="qty">2×</span><span class="desc">Antipulgas pipeta<span class="sub"> · 12.000 c/u</span></span><span class="amt">24.000</span></div>
+    </div>
+
+    <hr class="r-sep" />
+
+    <div class="r-tot">
+      <div class="row"><span>Subtotal (base)</span><span>181.513</span></div>
+      <div class="row"><span>IVA 19%</span><span>34.487</span></div>
+      <div class="row grand"><span>TOTAL</span><span>$216.000</span></div>
+    </div>
+
+    <hr class="r-sep" />
+    <div class="r-center"><span class="r-pay-pill">● Efectivo · Contado</span></div>
+    <div class="r-tot" style="margin-top:8px">
+      <div class="row pay"><span>Recibido</span><span>220.000</span></div>
+      <div class="row change"><span>Cambio</span><span>4.000</span></div>
+    </div>
+
+    <hr class="r-sep" />
+
+    <div class="r-dian">
+      <div class="r-qr" id="qr-pos"></div>
+      <div class="r-dian-info">
+        <b>CUDE</b>
+        <span class="r-cufe">b8c7d6e5f4a3920183cde7f6a5b4c3d2e1f0a9b8</span>
+        <div style="margin-top:3px">Validado DIAN 16/06/2026 15:48<br/>Ambiente: Producción</div>
+      </div>
+    </div>
+
+    <hr class="r-sep" />
+
+    <div class="r-foot">
+      <div class="thanks">¡Gracias por confiar en nosotros!</div>
+      Próxima cita de Luna: vacuna anual jun-2027<br />
+      Atención 24h · WhatsApp 320 671 9912
+      <div class="web">www.clinicanorte.vet</div>
+    </div>
+    <div class="r-stars">✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦</div>
+  </div>
+
+  <!-- ===== Cierre de cuenta ===== -->
+  <div class="receipt hidden" id="receipt-acct">
+    <div class="r-brand">
+      <div class="r-mark">V</div>
+      <div class="r-clinic">Clínica Veterinaria Norte</div>
+      <div class="r-tagline">Vetrina Norte · Cuidamos a tu familia</div>
+    </div>
+    <div class="r-fiscal">
+      NIT 901.456.789-3 · Responsable de IVA<br />
+      Cra 50 #66-12, Bogotá D.C.<br />
+      Tel: 601 745 8820 · facturacion@clinicanorte.com
+    </div>
+
+    <hr class="r-sep solid" />
+
+    <div class="r-doctype">Recibo de cierre de cuenta</div>
+    <div class="r-docno">REC-2026-1247</div>
+
+    <hr class="r-sep" />
+
+    <div class="r-meta">
+      <div class="row"><span>Cuenta</span><b>#8001 · Hospitalización</b></div>
+      <div class="row"><span>Abierta</span><b>21/05/2026</b></div>
+      <div class="row"><span>Cerrada</span><b>16/06/2026 04:10 PM</b></div>
+      <div class="row"><span>Propietario</span><b>Jorge Vargas R.</b></div>
+      <div class="row"><span>Atendió</span><b>Andrés Mejía</b></div>
+    </div>
+
+    <hr class="r-sep" />
+    <div class="r-sectlabel">Cargos por mascota</div>
+
+    <div class="r-petgroup">
+      <div class="r-pethead"><span class="paw">🐾</span> Toby · Canino</div>
+      <div class="r-line"><span class="qty">2×</span><span class="desc">Día de hospitalización<span class="sub"> · 95.000 c/u</span></span><span class="amt">190.000</span></div>
+      <div class="r-line"><span class="qty">1×</span><span class="desc">Consulta de urgencia</span><span class="amt">120.000</span></div>
+    </div>
+    <div class="r-petgroup">
+      <div class="r-pethead"><span class="paw">🐾</span> Coco · Canino</div>
+      <div class="r-line"><span class="qty">1×</span><span class="desc">Consulta general</span><span class="amt">55.000</span></div>
+      <div class="r-line"><span class="qty">1×</span><span class="desc">Vacuna óctuple</span><span class="amt">65.000</span></div>
+    </div>
+    <div class="r-petgroup">
+      <div class="r-pethead"><span class="paw">🛍️</span> General</div>
+      <div class="r-line"><span class="qty">1×</span><span class="desc">Royal Canin Adult 3kg</span><span class="amt">72.000</span></div>
+    </div>
+
+    <hr class="r-sep" />
+
+    <div class="r-tot">
+      <div class="row"><span>Subtotal exento</span><span>430.000</span></div>
+      <div class="row"><span>Subtotal gravado</span><span>60.504</span></div>
+      <div class="row"><span>IVA 19%</span><span>11.496</span></div>
+      <div class="row grand"><span>TOTAL CUENTA</span><span>$502.000</span></div>
+      <div class="row" style="color:var(--ink-soft)"><span>Abonos previos</span><span>− 150.000</span></div>
+      <div class="row grand" style="font-size:14px"><span>SALDO COBRADO</span><span>$352.000</span></div>
+    </div>
+
+    <hr class="r-sep" />
+    <div class="r-center"><span class="r-pay-pill">● Transferencia · Contado</span></div>
+
+    <hr class="r-sep" />
+
+    <div class="r-dian">
+      <div class="r-qr" id="qr-acct"></div>
+      <div class="r-dian-info">
+        <b>CUFE</b>
+        <span class="r-cufe">a1f4c8e7d2b9605143fae8c7d1b2a3940fe5c6d7</span>
+        <div style="margin-top:3px">Factura electrónica FE-1247<br/>Validado DIAN 16/06/2026 16:10</div>
+      </div>
+    </div>
+
+    <hr class="r-sep" />
+
+    <div class="r-foot">
+      <div class="thanks">¡Toby y Coco se recuperaron pronto!</div>
+      Control post-hospitalización: 23/06/2026<br />
+      Resolución DIAN 18764003912345
+      <div class="web">www.clinicanorte.vet</div>
+    </div>
+    <div class="r-stars">✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦</div>
+  </div>
+
+<script>
+  // Deterministic faux-QR
+  function paintQR(id, seed) {
+    var el = document.getElementById(id);
+    var s = seed;
+    for (var i = 0; i < 49; i++) {
+      s = (s * 1103515245 + 12345) & 0x7fffffff;
+      var on = ((s >> 8) & 1) === 1;
+      // force finder-ish corners
+      var r = Math.floor(i / 7), c = i % 7;
+      var corner = (r < 1 && c < 1) || (r < 1 && c > 5) || (r > 5 && c < 1);
+      var bit = document.createElement('i');
+      if (!(on || corner)) bit.className = 'off';
+      el.appendChild(bit);
+    }
+  }
+  paintQR('qr-pos', 90211);
+  paintQR('qr-acct', 12477);
+
+  function showVariant(v) {
+    document.getElementById('receipt-pos').classList.toggle('hidden', v !== 'pos');
+    document.getElementById('receipt-acct').classList.toggle('hidden', v !== 'acct');
+    document.getElementById('tab-pos').classList.toggle('active', v === 'pos');
+    document.getElementById('tab-acct').classList.toggle('active', v === 'acct');
+  }
+
+  function showWidth(w) {
+    document.body.setAttribute('data-w', w);
+    document.querySelectorAll('.receipt').forEach(function (r) {
+      r.classList.toggle('w58', w === '58');
+    });
+    document.getElementById('w-80').classList.toggle('active', w === '80');
+    document.getElementById('w-58').classList.toggle('active', w === '58');
+    // adjust @page size for print
+    var styleId = 'pagesize';
+    var st = document.getElementById(styleId) || document.head.appendChild(Object.assign(document.createElement('style'), { id: styleId }));
+    st.textContent = '@page { size: ' + w + 'mm auto; margin: 0; }';
+  }
+  document.body.setAttribute('data-w', '80');
+</script>
+</body>
+</html>
