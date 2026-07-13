@@ -14,6 +14,8 @@ const props = defineProps<{
   modelValue: string | null
   /** Nombre precargado (modo edición) cuando ya hay ownerId pero no Owner. */
   initialName?: string | null
+  /** Marca el campo como inválido (borde rojo + shake) cuando falta el sujeto de la cita. */
+  invalid?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -72,12 +74,13 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   </div>
 
   <div v-else ref="box" class="combo">
-    <div class="combo-input">
+    <div class="combo-input" :class="{ invalid }">
       <Search :size="15" :stroke-width="1.7" class="combo-icon" />
       <input
         v-model="query"
         type="text"
         placeholder="Buscar por nombre, ID o documento…"
+        :aria-invalid="invalid || undefined"
         @focus="open = true"
       />
     </div>
@@ -126,6 +129,37 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
 .combo-input:focus-within {
   border-color: var(--amatista-500);
   box-shadow: 0 0 0 3px var(--amatista-50);
+}
+.combo-input.invalid {
+  border-color: oklch(60% 0.2 25);
+  background: oklch(98.5% 0.02 25);
+  animation: shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+.combo-input.invalid:focus-within {
+  border-color: oklch(55% 0.22 25);
+  box-shadow: 0 0 0 3px oklch(92% 0.06 25);
+}
+.combo-input.invalid .combo-icon {
+  color: oklch(55% 0.22 25);
+}
+@keyframes shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-3px);
+  }
+  40%,
+  60% {
+    transform: translateX(3px);
+  }
 }
 .combo-icon {
   color: var(--warm-500);

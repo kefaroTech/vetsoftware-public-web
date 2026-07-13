@@ -11,6 +11,12 @@ export interface EmployeeRole {
   code: string
 }
 
+// Sede (sucursal) a la que pertenece un empleado, tal como llega en el listado/detalle.
+export interface EmployeeBranch {
+  id: number
+  name: string
+}
+
 export interface Employee {
   id: number
   employeeCode: string
@@ -24,6 +30,7 @@ export interface Employee {
   companyId: number
   createdDate: string
   roles: EmployeeRole[]
+  branches: EmployeeBranch[]
   initials: string
 }
 
@@ -181,6 +188,8 @@ export interface LaboratoryTest {
   quantity: number
   diagnosis: string
   status: LaboratoryTestStatus
+  // Sede de la muestra (multi-sucursal). Si falta, al persistir se usa la sede del menú principal.
+  branchId?: number | null
 }
 
 export interface DiagnosticImaging {

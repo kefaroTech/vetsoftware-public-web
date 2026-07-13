@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { Beaker, Plus, Trash2, X, Pencil } from 'lucide-vue-next'
+import { Beaker, Plus, Trash2, X, Pencil, AlertTriangle } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
+import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
 import SearchableSelect from '@/features/dashboard/components/ui/SearchableSelect.vue'
 import type { Animal, LaboratoryTest } from '@/types/domain'
 import type { LaboratoryTestDraftItem } from '../composables/useNuevaConsultaDraft'
 import { todayISO, formatDateLong, formatDateShort } from '../composables/format'
 import { useTestTypes } from '../composables/useTestTypes'
+import { useBranches } from '@/features/branches/composables/useBranches'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
@@ -42,17 +44,51 @@ function emptyTest(): TestDraft {
   return { testTypeId: '', quantity: '1', diagnosis: '' }
 }
 
+// Desplegable de sede: solo las sedes ASIGNADAS al usuario (aunque sea admin).
+const { assignedBranches, selectedBranchId } = useBranches()
+
 const draft = reactive({
   date: todayISO(),
   tests: [emptyTest()] as TestDraft[],
 })
 const submitted = ref(false)
 const editingIndex = ref<number | null>(null)
+const branchId = ref<number | null>(null)
+const defaultBranchId = ref<number | null>(null)
+const confirmingBranch = ref(false)
+
+// Sede por defecto: la del menú si el usuario la tiene asignada; si no, su primera sede asignada.
+function resolveDefaultBranch(): number | null {
+  const ids = assignedBranches.value.map((b) => b.id)
+  if (selectedBranchId.value != null && ids.includes(selectedBranchId.value)) return selectedBranchId.value
+  return assignedBranches.value[0]?.id ?? null
+}
+// Sede de la solicitud: se elige si el usuario tiene ≥2 sedes asignadas.
+const showBranchField = computed(() => assignedBranches.value.length > 1)
+const branchOptions = computed(() =>
+  assignedBranches.value.map((b) => ({
+    value: String(b.id),
+    label: b.city?.name ? `${b.name} - ${b.city.name}` : b.name,
+  })),
+)
+function branchName(id: number | null): string {
+  return assignedBranches.value.find((b) => b.id === id)?.name ?? 'la sede'
+}
+// Hay que confirmar si la sede elegida difiere de la sede por defecto.
+const needsBranchConfirm = computed(
+  () =>
+    defaultBranchId.value != null &&
+    branchId.value != null &&
+    branchId.value !== defaultBranchId.value,
+)
 
 function resetDraft() {
   draft.date = todayISO()
   draft.tests = [emptyTest()]
   submitted.value = false
+  confirmingBranch.value = false
+  defaultBranchId.value = resolveDefaultBranch()
+  branchId.value = defaultBranchId.value
 }
 
 watch(
@@ -76,8 +112,12 @@ function startEditing(idx: number) {
       diagnosis: item.diagnosis,
     },
   ]
+  // Al editar, la sede por defecto es la que ya tenía el examen.
+  defaultBranchId.value = item.branchId ?? resolveDefaultBranch()
+  branchId.value = defaultBranchId.value
   editingIndex.value = idx
   submitted.value = false
+  confirmingBranch.value = false
 }
 
 function cancelEditing() {
@@ -153,12 +193,23 @@ function save() {
     scrollToFirstError()
     return
   }
+  // Confirmación si la sede elegida difiere de la del menú principal.
+  if (needsBranchConfirm.value && !confirmingBranch.value) {
+    confirmingBranch.value = true
+    return
+  }
+  doSave()
+}
+
+function doSave() {
+  confirmingBranch.value = false
   const items: LaboratoryTest[] = draft.tests.map((t) => ({
     date: draft.date,
     testTypeId: t.testTypeId,
     quantity: Number(t.quantity),
     diagnosis: t.diagnosis.trim(),
     status: 'PENDING_COLLECTION',
+    branchId: branchId.value,
   }))
   if (editingIndex.value !== null) {
     const first = items[0]
@@ -183,7 +234,28 @@ function save() {
     @close="emit('close')"
   >
     <template #body>
+      <div v-if="confirmingBranch" class="branch-confirm">
+        <AlertTriangle :size="22" :stroke-width="1.7" class="bc-ic" />
+        <div>
+          <p class="bc-title">Sede distinta a la del menú</p>
+          <p class="bc-text">
+            Vas a registrar esta solicitud en <b>{{ branchName(branchId) }}</b>, que es
+            <b>diferente</b> a la sede por defecto
+            (<b>{{ branchName(defaultBranchId) }}</b>). ¿Seguro que quieres usar esa sede?
+          </p>
+        </div>
+      </div>
+      <template v-else>
       <div v-if="typesError" class="catalog-error">{{ typesError }}</div>
+
+      <BaseField v-if="showBranchField" label="Sede" required class="branch-field">
+        <BaseSelect
+          :model-value="branchId != null ? String(branchId) : null"
+          :options="branchOptions"
+          placeholder="Selecciona una sede"
+          @update:model-value="(v: string) => (branchId = Number(v))"
+        />
+      </BaseField>
 
       <section
         v-if="props.existing.length > 0 && editingIndex === null"
@@ -307,26 +379,34 @@ function save() {
         <Plus :size="14" :stroke-width="1.8" />
         <span>Agregar otro examen</span>
       </button>
+      </template>
     </template>
 
     <template #footer-left>
-      <span v-if="editingIndex !== null">Editando examen existente</span>
+      <span v-if="confirmingBranch">Confirma la sede antes de continuar</span>
+      <span v-else-if="editingIndex !== null">Editando examen existente</span>
       <span v-else>
         {{ draft.tests.length }} examen{{ draft.tests.length === 1 ? '' : 'es' }}
         · Se vinculará a la consulta
       </span>
     </template>
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">
-        Cancelar
-      </button>
-      <button
-        type="button"
-        class="btn-primary"
-        @click="save"
-      >
-        {{ editingIndex !== null ? 'Guardar cambios' : 'Guardar solicitud' }}
-      </button>
+      <template v-if="confirmingBranch">
+        <button type="button" class="btn-ghost" @click="confirmingBranch = false">
+          Volver
+        </button>
+        <button type="button" class="btn-primary" @click="doSave">
+          Sí, usar esta sede
+        </button>
+      </template>
+      <template v-else>
+        <button type="button" class="btn-ghost" @click="emit('close')">
+          Cancelar
+        </button>
+        <button type="button" class="btn-primary" @click="save">
+          {{ editingIndex !== null ? 'Guardar cambios' : 'Guardar solicitud' }}
+        </button>
+      </template>
     </template>
   </ModalShell>
 </template>
@@ -340,6 +420,38 @@ function save() {
   border-radius: 10px;
   font-size: 12.5px;
   margin-bottom: 14px;
+}
+.branch-field {
+  margin-bottom: 16px;
+  max-width: 380px;
+}
+.branch-confirm {
+  display: flex;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 11px;
+  background: oklch(96% 0.05 80);
+  border: 1px solid oklch(88% 0.09 80);
+}
+.bc-ic {
+  flex-shrink: 0;
+  color: oklch(55% 0.14 60);
+  margin-top: 2px;
+}
+.bc-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: oklch(38% 0.13 60);
+}
+.bc-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--warm-700);
+}
+.bc-text b {
+  font-weight: 600;
 }
 .tests-list {
   display: flex;

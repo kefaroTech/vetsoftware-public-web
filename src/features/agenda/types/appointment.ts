@@ -65,6 +65,9 @@ export interface CreateAppointmentRequest {
   clientName?: string | null
   clientPhone?: string | null
   notes?: string | null
+  // Sede en la que se agenda. Se elige en el form (default = sede del menú principal); si no viene, el backend
+  // usa la sede activa por defecto. Solo aplica al crear (el update no cambia de sede).
+  branchId?: number | null
 }
 
 export type UpdateAppointmentRequest = CreateAppointmentRequest

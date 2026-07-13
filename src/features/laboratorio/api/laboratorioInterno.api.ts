@@ -1,4 +1,5 @@
 import { http } from '@/services/http/http.client'
+import { withBranchParam } from '@/features/branches/api/branchContext'
 import {
   laboratoryTestApi,
   type LaboratoryTestResponse,
@@ -27,9 +28,10 @@ export const laboratorioInternoApi = {
     if (criteria.dateFrom) params.dateFrom = criteria.dateFrom
     if (criteria.dateTo) params.dateTo = criteria.dateTo
 
+    // Scoped por sede: se envía la sede seleccionada en el menú principal (contexto multi-sucursal).
     const { data } = await http.get<PageResponse<LaboratoryTestResponse>>(
       '/laboratory-tests/search',
-      { params },
+      { params: withBranchParam(params) },
     )
     return data
   },

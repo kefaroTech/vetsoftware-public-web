@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { ChevronRight } from 'lucide-vue-next'
 import type { Employee } from '@/types/domain'
 import EmployeeAvatar from './EmployeeAvatar.vue'
 import RolePill from './RolePill.vue'
 import StatusPill from './StatusPill.vue'
 
-defineProps<{
+const props = defineProps<{
   employee: Employee
   selected: boolean
   zebra: boolean
@@ -14,6 +15,13 @@ defineProps<{
 defineEmits<{
   select: [id: number]
 }>()
+
+const MAX_VISIBLE_BRANCHES = 2
+const visibleBranches = computed(() => props.employee.branches.slice(0, MAX_VISIBLE_BRANCHES))
+const hiddenCount = computed(() =>
+  Math.max(0, props.employee.branches.length - MAX_VISIBLE_BRANCHES),
+)
+const branchNames = computed(() => props.employee.branches.map((b) => b.name).join(', '))
 </script>
 
 <template>
@@ -40,6 +48,13 @@ defineEmits<{
         <RolePill v-for="r in employee.roles" :key="r.id" :name="r.name" :code="r.code" />
       </div>
       <span v-else class="no-role">Sin rol</span>
+    </div>
+    <div class="cell sedes-cell">
+      <div v-if="employee.branches.length > 0" class="sedes" :title="branchNames">
+        <span v-for="b in visibleBranches" :key="b.id" class="sede-chip">{{ b.name }}</span>
+        <span v-if="hiddenCount > 0" class="sede-more">+{{ hiddenCount }}</span>
+      </div>
+      <span v-else class="no-sede">Sin sede</span>
     </div>
     <div class="cell contact-cell">
       <div class="email">{{ employee.email }}</div>
@@ -93,16 +108,19 @@ defineEmits<{
   flex: 0 0 36px;
 }
 .name-cell {
-  flex: 2;
+  flex: 1.8;
 }
 .role-cell {
+  flex: 1.2;
+}
+.sedes-cell {
   flex: 1.4;
 }
 .contact-cell {
-  flex: 1.6;
+  flex: 1.4;
 }
 .status-cell {
-  flex: 0 0 100px;
+  flex: 0 0 96px;
 }
 .chev-cell {
   flex: 0 0 28px;
@@ -135,9 +153,33 @@ defineEmits<{
   gap: 4px;
   flex-wrap: wrap;
 }
-.no-role {
+.no-role,
+.no-sede {
   font-size: 12px;
   color: var(--warm-500);
   font-style: italic;
+}
+.sedes {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.sede-chip {
+  max-width: 100%;
+  padding: 2px 8px;
+  font-size: 11.5px;
+  color: var(--warm-700);
+  background: var(--warm-100);
+  border: 1px solid var(--warm-200);
+  border-radius: 999px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sede-more {
+  font-size: 11.5px;
+  color: var(--warm-500);
+  font-weight: 500;
 }
 </style>

@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { Beaker, Check, PawPrint, Plus, X } from 'lucide-vue-next'
+import { Beaker, Check, PawPrint, Plus, X, AlertTriangle } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
+import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
 import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
 import SearchableSelect from '@/features/dashboard/components/ui/SearchableSelect.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
+import { useBranches } from '@/features/branches/composables/useBranches'
 import { useTestTypes } from '@/features/dashboard/views/consulta/nueva/composables/useTestTypes'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import {
@@ -29,6 +31,8 @@ const emit = defineEmits<{
 }>()
 
 const { companyId } = useAuth()
+// Desplegable de sede: solo las sedes ASIGNADAS al usuario (aunque sea admin).
+const { assignedBranches, selectedBranchId } = useBranches()
 const {
   options: testOptions,
   loading: loadingTypes,
@@ -49,6 +53,9 @@ function emptyRow(): TestRow {
 const isEdit = computed(() => props.initial != null)
 
 const patientId = ref<number | null>(null)
+const branchId = ref<number | null>(null)
+const defaultBranchId = ref<number | null>(null)
+const confirmingBranch = ref(false)
 const draft = reactive({
   date: todayISO(),
   sampleCollected: false,
@@ -57,6 +64,32 @@ const draft = reactive({
 const submitted = ref(false)
 const saving = ref(false)
 const saveError = ref<string | null>(null)
+
+// Sede por defecto: la del menú si el usuario la tiene asignada; si no, su primera sede asignada.
+function resolveDefaultBranch(): number | null {
+  const ids = assignedBranches.value.map((b) => b.id)
+  if (selectedBranchId.value != null && ids.includes(selectedBranchId.value)) return selectedBranchId.value
+  return assignedBranches.value[0]?.id ?? null
+}
+// Sede de la solicitud: solo se elige al crear y si el usuario tiene ≥2 sedes asignadas.
+const showBranchField = computed(() => !isEdit.value && assignedBranches.value.length > 1)
+const branchOptions = computed(() =>
+  assignedBranches.value.map((b) => ({
+    value: String(b.id),
+    label: b.city?.name ? `${b.name} - ${b.city.name}` : b.name,
+  })),
+)
+function branchName(id: number | null): string {
+  return assignedBranches.value.find((b) => b.id === id)?.name ?? 'la sede'
+}
+// Hay que confirmar si (al crear) la sede elegida difiere de la sede por defecto.
+const needsBranchConfirm = computed(
+  () =>
+    !isEdit.value &&
+    defaultBranchId.value != null &&
+    branchId.value != null &&
+    branchId.value !== defaultBranchId.value,
+)
 
 // Solo mostrar el toggle cuando aplica: en create siempre, en edit solo si el
 // status actual sigue en alguno de los dos PENDING*. Si el examen ya está
@@ -87,6 +120,10 @@ function reset() {
   }
   submitted.value = false
   saveError.value = null
+  confirmingBranch.value = false
+  // Sede por defecto: la del menú si está asignada al usuario; si no, su primera sede asignada.
+  defaultBranchId.value = resolveDefaultBranch()
+  branchId.value = defaultBranchId.value
 }
 
 watch(
@@ -95,6 +132,14 @@ watch(
     if (open) reset()
   },
 )
+
+// Default de sede cuando las sucursales llegan tarde.
+watch(assignedBranches, () => {
+  if (props.open && branchId.value == null) {
+    defaultBranchId.value = resolveDefaultBranch()
+    branchId.value = defaultBranchId.value
+  }
+})
 
 const errors = computed(() => ({
   patient: patientId.value == null ? 'Selecciona un paciente' : null,
@@ -137,12 +182,26 @@ async function onCreateType(data: { name: string; description: string }) {
   }
 }
 
-async function save() {
+function save() {
   submitted.value = true
   if (!valid.value || saving.value) {
     scrollToFirstError()
     return
   }
+  if (companyId.value == null || patientId.value == null) {
+    saveError.value = 'Faltan datos para guardar.'
+    return
+  }
+  // Confirmación si la sede elegida difiere de la del menú principal (solo al crear).
+  if (needsBranchConfirm.value && !confirmingBranch.value) {
+    confirmingBranch.value = true
+    return
+  }
+  void doSave()
+}
+
+async function doSave() {
+  confirmingBranch.value = false
   const cid = companyId.value
   const pid = patientId.value
   if (cid == null || pid == null) {
@@ -186,6 +245,7 @@ async function save() {
           animalId: pid,
           consultationId: null,
           companyId: cid,
+          branchId: branchId.value,
         })
         emit('saved', created)
       }
@@ -210,6 +270,18 @@ async function save() {
     @close="emit('close')"
   >
     <template #body>
+      <div v-if="confirmingBranch" class="branch-confirm">
+        <AlertTriangle :size="22" :stroke-width="1.7" class="bc-ic" />
+        <div>
+          <p class="bc-title">Sede distinta a la del menú</p>
+          <p class="bc-text">
+            Vas a registrar esta solicitud en <b>{{ branchName(branchId) }}</b>, que es
+            <b>diferente</b> a la sede por defecto
+            (<b>{{ branchName(defaultBranchId) }}</b>). ¿Seguro que quieres usar esa sede?
+          </p>
+        </div>
+      </div>
+      <template v-else>
       <div v-if="typesError" class="banner error">{{ typesError }}</div>
       <div v-if="saveError" class="banner error">{{ saveError }}</div>
 
@@ -239,6 +311,20 @@ async function save() {
 
       <BaseField label="Fecha" required>
         <DateInput v-model="draft.date" />
+      </BaseField>
+
+      <BaseField
+        v-if="showBranchField"
+        label="Sede"
+        required
+        hint="Por defecto, la sede seleccionada en el menú principal."
+      >
+        <BaseSelect
+          :model-value="branchId != null ? String(branchId) : null"
+          :options="branchOptions"
+          placeholder="Selecciona una sede"
+          @update:model-value="(v: string) => (branchId = Number(v))"
+        />
       </BaseField>
 
       <div class="rows">
@@ -313,15 +399,26 @@ async function save() {
           </div>
         </div>
       </label>
+      </template>
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" :disabled="saving" @click="emit('close')">
-        Cancelar
-      </button>
-      <button type="button" class="btn-primary" :disabled="saving" @click="save">
-        {{ saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Guardar solicitud' }}
-      </button>
+      <template v-if="confirmingBranch">
+        <button type="button" class="btn-ghost" :disabled="saving" @click="confirmingBranch = false">
+          Volver
+        </button>
+        <button type="button" class="btn-primary" :disabled="saving" @click="doSave">
+          Sí, usar esta sede
+        </button>
+      </template>
+      <template v-else>
+        <button type="button" class="btn-ghost" :disabled="saving" @click="emit('close')">
+          Cancelar
+        </button>
+        <button type="button" class="btn-primary" :disabled="saving" @click="save">
+          {{ saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Guardar solicitud' }}
+        </button>
+      </template>
     </template>
   </ModalShell>
 </template>
@@ -335,6 +432,34 @@ async function save() {
   padding: 8px 12px;
   font-size: 12.5px;
   margin-bottom: 12px;
+}
+.branch-confirm {
+  display: flex;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 11px;
+  background: oklch(96% 0.05 80);
+  border: 1px solid oklch(88% 0.09 80);
+}
+.bc-ic {
+  flex-shrink: 0;
+  color: oklch(55% 0.14 60);
+  margin-top: 2px;
+}
+.bc-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: oklch(38% 0.13 60);
+}
+.bc-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--warm-700);
+}
+.bc-text b {
+  font-weight: 600;
 }
 .patient-fixed {
   display: flex;

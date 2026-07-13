@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Plus } from 'lucide-vue-next'
 import type { Employee } from '@/types/domain'
 import { useAuth } from '@/features/auth/composables/useAuth'
@@ -20,7 +20,7 @@ import ConfirmDeactivateDialog from '../components/ConfirmDeactivateDialog.vue'
 import ResendInvitationModal from '../components/ResendInvitationModal.vue'
 import { employeeRolesApi } from '../api/employeeRoles.api'
 import { employeeBranchesApi } from '../api/employeeBranches.api'
-import { useSedes } from '@/features/branches/composables/useSedes'
+import { useBranches } from '@/features/branches/composables/useBranches'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import PageHeader from '@/components/ui/PageHeader.vue'
@@ -37,7 +37,15 @@ const {
   employees,
   loading,
   error,
-  fetchAll,
+  page,
+  pageSize,
+  totalElements,
+  totalPages,
+  search,
+  setQuery,
+  setPage,
+  refresh,
+  reset,
   create,
   update,
   deactivate,
@@ -45,13 +53,27 @@ const {
   resendInvitation,
 } = useEmployees()
 const { list: availableRoles } = useRoles()
-const { activeSedes } = useSedes()
+// Sedes ASIGNABLES por el usuario actual: admin ve todas las activas; un no-admin solo sus sedes.
+const { visibleBranches } = useBranches()
 const { can } = useAuthorization()
 const toast = useToast()
 const canCreate = can(PERMISSIONS.EMPLOYEE_CREATE)
 const canUpdate = can(PERMISSIONS.EMPLOYEE_UPDATE)
 
+// Valor inmediato del input; se aplica al servicio con debounce para no disparar una petición por tecla.
 const query = ref('')
+const SEARCH_DEBOUNCE_MS = 300
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+watch(query, (q) => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    void setQuery(q)
+  }, SEARCH_DEBOUNCE_MS)
+})
+onUnmounted(() => {
+  if (searchTimer) clearTimeout(searchTimer)
+})
+
 const selectedId = ref<number | null>(null)
 const formOpen = ref(false)
 const formInitial = ref<Employee | null>(null)
@@ -65,7 +87,10 @@ const submitError = ref<string | null>(null)
 const selected = computed(() => employees.value.find((e) => e.id === selectedId.value) ?? null)
 
 onMounted(() => {
-  fetchAll().catch(() => {
+  // El store sobrevive a la navegación: al entrar limpiamos el filtro previo para no arrastrarlo.
+  query.value = ''
+  reset()
+  search().catch(() => {
     /* error ya queda en error.value */
   })
 })
@@ -96,6 +121,14 @@ function openChangeRoles(employee: Employee) {
 }
 
 function openChangeBranches(employee: Employee) {
+  // Un admin ve todas las sedes (bypass por admin.all): no tiene sentido asignarle sedes.
+  if (hasAdminRole(employee)) {
+    toast.info(
+      'Sin sedes que asignar',
+      'Un administrador tiene acceso a todas las sedes de la empresa.',
+    )
+    return
+  }
   submitError.value = null
   changingBranchesTarget.value = employee
 }
@@ -129,6 +162,7 @@ async function handleSubmit(data: EmployeeFormData) {
         return
       }
       // El backend crea el empleado, le asigna roles y sedes, y le envía la invitación por correo (1 transacción).
+      // `create` refresca la página actual internamente (la fila nueva llega con sus roles/sedes).
       const created = await create({
         employeeCode: data.employeeCode.trim(),
         password: data.password,
@@ -138,7 +172,6 @@ async function handleSubmit(data: EmployeeFormData) {
         roleIds: data.roleIds,
         branchIds: data.branchIds,
       })
-      await fetchAll()
       selectedId.value = created.id
       toast.success('Empleado invitado', `Se envió la invitación a ${created.email}`)
     }
@@ -177,7 +210,7 @@ async function confirmDeactivate() {
     toast.error('Ocurrió un error', msg)
     // Estado del front posiblemente desincronizado (empleado ya inexistente/desactivado): resincronizamos.
     deactivateTarget.value = null
-    await fetchAll().catch(() => {})
+    await refresh().catch(() => {})
   } finally {
     busy.value = false
   }
@@ -234,7 +267,7 @@ async function onConfirmChangeRoles(data: ChangeRolesConfirm) {
       ),
       ...data.removeEmployeeRoleIds.map((id) => employeeRolesApi.remove(id)),
     ])
-    await fetchAll()
+    await refresh()
     selectedId.value = target.id
     const label =
       data.selectedRoles.length === 1
@@ -260,6 +293,8 @@ async function onConfirmChangeBranches(data: ChangeBranchesConfirm) {
   submitError.value = null
   try {
     await employeeBranchesApi.set(target.id, { allBranches: false, branchIds: data.branchIds })
+    // Refrescamos para que la columna/detalle de sedes reflejen el cambio (la respuesta del set no las devuelve).
+    await refresh()
     selectedId.value = target.id
     const n = data.branchIds.length
     toast.success('Sedes actualizadas', `${target.name} opera ahora en ${n} ${n === 1 ? 'sede' : 'sedes'}.`)
@@ -297,7 +332,12 @@ async function onConfirmChangeBranches(data: ChangeBranchesConfirm) {
       :selected-id="selectedId"
       :query="query"
       :loading="loading"
+      :page="page"
+      :page-size="pageSize"
+      :total-elements="totalElements"
+      :total-pages="totalPages"
       @update:query="query = $event"
+      @update:page="setPage"
       @select="onSelect"
     />
 
@@ -334,7 +374,7 @@ async function onConfirmChangeBranches(data: ChangeBranchesConfirm) {
     <ChangeBranchesModal
       :open="changingBranchesTarget !== null"
       :employee="changingBranchesTarget"
-      :available-branches="activeSedes"
+      :available-branches="visibleBranches"
       :busy="busy"
       @close="changingBranchesTarget = null"
       @confirm="onConfirmChangeBranches"

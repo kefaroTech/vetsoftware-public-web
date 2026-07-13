@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { scrollToFirstError } from '@/composables/scrollToError'
 import { Calendar, Check, AlertTriangle } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
@@ -9,6 +10,7 @@ import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
 import TimeInput from './TimeInput.vue'
 import OwnerSearchAutocomplete from './OwnerSearchAutocomplete.vue'
 import { useVets } from '../composables/useVets'
+import { useBranches } from '@/features/branches/composables/useBranches'
 import { useAnimalsByOwnerStore } from '@/features/dashboard/views/consulta/nueva/stores/animalsByOwner.store'
 import {
   APPT_TYPES,
@@ -48,6 +50,8 @@ const emit = defineEmits<{
 }>()
 
 const { vets } = useVets()
+// Desplegable de sede: solo las sedes ASIGNADAS al usuario (aunque sea admin).
+const { assignedBranches, selectedBranchId } = useBranches()
 const animalsStore = useAnimalsByOwnerStore()
 
 const typeEntries = Object.entries(APPT_TYPES) as [AppointmentType, (typeof APPT_TYPES)[AppointmentType]][]
@@ -64,6 +68,9 @@ const animalId = ref<string>('') // '' = por confirmar
 const clientName = ref('')
 const clientPhone = ref('')
 const notes = ref('')
+const branchId = ref<number | null>(null)
+const defaultBranchId = ref<number | null>(null)
+const confirmingBranch = ref(false)
 const submitted = ref(false)
 
 const pets = ref<Animal[]>([])
@@ -74,6 +81,10 @@ const isEdit = computed(() => props.mode === 'edit')
 
 function resetFromProps() {
   submitted.value = false
+  confirmingBranch.value = false
+  // Sede por defecto: la del menú si está entre las asignadas del usuario; si no, su primera sede asignada.
+  defaultBranchId.value = resolveDefaultBranch()
+  branchId.value = defaultBranchId.value
   const appt = props.appointment
   if (appt) {
     date.value = apptDate(appt.startAt)
@@ -119,6 +130,40 @@ watch(vets, (list) => {
     employeeId.value = list[0]?.id ?? null
   }
 })
+
+// Default de sede cuando las sucursales llegan tarde.
+watch(assignedBranches, () => {
+  if (props.open && branchId.value == null) {
+    defaultBranchId.value = resolveDefaultBranch()
+    branchId.value = defaultBranchId.value
+  }
+})
+
+// Sede por defecto: la del menú si el usuario la tiene asignada; si no, su primera sede asignada.
+function resolveDefaultBranch(): number | null {
+  const ids = assignedBranches.value.map((b) => b.id)
+  if (selectedBranchId.value != null && ids.includes(selectedBranchId.value)) return selectedBranchId.value
+  return assignedBranches.value[0]?.id ?? null
+}
+// El select de sede solo se muestra al crear y si el usuario tiene ≥2 sedes asignadas.
+const showBranchField = computed(() => props.mode === 'create' && assignedBranches.value.length > 1)
+const branchOptions = computed(() =>
+  assignedBranches.value.map((b) => ({
+    value: String(b.id),
+    label: b.city?.name ? `${b.name} - ${b.city.name}` : b.name,
+  })),
+)
+function branchName(id: number | null): string {
+  return assignedBranches.value.find((b) => b.id === id)?.name ?? 'la sede'
+}
+// Hay que confirmar si (al crear) la sede elegida difiere de la sede por defecto.
+const needsBranchConfirm = computed(
+  () =>
+    props.mode === 'create' &&
+    defaultBranchId.value != null &&
+    branchId.value != null &&
+    branchId.value !== defaultBranchId.value,
+)
 
 async function loadPets(oid: string) {
   petsLoading.value = true
@@ -216,7 +261,22 @@ const submitLabel = computed(() => {
 
 function submit() {
   submitted.value = true
-  if (!valid.value || employeeId.value == null) return
+  if (!valid.value || employeeId.value == null) {
+    // Igual que el resto de formularios: centra el scroll (con shake) sobre el primer campo faltante.
+    void scrollToFirstError()
+    return
+  }
+  // Si la sede elegida difiere de la del menú principal, pedir confirmación antes de agendar.
+  if (needsBranchConfirm.value && !confirmingBranch.value) {
+    confirmingBranch.value = true
+    return
+  }
+  doEmit()
+}
+
+function doEmit() {
+  confirmingBranch.value = false
+  if (employeeId.value == null) return
   const startAt = toIsoLocalDateTime(date.value, time.value)
 
   if (isReschedule.value && props.appointment) {
@@ -238,6 +298,8 @@ function submit() {
     clientName: !registered ? clientName.value.trim() || null : null,
     clientPhone: !registered ? clientPhone.value.trim() || null : null,
     notes: notes.value.trim() || null,
+    // La sede solo se envía al crear (el update no cambia de sede).
+    ...(props.mode === 'create' ? { branchId: branchId.value } : {}),
   }
 
   if (isEdit.value && props.appointment) {
@@ -260,7 +322,18 @@ function submit() {
     @close="emit('close')"
   >
     <template #body>
-      <div class="mform">
+      <div v-if="confirmingBranch" class="branch-confirm">
+        <AlertTriangle :size="22" :stroke-width="1.7" class="bc-ic" />
+        <div>
+          <p class="bc-title">Sede distinta a la del menú</p>
+          <p class="bc-text">
+            Vas a agendar esta cita en <b>{{ branchName(branchId) }}</b>, que es
+            <b>diferente</b> a la sede por defecto
+            (<b>{{ branchName(defaultBranchId) }}</b>). ¿Seguro que quieres agendar en esa sede?
+          </p>
+        </div>
+      </div>
+      <div v-else class="mform">
         <!-- Cuándo + vet -->
         <div class="cols">
           <div class="col">
@@ -289,6 +362,16 @@ function submit() {
                 placeholder="Selecciona un veterinario/a"
                 @update:model-value="(v: string) => (employeeId = Number(v))"
               />
+            </div>
+            <div v-if="showBranchField" class="field">
+              <label class="flabel">Sede <span class="req">*</span></label>
+              <BaseSelect
+                :model-value="branchId != null ? String(branchId) : null"
+                :options="branchOptions"
+                placeholder="Selecciona una sede"
+                @update:model-value="(v: string) => (branchId = Number(v))"
+              />
+              <div class="fhint">Por defecto, la sede seleccionada en el menú principal.</div>
             </div>
           </div>
         </div>
@@ -359,6 +442,7 @@ function submit() {
                   <OwnerSearchAutocomplete
                     v-model="ownerId"
                     :initial-name="ownerName"
+                    :invalid="submitted && missingSubject"
                     @select="onOwnerSelect"
                   />
                 </div>
@@ -376,7 +460,11 @@ function submit() {
               <template v-else>
                 <div class="field">
                   <label class="flabel">Nombre del contacto</label>
-                  <BaseInput v-model="clientNameModel" placeholder="Ej. María Pérez" />
+                  <BaseInput
+                    v-model="clientNameModel"
+                    :invalid="submitted && missingSubject"
+                    placeholder="Ej. María Pérez"
+                  />
                 </div>
                 <div class="field">
                   <label class="flabel">Teléfono</label>
@@ -407,13 +495,21 @@ function submit() {
     </template>
 
     <template #footer-left>
-      <span>Los campos con <span class="req">*</span> son obligatorios.</span>
+      <span v-if="!confirmingBranch">Los campos con <span class="req">*</span> son obligatorios.</span>
     </template>
     <template #footer-actions>
-      <button type="button" class="btn btn-ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn btn-primary" @click="submit">
-        <Check :size="16" :stroke-width="1.8" /> {{ submitLabel }}
-      </button>
+      <template v-if="confirmingBranch">
+        <button type="button" class="btn btn-ghost" @click="confirmingBranch = false">Volver</button>
+        <button type="button" class="btn btn-primary" @click="doEmit">
+          <Check :size="16" :stroke-width="1.8" /> Sí, agendar en esta sede
+        </button>
+      </template>
+      <template v-else>
+        <button type="button" class="btn btn-ghost" @click="emit('close')">Cancelar</button>
+        <button type="button" class="btn btn-primary" @click="submit">
+          <Check :size="16" :stroke-width="1.8" /> {{ submitLabel }}
+        </button>
+      </template>
     </template>
   </ModalShell>
 </template>
@@ -423,6 +519,34 @@ function submit() {
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+.branch-confirm {
+  display: flex;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 11px;
+  background: oklch(96% 0.05 80);
+  border: 1px solid oklch(88% 0.09 80);
+}
+.bc-ic {
+  flex-shrink: 0;
+  color: oklch(55% 0.14 60);
+  margin-top: 2px;
+}
+.bc-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: oklch(38% 0.13 60);
+}
+.bc-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--warm-700);
+}
+.bc-text b {
+  font-weight: 600;
 }
 .cols {
   display: grid;

@@ -13,6 +13,11 @@ export interface EmployeeRoleSummary {
   code: string
 }
 
+export interface EmployeeBranchSummary {
+  id: number
+  name: string
+}
+
 export interface EmployeeResponse {
   id: number
   employeeCode: string
@@ -23,7 +28,23 @@ export interface EmployeeResponse {
   status: 'INVITED' | 'ACTIVE'
   company: EmployeeCompanySummary
   roles: EmployeeRoleSummary[]
+  branches: EmployeeBranchSummary[]
   createdDate: string
+}
+
+/** Envoltura genérica de respuesta paginada del backend (GET /employees/search). */
+export interface PageResponse<T> {
+  content: T[]
+  page: number
+  pageSize: number
+  totalElements: number
+  totalPages: number
+}
+
+export interface SearchEmployeesParams {
+  q?: string
+  page: number // 0-based (backend)
+  pageSize: number
 }
 
 export interface CreateEmployeeRequest {
@@ -52,6 +73,21 @@ export const employeeApi = {
 
   async listByCompany(): Promise<EmployeeResponse[]> {
     const { data } = await http.get<EmployeeResponse[]>('/employees/by-company')
+    return data
+  },
+
+  // Listado paginado + búsqueda server-side (nombre/código/correo). El backend deriva la empresa del JWT.
+  async search(params: SearchEmployeesParams): Promise<PageResponse<EmployeeResponse>> {
+    const query: Record<string, string | number> = {
+      page: params.page,
+      pageSize: params.pageSize,
+    }
+    const q = params.q?.trim()
+    if (q) query.q = q
+    const { data } = await http.get<PageResponse<EmployeeResponse>>('/employees/search', {
+      params: query,
+      skipGlobalLoader: true,
+    })
     return data
   },
 

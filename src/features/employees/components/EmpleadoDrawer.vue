@@ -152,7 +152,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               v-if="canUpdate"
               type="button"
               class="ghost"
-              :disabled="busy"
+              :disabled="busy || isAdmin"
+              :title="
+                isAdmin
+                  ? 'Un administrador tiene acceso a todas las sedes; no se le asignan sedes.'
+                  : undefined
+              "
               @click="emit('change-branches', employee)"
             >
               <Building2 :size="14" :stroke-width="1.7" />

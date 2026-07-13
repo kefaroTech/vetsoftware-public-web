@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Mail, IdCard, Calendar } from 'lucide-vue-next'
+import { Mail, IdCard, Calendar, Building2 } from 'lucide-vue-next'
 import type { Employee } from '@/types/domain'
 
 const props = defineProps<{ employee: Employee }>()
+
+const branches = computed(() => props.employee.branches)
 
 const fields = computed(() => [
   { icon: Mail, label: 'Correo', value: props.employee.email || '—' },
@@ -29,6 +31,19 @@ function formatDate(iso: string): string {
       <div class="data">
         <div class="label">{{ f.label }}</div>
         <div class="value">{{ f.value }}</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="ic">
+        <Building2 :size="15" :stroke-width="1.7" />
+      </div>
+      <div class="data">
+        <div class="label">Sedes</div>
+        <div v-if="branches.length > 0" class="chips">
+          <span v-for="b in branches" :key="b.id" class="chip">{{ b.name }}</span>
+        </div>
+        <div v-else class="value muted">Sin sedes asignadas</div>
       </div>
     </div>
   </div>
@@ -75,5 +90,23 @@ function formatDate(iso: string): string {
   font-size: 14px;
   color: var(--warm-900);
   word-break: break-word;
+}
+.value.muted {
+  color: var(--warm-500);
+  font-style: italic;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip {
+  padding: 3px 10px;
+  font-size: 12.5px;
+  color: var(--warm-700);
+  background: var(--warm-100);
+  border: 1px solid var(--warm-200);
+  border-radius: 999px;
+  white-space: nowrap;
 }
 </style>

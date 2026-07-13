@@ -168,6 +168,8 @@ async function persistConsultationItems(consultationId: number, animalId: number
       animalId,
       consultationId,
       companyId,
+      // Sede elegida en el modal de la muestra; si no hay, withBranchBody usa la del menú principal.
+      branchId: t.branchId,
     })
     draft.markLaboratoryTestSaved(i, created.id)
   }

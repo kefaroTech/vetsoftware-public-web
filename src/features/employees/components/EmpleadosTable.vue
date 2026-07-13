@@ -1,32 +1,26 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { Search } from 'lucide-vue-next'
 import type { Employee } from '@/types/domain'
 import EmpleadoRow from './EmpleadoRow.vue'
+import Pagination from '@/features/acciones/components/Pagination.vue'
 
-const props = defineProps<{
+// La búsqueda es server-side: no filtramos localmente, renderizamos la página que llega del backend.
+defineProps<{
   employees: Employee[]
   selectedId: number | null
   query: string
   loading?: boolean
+  page: number
+  pageSize: number
+  totalElements: number
+  totalPages: number
 }>()
 
 const emit = defineEmits<{
   'update:query': [value: string]
+  'update:page': [value: number]
   select: [id: number]
 }>()
-
-const filtered = computed(() => {
-  const q = props.query.trim().toLowerCase()
-  if (!q) return props.employees
-  return props.employees.filter((e) => {
-    return (
-      e.name.toLowerCase().includes(q) ||
-      e.employeeCode.toLowerCase().includes(q) ||
-      e.email.toLowerCase().includes(q)
-    )
-  })
-})
 </script>
 
 <template>
@@ -48,22 +42,23 @@ const filtered = computed(() => {
         <div class="cell avatar-cell" />
         <div class="cell name-cell">Empleado</div>
         <div class="cell role-cell">Rol</div>
+        <div class="cell sedes-cell">Sedes</div>
         <div class="cell contact-cell">Correo</div>
         <div class="cell status-cell">Estado</div>
         <div class="cell chev-cell" />
       </div>
 
       <div v-if="loading && employees.length === 0" class="empty">Cargando empleados…</div>
-      <div v-else-if="filtered.length === 0" class="empty">
+      <div v-else-if="employees.length === 0" class="empty">
         {{
-          employees.length === 0
-            ? 'Aún no hay empleados registrados en esta empresa.'
-            : 'Sin resultados que coincidan con la búsqueda.'
+          query.trim()
+            ? 'Sin resultados que coincidan con la búsqueda.'
+            : 'Aún no hay empleados registrados en esta empresa.'
         }}
       </div>
 
       <EmpleadoRow
-        v-for="(emp, i) in filtered"
+        v-for="(emp, i) in employees"
         :key="emp.id"
         :employee="emp"
         :selected="emp.id === selectedId"
@@ -71,6 +66,14 @@ const filtered = computed(() => {
         @select="emit('select', $event)"
       />
     </div>
+
+    <Pagination
+      :page="page"
+      :page-count="totalPages"
+      :total="totalElements"
+      :page-size="pageSize"
+      @update:page="emit('update:page', $event)"
+    />
   </div>
 </template>
 
@@ -139,16 +142,19 @@ const filtered = computed(() => {
   flex: 0 0 36px;
 }
 .name-cell {
-  flex: 2;
+  flex: 1.8;
 }
 .role-cell {
+  flex: 1.2;
+}
+.sedes-cell {
   flex: 1.4;
 }
 .contact-cell {
-  flex: 1.6;
+  flex: 1.4;
 }
 .status-cell {
-  flex: 0 0 100px;
+  flex: 0 0 96px;
 }
 .chev-cell {
   flex: 0 0 28px;

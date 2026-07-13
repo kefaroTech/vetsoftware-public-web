@@ -1,4 +1,5 @@
 import { http } from '@/services/http/http.client'
+import { withBranchBody } from '@/features/branches/api/branchContext'
 import type { LaboratoryTestPriority, LaboratoryTestStatus } from '@/types/domain'
 
 export interface CreateLaboratoryTestPayload {
@@ -11,6 +12,8 @@ export interface CreateLaboratoryTestPayload {
   animalId: number
   consultationId: number | null
   companyId: number
+  // Sede de la muestra. Si no viene explícita, se inyecta la sede del menú principal (contexto multi-sucursal).
+  branchId?: number | null
 }
 
 export interface LaboratoryTestEmployeeSummary {
@@ -59,9 +62,10 @@ export interface LaboratoryTestResponse {
 
 export const laboratoryTestApi = {
   async create(payload: CreateLaboratoryTestPayload): Promise<LaboratoryTestResponse> {
+    // Multi-sucursal: si el payload no trae branchId, se usa la sede del menú principal.
     const { data } = await http.post<LaboratoryTestResponse>(
       '/laboratory-tests',
-      payload,
+      withBranchBody(payload),
     )
     return data
   },

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
+import { useBranches } from '@/features/branches/composables/useBranches'
 import LabBoard from '../components/LabBoard.vue'
 import LabHistory from '../components/LabHistory.vue'
 import LabDetailModal from '../modals/LabDetailModal.vue'
@@ -13,6 +14,7 @@ import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta
 
 const toast = useToast()
 const queue = useLabQueue()
+const { selectedBranchId } = useBranches()
 
 const tab = ref<'board' | 'history'>('board')
 const viewing = ref<LaboratoryTestResponse | null>(null)
@@ -21,6 +23,8 @@ const collectFor = ref<LaboratoryTestResponse | null>(null)
 const collecting = ref(false)
 
 onMounted(() => queue.load())
+// La bandeja es por sede: al cambiar la sede del menú principal, se recarga con las muestras de esa sede.
+watch(selectedBranchId, () => queue.load())
 
 async function handleAction(item: LaboratoryTestResponse, kind: LabActionKind) {
   if (kind === 'load') {

@@ -25,6 +25,7 @@ export function mapEmployeeResponse(r: EmployeeResponse): Employee {
       name: role.name,
       code: role.code,
     })),
+    branches: (r.branches ?? []).map((b) => ({ id: b.id, name: b.name })),
     initials: deriveInitials(r.name),
   }
 }

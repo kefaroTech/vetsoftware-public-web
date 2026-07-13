@@ -3,7 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { UserPlus, Pencil } from 'lucide-vue-next'
 import type { Employee, EmployeeStatus } from '@/types/domain'
 import { useRoles } from '@/features/roles/composables/useRoles'
-import { useSedes } from '@/features/branches/composables/useSedes'
+import { useBranches } from '@/features/branches/composables/useBranches'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
@@ -38,7 +38,8 @@ type FieldKey = 'employeeCode' | 'name' | 'email' | 'password' | 'roles' | 'bran
 const isEditing = computed(() => props.initial !== null)
 
 const { list: roles } = useRoles()
-const { activeSedes } = useSedes()
+// Sedes ASIGNABLES por el usuario actual: admin ve todas las activas; un no-admin solo sus sedes.
+const { visibleBranches } = useBranches()
 
 const draft = ref<EmployeeFormData>({
   employeeCode: '',
@@ -370,7 +371,7 @@ const subtitleText = computed(() =>
           :error="err('branches')"
         >
           <BranchSelectorGrid
-            :available-branches="activeSedes"
+            :available-branches="visibleBranches"
             :selected-ids="selectedBranchIds"
             @update:selected-ids="onSelectedBranchIdsUpdate"
           />

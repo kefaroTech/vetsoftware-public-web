@@ -20,11 +20,16 @@ export function useBranches() {
   const { isAdmin, branchIds } = useAuthorization()
 
   const activeBranches = computed(() => branches.value.filter((b) => b.active))
-  // Sedes visibles para el usuario: admin ve todas las activas; el resto, solo las activas que tiene asignadas.
+  // Sedes visibles para el selector GLOBAL del menú: admin ve todas las activas; el resto, solo las asignadas.
   const visibleBranches = computed(() =>
     isAdmin.value
       ? activeBranches.value
       : activeBranches.value.filter((b) => branchIds.value.includes(b.id)),
+  )
+  // Sedes ASIGNADAS al usuario (activas ∩ me.branchIds), SIN bypass de admin. Para los desplegables de CREACIÓN
+  // (agendar cita, crear muestra): el usuario solo puede operar/elegir sedes que tiene asignadas, aunque sea admin.
+  const assignedBranches = computed(() =>
+    activeBranches.value.filter((b) => branchIds.value.includes(b.id)),
   )
 
   const options = computed(() => {
@@ -71,6 +76,8 @@ export function useBranches() {
 
   return {
     options,
+    visibleBranches,
+    assignedBranches,
     selectedValue,
     selectedBranchId,
     hasBranches,
