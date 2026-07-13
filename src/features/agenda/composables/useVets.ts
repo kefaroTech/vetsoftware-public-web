@@ -8,9 +8,9 @@ export function useVets(autoload = true) {
   const { vets, loading, error } = storeToRefs(store)
 
   if (autoload) {
-    // Siempre recargar al abrir la pantalla: los empleados con rol VET pueden
-    // haber cambiado (nuevos veterinarios, asignaciones de rol).
-    onMounted(() => void store.load())
+    // Siempre recargar al abrir la pantalla (force): los empleados con rol VET pueden haber cambiado
+    // (nuevos veterinarios, asignaciones de rol). No se usa la caché.
+    onMounted(() => void store.load(true))
   }
 
   return {

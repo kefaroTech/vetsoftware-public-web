@@ -8,6 +8,8 @@ export interface Vet {
   id: number
   name: string
   initials: string
+  /** Sedes asignadas al veterinario (para filtrar por la sede elegida en la cita). */
+  branchIds: number[]
 }
 
 /**
@@ -21,10 +23,10 @@ export const useVetsStore = defineStore('agendaVets', () => {
   let inFlight: Promise<void> | null = null
 
   async function load(force = false): Promise<void> {
-    if (!force && (vets.value.length > 0 || inFlight)) {
-      if (inFlight) await inFlight
-      return
-    }
+    // Dedup de llamadas concurrentes (una sola petición aunque varios componentes la pidan a la vez).
+    if (inFlight) return inFlight
+    // La caché solo aplica cuando NO se fuerza: al abrir la pantalla/modal se llama con force=true y siempre recarga.
+    if (!force && vets.value.length > 0) return
     loading.value = true
     error.value = null
     inFlight = employeeApi
@@ -32,7 +34,12 @@ export const useVetsStore = defineStore('agendaVets', () => {
       .then((list) => {
         vets.value = list
           .filter((e) => e.roles.some((r) => r.code === 'VET'))
-          .map((e) => ({ id: e.id, name: e.name, initials: apptInitials(e.name) }))
+          .map((e) => ({
+            id: e.id,
+            name: e.name,
+            initials: apptInitials(e.name),
+            branchIds: e.branches.map((b) => b.id),
+          }))
       })
       .catch((e) => {
         error.value = getProblemDetailMessage(e, 'No se pudieron cargar los veterinarios')
@@ -42,7 +49,7 @@ export const useVetsStore = defineStore('agendaVets', () => {
         loading.value = false
         inFlight = null
       })
-    await inFlight
+    return inFlight
   }
 
   function findById(id: number | null | undefined): Vet | null {

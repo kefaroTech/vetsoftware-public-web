@@ -49,7 +49,7 @@ const emit = defineEmits<{
   ]
 }>()
 
-const { vets } = useVets()
+const { vets, load: loadVets } = useVets()
 // Desplegable de sede: solo las sedes ASIGNADAS al usuario (aunque sea admin).
 const { assignedBranches, selectedBranchId } = useBranches()
 const animalsStore = useAnimalsByOwnerStore()
@@ -104,7 +104,7 @@ function resetFromProps() {
     date.value = props.focusDate
     time.value = '09:00'
     type.value = 'CONSULTATION'
-    employeeId.value = vets.value[0]?.id ?? null
+    employeeId.value = availableVets.value[0]?.id ?? null
     subjectMode.value = 'registered'
     ownerId.value = null
     ownerName.value = null
@@ -119,17 +119,15 @@ function resetFromProps() {
 watch(
   () => props.open,
   (open) => {
-    if (open) resetFromProps()
+    if (open) {
+      // El modal está siempre montado (se controla con :open), así que su onMounted corre una sola vez.
+      // Al ABRIR se recarga siempre la lista de veterinarios desde el backend (por si cambió).
+      void loadVets(true)
+      resetFromProps()
+    }
   },
   { immediate: true },
 )
-
-// Default de vet cuando la lista llega tarde (modo crear).
-watch(vets, (list) => {
-  if (props.open && !props.appointment && employeeId.value == null) {
-    employeeId.value = list[0]?.id ?? null
-  }
-})
 
 // Default de sede cuando las sucursales llegan tarde.
 watch(assignedBranches, () => {
@@ -184,9 +182,29 @@ function onOwnerSelect(owner: Owner | null) {
 }
 
 // ── Opciones ─────────────────────────────────────────────────────────
+// Veterinarios disponibles: al CREAR se filtran por la sede elegida en la cita (solo los que atienden esa sede);
+// en editar/reprogramar se muestran todos (la cita ya tiene su sede).
+const availableVets = computed(() => {
+  const bid = branchId.value
+  if (props.mode !== 'create' || bid == null) return vets.value
+  return vets.value.filter((v) => v.branchIds.includes(bid))
+})
 const vetOptions = computed(() =>
-  vets.value.map((v) => ({ value: String(v.id), label: v.name })),
+  availableVets.value.map((v) => ({ value: String(v.id), label: v.name })),
 )
+
+// Al cambiar la sede (o al llegar los vets, en modo crear) reconciliar el veterinario: si el seleccionado no
+// atiende esa sede, caer al primero disponible.
+watch(availableVets, (list) => {
+  if (!props.open || props.mode !== 'create') return
+  if (list.length === 0) {
+    employeeId.value = null
+    return
+  }
+  if (employeeId.value == null || !list.some((v) => v.id === employeeId.value)) {
+    employeeId.value = list[0].id
+  }
+})
 const petOptions = computed(() => [
   { value: '', label: ownerId.value ? '— Por confirmar —' : 'Elige un dueño primero' },
   ...pets.value.map((p) => ({

@@ -50,6 +50,27 @@ Convención (espejo en ambos fronts):
 (cada componente tiene su propia lista). Usar `ref` local dentro de una función
 NO es un patrón híbrido — lo prohibido es el `ref()` module-scoped singleton.
 
+## Recargar SIEMPRE al abrir pantalla/modal (regla obligatoria)
+
+**Cada pantalla y cada modal debe recargar desde el backend TODOS los datos que
+la componen cada vez que se abre / se navega a ella. No mostrar caché vieja al
+abrir.** (Reportado: la lista de veterinarios en "Nueva cita" no se refrescaba.)
+
+Patrón:
+
+1. **Store**: `load(force = false)` / `fetchAll(force = false)` debe **dedup** las
+   llamadas concurrentes (`if (inFlight) return inFlight`) pero **refetchar cuando
+   `force === true`** — la caché solo aplica si NO se fuerza. Referencia:
+   `agenda/stores/vets.store.ts`.
+2. **Views (pantallas)**: en `onMounted` llamar al refresh **forzado** de cada
+   servicio/composable que usan (no el fetch cacheado). Los composables `useXxx`
+   con `autoload` fuerzan en su `onMounted` (`store.load(true)`).
+3. **Modales**: normalmente están **siempre montados** (se controlan con `:open`),
+   así que su `onMounted` corre una sola vez. Hay que refrescar en el
+   **`watch(() => props.open)`** cuando pasa a `true` (llamar `load(true)` /
+   `refresh()` de sus servicios). Referencia: `AppointmentFormModal` refresca
+   `useVets().load(true)` al abrir.
+
 ## Estructura por feature
 
 Cada feature vive en `src/features/<feature>/` y agrupa por subcarpetas:
