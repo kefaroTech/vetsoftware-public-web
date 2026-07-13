@@ -21,6 +21,8 @@ const PASSWORD = process.env.E2E_PASSWORD ?? '12345678'
 const NEG_FLAG = 'inventory.allow_negative_stock'
 
 let token = ''
+let companyId = 0 // empresa del usuario (para el flag por empresa en company_settings)
+let isAdmin = false // ¿el usuario tiene admin.all? (para el gate de company-settings)
 let branchA = 0 // sede principal
 let branchB = 0 // segunda sede (para multi-sede/transferencias)
 let categoryId = 0
@@ -59,15 +61,15 @@ function sku(prefix = 'KX') {
 }
 
 /**
- * Fija el flag GLOBAL de stock negativo directamente en la BD (Docker) — el endpoint PUT /system-configurations
- * exige un permiso de config de sistema que el admin de empresa no tiene, pero lo que este caso verifica es que el
- * LEDGER respete el valor, independiente de quién pueda escribirlo. `NegativeStockPolicy` lee la fila sin caché.
- * Devuelve true si se pudo setear (Docker/mysql disponible), false si no (para saltar solo en entornos sin Docker).
+ * Fija el flag de stock negativo de la EMPRESA en `company_settings` directamente en la BD (Docker). El endpoint
+ * `PUT /company-settings` está gateado a `admin.all` (solo el admin togglea); como el usuario de prueba no
+ * necesariamente es admin.all, se setea por BD para verificar que el LEDGER respete el valor. `NegativeStockPolicy`
+ * lee la fila (por empresa) sin caché. Devuelve true si se pudo setear (Docker/mysql disponible).
  */
-function setNegFlagDb(value: 'true' | 'false'): boolean {
+function setNegFlagDb(companyId: number, value: 'true' | 'false'): boolean {
   const sql =
-    `INSERT INTO system_configurations (property_name, value, created_date, enabled) ` +
-    `VALUES ('${NEG_FLAG}', '${value}', NOW(), 1) ON DUPLICATE KEY UPDATE value = '${value}'`
+    `INSERT INTO company_settings (company_id, property_name, value, created_date, enabled) ` +
+    `VALUES (${companyId}, '${NEG_FLAG}', '${value}', NOW(), 1) ON DUPLICATE KEY UPDATE value = '${value}'`
   try {
     execFileSync(
       'docker',
@@ -133,6 +135,11 @@ test.beforeAll(async ({ request }) => {
   token = login.body.token as string
   expect(token).toBeTruthy()
 
+  const me = await req(request, 'get', '/auth/me')
+  companyId = me.body.companyId as number
+  expect(companyId, 'companyId de /auth/me').toBeTruthy()
+  isAdmin = ((me.body.permissions as unknown as string[]) ?? []).includes('admin.all')
+
   const branches = await req(request, 'get', '/branches')
   expect(branches.status).toBe(200)
   const active = (branches.body as unknown as Array<Record<string, unknown>>).filter((b) => b.active)
@@ -157,8 +164,8 @@ test.beforeAll(async ({ request }) => {
     }
   }
 
-  // Estado limpio del flag global (por si una corrida previa lo dejó en true): varios casos dependen de OFF.
-  setNegFlagDb('false')
+  // Estado limpio del flag de la empresa (por si una corrida previa lo dejó en true): varios casos dependen de OFF.
+  setNegFlagDb(companyId, 'false')
 
   const cats = await req(request, 'get', '/product-categories')
   if ((cats.body as unknown as Array<unknown>).length > 0) {
@@ -438,20 +445,21 @@ test.describe('Multi-sede', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // 8. Override de stock negativo (system_configurations, GLOBAL)
 // ─────────────────────────────────────────────────────────────────────────────
-test.describe('Override de stock negativo', () => {
-  // El flag se setea en BD (ver setNegFlagDb). Solo se salta si Docker/mysql no está disponible en el entorno.
+test.describe('Override de stock negativo (por empresa, company_settings)', () => {
+  // El flag vive en company_settings (por empresa) y se setea en BD (ver setNegFlagDb). Solo se salta si Docker no
+  // está disponible. El toggle real desde la app es via PUT /company-settings, gateado a admin.all.
   test.afterAll(() => {
-    setNegFlagDb('false') // restaura el default para no afectar otros casos
+    setNegFlagDb(companyId, 'false') // restaura el default para no afectar otros casos
   })
   test('flag ON permite consumir sin stock (negativo)', async ({ request }) => {
-    test.skip(!setNegFlagDb('true'), 'requiere Docker (contenedor vetsoftware_mysql) para setear el flag')
+    test.skip(!setNegFlagDb(companyId, 'true'), 'requiere Docker (contenedor vetsoftware_mysql) para setear el flag')
     const p = await createProduct(request)
     const r = await req(request, 'post', '/inventory/consumptions', { data: { branchId: branchA, productId: p, quantity: 5, reason: 'x' } })
     expect(r.status).toBe(204)
     expect(await qtyOf(request, p, branchA)).toBe(-5)
   })
   test('flag OFF vuelve a bloquear con 409', async ({ request }) => {
-    test.skip(!setNegFlagDb('false'), 'requiere Docker para setear el flag')
+    test.skip(!setNegFlagDb(companyId, 'false'), 'requiere Docker para setear el flag')
     const p = await createProduct(request)
     const r = await req(request, 'post', '/inventory/consumptions', { data: { branchId: branchA, productId: p, quantity: 5, reason: 'x' } })
     expect(r.status).toBe(409)
@@ -577,6 +585,19 @@ test.describe('Inventario ↔ POS', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // 11. Autorización
 // ─────────────────────────────────────────────────────────────────────────────
+test.describe('company-settings (toggle del flag, gate admin.all)', () => {
+  test('PUT /company-settings gateado a admin.all', async ({ request }) => {
+    const r = await req(request, 'put', '/company-settings', { data: { propertyName: NEG_FLAG, value: 'false' } })
+    if (isAdmin) expect([200, 201], JSON.stringify(r.body)).toContain(r.status)
+    else expect(r.status, 'un no-admin no puede togglear el flag de empresa').toBe(403)
+  })
+  test('propertyName vacío → 400', async ({ request }) => {
+    test.skip(!isAdmin, 'requiere admin.all para pasar el gate y llegar a la validación')
+    const r = await req(request, 'put', '/company-settings', { data: { value: 'true' } })
+    expect(r.status).toBe(400)
+  })
+})
+
 test.describe('Autorización', () => {
   test('sin token → 401/403', async ({ request }) => {
     const r = await req(request, 'get', '/inventory/stock', { params: { branchId: branchA }, auth: false })
