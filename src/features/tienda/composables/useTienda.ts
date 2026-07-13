@@ -48,6 +48,7 @@ export function useTienda() {
     transferStock: store.transferStock,
     setMinStock: store.setMinStock,
     consumeStock: store.consumeStock,
+    recordCount: store.recordCount,
     loading,
     error,
     ensureLoaded: store.ensureLoaded,

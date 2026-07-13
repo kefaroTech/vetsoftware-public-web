@@ -22,8 +22,10 @@ import type {
   AdjustStockPayload,
   ConsumeStockPayload,
   InventoryAlertsView,
+  InventoryCountView,
   InventoryValuationView,
   ReceiveStockPayload,
+  RecordCountPayload,
   StockView,
   TransferStockPayload,
 } from '../types/inventory'
@@ -146,6 +148,14 @@ export const useTiendaStore = defineStore('tienda', () => {
     await inventoryApi.consume(payload)
     await loadStock(payload.branchId ?? stockBranchId.value)
     await loadInventoryInsights(payload.branchId ?? stockBranchId.value)
+  }
+
+  /** Conteo físico/cíclico: concilia (genera ADJUSTMENT_IN/OUT por diferencia) y recarga stock + insights. */
+  async function recordCount(payload: RecordCountPayload): Promise<InventoryCountView> {
+    const view = await inventoryApi.recordCount(payload)
+    await loadStock(payload.branchId ?? stockBranchId.value)
+    await loadInventoryInsights(payload.branchId ?? stockBranchId.value)
+    return view
   }
 
   async function fetchAll(): Promise<void> {
@@ -335,6 +345,7 @@ export const useTiendaStore = defineStore('tienda', () => {
     transferStock,
     setMinStock,
     consumeStock,
+    recordCount,
     loading,
     error,
     ensureLoaded,

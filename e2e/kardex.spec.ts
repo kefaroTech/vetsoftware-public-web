@@ -443,6 +443,136 @@ test.describe('Multi-sede', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 7b. Conteo físico / cíclico (concilia generando ADJUSTMENT_IN/OUT por la diferencia)
+// ─────────────────────────────────────────────────────────────────────────────
+test.describe('Conteo físico (cíclico)', () => {
+  type CountLine = { productId: number; countedQuantity: number }
+  async function count(request: APIRequestContext, lines: CountLine[], note?: string, branchId = branchA) {
+    return req(request, 'post', '/inventory/counts', { data: { branchId, note, lines } })
+  }
+
+  test('conteo sin diferencias no genera ajuste', async ({ request }) => {
+    const p = await createProduct(request)
+    await receive(request, p, branchA, 10)
+    const r = await count(request, [{ productId: p, countedQuantity: 10 }], 'cuadra')
+    expect(r.status, JSON.stringify(r.body)).toBe(201)
+    expect(r.body.totalLines).toBe(1)
+    expect(r.body.adjustedLines).toBe(0)
+    const line = (r.body.lines as Array<Record<string, unknown>>)[0]
+    expect(line.systemQuantity).toBe(10)
+    expect(line.countedQuantity).toBe(10)
+    expect(line.difference).toBe(0)
+    expect(await qtyOf(request, p, branchA)).toBe(10)
+    // Solo la entrada; ningún ajuste.
+    expect(await kardexTypes(request, p, branchA)).toEqual(['PURCHASE'])
+  })
+
+  test('faltante (contado < sistema) genera ADJUSTMENT_OUT por la diferencia', async ({ request }) => {
+    const p = await createProduct(request)
+    await receive(request, p, branchA, 10)
+    const r = await count(request, [{ productId: p, countedQuantity: 7 }], 'merma detectada')
+    expect(r.status).toBe(201)
+    expect(r.body.adjustedLines).toBe(1)
+    expect((r.body.lines as Array<Record<string, unknown>>)[0].difference).toBe(-3)
+    expect(await qtyOf(request, p, branchA)).toBe(7)
+    expect(await kardexTypes(request, p, branchA)).toContain('ADJUSTMENT_OUT')
+  })
+
+  test('sobrante (contado > sistema) genera ADJUSTMENT_IN por la diferencia', async ({ request }) => {
+    const p = await createProduct(request)
+    await receive(request, p, branchA, 10)
+    const r = await count(request, [{ productId: p, countedQuantity: 15 }])
+    expect(r.status).toBe(201)
+    expect((r.body.lines as Array<Record<string, unknown>>)[0].difference).toBe(5)
+    expect(await qtyOf(request, p, branchA)).toBe(15)
+    expect(await kardexTypes(request, p, branchA)).toContain('ADJUSTMENT_IN')
+  })
+
+  test('producto sin saldo previo (sistema 0) contado > 0 crea existencia', async ({ request }) => {
+    const p = await createProduct(request)
+    const r = await count(request, [{ productId: p, countedQuantity: 8 }])
+    expect(r.status).toBe(201)
+    const line = (r.body.lines as Array<Record<string, unknown>>)[0]
+    expect(line.systemQuantity).toBe(0)
+    expect(line.difference).toBe(8)
+    expect(await qtyOf(request, p, branchA)).toBe(8)
+    expect(await kardexTypes(request, p, branchA)).toContain('ADJUSTMENT_IN')
+  })
+
+  test('conteo multi-línea: uno sobra y otro falta', async ({ request }) => {
+    const a = await createProduct(request)
+    const b = await createProduct(request)
+    await receive(request, a, branchA, 10)
+    await receive(request, b, branchA, 10)
+    const r = await count(request, [
+      { productId: a, countedQuantity: 12 }, // +2
+      { productId: b, countedQuantity: 6 }, // −4
+    ])
+    expect(r.status).toBe(201)
+    expect(r.body.totalLines).toBe(2)
+    expect(r.body.adjustedLines).toBe(2)
+    expect(await qtyOf(request, a, branchA)).toBe(12)
+    expect(await qtyOf(request, b, branchA)).toBe(6)
+    expect(await kardexTypes(request, a, branchA)).toContain('ADJUSTMENT_IN')
+    expect(await kardexTypes(request, b, branchA)).toContain('ADJUSTMENT_OUT')
+  })
+
+  test('la sesión queda en el historial y su detalle trae las líneas', async ({ request }) => {
+    const p = await createProduct(request)
+    await receive(request, p, branchA, 10)
+    const created = await count(request, [{ productId: p, countedQuantity: 4 }], 'conteo semanal')
+    const id = created.body.id as number
+    expect(id).toBeTruthy()
+
+    // Listado (resumen, sin líneas).
+    const list = await req(request, 'get', '/inventory/counts', { params: { branchId: branchA, pageSize: 200 } })
+    expect(list.status).toBe(200)
+    const summary = (list.body.content as Array<Record<string, unknown>>).find((c) => c.id === id)
+    expect(summary, 'la sesión debe aparecer en el historial').toBeTruthy()
+    expect(summary!.totalLines).toBe(1)
+    expect(summary!.adjustedLines).toBe(1)
+
+    // Detalle (con líneas y diferencias).
+    const detail = await req(request, 'get', `/inventory/counts/${id}`)
+    expect(detail.status).toBe(200)
+    expect(detail.body.note).toBe('conteo semanal')
+    const line = (detail.body.lines as Array<Record<string, unknown>>)[0]
+    expect(line.productId).toBe(p)
+    expect(line.difference).toBe(-6)
+  })
+
+  test('detalle de una sesión inexistente → 404', async ({ request }) => {
+    const r = await req(request, 'get', '/inventory/counts/999999999')
+    expect(r.status).toBe(404)
+  })
+
+  test('sin líneas → 400', async ({ request }) => {
+    expect((await count(request, [])).status).toBe(400)
+  })
+  test('branchId ausente → 400', async ({ request }) => {
+    const p = await createProduct(request)
+    const r = await req(request, 'post', '/inventory/counts', { data: { lines: [{ productId: p, countedQuantity: 1 }] } })
+    expect(r.status).toBe(400)
+  })
+  test('productId ausente en una línea → 400', async ({ request }) => {
+    const r = await req(request, 'post', '/inventory/counts', { data: { branchId: branchA, lines: [{ countedQuantity: 5 }] } })
+    expect(r.status).toBe(400)
+  })
+  test('cantidad contada negativa → 400', async ({ request }) => {
+    const p = await createProduct(request)
+    expect((await count(request, [{ productId: p, countedQuantity: -3 }])).status).toBe(400)
+  })
+  test('producto repetido en el conteo → 400', async ({ request }) => {
+    const p = await createProduct(request)
+    const r = await count(request, [
+      { productId: p, countedQuantity: 5 },
+      { productId: p, countedQuantity: 3 },
+    ])
+    expect(r.status).toBe(400)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 8. Override de stock negativo (system_configurations, GLOBAL)
 // ─────────────────────────────────────────────────────────────────────────────
 test.describe('Override de stock negativo (por empresa, company_settings)', () => {

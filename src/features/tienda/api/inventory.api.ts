@@ -4,9 +4,11 @@ import type {
   AdjustStockPayload,
   ConsumeStockPayload,
   InventoryAlertsView,
+  InventoryCountView,
   InventoryValuationView,
   PurchaseView,
   ReceiveStockPayload,
+  RecordCountPayload,
   StockLotView,
   StockMovementView,
   StockSearchCriteria,
@@ -97,6 +99,26 @@ export const inventoryApi = {
     if (opts.from) params.from = opts.from
     if (opts.to) params.to = opts.to
     const { data } = await http.get<PageResponse<PurchaseView>>('/inventory/purchases', { params })
+    return data
+  },
+
+  // ── Conteo físico / cíclico ──
+  async recordCount(payload: RecordCountPayload): Promise<InventoryCountView> {
+    const { data } = await http.post<InventoryCountView>('/inventory/counts', payload)
+    return data
+  },
+
+  async counts(
+    opts: { branchId?: number | null; page?: number; pageSize?: number } = {},
+  ): Promise<PageResponse<InventoryCountView>> {
+    const params: Record<string, string | number> = { page: opts.page ?? 0, pageSize: opts.pageSize ?? 20 }
+    if (opts.branchId != null) params.branchId = opts.branchId
+    const { data } = await http.get<PageResponse<InventoryCountView>>('/inventory/counts', { params })
+    return data
+  },
+
+  async countDetail(id: number): Promise<InventoryCountView> {
+    const { data } = await http.get<InventoryCountView>(`/inventory/counts/${id}`)
     return data
   },
 }

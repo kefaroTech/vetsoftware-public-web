@@ -127,6 +127,38 @@ export interface ConsumeStockPayload {
   reason?: string | null
 }
 
+// ── Conteo físico / cíclico ───────────────────────────────────────────────────
+
+/** Línea de una sesión de conteo: sistema vs contado y la diferencia (ajuste) resultante. */
+export interface InventoryCountLineView {
+  productId: number
+  systemQuantity: number
+  countedQuantity: number
+  difference: number
+}
+
+/**
+ * Espejo de InventoryCountView. En el listado (historial) `lines` viene vacío y se usan los contadores
+ * agregados; en el detalle y al confirmar trae las líneas con sus diferencias.
+ */
+export interface InventoryCountView {
+  id: number
+  branchId: number
+  note: string | null
+  countedBy: number | null
+  createdDate: string
+  totalLines: number
+  adjustedLines: number
+  lines: InventoryCountLineView[]
+}
+
+/** Hoja de conteo a confirmar: solo las líneas efectivamente contadas. */
+export interface RecordCountPayload {
+  branchId: number
+  note?: string | null
+  lines: { productId: number; countedQuantity: number }[]
+}
+
 /** Renglón del libro de compras (entrada de mercancía con costo). */
 export interface PurchaseView {
   id: number

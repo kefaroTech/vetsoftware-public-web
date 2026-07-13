@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { AlertTriangle, ArrowLeftRight, Bell, BookText, Boxes, ChevronLeft, ChevronRight, PauseCircle, Package, Plus, RotateCcw, Search, SlidersHorizontal, Syringe } from 'lucide-vue-next'
+import { AlertTriangle, ArrowLeftRight, Bell, BookText, Boxes, ChevronLeft, ChevronRight, ClipboardList, PauseCircle, Package, Plus, RotateCcw, Search, SlidersHorizontal, Syringe } from 'lucide-vue-next'
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
 import StockStatePill from '../components/StockStatePill.vue'
 import ProductFormModal from '../components/ProductFormModal.vue'
@@ -10,6 +10,8 @@ import TransferModal, { type TransferDraft } from '../components/TransferModal.v
 import ConsumeModal, { type ConsumeDraft } from '../components/ConsumeModal.vue'
 import StockDetailModal from '../components/StockDetailModal.vue'
 import PurchasesModal from '../components/PurchasesModal.vue'
+import CountSheetModal, { type CountDraft } from '../components/CountSheetModal.vue'
+import CountsHistoryModal from '../components/CountsHistoryModal.vue'
 import CategoryManagerModal from '../components/CategoryManagerModal.vue'
 import { useTienda } from '../composables/useTienda'
 import { useBranches } from '@/features/branches/composables/useBranches'
@@ -57,6 +59,8 @@ const transferFor = ref<ProductResponse | null>(null)
 const consumeFor = ref<ProductResponse | null>(null)
 const detailFor = ref<ProductResponse | null>(null)
 const purchasesOpen = ref(false)
+const countOpen = ref(false)
+const historyOpen = ref(false)
 const categoriesOpen = ref(false)
 const pausing = ref<ProductResponse | null>(null)
 const pausingBusy = ref(false)
@@ -234,6 +238,28 @@ async function onTransfer(draft: TransferDraft) {
   }
 }
 
+/** Abre la hoja de conteo con el stock de la sede recién recargado. */
+async function openCount() {
+  await reloadStock()
+  countOpen.value = true
+}
+
+async function onRecordCount(draft: CountDraft) {
+  if (branchId.value == null) return
+  try {
+    const view = await store.recordCount({ branchId: branchId.value, note: draft.note, lines: draft.lines })
+    toast.success(
+      'Conteo aplicado',
+      view.adjustedLines > 0
+        ? `${view.adjustedLines} ajuste(s) generado(s) en ${branchName.value}.`
+        : `Todo cuadra en ${branchName.value}: sin ajustes.`,
+    )
+    countOpen.value = false
+  } catch (e) {
+    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo registrar el conteo'))
+  }
+}
+
 async function onConsume(draft: ConsumeDraft) {
   const p = consumeFor.value
   if (!p || branchId.value == null) return
@@ -327,6 +353,9 @@ async function onCategoryRemove(id: number) {
         </div>
         <button v-if="showStock" type="button" class="ghost-cta" @click="purchasesOpen = true">
           <BookText :size="14" :stroke-width="1.8" /> Compras
+        </button>
+        <button v-if="showStock && canAdjust" type="button" class="ghost-cta" @click="openCount">
+          <ClipboardList :size="14" :stroke-width="1.8" /> Conteo
         </button>
         <button v-if="canManageCategories" type="button" class="ghost-cta" @click="categoriesOpen = true">
           <Package :size="14" :stroke-width="1.8" /> Categorías
@@ -514,6 +543,23 @@ async function onCategoryRemove(id: number) {
     <ConsumeModal :open="consumeFor !== null" :product="consumeFor" :branch-name="branchName" :current="consumeFor ? stockOf(consumeFor).quantity : undefined" @close="consumeFor = null" @confirm="onConsume" />
     <StockDetailModal :open="detailFor !== null" :product="detailFor" :branch-id="branchId" :branch-name="branchName" @close="detailFor = null" />
     <PurchasesModal :open="purchasesOpen" :branch-id="branchId" :branch-name="branchName" @close="purchasesOpen = false" />
+    <CountSheetModal
+      :open="countOpen"
+      :branch-name="branchName"
+      :products="store.products.value"
+      :categories="store.productCategories.value"
+      :stock-by-product="store.stockByProduct.value"
+      @close="countOpen = false"
+      @confirm="onRecordCount"
+      @history="historyOpen = true"
+    />
+    <CountsHistoryModal
+      :open="historyOpen"
+      :branch-id="branchId"
+      :branch-name="branchName"
+      :products="store.products.value"
+      @close="historyOpen = false"
+    />
     <CategoryManagerModal
       :open="categoriesOpen"
       title="Categorías de producto"
