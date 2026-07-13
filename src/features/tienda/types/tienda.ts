@@ -84,6 +84,7 @@ export interface ProductResponse {
   code: string
   salePrice: number
   provider: string | null
+  supplier: ProductSupplierSummary | null
   taxTreatment: TaxTreatment
   notes: string | null
   productCategory: CategorySummary
@@ -95,11 +96,19 @@ export interface ProductResponse {
   version: number
 }
 
+/** Proveedor asociado al producto (feature supplier). El texto libre `provider` se mantiene como fallback. */
+export interface ProductSupplierSummary {
+  id: number
+  name: string
+  taxId: string | null
+}
+
 export interface ProductPayload {
   name: string
   code: string
   salePrice: number
   provider?: string | null
+  supplierId?: number | null
   taxTreatment: TaxTreatment
   notes?: string | null
   productCategoryId: number

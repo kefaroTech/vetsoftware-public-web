@@ -9,6 +9,7 @@ import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
 import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
 import { useTienda } from '../composables/useTienda'
+import { useSuppliers } from '@/features/compras/composables/useSuppliers'
 import type { ProductPayload, ProductResponse, TaxScheme, TaxTreatment } from '../types/tienda'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
@@ -44,12 +45,20 @@ const emit = defineEmits<{
 
 const store = useTienda()
 const toast = useToast()
+const { all: suppliers, loadAll: loadSuppliers } = useSuppliers()
+
+// Proveedor del catálogo (feature supplier). Opción vacía = sin proveedor asociado.
+const supplierOptions = computed(() => [
+  { value: '', label: 'Sin proveedor' },
+  ...suppliers.value.map((s) => ({ value: String(s.id), label: s.name })),
+])
 
 interface Draft {
   name: string
   code: string
   salePrice: string
   provider: string
+  supplierId: string
   notes: string
   productCategoryId: string
   taxTreatment: TaxTreatment
@@ -61,7 +70,7 @@ interface Draft {
 function emptyDraft(): Draft {
   return {
     name: '', code: '', salePrice: '',
-    provider: '', notes: '', productCategoryId: '',
+    provider: '', supplierId: '', notes: '', productCategoryId: '',
     taxTreatment: 'GRAVADO', taxId: '',
     version: null,
   }
@@ -74,6 +83,7 @@ function hydrate(it: ProductResponse) {
     code: it.code,
     salePrice: String(it.salePrice),
     provider: it.provider ?? '',
+    supplierId: it.supplier ? String(it.supplier.id) : '',
     notes: it.notes ?? '',
     productCategoryId: String(it.productCategory.id),
     taxTreatment: it.taxTreatment,
@@ -135,6 +145,7 @@ watch(
     if (!open) return
     resetTouched()
     saveError.value = null
+    void loadSuppliers(true)
     if (props.initial) hydrate(props.initial)
     else Object.assign(draft, emptyDraft())
   },
@@ -180,6 +191,7 @@ async function submit() {
     code: draft.code.trim(),
     salePrice: num(draft.salePrice),
     provider: draft.provider.trim() || null,
+    supplierId: draft.supplierId ? Number(draft.supplierId) : null,
     taxTreatment: draft.taxTreatment,
     notes: draft.notes.trim() || null,
     productCategoryId: Number(draft.productCategoryId),
@@ -242,7 +254,12 @@ async function submit() {
             <BaseInput :id="id" v-model="draft.salePrice" :invalid="!!err('salePrice')" inputmode="decimal" placeholder="0" @blur="markTouched('salePrice')" />
           </template>
         </BaseField>
-        <BaseField label="Proveedor">
+        <BaseField label="Proveedor" hint="Del catálogo de proveedores">
+          <template #default="{ id }">
+            <BaseSelect :id="id" v-model="draft.supplierId" :options="supplierOptions" placeholder="Sin proveedor" />
+          </template>
+        </BaseField>
+        <BaseField label="Proveedor (texto libre)" hint="Opcional · referencia rápida">
           <template #default="{ id }">
             <BaseInput :id="id" v-model="draft.provider" placeholder="Opcional" />
           </template>

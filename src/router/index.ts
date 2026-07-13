@@ -221,6 +221,30 @@ const router = createRouter({
           meta: { permission: PERMISSIONS.CASHREGISTER_READ },
         },
         {
+          path: 'compras/proveedores',
+          name: 'compras-proveedores',
+          component: () => import('@/features/compras/views/ProveedoresView.vue'),
+          meta: { permission: PERMISSIONS.SUPPLIER_READ },
+        },
+        {
+          path: 'compras/ordenes',
+          name: 'compras-ordenes',
+          component: () => import('@/features/compras/views/OrdenesRecepcionesView.vue'),
+          meta: { permissionsAny: [PERMISSIONS.PURCHASE_ORDER_READ, PERMISSIONS.GOODS_RECEIPT_READ] },
+        },
+        {
+          path: 'compras/facturas',
+          name: 'compras-facturas',
+          component: () => import('@/features/compras/views/FacturasProveedorView.vue'),
+          meta: { permission: PERMISSIONS.SUPPLIER_INVOICE_READ },
+        },
+        {
+          path: 'compras/libro',
+          name: 'compras-libro',
+          component: () => import('@/features/compras/views/LibroComprasView.vue'),
+          meta: { permission: PERMISSIONS.PURCHASE_REPORT_READ },
+        },
+        {
           path: 'cuentas',
           name: 'cuentas',
           component: () => import('@/features/cuentas/views/CuentasView.vue'),

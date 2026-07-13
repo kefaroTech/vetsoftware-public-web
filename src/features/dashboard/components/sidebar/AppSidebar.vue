@@ -26,6 +26,10 @@ import {
   Banknote,
   Pill,
   Building2,
+  Truck,
+  ReceiptText,
+  BookText,
+  ClipboardList,
 } from 'lucide-vue-next'
 import SidebarBrand from './SidebarBrand.vue'
 import SidebarNavItem from './SidebarNavItem.vue'
@@ -59,7 +63,7 @@ const isConsultaActive = computed(() =>
 )
 
 // Acordeón del sidebar: solo un desplegable abierto a la vez.
-type SidebarSection = 'consulta' | 'acciones' | 'tienda'
+type SidebarSection = 'consulta' | 'acciones' | 'tienda' | 'compras'
 const openSection = ref<SidebarSection | null>(null)
 function toggleSection(section: SidebarSection) {
   openSection.value = openSection.value === section ? null : section
@@ -91,6 +95,12 @@ const canPromotions = can(PERMISSIONS.PROMOTION_READ)
 const canTaxes = can(PERMISSIONS.TAX_READ)
 const canAccounts = can(PERMISSIONS.OPEN_ACCOUNT_READ)
 const canAgenda = can(PERMISSIONS.APPOINTMENT_READ)
+
+// Compras (punto 7): proveedores, órdenes/recepción, facturas/CxP, libro de compras.
+const canSuppliers = can(PERMISSIONS.SUPPLIER_READ)
+const canPurchaseOrders = canAny(PERMISSIONS.PURCHASE_ORDER_READ, PERMISSIONS.GOODS_RECEIPT_READ)
+const canSupplierInvoices = can(PERMISSIONS.SUPPLIER_INVOICE_READ)
+const canPurchaseBook = can(PERMISSIONS.PURCHASE_REPORT_READ)
 
 // Facturación electrónica (DIAN) — gateada por permisos FE.
 const {
@@ -167,6 +177,18 @@ const tiendaItems = computed(() => [
 ].filter((item) => item.show))
 
 const showTiendaSection = computed(() => tiendaItems.value.length > 0)
+
+const comprasSubRoutes = ['compras-proveedores', 'compras-ordenes', 'compras-facturas', 'compras-libro'] as const
+const isComprasActive = computed(() => comprasSubRoutes.some((name) => route.name === name))
+const comprasItems = computed(() =>
+  [
+    { label: 'Proveedores', icon: Truck, to: { name: 'compras-proveedores' as const }, show: canSuppliers.value },
+    { label: 'Órdenes y recepción', icon: ClipboardList, to: { name: 'compras-ordenes' as const }, show: canPurchaseOrders.value },
+    { label: 'Facturas / CxP', icon: ReceiptText, to: { name: 'compras-facturas' as const }, show: canSupplierInvoices.value },
+    { label: 'Libro de compras', icon: BookText, to: { name: 'compras-libro' as const }, show: canPurchaseBook.value },
+  ].filter((item) => item.show),
+)
+const showComprasSection = computed(() => comprasItems.value.length > 0)
 
 function goNuevaConsulta() {
   if (draft.state.owner) {
@@ -312,6 +334,28 @@ function onNotifications() {
       :active="route.name === 'caja'"
       @click="router.push({ name: 'caja' })"
     />
+
+    <template v-if="showComprasSection">
+      <div class="section-label">COMPRAS</div>
+      <SidebarNavItem
+        label="Compras"
+        :icon="Truck"
+        :active="isComprasActive"
+        expandable
+        :expanded="openSection === 'compras'"
+        @click="toggleSection('compras')"
+      />
+      <div v-if="openSection === 'compras'" class="sub-list">
+        <SidebarSubItem
+          v-for="item in comprasItems"
+          :key="item.label"
+          :label="item.label"
+          :icon="item.icon"
+          :to="item.to"
+          :active="route.name === item.to.name"
+        />
+      </div>
+    </template>
 
     <template v-if="showFacturacionSection">
       <div class="section-label">FACTURACIÓN</div>
