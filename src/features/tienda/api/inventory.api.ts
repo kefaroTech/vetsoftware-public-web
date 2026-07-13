@@ -121,4 +121,43 @@ export const inventoryApi = {
     const { data } = await http.get<InventoryCountView>(`/inventory/counts/${id}`)
     return data
   },
+
+  // ── Export (CSV/PDF) ──
+  async exportKardex(
+    productId: number,
+    opts: { branchId?: number | null; from?: string | null; to?: string | null; format: 'csv' | 'pdf' },
+  ): Promise<void> {
+    const params: Record<string, string | number> = { format: opts.format }
+    if (opts.branchId != null) params.branchId = opts.branchId
+    if (opts.from) params.from = opts.from
+    if (opts.to) params.to = opts.to
+    const res = await http.get(`/inventory/products/${productId}/kardex/export`, { params, responseType: 'blob' })
+    saveFile(res.data as Blob, res.headers['content-disposition'], `kardex_${productId}.${opts.format}`)
+  },
+
+  async exportPurchases(
+    opts: { branchId?: number | null; from?: string | null; to?: string | null; format: 'csv' | 'pdf' },
+  ): Promise<void> {
+    const params: Record<string, string | number> = { format: opts.format }
+    if (opts.branchId != null) params.branchId = opts.branchId
+    if (opts.from) params.from = opts.from
+    if (opts.to) params.to = opts.to
+    const res = await http.get('/inventory/purchases/export', { params, responseType: 'blob' })
+    saveFile(res.data as Blob, res.headers['content-disposition'], `compras.${opts.format}`)
+  },
+}
+
+/** Dispara la descarga del blob, tomando el nombre del header Content-Disposition si viene. */
+function saveFile(blob: Blob, contentDisposition: string | undefined, fallback: string) {
+  let filename = fallback
+  const match = contentDisposition?.match(/filename="([^"]+)"/)
+  if (match) filename = match[1]
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
 }

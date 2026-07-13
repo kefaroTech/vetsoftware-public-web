@@ -15,7 +15,20 @@ const page = ref(0)
 const totalPages = ref(1)
 const loading = ref(false)
 const error = ref<string | null>(null)
+const exporting = ref(false)
 const PAGE_SIZE = 15
+
+async function exportPurchases(format: 'csv' | 'pdf') {
+  exporting.value = true
+  error.value = null
+  try {
+    await inventoryApi.exportPurchases({ branchId: props.branchId, format })
+  } catch (e) {
+    error.value = getProblemDetailMessage(e, 'No se pudo exportar el libro de compras')
+  } finally {
+    exporting.value = false
+  }
+}
 
 function fmtDateTime(d: string): string {
   const dt = new Date(d)
@@ -62,6 +75,11 @@ watch(
   >
     <template #body>
       <div v-if="error" class="banner error">{{ error }}</div>
+      <div class="exportbar">
+        <span class="exp-lbl">Descargar</span>
+        <button type="button" class="exp" :disabled="exporting || loading" @click="exportPurchases('csv')">CSV</button>
+        <button type="button" class="exp" :disabled="exporting || loading" @click="exportPurchases('pdf')">PDF</button>
+      </div>
       <table class="table">
         <thead>
           <tr>
@@ -110,6 +128,11 @@ watch(
 .total { font-weight: 600; color: var(--warm-900); }
 .date { color: var(--warm-600); white-space: nowrap; }
 .sku { font-family: var(--font-mono); font-size: 11px; color: var(--warm-500); }
+.exportbar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.exp-lbl { font-size: 11.5px; color: var(--warm-500); margin-right: 2px; }
+.exp { padding: 5px 12px; border-radius: 7px; border: 1px solid var(--warm-200); background: var(--warm-50); color: var(--warm-700); font-family: inherit; font-size: 12px; font-weight: 500; cursor: pointer; }
+.exp:hover:not(:disabled) { background: var(--amatista-50); border-color: var(--amatista-300); color: var(--amatista-700); }
+.exp:disabled { opacity: 0.5; cursor: not-allowed; }
 .pag { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 12px; color: var(--warm-500); }
 .pag-ctrl { display: flex; gap: 6px; }
 .pag-ctrl button { width: 28px; height: 28px; border: 1px solid var(--warm-200); background: var(--warm-50); border-radius: 7px; color: var(--warm-700); cursor: pointer; display: grid; place-items: center; }

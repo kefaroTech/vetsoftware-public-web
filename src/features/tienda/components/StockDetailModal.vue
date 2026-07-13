@@ -23,6 +23,7 @@ const page = ref(0)
 const totalPages = ref(1)
 const loading = ref(false)
 const error = ref<string | null>(null)
+const exporting = ref(false)
 const PAGE_SIZE = 15
 
 const MOVEMENT_LABEL: Record<string, string> = {
@@ -98,6 +99,19 @@ async function loadKardex(p = 0) {
   }
 }
 
+async function exportKardex(format: 'csv' | 'pdf') {
+  if (!props.product) return
+  exporting.value = true
+  error.value = null
+  try {
+    await inventoryApi.exportKardex(props.product.id, { branchId: props.branchId, format })
+  } catch (e) {
+    error.value = getProblemDetailMessage(e, 'No se pudo exportar el kardex')
+  } finally {
+    exporting.value = false
+  }
+}
+
 function switchTab(t: 'lots' | 'kardex') {
   if (tab.value === t) return
   tab.value = t
@@ -142,8 +156,8 @@ watch(
           <tr>
             <th>Lote</th>
             <th>Vencimiento</th>
-            <th>Disponible</th>
-            <th>Costo unit.</th>
+            <th class="num">Disponible</th>
+            <th class="num">Costo unit.</th>
           </tr>
         </thead>
         <tbody>
@@ -160,14 +174,19 @@ watch(
 
       <!-- ── Kardex ── -->
       <template v-else>
+        <div class="exportbar">
+          <span class="exp-lbl">Descargar kardex</span>
+          <button type="button" class="exp" :disabled="exporting" @click="exportKardex('csv')">CSV</button>
+          <button type="button" class="exp" :disabled="exporting" @click="exportKardex('pdf')">PDF</button>
+        </div>
         <table class="table">
           <thead>
             <tr>
               <th>Fecha</th>
               <th>Movimiento</th>
               <th>Origen</th>
-              <th>Cantidad</th>
-              <th>Costo unit.</th>
+              <th class="num">Cantidad</th>
+              <th class="num">Costo unit.</th>
               <th>Motivo</th>
             </tr>
           </thead>
@@ -207,6 +226,7 @@ watch(
 .banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 12px; }
 .table { width: 100%; border-collapse: collapse; font-size: 12.5px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 10px; overflow: hidden; }
 .table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--warm-500); font-weight: 600; padding: 9px 12px; background: var(--warm-100); border-bottom: 1px solid var(--warm-200); }
+.table th.num { text-align: right; }
 .table td { padding: 9px 12px; border-bottom: 1px solid var(--warm-150); color: var(--warm-800); }
 .table tbody tr:last-child td { border-bottom: none; }
 .empty { text-align: center; padding: 32px; color: var(--warm-500); }
@@ -216,6 +236,11 @@ watch(
 .date { color: var(--warm-600); white-space: nowrap; }
 .ref { color: var(--warm-600); }
 .reason { color: var(--warm-600); max-width: 200px; }
+.exportbar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.exp-lbl { font-size: 11.5px; color: var(--warm-500); margin-right: 2px; }
+.exp { padding: 5px 12px; border-radius: 7px; border: 1px solid var(--warm-200); background: var(--warm-50); color: var(--warm-700); font-family: inherit; font-size: 12px; font-weight: 500; cursor: pointer; }
+.exp:hover:not(:disabled) { background: var(--amatista-50); border-color: var(--amatista-300); color: var(--amatista-700); }
+.exp:disabled { opacity: 0.5; cursor: not-allowed; }
 .pag { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 12px; color: var(--warm-500); }
 .pag-ctrl { display: flex; gap: 6px; }
 .pag-ctrl button { width: 28px; height: 28px; border: 1px solid var(--warm-200); background: var(--warm-50); border-radius: 7px; color: var(--warm-700); cursor: pointer; display: grid; place-items: center; }
