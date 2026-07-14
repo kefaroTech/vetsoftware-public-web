@@ -158,6 +158,7 @@ const showAdminSection = computed(
 
 const tiendaSubRoutes = [
   'tienda-pos',
+  'caja',
   'tienda-inventario',
   'tienda-servicios',
   'tienda-promociones',
@@ -170,13 +171,14 @@ const isTiendaActive = computed(() =>
 
 const tiendaItems = computed(() => [
   { label: 'Punto de venta', icon: ShoppingBag, to: { name: 'tienda-pos' as const }, show: canInventory.value },
+  { label: 'Caja', icon: Banknote, to: { name: 'caja' as const }, show: canCash.value },
   { label: 'Inventario', icon: Package, to: { name: 'tienda-inventario' as const }, show: canInventory.value },
   { label: 'Servicios', icon: Stethoscope, to: { name: 'tienda-servicios' as const }, show: canServices.value },
   { label: 'Promociones', icon: BadgePercent, to: { name: 'tienda-promociones' as const }, show: canPromotions.value },
   { label: 'Impuestos', icon: BarChart3, to: { name: 'tienda-impuestos' as const }, show: canTaxes.value },
 ].filter((item) => item.show))
 
-const showTiendaSection = computed(() => tiendaItems.value.length > 0)
+const showTiendaMenu = computed(() => tiendaItems.value.length > 0)
 
 const comprasSubRoutes = ['compras-proveedores', 'compras-ordenes', 'compras-facturas', 'compras-libro'] as const
 const isComprasActive = computed(() => comprasSubRoutes.some((name) => route.name === name))
@@ -189,6 +191,7 @@ const comprasItems = computed(() =>
   ].filter((item) => item.show),
 )
 const showComprasSection = computed(() => comprasItems.value.length > 0)
+const showTiendaSection = computed(() => showTiendaMenu.value || showComprasSection.value)
 
 function goNuevaConsulta() {
   if (draft.state.owner) {
@@ -307,54 +310,47 @@ function onNotifications() {
 
     <template v-if="showTiendaSection">
       <div class="section-label">TIENDA</div>
-      <SidebarNavItem
-        label="Tienda"
-        :icon="ShoppingBag"
-        :active="isTiendaActive"
-        expandable
-        :expanded="openSection === 'tienda'"
-        @click="toggleSection('tienda')"
-      />
-      <div v-if="openSection === 'tienda'" class="sub-list">
-        <SidebarSubItem
-          v-for="item in tiendaItems"
-          :key="item.label"
-          :label="item.label"
-          :icon="item.icon"
-          :to="item.to"
-          :active="route.name === item.to.name"
+      <template v-if="showTiendaMenu">
+        <SidebarNavItem
+          label="Tienda"
+          :icon="ShoppingBag"
+          :active="isTiendaActive"
+          expandable
+          :expanded="openSection === 'tienda'"
+          @click="toggleSection('tienda')"
         />
-      </div>
-    </template>
+        <div v-if="openSection === 'tienda'" class="sub-list">
+          <SidebarSubItem
+            v-for="item in tiendaItems"
+            :key="item.label"
+            :label="item.label"
+            :icon="item.icon"
+            :to="item.to"
+            :active="route.name === item.to.name"
+          />
+        </div>
+      </template>
 
-    <SidebarNavItem
-      v-if="canCash"
-      label="Caja"
-      :icon="Banknote"
-      :active="route.name === 'caja'"
-      @click="router.push({ name: 'caja' })"
-    />
-
-    <template v-if="showComprasSection">
-      <div class="section-label">COMPRAS</div>
-      <SidebarNavItem
-        label="Compras"
-        :icon="Truck"
-        :active="isComprasActive"
-        expandable
-        :expanded="openSection === 'compras'"
-        @click="toggleSection('compras')"
-      />
-      <div v-if="openSection === 'compras'" class="sub-list">
-        <SidebarSubItem
-          v-for="item in comprasItems"
-          :key="item.label"
-          :label="item.label"
-          :icon="item.icon"
-          :to="item.to"
-          :active="route.name === item.to.name"
+      <template v-if="showComprasSection">
+        <SidebarNavItem
+          label="Compras"
+          :icon="Truck"
+          :active="isComprasActive"
+          expandable
+          :expanded="openSection === 'compras'"
+          @click="toggleSection('compras')"
         />
-      </div>
+        <div v-if="openSection === 'compras'" class="sub-list">
+          <SidebarSubItem
+            v-for="item in comprasItems"
+            :key="item.label"
+            :label="item.label"
+            :icon="item.icon"
+            :to="item.to"
+            :active="route.name === item.to.name"
+          />
+        </div>
+      </template>
     </template>
 
     <template v-if="showFacturacionSection">

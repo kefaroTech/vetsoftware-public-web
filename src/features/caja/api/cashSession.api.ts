@@ -12,7 +12,8 @@ import type {
 // query en lecturas). El backend la acota por el alcance del empleado.
 
 export interface CashHistoryParams {
-  branchId?: number
+  branchId?: number | null
+  employeeId?: number
   from?: string
   to?: string
   page?: number
@@ -62,8 +63,11 @@ export const cashSessionApi = {
   },
 
   async history(params: CashHistoryParams = {}): Promise<PageResponse<CashSessionView>> {
+    const requestParams = Object.prototype.hasOwnProperty.call(params, 'branchId')
+      ? params
+      : withBranchParam({ ...params })
     const { data } = await http.get<PageResponse<CashSessionView>>('/cash-sessions', {
-      params: withBranchParam({ ...params }),
+      params: requestParams,
     })
     return data
   },

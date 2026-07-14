@@ -28,6 +28,7 @@ export const useCajaStore = defineStore('caja', () => {
   const historyPageSize = ref(20)
   const historyTotalPages = ref(0)
   const historyLoading = ref(false)
+  const historyFilters = ref<Pick<CashHistoryParams, 'branchId' | 'employeeId' | 'from' | 'to'>>({})
   const openSessions = ref<CashSessionView[]>([])
   const openSessionsLoading = ref(false)
   const openSessionsLoaded = ref(false)
@@ -79,8 +80,16 @@ export const useCajaStore = defineStore('caja', () => {
   async function loadHistory(params: CashHistoryParams = {}): Promise<void> {
     historyLoading.value = true
     try {
+      const filterKeys = ['branchId', 'employeeId', 'from', 'to'] as const
+      const nextFilters = { ...historyFilters.value }
+      for (const key of filterKeys) {
+        if (Object.prototype.hasOwnProperty.call(params, key)) {
+          Object.assign(nextFilters, { [key]: params[key] })
+        }
+      }
+      historyFilters.value = nextFilters
       const page = await cashSessionApi.history({
-        ...params,
+        ...historyFilters.value,
         page: params.page ?? historyPage.value - 1,
         pageSize: params.pageSize ?? historyPageSize.value,
       })
@@ -139,6 +148,7 @@ export const useCajaStore = defineStore('caja', () => {
     historyPageSize,
     historyTotalPages,
     historyLoading,
+    historyFilters,
     openSessions,
     openSessionsLoading,
     openSessionsLoaded,

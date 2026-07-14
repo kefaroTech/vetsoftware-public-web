@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Wallet, Plus, LockKeyhole, ArrowLeftRight, FileDown, History } from 'lucide-vue-next'
+import {
+  Wallet,
+  Plus,
+  LockKeyhole,
+  ArrowLeftRight,
+  FileDown,
+  History,
+  Filter,
+  RotateCcw,
+} from 'lucide-vue-next'
 import {
   useCaja,
   formatMoney,
@@ -19,8 +28,10 @@ import CloseCashModal from '../components/CloseCashModal.vue'
 import Pagination from '@/features/acciones/components/Pagination.vue'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import { cashSessionApi } from '../api/cashSession.api'
+import { employeeApi, type EmployeeResponse } from '@/features/employees/api/employee.api'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import type { CashSessionView } from '../types/caja'
+import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
 
 const {
   current,
@@ -77,6 +88,19 @@ const viewedCashSummary = ref<CashSessionView | null>(null)
 let returningToPos = false
 type CashTab = 'open' | 'mine' | 'history'
 const activeTab = ref<CashTab>('open')
+const historyBranchId = ref<number | null>(branchStore.selectedBranchId)
+const historyEmployeeId = ref<number | null>(null)
+const historyFrom = ref('')
+const historyTo = ref('')
+const historyEmployees = ref<EmployeeResponse[]>([])
+const historyEmployeesLoading = ref(false)
+
+const historyBranchOptions = computed(() =>
+  [...branchStore.branches].sort((a, b) => a.name.localeCompare(b.name, 'es')),
+)
+const historyEmployeeOptions = computed(() =>
+  [...historyEmployees.value].sort((a, b) => a.name.localeCompare(b.name, 'es')),
+)
 
 const openedAt = computed(() => current.value && formatDateTime(current.value.openedAt))
 
@@ -119,6 +143,14 @@ function showMyCash(): void {
   } else if (current.value?.id !== session.id) {
     void loadCurrent(true)
   }
+}
+
+function openCashSession(session: CashSessionView): void {
+  if (session.id === myOpenSession.value?.id) {
+    showMyCash()
+    return
+  }
+  void viewCash(session)
 }
 
 async function viewCash(session: CashSessionView): Promise<void> {
@@ -175,16 +207,57 @@ function handleOpenCashSaved(session: CashSessionView): void {
   void refreshAll()
 }
 
+function historyFilterParams() {
+  return {
+    branchId: historyBranchId.value,
+    employeeId: historyEmployeeId.value ?? undefined,
+    from: historyFrom.value || undefined,
+    to: historyTo.value || undefined,
+  }
+}
+
+function applyHistoryFilters(): void {
+  void loadHistory({ ...historyFilterParams(), page: 0 })
+}
+
+function clearHistoryFilters(): void {
+  historyBranchId.value = isAdmin.value ? null : branchStore.selectedBranchId
+  historyEmployeeId.value = null
+  historyFrom.value = ''
+  historyTo.value = ''
+  applyHistoryFilters()
+}
+
+async function loadHistoryEmployees(): Promise<void> {
+  historyEmployeesLoading.value = true
+  try {
+    historyEmployees.value = await employeeApi.listByCompany()
+  } catch {
+    historyEmployees.value = []
+  } finally {
+    historyEmployeesLoading.value = false
+  }
+}
+
 async function refreshAll() {
   const requests = [loadCurrent(true), loadOpenSessions()]
-  if (canReadHistory.value) requests.push(loadHistory({ page: 0, pageSize: 20 }))
+  if (canReadHistory.value) {
+    requests.push(loadHistory({ ...historyFilterParams(), page: 0, pageSize: 20 }))
+  }
   await Promise.all(requests)
 }
 
-onMounted(refreshAll)
+onMounted(() => {
+  const requests = [refreshAll(), branchStore.fetchAll()]
+  if (canReadHistory.value) requests.push(loadHistoryEmployees())
+  void Promise.all(requests)
+})
 watch(
   () => branchStore.selectedBranchId,
-  () => void refreshAll(),
+  (branchId) => {
+    historyBranchId.value = branchId
+    void refreshAll()
+  },
 )
 let initialTabResolved = false
 watch([openSessionsLoaded, myOpenSession], ([loaded, session], previous) => {
@@ -310,7 +383,7 @@ watch(
               </td>
               <td class="num">{{ formatMoney(session.openingFloat) }}</td>
               <td>
-                <button type="button" class="link" @click="viewCash(session)">
+                <button type="button" class="link" @click="openCashSession(session)">
                   {{ session.id === myOpenSession?.id ? 'Ver mi caja' : 'Ver caja' }}
                 </button>
               </td>
@@ -410,10 +483,70 @@ watch(
           >{{ historyTotal }} {{ historyTotal === 1 ? 'sesión' : 'sesiones' }}</span
         >
       </div>
+      <form class="history-filters" @submit.prevent="applyHistoryFilters">
+        <label class="filter-field">
+          <span>Sede</span>
+          <select v-model="historyBranchId" :disabled="historyLoading">
+            <option :value="null">
+              {{ isAdmin ? 'Todas las sedes' : 'Seleccione una sede' }}
+            </option>
+            <option v-for="branch in historyBranchOptions" :key="branch.id" :value="branch.id">
+              {{ branch.name }}{{ branch.active ? '' : ' (inactiva)' }}
+            </option>
+          </select>
+        </label>
+        <label class="filter-field">
+          <span>Empleado que abrió</span>
+          <select
+            v-model="historyEmployeeId"
+            :disabled="historyLoading || historyEmployeesLoading"
+          >
+            <option :value="null">
+              {{ historyEmployeesLoading ? 'Cargando empleados…' : 'Todos los empleados' }}
+            </option>
+            <option
+              v-for="employee in historyEmployeeOptions"
+              :key="employee.id"
+              :value="employee.id"
+            >
+              {{ employee.name }}{{ employee.enabled ? '' : ' (inactivo)' }}
+            </option>
+          </select>
+        </label>
+        <label class="filter-field date-field">
+          <span>Desde</span>
+          <DateInput
+            v-model="historyFrom"
+            id="cash-history-from"
+            placeholder="Fecha inicial"
+            :max="historyTo || undefined"
+            :disabled="historyLoading"
+          />
+        </label>
+        <label class="filter-field date-field">
+          <span>Hasta</span>
+          <DateInput
+            v-model="historyTo"
+            id="cash-history-to"
+            placeholder="Fecha final"
+            :min="historyFrom || undefined"
+            :disabled="historyLoading"
+          />
+        </label>
+        <div class="filter-actions">
+          <button type="submit" class="btn primary" :disabled="historyLoading">
+            <Filter :size="14" :stroke-width="1.8" /> Filtrar
+          </button>
+          <button type="button" class="btn ghost" :disabled="historyLoading" @click="clearHistoryFilters">
+            <RotateCcw :size="14" :stroke-width="1.8" /> Limpiar
+          </button>
+        </div>
+      </form>
       <div class="table-scroll">
         <table class="movs history-table">
           <thead>
             <tr>
+              <th>Sede</th>
               <th>Apertura</th>
               <th>Cierre</th>
               <th>Duración</th>
@@ -428,12 +561,13 @@ watch(
           </thead>
           <tbody>
             <tr v-if="historyLoading">
-              <td colspan="10" class="empty-row">Cargando historial…</td>
+              <td colspan="11" class="empty-row">Cargando historial…</td>
             </tr>
             <tr v-else-if="history.length === 0">
-              <td colspan="10" class="empty-row">Sin sesiones registradas.</td>
+              <td colspan="11" class="empty-row">Sin sesiones registradas.</td>
             </tr>
             <tr v-for="s in history" v-else :key="s.id">
+              <td class="branch-name">{{ branchLabel(s.branchName, s.branchId) }}</td>
               <td>{{ formatDateTime(s.openedAt) }}</td>
               <td>{{ s.closedAt ? formatDateTime(s.closedAt) : '—' }}</td>
               <td class="duration">{{ formatDuration(s.openedAt, s.closedAt) }}</td>
@@ -660,7 +794,10 @@ watch(
   margin-bottom: 20px;
   border-bottom: 1px solid var(--warm-200);
   overflow-x: auto;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+}
+.cash-tabs::-webkit-scrollbar {
+  display: none;
 }
 .cash-tab {
   position: relative;
@@ -973,13 +1110,64 @@ watch(
   color: var(--warm-500);
   font-size: 12px;
 }
+.history-filters {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(190px, 1.2fr) 170px 170px auto;
+  align-items: end;
+  gap: 10px;
+  margin: 12px 0 16px;
+  padding: 14px;
+  border: 1px solid var(--warm-200);
+  border-radius: 12px;
+  background: var(--warm-100);
+}
+.filter-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+.filter-field > span {
+  color: var(--warm-500);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.filter-field select {
+  width: 100%;
+  height: 38px;
+  padding: 0 32px 0 11px;
+  border: 1px solid var(--warm-200);
+  border-radius: 8px;
+  outline: none;
+  background: var(--warm-50);
+  color: var(--warm-800);
+  font: inherit;
+  font-size: 12.5px;
+}
+.filter-field select:focus {
+  border-color: var(--amatista-500, #76519d);
+  box-shadow: 0 0 0 3px rgb(92 45 140 / 10%);
+}
+.filter-field select:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.date-field :deep(.date-wrap) {
+  min-width: 0;
+}
+.filter-actions {
+  display: flex;
+  gap: 7px;
+}
 .table-scroll {
   width: 100%;
   overflow-x: auto;
   scrollbar-width: thin;
 }
 .history-table {
-  min-width: 1080px;
+  min-width: 1180px;
 }
 .duration,
 .employee {
@@ -1030,6 +1218,19 @@ watch(
   background: var(--amatista-600, #5c2d8c);
   color: #fff;
 }
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@media (max-width: 1100px) {
+  .history-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .filter-actions {
+    grid-column: 1 / -1;
+  }
+}
 
 @media (max-width: 720px) {
   .caja {
@@ -1042,6 +1243,13 @@ watch(
   }
   .cash-detail-grid {
     grid-template-columns: 1fr;
+  }
+  .history-filters {
+    grid-template-columns: 1fr;
+  }
+  .filter-actions {
+    grid-column: auto;
+    flex-wrap: wrap;
   }
 }
 </style>

@@ -15,12 +15,8 @@ import type { CashSessionView } from '../types/caja'
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: []; saved: [session: CashSessionView] }>()
 
-const { open: openCaja } = useCaja()
-const {
-  visibleBranches,
-  selectedBranchId,
-  loading: branchesLoading,
-} = useBranches()
+const { open: openCaja, openSessions, loadOpenSessions } = useCaja()
+const { visibleBranches, selectedBranchId, loading: branchesLoading } = useBranches()
 
 const openingFloat = ref('')
 const branchId = ref('')
@@ -39,21 +35,47 @@ const branchOptions = computed(() =>
     label: branch.city?.name ? `${branch.name} - ${branch.city.name}` : branch.name,
   })),
 )
-const selectedBranchNumericId = computed(() =>
-  branchId.value ? Number(branchId.value) : null,
-)
+const selectedBranchNumericId = computed(() => (branchId.value ? Number(branchId.value) : null))
 const branchChanged = computed(
   () =>
     defaultBranchId.value != null &&
     selectedBranchNumericId.value != null &&
     selectedBranchNumericId.value !== defaultBranchId.value,
 )
+const availableTerminals = computed(() =>
+  terminals.value.filter(
+    (terminal) =>
+      !openSessions.value.some(
+        (session) =>
+          session.branchId === terminal.branchId &&
+          session.terminal.trim().toUpperCase() === terminal.code.trim().toUpperCase(),
+      ),
+  ),
+)
 const terminalOptions = computed(() =>
-  terminals.value.map((terminal) => ({
+  availableTerminals.value.map((terminal) => ({
     value: String(terminal.id),
     label: `${terminal.name} · ${terminal.code}`,
   })),
 )
+const occupiedTerminalCount = computed(
+  () => terminals.value.length - availableTerminals.value.length,
+)
+const terminalHint = computed(() => {
+  if (terminalsLoading.value) return undefined
+  if (terminals.value.length === 0) return 'No hay terminales activos en esta sede.'
+  if (availableTerminals.value.length === 0) {
+    return 'Todos los terminales de esta sede ya tienen una caja abierta.'
+  }
+  if (occupiedTerminalCount.value > 0) {
+    return `${occupiedTerminalCount.value} ${
+      occupiedTerminalCount.value === 1
+        ? 'terminal no está disponible'
+        : 'terminales no están disponibles'
+    } porque ya ${occupiedTerminalCount.value === 1 ? 'tiene' : 'tienen'} una caja abierta.`
+  }
+  return undefined
+})
 const floatValue = computed(() => Number(openingFloat.value.replace(',', '.')))
 const floatError = computed(() =>
   openingFloat.value.trim() === '' || Number.isNaN(floatValue.value) || floatValue.value < 0
@@ -87,11 +109,13 @@ async function loadTerminals(selectedBranchId = branchId.value): Promise<void> {
 
   terminalsLoading.value = true
   try {
-    const loaded = await cashTerminalApi.list(selectedId, true)
+    const [loaded] = await Promise.all([cashTerminalApi.list(selectedId, true), loadOpenSessions()])
     if (requestSequence !== terminalLoadSequence) return
     const branchTerminals = loaded.filter((terminal) => terminal.branchId === selectedId)
     terminals.value = branchTerminals
-    if (branchTerminals.length === 1) terminalId.value = String(branchTerminals[0]!.id)
+    if (availableTerminals.value.length === 1) {
+      terminalId.value = String(availableTerminals.value[0]!.id)
+    }
   } catch (e) {
     if (requestSequence !== terminalLoadSequence) return
     serverError.value = getProblemDetailMessage(e, 'No se pudieron cargar los terminales')
@@ -176,7 +200,11 @@ async function submit() {
     <template #body>
       <p v-if="serverError" class="server-error">{{ serverError }}</p>
       <div class="grid">
-        <BaseField label="Base inicial (efectivo)" required :error="submitted ? floatError ?? undefined : undefined">
+        <BaseField
+          label="Base inicial (efectivo)"
+          required
+          :error="submitted ? (floatError ?? undefined) : undefined"
+        >
           <BaseInput
             v-model="openingFloat"
             placeholder="0"
@@ -202,20 +230,20 @@ async function submit() {
         <p v-if="branchChanged" class="branch-warning" role="alert">
           Estás cambiando la sede de la caja de
           <strong>{{ branchName(defaultBranchId) }}</strong> a
-          <strong>{{ branchName(selectedBranchNumericId) }}</strong>. Los terminales disponibles
-          corresponden a la nueva sede.
+          <strong>{{ branchName(selectedBranchNumericId) }}</strong
+          >. Los terminales disponibles corresponden a la nueva sede.
         </p>
         <BaseField
           label="Terminal"
           required
           :error="submitted && !terminalId ? 'Selecciona un terminal.' : undefined"
-          :hint="!terminalsLoading && terminals.length === 0 ? 'No hay terminales activos en esta sede.' : undefined"
+          :hint="terminalHint"
         >
           <BaseSelect
             v-model="terminalId"
             :options="terminalOptions"
             :placeholder="terminalsLoading ? 'Cargando…' : 'Selecciona un terminal'"
-            :disabled="terminalsLoading || terminals.length === 0"
+            :disabled="terminalsLoading || terminalOptions.length === 0"
             :invalid="submitted && !terminalId"
           />
         </BaseField>
