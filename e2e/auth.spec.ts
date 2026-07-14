@@ -29,6 +29,18 @@ test.describe('Autenticación y guard de sesión', () => {
     await expect(page.getByRole('button', { name: 'Iniciar sesión' })).toBeVisible()
   })
 
+  test('muestra el motivo cuando otra sesión reemplazó la actual', async ({ page }) => {
+    await page.addInitScript(() => {
+      sessionStorage.setItem(
+        'vetsoft.auth.session-replaced',
+        'Tu cuenta se inició en otro dispositivo.',
+      )
+    })
+    await page.goto('/login')
+
+    await expect(page.getByText('Tu cuenta se inició en otro dispositivo.')).toBeVisible()
+  })
+
   // --- Guard: guestOnly ---
   test('estando logueado, / redirige al dashboard', async ({ page }) => {
     test.skip(!PASSWORD, 'Define E2E_PASSWORD para correr los casos con login')

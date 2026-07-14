@@ -43,15 +43,35 @@ export function isInflow(type: CashMovementType): boolean {
 
 export function useCaja() {
   const store = useCajaStore()
-  const { current, loading, error, history, historyTotal, historyLoading, isOpen, expectedByMethod } =
-    storeToRefs(store)
+  const {
+    current,
+    loading,
+    error,
+    history,
+    historyTotal,
+    historyPage,
+    historyPageSize,
+    historyTotalPages,
+    historyLoading,
+    openSessions,
+    openSessionsLoading,
+    openSessionsLoaded,
+    isOpen,
+    expectedByMethod,
+  } = storeToRefs(store)
   return {
     current,
     loading,
     error,
     history,
     historyTotal,
+    historyPage,
+    historyPageSize,
+    historyTotalPages,
     historyLoading,
+    openSessions,
+    openSessionsLoading,
+    openSessionsLoaded,
     isOpen,
     expectedByMethod,
     loadCurrent: store.loadCurrent,
@@ -59,6 +79,8 @@ export function useCaja() {
     addMovement: store.addMovement,
     close: store.close,
     loadHistory: store.loadHistory,
+    loadOpenSessions: store.loadOpenSessions,
+    setHistoryPage: store.setHistoryPage,
     exportArqueo: store.exportArqueo,
   }
 }

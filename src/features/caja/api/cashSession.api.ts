@@ -21,7 +21,10 @@ export interface CashHistoryParams {
 
 export const cashSessionApi = {
   async open(payload: OpenCashSessionRequest): Promise<CashSessionView> {
-    const { data } = await http.post<CashSessionView>('/cash-sessions/open', withBranchBody(payload))
+    const { data } = await http.post<CashSessionView>(
+      '/cash-sessions/open',
+      withBranchBody(payload),
+    )
     return data
   },
 
@@ -29,7 +32,10 @@ export const cashSessionApi = {
     sessionId: number,
     payload: RegisterCashMovementRequest,
   ): Promise<CashSessionView> {
-    const { data } = await http.post<CashSessionView>(`/cash-sessions/${sessionId}/movements`, payload)
+    const { data } = await http.post<CashSessionView>(
+      `/cash-sessions/${sessionId}/movements`,
+      payload,
+    )
     return data
   },
 
@@ -40,14 +46,18 @@ export const cashSessionApi = {
 
   /** Sesión OPEN de la sede seleccionada, o null si no hay caja abierta. */
   async current(): Promise<CashSessionView | null> {
-    const { data } = await http.get<CashSessionView | ''>('/cash-sessions/current', {
-      params: withBranchParam({}),
-    })
+    const { data } = await http.get<CashSessionView | ''>('/cash-sessions/current')
     return data ? (data as CashSessionView) : null
   },
 
   async getById(id: number): Promise<CashSessionView> {
     const { data } = await http.get<CashSessionView>(`/cash-sessions/${id}`)
+    return data
+  },
+
+  /** Cajas OPEN visibles según la compañía y las sedes autorizadas del usuario. */
+  async listOpen(): Promise<CashSessionView[]> {
+    const { data } = await http.get<CashSessionView[]>('/cash-sessions/open')
     return data
   },
 

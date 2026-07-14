@@ -100,6 +100,7 @@ export const PERMISSIONS = {
   CASHREGISTER_OPERATE: 'cashregister.operate',
   CASHREGISTER_CLOSE: 'cashregister.close',
   CASHREGISTER_READ: 'cashregister.read',
+  CASHREGISTER_HISTORY_READ: 'cashregister.history.read',
 
   // Compras (punto 7). Proveedores (migr. 199), órdenes de compra + recepción (migr. 202),
   // facturas de proveedor / cuentas por pagar (migr. 204) y libro de compras (migr. 205). Sub-módulo PURCHASES.

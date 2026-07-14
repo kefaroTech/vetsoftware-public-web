@@ -41,12 +41,16 @@ export interface CashSessionCountView {
 export interface CashSessionView {
   id: number
   branchId: number
+  branchName: string | null
   terminal: string
   status: CashSessionStatus
   openedByEmployeeId: number | null
+  openedByEmployeeName: string | null
   openedAt: string
   openingFloat: number
+  closingTotal: number | null
   closedByEmployeeId: number | null
+  closedByEmployeeName: string | null
   closedAt: string | null
   note: string | null
   version: number
@@ -57,8 +61,8 @@ export interface CashSessionView {
 
 export interface OpenCashSessionRequest {
   branchId: number
+  terminalId: number
   openingFloat: number
-  terminal?: string | null
   note?: string | null
 }
 

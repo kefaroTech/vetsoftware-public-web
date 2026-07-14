@@ -16,6 +16,7 @@ import { useSedes } from '@/features/branches/composables/useSedes'
 import type { BranchResponse, SaveBranchRequest } from '@/features/branches/api/branch.api'
 import BranchCard from '../components/BranchCard.vue'
 import SedeFormModal from '../components/SedeFormModal.vue'
+import CashTerminalsPanel from '@/features/caja/components/CashTerminalsPanel.vue'
 
 const router = useRouter()
 const toast = useToast()
@@ -204,6 +205,8 @@ onMounted(() => {
         <p>Aún no hay sedes registradas.</p>
       </div>
     </div>
+
+    <CashTerminalsPanel :branches="sedes" />
 
     <SedeFormModal
       :open="sedeModalOpen"

@@ -1,6 +1,15 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import PublicLayout from '@/components/public/PublicLayout.vue'
+import { SESSION_REPLACED_NOTICE_KEY } from '@/services/http/http.client'
 import LoginForm from '../components/LoginForm.vue'
+
+const sessionNotice = ref('')
+
+onMounted(() => {
+  sessionNotice.value = sessionStorage.getItem(SESSION_REPLACED_NOTICE_KEY) ?? ''
+  sessionStorage.removeItem(SESSION_REPLACED_NOTICE_KEY)
+})
 </script>
 
 <template>
@@ -13,6 +22,15 @@ import LoginForm from '../components/LoginForm.vue'
       <div class="login-eyebrow">Panel administrativo</div>
       <h1 class="login-title">Inicia sesión</h1>
       <p class="login-sub">Accede al panel para administrar VetSoftware.</p>
+      <v-alert
+        v-if="sessionNotice"
+        class="mb-5"
+        type="warning"
+        variant="tonal"
+        density="compact"
+      >
+        {{ sessionNotice }}
+      </v-alert>
       <LoginForm />
     </div>
   </PublicLayout>

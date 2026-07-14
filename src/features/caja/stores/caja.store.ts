@@ -24,7 +24,13 @@ export const useCajaStore = defineStore('caja', () => {
 
   const history = ref<CashSessionView[]>([])
   const historyTotal = ref(0)
+  const historyPage = ref(1) // 1-based para Pagination.vue; el backend usa 0-based.
+  const historyPageSize = ref(20)
+  const historyTotalPages = ref(0)
   const historyLoading = ref(false)
+  const openSessions = ref<CashSessionView[]>([])
+  const openSessionsLoading = ref(false)
+  const openSessionsLoaded = ref(false)
 
   const isOpen = computed(() => current.value?.status === 'OPEN')
 
@@ -73,14 +79,42 @@ export const useCajaStore = defineStore('caja', () => {
   async function loadHistory(params: CashHistoryParams = {}): Promise<void> {
     historyLoading.value = true
     try {
-      const page = await cashSessionApi.history(params)
+      const page = await cashSessionApi.history({
+        ...params,
+        page: params.page ?? historyPage.value - 1,
+        pageSize: params.pageSize ?? historyPageSize.value,
+      })
       history.value = page.content
       historyTotal.value = page.totalElements
+      historyPage.value = page.page + 1
+      historyPageSize.value = page.pageSize
+      historyTotalPages.value = page.totalPages
     } catch (e) {
       error.value = getProblemDetailMessage(e, 'No se pudo cargar el historial de cajas')
     } finally {
       historyLoading.value = false
     }
+  }
+
+  async function loadOpenSessions(): Promise<void> {
+    openSessionsLoading.value = true
+    openSessionsLoaded.value = false
+    try {
+      openSessions.value = await cashSessionApi.listOpen()
+      openSessionsLoaded.value = true
+    } catch (e) {
+      error.value = getProblemDetailMessage(e, 'No se pudieron cargar las cajas abiertas')
+    } finally {
+      openSessionsLoading.value = false
+    }
+  }
+
+  function setHistoryPage(page: number): Promise<void> {
+    if (page === historyPage.value || page < 1 || page > historyTotalPages.value) {
+      return Promise.resolve()
+    }
+    historyPage.value = page
+    return loadHistory()
   }
 
   function exportArqueo(id: number, format: 'csv' | 'pdf'): Promise<void> {
@@ -101,7 +135,13 @@ export const useCajaStore = defineStore('caja', () => {
     error,
     history,
     historyTotal,
+    historyPage,
+    historyPageSize,
+    historyTotalPages,
     historyLoading,
+    openSessions,
+    openSessionsLoading,
+    openSessionsLoaded,
     isOpen,
     expectedByMethod,
     loadCurrent,
@@ -109,6 +149,8 @@ export const useCajaStore = defineStore('caja', () => {
     addMovement,
     close,
     loadHistory,
+    loadOpenSessions,
+    setHistoryPage,
     exportArqueo,
   }
 })

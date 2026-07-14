@@ -100,8 +100,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   /** Limpia sesión y storage sin redirigir (útil para expiración proactiva vía router). */
   function clearSession() {
-    try { localStorage.clear() } catch { /* ignore */ }
-    try { sessionStorage.clear() } catch { /* ignore */ }
+    // Conserva preferencias y el aviso SESSION_REPLACED; solo elimina credenciales de auth.
+    try { localStorage.removeItem(AUTH_STORAGE_KEY) } catch { /* ignore */ }
     session.value = null
     me.value = null
   }

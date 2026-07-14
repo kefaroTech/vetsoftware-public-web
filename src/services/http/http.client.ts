@@ -11,6 +11,7 @@ declare module 'axios' {
 }
 
 export const AUTH_STORAGE_KEY = 'vetsoft.auth'
+export const SESSION_REPLACED_NOTICE_KEY = 'vetsoft.auth.session-replaced'
 
 export const http = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL ?? ''}/api/v1`,
@@ -60,12 +61,20 @@ http.interceptors.response.use(
     const status = error.response?.status
     const original = error.config
     const url = original?.url ?? ''
+    const code = getProblemDetailCode(error)
+
+    if (status === 401 && code === 'SESSION_REPLACED') {
+      sessionStorage.setItem(
+        SESSION_REPLACED_NOTICE_KEY,
+        'Tu cuenta se inició en otro dispositivo.',
+      )
+    }
+
     // Las llamadas de auth no entran al flujo de refresh (evita recursión).
     const isAuthCall =
       url.includes('/auth/login') || url.includes('/auth/refresh') || url.includes('/auth/logout')
 
     if (status === 401 && original && !isAuthCall) {
-      const code = getProblemDetailCode(error)
       // Solo el access expirado se intenta refrescar; token inválido/revocado → a login.
       if (code === 'TOKEN_EXPIRED' && !original._retry && refreshHandler) {
         original._retry = true
