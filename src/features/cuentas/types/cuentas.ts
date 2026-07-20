@@ -5,6 +5,7 @@
  *
  * Notas de modelo (ver plan §Restricciones):
  * - La cuenta pertenece al PROPIETARIO (ownerId); no guarda `origen`.
+ * - Cada cuenta pertenece a una SEDE; un propietario puede tener una cuenta OPEN por sede.
  * - Los cargos de producto/servicio llevan `animalId` (cargo por mascota);
  *   los cargos generales NO (bucket "General").
  * - El total/saldo lo calcula el backend (totalAmount/paidAmount/outstandingAmount).
@@ -42,6 +43,12 @@ export interface CompanySummary {
   identifier: string
 }
 
+export interface BranchSummary {
+  id: number
+  name: string
+  code: string
+}
+
 export interface TaxSummary {
   id: number
   name: string
@@ -67,6 +74,7 @@ export interface OpenAccountResponse {
   outstandingAmount: number
   status: OpenAccountStatus
   company: CompanySummary
+  branch: BranchSummary
   createdBy: EmployeeSummary
   createdDate: string
   enabled: boolean

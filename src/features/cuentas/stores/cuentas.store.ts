@@ -16,7 +16,7 @@ import type {
 } from '../types/cuentas'
 
 /**
- * Store de Cuentas abiertas (por propietario). El total/saldo proviene del
+ * Store de Cuentas abiertas (por propietario y sede). El total/saldo proviene del
  * backend; los cargos se agrupan por mascota en la UI.
  */
 export const useCuentasStore = defineStore('cuentas', () => {
@@ -189,6 +189,9 @@ export const useCuentasStore = defineStore('cuentas', () => {
   })
 
   async function findOpenAccountByOwner(ownerId: number): Promise<OpenAccountResponse | null> {
+    if (useBranchStore().selectedBranchId == null) {
+      throw new Error('Selecciona una sede para consultar la cuenta abierta del propietario.')
+    }
     // "Cuenta abierta" = status === 'OPEN'. Una cuenta cerrada/cancelada sigue
     // enabled=true pero ya no es abierta, así que no debe bloquear abrir otra.
     const local = accounts.value.find(
@@ -207,6 +210,9 @@ export const useCuentasStore = defineStore('cuentas', () => {
    * cuenta vive en el modal (aviso de duplicado al elegir propietario), no aquí.
    */
   async function openAccount(ownerId: number): Promise<OpenAccountResponse> {
+    if (useBranchStore().selectedBranchId == null) {
+      throw new Error('Selecciona una sede antes de abrir una cuenta.')
+    }
     const existing = await findOpenAccountByOwner(ownerId)
     if (existing) {
       upsertAccount(existing)

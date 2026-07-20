@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { Minus, PawPrint, Plus, Search, Wallet, X } from 'lucide-vue-next'
+import { ArrowRight, MapPin, Minus, PawPrint, Plus, Search, Wallet, X } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
@@ -16,6 +16,7 @@ import { animalApi } from '@/features/dashboard/views/consulta/nueva/api/animal.
 import { buildCreateAnimalRequest } from '@/features/dashboard/views/consulta/nueva/api/animal.mapper'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
+import { useBranchStore } from '@/features/branches/stores/branch.store'
 import type { CreateGeneralChargePayload, OpenAccountResponse } from '../types/cuentas'
 import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
 import type { PetDraft } from '@/features/dashboard/views/consulta/nueva/stores/nuevaConsultaDraft.store'
@@ -26,6 +27,7 @@ const emit = defineEmits<{ close: []; created: [account: OpenAccountResponse] }>
 const tienda = useTienda()
 const store = useCuentas()
 const toast = useToast()
+const branchStore = useBranchStore()
 const { companyId } = useAuth()
 
 // ── Carrito de cargos a registrar ────────────────────────────────────────────
@@ -269,6 +271,7 @@ function removeLine(line: CartLine) {
 const canConfirm = computed(
   () =>
     !!pickedOwner.value &&
+    branchStore.selectedBranchId != null &&
     !dupAccount.value &&
     !petCreating.value &&
     cart.value.length > 0 &&
@@ -279,6 +282,12 @@ const canConfirm = computed(
 const retryHint = computed(
   () => !busy.value && !!createdAccount.value && pendingOps.value.some((o) => !o.done),
 )
+
+function goToExistingAccount(): void {
+  if (!dupAccount.value) return
+  emit('created', dupAccount.value)
+  emit('close')
+}
 
 /** Aplana el carrito a POSTs individuales (1 cargo por unidad); base de la idempotencia. */
 function buildOps(): ChargeOp[] {
@@ -358,8 +367,13 @@ async function confirm() {
     @close="emit('close')"
   >
     <template #body>
+      <div v-if="branchStore.selectedBranchId == null" class="dup-warn">
+        <MapPin :size="15" :stroke-width="1.8" />
+        <span>Selecciona una sede antes de abrir una cuenta.</span>
+      </div>
+
       <!-- Paso 1 · elegir o crear propietario -->
-      <FeCustomerPicker v-if="!pickedOwner" mode="basic" @pick="onOwnerPicked" />
+      <FeCustomerPicker v-else-if="!pickedOwner" mode="basic" @pick="onOwnerPicked" />
 
       <!-- Paso 2 · builder de cargos -->
       <template v-else>
@@ -375,8 +389,8 @@ async function confirm() {
         <div v-if="dupAccount" class="dup-warn">
           <Wallet :size="15" :stroke-width="1.8" />
           <span>
-            <strong>{{ pickedOwner.name }}</strong> ya tiene una cuenta abierta. Ábrela desde la lista
-            para agregar cargos.
+            <strong>{{ pickedOwner.name }}</strong> ya tiene una cuenta abierta en
+            {{ dupAccount.branch.name }}. Puedes ir directamente al detalle para agregar cargos.
           </span>
         </div>
 
@@ -521,7 +535,10 @@ async function confirm() {
     </template>
     <template #footer-actions>
       <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn-primary" :disabled="!canConfirm" @click="confirm">
+      <button v-if="dupAccount" type="button" class="btn-primary" @click="goToExistingAccount">
+        Ir al detalle de la cuenta <ArrowRight :size="15" :stroke-width="1.9" />
+      </button>
+      <button v-else type="button" class="btn-primary" :disabled="!canConfirm" @click="confirm">
         {{ busy ? 'Abriendo…' : 'Abrir cuenta' }}
       </button>
     </template>

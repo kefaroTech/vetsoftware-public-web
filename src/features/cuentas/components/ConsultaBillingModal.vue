@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { Check, Minus, Plus, Receipt, X } from 'lucide-vue-next'
+import { Check, MapPin, Minus, Plus, Receipt, X } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import { useTienda } from '@/features/tienda/composables/useTienda'
 import { formatMoney } from '@/features/tienda/composables/pricing'
 import { useCuentas } from '../composables/useCuentas'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
+import { useBranchStore } from '@/features/branches/stores/branch.store'
 import type { OpenAccountResponse, UnifiedCharge } from '../types/cuentas'
 
 const props = withDefaults(
@@ -29,6 +30,7 @@ const emit = defineEmits<{ close: []; finish: [] }>()
 const tienda = useTienda()
 const cuentas = useCuentas()
 const toast = useToast()
+const branchStore = useBranchStore()
 
 type Destino = 'existing' | 'new' | 'nada'
 type CartKind = 'service' | 'product'
@@ -143,6 +145,7 @@ const showCharges = computed(() => destino.value === 'existing' || destino.value
 const canConfirm = computed(() => {
   if (busy.value) return false
   if (destino.value === 'nada') return true
+  if (branchStore.selectedBranchId == null) return false
   // Regla: no se abre una cuenta sin cargos → 'new' exige al menos 1 ítem.
   if (destino.value === 'new') return props.ownerId != null && items.value.length > 0
   return props.ownerId != null
@@ -228,11 +231,16 @@ async function confirm() {
       <div v-if="loadingAccount" class="state">Verificando cuenta…</div>
 
       <template v-else>
+        <div v-if="branchStore.selectedBranchId == null" class="acct-none branch-required">
+          <MapPin :size="15" :stroke-width="1.8" />
+          <span>Selecciona una sede para agregar cargos o abrir una cuenta.</span>
+        </div>
+
         <!-- 2. Banda de estado de cuenta -->
         <div v-if="hasAccount && existingAccount" class="acctcard">
           <div class="ac-ic"><Receipt :size="17" :stroke-width="1.7" /></div>
           <div class="ac-text">
-            <div class="ac-title">{{ firstName }} ya tiene una cuenta abierta</div>
+            <div class="ac-title">{{ firstName }} ya tiene una cuenta abierta en {{ existingAccount.branch.name }}</div>
             <div class="ac-sub">
               {{ existingCharges.length }} cargo(s) · desde {{ existingAccount.createdDate.slice(5, 10) }}
             </div>
@@ -250,7 +258,7 @@ async function confirm() {
           </span>
         </div>
 
-        <!-- 3. Selector de destino (regla: 1 cuenta abierta por propietario) -->
+        <!-- 3. Selector de destino (regla: 1 cuenta abierta por propietario y sede) -->
         <div class="dest">
           <button
             v-if="hasAccount"

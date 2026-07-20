@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import {
   ArrowLeft,
   Ban,
@@ -7,6 +7,7 @@ import {
   CreditCard,
   FileText,
   Lock,
+  MapPin,
   Package,
   Plus,
   Receipt,
@@ -30,6 +31,7 @@ import {
 import { animalApi } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
+import { useBranchStore } from '@/features/branches/stores/branch.store'
 import {
   OPEN_ACCOUNT_STATUS_LABEL,
   PAYMENT_METHOD_LABEL,
@@ -41,6 +43,7 @@ import {
 } from '../types/cuentas'
 
 const store = useCuentas()
+const branchStore = useBranchStore()
 const { can } = useAuthorization()
 const canCreate = can(PERMISSIONS.OPEN_ACCOUNT_CREATE)
 const canVoidPayment = can(PERMISSIONS.DEBT_OPEN_ACCOUNT_VOID)
@@ -68,6 +71,16 @@ const STATUS_TONE: Record<OpenAccountStatus, string> = {
 }
 
 onMounted(() => store.reload())
+watch(
+  () => branchStore.selectedBranchId,
+  () => {
+    selected.value = null
+    openAccountOpen.value = false
+    addChargeOpen.value = false
+    paymentOpen.value = false
+    closeOpen.value = false
+  },
+)
 
 // Activas = cuentas abiertas (OPEN); Cerradas = cobradas (CLOSE) o canceladas (CANCEL).
 const activeAccounts = computed(() => store.accounts.value.filter((a) => a.status === 'OPEN'))
@@ -115,8 +128,13 @@ function saldoValue(acc: OpenAccountResponse): number {
   return acc.status === 'CLOSE' ? acc.totalAmount : acc.outstandingAmount
 }
 
-/** Una cuenta cerrada o cancelada es de solo lectura: no admite cambios. */
-const isReadOnly = computed(() => !!selected.value && selected.value.status !== 'OPEN')
+/** Solo se administra una cuenta OPEN desde la sede a la que pertenece. */
+const isReadOnly = computed(
+  () =>
+    !!selected.value &&
+    (selected.value.status !== 'OPEN' ||
+      branchStore.selectedBranchId !== selected.value.branch.id),
+)
 
 /** Línea de meta del detalle: "cuenta abierta {fecha}" o "cerrada/cancelada el X por Y · motivo". */
 const detailMeta = computed(() => {
@@ -208,16 +226,28 @@ async function onChargeVoided() {
     <PageHeader
       kicker="Facturación"
       title="Cuentas"
-      lead="Cuentas a crédito por propietario. Los cargos se agrupan por mascota."
+      lead="Cuentas a crédito administradas por sede. Los cargos se agrupan por mascota."
     >
       <template #action>
-        <button v-if="canCreate && !selected" type="button" class="cta" @click="openCreateModal">
+        <button
+          v-if="canCreate && !selected && branchStore.selectedBranchId != null"
+          type="button"
+          class="cta"
+          @click="openCreateModal"
+        >
           <Plus :size="16" :stroke-width="1.8" /> Abrir cuenta
         </button>
       </template>
     </PageHeader>
 
     <div v-if="store.error.value" class="banner error">{{ store.error.value }}</div>
+    <div
+      v-if="canCreate && !selected && branchStore.selectedBranchId == null"
+      class="banner branch-warning"
+    >
+      <MapPin :size="15" :stroke-width="1.8" />
+      Selecciona una sede para abrir o agregar cargos a una cuenta.
+    </div>
 
     <!-- LISTA -->
     <template v-if="!selected">
@@ -297,7 +327,10 @@ async function onChargeVoided() {
             </div>
             <span class="status-pill" :class="STATUS_TONE[acc.status]">{{ cardStatusLabel(acc) }}</span>
           </div>
-          <div class="acct-meta">Cuenta desde {{ formatDateShort(acc.createdDate) }}</div>
+          <div class="acct-meta">
+            <MapPin :size="13" :stroke-width="1.8" /> {{ acc.branch.name }}
+            <span>· Cuenta desde {{ formatDateShort(acc.createdDate) }}</span>
+          </div>
           <div class="acct-totals">
             <div class="row"><span>Acumulado</span><strong>{{ formatMoney(acc.totalAmount) }}</strong></div>
             <div v-if="acc.paidAmount > 0" class="row"><span>Abonado</span><strong>{{ formatMoney(acc.paidAmount) }}</strong></div>
@@ -325,11 +358,11 @@ async function onChargeVoided() {
               <span class="status-pill" :class="STATUS_TONE[selected.status]">{{ OPEN_ACCOUNT_STATUS_LABEL[selected.status] }}</span>
             </div>
             <div class="detail-meta">
-              {{ selected.owner.document }} · {{ detailMeta }}
+              {{ selected.owner.document }} · {{ selected.branch.name }} · {{ detailMeta }}
             </div>
           </div>
         </div>
-        <div v-if="selected.status === 'OPEN'" class="detail-actions">
+        <div v-if="!isReadOnly" class="detail-actions">
           <button type="button" class="cta" @click="addChargeOpen = true">
             <Plus :size="15" :stroke-width="1.8" /> Agregar cargo
           </button>
@@ -349,7 +382,10 @@ async function onChargeVoided() {
 
       <div v-if="isReadOnly" class="readonly-note">
         <Lock :size="15" :stroke-width="1.8" />
-        <span>
+        <span v-if="selected.status === 'OPEN'">
+          Esta cuenta pertenece a {{ selected.branch.name }}. Selecciona esa sede para administrarla.
+        </span>
+        <span v-else>
           Cuenta {{ selected.status === 'CANCEL' ? 'cancelada' : 'cerrada' }} · solo lectura.
           No admite nuevos cargos ni abonos.
         </span>
@@ -522,6 +558,7 @@ async function onChargeVoided() {
 .ghost-cta:hover:not(:disabled) { background: var(--warm-100); }
 .ghost-cta:disabled { opacity: 0.5; cursor: not-allowed; }
 .banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
+.banner.branch-warning { display: flex; align-items: center; gap: 8px; background: oklch(96% 0.04 80); border: 1px solid oklch(88% 0.08 80); color: oklch(42% 0.09 70); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
 
 /* Tabs Activas / Cerradas */
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--warm-200); margin-bottom: 16px; }
@@ -578,7 +615,7 @@ async function onChargeVoided() {
 .name { font-size: 15px; font-weight: 500; color: var(--warm-900); }
 .name.lg { margin: 0; font-size: 22px; font-family: var(--font-serif); font-weight: 400; letter-spacing: -0.015em; line-height: 1.05; }
 .doc { font-size: 12px; color: var(--warm-500); margin-top: 1px; }
-.acct-meta { font-size: 12px; color: var(--warm-500); }
+.acct-meta { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: 12px; color: var(--warm-500); }
 .acct-totals { display: flex; flex-direction: column; gap: 4px; padding-top: 11px; border-top: 1px solid var(--warm-150); }
 .acct-totals .row { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--warm-600); }
 .acct-totals .row strong { color: var(--warm-900); font-variant-numeric: tabular-nums; }

@@ -42,6 +42,7 @@ export interface CashSessionView {
   id: number
   branchId: number
   branchName: string | null
+  terminalId: number
   terminal: string
   status: CashSessionStatus
   openedByEmployeeId: number | null
