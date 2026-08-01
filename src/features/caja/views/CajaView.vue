@@ -51,7 +51,7 @@ const {
   setHistoryPage,
   exportArqueo,
 } = useCaja()
-const { can, isAdmin } = useAuthorization()
+const { can } = useAuthorization()
 const { subjectId } = useAuth()
 const branchStore = useBranchStore()
 const route = useRoute()
@@ -71,10 +71,9 @@ const canOpenCash = computed(
 )
 const canCloseCurrentSession = computed(
   () =>
-    isAdmin.value ||
-    (canClose.value &&
+    canClose.value &&
       subjectId.value != null &&
-      current.value?.openedByEmployeeId === subjectId.value),
+      current.value?.openedByEmployeeId === subjectId.value,
 )
 
 const openModal = ref(false)
@@ -221,7 +220,7 @@ function applyHistoryFilters(): void {
 }
 
 function clearHistoryFilters(): void {
-  historyBranchId.value = isAdmin.value ? null : branchStore.selectedBranchId
+  historyBranchId.value = null
   historyEmployeeId.value = null
   historyFrom.value = ''
   historyTo.value = ''
@@ -488,7 +487,7 @@ watch(
           <span>Sede</span>
           <select v-model="historyBranchId" :disabled="historyLoading">
             <option :value="null">
-              {{ isAdmin ? 'Todas las sedes' : 'Seleccione una sede' }}
+              Todas las sedes asignadas
             </option>
             <option v-for="branch in historyBranchOptions" :key="branch.id" :value="branch.id">
               {{ branch.name }}{{ branch.active ? '' : ' (inactiva)' }}

@@ -10,7 +10,7 @@ import { PERMISSIONS } from '@/constants/permissions'
  *
  * Todas las capacidades del módulo (documentos, emisión, reportes, configuración)
  * cuelgan del mismo permiso: quien puede facturar electrónicamente puede usar todo
- * el módulo. `admin.all` también lo habilita (vía useAuthorization).
+ * el módulo mediante permisos empresariales explícitos.
  */
 export function useFacturacionAccess() {
   const { can, hasPermission } = useAuthorization()

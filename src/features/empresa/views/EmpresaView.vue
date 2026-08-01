@@ -20,14 +20,14 @@ import CashTerminalsPanel from '@/features/caja/components/CashTerminalsPanel.vu
 
 const router = useRouter()
 const toast = useToast()
-const { can, isAdmin } = useAuthorization()
+const { can } = useAuthorization()
 const { canConfig: feCanConfig } = useFacturacionAccess()
 
 const { company, taxProfile, loading, load } = useEmpresa()
 const { sedes, activeCount, isPrincipal, create, update, setActive } = useSedes()
 
 const canManageSedes = computed(
-  () => isAdmin.value || can(PERMISSIONS.BRANCH_CREATE).value || can(PERMISSIONS.BRANCH_UPDATE).value,
+  () => can(PERMISSIONS.BRANCH_CREATE).value || can(PERMISSIONS.BRANCH_UPDATE).value,
 )
 
 // ── Datos derivados de la empresa (perfil fiscal + base) ─────────────────────

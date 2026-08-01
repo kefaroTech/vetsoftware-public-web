@@ -81,7 +81,6 @@ export interface RolePermissionResponse {
 export interface CreateRoleRequest {
   name: string
   code: string
-  companyId: number
 }
 
 export type UpdateRoleRequest = CreateRoleRequest

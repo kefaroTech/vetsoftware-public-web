@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { rolesApi } from '../api/roles.api'
 import { rolePermissionsApi } from '../api/rolePermissions.api'
-import { useAuth } from '@/features/auth/composables/useAuth'
 import type { CreateRoleRequest, RoleResponse, UpdateRoleRequest } from '../types'
 
 function setsEqual<T>(a: Set<T>, b: Set<T>): boolean {
@@ -80,13 +79,9 @@ export const useRolesStore = defineStore('roles', () => {
     name: string
     permissionIds: number[]
   }): Promise<RoleResponse> {
-    const { companyId } = useAuth()
-    const cid = companyId.value
-    if (cid == null) throw new Error('No hay companyId en sesión')
     const payload: CreateRoleRequest = {
       name: input.name.trim(),
       code: makeRoleCode(input.name),
-      companyId: cid,
     }
     const created = await rolesApi.create(payload)
     if (input.permissionIds.length > 0) {
@@ -110,7 +105,6 @@ export const useRolesStore = defineStore('roles', () => {
       const payload: UpdateRoleRequest = {
         name: trimmedName,
         code: role.code,
-        companyId: role.company.id,
       }
       await rolesApi.update(role.id, payload)
       nameChanged = true

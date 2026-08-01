@@ -17,17 +17,14 @@ export const ALL_BRANCHES = ''
 export function useBranches() {
   const store = useBranchStore()
   const { branches, loading, error, selectedBranchId } = storeToRefs(store)
-  const { isAdmin, branchIds } = useAuthorization()
+  const { branchIds } = useAuthorization()
 
   const activeBranches = computed(() => branches.value.filter((b) => b.active))
-  // Sedes visibles para el selector GLOBAL del menú: admin ve todas las activas; el resto, solo las asignadas.
+  // Sedes visibles para el selector global: siempre las asignadas explícitamente al empleado.
   const visibleBranches = computed(() =>
-    isAdmin.value
-      ? activeBranches.value
-      : activeBranches.value.filter((b) => branchIds.value.includes(b.id)),
+    activeBranches.value.filter((b) => branchIds.value.includes(b.id)),
   )
-  // Sedes ASIGNADAS al usuario (activas ∩ me.branchIds), SIN bypass de admin. Para los desplegables de CREACIÓN
-  // (agendar cita, crear muestra): el usuario solo puede operar/elegir sedes que tiene asignadas, aunque sea admin.
+  // Sedes asignadas al usuario (activas ∩ me.branchIds), también usadas por formularios de creación.
   const assignedBranches = computed(() =>
     activeBranches.value.filter((b) => branchIds.value.includes(b.id)),
   )
@@ -38,10 +35,7 @@ export function useBranches() {
       // Nombre de la sede + ciudad ("Principal - Bogotá") para desambiguar sedes homónimas en distintas ciudades.
       label: b.city?.name ? `${b.name} - ${b.city.name}` : b.name,
     }))
-    // "Todas las sedes" solo para admin; un no-admin debe operar siempre sobre una sede concreta.
-    return isAdmin.value
-      ? [{ value: ALL_BRANCHES, label: 'Todas las sedes' }, ...branchOpts]
-      : branchOpts
+    return branchOpts
   })
 
   // v-model string para BaseSelect: id -> string, null -> ''.
@@ -55,12 +49,10 @@ export function useBranches() {
   // Multi-sede real (≥2 sedes visibles): p.ej. para decidir si mostrar el selector de sede en formularios.
   const hasMultipleBranches = computed(() => visibleBranches.value.length > 1)
 
-  // Reconciliar la selección de un no-admin: nunca dejar "Todas" (null) ni una sede fuera de su alcance —
-  // si no, las listas/escrituras irían sin branchId y el backend respondería 400/403. Cae a su primera sede.
+  // Nunca dejar "Todas" (null) ni una sede fuera del alcance explícito. Cae a la primera sede asignada.
   watch(
-    [visibleBranches, isAdmin],
+    visibleBranches,
     () => {
-      if (isAdmin.value) return
       const ids = visibleBranches.value.map((b) => b.id)
       if (ids.length === 0) return
       if (selectedBranchId.value == null || !ids.includes(selectedBranchId.value)) {

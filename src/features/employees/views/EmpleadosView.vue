@@ -121,7 +121,7 @@ function openChangeRoles(employee: Employee) {
 }
 
 function openChangeBranches(employee: Employee) {
-  // Un admin ve todas las sedes (bypass por admin.all): no tiene sentido asignarle sedes.
+  // El rol ADMIN mantiene cobertura total mediante asignaciones explícitas de sede.
   if (hasAdminRole(employee)) {
     toast.info(
       'Sin sedes que asignar',

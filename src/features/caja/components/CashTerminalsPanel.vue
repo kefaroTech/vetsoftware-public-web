@@ -17,14 +17,14 @@ import {
 } from '../api/cashTerminal.api'
 
 const props = defineProps<{ branches: BranchResponse[] }>()
-const { can, isAdmin } = useAuthorization()
+const { can } = useAuthorization()
 const toast = useToast()
 
 const activeBranches = computed(() => props.branches.filter((branch) => branch.active))
 const branchOptions = computed(() =>
   activeBranches.value.map((branch) => ({ value: String(branch.id), label: branch.name })),
 )
-const canManage = computed(() => isAdmin.value || can(PERMISSIONS.BRANCH_UPDATE).value)
+const canManage = computed(() => can(PERMISSIONS.BRANCH_UPDATE).value)
 
 const selectedBranchId = ref('')
 const terminals = ref<CashTerminal[]>([])

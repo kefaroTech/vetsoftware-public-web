@@ -352,16 +352,15 @@ router.beforeEach(async (to, from) => {
     return redirect({ name: 'home' })
   }
 
-  const { permissions, isAdmin } = useAuthorization()
+  const { permissions } = useAuthorization()
   const required = to.meta.permission as string | undefined
   const requiredAny = to.meta.permissionsAny as string[] | undefined
 
-  if (required && !isAdmin.value && !permissions.value.includes(required)) {
+  if (required && !permissions.value.includes(required)) {
     return redirect({ name: 'home' })
   }
   if (
     requiredAny &&
-    !isAdmin.value &&
     !requiredAny.some((p) => permissions.value.includes(p))
   ) {
     return redirect({ name: 'home' })

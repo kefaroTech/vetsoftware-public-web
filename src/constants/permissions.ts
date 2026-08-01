@@ -1,6 +1,4 @@
 export const PERMISSIONS = {
-  ADMIN_ALL: 'admin.all',
-
   EMPLOYEE_CREATE: 'employee.create',
   EMPLOYEE_READ: 'employee.read',
   EMPLOYEE_UPDATE: 'employee.update',
