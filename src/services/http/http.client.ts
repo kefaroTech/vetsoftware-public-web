@@ -1,6 +1,7 @@
 import axios, { AxiosError } from 'axios'
 import type { ProblemDetail } from '@/types/api.types'
 import { popLoader, pushLoader } from '@/composables/useGlobalLoader'
+import { createApiBaseUrl } from './api-base-url'
 
 declare module 'axios' {
   export interface AxiosRequestConfig {
@@ -14,7 +15,7 @@ export const AUTH_STORAGE_KEY = 'vetsoft.auth'
 export const SESSION_REPLACED_NOTICE_KEY = 'vetsoft.auth.session-replaced'
 
 export const http = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL ?? ''}/api/v1`,
+  baseURL: createApiBaseUrl(import.meta.env.VITE_API_URL),
   headers: { 'Content-Type': 'application/json' },
 })
 
