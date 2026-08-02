@@ -7,7 +7,7 @@ import { ref } from 'vue'
  * del script de Google, que es un recurso global legítimo.
  */
 const SITE_KEY =
-  (import.meta.env.VITE_RECAPTCHA_SITE_KEY as string | undefined) ??
+  (import.meta.env.VITE_RECAPTCHA_SITE_KEY as string | undefined) ||
   '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
 
 const CALLBACK_NAME = '__vetRecaptchaOnLoad'
