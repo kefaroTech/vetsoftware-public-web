@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { Check, ChevronDown } from 'lucide-vue-next'
 
 interface Option {
@@ -24,8 +24,7 @@ const emit = defineEmits<{
   blur: []
 }>()
 
-let seq = 0
-const uid = `bsel-${(seq = seq + 1)}-${Math.round(performance.now())}`
+const uid = useId()
 const controlId = computed(() => props.id ?? uid)
 
 const root = ref<HTMLElement | null>(null)

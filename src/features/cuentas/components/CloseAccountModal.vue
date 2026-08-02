@@ -394,9 +394,9 @@ function onShellClose() {
     :width="520"
     @close="onShellClose"
   >
-    <!-- PASO COBRO -->
-    <template v-if="step === 'cobro'" #body>
-      <div class="form">
+    <template #body>
+      <!-- PASO COBRO -->
+      <div v-if="step === 'cobro'" class="form">
         <div class="field-lab">Motivo del cierre</div>
         <div class="mode">
           <button
@@ -519,21 +519,9 @@ function onShellClose() {
           cerrar la cuenta.
         </p>
       </div>
-    </template>
 
-    <template v-if="step === 'cobro'" #footer-left>
-      <span class="foottotal">Saldo <strong>{{ formatMoney(outstanding) }}</strong></span>
-    </template>
-    <template v-if="step === 'cobro'" #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn-primary" :disabled="!canConfirm" @click="confirm">
-        {{ busy ? 'Procesando…' : primaryLabel }}
-      </button>
-    </template>
-
-    <!-- PASO RECIBO -->
-    <template v-if="step === 'recibo' && result" #body>
-      <div class="receipt">
+      <!-- PASO RECIBO -->
+      <div v-else-if="step === 'recibo' && result" class="receipt">
         <div class="badge" :class="{ cancel: receiptCancel }">
           <X v-if="receiptCancel" :size="26" :stroke-width="2.4" />
           <Check v-else :size="26" :stroke-width="2.4" />
@@ -552,19 +540,30 @@ function onShellClose() {
       </div>
     </template>
 
-    <template v-if="step === 'recibo'" #footer-left>
-      <div class="w-seg" role="group" aria-label="Ancho del tiquete">
+    <template #footer-left>
+      <span v-if="step === 'cobro'" class="foottotal">
+        Saldo <strong>{{ formatMoney(outstanding) }}</strong>
+      </span>
+      <div v-else-if="step === 'recibo'" class="w-seg" role="group" aria-label="Ancho del tiquete">
         <button type="button" :class="{ on: width === '80' }" @click="setWidth('80')">80mm</button>
         <button type="button" :class="{ on: width === '58' }" @click="setWidth('58')">58mm</button>
       </div>
     </template>
-    <template v-if="step === 'recibo'" #footer-actions>
-      <button type="button" class="btn-ghost" @click="onPrint">
-        <Printer :size="15" :stroke-width="2" /> Imprimir
-      </button>
-      <button type="button" class="btn-primary" @click="finish">
-        <Check :size="15" :stroke-width="2" /> Listo
-      </button>
+    <template #footer-actions>
+      <template v-if="step === 'cobro'">
+        <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
+        <button type="button" class="btn-primary" :disabled="!canConfirm" @click="confirm">
+          {{ busy ? 'Procesando…' : primaryLabel }}
+        </button>
+      </template>
+      <template v-else-if="step === 'recibo'">
+        <button type="button" class="btn-ghost" @click="onPrint">
+          <Printer :size="15" :stroke-width="2" /> Imprimir
+        </button>
+        <button type="button" class="btn-primary" @click="finish">
+          <Check :size="15" :stroke-width="2" /> Listo
+        </button>
+      </template>
     </template>
   </ModalShell>
 
