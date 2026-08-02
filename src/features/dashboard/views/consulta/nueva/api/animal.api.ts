@@ -71,7 +71,6 @@ export interface CreateAnimalRequest {
   size: number | null
   deceased: boolean
   deceasedDate: string | null
-  companyId: number
 }
 
 export type UpdateAnimalRequest = CreateAnimalRequest

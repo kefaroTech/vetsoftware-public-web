@@ -164,8 +164,7 @@ const regimeOptions = (Object.keys(TAX_REGIME_LABEL) as TaxRegime[]).map((k) => 
 async function submit() {
   ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = true))
   if (!isValid.value || submitting.value) return
-  const company = companyId.value
-  if (company == null) {
+  if (companyId.value == null) {
     submitError.value = 'No se pudo determinar la empresa. Vuelve a iniciar sesión.'
     return
   }
@@ -178,7 +177,6 @@ async function submit() {
     email: draft.email.trim(),
     address: draft.address.trim(),
     cityId: Number(draft.cityId),
-    companyId: company,
     documentType: draft.documentType,
     personType: draft.personType,
     verificationDigit: isNit.value ? dv.value : null,

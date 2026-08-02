@@ -88,7 +88,6 @@ async function submitOwner(): Promise<boolean> {
       personType: o.personType as PersonType,
       address: o.address.trim(),
       cityId: cityIdNum,
-      companyId: companyId.value,
     })
     draft.setOwner(mapOwnerResponse(created))
     return true
@@ -166,7 +165,7 @@ async function submitPet(): Promise<boolean> {
   }
   petSubmitError.value = null
   try {
-    const payload = buildCreateAnimalRequest(p, o.id, companyId.value)
+    const payload = buildCreateAnimalRequest(p, o.id)
     const created = await animalApi.create(payload)
     const newPet = mapAnimalResponse(created)
     addPet(newPet)

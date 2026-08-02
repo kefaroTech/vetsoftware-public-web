@@ -2,7 +2,6 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Plus } from 'lucide-vue-next'
 import type { Employee } from '@/types/domain'
-import { useAuth } from '@/features/auth/composables/useAuth'
 import { useEmployees } from '../composables/useEmployees'
 import { useRoles } from '@/features/roles/composables/useRoles'
 import EmpleadosTable from '../components/EmpleadosTable.vue'
@@ -32,7 +31,6 @@ function hasAdminRole(employee: Employee): boolean {
   return employee.roles.some((r) => r.code === ADMIN_ROLE_CODE)
 }
 
-const { companyId } = useAuth()
 const {
   employees,
   loading,
@@ -148,11 +146,6 @@ async function handleSubmit(data: EmployeeFormData) {
       selectedId.value = updated.id
       toast.success('Empleado actualizado', updated.name)
     } else {
-      const cid = companyId.value
-      if (cid == null) {
-        submitError.value = 'No se pudo determinar la empresa actual.'
-        return
-      }
       if (data.roleIds.length === 0) {
         submitError.value = 'Selecciona al menos un rol para el empleado.'
         return
@@ -168,7 +161,6 @@ async function handleSubmit(data: EmployeeFormData) {
         password: data.password,
         name: data.name.trim(),
         email: data.email.trim(),
-        companyId: cid,
         roleIds: data.roleIds,
         branchIds: data.branchIds,
       })

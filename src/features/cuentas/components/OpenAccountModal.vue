@@ -179,7 +179,7 @@ async function submitPet() {
   petBusy.value = true
   petError.value = null
   try {
-    const payload = buildCreateAnimalRequest(petDraft.value, String(owner.id), companyId.value)
+    const payload = buildCreateAnimalRequest(petDraft.value, String(owner.id))
     const created = await animalApi.create(payload)
     ownerPets.value = [...ownerPets.value, { id: created.id, name: created.name }]
     selectedPet.value = created.id

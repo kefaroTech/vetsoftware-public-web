@@ -156,7 +156,6 @@ async function saveOwner() {
       personType: o.personType as PersonType,
       address: o.address.trim(),
       cityId: cityIdNum,
-      companyId: companyId.value,
     })
     ownerCreating.value = false
     pickOwner(mapOwnerResponse(created))
@@ -200,7 +199,7 @@ async function savePet() {
   savingPet.value = true
   petSubmitError.value = null
   try {
-    const payload = buildCreateAnimalRequest(petDraft.value, owner.id, companyId.value)
+    const payload = buildCreateAnimalRequest(petDraft.value, owner.id)
     const created = await animalApi.create(payload)
     animals.value = [...animals.value, created]
     petCreating.value = false

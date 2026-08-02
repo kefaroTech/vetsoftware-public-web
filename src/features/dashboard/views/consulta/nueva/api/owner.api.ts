@@ -41,7 +41,6 @@ export interface CreateOwnerRequest {
   address: string
   phone: string
   cityId: number
-  companyId: number
   // Campos fiscales (opcionales en el tipo del front; el backend exige
   // documentType/personType al crear — la captura fiscal vive en FE > 5 UVT y en OwnerForm).
   documentType?: OwnerDocumentType

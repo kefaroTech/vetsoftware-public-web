@@ -157,7 +157,6 @@ async function onSaveFiscal(data: Partial<FiscalCustomer>) {
     address: o.address,
     phone: o.phone,
     cityId: o.city.id,
-    companyId: o.company.id,
     documentType: data.documentType ?? o.documentType ?? undefined,
     personType: data.personType ?? o.personType ?? undefined,
     verificationDigit: data.verificationDigit ?? null,

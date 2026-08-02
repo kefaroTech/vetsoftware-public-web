@@ -30,7 +30,6 @@ export function mapAnimalResponse(r: AnimalResponse): Animal {
 export function buildCreateAnimalRequest(
   p: PetDraft,
   ownerId: string,
-  companyId: number,
 ): CreateAnimalRequest {
   if (!p.gender || !p.reproductiveState) {
     throw new Error('Pet draft is incomplete')
@@ -60,6 +59,5 @@ export function buildCreateAnimalRequest(
     size: sizeNum,
     deceased: false,
     deceasedDate: null,
-    companyId,
   }
 }
