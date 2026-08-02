@@ -36,7 +36,7 @@ const emit = defineEmits<{ close: []; edit: [] }>()
           v-for="(f, idx) in fields"
           :key="idx"
           :label="f.label"
-          :value="f.value as string | number | null"
+          :value="f.value"
           :span="f.span"
         />
       </div>

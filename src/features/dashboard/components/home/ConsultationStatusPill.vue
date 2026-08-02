@@ -15,6 +15,7 @@ const meta = computed(() => {
     case 'completada':
       return { label: 'Completada', tone: 'ok' as const }
   }
+  return { label: props.status, tone: 'wait' as const }
 })
 </script>
 
