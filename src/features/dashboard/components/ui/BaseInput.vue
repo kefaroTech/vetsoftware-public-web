@@ -33,13 +33,7 @@ const effectiveType = computed(() =>
 
 <template>
   <label class="input" :class="{ disabled, invalid }">
-    <component
-      :is="icon"
-      v-if="icon"
-      :size="14"
-      :stroke-width="1.6"
-      class="icon"
-    />
+    <component :is="icon" v-if="icon" :size="14" :stroke-width="1.6" class="icon" />
     <input
       :id="id"
       :type="effectiveType"
@@ -77,46 +71,72 @@ const effectiveType = computed(() =>
   padding: 10px 14px;
   font-size: 13.5px;
   cursor: text;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
 }
-.input:hover:not(.disabled):not(.invalid):not(:focus-within) {
+
+.input:hover:not(.disabled, .invalid, :focus-within) {
   border-color: var(--warm-300);
 }
+
 .input:focus-within {
   border-color: var(--amatista-500);
   box-shadow: 0 0 0 3px var(--amatista-50);
 }
+
 .input:focus-within .icon {
   color: var(--amatista-500);
 }
+
 .input.disabled {
   background: var(--warm-100);
   color: var(--warm-500);
   cursor: not-allowed;
 }
+
 .input.invalid {
-  border-color: oklch(60% 0.20 25);
-  background: oklch(98.5% 0.02 25);
+  border-color: oklch(60% 0.2 25deg);
+  background: oklch(98.5% 0.02 25deg);
   animation: shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
+
 .input.invalid:focus-within {
-  border-color: oklch(55% 0.22 25);
-  box-shadow: 0 0 0 3px oklch(92% 0.06 25);
+  border-color: oklch(55% 0.22 25deg);
+  box-shadow: 0 0 0 3px oklch(92% 0.06 25deg);
 }
+
 .input.invalid .icon {
-  color: oklch(55% 0.22 25);
+  color: oklch(55% 0.22 25deg);
 }
+
 @keyframes shake {
-  10%, 90% { transform: translateX(-1px); }
-  20%, 80% { transform: translateX(2px); }
-  30%, 50%, 70% { transform: translateX(-3px); }
-  40%, 60% { transform: translateX(3px); }
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-3px);
+  }
+  40%,
+  60% {
+    transform: translateX(3px);
+  }
 }
+
 .icon {
   color: var(--warm-500);
   flex-shrink: 0;
   transition: color 0.15s ease;
 }
+
 input {
   flex: 1;
   border: none;
@@ -127,17 +147,21 @@ input {
   color: var(--warm-900);
   min-width: 0;
 }
+
 input::placeholder {
   color: var(--warm-500);
 }
+
 input:disabled {
   cursor: not-allowed;
 }
+
 .suffix {
   font-size: 11.5px;
   color: var(--warm-500);
   flex-shrink: 0;
 }
+
 .reveal {
   display: grid;
   place-items: center;
@@ -149,9 +173,11 @@ input:disabled {
   cursor: pointer;
   transition: color 0.15s ease;
 }
+
 .reveal:hover {
   color: var(--warm-700);
 }
+
 .input.disabled .reveal {
   cursor: not-allowed;
   color: var(--warm-400);

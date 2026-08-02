@@ -15,10 +15,6 @@ import {
 import { useBranches, ALL_BRANCHES } from '@/features/branches/composables/useBranches'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
-// Multi-sucursal (B-6): prefijo por sede. "Todas las sedes" (ALL_BRANCHES = '') = resolución de empresa.
-// El selector solo aparece en empresas multi-sede; en empresas de 1 sede la resolución queda company-wide.
-const { options: branchOptions, hasMultipleBranches } = useBranches()
-
 const props = defineProps<{
   open: boolean
   initial: NumberingResolutionResponse | null
@@ -29,6 +25,10 @@ const emit = defineEmits<{
   save: [payload: { id: number | null; body: SaveNumberingResolutionRequest }]
   close: []
 }>()
+
+// Multi-sucursal (B-6): prefijo por sede. "Todas las sedes" (ALL_BRANCHES = '') = resolución de empresa.
+// El selector solo aparece en empresas multi-sede; en empresas de 1 sede la resolución queda company-wide.
+const { options: branchOptions, hasMultipleBranches } = useBranches()
 
 interface Draft {
   documentType: ElectronicDocumentType
@@ -107,11 +107,7 @@ const errors = computed(() => {
     // es nullable (el dominio solo valida longitud) → opcional (p.ej. documento POS sin prefijo).
     prefix: null,
     rangeFrom: !draft.rangeFrom || from < 1 ? 'Debe ser ≥ 1' : null,
-    rangeTo: !draft.rangeTo
-      ? 'Requerido'
-      : to < from
-        ? 'No puede ser menor que "desde"'
-        : null,
+    rangeTo: !draft.rangeTo ? 'Requerido' : to < from ? 'No puede ser menor que "desde"' : null,
     validFrom: draft.validFrom ? null : 'Requerido',
     validTo: !draft.validTo
       ? 'Requerido'
@@ -125,7 +121,7 @@ const isValid = computed(() => Object.values(errors.value).every((e) => !e))
 
 type ErrorKey = 'resolutionNumber' | 'prefix' | 'rangeFrom' | 'rangeTo' | 'validFrom' | 'validTo'
 function err(field: ErrorKey): string | undefined {
-  return submitted.value && errors.value[field] ? errors.value[field]! : undefined
+  return submitted.value ? (errors.value[field] ?? undefined) : undefined
 }
 
 function submit() {
@@ -235,11 +231,7 @@ function submit() {
         </BaseField>
         <BaseField label="Vigente desde" required :error="err('validFrom')">
           <template #default="{ id }">
-            <DateInput
-              :id="id"
-              v-model="draft.validFrom"
-              :invalid="!!err('validFrom')"
-            />
+            <DateInput :id="id" v-model="draft.validFrom" :invalid="!!err('validFrom')" />
           </template>
         </BaseField>
         <BaseField label="Vigente hasta" required :error="err('validTo')">
@@ -279,14 +271,17 @@ function submit() {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px 22px;
 }
-@media (max-width: 760px) {
+
+@media (width <= 760px) {
   .grid {
     grid-template-columns: 1fr;
   }
 }
+
 .span-2 {
   grid-column: 1 / -1;
 }
+
 .help {
   margin: 14px 0 0;
   font-size: 12px;
@@ -295,6 +290,7 @@ function submit() {
   padding-left: 10px;
   line-height: 1.5;
 }
+
 .btn-ghost {
   padding: 9px 16px;
   border-radius: 9px;
@@ -305,18 +301,26 @@ function submit() {
   font-weight: 500;
   cursor: pointer;
 }
+
 .btn-ghost:hover {
   background: var(--warm-100);
 }
+
 .btn-primary {
   padding: 9px 18px;
   border-radius: 9px;
   border: none;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
   color: #fff;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08), 0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.45);
+  box-shadow:
+    0 1px 2px rgb(50 20 80 / 8%),
+    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 45%);
 }
 </style>

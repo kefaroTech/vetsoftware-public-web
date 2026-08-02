@@ -132,9 +132,9 @@ async function robustLogin(page: Page): Promise<void> {
 async function robustLoginAndOpenWizard(page: Page): Promise<void> {
   await robustLogin(page)
   await page.goto(NUEVA_CONSULTA_URL)
-  await expect(
-    page.getByRole('heading', { name: /Quién es el propietario/ }),
-  ).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('heading', { name: /Quién es el propietario/ })).toBeVisible({
+    timeout: 30_000,
+  })
 }
 
 /**

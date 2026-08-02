@@ -82,10 +82,7 @@ export const useAppointmentsStore = defineStore('appointments', () => {
     return updated
   }
 
-  async function changeStatus(
-    id: number,
-    status: AppointmentStatus,
-  ): Promise<AppointmentResponse> {
+  async function changeStatus(id: number, status: AppointmentStatus): Promise<AppointmentResponse> {
     const updated = await appointmentApi.changeStatus(id, { status })
     await load()
     return updated

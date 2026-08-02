@@ -22,6 +22,7 @@ defineProps<{ icon: Component; title: string; sub?: string }>()
   align-items: flex-start;
   gap: 12px;
 }
+
 .sechead-ic {
   width: 38px;
   height: 38px;
@@ -32,6 +33,7 @@ defineProps<{ icon: Component; title: string; sub?: string }>()
   color: var(--amatista-700);
   flex-shrink: 0;
 }
+
 .sechead-title {
   font-family: var(--font-serif);
   font-size: 19px;
@@ -40,6 +42,7 @@ defineProps<{ icon: Component; title: string; sub?: string }>()
   color: var(--warm-900);
   line-height: 1.2;
 }
+
 .sechead-sub {
   margin-top: 3px;
   font-size: 12.5px;

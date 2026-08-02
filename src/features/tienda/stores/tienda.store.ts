@@ -119,7 +119,11 @@ export const useTiendaStore = defineStore('tienda', () => {
     await loadStock(stockBranchId.value)
     await loadInventoryInsights(stockBranchId.value)
   }
-  async function setMinStock(productId: number, branchId: number | null, minStock: number): Promise<void> {
+  async function setMinStock(
+    productId: number,
+    branchId: number | null,
+    minStock: number,
+  ): Promise<void> {
     await inventoryApi.setMinStock(productId, branchId, minStock)
     await loadStock(branchId ?? stockBranchId.value)
   }
@@ -274,7 +278,12 @@ export const useTiendaStore = defineStore('tienda', () => {
     upsert(productCategories, created)
     return created
   }
-  async function updateProductCategory(id: number, name: string, description: string, version: number) {
+  async function updateProductCategory(
+    id: number,
+    name: string,
+    description: string,
+    version: number,
+  ) {
     const updated = await productCategoryApi.update(id, { name, description, version })
     upsert(productCategories, updated)
     return updated
@@ -289,7 +298,12 @@ export const useTiendaStore = defineStore('tienda', () => {
     upsert(serviceCategories, created)
     return created
   }
-  async function updateServiceCategory(id: number, name: string, description: string, version: number) {
+  async function updateServiceCategory(
+    id: number,
+    name: string,
+    description: string,
+    version: number,
+  ) {
     const updated = await serviceCategoryApi.update(id, { name, description, version })
     upsert(serviceCategories, updated)
     return updated

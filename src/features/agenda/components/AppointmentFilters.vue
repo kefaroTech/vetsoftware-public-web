@@ -16,9 +16,9 @@ const vetOptions = computed(() => [
 
 const statusOptions = computed(() => [
   { value: 'ALL', label: 'Todos los estados' },
-  ...(Object.entries(APPT_STATUS) as [AppointmentStatus, (typeof APPT_STATUS)[AppointmentStatus]][]).map(
-    ([key, m]) => ({ value: key, label: m.label }),
-  ),
+  ...(
+    Object.entries(APPT_STATUS) as [AppointmentStatus, (typeof APPT_STATUS)[AppointmentStatus]][]
+  ).map(([key, m]) => ({ value: key, label: m.label })),
 ])
 
 const originOptions = [
@@ -57,10 +57,12 @@ const originModel = computed({
   gap: 8px;
   flex-wrap: wrap;
 }
+
 .filter-icon {
   color: var(--warm-500);
   flex-shrink: 0;
 }
+
 .sel {
   min-width: 170px;
 }

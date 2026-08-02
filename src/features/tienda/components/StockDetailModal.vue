@@ -144,8 +144,12 @@ watch(
   >
     <template #body>
       <div class="seg" role="tablist">
-        <button type="button" :class="{ on: tab === 'lots' }" @click="switchTab('lots')">Lotes</button>
-        <button type="button" :class="{ on: tab === 'kardex' }" @click="switchTab('kardex')">Movimientos</button>
+        <button type="button" :class="{ on: tab === 'lots' }" @click="switchTab('lots')">
+          Lotes
+        </button>
+        <button type="button" :class="{ on: tab === 'kardex' }" @click="switchTab('kardex')">
+          Movimientos
+        </button>
       </div>
 
       <div v-if="error" class="banner error">{{ error }}</div>
@@ -161,8 +165,12 @@ watch(
           </tr>
         </thead>
         <tbody>
-          <tr v-if="loading"><td colspan="4" class="empty">Cargando…</td></tr>
-          <tr v-else-if="lots.length === 0"><td colspan="4" class="empty">Sin lotes con existencia.</td></tr>
+          <tr v-if="loading">
+            <td colspan="4" class="empty">Cargando…</td>
+          </tr>
+          <tr v-else-if="lots.length === 0">
+            <td colspan="4" class="empty">Sin lotes con existencia.</td>
+          </tr>
           <tr v-for="l in lots" v-else :key="l.lotId">
             <td>{{ l.lotNumber || '—' }}</td>
             <td>{{ fmtDate(l.expireDate) }}</td>
@@ -176,8 +184,12 @@ watch(
       <template v-else>
         <div class="exportbar">
           <span class="exp-lbl">Descargar kardex</span>
-          <button type="button" class="exp" :disabled="exporting" @click="exportKardex('csv')">CSV</button>
-          <button type="button" class="exp" :disabled="exporting" @click="exportKardex('pdf')">PDF</button>
+          <button type="button" class="exp" :disabled="exporting" @click="exportKardex('csv')">
+            CSV
+          </button>
+          <button type="button" class="exp" :disabled="exporting" @click="exportKardex('pdf')">
+            PDF
+          </button>
         </div>
         <table class="table">
           <thead>
@@ -191,13 +203,19 @@ watch(
             </tr>
           </thead>
           <tbody>
-            <tr v-if="loading"><td colspan="6" class="empty">Cargando…</td></tr>
-            <tr v-else-if="movements.length === 0"><td colspan="6" class="empty">Sin movimientos.</td></tr>
+            <tr v-if="loading">
+              <td colspan="6" class="empty">Cargando…</td>
+            </tr>
+            <tr v-else-if="movements.length === 0">
+              <td colspan="6" class="empty">Sin movimientos.</td>
+            </tr>
             <tr v-for="m in movements" v-else :key="m.id">
               <td class="date">{{ fmtDateTime(m.createdDate) }}</td>
               <td>{{ movementLabel(m.type) }}</td>
               <td class="ref">{{ referenceLabel(m.referenceType) }}</td>
-              <td class="num" :class="m.quantity >= 0 ? 'in' : 'out'">{{ m.quantity >= 0 ? '+' : '' }}{{ m.quantity }}</td>
+              <td class="num" :class="m.quantity >= 0 ? 'in' : 'out'">
+                {{ m.quantity >= 0 ? '+' : '' }}{{ m.quantity }}
+              </td>
               <td class="num">{{ formatMoney(m.unitCost) }}</td>
               <td class="reason">{{ m.reason || '—' }}</td>
             </tr>
@@ -206,8 +224,12 @@ watch(
         <div v-if="totalPages > 1" class="pag">
           <span>Página {{ page + 1 }} de {{ totalPages }}</span>
           <div class="pag-ctrl">
-            <button type="button" :disabled="page === 0" @click="loadKardex(page - 1)"><ChevronLeft :size="14" /></button>
-            <button type="button" :disabled="page + 1 >= totalPages" @click="loadKardex(page + 1)"><ChevronRight :size="14" /></button>
+            <button type="button" :disabled="page === 0" @click="loadKardex(page - 1)">
+              <ChevronLeft :size="14" />
+            </button>
+            <button type="button" :disabled="page + 1 >= totalPages" @click="loadKardex(page + 1)">
+              <ChevronRight :size="14" />
+            </button>
           </div>
         </div>
       </template>
@@ -220,34 +242,170 @@ watch(
 </template>
 
 <style scoped>
-.seg { display: inline-flex; background: var(--warm-100); border: 1px solid var(--warm-200); border-radius: 9px; padding: 2px; margin-bottom: 14px; }
-.seg button { border: none; background: transparent; font-family: inherit; font-size: 12.5px; font-weight: 500; color: var(--warm-600); padding: 6px 14px; border-radius: 7px; cursor: pointer; }
-.seg button.on { background: var(--warm-50); color: var(--amatista-700); box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08); }
-.banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 12px; }
-.table { width: 100%; border-collapse: collapse; font-size: 12.5px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 10px; overflow: hidden; }
-.table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--warm-500); font-weight: 600; padding: 9px 12px; background: var(--warm-100); border-bottom: 1px solid var(--warm-200); }
-.table th.num { text-align: right; }
-.table td { padding: 9px 12px; border-bottom: 1px solid var(--warm-150); color: var(--warm-800); }
-.table tbody tr:last-child td { border-bottom: none; }
-.empty { text-align: center; padding: 32px; color: var(--warm-500); }
-.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.num.in { color: oklch(45% 0.13 150); font-weight: 600; }
-.num.out { color: oklch(48% 0.16 25); font-weight: 600; }
-.date { color: var(--warm-600); white-space: nowrap; }
-.ref { color: var(--warm-600); }
-.reason { color: var(--warm-600); max-width: 200px; }
-.exportbar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-.exp-lbl { font-size: 11.5px; color: var(--warm-500); margin-right: 2px; }
-.exp { padding: 5px 12px; border-radius: 7px; border: 1px solid var(--warm-200); background: var(--warm-50); color: var(--warm-700); font-family: inherit; font-size: 12px; font-weight: 500; cursor: pointer; }
-.exp:hover:not(:disabled) { background: var(--amatista-50); border-color: var(--amatista-300); color: var(--amatista-700); }
-.exp:disabled { opacity: 0.5; cursor: not-allowed; }
-.pag { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 12px; color: var(--warm-500); }
-.pag-ctrl { display: flex; gap: 6px; }
-.pag-ctrl button { width: 28px; height: 28px; border: 1px solid var(--warm-200); background: var(--warm-50); border-radius: 7px; color: var(--warm-700); cursor: pointer; display: grid; place-items: center; }
-.pag-ctrl button:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-ghost {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  background: transparent; border: 1px solid var(--warm-200); color: var(--warm-700);
+.seg {
+  display: inline-flex;
+  background: var(--warm-100);
+  border: 1px solid var(--warm-200);
+  border-radius: 9px;
+  padding: 2px;
+  margin-bottom: 14px;
 }
-.btn-ghost:hover { background: var(--warm-100); }
+.seg button {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--warm-600);
+  padding: 6px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.seg button.on {
+  background: var(--warm-50);
+  color: var(--amatista-700);
+  box-shadow: 0 1px 2px rgb(50 20 80 / 8%);
+}
+.banner.error {
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.table th {
+  text-align: left;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--warm-500);
+  font-weight: 600;
+  padding: 9px 12px;
+  background: var(--warm-100);
+  border-bottom: 1px solid var(--warm-200);
+}
+.table th.num {
+  text-align: right;
+}
+.table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--warm-150);
+  color: var(--warm-800);
+}
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+.empty {
+  text-align: center;
+  padding: 32px;
+  color: var(--warm-500);
+}
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.num.in {
+  color: oklch(45% 0.13 150deg);
+  font-weight: 600;
+}
+.num.out {
+  color: oklch(48% 0.16 25deg);
+  font-weight: 600;
+}
+.date {
+  color: var(--warm-600);
+  white-space: nowrap;
+}
+.ref {
+  color: var(--warm-600);
+}
+.reason {
+  color: var(--warm-600);
+  max-width: 200px;
+}
+.exportbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.exp-lbl {
+  font-size: 11.5px;
+  color: var(--warm-500);
+  margin-right: 2px;
+}
+.exp {
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--warm-200);
+  background: var(--warm-50);
+  color: var(--warm-700);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.exp:hover:not(:disabled) {
+  background: var(--amatista-50);
+  border-color: var(--amatista-300);
+  color: var(--amatista-700);
+}
+.exp:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pag {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--warm-500);
+}
+.pag-ctrl {
+  display: flex;
+  gap: 6px;
+}
+.pag-ctrl button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--warm-200);
+  background: var(--warm-50);
+  border-radius: 7px;
+  color: var(--warm-700);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.pag-ctrl button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  color: var(--warm-700);
+}
+.btn-ghost:hover {
+  background: var(--warm-100);
+}
 </style>

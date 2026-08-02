@@ -44,8 +44,15 @@ interface Draft {
 
 function emptyDraft(): Draft {
   return {
-    name: '', promotionType: 'DISCOUNT', applicationType: 'PRODUCT', applicationItem: '',
-    valueType: 'PERCENTAGE', value: '', startDate: todayISO(), endDate: todayISO(), active: true,
+    name: '',
+    promotionType: 'DISCOUNT',
+    applicationType: 'PRODUCT',
+    applicationItem: '',
+    valueType: 'PERCENTAGE',
+    value: '',
+    startDate: todayISO(),
+    endDate: todayISO(),
+    active: true,
   }
 }
 
@@ -79,8 +86,14 @@ const applicationItemOptions = computed(() => {
   }
   // CATEGORY: el backend solo guarda un Long; mostramos categorías de producto y de servicio.
   return [
-    ...store.productCategories.value.map((c) => ({ value: String(c.id), label: `Producto · ${c.name}` })),
-    ...store.serviceCategories.value.map((c) => ({ value: String(c.id), label: `Servicio · ${c.name}` })),
+    ...store.productCategories.value.map((c) => ({
+      value: String(c.id),
+      label: `Producto · ${c.name}`,
+    })),
+    ...store.serviceCategories.value.map((c) => ({
+      value: String(c.id),
+      label: `Servicio · ${c.name}`,
+    })),
   ]
 })
 
@@ -112,7 +125,12 @@ watch(
 )
 
 // Al cambiar el destino, limpia el ítem seleccionado.
-watch(() => draft.applicationType, () => { draft.applicationItem = '' })
+watch(
+  () => draft.applicationType,
+  () => {
+    draft.applicationItem = ''
+  },
+)
 
 function num(v: string): number {
   return Number(String(v).replace(',', '.'))
@@ -126,7 +144,9 @@ const errors = computed(() => ({
 }))
 
 function err(field: string): string | undefined {
-  return submitted.value ? (errors.value as Record<string, string | null>)[field] ?? undefined : undefined
+  return submitted.value
+    ? ((errors.value as Record<string, string | null>)[field] ?? undefined)
+    : undefined
 }
 
 const isValid = computed(() => Object.values(errors.value).every((e) => e === null))
@@ -178,7 +198,12 @@ async function submit() {
       <div class="grid">
         <BaseField label="Nombre" required :error="err('name')" class="col-2">
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.name" :invalid="!!err('name')" placeholder="Promo dermatológica" />
+            <BaseInput
+              :id="id"
+              v-model="draft.name"
+              :invalid="!!err('name')"
+              placeholder="Promo dermatológica"
+            />
           </template>
         </BaseField>
         <BaseField label="Tipo de promoción" required>
@@ -193,7 +218,13 @@ async function submit() {
         </BaseField>
         <BaseField label="Destino" required :error="err('applicationItem')" class="col-2">
           <template #default="{ id }">
-            <BaseSelect :id="id" v-model="draft.applicationItem" :options="applicationItemOptions" :invalid="!!err('applicationItem')" placeholder="Selecciona…" />
+            <BaseSelect
+              :id="id"
+              v-model="draft.applicationItem"
+              :options="applicationItemOptions"
+              :invalid="!!err('applicationItem')"
+              placeholder="Selecciona…"
+            />
           </template>
         </BaseField>
         <BaseField v-if="!isSpecialPrice" label="Tipo de valor" required>
@@ -202,12 +233,24 @@ async function submit() {
           </template>
         </BaseField>
         <BaseField
-          :label="isSpecialPrice ? 'Precio especial' : (draft.valueType === 'PERCENTAGE' ? 'Porcentaje de descuento' : 'Monto de descuento')"
+          :label="
+            isSpecialPrice
+              ? 'Precio especial'
+              : draft.valueType === 'PERCENTAGE'
+                ? 'Porcentaje de descuento'
+                : 'Monto de descuento'
+          "
           required
           :error="err('value')"
         >
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.value" :invalid="!!err('value')" inputmode="decimal" placeholder="0" />
+            <BaseInput
+              :id="id"
+              v-model="draft.value"
+              :invalid="!!err('value')"
+              inputmode="decimal"
+              placeholder="0"
+            />
           </template>
         </BaseField>
         <BaseField label="Inicio" required>
@@ -233,21 +276,75 @@ async function submit() {
 </template>
 
 <style scoped>
-.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; }
-.col-2 { grid-column: 1 / -1; }
-@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
-.check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--warm-800); cursor: pointer; }
-.check input { width: 16px; height: 16px; accent-color: var(--amatista-600); }
-.banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+}
+.col-2 {
+  grid-column: 1 / -1;
+}
+
+@media (width <= 760px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--warm-800);
+  cursor: pointer;
+}
+.check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--amatista-600);
+}
+.banner.error {
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
 .btn-primary {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  border: none; color: white;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  border: none;
+  color: white;
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
 }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-ghost {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  background: transparent; border: 1px solid var(--warm-200); color: var(--warm-700);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  color: var(--warm-700);
 }
-.btn-ghost:hover { background: var(--warm-100); }
+.btn-ghost:hover {
+  background: var(--warm-100);
+}
 </style>

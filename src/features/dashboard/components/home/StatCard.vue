@@ -22,27 +22,33 @@ defineProps<{
   border-radius: 12px;
   padding: 14px 16px;
 }
+
 .label {
   font-size: 11.5px;
   color: var(--warm-500);
   margin-bottom: 6px;
 }
+
 .value {
   font-size: 26px;
   font-weight: 500;
   letter-spacing: -0.02em;
   color: var(--warm-900);
 }
+
 .sub {
   font-size: 11.5px;
   margin-top: 4px;
 }
+
 .sub-ok {
-  color: oklch(50% 0.13 145);
+  color: oklch(50% 0.13 145deg);
 }
+
 .sub-amatista {
   color: var(--amatista-700);
 }
+
 .sub-neutral {
   color: var(--warm-500);
 }

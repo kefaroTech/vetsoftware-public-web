@@ -26,18 +26,14 @@ const BASE = '/medication-schedules'
 
 export const medicationScheduleApi = {
   /** Regenera (borra plan previo + crea) las tomas de una medicación. */
-  async generate(
-    hospitalizationMedicationId: number,
-  ): Promise<MedicationScheduleResponse[]> {
+  async generate(hospitalizationMedicationId: number): Promise<MedicationScheduleResponse[]> {
     const { data } = await http.post<MedicationScheduleResponse[]>(
       `${BASE}/generate/${hospitalizationMedicationId}`,
     )
     return data
   },
 
-  async listByHospitalization(
-    hospitalizationId: number,
-  ): Promise<MedicationScheduleResponse[]> {
+  async listByHospitalization(hospitalizationId: number): Promise<MedicationScheduleResponse[]> {
     const { data } = await http.get<MedicationScheduleResponse[]>(
       `${BASE}/by-hospitalization/${hospitalizationId}`,
     )
@@ -46,9 +42,7 @@ export const medicationScheduleApi = {
 
   /** Marca la toma como aplicada. Devuelve el plan completo de esa medicación. */
   async apply(scheduleId: number): Promise<MedicationScheduleResponse[]> {
-    const { data } = await http.patch<MedicationScheduleResponse[]>(
-      `${BASE}/${scheduleId}/apply`,
-    )
+    const { data } = await http.patch<MedicationScheduleResponse[]>(`${BASE}/${scheduleId}/apply`)
     return data
   },
 
@@ -66,9 +60,7 @@ export const medicationScheduleApi = {
   },
 
   /** Soft-delete de las tomas pendientes (al suspender). Devuelve las aplicadas. */
-  async suspendPending(
-    hospitalizationMedicationId: number,
-  ): Promise<MedicationScheduleResponse[]> {
+  async suspendPending(hospitalizationMedicationId: number): Promise<MedicationScheduleResponse[]> {
     const { data } = await http.patch<MedicationScheduleResponse[]>(
       `${BASE}/by-medication/${hospitalizationMedicationId}/suspend-pending`,
     )

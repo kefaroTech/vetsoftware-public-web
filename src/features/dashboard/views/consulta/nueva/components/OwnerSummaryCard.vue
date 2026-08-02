@@ -21,16 +21,9 @@ function formatLocation(owner: Owner): string {
 </script>
 
 <template>
-  <SectionCard
-    accent
-    :icon="User"
-    :title="owner.name"
-    :subtitle="owner.document"
-  >
+  <SectionCard accent :icon="User" :title="owner.name" :subtitle="owner.document">
     <template #action>
-      <button type="button" class="change" @click="$emit('change')">
-        Cambiar
-      </button>
+      <button type="button" class="change" @click="$emit('change')">Cambiar</button>
     </template>
     <div class="grid">
       <div class="row">
@@ -74,8 +67,7 @@ function formatLocation(owner: Owner): string {
       <Sparkles :size="14" :stroke-width="1.6" />
       <span>
         <strong>{{ petCount }} mascota{{ petCount === 1 ? '' : 's' }}</strong>
-        registrada{{ petCount === 1 ? '' : 's' }} a su nombre. Elige abajo la que
-        vas a atender.
+        registrada{{ petCount === 1 ? '' : 's' }} a su nombre. Elige abajo la que vas a atender.
       </span>
     </div>
   </SectionCard>
@@ -93,14 +85,17 @@ function formatLocation(owner: Owner): string {
   color: var(--warm-900);
   cursor: pointer;
 }
+
 .change:hover {
   background: var(--warm-100);
 }
+
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
+
 .row {
   display: flex;
   align-items: flex-start;
@@ -111,11 +106,13 @@ function formatLocation(owner: Owner): string {
   border-radius: 11px;
   background: color-mix(in oklch, var(--warm-100) 62%, transparent);
 }
+
 @container (max-width: 520px) {
   .grid {
     grid-template-columns: 1fr;
   }
 }
+
 .ic {
   width: 28px;
   height: 28px;
@@ -126,15 +123,18 @@ function formatLocation(owner: Owner): string {
   place-items: center;
   flex-shrink: 0;
 }
+
 .row > div:last-child {
   min-width: 0;
 }
+
 .lab {
   font-size: 11px;
   color: var(--warm-500);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
 .val {
   font-size: 13px;
   color: var(--warm-900);
@@ -142,6 +142,7 @@ function formatLocation(owner: Owner): string {
   overflow-wrap: anywhere;
   line-height: 1.35;
 }
+
 .banner {
   margin-top: 18px;
   padding: 12px 14px;
@@ -154,10 +155,12 @@ function formatLocation(owner: Owner): string {
   font-size: 12.5px;
   color: var(--warm-900);
 }
+
 .banner :global(svg) {
   color: var(--amatista-700);
   flex-shrink: 0;
 }
+
 .banner strong {
   font-weight: 600;
 }

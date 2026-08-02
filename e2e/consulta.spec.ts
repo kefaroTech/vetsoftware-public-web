@@ -84,14 +84,20 @@ test.describe('B · Búsqueda de propietario', () => {
     await expect(page.getByText('0 resultados')).toBeVisible()
   })
 
-  test('[det] término inexistente muestra "Sin resultados" y ofrece registrar', async ({ page }) => {
+  test('[det] término inexistente muestra "Sin resultados" y ofrece registrar', async ({
+    page,
+  }) => {
     const term = unlikelyTerm()
     await searchOwner(page, term)
     await expect(page.getByText(new RegExp(`Sin resultados para`))).toBeVisible()
-    await expect(page.getByRole('button', { name: new RegExp(`Registrar a "${term}"`) })).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: new RegExp(`Registrar a "${term}"`) }),
+    ).toBeVisible()
   })
 
-  test('[det] desde "sin resultados" se abre el form con el nombre precargado', async ({ page }) => {
+  test('[det] desde "sin resultados" se abre el form con el nombre precargado', async ({
+    page,
+  }) => {
     const term = 'Cliente Nuevo E2E'
     await searchOwner(page, term)
     await page.getByRole('button', { name: new RegExp(`Registrar a "`) }).click()
@@ -269,7 +275,9 @@ test.describe('C · Propietario nuevo · validación de campos', () => {
   })
 
   // --- Botón SIEMPRE activo + validación animada al click + cascada geo ---
-  test('[det] "Guardar propietario" está SIEMPRE activo; click vacío valida y no avanza', async ({ page }) => {
+  test('[det] "Guardar propietario" está SIEMPRE activo; click vacío valida y no avanza', async ({
+    page,
+  }) => {
     const btn = footerNext(page, 'Guardar propietario')
     await expect(btn).toBeEnabled()
     await btn.click()
@@ -277,7 +285,9 @@ test.describe('C · Propietario nuevo · validación de campos', () => {
     await expectFormBlocked(page, /Registrar nuevo propietario/)
   })
 
-  test('[data] con todo lleno pero SIN tipo de persona, el click valida y no crea; al completar, crea', async ({ page }) => {
+  test('[data] con todo lleno pero SIN tipo de persona, el click valida y no crea; al completar, crea', async ({
+    page,
+  }) => {
     // Llena nombre/doc/teléfono + tipo de documento + geo, pero NO el tipo de persona.
     const doc = `SP${uniqueSuffix()}`.slice(0, 20)
     await page.getByLabel(/Nombre completo/).fill('Sin Persona E2E')
@@ -336,7 +346,9 @@ test.describe('D · Selección de mascota', () => {
     await expect(page.getByRole('button', { name: 'Registrar primera mascota' })).toBeVisible()
   })
 
-  test('[data] "Continuar a la consulta" activo sin mascota; click muestra banner-guía y no avanza', async ({ page }) => {
+  test('[data] "Continuar a la consulta" activo sin mascota; click muestra banner-guía y no avanza', async ({
+    page,
+  }) => {
     await gotoNuevaConsulta(page)
     await createAndSelectOwner(page)
     const btn = footerNext(page, 'Continuar a la consulta')
@@ -348,7 +360,9 @@ test.describe('D · Selección de mascota', () => {
     await expect(page.getByRole('heading', { name: /Datos de la consulta/ })).toHaveCount(0)
   })
 
-  test('[data] "Continuar" sin mascota agita la selección (animación requerido)', async ({ page }) => {
+  test('[data] "Continuar" sin mascota agita la selección (animación requerido)', async ({
+    page,
+  }) => {
     await gotoNuevaConsulta(page)
     await createAndSelectOwner(page)
     await footerNext(page, 'Continuar a la consulta').click()
@@ -392,7 +406,9 @@ test.describe('E · Mascota nueva · validación de campos', () => {
     await expect(page.getByText(/exactamente 15 dígitos/)).toBeVisible()
   })
 
-  test('[data] chip de 15 dígitos exactos es válido (opcional pero con formato)', async ({ page }) => {
+  test('[data] chip de 15 dígitos exactos es válido (opcional pero con formato)', async ({
+    page,
+  }) => {
     await page.getByLabel(/Número de chip/).fill('985112345678901')
     await page.getByLabel(/^Nombre/).click()
     await expect(page.getByText(/exactamente 15 dígitos/)).toHaveCount(0)
@@ -445,7 +461,9 @@ test.describe('E · Mascota nueva · validación de campos', () => {
     await expect(page.getByRole('combobox', { name: /Raza/ })).toBeDisabled()
   })
 
-  test('[data] "Guardar mascota" está SIEMPRE activo; click vacío valida y no crea', async ({ page }) => {
+  test('[data] "Guardar mascota" está SIEMPRE activo; click vacío valida y no crea', async ({
+    page,
+  }) => {
     const btn = footerNext(page, 'Guardar mascota')
     await expect(btn).toBeEnabled()
     await btn.click()
@@ -463,7 +481,9 @@ test.describe('E · Mascota nueva · validación de campos', () => {
     await expect(page.getByText(REVISA_CAMPOS_MSG)).toHaveCount(0)
   })
 
-  test('[data] sin estado reproductivo, el click valida (shake) y no crea; al completar, crea', async ({ page }) => {
+  test('[data] sin estado reproductivo, el click valida (shake) y no crea; al completar, crea', async ({
+    page,
+  }) => {
     // Todo lo requerido MENOS el estado reproductivo (SegmentedRadio).
     await page.getByLabel(/^Nombre/).fill('Mascota Req E2E')
     await pickSelect(page, /Especie/)
@@ -499,12 +519,16 @@ test.describe('F · Datos de la consulta', () => {
     await gotoNuevaConsulta(page)
   })
 
-  test('[det] sin llegar al paso 2, el botón inicial no es "Guardar consulta"', async ({ page }) => {
+  test('[det] sin llegar al paso 2, el botón inicial no es "Guardar consulta"', async ({
+    page,
+  }) => {
     // Verificación barata de que el paso 1 no expone el submit final.
     await expect(footerNext(page, 'Guardar consulta')).toHaveCount(0)
   })
 
-  test('[data] anamnesis vacía: click "Guardar consulta" valida y NO abre confirmación', async ({ page }) => {
+  test('[data] anamnesis vacía: click "Guardar consulta" valida y NO abre confirmación', async ({
+    page,
+  }) => {
     await irAPasoConsulta(page)
     await pickSelect(page, /Tipo de consulta/)
     await expect(footerNext(page, 'Guardar consulta')).toBeEnabled()
@@ -513,7 +537,9 @@ test.describe('F · Datos de la consulta', () => {
     await expect(page.getByRole('alertdialog')).toHaveCount(0)
   })
 
-  test('[data] anamnesis en blanco (blur) muestra "La anamnesis es obligatoria."', async ({ page }) => {
+  test('[data] anamnesis en blanco (blur) muestra "La anamnesis es obligatoria."', async ({
+    page,
+  }) => {
     await irAPasoConsulta(page)
     await anamnesis(page).click()
     await anamnesis(page).blur()
@@ -531,7 +557,9 @@ test.describe('F · Datos de la consulta', () => {
     await expect(page.getByRole('alertdialog')).toHaveCount(0)
   })
 
-  test('[data] tipo + anamnesis: click "Guardar consulta" abre el modal de confirmación', async ({ page }) => {
+  test('[data] tipo + anamnesis: click "Guardar consulta" abre el modal de confirmación', async ({
+    page,
+  }) => {
     await irAPasoConsulta(page)
     await pickSelect(page, /Tipo de consulta/)
     await anamnesis(page).fill('Paciente decaído, inapetencia de 2 días.')
@@ -555,7 +583,9 @@ test.describe('F · Datos de la consulta', () => {
     await expect(page.getByRole('alertdialog')).toBeVisible()
   })
 
-  test('[data] diagnóstico y planes vacíos NO bloquean (opcionales): confirma con solo tipo + anamnesis', async ({ page }) => {
+  test('[data] diagnóstico y planes vacíos NO bloquean (opcionales): confirma con solo tipo + anamnesis', async ({
+    page,
+  }) => {
     // Solo tipo + anamnesis; diagnóstico, planes y próximo control quedan vacíos.
     await irAPasoConsulta(page)
     await pickSelect(page, /Tipo de consulta/)
@@ -705,7 +735,10 @@ test.describe('H · Procedimientos de la consulta', () => {
   test('[data] Receta: la observación por medicamento persiste (round-trip)', async ({ page }) => {
     let d = await openQuickAction(page, /Plan terapéutico/, 'Nuevo plan terapéutico')
     await fillReceta(page)
-    await d.getByLabel(/Observación/).first().fill('Administrar con alimento')
+    await d
+      .getByLabel(/Observación/)
+      .first()
+      .fill('Administrar con alimento')
     await d.getByRole('button', { name: 'Guardar plan terapéutico' }).click()
     await expect(d).toBeHidden()
     d = await openQuickAction(page, /Plan terapéutico/, 'Nuevo plan terapéutico')
@@ -772,7 +805,9 @@ test.describe('H · Procedimientos de la consulta', () => {
   })
 
   // ── Examen de laboratorio (catálogo creable) ────────────────────────────────
-  test('[data] Examen lab: guardar vacío exige el tipo (Observaciones es opcional)', async ({ page }) => {
+  test('[data] Examen lab: guardar vacío exige el tipo (Observaciones es opcional)', async ({
+    page,
+  }) => {
     const d = await openQuickAction(page, /Examen lab/, 'Solicitar examen de laboratorio')
     await d.getByRole('button', { name: 'Guardar solicitud' }).click()
     // "Selecciona un tipo" también es el placeholder del select → acotamos al <p class="error">.
@@ -881,7 +916,9 @@ test.describe('H · Procedimientos de la consulta', () => {
     await expect(d).toBeHidden()
   })
 
-  test('[data] Hospitalización: el "Tipo" lista Ambulatoria y Hospitalización', async ({ page }) => {
+  test('[data] Hospitalización: el "Tipo" lista Ambulatoria y Hospitalización', async ({
+    page,
+  }) => {
     const d = await openQuickAction(page, /Hospitalización/, 'Ingresar a hospitalización')
     await d.getByRole('combobox', { name: /Tipo/ }).click()
     const lb = page.getByRole('listbox')
@@ -905,7 +942,9 @@ test.describe('H · Procedimientos de la consulta', () => {
     await expect(d).toBeHidden()
   })
 
-  test('[data] Desparasitación: el "Tipo" lista Interna, Externa, Mixta y Otra', async ({ page }) => {
+  test('[data] Desparasitación: el "Tipo" lista Interna, Externa, Mixta y Otra', async ({
+    page,
+  }) => {
     const d = await openQuickAction(page, /Desparasitación/, 'Registrar desparasitación')
     await d.getByRole('combobox', { name: /Tipo/ }).click()
     const lb = page.getByRole('listbox')
@@ -1103,7 +1142,9 @@ test.describe('F3 · Consumo de servicio (Fase 3)', () => {
     await irAPasoConsulta(page)
   })
 
-  const isConsultationsPost = (r: import('@playwright/test').Request | import('@playwright/test').Response) => {
+  const isConsultationsPost = (
+    r: import('@playwright/test').Request | import('@playwright/test').Response,
+  ) => {
     const req = 'request' in r ? r.request() : r
     return new URL(req.url()).pathname.endsWith('/consultations') && req.method() === 'POST'
   }
@@ -1183,7 +1224,9 @@ test.describe('F3 · Consumo de servicio (Fase 3)', () => {
     expect(resp.ok()).toBeTruthy()
   })
 
-  test('[data] receta: el POST /prescriptions usa el diagnóstico de la CONSULTA', async ({ page }) => {
+  test('[data] receta: el POST /prescriptions usa el diagnóstico de la CONSULTA', async ({
+    page,
+  }) => {
     await pickSelect(page, /Tipo de consulta/)
     await anamnesis(page).fill('Consulta cuyo diagnóstico alimenta la receta.')
     await page.getByPlaceholder(/Diagnóstico presuntivo/).fill('Gastroenteritis aguda inespecífica')
@@ -1206,7 +1249,10 @@ test.describe('F3 · Consumo de servicio (Fase 3)', () => {
     await anamnesis(page).fill('Consulta con receta observada.')
     const d = await openQuickAction(page, /Plan terapéutico/, 'Nuevo plan terapéutico')
     await fillReceta(page)
-    await d.getByLabel(/Observación/).first().fill('Administrar con alimento')
+    await d
+      .getByLabel(/Observación/)
+      .first()
+      .fill('Administrar con alimento')
     await d.getByRole('button', { name: 'Guardar plan terapéutico' }).click()
     await expect(d).toBeHidden()
     const medReqP = page.waitForRequest(
@@ -1240,7 +1286,10 @@ test.describe('F3 · Consumo de servicio (Fase 3)', () => {
         const p = new URL(r.url()).pathname
         return p.includes('/prescriptions/') && p.endsWith('/export.pdf')
       }),
-      page.getByRole('button', { name: /Imprimir receta/ }).first().click(),
+      page
+        .getByRole('button', { name: /Imprimir receta/ })
+        .first()
+        .click(),
     ])
     expect(resp.ok(), `GET export.pdf → ${resp.status()}`).toBeTruthy()
     expect(resp.headers()['content-type']).toContain('pdf')
@@ -1353,9 +1402,9 @@ test.describe('G · Flujo completo y borrador', () => {
     // Tras validar, el primer campo faltante queda centrado verticalmente en el viewport.
     const field = page.locator('.field', { hasText: 'Tipo de consulta' }).first()
     const vh = page.viewportSize()!.height
-    await expect.poll(async () => (await field.boundingBox())?.y ?? 0, { timeout: 4000 }).toBeGreaterThan(
-      vh * 0.12,
-    )
+    await expect
+      .poll(async () => (await field.boundingBox())?.y ?? 0, { timeout: 4000 })
+      .toBeGreaterThan(vh * 0.12)
     const y = (await field.boundingBox())!.y
     expect(y, 'el campo debe quedar en la banda central, no pegado al borde').toBeLessThan(vh * 0.8)
   })
@@ -1378,7 +1427,8 @@ test.describe('G · Flujo completo y borrador', () => {
     await expect(confirm).toBeVisible()
     const [consultaResp] = await Promise.all([
       page.waitForResponse(
-        (r) => new URL(r.url()).pathname.endsWith('/consultations') && r.request().method() === 'POST',
+        (r) =>
+          new URL(r.url()).pathname.endsWith('/consultations') && r.request().method() === 'POST',
       ),
       confirm.getByRole('button', { name: 'Confirmar y guardar' }).click(),
     ])
@@ -1389,7 +1439,8 @@ test.describe('G · Flujo completo y borrador', () => {
     await expect(billing).toBeVisible()
     const [accountResp] = await Promise.all([
       page.waitForResponse(
-        (r) => new URL(r.url()).pathname.endsWith('/open-accounts') && r.request().method() === 'POST',
+        (r) =>
+          new URL(r.url()).pathname.endsWith('/open-accounts') && r.request().method() === 'POST',
       ),
       billing.getByRole('button', { name: /Guardar y abrir cuenta/ }).click(),
     ])
@@ -1414,7 +1465,9 @@ test.describe('G · Flujo completo y borrador', () => {
     await searchOwner(page, 'Memoria Borrador E2E')
     await page.reload()
     // El buscador o el estado del wizard debe seguir accesible tras recargar.
-    await expect(page.getByRole('heading', { name: /Quién es el propietario|Propietario/ })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: /Quién es el propietario|Propietario/ }),
+    ).toBeVisible()
   })
 })
 
@@ -1500,7 +1553,9 @@ test.describe('J · Campos obligatorios (*) vs opcionales', () => {
     await expect(page.getByRole('heading', { name: /Selecciona la mascota/ })).toBeVisible()
   })
 
-  test('[det] Propietario: nombre solo-espacios cuenta como vacío (obligatorio)', async ({ page }) => {
+  test('[det] Propietario: nombre solo-espacios cuenta como vacío (obligatorio)', async ({
+    page,
+  }) => {
     await gotoNuevaConsulta(page)
     await startCreateOwnerFromEmpty(page)
     await page.getByLabel(/Nombre completo/).fill('   ')
@@ -1609,7 +1664,10 @@ const QUICK_ACTIONS: QuickActionCase[] = [
     editLabel: 'Editar examen',
     seed: async (page) => {
       await createInSearchable(page, 'Tipo de examen', `Ex E2E ${uniqueSuffix()}`)
-      await page.getByRole('dialog').getByLabel(/Observaciones/).fill('Sospecha de anemia')
+      await page
+        .getByRole('dialog')
+        .getByLabel(/Observaciones/)
+        .fill('Sospecha de anemia')
     },
   },
   {

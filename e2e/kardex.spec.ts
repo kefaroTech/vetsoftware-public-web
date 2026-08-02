@@ -73,7 +73,16 @@ function setNegFlagDb(companyId: number, value: 'true' | 'false'): boolean {
   try {
     execFileSync(
       'docker',
-      ['exec', 'vetsoftware_mysql', 'mysql', '-ucronos', '-pcronos2026*', 'vetsoftware_db', '-e', sql],
+      [
+        'exec',
+        'vetsoftware_mysql',
+        'mysql',
+        '-ucronos',
+        '-pcronos2026*',
+        'vetsoftware_db',
+        '-e',
+        sql,
+      ],
       { stdio: 'pipe' },
     )
     return true
@@ -85,7 +94,13 @@ function setNegFlagDb(companyId: number, value: 'true' | 'false'): boolean {
 /** Crea un producto de catálogo EXCLUIDO (sin tarifa) y devuelve su id. */
 async function createProduct(request: APIRequestContext, name = 'Kardex Test'): Promise<number> {
   const { status, body } = await req(request, 'post', '/products', {
-    data: { name: `${name} ${sku()}`, code: sku('SKU'), salePrice: 50000, taxTreatment: 'EXCLUIDO', productCategoryId: categoryId },
+    data: {
+      name: `${name} ${sku()}`,
+      code: sku('SKU'),
+      salePrice: 50000,
+      taxTreatment: 'EXCLUIDO',
+      productCategoryId: categoryId,
+    },
   })
   expect(status, `crear producto: ${JSON.stringify(body)}`).toBe(201)
   return body.id as number
@@ -99,12 +114,20 @@ async function stockOf(request: APIRequestContext, productId: number, branchId: 
   const rows = (body.content as Array<Record<string, unknown>>) ?? []
   return rows.find((r) => r.productId === productId) ?? null
 }
-async function qtyOf(request: APIRequestContext, productId: number, branchId: number): Promise<number> {
+async function qtyOf(
+  request: APIRequestContext,
+  productId: number,
+  branchId: number,
+): Promise<number> {
   const row = await stockOf(request, productId, branchId)
   return row ? (row.quantity as number) : 0
 }
 /** Tipos de movimiento del kardex de un producto en una sede (más reciente primero). */
-async function kardexTypes(request: APIRequestContext, productId: number, branchId: number): Promise<string[]> {
+async function kardexTypes(
+  request: APIRequestContext,
+  productId: number,
+  branchId: number,
+): Promise<string[]> {
   const { body } = await req(request, 'get', `/inventory/products/${productId}/kardex`, {
     params: { branchId, pageSize: 200 },
   })
@@ -142,7 +165,9 @@ test.beforeAll(async ({ request }) => {
 
   const branches = await req(request, 'get', '/branches')
   expect(branches.status).toBe(200)
-  const active = (branches.body as unknown as Array<Record<string, unknown>>).filter((b) => b.active)
+  const active = (branches.body as unknown as Array<Record<string, unknown>>).filter(
+    (b) => b.active,
+  )
   expect(active.length, 'se requieren ≥1 sede activa').toBeGreaterThan(0)
   branchA = active[0].id as number
   branchB = active.length > 1 ? (active[1].id as number) : 0
@@ -158,7 +183,9 @@ test.beforeAll(async ({ request }) => {
       })
       if (created.status === 200 || created.status === 201) {
         const candidate = created.body.id as number
-        const reachable = await req(request, 'get', '/inventory/stock', { params: { branchId: candidate, pageSize: 1 } })
+        const reachable = await req(request, 'get', '/inventory/stock', {
+          params: { branchId: candidate, pageSize: 1 },
+        })
         if (reachable.status === 200) branchB = candidate // solo si el usuario puede operar/leer esa sede
       }
     }
@@ -185,23 +212,32 @@ test.describe('Recepción de mercancía (entrada)', () => {
   test('entrada válida suma stock, crea lote y movimiento PURCHASE', async ({ request }) => {
     const p = await createProduct(request)
     expect(await qtyOf(request, p, branchA)).toBe(0)
-    const r = await receive(request, p, branchA, 40, 30000, { lotNumber: 'L-A', expireDate: '2027-01-01' })
+    const r = await receive(request, p, branchA, 40, 30000, {
+      lotNumber: 'L-A',
+      expireDate: '2027-01-01',
+    })
     expect(r.status).toBe(204)
     expect(await qtyOf(request, p, branchA)).toBe(40)
 
-    const lots = await req(request, 'get', `/inventory/products/${p}/lots`, { params: { branchId: branchA } })
+    const lots = await req(request, 'get', `/inventory/products/${p}/lots`, {
+      params: { branchId: branchA },
+    })
     expect(lots.status).toBe(200)
     expect((lots.body as unknown as Array<Record<string, unknown>>).length).toBe(1)
     expect((lots.body as unknown as Array<Record<string, unknown>>)[0].unitCost).toBe(30000)
     expect(await kardexTypes(request, p, branchA)).toContain('PURCHASE')
   })
 
-  test('dos entradas del mismo lote (nº+venc+costo) se acumulan en un lote', async ({ request }) => {
+  test('dos entradas del mismo lote (nº+venc+costo) se acumulan en un lote', async ({
+    request,
+  }) => {
     const p = await createProduct(request)
     await receive(request, p, branchA, 10, 5000, { lotNumber: 'X', expireDate: '2027-05-01' })
     await receive(request, p, branchA, 15, 5000, { lotNumber: 'X', expireDate: '2027-05-01' })
     expect(await qtyOf(request, p, branchA)).toBe(25)
-    const lots = await req(request, 'get', `/inventory/products/${p}/lots`, { params: { branchId: branchA } })
+    const lots = await req(request, 'get', `/inventory/products/${p}/lots`, {
+      params: { branchId: branchA },
+    })
     expect((lots.body as unknown as Array<unknown>).length).toBe(1)
   })
 
@@ -209,17 +245,23 @@ test.describe('Recepción de mercancía (entrada)', () => {
     const p = await createProduct(request)
     await receive(request, p, branchA, 10, 5000)
     await receive(request, p, branchA, 10, 7000)
-    const lots = await req(request, 'get', `/inventory/products/${p}/lots`, { params: { branchId: branchA } })
+    const lots = await req(request, 'get', `/inventory/products/${p}/lots`, {
+      params: { branchId: branchA },
+    })
     expect((lots.body as unknown as Array<unknown>).length).toBe(2)
   })
 
   test('productId ausente → 400', async ({ request }) => {
-    const r = await req(request, 'post', '/inventory/receipts', { data: { branchId: branchA, quantity: 5, unitCost: 1000 } })
+    const r = await req(request, 'post', '/inventory/receipts', {
+      data: { branchId: branchA, quantity: 5, unitCost: 1000 },
+    })
     expect(r.status).toBe(400)
   })
   test('quantity ausente → 400', async ({ request }) => {
     const p = await createProduct(request)
-    const r = await req(request, 'post', '/inventory/receipts', { data: { branchId: branchA, productId: p, unitCost: 1000 } })
+    const r = await req(request, 'post', '/inventory/receipts', {
+      data: { branchId: branchA, productId: p, unitCost: 1000 },
+    })
     expect(r.status).toBe(400)
   })
   test('quantity = 0 → 400', async ({ request }) => {
@@ -232,7 +274,9 @@ test.describe('Recepción de mercancía (entrada)', () => {
   })
   test('unitCost ausente → 400 (obligatorio en recepción)', async ({ request }) => {
     const p = await createProduct(request)
-    const r = await req(request, 'post', '/inventory/receipts', { data: { branchId: branchA, productId: p, quantity: 5 } })
+    const r = await req(request, 'post', '/inventory/receipts', {
+      data: { branchId: branchA, productId: p, quantity: 5 },
+    })
     expect(r.status).toBe(400)
   })
   test('unitCost negativo → 400', async ({ request }) => {
@@ -245,7 +289,13 @@ test.describe('Recepción de mercancía (entrada)', () => {
 // 2. Ajustes (ADJUSTMENT_IN / ADJUSTMENT_OUT)
 // ─────────────────────────────────────────────────────────────────────────────
 test.describe('Ajustes de inventario', () => {
-  async function adjust(request: APIRequestContext, productId: number, delta: number, reason = 'conteo', unitCost?: number) {
+  async function adjust(
+    request: APIRequestContext,
+    productId: number,
+    delta: number,
+    reason = 'conteo',
+    unitCost?: number,
+  ) {
     return req(request, 'post', '/inventory/adjustments', {
       data: { branchId: branchA, productId, delta, reason, unitCost },
     })
@@ -280,7 +330,9 @@ test.describe('Ajustes de inventario', () => {
   })
   test('motivo ausente → 400', async ({ request }) => {
     const p = await createProduct(request)
-    const r = await req(request, 'post', '/inventory/adjustments', { data: { branchId: branchA, productId: p, delta: 5 } })
+    const r = await req(request, 'post', '/inventory/adjustments', {
+      data: { branchId: branchA, productId: p, delta: 5 },
+    })
     expect(r.status).toBe(400)
   })
 })
@@ -291,8 +343,17 @@ test.describe('Ajustes de inventario', () => {
 test.describe('Transferencias entre sedes', () => {
   test.skip(() => branchB === 0, 'requiere ≥2 sedes activas')
 
-  async function transfer(request: APIRequestContext, productId: number, from: number, to: number, quantity: number, reason = 'traslado') {
-    return req(request, 'post', '/inventory/transfers', { data: { fromBranchId: from, toBranchId: to, productId, quantity, reason } })
+  async function transfer(
+    request: APIRequestContext,
+    productId: number,
+    from: number,
+    to: number,
+    quantity: number,
+    reason = 'traslado',
+  ) {
+    return req(request, 'post', '/inventory/transfers', {
+      data: { fromBranchId: from, toBranchId: to, productId, quantity, reason },
+    })
   }
 
   test('transferencia mueve stock y preserva costo por lote', async ({ request }) => {
@@ -302,7 +363,9 @@ test.describe('Transferencias entre sedes', () => {
     expect(await qtyOf(request, p, branchA)).toBe(18)
     expect(await qtyOf(request, p, branchB)).toBe(12)
     // El lote replicado en destino mantiene el costo 8000.
-    const lotsB = await req(request, 'get', `/inventory/products/${p}/lots`, { params: { branchId: branchB } })
+    const lotsB = await req(request, 'get', `/inventory/products/${p}/lots`, {
+      params: { branchId: branchB },
+    })
     expect((lotsB.body as unknown as Array<Record<string, unknown>>)[0].unitCost).toBe(8000)
     expect(await kardexTypes(request, p, branchA)).toContain('TRANSFER_OUT')
     expect(await kardexTypes(request, p, branchB)).toContain('TRANSFER_IN')
@@ -324,7 +387,9 @@ test.describe('Transferencias entre sedes', () => {
   })
   test('fromBranchId ausente → 400', async ({ request }) => {
     const p = await createProduct(request)
-    const r = await req(request, 'post', '/inventory/transfers', { data: { toBranchId: branchB, productId: p, quantity: 1 } })
+    const r = await req(request, 'post', '/inventory/transfers', {
+      data: { toBranchId: branchB, productId: p, quantity: 1 },
+    })
     expect(r.status).toBe(400)
   })
 })
@@ -333,8 +398,15 @@ test.describe('Transferencias entre sedes', () => {
 // 4. Consumo clínico (CLINICAL_USE)
 // ─────────────────────────────────────────────────────────────────────────────
 test.describe('Consumo clínico', () => {
-  async function consume(request: APIRequestContext, productId: number, quantity: number, reason = 'paciente') {
-    return req(request, 'post', '/inventory/consumptions', { data: { branchId: branchA, productId, quantity, reason } })
+  async function consume(
+    request: APIRequestContext,
+    productId: number,
+    quantity: number,
+    reason = 'paciente',
+  ) {
+    return req(request, 'post', '/inventory/consumptions', {
+      data: { branchId: branchA, productId, quantity, reason },
+    })
   }
   test('consumo válido resta stock y registra CLINICAL_USE', async ({ request }) => {
     const p = await createProduct(request)
@@ -349,7 +421,9 @@ test.describe('Consumo clínico', () => {
   })
   test('quantity ausente → 400', async ({ request }) => {
     const p = await createProduct(request)
-    const r = await req(request, 'post', '/inventory/consumptions', { data: { branchId: branchA, productId: p } })
+    const r = await req(request, 'post', '/inventory/consumptions', {
+      data: { branchId: branchA, productId: p },
+    })
     expect(r.status).toBe(400)
   })
   test('quantity cero/negativa → 400', async ({ request }) => {
@@ -364,7 +438,9 @@ test.describe('Consumo clínico', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 test.describe('Mínimo por sede y alertas', () => {
   async function setMin(request: APIRequestContext, productId: number, minStock: number) {
-    return req(request, 'put', `/inventory/products/${productId}/min-stock`, { data: { branchId: branchA, minStock } })
+    return req(request, 'put', `/inventory/products/${productId}/min-stock`, {
+      data: { branchId: branchA, minStock },
+    })
   }
   test('fijar mínimo y marcar bajo mínimo (lowStock)', async ({ request }) => {
     const p = await createProduct(request)
@@ -374,10 +450,18 @@ test.describe('Mínimo por sede y alertas', () => {
     expect(row?.minStock).toBe(10)
     expect(row?.lowStock).toBe(true)
     // Aparece en el filtro lowStock y en alertas.
-    const low = await req(request, 'get', '/inventory/stock', { params: { branchId: branchA, lowStock: true, pageSize: 200 } })
-    expect((low.body.content as Array<Record<string, unknown>>).some((r) => r.productId === p)).toBe(true)
+    const low = await req(request, 'get', '/inventory/stock', {
+      params: { branchId: branchA, lowStock: true, pageSize: 200 },
+    })
+    expect(
+      (low.body.content as Array<Record<string, unknown>>).some((r) => r.productId === p),
+    ).toBe(true)
     const alerts = await req(request, 'get', '/inventory/alerts', { params: { branchId: branchA } })
-    expect((alerts.body.lowStock as unknown as Array<Record<string, unknown>>).some((r) => r.productId === p)).toBe(true)
+    expect(
+      (alerts.body.lowStock as unknown as Array<Record<string, unknown>>).some(
+        (r) => r.productId === p,
+      ),
+    ).toBe(true)
   })
   test('mínimo negativo → 400', async ({ request }) => {
     const p = await createProduct(request)
@@ -386,7 +470,9 @@ test.describe('Mínimo por sede y alertas', () => {
   test('lote vencido/por vencer aparece en alertas.expiring', async ({ request }) => {
     const p = await createProduct(request)
     await receive(request, p, branchA, 5, 1000, { lotNumber: 'VENC', expireDate: '2020-01-01' })
-    const alerts = await req(request, 'get', '/inventory/alerts', { params: { branchId: branchA, expiringInDays: 30 } })
+    const alerts = await req(request, 'get', '/inventory/alerts', {
+      params: { branchId: branchA, expiringInDays: 30 },
+    })
     const exp = alerts.body.expiring as unknown as Array<Record<string, unknown>>
     const hit = exp.find((e) => e.productId === p)
     expect(hit, 'el lote vencido debe estar en expiring').toBeTruthy()
@@ -403,14 +489,18 @@ test.describe('Lecturas (valuación, compras, kardex)', () => {
     await receive(request, p, branchA, 10, 2500)
     const val = await req(request, 'get', '/inventory/valuation', { params: { branchId: branchA } })
     expect(val.status).toBe(200)
-    const row = (val.body.byProduct as unknown as Array<Record<string, unknown>>).find((r) => r.productId === p)
+    const row = (val.body.byProduct as unknown as Array<Record<string, unknown>>).find(
+      (r) => r.productId === p,
+    )
     expect(row?.value).toBe(25000)
     expect((val.body.totalValue as number) >= 25000).toBe(true)
   })
   test('libro de compras lista la entrada con su total', async ({ request }) => {
     const p = await createProduct(request)
     await receive(request, p, branchA, 7, 3000)
-    const pur = await req(request, 'get', '/inventory/purchases', { params: { branchId: branchA, pageSize: 200 } })
+    const pur = await req(request, 'get', '/inventory/purchases', {
+      params: { branchId: branchA, pageSize: 200 },
+    })
     expect(pur.status).toBe(200)
     const row = (pur.body.content as Array<Record<string, unknown>>).find((r) => r.productId === p)
     expect(row, 'la compra debe aparecer').toBeTruthy()
@@ -420,10 +510,14 @@ test.describe('Lecturas (valuación, compras, kardex)', () => {
     const p = await createProduct(request)
     await receive(request, p, branchA, 5)
     await receive(request, p, branchA, 5)
-    const k = await req(request, 'get', `/inventory/products/${p}/kardex`, { params: { branchId: branchA, page: 0, pageSize: 1 } })
+    const k = await req(request, 'get', `/inventory/products/${p}/kardex`, {
+      params: { branchId: branchA, page: 0, pageSize: 1 },
+    })
     expect(k.body.totalElements as number).toBeGreaterThanOrEqual(2)
     expect((k.body.content as Array<unknown>).length).toBe(1)
-    const future = await req(request, 'get', `/inventory/products/${p}/kardex`, { params: { branchId: branchA, from: '2099-01-01' } })
+    const future = await req(request, 'get', `/inventory/products/${p}/kardex`, {
+      params: { branchId: branchA, from: '2099-01-01' },
+    })
     expect((future.body.content as Array<unknown>).length).toBe(0)
   })
 })
@@ -447,7 +541,12 @@ test.describe('Multi-sede', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 test.describe('Conteo físico (cíclico)', () => {
   type CountLine = { productId: number; countedQuantity: number }
-  async function count(request: APIRequestContext, lines: CountLine[], note?: string, branchId = branchA) {
+  async function count(
+    request: APIRequestContext,
+    lines: CountLine[],
+    note?: string,
+    branchId = branchA,
+  ) {
     return req(request, 'post', '/inventory/counts', { data: { branchId, note, lines } })
   }
 
@@ -467,7 +566,9 @@ test.describe('Conteo físico (cíclico)', () => {
     expect(await kardexTypes(request, p, branchA)).toEqual(['PURCHASE'])
   })
 
-  test('faltante (contado < sistema) genera ADJUSTMENT_OUT por la diferencia', async ({ request }) => {
+  test('faltante (contado < sistema) genera ADJUSTMENT_OUT por la diferencia', async ({
+    request,
+  }) => {
     const p = await createProduct(request)
     await receive(request, p, branchA, 10)
     const r = await count(request, [{ productId: p, countedQuantity: 7 }], 'merma detectada')
@@ -478,7 +579,9 @@ test.describe('Conteo físico (cíclico)', () => {
     expect(await kardexTypes(request, p, branchA)).toContain('ADJUSTMENT_OUT')
   })
 
-  test('sobrante (contado > sistema) genera ADJUSTMENT_IN por la diferencia', async ({ request }) => {
+  test('sobrante (contado > sistema) genera ADJUSTMENT_IN por la diferencia', async ({
+    request,
+  }) => {
     const p = await createProduct(request)
     await receive(request, p, branchA, 10)
     const r = await count(request, [{ productId: p, countedQuantity: 15 }])
@@ -525,7 +628,9 @@ test.describe('Conteo físico (cíclico)', () => {
     expect(id).toBeTruthy()
 
     // Listado (resumen, sin líneas).
-    const list = await req(request, 'get', '/inventory/counts', { params: { branchId: branchA, pageSize: 200 } })
+    const list = await req(request, 'get', '/inventory/counts', {
+      params: { branchId: branchA, pageSize: 200 },
+    })
     expect(list.status).toBe(200)
     const summary = (list.body.content as Array<Record<string, unknown>>).find((c) => c.id === id)
     expect(summary, 'la sesión debe aparecer en el historial').toBeTruthy()
@@ -551,11 +656,15 @@ test.describe('Conteo físico (cíclico)', () => {
   })
   test('branchId ausente → 400', async ({ request }) => {
     const p = await createProduct(request)
-    const r = await req(request, 'post', '/inventory/counts', { data: { lines: [{ productId: p, countedQuantity: 1 }] } })
+    const r = await req(request, 'post', '/inventory/counts', {
+      data: { lines: [{ productId: p, countedQuantity: 1 }] },
+    })
     expect(r.status).toBe(400)
   })
   test('productId ausente en una línea → 400', async ({ request }) => {
-    const r = await req(request, 'post', '/inventory/counts', { data: { branchId: branchA, lines: [{ countedQuantity: 5 }] } })
+    const r = await req(request, 'post', '/inventory/counts', {
+      data: { branchId: branchA, lines: [{ countedQuantity: 5 }] },
+    })
     expect(r.status).toBe(400)
   })
   test('cantidad contada negativa → 400', async ({ request }) => {
@@ -582,16 +691,23 @@ test.describe('Override de stock negativo (por empresa, company_settings)', () =
     setNegFlagDb(companyId, 'false') // restaura el default para no afectar otros casos
   })
   test('flag ON permite consumir sin stock (negativo)', async ({ request }) => {
-    test.skip(!setNegFlagDb(companyId, 'true'), 'requiere Docker (contenedor vetsoftware_mysql) para setear el flag')
+    test.skip(
+      !setNegFlagDb(companyId, 'true'),
+      'requiere Docker (contenedor vetsoftware_mysql) para setear el flag',
+    )
     const p = await createProduct(request)
-    const r = await req(request, 'post', '/inventory/consumptions', { data: { branchId: branchA, productId: p, quantity: 5, reason: 'x' } })
+    const r = await req(request, 'post', '/inventory/consumptions', {
+      data: { branchId: branchA, productId: p, quantity: 5, reason: 'x' },
+    })
     expect(r.status).toBe(204)
     expect(await qtyOf(request, p, branchA)).toBe(-5)
   })
   test('flag OFF vuelve a bloquear con 409', async ({ request }) => {
     test.skip(!setNegFlagDb(companyId, 'false'), 'requiere Docker para setear el flag')
     const p = await createProduct(request)
-    const r = await req(request, 'post', '/inventory/consumptions', { data: { branchId: branchA, productId: p, quantity: 5, reason: 'x' } })
+    const r = await req(request, 'post', '/inventory/consumptions', {
+      data: { branchId: branchA, productId: p, quantity: 5, reason: 'x' },
+    })
     expect(r.status).toBe(409)
   })
 })
@@ -614,8 +730,13 @@ test.describe('Inventario ↔ cuenta abierta', () => {
 
   test('cargar producto a la cuenta descuenta stock; anular lo repone', async ({ request }) => {
     test.skip(animalId === 0 || ownerId === 0, 'requiere un animal con propietario existente')
-    const acc = await req(request, 'post', '/open-accounts', { data: { ownerId, branchId: branchA } })
-    test.skip(acc.status !== 201 && acc.status !== 200, `no se pudo abrir cuenta: ${JSON.stringify(acc.body)}`)
+    const acc = await req(request, 'post', '/open-accounts', {
+      data: { ownerId, branchId: branchA },
+    })
+    test.skip(
+      acc.status !== 201 && acc.status !== 200,
+      `no se pudo abrir cuenta: ${JSON.stringify(acc.body)}`,
+    )
     const openAccountId = acc.body.id as number
 
     const p = await createProduct(request)
@@ -629,7 +750,9 @@ test.describe('Inventario ↔ cuenta abierta', () => {
 
     // Anular el cargo repone (VOID_IN).
     const chargeId = charge.body.id as number
-    const voided = await req(request, 'patch', `/product-charge-open-accounts/${chargeId}/void`, { data: { reason: 'test reverse' } })
+    const voided = await req(request, 'patch', `/product-charge-open-accounts/${chargeId}/void`, {
+      data: { reason: 'test reverse' },
+    })
     expect(voided.status).toBe(200)
     expect(await qtyOf(request, p, branchA)).toBe(20)
     expect(await kardexTypes(request, p, branchA)).toContain('VOID_IN')
@@ -637,7 +760,9 @@ test.describe('Inventario ↔ cuenta abierta', () => {
 
   test('cargar producto sin stock (flag OFF) → 409 y no crea el cargo', async ({ request }) => {
     test.skip(animalId === 0 || ownerId === 0, 'requiere un animal con propietario existente')
-    const acc = await req(request, 'post', '/open-accounts', { data: { ownerId, branchId: branchA } })
+    const acc = await req(request, 'post', '/open-accounts', {
+      data: { ownerId, branchId: branchA },
+    })
     test.skip(acc.status !== 201 && acc.status !== 200, 'no se pudo abrir cuenta')
     const openAccountId = acc.body.id as number
     const p = await createProduct(request) // 0 stock
@@ -657,7 +782,12 @@ test.describe('Inventario ↔ POS', () => {
   // descuento POS ya está cubierta por los tests unitarios y validada; aquí solo se verifica end-to-end.
   let posAvailable = false
 
-  async function posSale(request: APIRequestContext, productId: number, quantity: number, unitPrice = 50000) {
+  async function posSale(
+    request: APIRequestContext,
+    productId: number,
+    quantity: number,
+    unitPrice = 50000,
+  ) {
     return req(request, 'post', '/electronic-documents/from-sale', {
       data: {
         documentType: 'DOC_EQUIV_POS',
@@ -678,7 +808,10 @@ test.describe('Inventario ↔ POS', () => {
   })
 
   test('venta POS de un producto descuenta stock (POS_DOCUMENT)', async ({ request }) => {
-    test.skip(!posAvailable, 'POS no configurado (perfil fiscal / resolución de numeración DIAN ausentes)')
+    test.skip(
+      !posAvailable,
+      'POS no configurado (perfil fiscal / resolución de numeración DIAN ausentes)',
+    )
     const p = await createProduct(request)
     await receive(request, p, branchA, 10)
     const sale = await posSale(request, p, 3)
@@ -717,7 +850,9 @@ test.describe('Inventario ↔ POS', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 test.describe('company-settings (toggle del flag, gate admin.all)', () => {
   test('PUT /company-settings gateado a admin.all', async ({ request }) => {
-    const r = await req(request, 'put', '/company-settings', { data: { propertyName: NEG_FLAG, value: 'false' } })
+    const r = await req(request, 'put', '/company-settings', {
+      data: { propertyName: NEG_FLAG, value: 'false' },
+    })
     if (isAdmin) expect([200, 201], JSON.stringify(r.body)).toContain(r.status)
     else expect(r.status, 'un no-admin no puede togglear el flag de empresa').toBe(403)
   })
@@ -730,7 +865,10 @@ test.describe('company-settings (toggle del flag, gate admin.all)', () => {
 
 test.describe('Autorización', () => {
   test('sin token → 401/403', async ({ request }) => {
-    const r = await req(request, 'get', '/inventory/stock', { params: { branchId: branchA }, auth: false })
+    const r = await req(request, 'get', '/inventory/stock', {
+      params: { branchId: branchA },
+      auth: false,
+    })
     expect([401, 403]).toContain(r.status)
   })
 })

@@ -27,10 +27,7 @@ export function mapAnimalResponse(r: AnimalResponse): Animal {
   }
 }
 
-export function buildCreateAnimalRequest(
-  p: PetDraft,
-  ownerId: string,
-): CreateAnimalRequest {
+export function buildCreateAnimalRequest(p: PetDraft, ownerId: string): CreateAnimalRequest {
   if (!p.gender || !p.reproductiveState) {
     throw new Error('Pet draft is incomplete')
   }
@@ -40,9 +37,7 @@ export function buildCreateAnimalRequest(
   // El backend ahora almacena el peso como decimal (BigDecimal) → no redondeamos; conserva la
   // precisión clínica. Se registra como primer punto del historial de peso del animal.
   const weightNum = p.weight.trim() ? Number(p.weight.replace(',', '.')) : null
-  const sizeNum = p.size.trim()
-    ? Math.round(Number(p.size.replace(',', '.')))
-    : null
+  const sizeNum = p.size.trim() ? Math.round(Number(p.size.replace(',', '.'))) : null
   return {
     name: p.name.trim(),
     code,

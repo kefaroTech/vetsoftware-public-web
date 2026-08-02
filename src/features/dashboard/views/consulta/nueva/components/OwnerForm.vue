@@ -14,7 +14,6 @@ import {
 import type { OwnerDraft } from '../composables/useNuevaConsultaDraft'
 
 const props = defineProps<{ modelValue: OwnerDraft }>()
-defineEmits<{ 'update:modelValue': [value: OwnerDraft] }>()
 
 const draft = computed(() => props.modelValue)
 
@@ -48,9 +47,10 @@ watch(
   },
 )
 
-const docTypeOptions = (Object.keys(OWNER_DOCTYPE_LABEL) as OwnerDocumentType[]).map(
-  (k) => ({ value: k, label: OWNER_DOCTYPE_LABEL[k] }),
-)
+const docTypeOptions = (Object.keys(OWNER_DOCTYPE_LABEL) as OwnerDocumentType[]).map((k) => ({
+  value: k,
+  label: OWNER_DOCTYPE_LABEL[k],
+}))
 const personTypeOptions = [
   { value: 'NATURAL', label: 'Natural' },
   { value: 'JURIDICA', label: 'Jurídica' },
@@ -127,7 +127,7 @@ const errors = computed(() => ({
 }))
 
 function err(field: FieldKey): string | undefined {
-  return touched[field] && errors.value[field] ? errors.value[field]! : undefined
+  return touched[field] ? (errors.value[field] ?? undefined) : undefined
 }
 
 function markTouched(field: FieldKey) {
@@ -156,9 +156,7 @@ const phoneModel = computed({
 
 function validate(): boolean {
   ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = true))
-  return (Object.keys(errors.value) as FieldKey[]).every(
-    (k) => !errors.value[k],
-  )
+  return (Object.keys(errors.value) as FieldKey[]).every((k) => !errors.value[k])
 }
 
 defineExpose({ validate })
@@ -214,11 +212,7 @@ defineExpose({ validate })
             />
           </template>
         </BaseField>
-        <BaseField
-          label="Email"
-          hint="Opcional · usado para recordatorios"
-          :error="err('email')"
-        >
+        <BaseField label="Email" hint="Opcional · usado para recordatorios" :error="err('email')">
           <template #default="{ id }">
             <BaseInput
               :id="id"
@@ -233,11 +227,7 @@ defineExpose({ validate })
             />
           </template>
         </BaseField>
-        <BaseField
-          label="Tipo de documento"
-          required
-          :error="err('documentType')"
-        >
+        <BaseField label="Tipo de documento" required :error="err('documentType')">
           <template #default="{ id }">
             <BaseSelect
               :id="id"
@@ -267,9 +257,7 @@ defineExpose({ validate })
               :id="id"
               v-model="draft.countryId"
               :options="countryOptions"
-              :placeholder="
-                loadingCountries ? 'Cargando…' : 'Selecciona país'
-              "
+              :placeholder="loadingCountries ? 'Cargando…' : 'Selecciona país'"
               :disabled="loadingCountries"
               :invalid="!!err('countryId')"
               @blur="markTouched('countryId')"
@@ -316,10 +304,7 @@ defineExpose({ validate })
         </BaseField>
       </div>
       <div class="full-row">
-        <BaseField
-          label="Dirección"
-          hint="Calle, número, departamento, referencia"
-        >
+        <BaseField label="Dirección" hint="Calle, número, departamento, referencia">
           <template #default="{ id }">
             <BaseInput
               :id="id"
@@ -339,37 +324,43 @@ defineExpose({ validate })
   flex-direction: column;
   gap: 18px;
 }
+
 .geo-error {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 12.5px;
   padding: 10px 14px;
-  background: oklch(94% 0.06 25);
-  border: 1px solid oklch(85% 0.10 25);
-  color: oklch(35% 0.15 25);
+  background: oklch(94% 0.06 25deg);
+  border: 1px solid oklch(85% 0.1 25deg);
+  color: oklch(35% 0.15 25deg);
   border-radius: 10px;
 }
+
 .grid-2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 22px 28px;
 }
+
 .grid-3 {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 22px 28px;
   margin-bottom: 22px;
 }
+
 .full-row {
   display: block;
 }
-@media (max-width: 980px) {
+
+@media (width <= 980px) {
   .grid-3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-@media (max-width: 640px) {
+
+@media (width <= 640px) {
   .grid-2,
   .grid-3 {
     grid-template-columns: 1fr;

@@ -38,34 +38,24 @@ watch(
   { immediate: true },
 )
 
-const currentIds = computed(
-  () => new Set((props.employee?.roles ?? []).map((r) => r.id)),
-)
+const currentIds = computed(() => new Set((props.employee?.roles ?? []).map((r) => r.id)))
 
-const addIds = computed(() =>
-  [...selectedRoleIds.value].filter((id) => !currentIds.value.has(id)),
-)
+const addIds = computed(() => [...selectedRoleIds.value].filter((id) => !currentIds.value.has(id)))
 
 const removeRoleIds = computed(() =>
   [...currentIds.value].filter((id) => !selectedRoleIds.value.has(id)),
 )
 
 const removeEmployeeRoleIds = computed(() => {
-  const map = new Map(
-    (props.employee?.roles ?? []).map((r) => [r.id, r.employeeRoleId]),
-  )
+  const map = new Map((props.employee?.roles ?? []).map((r) => [r.id, r.employeeRoleId]))
   return removeRoleIds.value
     .map((rid) => map.get(rid))
     .filter((id): id is number => typeof id === 'number')
 })
 
-const hasChanges = computed(
-  () => addIds.value.length > 0 || removeRoleIds.value.length > 0,
-)
+const hasChanges = computed(() => addIds.value.length > 0 || removeRoleIds.value.length > 0)
 const hasAtLeastOne = computed(() => selectedRoleIds.value.size > 0)
-const canSave = computed(
-  () => hasChanges.value && hasAtLeastOne.value && !props.busy,
-)
+const canSave = computed(() => hasChanges.value && hasAtLeastOne.value && !props.busy)
 
 const addNames = computed(() =>
   addIds.value
@@ -124,9 +114,7 @@ function onSave() {
           />
           <div class="identity-info">
             <div class="identity-name">{{ employee.name }}</div>
-            <div class="identity-meta">
-              {{ employee.employeeCode }} · {{ employee.email }}
-            </div>
+            <div class="identity-meta">{{ employee.employeeCode }} · {{ employee.email }}</div>
           </div>
         </div>
 
@@ -152,9 +140,7 @@ function onSave() {
             <span class="label">Asignar roles</span>
             <span class="counter">{{ selectedRoleIds.size }} seleccionados</span>
           </div>
-          <p class="hint">
-            Un empleado puede tener varios roles. Debe tener al menos uno.
-          </p>
+          <p class="hint">Un empleado puede tener varios roles. Debe tener al menos uno.</p>
           <RoleSelectorGrid
             :available-roles="availableRoles"
             :selected-ids="selectedRoleIds"
@@ -188,15 +174,8 @@ function onSave() {
     </template>
 
     <template #footer-actions>
-      <button type="button" class="ghost" :disabled="busy" @click="emit('close')">
-        Cancelar
-      </button>
-      <button
-        type="button"
-        class="primary"
-        :disabled="!canSave"
-        @click="onSave"
-      >
+      <button type="button" class="ghost" :disabled="busy" @click="emit('close')">Cancelar</button>
+      <button type="button" class="primary" :disabled="!canSave" @click="onSave">
         {{ busy ? 'Guardando…' : 'Guardar cambios' }}
       </button>
     </template>
@@ -209,6 +188,7 @@ function onSave() {
   flex-direction: column;
   gap: 22px;
 }
+
 .identity {
   display: flex;
   align-items: center;
@@ -217,32 +197,38 @@ function onSave() {
   background: var(--warm-100);
   border-radius: 11px;
 }
+
 .identity-info {
   min-width: 0;
   flex: 1;
 }
+
 .identity-name {
   font-size: 14px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .identity-meta {
   font-size: 12px;
   color: var(--warm-600);
   margin-top: 2px;
   word-break: break-all;
 }
+
 .section {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
+
 .section-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
+
 .label {
   font-size: 11.5px;
   letter-spacing: 0.08em;
@@ -250,6 +236,7 @@ function onSave() {
   color: var(--warm-500);
   font-weight: 500;
 }
+
 .counter {
   font-size: 11.5px;
   padding: 2px 8px;
@@ -258,21 +245,25 @@ function onSave() {
   color: var(--warm-600);
   font-weight: 500;
 }
+
 .current-pills {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
+
 .no-current {
   font-size: 12.5px;
   color: var(--warm-500);
   font-style: italic;
 }
+
 .hint {
   margin: 0;
   font-size: 12px;
   color: var(--warm-600);
 }
+
 .banner {
   display: flex;
   flex-direction: column;
@@ -281,24 +272,28 @@ function onSave() {
   border-radius: 9px;
   font-size: 12.5px;
 }
+
 .banner.error {
   flex-direction: row;
   align-items: center;
-  background: oklch(95% 0.06 25);
-  border: 1px solid oklch(85% 0.12 25);
-  color: oklch(40% 0.18 25);
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
 }
+
 .banner.warn {
-  background: oklch(95% 0.05 80);
-  border: 1px solid oklch(85% 0.08 80);
-  color: oklch(35% 0.1 80);
+  background: oklch(95% 0.05 80deg);
+  border: 1px solid oklch(85% 0.08 80deg);
+  color: oklch(35% 0.1 80deg);
 }
+
 .banner-head {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-weight: 500;
 }
+
 .diff-list {
   margin: 0;
   padding: 0;
@@ -307,18 +302,22 @@ function onSave() {
   flex-direction: column;
   gap: 4px;
 }
+
 .diff-list li {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 12.5px;
 }
+
 .diff-add {
-  color: oklch(45% 0.13 145);
+  color: oklch(45% 0.13 145deg);
 }
+
 .diff-remove {
-  color: oklch(48% 0.18 25);
+  color: oklch(48% 0.18 25deg);
 }
+
 .ghost,
 .primary {
   padding: 8px 14px;
@@ -329,21 +328,26 @@ function onSave() {
   font-weight: 500;
   border: 1px solid transparent;
 }
+
 .ghost {
   background: var(--warm-50);
   color: var(--warm-700);
   border-color: var(--warm-200);
 }
+
 .ghost:hover:not(:disabled) {
   background: var(--warm-100);
 }
+
 .primary {
   background: var(--amatista-700);
   color: white;
 }
+
 .primary:hover:not(:disabled) {
   background: var(--amatista-800);
 }
+
 .ghost:disabled,
 .primary:disabled {
   cursor: not-allowed;

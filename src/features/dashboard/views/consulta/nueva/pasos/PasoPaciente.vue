@@ -68,8 +68,7 @@ async function submitOwner(): Promise<boolean> {
     return false
   }
   if (companyId.value == null) {
-    ownerSubmitError.value =
-      'No se pudo identificar la empresa actual. Vuelve a iniciar sesión.'
+    ownerSubmitError.value = 'No se pudo identificar la empresa actual. Vuelve a iniciar sesión.'
     return false
   }
   const cityIdNum = Number(o.cityId)
@@ -159,8 +158,7 @@ async function submitPet(): Promise<boolean> {
     return false
   }
   if (companyId.value == null) {
-    petSubmitError.value =
-      'No se pudo identificar la empresa actual. Vuelve a iniciar sesión.'
+    petSubmitError.value = 'No se pudo identificar la empresa actual. Vuelve a iniciar sesión.'
     return false
   }
   petSubmitError.value = null
@@ -287,8 +285,7 @@ function clearBanner() {
             <div class="empty-ic"><User :size="26" :stroke-width="1.6" /></div>
             <div class="empty-title">Empieza buscando un propietario</div>
             <p class="empty-desc">
-              Escribe el nombre, documento o email. Si no existe, podrás crearlo
-              desde aquí mismo.
+              Escribe el nombre, documento o email. Si no existe, podrás crearlo desde aquí mismo.
             </p>
             <button type="button" class="btn-create" @click="startCreateOwner">
               <Plus :size="14" :stroke-width="1.6" />
@@ -325,7 +322,10 @@ function clearBanner() {
           </div>
 
           <div v-else class="no-results">
-            <div class="nr-msg">Sin resultados para "<strong>{{ query }}</strong>"</div>
+            <div class="nr-msg">
+              Sin resultados para "<strong>{{ query }}</strong
+              >"
+            </div>
             <button type="button" class="btn-create" @click="startCreateOwner">
               <Plus :size="14" :stroke-width="1.6" />
               <span>Registrar a "{{ query }}"</span>
@@ -355,12 +355,7 @@ function clearBanner() {
                 title="Registrar nueva mascota"
                 subtitle="Datos básicos para crear el expediente. Los detalles clínicos se agregan en cada consulta."
               />
-              <button
-                v-if="pets.length > 0"
-                type="button"
-                class="back-list"
-                @click="backToPetList"
-              >
+              <button v-if="pets.length > 0" type="button" class="back-list" @click="backToPetList">
                 ← Ver mascotas existentes
               </button>
             </div>
@@ -434,11 +429,13 @@ function clearBanner() {
   margin-bottom: 16px;
   position: relative;
 }
+
 .banner.danger {
-  background: oklch(94% 0.06 25);
-  border: 1px solid oklch(85% 0.10 25);
-  color: oklch(35% 0.15 25);
+  background: oklch(94% 0.06 25deg);
+  border: 1px solid oklch(85% 0.1 25deg);
+  color: oklch(35% 0.15 25deg);
 }
+
 .banner-x {
   margin-left: auto;
   background: transparent;
@@ -450,30 +447,49 @@ function clearBanner() {
   padding: 0 4px;
   font-family: inherit;
 }
+
 .pet-section {
   margin-top: 28px;
   padding-top: 4px;
 }
+
 /* Animación "requerido" cuando se intenta continuar sin elegir mascota. Se agita el
    área seleccionable (grid de tarjetas o estado vacío), no el encabezado. */
 .pet-section.pet-shake :is(.grid, .empty, .add-pet) {
   animation: pet-shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
+
 @keyframes pet-shake {
-  10%, 90% { transform: translateX(-1px); }
-  20%, 80% { transform: translateX(2px); }
-  30%, 50%, 70% { transform: translateX(-4px); }
-  40%, 60% { transform: translateX(4px); }
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-4px);
+  }
+  40%,
+  60% {
+    transform: translateX(4px);
+  }
 }
+
 .search-wrap {
   padding: 16px;
   border-bottom: 1px solid var(--warm-200);
 }
+
 .empty,
 .no-results {
   padding: 40px 20px;
   text-align: center;
 }
+
 .empty-ic {
   width: 56px;
   height: 56px;
@@ -484,12 +500,14 @@ function clearBanner() {
   place-items: center;
   margin: 0 auto 14px;
 }
+
 .empty-title {
   font-size: 15px;
   font-weight: 500;
   margin-bottom: 4px;
   color: var(--warm-900);
 }
+
 .empty-desc {
   margin: 0 auto 18px;
   max-width: 380px;
@@ -497,6 +515,7 @@ function clearBanner() {
   color: var(--warm-600);
   line-height: 1.55;
 }
+
 .btn-create {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
@@ -511,13 +530,16 @@ function clearBanner() {
   align-items: center;
   gap: 7px;
 }
+
 .btn-create:hover {
   background: var(--warm-100);
 }
+
 .results {
   display: flex;
   flex-direction: column;
 }
+
 .not-found {
   border: none;
   border-top: 1px solid var(--warm-200);
@@ -531,9 +553,11 @@ function clearBanner() {
   text-align: left;
   transition: background 0.12s;
 }
+
 .not-found:hover {
   background: var(--warm-200);
 }
+
 .nf-ic {
   width: 32px;
   height: 32px;
@@ -543,27 +567,33 @@ function clearBanner() {
   display: grid;
   place-items: center;
 }
+
 .nf-meta {
   flex: 1;
 }
+
 .nf-title {
   font-size: 13px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .nf-sub {
   font-size: 12px;
   color: var(--warm-600);
   margin-top: 1px;
 }
+
 .nf-arrow {
   color: var(--warm-500);
 }
+
 .nr-msg {
   font-size: 13.5px;
   color: var(--warm-600);
   margin-bottom: 14px;
 }
+
 .loading,
 .search-error {
   padding: 28px 20px;
@@ -574,24 +604,29 @@ function clearBanner() {
   font-size: 13px;
   color: var(--warm-600);
 }
+
 .search-error {
-  color: oklch(45% 0.15 25);
+  color: oklch(45% 0.15 25deg);
 }
+
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
 }
-@media (max-width: 1080px) {
+
+@media (width <= 1080px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
-@media (max-width: 720px) {
+
+@media (width <= 720px) {
   .grid {
     grid-template-columns: 1fr;
   }
 }
+
 .add-pet {
   background: transparent;
   border: 1.5px dashed var(--warm-300);
@@ -606,12 +641,16 @@ function clearBanner() {
   gap: 8px;
   min-height: 175px;
   color: var(--warm-600);
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
+
 .add-pet:hover {
   border-color: var(--amatista-700);
   background: var(--amatista-50);
 }
+
 .add-ic {
   width: 38px;
   height: 38px;
@@ -621,17 +660,20 @@ function clearBanner() {
   display: grid;
   place-items: center;
 }
+
 .add-title {
   font-size: 13px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .add-sub {
   font-size: 11.5px;
   text-align: center;
   max-width: 160px;
   line-height: 1.4;
 }
+
 .btn {
   font-family: inherit;
   font-size: 13.5px;
@@ -644,19 +686,23 @@ function clearBanner() {
   align-items: center;
   gap: 7px;
 }
+
 .btn.primary {
   background: var(--amatista-700);
   color: white;
 }
+
 .btn.primary:hover {
   filter: brightness(1.05);
 }
+
 .create-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
 }
+
 .back-list {
   background: transparent;
   border: none;
@@ -669,6 +715,7 @@ function clearBanner() {
   border-radius: 6px;
   margin-top: 6px;
 }
+
 .back-list:hover {
   background: var(--amatista-50);
 }

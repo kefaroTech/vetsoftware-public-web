@@ -104,10 +104,10 @@ test.beforeAll(async () => {
 
 async function authenticate(page: import('@playwright/test').Page) {
   await page.goto('/')
-  await page.evaluate(
-    ({ key, value }) => localStorage.setItem(key, value),
-    { key: AUTH_STORAGE_KEY, value: JSON.stringify(session) },
-  )
+  await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
+    key: AUTH_STORAGE_KEY,
+    value: JSON.stringify(session),
+  })
   // El SPA puede redirigir durante la carga y abortar el goto (ERR_ABORTED);
   // reintentamos con domcontentloaded y luego esperamos el encabezado.
   for (let i = 0; i < 3; i++) {
@@ -118,7 +118,9 @@ async function authenticate(page: import('@playwright/test').Page) {
       await page.waitForTimeout(400)
     }
   }
-  await expect(page.getByRole('heading', { name: 'Agenda', level: 1 })).toBeVisible({ timeout: 15000 })
+  await expect(page.getByRole('heading', { name: 'Agenda', level: 1 })).toBeVisible({
+    timeout: 15000,
+  })
 }
 
 test('la vista Día muestra las citas del día creadas en el backend', async ({ page }) => {
@@ -130,9 +132,14 @@ test('la vista Día muestra las citas del día creadas en el backend', async ({ 
   await expect(page.getByText('Citas del día')).toBeVisible()
 })
 
-test('el detalle ofrece solo transiciones válidas y aplica el cambio de estado', async ({ page }) => {
+test('el detalle ofrece solo transiciones válidas y aplica el cambio de estado', async ({
+  page,
+}) => {
   await authenticate(page)
-  await page.getByRole('button', { name: new RegExp(clientA) }).first().click()
+  await page
+    .getByRole('button', { name: new RegExp(clientA) })
+    .first()
+    .click()
 
   // Estado inicial REQUESTED → etiqueta "Solicitada".
   const dialog = page.getByRole('dialog')
@@ -148,14 +155,26 @@ test('el detalle ofrece solo transiciones válidas y aplica el cambio de estado'
   await expect(dialog.getByRole('button', { name: /Llegó/ })).toBeVisible()
 })
 
-test('el modal "Nueva cita" muestra el diseño completo (9 tipos + vet asignable)', async ({ page }) => {
+test('el modal "Nueva cita" muestra el diseño completo (9 tipos + vet asignable)', async ({
+  page,
+}) => {
   await authenticate(page)
   await page.getByRole('button', { name: 'Nueva cita' }).click()
   const dialog = page.getByRole('dialog')
   await expect(dialog.getByRole('heading', { name: 'Agendar cita' })).toBeVisible()
 
   // Los 9 tipos de cita.
-  for (const t of ['Consulta', 'Control', 'Vacunación', 'Desparasitación', 'Cirugía', 'Imagen Dx', 'Laboratorio', 'Spa / Estética', 'Otro']) {
+  for (const t of [
+    'Consulta',
+    'Control',
+    'Vacunación',
+    'Desparasitación',
+    'Cirugía',
+    'Imagen Dx',
+    'Laboratorio',
+    'Spa / Estética',
+    'Otro',
+  ]) {
     await expect(dialog.getByRole('button', { name: t, exact: true })).toBeVisible()
   }
   // El empleado con rol VET es asignable (aparece en el modal).

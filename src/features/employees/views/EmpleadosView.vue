@@ -6,12 +6,8 @@ import { useEmployees } from '../composables/useEmployees'
 import { useRoles } from '@/features/roles/composables/useRoles'
 import EmpleadosTable from '../components/EmpleadosTable.vue'
 import EmpleadoDrawer from '../components/EmpleadoDrawer.vue'
-import EmployeeFormModal, {
-  type EmployeeFormData,
-} from '../components/EmployeeFormModal.vue'
-import ChangeRolesModal, {
-  type ChangeRolesConfirm,
-} from '../components/ChangeRolesModal.vue'
+import EmployeeFormModal, { type EmployeeFormData } from '../components/EmployeeFormModal.vue'
+import ChangeRolesModal, { type ChangeRolesConfirm } from '../components/ChangeRolesModal.vue'
 import ChangeBranchesModal, {
   type ChangeBranchesConfirm,
 } from '../components/ChangeBranchesModal.vue'
@@ -179,10 +175,7 @@ async function handleSubmit(data: EmployeeFormData) {
 
 function askDeactivate(employee: Employee) {
   if (hasAdminRole(employee)) {
-    toast.error(
-      'No se puede desactivar',
-      'Los empleados con rol ADMIN no pueden ser desactivados.',
-    )
+    toast.error('No se puede desactivar', 'Los empleados con rol ADMIN no pueden ser desactivados.')
     return
   }
   deactivateTarget.value = employee
@@ -202,7 +195,7 @@ async function confirmDeactivate() {
     toast.error('Ocurrió un error', msg)
     // Estado del front posiblemente desincronizado (empleado ya inexistente/desactivado): resincronizamos.
     deactivateTarget.value = null
-    await refresh().catch(() => {})
+    await refresh().catch(() => undefined)
   } finally {
     busy.value = false
   }
@@ -254,9 +247,7 @@ async function onConfirmChangeRoles(data: ChangeRolesConfirm) {
   submitError.value = null
   try {
     await Promise.all([
-      ...data.addIds.map((roleId) =>
-        employeeRolesApi.create({ employeeId: target.id, roleId }),
-      ),
+      ...data.addIds.map((roleId) => employeeRolesApi.create({ employeeId: target.id, roleId })),
       ...data.removeEmployeeRoleIds.map((id) => employeeRolesApi.remove(id)),
     ])
     await refresh()
@@ -289,7 +280,10 @@ async function onConfirmChangeBranches(data: ChangeBranchesConfirm) {
     await refresh()
     selectedId.value = target.id
     const n = data.branchIds.length
-    toast.success('Sedes actualizadas', `${target.name} opera ahora en ${n} ${n === 1 ? 'sede' : 'sedes'}.`)
+    toast.success(
+      'Sedes actualizadas',
+      `${target.name} opera ahora en ${n} ${n === 1 ? 'sede' : 'sedes'}.`,
+    )
     changingBranchesTarget.value = null
   } catch (e) {
     const msg = getProblemDetailMessage(e, 'No se pudieron actualizar las sedes')
@@ -395,6 +389,7 @@ async function onConfirmChangeBranches(data: ChangeBranchesConfirm) {
   font-family: var(--font-sans);
   color: var(--warm-900);
 }
+
 .cta {
   display: flex;
   align-items: center;
@@ -412,23 +407,27 @@ async function onConfirmChangeBranches(data: ChangeBranchesConfirm) {
   border-radius: 9px;
   cursor: pointer;
   font-family: inherit;
-  box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.5);
+  box-shadow:
+    0 1px 2px rgb(50 20 80 / 8%),
+    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 50%);
   white-space: nowrap;
 }
+
 .cta:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
+
 .banner {
   padding: 10px 14px;
   border-radius: 8px;
   font-size: 13px;
   margin-bottom: 14px;
 }
+
 .banner.error {
-  background: oklch(95% 0.06 25);
-  border: 1px solid oklch(85% 0.12 25);
-  color: oklch(40% 0.18 25);
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
 }
 </style>

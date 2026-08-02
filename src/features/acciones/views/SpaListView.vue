@@ -12,10 +12,7 @@ import { useToast } from '@/composables/useToast'
 import { openBilling } from '@/features/cuentas/composables/useBillingPrompt'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
-import {
-  spaApi,
-  type SpaResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/spa.api'
+import { spaApi, type SpaResponse } from '@/features/dashboard/views/consulta/nueva/api/spa.api'
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
 import type { Owner } from '@/types/domain'
 import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
@@ -69,8 +66,7 @@ async function onSelect(info: { owner: Owner; animal: AnimalResponse } | null) {
   try {
     items.value = await spaApi.listByAnimal(info.animal.id)
   } catch (e) {
-    error.value =
-      e instanceof Error ? e.message : 'No se pudieron cargar los servicios de spa'
+    error.value = e instanceof Error ? e.message : 'No se pudieron cargar los servicios de spa'
   } finally {
     loading.value = false
   }
@@ -144,12 +140,7 @@ function searchFn(item: SpaResponse, q: string) {
       lead="Servicios de baño, estética e higiene independientes de una consulta."
     >
       <template #action>
-        <button
-          v-if="canCreate && selection"
-          type="button"
-          class="cta"
-          @click="modalOpen = true"
-        >
+        <button v-if="canCreate && selection" type="button" class="cta" @click="modalOpen = true">
           <Plus :size="16" :stroke-width="1.8" /> Nuevo servicio
         </button>
       </template>
@@ -157,18 +148,10 @@ function searchFn(item: SpaResponse, q: string) {
 
     <div v-if="error" class="banner error">{{ error }}</div>
 
-    <PatientCascadePicker
-      v-if="!selection"
-      v-model="patientId"
-      @update:selection="onSelect"
-    />
+    <PatientCascadePicker v-if="!selection" v-model="patientId" @update:selection="onSelect" />
 
     <template v-else>
-      <OwnerAnimalBreadcrumb
-        :owner="selection.owner"
-        :animal="selection.animal"
-        @reset="onReset"
-      />
+      <OwnerAnimalBreadcrumb :owner="selection.owner" :animal="selection.animal" @reset="onReset" />
       <ListBody
         :items="items"
         :loading="loading"
@@ -227,7 +210,11 @@ function searchFn(item: SpaResponse, q: string) {
     <ConfirmDeleteDialog
       :open="deleting !== null"
       title="Eliminar servicio de spa"
-      :message="deleting ? `Se eliminará el servicio ${deleting.spaType.name}. Esta acción no se puede deshacer.` : ''"
+      :message="
+        deleting
+          ? `Se eliminará el servicio ${deleting.spaType.name}. Esta acción no se puede deshacer.`
+          : ''
+      "
       :busy="deletingBusy"
       @cancel="deleting = null"
       @confirm="onConfirmDelete"
@@ -246,26 +233,82 @@ function searchFn(item: SpaResponse, q: string) {
 </template>
 
 <style scoped>
-.page { font-family: var(--font-sans); color: var(--warm-900); }
+.page {
+  font-family: var(--font-sans);
+  color: var(--warm-900);
+}
+
 .cta {
-  display: flex; align-items: center; gap: 8px; padding: 10px 16px;
-  font-size: 13.5px; font-weight: 500;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
-  color: white; border: none; border-radius: 9px; cursor: pointer; font-family: inherit;
-  box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08), 0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.5);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 13.5px;
+  font-weight: 500;
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
+  color: white;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow:
+    0 1px 2px rgb(50 20 80 / 8%),
+    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 50%);
   white-space: nowrap;
 }
-.banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
-.truncate { max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.actions-col { width: 88px; text-align: right; }
-.actions { display: flex; gap: 6px; justify-content: flex-end; }
-.icon-btn {
-  display: grid; place-items: center; width: 28px; height: 28px;
-  border-radius: 7px; border: 1px solid var(--warm-200);
-  background: transparent; color: var(--warm-700); cursor: pointer;
+.banner.error {
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 14px;
 }
-.icon-btn:hover { background: var(--warm-100); }
-.icon-btn.danger:hover { background: oklch(95% 0.06 25); color: oklch(40% 0.18 25); border-color: oklch(85% 0.12 25); }
-.clickable-row { cursor: pointer; transition: background 0.12s ease; }
-.clickable-row:hover td { background: var(--amatista-50); }
+.truncate {
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.actions-col {
+  width: 88px;
+  text-align: right;
+}
+.actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--warm-200);
+  background: transparent;
+  color: var(--warm-700);
+  cursor: pointer;
+}
+.icon-btn:hover {
+  background: var(--warm-100);
+}
+.icon-btn.danger:hover {
+  background: oklch(95% 0.06 25deg);
+  color: oklch(40% 0.18 25deg);
+  border-color: oklch(85% 0.12 25deg);
+}
+.clickable-row {
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.clickable-row:hover td {
+  background: var(--amatista-50);
+}
 </style>

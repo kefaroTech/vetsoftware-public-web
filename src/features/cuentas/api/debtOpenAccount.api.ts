@@ -14,9 +14,10 @@ export const debtOpenAccountApi = {
   },
   /** Anula un abono con motivo obligatorio (requiere permiso elevado debtOpenAccount.delete). */
   async voidPayment(id: number, reason: string, expectedVersion?: number): Promise<DebtResponse> {
-    const { data } = await http.patch<DebtResponse>(
-      `/debt-open-accounts/${id}/void`, { reason, expectedVersion },
-    )
+    const { data } = await http.patch<DebtResponse>(`/debt-open-accounts/${id}/void`, {
+      reason,
+      expectedVersion,
+    })
     return data
   },
 }

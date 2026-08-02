@@ -1,8 +1,5 @@
 import { http } from '@/services/http/http.client'
-import type {
-  CompanyTaxProfileResponse,
-  SaveCompanyTaxProfileRequest,
-} from '../types/facturacion'
+import type { CompanyTaxProfileResponse, SaveCompanyTaxProfileRequest } from '../types/facturacion'
 
 export const companyTaxProfileApi = {
   /** Devuelve null si la empresa aún no tiene perfil fiscal (404). */
@@ -28,6 +25,10 @@ export const companyTaxProfileApi = {
 }
 
 function isNotFound(e: unknown): boolean {
-  return !!e && typeof e === 'object' && 'response' in e &&
+  return (
+    !!e &&
+    typeof e === 'object' &&
+    'response' in e &&
     (e as { response?: { status?: number } }).response?.status === 404
+  )
 }

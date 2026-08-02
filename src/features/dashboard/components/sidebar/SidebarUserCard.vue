@@ -84,6 +84,7 @@ onBeforeUnmount(() => {
 .user-wrap {
   position: relative;
 }
+
 .user-card {
   display: flex;
   align-items: center;
@@ -91,7 +92,7 @@ onBeforeUnmount(() => {
   padding: 10px;
   border: none;
   border-radius: 10px;
-  background: oklch(35% 0.1 var(--hue) / 0.4);
+  background: oklch(35% 0.1 var(--hue) / 40%);
   color: oklch(94% 0.02 var(--hue));
   cursor: pointer;
   font-family: inherit;
@@ -99,15 +100,17 @@ onBeforeUnmount(() => {
   width: 100%;
   transition: background 0.12s ease;
 }
+
 .user-card:hover,
 .user-card.open {
-  background: oklch(40% 0.1 var(--hue) / 0.5);
+  background: oklch(40% 0.1 var(--hue) / 50%);
 }
+
 .avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, oklch(78% 0.14 30), oklch(65% 0.16 350));
+  background: linear-gradient(135deg, oklch(78% 0.14 30deg), oklch(65% 0.16 350deg));
   color: white;
   display: flex;
   align-items: center;
@@ -116,12 +119,14 @@ onBeforeUnmount(() => {
   font-weight: 600;
   flex-shrink: 0;
 }
+
 .info {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
+
 .name {
   font-size: 12.5px;
   font-weight: 500;
@@ -129,16 +134,19 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .role {
   font-size: 11px;
   opacity: 0.6;
   margin-top: 1px;
 }
+
 .chev {
   opacity: 0.5;
   flex-shrink: 0;
   transition: transform 0.15s ease;
 }
+
 .user-card.open .chev {
   transform: rotate(90deg);
 }
@@ -152,10 +160,11 @@ onBeforeUnmount(() => {
   padding: 6px;
   border-radius: 10px;
   background: oklch(30% 0.08 var(--hue));
-  border: 1px solid oklch(70% 0.04 var(--hue) / 0.14);
-  box-shadow: 0 12px 28px -10px oklch(15% 0.08 var(--hue) / 0.7);
+  border: 1px solid oklch(70% 0.04 var(--hue) / 14%);
+  box-shadow: 0 12px 28px -10px oklch(15% 0.08 var(--hue) / 70%);
   z-index: 30;
 }
+
 .menu-item {
   display: flex;
   align-items: center;
@@ -165,16 +174,17 @@ onBeforeUnmount(() => {
   border: none;
   border-radius: 7px;
   background: transparent;
-  color: oklch(90% 0.03 var(--hue) / 0.9);
+  color: oklch(90% 0.03 var(--hue) / 90%);
   font-family: inherit;
   font-size: 13px;
   cursor: pointer;
   text-align: left;
   transition: background 0.12s ease;
 }
+
 .menu-item.logout:hover {
-  background: oklch(58% 0.2 25 / 0.16);
-  color: oklch(85% 0.14 25);
+  background: oklch(58% 0.2 25deg / 16%);
+  color: oklch(85% 0.14 25deg);
 }
 
 .menu-fade-enter-active,
@@ -183,21 +193,24 @@ onBeforeUnmount(() => {
     opacity 0.14s ease,
     transform 0.14s ease;
 }
+
 .menu-fade-enter-from,
 .menu-fade-leave-to {
   opacity: 0;
   transform: translateY(6px);
 }
 
-@media (max-width: 1024px) {
+@media (width <= 1024px) {
   .user-card {
     justify-content: center;
     padding: 8px 0;
   }
+
   .info,
   .chev {
     display: none;
   }
+
   /* En modo colapsado el menú necesita ancho propio para el texto. */
   .user-menu {
     left: 0;

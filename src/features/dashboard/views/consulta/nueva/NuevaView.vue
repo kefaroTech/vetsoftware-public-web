@@ -122,7 +122,11 @@ async function handleBack() {
   goStep((step.value - 1) as WizardStep)
 }
 
-async function persistConsultationItems(consultationId: number, animalId: number, companyId: number) {
+async function persistConsultationItems(
+  consultationId: number,
+  animalId: number,
+  companyId: number,
+) {
   const s = draft.state
 
   // Recetas: cabecera + medicamentos en cascada. Items con savedId se saltan.
@@ -221,10 +225,8 @@ async function persistConsultationItems(consultationId: number, animalId: number
       animalId,
       consultationId,
       companyId,
-      weight: h.weight?.trim()
-        ? Number(h.weight.trim().replace(',', '.'))
-        : null,
-      weightUnit: h.weight?.trim() ? draft.state.pet?.weightType ?? null : null,
+      weight: h.weight?.trim() ? Number(h.weight.trim().replace(',', '.')) : null,
+      weightUnit: h.weight?.trim() ? (draft.state.pet?.weightType ?? null) : null,
     })
     draft.markHospitalizationSaved(i, created.id)
   }
@@ -306,9 +308,7 @@ async function saveConsultation(keepOwner = false) {
         prognosis: cDraft.prognosis.trim() || null,
         nextControl: cDraft.nextControlDate || null,
         animalId: Number(pet.id),
-        weight: cDraft.weight.trim()
-          ? Number(cDraft.weight.trim().replace(',', '.'))
-          : null,
+        weight: cDraft.weight.trim() ? Number(cDraft.weight.trim().replace(',', '.')) : null,
         weightUnit: cDraft.weight.trim() ? pet.weightType : null,
         // Examen físico / constantes vitales (Fase 3) — opcionales; van null si vacíos.
         temperature: numOrNull(cDraft.temperature),
@@ -541,6 +541,7 @@ onUnmounted(() => {
   flex-direction: column;
   overflow: hidden;
 }
+
 .topbar {
   height: 60px;
   padding: 0 clamp(14px, 3vw, 32px);
@@ -551,6 +552,7 @@ onUnmounted(() => {
   gap: 16px;
   flex-shrink: 0;
 }
+
 .back {
   background: transparent;
   border: none;
@@ -564,15 +566,18 @@ onUnmounted(() => {
   gap: 8px;
   cursor: pointer;
 }
+
 .back:hover {
   background: var(--warm-100);
   color: var(--warm-900);
 }
+
 .divider {
   width: 1px;
   height: 22px;
   background: var(--warm-200);
 }
+
 .brand {
   margin: 0;
   font-family: var(--font-serif);
@@ -581,6 +586,7 @@ onUnmounted(() => {
   font-weight: 400;
   color: var(--warm-900);
 }
+
 .badge {
   font-size: 11px;
   padding: 3px 8px;
@@ -592,6 +598,7 @@ onUnmounted(() => {
   font-weight: 500;
   margin-left: 4px;
 }
+
 .cancel {
   margin-left: auto;
   background: transparent;
@@ -606,36 +613,42 @@ onUnmounted(() => {
   padding: 6px 10px;
   border-radius: 6px;
 }
+
 .cancel:hover {
   background: var(--warm-100);
   color: var(--warm-900);
 }
-@media (max-width: 720px) {
+
+@media (width <= 720px) {
   .topbar .brand {
     font-size: 18px;
   }
+
   .topbar .back span,
   .topbar .cancel span,
   .topbar .badge {
     display: none;
   }
 }
+
 .content {
   flex: 1;
   overflow: auto;
   display: flex;
   flex-direction: column;
 }
+
 .save-error {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 13px;
   padding: 12px 18px;
-  background: oklch(94% 0.06 25);
-  border-top: 1px solid oklch(85% 0.10 25);
-  color: oklch(35% 0.15 25);
+  background: oklch(94% 0.06 25deg);
+  border-top: 1px solid oklch(85% 0.1 25deg);
+  color: oklch(35% 0.15 25deg);
 }
+
 .discard-extra {
   background: transparent;
   border: none;
@@ -646,10 +659,12 @@ onUnmounted(() => {
   padding: 9px 10px;
   border-radius: 8px;
 }
+
 .discard-extra:hover {
   background: var(--warm-100);
   color: var(--warm-900);
 }
+
 .btn-keep-owner {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
@@ -661,9 +676,11 @@ onUnmounted(() => {
   color: var(--warm-900);
   cursor: pointer;
 }
+
 .btn-keep-owner:hover:not(:disabled) {
   background: var(--warm-100);
 }
+
 .btn-keep-owner:disabled {
   opacity: 0.5;
   cursor: not-allowed;

@@ -14,10 +14,6 @@ const props = defineProps<{
   canUpdate?: boolean
 }>()
 
-const isAdmin = computed(
-  () => props.employee?.roles.some((r) => r.code === 'ADMIN') ?? false,
-)
-
 const emit = defineEmits<{
   close: []
   edit: [employee: Employee]
@@ -27,6 +23,8 @@ const emit = defineEmits<{
   deactivate: [employee: Employee]
   activate: [employee: Employee]
 }>()
+
+const isAdmin = computed(() => props.employee?.roles.some((r) => r.code === 'ADMIN') ?? false)
 
 const isInvited = computed(() => props.employee?.status === 'INVITED')
 
@@ -58,20 +56,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 <template>
   <Teleport to="body">
     <Transition name="drawer">
-      <div
-        v-if="open && employee"
-        class="drawer-root"
-        role="dialog"
-        aria-modal="true"
-      >
+      <div v-if="open && employee" class="drawer-root" role="dialog" aria-modal="true">
         <aside class="drawer">
           <header class="head" :style="headerStyle">
-            <button
-              type="button"
-              class="close"
-              aria-label="Cerrar"
-              @click="emit('close')"
-            >
+            <button type="button" class="close" aria-label="Cerrar" @click="emit('close')">
               <X :size="15" :stroke-width="1.8" />
             </button>
 
@@ -96,7 +84,11 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
                     />
                   </template>
                   <span v-else class="no-role">Sin rol asignado</span>
-                  <StatusPill :active="employee.enabled" :invited="employee.status === 'INVITED'" size="lg" />
+                  <StatusPill
+                    :active="employee.enabled"
+                    :invited="employee.status === 'INVITED'"
+                    size="lg"
+                  />
                 </div>
               </div>
             </div>
@@ -203,12 +195,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .drawer-root {
   position: fixed;
   inset: 0;
-  background: oklch(20% 0.05 var(--hue) / 0.35);
+  background: oklch(20% 0.05 var(--hue) / 35%);
   backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
   z-index: 1400;
   font-family: var(--font-sans);
 }
+
 .drawer {
   position: absolute;
   top: 0;
@@ -218,7 +210,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   max-width: 100vw;
   background: var(--warm-50);
   border-left: 1px solid var(--warm-200);
-  box-shadow: -20px 0 60px -20px oklch(20% 0.05 var(--hue) / 0.25);
+  box-shadow: -20px 0 60px -20px oklch(20% 0.05 var(--hue) / 25%);
   display: flex;
   flex-direction: column;
 }
@@ -227,14 +219,17 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .drawer-leave-active {
   transition: opacity 0.2s ease;
 }
+
 .drawer-enter-from,
 .drawer-leave-to {
   opacity: 0;
 }
+
 .drawer-enter-active .drawer,
 .drawer-leave-active .drawer {
   transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+
 .drawer-enter-from .drawer,
 .drawer-leave-to .drawer {
   transform: translateX(100%);
@@ -245,6 +240,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   padding: 22px 26px 18px;
   border-bottom: 1px solid var(--warm-200);
 }
+
 .close {
   position: absolute;
   top: 16px;
@@ -260,20 +256,24 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   color: var(--warm-600);
   transition: background 0.12s ease;
 }
+
 .close:hover {
   background: var(--warm-100);
   color: var(--warm-900);
 }
+
 .head-row {
   display: flex;
   align-items: flex-start;
   gap: 16px;
 }
+
 .head-info {
   flex: 1;
   min-width: 0;
   padding-top: 4px;
 }
+
 .name {
   margin: 0;
   font-family: var(--font-serif);
@@ -282,13 +282,15 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   font-weight: 400;
   letter-spacing: -0.01em;
   color: var(--warm-900);
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
+
 .code {
   font-size: 13px;
   color: var(--warm-600);
   margin-top: 4px;
 }
+
 .pills {
   display: flex;
   gap: 8px;
@@ -296,6 +298,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   flex-wrap: wrap;
   align-items: center;
 }
+
 .no-role {
   font-size: 12.5px;
   color: var(--warm-500);
@@ -317,9 +320,11 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   background: var(--warm-100);
   flex-wrap: wrap;
 }
+
 .spacer {
   flex: 1;
 }
+
 .ghost,
 .danger,
 .primary {
@@ -333,53 +338,65 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   font-family: inherit;
   border: 1px solid transparent;
 }
+
 .ghost {
   background: var(--warm-50);
   color: var(--warm-700);
   border-color: var(--warm-200);
 }
+
 .ghost:hover:not(:disabled) {
   background: var(--warm-100);
 }
+
 .ghost:disabled {
   cursor: not-allowed;
   opacity: 0.55;
 }
+
 .ghost.accent {
   color: var(--amatista-700);
-  border-color: var(--amatista-200, oklch(88% 0.05 300));
+  border-color: var(--amatista-200, oklch(88% 0.05 300deg));
   background: var(--amatista-50);
   font-weight: 500;
 }
+
 .ghost.accent:hover:not(:disabled) {
-  background: var(--amatista-100, oklch(94% 0.04 300));
+  background: var(--amatista-100, oklch(94% 0.04 300deg));
 }
+
 .danger {
   font-weight: 500;
-  background: oklch(94% 0.05 25);
-  color: oklch(48% 0.18 25);
-  border-color: oklch(48% 0.18 25);
+  background: oklch(94% 0.05 25deg);
+  color: oklch(48% 0.18 25deg);
+  border-color: oklch(48% 0.18 25deg);
 }
+
 .danger:hover:not(:disabled) {
-  background: oklch(91% 0.07 25);
+  background: oklch(91% 0.07 25deg);
 }
+
 .danger:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
+
 .primary {
   font-weight: 500;
   background: var(--amatista-700);
   color: white;
   border: none;
 }
+
 .primary:hover:not(:disabled) {
   background: var(--amatista-800);
 }
+
 .primary:disabled {
   cursor: not-allowed;
   opacity: 0.7;
 }
+
 .admin-lock {
   display: inline-flex;
   align-items: center;

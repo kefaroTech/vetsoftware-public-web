@@ -12,7 +12,7 @@ interface Props {
   nested?: boolean
 }
 const props = withDefaults(defineProps<Props>(), { nested: false })
-const emit = defineEmits<{ (e: 'select', event: ClinicalEvent): void }>()
+const emit = defineEmits<(e: 'select', event: ClinicalEvent) => void>()
 
 const meta = computed(() => EVENT_TYPES[props.event.eventType])
 const tokens = computed(() => TYPE_COLORS[meta.value.color])
@@ -50,12 +50,7 @@ function handleClick() {
           {{ event.summary || 'Sin descripción' }}
         </div>
       </div>
-      <ChevronRight
-        v-if="navigable"
-        :size="16"
-        :stroke-width="1.6"
-        class="chev"
-      />
+      <ChevronRight v-if="navigable" :size="16" :stroke-width="1.6" class="chev" />
     </button>
   </div>
 </template>
@@ -65,6 +60,7 @@ function handleClick() {
   position: relative;
   margin-bottom: 10px;
 }
+
 .bullet {
   position: absolute;
   left: -31px;
@@ -76,8 +72,9 @@ function handleClick() {
   place-items: center;
   font-size: 14px;
   border: 3px solid var(--warm-100);
-  box-shadow: 0 2px 6px -2px rgba(20, 15, 30, 0.12);
+  box-shadow: 0 2px 6px -2px rgb(20 15 30 / 12%);
 }
+
 .card {
   display: flex;
   align-items: flex-start;
@@ -90,18 +87,24 @@ function handleClick() {
   padding: 12px 16px;
   font-family: inherit;
   cursor: default;
-  transition: border-color 0.12s ease, background 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
 }
+
 .card.navigable {
   cursor: pointer;
 }
+
 .card.navigable:hover {
   border-color: var(--hover-border);
 }
+
 .content {
   flex: 1;
   min-width: 0;
 }
+
 .head {
   display: flex;
   align-items: center;
@@ -109,21 +112,25 @@ function handleClick() {
   margin-bottom: 4px;
   flex-wrap: wrap;
 }
+
 .date {
   font-size: 12px;
   color: var(--warm-500);
 }
+
 .source {
   font-size: 11px;
   color: var(--warm-400);
   font-family: var(--font-mono);
 }
+
 .summary {
   font-size: 13.5px;
   color: var(--warm-800);
   line-height: 1.45;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
+
 .chev {
   color: var(--warm-400);
   align-self: center;
@@ -134,6 +141,7 @@ function handleClick() {
 .event-row.nested {
   margin-bottom: 6px;
 }
+
 .event-row.nested::before {
   content: '';
   position: absolute;
@@ -143,6 +151,7 @@ function handleClick() {
   height: 2px;
   background: var(--warm-200);
 }
+
 .event-row.nested .bullet {
   left: -10px;
   top: 11px;
@@ -151,10 +160,12 @@ function handleClick() {
   font-size: 11px;
   border-width: 2px;
 }
+
 .event-row.nested .card {
   padding: 9px 13px;
   background: var(--warm-50);
 }
+
 .event-row.nested .summary {
   font-size: 13px;
 }

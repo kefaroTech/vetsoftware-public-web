@@ -49,20 +49,13 @@ export interface DiagnosticImagingResponse {
 }
 
 export const diagnosticImagingApi = {
-  async create(
-    payload: CreateDiagnosticImagingPayload,
-  ): Promise<DiagnosticImagingResponse> {
-    const { data } = await http.post<DiagnosticImagingResponse>(
-      '/diagnostic-imagings',
-      payload,
-    )
+  async create(payload: CreateDiagnosticImagingPayload): Promise<DiagnosticImagingResponse> {
+    const { data } = await http.post<DiagnosticImagingResponse>('/diagnostic-imagings', payload)
     return data
   },
 
   async listAll(): Promise<DiagnosticImagingResponse[]> {
-    const { data } = await http.get<DiagnosticImagingResponse[]>(
-      '/diagnostic-imagings',
-    )
+    const { data } = await http.get<DiagnosticImagingResponse[]>('/diagnostic-imagings')
     return data
   },
 
@@ -74,9 +67,7 @@ export const diagnosticImagingApi = {
   },
 
   async findById(id: number): Promise<DiagnosticImagingResponse> {
-    const { data } = await http.get<DiagnosticImagingResponse>(
-      `/diagnostic-imagings/${id}`,
-    )
+    const { data } = await http.get<DiagnosticImagingResponse>(`/diagnostic-imagings/${id}`)
     return data
   },
 

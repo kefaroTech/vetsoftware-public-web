@@ -24,8 +24,7 @@ const emit = defineEmits<{
 const tokens = computed(() => ROLE_COLORS[props.color])
 const isAdmin = computed(
   () =>
-    props.totalCatalogPermissions > 0 &&
-    props.permissionCount === props.totalCatalogPermissions,
+    props.totalCatalogPermissions > 0 && props.permissionCount === props.totalCatalogPermissions,
 )
 const visibleChips = computed(() => props.subModules.slice(0, 4))
 const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
@@ -35,10 +34,7 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   <article class="card" :class="{ inactive: !active }">
     <div class="head">
       <div class="left">
-        <div
-          class="avatar"
-          :style="{ background: tokens.avatarBg, color: tokens.avatarFg }"
-        >
+        <div class="avatar" :style="{ background: tokens.avatarBg, color: tokens.avatarFg }">
           <Shield :size="18" :stroke-width="1.7" />
         </div>
         <div class="title-block">
@@ -98,22 +94,29 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   border: 1px solid var(--warm-200);
   border-radius: 14px;
   padding: 18px;
-  transition: opacity 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
+
 .card:hover {
   border-color: var(--warm-300);
-  box-shadow: 0 4px 14px -8px rgba(20, 15, 30, 0.18);
+  box-shadow: 0 4px 14px -8px rgb(20 15 30 / 18%);
 }
+
 .card.inactive {
   opacity: 0.65;
   border-color: var(--warm-150);
 }
+
 .head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
 }
+
 .left {
   display: flex;
   align-items: center;
@@ -121,6 +124,7 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   min-width: 0;
   flex: 1;
 }
+
 .avatar {
   width: 40px;
   height: 40px;
@@ -129,12 +133,14 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   place-items: center;
   flex-shrink: 0;
 }
+
 .title-block {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
 }
+
 .name {
   margin: 0;
   font-family: var(--font-serif);
@@ -143,8 +149,9 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   letter-spacing: -0.01em;
   color: var(--warm-900);
   line-height: 1.15;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
+
 .admin-badge {
   display: inline-flex;
   align-items: center;
@@ -158,6 +165,7 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   font-size: 11.5px;
   font-weight: 500;
 }
+
 .readonly-badge {
   display: inline-flex;
   align-items: center;
@@ -171,6 +179,7 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   font-size: 11.5px;
   font-weight: 500;
 }
+
 .stats {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -180,12 +189,14 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   border-top: 1px solid var(--warm-150);
   border-bottom: 1px solid var(--warm-150);
 }
+
 .stat {
   display: flex;
   flex-direction: column;
   gap: 1px;
   align-items: flex-start;
 }
+
 .stat-num {
   font-family: var(--font-serif);
   font-size: 26px;
@@ -193,21 +204,25 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   color: var(--warm-900);
   letter-spacing: -0.02em;
 }
+
 .stat-label {
   font-size: 11px;
   color: var(--warm-500);
   letter-spacing: 0.02em;
 }
+
 .divider {
   width: 1px;
   height: 30px;
   background: var(--warm-200);
 }
+
 .chips {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
 }
+
 .chip {
   font-size: 11px;
   padding: 2px 8px;
@@ -216,15 +231,18 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   color: var(--warm-700);
   white-space: nowrap;
 }
+
 .chip.more {
   background: var(--warm-200);
   font-weight: 500;
 }
+
 .chips-empty {
   font-size: 12px;
   color: var(--warm-500);
   font-style: italic;
 }
+
 .edit-btn {
   align-self: flex-start;
   display: inline-flex;
@@ -239,8 +257,11 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
 }
+
 .edit-btn:hover {
   background: var(--amatista-100);
   border-color: var(--amatista-300);

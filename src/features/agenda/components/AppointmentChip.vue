@@ -20,9 +20,7 @@ const typeMeta = computed(() => APPT_TYPES[props.appt.type])
 const tokens = computed(() => apptTypeTokens(props.appt.type))
 const statusMeta = computed(() => APPT_STATUS[props.appt.status])
 const terminal = computed(() => APPT_TERMINAL.has(props.appt.status))
-const subject = computed(
-  () => props.appt.animal?.name || props.appt.clientName || 'Sin asignar',
-)
+const subject = computed(() => props.appt.animal?.name || props.appt.clientName || 'Sin asignar')
 </script>
 
 <template>
@@ -81,17 +79,20 @@ const subject = computed(
   text-align: left;
   min-width: 0;
 }
+
 .c-time {
   font-family: var(--font-mono);
   font-weight: 600;
   flex-shrink: 0;
 }
+
 .c-title {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
 }
+
 .c-status-dot {
   width: 6px;
   height: 6px;
@@ -99,6 +100,7 @@ const subject = computed(
   margin-left: auto;
   flex-shrink: 0;
 }
+
 .chip-week {
   display: flex;
   align-items: center;
@@ -112,19 +114,23 @@ const subject = computed(
   text-align: left;
   transition: filter 0.12s ease;
 }
+
 .chip-week:hover {
   filter: brightness(1.02);
 }
+
 .w-time {
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
   flex-shrink: 0;
 }
+
 .w-body {
   flex: 1;
   min-width: 0;
 }
+
 .w-line {
   display: block;
   font-size: 12px;
@@ -132,6 +138,7 @@ const subject = computed(
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .w-sub {
   display: block;
   font-size: 10.5px;

@@ -48,7 +48,10 @@ async function switchMode(m: 'active' | 'paused') {
     try {
       await store.loadPausedTaxes()
     } catch (e) {
-      toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudieron cargar los pausados'))
+      toast.error(
+        'Ocurrió un error',
+        getProblemDetailMessage(e, 'No se pudieron cargar los pausados'),
+      )
     } finally {
       pausedLoading.value = false
     }
@@ -74,7 +77,10 @@ function onFormClose() {
 /** Solo se puede pausar un impuesto que NO esté en uso (el back lo bloquea con 409; aquí lo prevenimos). */
 function requestPause(t: TaxResponse) {
   if (usageOf(t.id) > 0) {
-    toast.warn('Impuesto en uso', `${t.name} está asignado a ${usageOf(t.id)} ítem(s). Cámbialos de tasa antes de pausarlo.`)
+    toast.warn(
+      'Impuesto en uso',
+      `${t.name} está asignado a ${usageOf(t.id)} ítem(s). Cámbialos de tasa antes de pausarlo.`,
+    )
     return
   }
   pausing.value = t
@@ -119,8 +125,12 @@ function ivaContenido(percentage: number): string {
       </div>
       <div class="head-actions">
         <div class="seg" role="tablist">
-          <button type="button" :class="{ on: mode === 'active' }" @click="switchMode('active')">Activos</button>
-          <button type="button" :class="{ on: mode === 'paused' }" @click="switchMode('paused')">Pausados</button>
+          <button type="button" :class="{ on: mode === 'active' }" @click="switchMode('active')">
+            Activos
+          </button>
+          <button type="button" :class="{ on: mode === 'paused' }" @click="switchMode('paused')">
+            Pausados
+          </button>
         </div>
         <button v-if="canCreate && mode === 'active'" type="button" class="cta" @click="openNew">
           <Plus :size="16" :stroke-width="1.8" /> Nuevo impuesto
@@ -132,82 +142,88 @@ function ivaContenido(percentage: number): string {
 
     <!-- ─────────── Modo ACTIVOS ─────────── -->
     <div v-if="mode === 'active'" class="tbl-scroll">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Impuesto</th>
-          <th>Tributo</th>
-          <th>Porcentaje</th>
-          <th>IVA contenido en $100.000</th>
-          <th>En uso</th>
-          <th v-if="canUpdate || canDelete"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-if="store.loading.value">
-          <td colspan="6" class="empty">Cargando…</td>
-        </tr>
-        <tr v-else-if="store.taxes.value.length === 0">
-          <td colspan="6" class="empty">Sin impuestos. Crea el primero.</td>
-        </tr>
-        <tr v-for="t in store.taxes.value" v-else :key="t.id" class="trow" @click="onRowClick(t)">
-          <td class="tname">{{ t.name }}</td>
-          <td>{{ t.taxScheme }}</td>
-          <td class="tstock">{{ t.percentage }}%</td>
-          <td>{{ ivaContenido(t.percentage) }}</td>
-          <td class="tuse">{{ usageOf(t.id) }} ítem(s)</td>
-          <td v-if="canUpdate || canDelete" @click.stop>
-            <div class="actions">
-              <button v-if="canUpdate" type="button" class="icon-btn" title="Editar" @click="editing = t">
-                <Pencil :size="14" :stroke-width="1.7" />
-              </button>
-              <button
-                v-if="canDelete"
-                type="button"
-                class="icon-btn"
-                :disabled="usageOf(t.id) > 0"
-                :title="usageOf(t.id) > 0 ? 'No se puede pausar: impuesto en uso' : 'Pausar'"
-                @click="requestPause(t)"
-              >
-                <PauseCircle :size="14" :stroke-width="1.7" />
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Impuesto</th>
+            <th>Tributo</th>
+            <th>Porcentaje</th>
+            <th>IVA contenido en $100.000</th>
+            <th>En uso</th>
+            <th v-if="canUpdate || canDelete"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-if="store.loading.value">
+            <td colspan="6" class="empty">Cargando…</td>
+          </tr>
+          <tr v-else-if="store.taxes.value.length === 0">
+            <td colspan="6" class="empty">Sin impuestos. Crea el primero.</td>
+          </tr>
+          <tr v-for="t in store.taxes.value" v-else :key="t.id" class="trow" @click="onRowClick(t)">
+            <td class="tname">{{ t.name }}</td>
+            <td>{{ t.taxScheme }}</td>
+            <td class="tstock">{{ t.percentage }}%</td>
+            <td>{{ ivaContenido(t.percentage) }}</td>
+            <td class="tuse">{{ usageOf(t.id) }} ítem(s)</td>
+            <td v-if="canUpdate || canDelete" @click.stop>
+              <div class="actions">
+                <button
+                  v-if="canUpdate"
+                  type="button"
+                  class="icon-btn"
+                  title="Editar"
+                  @click="editing = t"
+                >
+                  <Pencil :size="14" :stroke-width="1.7" />
+                </button>
+                <button
+                  v-if="canDelete"
+                  type="button"
+                  class="icon-btn"
+                  :disabled="usageOf(t.id) > 0"
+                  :title="usageOf(t.id) > 0 ? 'No se puede pausar: impuesto en uso' : 'Pausar'"
+                  @click="requestPause(t)"
+                >
+                  <PauseCircle :size="14" :stroke-width="1.7" />
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- ─────────── Modo PAUSADOS ─────────── -->
     <div v-else class="tbl-scroll">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Impuesto</th>
-          <th>Tributo</th>
-          <th>Porcentaje</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-if="pausedLoading">
-          <td colspan="4" class="empty">Cargando…</td>
-        </tr>
-        <tr v-else-if="store.pausedTaxes.value.length === 0">
-          <td colspan="4" class="empty">No hay impuestos pausados.</td>
-        </tr>
-        <tr v-for="t in store.pausedTaxes.value" v-else :key="t.id">
-          <td class="tname">{{ t.name }}</td>
-          <td>{{ t.taxScheme }}</td>
-          <td class="tstock">{{ t.percentage }}%</td>
-          <td>
-            <button v-if="canDelete" type="button" class="reactivate" @click="onReactivate(t)">
-              <RotateCcw :size="14" :stroke-width="1.7" /> Reactivar
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Impuesto</th>
+            <th>Tributo</th>
+            <th>Porcentaje</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-if="pausedLoading">
+            <td colspan="4" class="empty">Cargando…</td>
+          </tr>
+          <tr v-else-if="store.pausedTaxes.value.length === 0">
+            <td colspan="4" class="empty">No hay impuestos pausados.</td>
+          </tr>
+          <tr v-for="t in store.pausedTaxes.value" v-else :key="t.id">
+            <td class="tname">{{ t.name }}</td>
+            <td>{{ t.taxScheme }}</td>
+            <td class="tstock">{{ t.percentage }}%</td>
+            <td>
+              <button v-if="canDelete" type="button" class="reactivate" @click="onReactivate(t)">
+                <RotateCcw :size="14" :stroke-width="1.7" /> Reactivar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <p class="note">
@@ -215,13 +231,22 @@ function ivaContenido(percentage: number): string {
       punto de venta el impuesto se calcula por línea y se agrupa por tasa en la factura.
     </p>
 
-    <TaxFormModal :open="modalOpen || editing !== null" :initial="editing" @close="onFormClose" @saved="onSaved" />
+    <TaxFormModal
+      :open="modalOpen || editing !== null"
+      :initial="editing"
+      @close="onFormClose"
+      @saved="onSaved"
+    />
 
     <ConfirmDeleteDialog
       :open="pausing !== null"
       title="Pausar impuesto"
       action-label="Pausar"
-      :message="pausing ? `${pausing.name} dejará de estar disponible para asignar. Podrás reactivarlo desde la pestaña “Pausados”.` : ''"
+      :message="
+        pausing
+          ? `${pausing.name} dejará de estar disponible para asignar. Podrás reactivarlo desde la pestaña “Pausados”.`
+          : ''
+      "
       :busy="pausingBusy"
       @cancel="pausing = null"
       @confirm="onConfirmPause"
@@ -230,37 +255,198 @@ function ivaContenido(percentage: number): string {
 </template>
 
 <style scoped>
-.inv { font-family: var(--font-sans); color: var(--warm-900); }
-.head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
-.kicker { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--warm-500); font-weight: 500; margin-bottom: 6px; }
-.title { margin: 0; font-family: var(--font-serif); font-size: 36px; font-weight: 400; letter-spacing: -0.015em; line-height: 1.05; color: var(--warm-900); }
-.head-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; flex-wrap: wrap; }
-.seg { display: inline-flex; background: var(--warm-100); border: 1px solid var(--warm-200); border-radius: 9px; padding: 2px; }
-.seg button { border: none; background: transparent; font-family: inherit; font-size: 12.5px; font-weight: 500; color: var(--warm-600); padding: 6px 12px; border-radius: 7px; cursor: pointer; }
-.seg button.on { background: var(--warm-50); color: var(--amatista-700); box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08); }
-.cta {
-  display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 9px;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
-  color: #fff; border: none; font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
-  box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08), 0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.45);
+.inv {
+  font-family: var(--font-sans);
+  color: var(--warm-900);
 }
-.banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
-.tbl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 12px; overflow: hidden; }
-.table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--warm-500); font-weight: 600; padding: 11px 14px; background: var(--warm-100); border-bottom: 1px solid var(--warm-200); }
-.table td { padding: 11px 14px; border-bottom: 1px solid var(--warm-150); color: var(--warm-800); vertical-align: middle; }
-.table tbody tr:last-child td { border-bottom: none; }
-.trow { cursor: pointer; }
-.trow:hover { background: var(--warm-100); }
-.empty { text-align: center; padding: 40px; color: var(--warm-500); }
-.tname { font-weight: 500; color: var(--warm-900); }
-.tstock { font-weight: 600; }
-.tuse { color: var(--warm-600); font-size: 12.5px; }
-.actions { display: flex; gap: 4px; align-items: center; }
-.icon-btn { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--warm-200); background: transparent; color: var(--warm-700); cursor: pointer; }
-.icon-btn:hover:not(:disabled) { background: var(--warm-100); }
-.icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.reactivate { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--amatista-200); background: var(--amatista-50); color: var(--amatista-700); font-family: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; white-space: nowrap; }
-.reactivate:hover { background: var(--amatista-100); }
-.note { margin: 16px 0 0; font-size: 12.5px; color: var(--warm-500); line-height: 1.55; max-width: 640px; }
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.kicker {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--warm-500);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 36px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.05;
+  color: var(--warm-900);
+}
+.head-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.seg {
+  display: inline-flex;
+  background: var(--warm-100);
+  border: 1px solid var(--warm-200);
+  border-radius: 9px;
+  padding: 2px;
+}
+.seg button {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--warm-600);
+  padding: 6px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.seg button.on {
+  background: var(--warm-50);
+  color: var(--amatista-700);
+  box-shadow: 0 1px 2px rgb(50 20 80 / 8%);
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: 9px;
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
+  color: #fff;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow:
+    0 1px 2px rgb(50 20 80 / 8%),
+    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 45%);
+}
+.banner.error {
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+.tbl-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.table th {
+  text-align: left;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--warm-500);
+  font-weight: 600;
+  padding: 11px 14px;
+  background: var(--warm-100);
+  border-bottom: 1px solid var(--warm-200);
+}
+.table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--warm-150);
+  color: var(--warm-800);
+  vertical-align: middle;
+}
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+.trow {
+  cursor: pointer;
+}
+.trow:hover {
+  background: var(--warm-100);
+}
+.empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--warm-500);
+}
+.tname {
+  font-weight: 500;
+  color: var(--warm-900);
+}
+.tstock {
+  font-weight: 600;
+}
+.tuse {
+  color: var(--warm-600);
+  font-size: 12.5px;
+}
+.actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--warm-200);
+  background: transparent;
+  color: var(--warm-700);
+  cursor: pointer;
+}
+.icon-btn:hover:not(:disabled) {
+  background: var(--warm-100);
+}
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.reactivate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--amatista-200);
+  background: var(--amatista-50);
+  color: var(--amatista-700);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.reactivate:hover {
+  background: var(--amatista-100);
+}
+.note {
+  margin: 16px 0 0;
+  font-size: 12.5px;
+  color: var(--warm-500);
+  line-height: 1.55;
+  max-width: 640px;
+}
 </style>

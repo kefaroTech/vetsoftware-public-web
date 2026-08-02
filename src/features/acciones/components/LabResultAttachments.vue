@@ -65,12 +65,7 @@ async function downloadFile(att: LaboratoryTestFileResponse) {
     <ul v-else class="att-list">
       <li v-for="att in attachments" :key="att.id" class="att">
         <FileText :size="15" :stroke-width="1.7" class="att-icon" />
-        <button
-          type="button"
-          class="att-name"
-          title="Ver archivo"
-          @click="viewFile(att)"
-        >
+        <button type="button" class="att-name" title="Ver archivo" @click="viewFile(att)">
           {{ att.originalFileName }}
         </button>
         <button type="button" class="icon" title="Ver" @click="viewFile(att)">
@@ -88,6 +83,7 @@ async function downloadFile(att: LaboratoryTestFileResponse) {
 .attachments {
   margin-top: 18px;
 }
+
 .att-label {
   font-size: 11px;
   font-weight: 500;
@@ -96,13 +92,16 @@ async function downloadFile(att: LaboratoryTestFileResponse) {
   color: var(--warm-500);
   margin-bottom: 8px;
 }
+
 .att-state {
   font-size: 12.5px;
   color: var(--warm-500);
 }
+
 .att-state.error {
-  color: oklch(45% 0.18 25);
+  color: oklch(45% 0.18 25deg);
 }
+
 .att-list {
   list-style: none;
   margin: 0;
@@ -111,6 +110,7 @@ async function downloadFile(att: LaboratoryTestFileResponse) {
   flex-direction: column;
   gap: 6px;
 }
+
 .att {
   display: flex;
   align-items: center;
@@ -122,10 +122,12 @@ async function downloadFile(att: LaboratoryTestFileResponse) {
   font-size: 12.5px;
   color: var(--warm-800);
 }
+
 .att-icon {
   color: var(--warm-500);
   flex-shrink: 0;
 }
+
 .att-name {
   flex: 1;
   min-width: 0;
@@ -140,9 +142,11 @@ async function downloadFile(att: LaboratoryTestFileResponse) {
   color: var(--amatista-700);
   cursor: pointer;
 }
+
 .att-name:hover {
   text-decoration: underline;
 }
+
 .icon {
   background: transparent;
   border: 1px solid var(--warm-200);
@@ -155,6 +159,7 @@ async function downloadFile(att: LaboratoryTestFileResponse) {
   cursor: pointer;
   flex-shrink: 0;
 }
+
 .icon:hover {
   background: var(--amatista-50);
   border-color: var(--amatista-300);

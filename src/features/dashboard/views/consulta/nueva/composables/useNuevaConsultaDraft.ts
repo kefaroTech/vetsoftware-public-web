@@ -1,8 +1,5 @@
 import { storeToRefs } from 'pinia'
-import {
-  useNuevaConsultaDraftStore,
-  buildConsultation,
-} from '../stores/nuevaConsultaDraft.store'
+import { useNuevaConsultaDraftStore, buildConsultation } from '../stores/nuevaConsultaDraft.store'
 
 export type {
   WizardStep,

@@ -97,7 +97,7 @@ const typeCounts = computed(() => {
   }
   return Object.entries(counts).map(([type, count]) => ({
     type: type as ClinicalEventType,
-    count: count!,
+    count: count ?? 0,
   }))
 })
 
@@ -129,8 +129,7 @@ const weightLabel = computed(() => {
   const p = state.pet
   if (!p) return ''
   if (p.weight == null) return 'Sin registro'
-  const unit =
-    p.weightType === 'GRAMS' ? 'g' : p.weightType === 'POUNDS' ? 'lb' : 'kg'
+  const unit = p.weightType === 'GRAMS' ? 'g' : p.weightType === 'POUNDS' ? 'lb' : 'kg'
   return `${p.weight} ${unit}`
 })
 
@@ -342,11 +341,7 @@ function goNuevaConsulta() {
 
       <div class="search-box">
         <Search :size="14" :stroke-width="1.7" class="search-icon" />
-        <input
-          v-model="search"
-          placeholder="Buscar en eventos…"
-          class="search-input"
-        />
+        <input v-model="search" placeholder="Buscar en eventos…" class="search-input" />
       </div>
     </div>
 
@@ -357,10 +352,7 @@ function goNuevaConsulta() {
 
       <div v-else-if="error" class="banner error">{{ error }}</div>
 
-      <div
-        v-else-if="filtered.length === 0"
-        class="empty-card"
-      >
+      <div v-else-if="filtered.length === 0" class="empty-card">
         {{
           eventsSorted.length === 0
             ? 'Sin historia clínica registrada todavía.'
@@ -394,11 +386,13 @@ function goNuevaConsulta() {
   display: flex;
   flex-direction: column;
 }
+
 .patient-head {
   padding: 24px 36px;
   background: linear-gradient(180deg, var(--amatista-50), var(--warm-50));
   border-bottom: 1px solid var(--warm-200);
 }
+
 .back-btn {
   display: inline-flex;
   align-items: center;
@@ -412,14 +406,17 @@ function goNuevaConsulta() {
   padding: 0;
   margin-bottom: 14px;
 }
+
 .back-btn:hover {
   color: var(--amatista-700);
 }
+
 .patient {
   display: flex;
   align-items: flex-start;
   gap: 18px;
 }
+
 .avatar {
   width: 72px;
   height: 72px;
@@ -433,10 +430,12 @@ function goNuevaConsulta() {
   flex-shrink: 0;
   font-family: var(--font-serif);
 }
+
 .patient-body {
   flex: 1;
   min-width: 0;
 }
+
 .patient-name {
   font-family: var(--font-serif);
   font-size: 32px;
@@ -446,12 +445,14 @@ function goNuevaConsulta() {
   margin: 0;
   line-height: 1.1;
 }
+
 .pills {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
   margin-top: 6px;
 }
+
 .pill {
   padding: 3px 9px;
   border-radius: 999px;
@@ -460,19 +461,23 @@ function goNuevaConsulta() {
   font-size: 11.5px;
   font-weight: 500;
 }
+
 .owner-line {
   font-size: 13px;
   color: var(--warm-600);
   margin-top: 8px;
 }
+
 .owner-line strong {
   color: var(--warm-900);
 }
+
 .actions {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
 }
+
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -487,9 +492,11 @@ function goNuevaConsulta() {
   cursor: pointer;
   font-family: inherit;
 }
+
 .btn-primary:hover {
   background: var(--amatista-600);
 }
+
 .btn-ghost {
   display: inline-flex;
   align-items: center;
@@ -503,6 +510,7 @@ function goNuevaConsulta() {
   cursor: pointer;
   font-family: inherit;
 }
+
 .btn-ghost:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -511,6 +519,7 @@ function goNuevaConsulta() {
 .weight-section {
   padding: 18px 36px 0;
 }
+
 .weight-toggle {
   display: inline-flex;
   align-items: center;
@@ -524,33 +533,43 @@ function goNuevaConsulta() {
   border: 1px solid var(--warm-200);
   border-radius: 10px;
   cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
 }
+
 .weight-toggle:hover {
   border-color: var(--amatista-300);
   color: var(--amatista-700);
 }
+
 .weight-toggle.open {
   color: var(--amatista-700);
   border-color: var(--amatista-300);
   background: var(--amatista-50);
   margin-bottom: 12px;
 }
+
 .weight-toggle .chev {
   transition: transform 0.15s ease;
 }
+
 .weight-toggle.open .chev {
   transform: rotate(180deg);
 }
+
 .filters {
   padding: 18px 36px 0;
 }
+
 .chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 14px;
 }
+
 .chip {
   display: inline-flex;
   align-items: center;
@@ -564,20 +583,27 @@ function goNuevaConsulta() {
   font-weight: 400;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
 }
+
 .chip:hover {
   border-color: var(--amatista-300);
 }
+
 .chip.active {
   background: var(--amatista-700);
   color: white;
   border-color: var(--amatista-700);
   font-weight: 500;
 }
+
 .chip-icon {
   font-size: 13px;
 }
+
 .search-box {
   display: flex;
   align-items: center;
@@ -588,10 +614,12 @@ function goNuevaConsulta() {
   border: 1px solid var(--warm-200);
   border-radius: 10px;
 }
+
 .search-icon {
   color: var(--warm-500);
   flex-shrink: 0;
 }
+
 .search-input {
   flex: 1;
   border: none;
@@ -608,24 +636,28 @@ function goNuevaConsulta() {
 .timeline-wrap {
   padding: 0 36px 40px;
 }
+
 .loading-row {
   display: grid;
   place-items: center;
   padding: 60px 0;
 }
+
 .banner.error {
   padding: 12px 14px;
   margin-bottom: 16px;
   font-size: 13px;
   border-radius: 10px;
-  background: oklch(97% 0.02 25);
-  color: oklch(48% 0.18 25);
-  border: 1px solid oklch(85% 0.06 25);
+  background: oklch(97% 0.02 25deg);
+  color: oklch(48% 0.18 25deg);
+  border: 1px solid oklch(85% 0.06 25deg);
 }
+
 .export-error {
   margin-top: 12px;
   margin-bottom: 0;
 }
+
 .empty-card {
   padding: 50px 20px;
   text-align: center;
@@ -635,6 +667,7 @@ function goNuevaConsulta() {
   border-radius: 12px;
   font-size: 14px;
 }
+
 .hydrating {
   display: grid;
   place-items: center;

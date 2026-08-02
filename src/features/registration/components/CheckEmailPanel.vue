@@ -15,8 +15,8 @@ const router = useRouter()
     </div>
     <h1 class="check-title">Revisa tu correo</h1>
     <p class="check-text">
-      Te enviamos un enlace de verificación a <strong>{{ email }}</strong>. Ábrelo para activar tu
-      cuenta; después podrás iniciar sesión.
+      Te enviamos un enlace de verificación a <strong>{{ email }}</strong
+      >. Ábrelo para activar tu cuenta; después podrás iniciar sesión.
     </p>
     <p class="check-note">¿No lo ves? Revisa la carpeta de spam. El enlace vence en unas horas.</p>
 
@@ -37,6 +37,7 @@ const router = useRouter()
   box-shadow: var(--pub-card-shadow);
   padding: clamp(30px, 5vw, 46px) clamp(26px, 5vw, 44px);
 }
+
 .check-icon {
   width: 74px;
   height: 74px;
@@ -48,6 +49,7 @@ const router = useRouter()
   place-items: center;
   color: var(--pub-ame-700);
 }
+
 .check-title {
   font-family: 'Instrument Serif', serif;
   font-size: 30px;
@@ -56,6 +58,7 @@ const router = useRouter()
   letter-spacing: -0.02em;
   line-height: 1.08;
 }
+
 .check-text {
   font-size: 14.5px;
   color: var(--pub-ink-600);
@@ -63,9 +66,11 @@ const router = useRouter()
   margin: 12px auto 0;
   max-width: 420px;
 }
+
 .check-text strong {
   color: var(--pub-ink-900);
 }
+
 .check-note {
   font-size: 12.5px;
   color: var(--pub-ink-400);
@@ -73,6 +78,7 @@ const router = useRouter()
   margin: 14px auto 0;
   max-width: 400px;
 }
+
 .check-actions {
   margin-top: 26px;
 }

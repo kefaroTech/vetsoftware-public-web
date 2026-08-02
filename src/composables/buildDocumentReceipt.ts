@@ -46,7 +46,7 @@ export function buildDocumentReceiptTicket(
     )
     const taxId = `${docTypeShort} ${issuer.documentId}${issuer.verificationDigit ? `-${issuer.verificationDigit}` : ''}`
     const regime = issuer.taxRegime
-      ? TAX_REGIME_LABEL[issuer.taxRegime as TaxRegime] ?? issuer.taxRegime
+      ? (TAX_REGIME_LABEL[issuer.taxRegime as TaxRegime] ?? issuer.taxRegime)
       : null
     fiscal.push(regime ? `${taxId} · ${regime}` : taxId)
     if (issuer.email) fiscal.push(issuer.email)

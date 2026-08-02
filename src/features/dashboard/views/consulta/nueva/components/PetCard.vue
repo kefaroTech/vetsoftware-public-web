@@ -44,7 +44,9 @@ defineEmits<{ select: [] }>()
       <div>
         <div class="lab">Peso</div>
         <div class="val">
-          {{ pet.weight != null ? `${pet.weight} ${weightUnitLabel(pet.weightType)}` : 'Sin registro' }}
+          {{
+            pet.weight != null ? `${pet.weight} ${weightUnitLabel(pet.weightType)}` : 'Sin registro'
+          }}
         </div>
       </div>
       <div>
@@ -65,23 +67,31 @@ defineEmits<{ select: [] }>()
   position: relative;
   text-align: left;
   font-family: inherit;
-  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    transform 0.15s;
 }
+
 .pet-card:hover:not(.selected) {
   border-color: var(--warm-300);
 }
+
 .pet-card.selected {
   border: 1.5px solid var(--amatista-700);
   box-shadow: 0 0 0 3px var(--amatista-50);
   padding: 15.5px;
 }
+
 .pet-card.deceased {
   opacity: 0.7;
 }
+
 .pet-card:focus-visible {
   outline: 2px solid var(--amatista-700);
   outline-offset: 2px;
 }
+
 .check {
   position: absolute;
   top: 12px;
@@ -94,12 +104,14 @@ defineEmits<{ select: [] }>()
   display: grid;
   place-items: center;
 }
+
 .head {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
 }
+
 .avatar {
   width: 44px;
   height: 44px;
@@ -113,10 +125,12 @@ defineEmits<{ select: [] }>()
   font-size: 18px;
   font-weight: 500;
 }
+
 .meta {
   min-width: 0;
   flex: 1;
 }
+
 .name {
   font-size: 15px;
   font-weight: 500;
@@ -125,23 +139,27 @@ defineEmits<{ select: [] }>()
   gap: 6px;
   color: var(--warm-900);
 }
+
 .sub {
   font-size: 12px;
   color: var(--warm-500);
   margin-top: 2px;
 }
+
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px 8px;
   font-size: 11.5px;
 }
+
 .lab {
   color: var(--warm-500);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-size: 10px;
 }
+
 .val {
   color: var(--warm-900);
   margin-top: 2px;

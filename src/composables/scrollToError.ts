@@ -35,7 +35,7 @@ export async function scrollToFirstError(root?: ParentNode): Promise<boolean> {
 
   const candidates = Array.from(scope.querySelectorAll<HTMLElement>(ERROR_SELECTOR))
     // El mensaje vive en <p.error>; centramos sobre el .field completo (label + input + error).
-    .map((el) => (el.matches('p.error') ? el.closest<HTMLElement>('.field') ?? el : el))
+    .map((el) => (el.matches('p.error') ? (el.closest<HTMLElement>('.field') ?? el) : el))
     .filter(isVisible)
 
   if (candidates.length === 0) return false

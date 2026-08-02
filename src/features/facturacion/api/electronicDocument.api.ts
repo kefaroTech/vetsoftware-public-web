@@ -28,8 +28,12 @@ export const electronicDocumentApi = {
       )
       return data
     } catch (e) {
-      if (!!e && typeof e === 'object' && 'response' in e &&
-        (e as { response?: { status?: number } }).response?.status === 404) {
+      if (
+        !!e &&
+        typeof e === 'object' &&
+        'response' in e &&
+        (e as { response?: { status?: number } }).response?.status === 404
+      ) {
         return null
       }
       throw e
@@ -37,12 +41,17 @@ export const electronicDocumentApi = {
   },
 
   async emit(payload: EmitElectronicDocumentRequest): Promise<ElectronicDocumentResponse> {
-    const { data } = await http.post<ElectronicDocumentResponse>('/electronic-documents/emit', payload)
+    const { data } = await http.post<ElectronicDocumentResponse>(
+      '/electronic-documents/emit',
+      payload,
+    )
     return data
   },
 
   async transmit(id: number): Promise<ElectronicDocumentResponse> {
-    const { data } = await http.post<ElectronicDocumentResponse>(`/electronic-documents/${id}/transmit`)
+    const { data } = await http.post<ElectronicDocumentResponse>(
+      `/electronic-documents/${id}/transmit`,
+    )
     return data
   },
 

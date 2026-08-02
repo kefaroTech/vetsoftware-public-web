@@ -15,6 +15,7 @@ withDefaults(defineProps<{ maxWidth?: number }>(), { maxWidth: 1600 })
   flex: 1;
   padding: 28px clamp(20px, 3vw + 8px, 56px);
 }
+
 .inner {
   margin: 0 auto;
   width: 100%;

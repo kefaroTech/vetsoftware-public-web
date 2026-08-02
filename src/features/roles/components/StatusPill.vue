@@ -21,23 +21,28 @@ defineProps<{ active: boolean }>()
   white-space: nowrap;
   line-height: 1;
 }
+
 .pill.on {
   background: var(--success-bg);
   color: var(--success-fg);
 }
+
 .pill.off {
   background: var(--warm-200);
   color: var(--warm-600);
 }
+
 .dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
 }
+
 .pill.on .dot {
   background: var(--success-dot);
 }
+
 .pill.off .dot {
   background: var(--warm-500);
 }

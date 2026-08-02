@@ -55,9 +55,7 @@ async function downloadFile(att: LaboratoryTestFileResponse) {
 }
 
 const showAttachments = computed(
-  () =>
-    props.test?.status === 'PENDING_VALIDATION' ||
-    props.test?.status === 'COMPLETED',
+  () => props.test?.status === 'PENDING_VALIDATION' || props.test?.status === 'COMPLETED',
 )
 </script>
 
@@ -70,7 +68,7 @@ const showAttachments = computed(
     :width="640"
     @close="emit('close')"
   >
-    <template #body v-if="test">
+    <template v-if="test" #body>
       <div class="detail-grid">
         <DetailField label="Paciente" :value="`${test.animal.name} · ${test.animal.code}`" />
         <DetailField label="Fecha" :value="formatDateShort(test.date)" />
@@ -157,17 +155,25 @@ const showAttachments = computed(
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px 24px;
 }
-@media (max-width: 560px) { .detail-grid { grid-template-columns: 1fr; } }
+
+@media (width <= 560px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .pills {
   display: flex;
   gap: 28px;
   margin-top: 18px;
 }
+
 .pill-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
+
 .pill-label {
   font-size: 11px;
   font-weight: 500;
@@ -175,18 +181,21 @@ const showAttachments = computed(
   text-transform: uppercase;
   color: var(--warm-500);
 }
+
 .validated {
   margin-top: 16px;
   font-size: 12.5px;
-  color: oklch(40% 0.13 150);
-  background: oklch(95% 0.05 150);
-  border: 1px solid oklch(85% 0.08 150);
+  color: oklch(40% 0.13 150deg);
+  background: oklch(95% 0.05 150deg);
+  border: 1px solid oklch(85% 0.08 150deg);
   border-radius: 8px;
   padding: 8px 12px;
 }
+
 .attachments {
   margin-top: 18px;
 }
+
 .att-label {
   font-size: 11px;
   font-weight: 500;
@@ -195,13 +204,16 @@ const showAttachments = computed(
   color: var(--warm-500);
   margin-bottom: 8px;
 }
+
 .att-state {
   font-size: 12.5px;
   color: var(--warm-500);
 }
+
 .att-state.error {
-  color: oklch(45% 0.18 25);
+  color: oklch(45% 0.18 25deg);
 }
+
 .att-list {
   list-style: none;
   margin: 0;
@@ -210,6 +222,7 @@ const showAttachments = computed(
   flex-direction: column;
   gap: 6px;
 }
+
 .att {
   display: flex;
   align-items: center;
@@ -221,6 +234,7 @@ const showAttachments = computed(
   font-size: 12.5px;
   color: var(--warm-800);
 }
+
 .att-name {
   flex: 1;
   min-width: 0;
@@ -228,6 +242,7 @@ const showAttachments = computed(
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .dl {
   background: transparent;
   border: 1px solid var(--warm-200);
@@ -239,11 +254,13 @@ const showAttachments = computed(
   place-items: center;
   cursor: pointer;
 }
+
 .dl:hover {
   background: var(--amatista-50);
   border-color: var(--amatista-300);
   color: var(--amatista-700);
 }
+
 .btn-ghost,
 .btn-primary {
   font-family: inherit;
@@ -254,18 +271,22 @@ const showAttachments = computed(
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn-ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-700);
 }
+
 .btn-ghost:hover {
   background: var(--warm-100);
 }
+
 .btn-primary {
   background: var(--amatista-700);
   color: white;
 }
+
 .btn-primary:hover {
   filter: brightness(1.05);
 }

@@ -24,6 +24,7 @@ const meta = computed(() => APPT_STATUS[props.status])
   border-radius: 999px;
   white-space: nowrap;
 }
+
 .dot {
   width: 6px;
   height: 6px;

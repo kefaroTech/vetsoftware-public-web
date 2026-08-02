@@ -100,7 +100,8 @@ const filteredAccounts = computed(() => {
   const q = query.value.trim().toLowerCase()
   if (!q) return visibleAccounts.value
   return visibleAccounts.value.filter(
-    (a) => a.owner.name.toLowerCase().includes(q) || (a.owner.document ?? '').toLowerCase().includes(q),
+    (a) =>
+      a.owner.name.toLowerCase().includes(q) || (a.owner.document ?? '').toLowerCase().includes(q),
   )
 })
 
@@ -132,8 +133,7 @@ function saldoValue(acc: OpenAccountResponse): number {
 const isReadOnly = computed(
   () =>
     !!selected.value &&
-    (selected.value.status !== 'OPEN' ||
-      branchStore.selectedBranchId !== selected.value.branch.id),
+    (selected.value.status !== 'OPEN' || branchStore.selectedBranchId !== selected.value.branch.id),
 )
 
 /** Línea de meta del detalle: "cuenta abierta {fecha}" o "cerrada/cancelada el X por Y · motivo". */
@@ -171,9 +171,10 @@ function backToList() {
 }
 
 async function refreshSelected() {
-  if (!selected.value) return
-  await store.refreshAccount(selected.value.id)
-  selected.value = store.accounts.value.find((a) => a.id === selected.value!.id) ?? selected.value
+  const current = selected.value
+  if (!current) return
+  await store.refreshAccount(current.id)
+  selected.value = store.accounts.value.find((a) => a.id === current.id) ?? current
 }
 
 // ── Abrir cuenta ─────────────────────────────────────────────────────────────
@@ -260,7 +261,9 @@ async function onChargeVoided() {
           @click="tab = 'activas'"
         >
           <Receipt :size="15" :stroke-width="1.7" /> <span>Activas</span>
-          <span v-if="activeAccounts.length > 0" class="tab-badge">{{ activeAccounts.length }}</span>
+          <span v-if="activeAccounts.length > 0" class="tab-badge">{{
+            activeAccounts.length
+          }}</span>
         </button>
         <button
           type="button"
@@ -283,7 +286,12 @@ async function onChargeVoided() {
         </span>
       </div>
 
-      <input v-model="query" type="text" class="search" placeholder="Buscar por propietario o documento…" />
+      <input
+        v-model="query"
+        type="text"
+        class="search"
+        placeholder="Buscar por propietario o documento…"
+      />
 
       <div v-if="store.loading.value" class="state">Cargando…</div>
       <div
@@ -325,18 +333,26 @@ async function onChargeVoided() {
                 <div class="doc">{{ acc.owner.document }}</div>
               </div>
             </div>
-            <span class="status-pill" :class="STATUS_TONE[acc.status]">{{ cardStatusLabel(acc) }}</span>
+            <span class="status-pill" :class="STATUS_TONE[acc.status]">{{
+              cardStatusLabel(acc)
+            }}</span>
           </div>
           <div class="acct-meta">
             <MapPin :size="13" :stroke-width="1.8" /> {{ acc.branch.name }}
             <span>· Cuenta desde {{ formatDateShort(acc.createdDate) }}</span>
           </div>
           <div class="acct-totals">
-            <div class="row"><span>Acumulado</span><strong>{{ formatMoney(acc.totalAmount) }}</strong></div>
-            <div v-if="acc.paidAmount > 0" class="row"><span>Abonado</span><strong>{{ formatMoney(acc.paidAmount) }}</strong></div>
+            <div class="row">
+              <span>Acumulado</span><strong>{{ formatMoney(acc.totalAmount) }}</strong>
+            </div>
+            <div v-if="acc.paidAmount > 0" class="row">
+              <span>Abonado</span><strong>{{ formatMoney(acc.paidAmount) }}</strong>
+            </div>
             <div class="row saldo">
               <span>{{ saldoLabel(acc) }}</span>
-              <strong :class="{ zero: saldoValue(acc) <= 0 }">{{ formatMoney(saldoValue(acc)) }}</strong>
+              <strong :class="{ zero: saldoValue(acc) <= 0 }">{{
+                formatMoney(saldoValue(acc))
+              }}</strong>
             </div>
           </div>
         </button>
@@ -355,7 +371,9 @@ async function onChargeVoided() {
           <div>
             <div class="name-row">
               <h1 class="name lg">{{ selected.owner.name }}</h1>
-              <span class="status-pill" :class="STATUS_TONE[selected.status]">{{ OPEN_ACCOUNT_STATUS_LABEL[selected.status] }}</span>
+              <span class="status-pill" :class="STATUS_TONE[selected.status]">{{
+                OPEN_ACCOUNT_STATUS_LABEL[selected.status]
+              }}</span>
             </div>
             <div class="detail-meta">
               {{ selected.owner.document }} · {{ selected.branch.name }} · {{ detailMeta }}
@@ -383,11 +401,12 @@ async function onChargeVoided() {
       <div v-if="isReadOnly" class="readonly-note">
         <Lock :size="15" :stroke-width="1.8" />
         <span v-if="selected.status === 'OPEN'">
-          Esta cuenta pertenece a {{ selected.branch.name }}. Selecciona esa sede para administrarla.
+          Esta cuenta pertenece a {{ selected.branch.name }}. Selecciona esa sede para
+          administrarla.
         </span>
         <span v-else>
-          Cuenta {{ selected.status === 'CANCEL' ? 'cancelada' : 'cerrada' }} · solo lectura.
-          No admite nuevos cargos ni abonos.
+          Cuenta {{ selected.status === 'CANCEL' ? 'cancelada' : 'cerrada' }} · solo lectura. No
+          admite nuevos cargos ni abonos.
         </span>
       </div>
 
@@ -411,7 +430,9 @@ async function onChargeVoided() {
         <!-- Cargos por mascota -->
         <section class="col">
           <div class="section-head">
-            <span class="sh-title"><FileText :size="16" :stroke-width="1.7" /> Cargos por mascota</span>
+            <span class="sh-title"
+              ><FileText :size="16" :stroke-width="1.7" /> Cargos por mascota</span
+            >
           </div>
 
           <div v-if="store.charges.value.length === 0" class="mini-empty">Sin cargos todavía.</div>
@@ -433,14 +454,29 @@ async function onChargeVoided() {
                 class="charge"
                 :class="{ voided: c.voided }"
               >
-                <component :is="CHARGE_ICON[c.kind]" :size="14" :stroke-width="1.7" class="c-icon" :class="c.kind" />
+                <component
+                  :is="CHARGE_ICON[c.kind]"
+                  :size="14"
+                  :stroke-width="1.7"
+                  class="c-icon"
+                  :class="c.kind"
+                />
                 <span class="c-concept">
                   {{ c.concept }}<span v-if="c.quantity > 1" class="c-qty">x{{ c.quantity }}</span>
-                  <span v-if="c.voided" class="c-void" :title="c.voidReason ? `Motivo: ${c.voidReason}` : ''">
+                  <span
+                    v-if="c.voided"
+                    class="c-void"
+                    :title="c.voidReason ? `Motivo: ${c.voidReason}` : ''"
+                  >
                     Anulado{{ c.voidedByName ? ` por ${c.voidedByName}` : '' }}
                   </span>
                 </span>
-                <span v-if="c.createdByName" class="c-by" :title="`Registrado por ${c.createdByName}`">{{ c.createdByName }}</span>
+                <span
+                  v-if="c.createdByName"
+                  class="c-by"
+                  :title="`Registrado por ${c.createdByName}`"
+                  >{{ c.createdByName }}</span
+                >
                 <span class="c-date">{{ c.date.slice(5, 10) }}</span>
                 <span class="c-amount">{{ formatMoney(c.amount) }}</span>
                 <button
@@ -463,9 +499,16 @@ async function onChargeVoided() {
           <div class="section-head">
             <span class="sh-title"><Wallet :size="16" :stroke-width="1.7" /> Abonos</span>
           </div>
-          <div v-if="store.payments.value.length === 0" class="mini-empty">Sin abonos registrados.</div>
+          <div v-if="store.payments.value.length === 0" class="mini-empty">
+            Sin abonos registrados.
+          </div>
           <ul v-else class="pago-list">
-            <li v-for="p in store.payments.value" :key="p.id" class="pago" :class="{ voided: p.voided }">
+            <li
+              v-for="p in store.payments.value"
+              :key="p.id"
+              class="pago"
+              :class="{ voided: p.voided }"
+            >
               <div class="pago-info">
                 <span class="pago-amt">{{ formatMoney(p.amount) }}</span>
                 <span class="pago-meta">
@@ -473,7 +516,8 @@ async function onChargeVoided() {
                   <template v-if="p.createdBy?.name"> · {{ p.createdBy.name }}</template>
                 </span>
                 <span v-if="p.voided" class="pago-void">
-                  Anulado{{ p.voidedBy?.name ? ` por ${p.voidedBy.name}` : '' }}{{ p.voidReason ? ` · ${p.voidReason}` : '' }}
+                  Anulado{{ p.voidedBy?.name ? ` por ${p.voidedBy.name}` : ''
+                  }}{{ p.voidReason ? ` · ${p.voidReason}` : '' }}
                 </span>
               </div>
               <button
@@ -544,152 +588,706 @@ async function onChargeVoided() {
 </template>
 
 <style scoped>
-.page { font-family: var(--font-sans); color: var(--warm-900); }
+.page {
+  font-family: var(--font-sans);
+  color: var(--warm-900);
+}
+
 .cta {
-  display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; font-size: 13.5px; font-weight: 500;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
-  color: white; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; white-space: nowrap;
-  box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08), 0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.5);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 13.5px;
+  font-weight: 500;
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
+  color: white;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  box-shadow:
+    0 1px 2px rgb(50 20 80 / 8%),
+    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 50%);
 }
+
 .ghost-cta {
-  display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; font-size: 13.5px; font-weight: 500;
-  background: transparent; border: 1px solid var(--warm-200); color: var(--warm-700); border-radius: 9px; cursor: pointer; font-family: inherit; white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  color: var(--warm-700);
+  border-radius: 9px;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
 }
-.ghost-cta:hover:not(:disabled) { background: var(--warm-100); }
-.ghost-cta:disabled { opacity: 0.5; cursor: not-allowed; }
-.banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
-.banner.branch-warning { display: flex; align-items: center; gap: 8px; background: oklch(96% 0.04 80); border: 1px solid oklch(88% 0.08 80); color: oklch(42% 0.09 70); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
+.ghost-cta:hover:not(:disabled) {
+  background: var(--warm-100);
+}
+.ghost-cta:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.banner.error {
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+.banner.branch-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: oklch(96% 0.04 80deg);
+  border: 1px solid oklch(88% 0.08 80deg);
+  color: oklch(42% 0.09 70deg);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
 
 /* Tabs Activas / Cerradas */
-.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--warm-200); margin-bottom: 16px; }
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--warm-200);
+  margin-bottom: 16px;
+}
+
 .tabs button {
-  display: inline-flex; align-items: center; gap: 8px; font-family: inherit; font-size: 13.5px; font-weight: 500;
-  color: var(--warm-600); background: transparent; border: none; border-bottom: 2px solid transparent;
-  padding: 10px 16px; margin-bottom: -1px; cursor: pointer; transition: color 0.12s ease, border-color 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--warm-600);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 16px;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition:
+    color 0.12s ease,
+    border-color 0.12s ease;
 }
-.tabs button:hover { color: var(--warm-900); }
-.tabs button.active { color: var(--amatista-700); border-bottom-color: var(--amatista-600); }
+.tabs button:hover {
+  color: var(--warm-900);
+}
+.tabs button.active {
+  color: var(--amatista-700);
+  border-bottom-color: var(--amatista-600);
+}
+
 .tab-badge {
-  min-width: 20px; height: 20px; padding: 0 7px; border-radius: 10px; background: var(--amatista-600);
-  color: white; font-size: 11px; font-weight: 600; display: grid; place-items: center; font-variant-numeric: tabular-nums;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 10px;
+  background: var(--amatista-600);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  display: grid;
+  place-items: center;
+  font-variant-numeric: tabular-nums;
 }
-.tab-badge.muted { background: var(--warm-200); color: var(--warm-600); }
+.tab-badge.muted {
+  background: var(--warm-200);
+  color: var(--warm-600);
+}
 
 /* Estado vacío por tab */
-.empty-state { padding: 56px 20px; text-align: center; background: var(--warm-50); border: 1px dashed var(--warm-300); border-radius: 14px; }
-.empty-ic { width: 60px; height: 60px; border-radius: 16px; background: var(--amatista-50); color: var(--amatista-700); display: grid; place-items: center; margin: 0 auto 14px; }
-.empty-title { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
-.empty-desc { font-size: 13px; color: var(--warm-600); margin: 0; }
-.alert { display: flex; align-items: center; gap: 9px; padding: 11px 14px; margin-bottom: 16px; background: oklch(95% 0.06 80); border: 1px solid oklch(88% 0.09 80); border-radius: 10px; font-size: 13px; color: oklch(40% 0.10 70); }
-.alert strong { color: oklch(35% 0.13 70); }
-.readonly-note { display: flex; align-items: center; gap: 9px; padding: 11px 14px; margin-bottom: 18px; background: var(--warm-100); border: 1px solid var(--warm-200); border-radius: 10px; font-size: 13px; color: var(--warm-600); }
-.readonly-note svg { color: var(--warm-500); flex-shrink: 0; }
-.search {
-  width: 100%; max-width: 360px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 10px;
-  padding: 10px 14px; font-family: inherit; font-size: 13.5px; color: var(--warm-900); outline: none; margin-bottom: 16px;
+.empty-state {
+  padding: 56px 20px;
+  text-align: center;
+  background: var(--warm-50);
+  border: 1px dashed var(--warm-300);
+  border-radius: 14px;
 }
-.search:focus { border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
-.state { padding: 32px 16px; text-align: center; font-size: 13px; color: var(--warm-500); background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 12px; }
+.empty-ic {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: var(--amatista-50);
+  color: var(--amatista-700);
+  display: grid;
+  place-items: center;
+  margin: 0 auto 14px;
+}
+.empty-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.empty-desc {
+  font-size: 13px;
+  color: var(--warm-600);
+  margin: 0;
+}
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 14px;
+  margin-bottom: 16px;
+  background: oklch(95% 0.06 80deg);
+  border: 1px solid oklch(88% 0.09 80deg);
+  border-radius: 10px;
+  font-size: 13px;
+  color: oklch(40% 0.1 70deg);
+}
+.alert strong {
+  color: oklch(35% 0.13 70deg);
+}
+.readonly-note {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 14px;
+  margin-bottom: 18px;
+  background: var(--warm-100);
+  border: 1px solid var(--warm-200);
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--warm-600);
+}
+.readonly-note svg {
+  color: var(--warm-500);
+  flex-shrink: 0;
+}
 
-.status-pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 500; white-space: nowrap; }
-.status-pill.open { background: var(--success-bg); color: var(--success-fg); }
-.status-pill.closed { background: var(--warm-150); color: var(--warm-600); }
-.status-pill.cancelled { background: oklch(95% 0.06 25); color: oklch(48% 0.18 25); }
+.search {
+  width: 100%;
+  max-width: 360px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--warm-900);
+  outline: none;
+  margin-bottom: 16px;
+}
+.search:focus {
+  border-color: var(--amatista-500);
+  box-shadow: 0 0 0 3px var(--amatista-50);
+}
+.state {
+  padding: 32px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--warm-500);
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 12px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.status-pill.open {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+.status-pill.closed {
+  background: var(--warm-150);
+  color: var(--warm-600);
+}
+.status-pill.cancelled {
+  background: oklch(95% 0.06 25deg);
+  color: oklch(48% 0.18 25deg);
+}
 
 /* Tarjetas de lista */
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
 .acct-card {
-  text-align: left; font-family: inherit; cursor: pointer; padding: 16px; border-radius: 14px;
-  background: var(--warm-50); border: 1px solid var(--warm-200); display: flex; flex-direction: column; gap: 11px;
-  transition: border-color 0.12s, box-shadow 0.12s;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  transition:
+    border-color 0.12s,
+    box-shadow 0.12s;
 }
-.acct-card:hover { border-color: var(--amatista-300); box-shadow: 0 4px 14px -8px rgba(20, 15, 30, 0.18); }
-.acct-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-.who { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.acct-card:hover {
+  border-color: var(--amatista-300);
+  box-shadow: 0 4px 14px -8px rgb(20 15 30 / 18%);
+}
+.acct-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.who {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
 .avatar {
-  width: 42px; height: 42px; border-radius: 11px; background: var(--amatista-100); color: var(--amatista-700);
-  display: grid; place-items: center; font-family: var(--font-serif); font-size: 16px; font-weight: 500; flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: var(--amatista-100);
+  color: var(--amatista-700);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 500;
+  flex-shrink: 0;
 }
-.avatar.lg { width: 48px; height: 48px; border-radius: 12px; font-size: 18px; }
-.who-text { min-width: 0; }
-.name { font-size: 15px; font-weight: 500; color: var(--warm-900); }
-.name.lg { margin: 0; font-size: 22px; font-family: var(--font-serif); font-weight: 400; letter-spacing: -0.015em; line-height: 1.05; }
-.doc { font-size: 12px; color: var(--warm-500); margin-top: 1px; }
-.acct-meta { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: 12px; color: var(--warm-500); }
-.acct-totals { display: flex; flex-direction: column; gap: 4px; padding-top: 11px; border-top: 1px solid var(--warm-150); }
-.acct-totals .row { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--warm-600); }
-.acct-totals .row strong { color: var(--warm-900); font-variant-numeric: tabular-nums; }
-.acct-totals .row.saldo { font-size: 14px; padding-top: 5px; margin-top: 2px; border-top: 1px dashed var(--warm-200); }
-.acct-totals .row.saldo strong { color: oklch(45% 0.13 70); font-size: 15px; }
-.acct-totals .row.saldo strong.zero { color: var(--success-fg); }
+.avatar.lg {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  font-size: 18px;
+}
+.who-text {
+  min-width: 0;
+}
+.name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--warm-900);
+}
+.name.lg {
+  margin: 0;
+  font-size: 22px;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.05;
+}
+.doc {
+  font-size: 12px;
+  color: var(--warm-500);
+  margin-top: 1px;
+}
+.acct-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--warm-500);
+}
+.acct-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 11px;
+  border-top: 1px solid var(--warm-150);
+}
+.acct-totals .row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--warm-600);
+}
+.acct-totals .row strong {
+  color: var(--warm-900);
+  font-variant-numeric: tabular-nums;
+}
+.acct-totals .row.saldo {
+  font-size: 14px;
+  padding-top: 5px;
+  margin-top: 2px;
+  border-top: 1px dashed var(--warm-200);
+}
+.acct-totals .row.saldo strong {
+  color: oklch(45% 0.13 70deg);
+  font-size: 15px;
+}
+.acct-totals .row.saldo strong.zero {
+  color: var(--success-fg);
+}
 
 /* Detalle */
 .back {
-  display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-family: inherit; cursor: pointer;
-  background: transparent; border: none; color: var(--amatista-700); padding: 4px 0; margin-bottom: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: var(--amatista-700);
+  padding: 4px 0;
+  margin-bottom: 14px;
 }
-.detail-head { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: 18px; }
-.detail-head .who { align-items: center; gap: 14px; }
-.name-row { display: flex; align-items: center; gap: 11px; }
-.detail-meta { font-size: 13.5px; color: var(--warm-600); margin-top: 3px; }
-.detail-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.detail-head .who {
+  align-items: center;
+  gap: 14px;
+}
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.detail-meta {
+  font-size: 13.5px;
+  color: var(--warm-600);
+  margin-top: 3px;
+}
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 
-.summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
-.sum-box { background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 5px; }
-.sum-box.alert { background: oklch(95% 0.06 80); border-color: oklch(88% 0.09 80); }
-.sum-lab { font-size: 11.5px; color: var(--warm-500); text-transform: uppercase; letter-spacing: 0.04em; }
-.sum-val { font-family: var(--font-serif); font-size: 24px; color: var(--warm-900); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-.sum-box.alert .sum-val { color: oklch(45% 0.13 70); }
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.sum-box {
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.sum-box.alert {
+  background: oklch(95% 0.06 80deg);
+  border-color: oklch(88% 0.09 80deg);
+}
+.sum-lab {
+  font-size: 11.5px;
+  color: var(--warm-500);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.sum-val {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  color: var(--warm-900);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.sum-box.alert .sum-val {
+  color: oklch(45% 0.13 70deg);
+}
 
-.cols { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; align-items: start; }
-@media (max-width: 1000px) { .cols { grid-template-columns: 1fr; } .summary { grid-template-columns: 1fr; } }
-.col { background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 14px; overflow: hidden; }
-.section-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--warm-200); }
-.sh-title { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--warm-900); }
-.sh-title svg { color: var(--amatista-600); }
-.mini-empty { padding: 28px 18px; text-align: center; font-size: 13px; color: var(--warm-400); }
+.cols {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
 
-.group { padding: 8px 18px; }
-.group:not(:last-child) { border-bottom: 1px solid var(--warm-100); }
-.group-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0 8px; border-bottom: 1.5px solid var(--warm-200); margin-bottom: 4px; }
-.group-id { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
-.pet-avatar { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; background: var(--amatista-100); color: var(--amatista-700); font-size: 10.5px; font-weight: 700; }
-.pet-avatar.general { background: var(--warm-200); color: var(--warm-600); }
-.group-name { font-size: 13.5px; font-weight: 600; color: var(--warm-900); }
-.group-sub { font-size: 13px; font-weight: 700; color: var(--amatista-700); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.charge-list { list-style: none; margin: 0; padding: 0; }
-.charge { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--warm-100); }
-.charge:last-child { border-bottom: none; }
-.c-icon.product { color: var(--warm-500); }
-.c-icon.service { color: oklch(45% 0.15 240); }
-.c-icon.general { color: var(--amatista-600); }
-.c-concept { flex: 1; min-width: 0; font-size: 13px; color: var(--warm-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.c-by { font-size: 11px; color: var(--warm-400); white-space: nowrap; max-width: 90px; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
-.c-date { font-size: 11px; color: var(--warm-400); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.c-amount { font-size: 13px; font-weight: 500; color: var(--warm-900); font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (width <= 1000px) {
+  .cols {
+    grid-template-columns: 1fr;
+  }
+  .summary {
+    grid-template-columns: 1fr;
+  }
+}
+.col {
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--warm-200);
+}
+.sh-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--warm-900);
+}
+.sh-title svg {
+  color: var(--amatista-600);
+}
+.mini-empty {
+  padding: 28px 18px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--warm-400);
+}
+
+.group {
+  padding: 8px 18px;
+}
+.group:not(:last-child) {
+  border-bottom: 1px solid var(--warm-100);
+}
+.group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 0 8px;
+  border-bottom: 1.5px solid var(--warm-200);
+  margin-bottom: 4px;
+}
+.group-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.pet-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--amatista-100);
+  color: var(--amatista-700);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.pet-avatar.general {
+  background: var(--warm-200);
+  color: var(--warm-600);
+}
+.group-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--warm-900);
+}
+.group-sub {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--amatista-700);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.charge-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.charge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--warm-100);
+}
+.charge:last-child {
+  border-bottom: none;
+}
+.c-icon.product {
+  color: var(--warm-500);
+}
+.c-icon.service {
+  color: oklch(45% 0.15 240deg);
+}
+.c-icon.general {
+  color: var(--amatista-600);
+}
+.c-concept {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--warm-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.c-by {
+  font-size: 11px;
+  color: var(--warm-400);
+  white-space: nowrap;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+.c-date {
+  font-size: 11px;
+  color: var(--warm-400);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.c-amount {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--warm-900);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* Cargo anulado: queda visible, atenuado y tachado en concepto + monto. */
-.charge.voided .c-concept { color: var(--warm-500); }
-.charge.voided .c-amount { text-decoration: line-through; color: var(--warm-500); }
-.c-qty { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 600; color: var(--amatista-700); font-variant-numeric: tabular-nums; }
-.c-void { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 500; color: oklch(48% 0.16 25); }
-.c-banned { color: oklch(55% 0.16 25); flex-shrink: 0; }
-.c-void-btn { width: 24px; height: 24px; border: 1px solid var(--warm-200); background: transparent; color: var(--warm-500); cursor: pointer; border-radius: 6px; display: grid; place-items: center; flex-shrink: 0; }
-.c-void-btn:hover { background: oklch(95% 0.05 25); border-color: oklch(85% 0.10 25); color: oklch(48% 0.18 25); }
-
-.pago-list { list-style: none; margin: 0; padding: 12px 18px; display: flex; flex-direction: column; gap: 8px; }
-.pago { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; background: var(--warm-100); border-radius: 9px; }
-.pago-info { min-width: 0; }
-.pago-amt { font-size: 14px; font-weight: 600; color: var(--warm-900); font-variant-numeric: tabular-nums; }
-.pago-meta { font-size: 11.5px; color: var(--warm-500); margin-top: 1px; display: block; }
-.pago-check { color: var(--success-dot); flex-shrink: 0; }
-/* Abono anulado: queda visible, atenuado y tachado en el monto. */
-.pago.voided { background: oklch(96% 0.02 25); }
-.pago.voided .pago-amt { text-decoration: line-through; color: var(--warm-500); }
-.pago-void { display: block; margin-top: 3px; font-size: 11.5px; color: oklch(48% 0.16 25); }
-.pago-banned { color: oklch(55% 0.16 25); flex-shrink: 0; }
-.pago-void-btn {
-  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; font-family: inherit; font-size: 12px; font-weight: 500;
-  background: transparent; border: 1px solid var(--warm-200); color: var(--warm-600); border-radius: 7px; padding: 5px 9px; cursor: pointer;
+.charge.voided .c-concept {
+  color: var(--warm-500);
 }
-.pago-void-btn:hover { background: oklch(95% 0.05 25); border-color: oklch(85% 0.10 25); color: oklch(48% 0.18 25); }
+.charge.voided .c-amount {
+  text-decoration: line-through;
+  color: var(--warm-500);
+}
+.c-qty {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--amatista-700);
+  font-variant-numeric: tabular-nums;
+}
+.c-void {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: oklch(48% 0.16 25deg);
+}
+.c-banned {
+  color: oklch(55% 0.16 25deg);
+  flex-shrink: 0;
+}
+.c-void-btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--warm-200);
+  background: transparent;
+  color: var(--warm-500);
+  cursor: pointer;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.c-void-btn:hover {
+  background: oklch(95% 0.05 25deg);
+  border-color: oklch(85% 0.1 25deg);
+  color: oklch(48% 0.18 25deg);
+}
+
+.pago-list {
+  list-style: none;
+  margin: 0;
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pago {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--warm-100);
+  border-radius: 9px;
+}
+.pago-info {
+  min-width: 0;
+}
+.pago-amt {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--warm-900);
+  font-variant-numeric: tabular-nums;
+}
+.pago-meta {
+  font-size: 11.5px;
+  color: var(--warm-500);
+  margin-top: 1px;
+  display: block;
+}
+.pago-check {
+  color: var(--success-dot);
+  flex-shrink: 0;
+}
+
+/* Abono anulado: queda visible, atenuado y tachado en el monto. */
+.pago.voided {
+  background: oklch(96% 0.02 25deg);
+}
+.pago.voided .pago-amt {
+  text-decoration: line-through;
+  color: var(--warm-500);
+}
+.pago-void {
+  display: block;
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: oklch(48% 0.16 25deg);
+}
+.pago-banned {
+  color: oklch(55% 0.16 25deg);
+  flex-shrink: 0;
+}
+
+.pago-void-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  color: var(--warm-600);
+  border-radius: 7px;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+.pago-void-btn:hover {
+  background: oklch(95% 0.05 25deg);
+  border-color: oklch(85% 0.1 25deg);
+  color: oklch(48% 0.18 25deg);
+}
 </style>

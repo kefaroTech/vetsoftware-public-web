@@ -221,17 +221,10 @@ function medErr(
     <template #body>
       <div v-if="medsError" class="catalog-error">{{ medsError }}</div>
 
-      <section
-        v-if="props.existing.length > 0 && editingIndex === null"
-        class="existing-section"
-      >
+      <section v-if="props.existing.length > 0 && editingIndex === null" class="existing-section">
         <h4 class="existing-title">Ya agregados ({{ props.existing.length }})</h4>
         <ul class="existing-list">
-          <li
-            v-for="(item, idx) in props.existing"
-            :key="idx"
-            class="existing-card"
-          >
+          <li v-for="(item, idx) in props.existing" :key="idx" class="existing-card">
             <div class="existing-summary">
               <div class="existing-main">
                 {{ formatDateShort(item.date) }} ·
@@ -251,9 +244,7 @@ function medErr(
                 :class="{ active: editingIndex === idx }"
                 aria-label="Editar plan terapéutico"
                 :disabled="editingIndex !== null && editingIndex !== idx"
-                @click="
-                  editingIndex === idx ? cancelEditing() : startEditing(idx)
-                "
+                @click="editingIndex === idx ? cancelEditing() : startEditing(idx)"
               >
                 <Pencil :size="14" :stroke-width="1.7" />
               </button>
@@ -272,10 +263,7 @@ function medErr(
       </section>
 
       <div class="grid-1">
-        <BaseField
-          label="Observaciones"
-          hint="Indicaciones adicionales para el propietario"
-        >
+        <BaseField label="Observaciones" hint="Indicaciones adicionales para el propietario">
           <template #default="{ id }">
             <BaseTextarea
               :id="id"
@@ -293,11 +281,7 @@ function medErr(
       </div>
 
       <div class="meds-list">
-        <div
-          v-for="(m, i) in draft.medicaments"
-          :key="i"
-          class="med-card"
-        >
+        <div v-for="(m, i) in draft.medicaments" :key="i" class="med-card">
           <div class="med-head">
             <div class="med-num">{{ i + 1 }}</div>
             <div class="med-name-preview">
@@ -315,11 +299,7 @@ function medErr(
           </div>
 
           <div class="med-grid">
-            <BaseField
-              label="Nombre del medicamento"
-              required
-              :error="medErr(i, 'medicamentId')"
-            >
+            <BaseField label="Nombre del medicamento" required :error="medErr(i, 'medicamentId')">
               <template #default>
                 <SearchableSelect
                   v-model="m.medicamentId"
@@ -332,11 +312,7 @@ function medErr(
                 />
               </template>
             </BaseField>
-            <BaseField
-              label="Presentación"
-              required
-              :error="medErr(i, 'presentation')"
-            >
+            <BaseField label="Presentación" required :error="medErr(i, 'presentation')">
               <template #default="{ id }">
                 <BaseInput
                   :id="id"
@@ -346,11 +322,7 @@ function medErr(
                 />
               </template>
             </BaseField>
-            <BaseField
-              label="Cantidad"
-              required
-              :error="medErr(i, 'quantity')"
-            >
+            <BaseField label="Cantidad" required :error="medErr(i, 'quantity')">
               <template #default="{ id }">
                 <BaseInput
                   :id="id"
@@ -378,10 +350,7 @@ function medErr(
             </BaseField>
           </div>
           <div class="med-obs">
-            <BaseField
-              label="Observación"
-              hint="Nota específica de este medicamento (opcional)"
-            >
+            <BaseField label="Observación" hint="Nota específica de este medicamento (opcional)">
               <template #default="{ id }">
                 <BaseInput
                   :id="id"
@@ -402,21 +371,13 @@ function medErr(
 
     <template #footer-left>
       <span>
-        {{ draft.medicaments.length }} medicamento{{
-          draft.medicaments.length === 1 ? '' : 's'
-        }}
+        {{ draft.medicaments.length }} medicamento{{ draft.medicaments.length === 1 ? '' : 's' }}
         · Se vinculará a la consulta actual
       </span>
     </template>
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">
-        Cancelar
-      </button>
-      <button
-        type="button"
-        class="btn-primary"
-        @click="save"
-      >
+      <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
+      <button type="button" class="btn-primary" @click="save">
         {{ editingIndex !== null ? 'Guardar cambios' : 'Guardar plan terapéutico' }}
       </button>
     </template>
@@ -425,55 +386,64 @@ function medErr(
 
 <style scoped>
 .catalog-error {
-  background: oklch(94% 0.06 25);
-  border: 1px solid oklch(85% 0.10 25);
-  color: oklch(35% 0.15 25);
+  background: oklch(94% 0.06 25deg);
+  border: 1px solid oklch(85% 0.1 25deg);
+  color: oklch(35% 0.15 25deg);
   padding: 10px 14px;
   border-radius: 10px;
   font-size: 12.5px;
   margin-bottom: 14px;
 }
+
 .grid-1 {
   display: grid;
   grid-template-columns: 1fr;
   gap: 18px;
   margin-bottom: 22px;
 }
+
 .med-obs {
   margin-top: 12px;
 }
+
 .meds-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
 }
+
 .meds-title {
   font-size: 13px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .meds-count {
   font-size: 11.5px;
   color: var(--warm-500);
 }
+
 .meds-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
+
 .med-card {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 11px;
   padding: 14px;
 }
+
 .med-head {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 12px;
 }
+
 .med-num {
   width: 24px;
   height: 24px;
@@ -485,6 +455,7 @@ function medErr(
   display: grid;
   place-items: center;
 }
+
 .med-name-preview {
   flex: 1;
   font-size: 12.5px;
@@ -494,6 +465,7 @@ function medErr(
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .med-remove {
   background: transparent;
   border: none;
@@ -502,28 +474,34 @@ function medErr(
   padding: 4px;
   border-radius: 6px;
 }
+
 .med-remove:hover {
   background: var(--warm-100);
-  color: oklch(50% 0.18 25);
+  color: oklch(50% 0.18 25deg);
 }
+
 .med-grid {
   display: grid;
   grid-template-columns: 2fr 1.5fr 140px 2fr;
   gap: 12px;
 }
-@media (max-width: 980px) {
+
+@media (width <= 980px) {
   .med-grid {
     grid-template-columns: 1fr 1fr;
   }
 }
-@media (max-width: 640px) {
+
+@media (width <= 640px) {
   .med-grid {
     grid-template-columns: 1fr;
   }
 }
+
 .suggest-wrap {
   position: relative;
 }
+
 .suggest {
   position: absolute;
   top: calc(100% + 4px);
@@ -532,11 +510,12 @@ function medErr(
   background: var(--warm-50);
   border: 1px solid var(--warm-300);
   border-radius: 10px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 12px 30px rgb(0 0 0 / 12%);
   z-index: 10;
   max-height: 220px;
   overflow: auto;
 }
+
 .suggest-item {
   width: 100%;
   text-align: left;
@@ -551,28 +530,35 @@ function medErr(
   flex-direction: column;
   gap: 2px;
 }
+
 .suggest-item:last-child {
   border-bottom: none;
 }
+
 .suggest-item:hover {
   background: var(--amatista-50);
 }
+
 .suggest-name {
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .suggest-hint {
   font-size: 11.5px;
   color: var(--warm-500);
 }
+
 .suggest-empty {
   padding: 10px 12px;
   font-size: 12px;
   color: var(--warm-500);
 }
+
 .suggest-empty strong {
   color: var(--warm-900);
 }
+
 .add-med {
   margin-top: 10px;
   width: 100%;
@@ -590,11 +576,13 @@ function medErr(
   justify-content: center;
   gap: 7px;
 }
+
 .add-med:hover {
   background: var(--warm-100);
   border-color: var(--amatista-500);
   color: var(--amatista-700);
 }
+
 .btn-ghost,
 .btn-primary {
   font-family: inherit;
@@ -605,27 +593,33 @@ function medErr(
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn-ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-900);
 }
+
 .btn-ghost:hover {
   background: var(--warm-100);
 }
+
 .btn-primary {
   background: var(--amatista-700);
   color: white;
   border: none;
   padding: 9px 18px;
 }
+
 .btn-primary:hover:not(:disabled) {
   filter: brightness(1.05);
 }
+
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
 .existing-section {
   margin-bottom: 22px;
   padding: 14px 16px;
@@ -633,12 +627,14 @@ function medErr(
   border: 1px solid var(--amatista-200);
   border-radius: 12px;
 }
+
 .existing-title {
   font-size: 14px;
   font-weight: 600;
   color: var(--amatista-700);
   margin: 0 0 10px;
 }
+
 .existing-list {
   list-style: none;
   padding: 0;
@@ -647,6 +643,7 @@ function medErr(
   flex-direction: column;
   gap: 8px;
 }
+
 .existing-card {
   display: flex;
   align-items: center;
@@ -657,10 +654,12 @@ function medErr(
   border: 1px solid var(--warm-200);
   border-radius: 10px;
 }
+
 .existing-summary {
   min-width: 0;
   flex: 1;
 }
+
 .existing-main {
   font-size: 14.5px;
   font-weight: 500;
@@ -670,21 +669,24 @@ function medErr(
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .existing-sub {
   font-size: 13px;
   color: var(--warm-600);
   margin-top: 4px;
 }
+
 .saved-chip {
   font-size: 12px;
   font-weight: 500;
   padding: 5px 10px;
   border-radius: 999px;
-  background: oklch(94% 0.06 150);
-  color: oklch(40% 0.15 150);
-  border: 1px solid oklch(85% 0.10 150);
+  background: oklch(94% 0.06 150deg);
+  color: oklch(40% 0.15 150deg);
+  border: 1px solid oklch(85% 0.1 150deg);
   white-space: nowrap;
 }
+
 .remove-existing {
   background: transparent;
   border: 1px solid var(--warm-200);
@@ -697,15 +699,18 @@ function medErr(
   color: var(--warm-600);
   flex-shrink: 0;
 }
+
 .remove-existing:hover:not(:disabled) {
-  background: oklch(94% 0.06 25);
-  border-color: oklch(85% 0.10 25);
-  color: oklch(35% 0.15 25);
+  background: oklch(94% 0.06 25deg);
+  border-color: oklch(85% 0.1 25deg);
+  color: oklch(35% 0.15 25deg);
 }
+
 .remove-existing:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
 .edit-existing {
   background: transparent;
   border: 1px solid var(--warm-200);
@@ -718,20 +723,24 @@ function medErr(
   color: var(--warm-600);
   flex-shrink: 0;
 }
+
 .edit-existing:hover:not(:disabled) {
   background: var(--amatista-50);
   border-color: var(--amatista-500);
   color: var(--amatista-700);
 }
+
 .edit-existing.active {
   background: var(--amatista-700);
   border-color: var(--amatista-700);
   color: white;
 }
+
 .edit-existing:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
 .editing-banner {
   display: flex;
   align-items: center;
@@ -744,11 +753,13 @@ function medErr(
   font-size: 13px;
   font-weight: 500;
 }
+
 .editing-banner span {
   flex: 1;
 }
+
 .editing-cancel {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgb(255 255 255 / 18%);
   border: none;
   padding: 5px 12px;
   border-radius: 6px;
@@ -758,7 +769,8 @@ function medErr(
   color: white;
   cursor: pointer;
 }
+
 .editing-cancel:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgb(255 255 255 / 28%);
 }
 </style>

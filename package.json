@@ -15,6 +15,7 @@
     "stylelint:fix": "stylelint \"src/**/*.{css,scss,sass,vue}\" --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "quality": "npm run lint:strict && npm run stylelint:strict && npm run format:check",
     "quality:staged": "lint-staged",
     "e2e": "playwright test",
     "e2e:historial": "npx playwright test historia.spec.ts",

@@ -116,12 +116,8 @@ const totalCatalogPermissions = computed(() => permissionsCatalog.list.value.len
 const orderedRoles = computed(() =>
   [...roles.list.value].sort((a, b) => a.name.localeCompare(b.name)),
 )
-const isLoading = computed(
-  () => roles.loading.value || permissionsCatalog.loading.value,
-)
-const hasError = computed(
-  () => roles.error.value ?? permissionsCatalog.error.value,
-)
+const isLoading = computed(() => roles.loading.value || permissionsCatalog.loading.value)
+const hasError = computed(() => roles.error.value ?? permissionsCatalog.error.value)
 </script>
 
 <template>
@@ -132,12 +128,7 @@ const hasError = computed(
       lead="Definí qué puede hacer cada miembro del equipo. Agrupá permisos por sub-módulo y mantené el control fino sobre quién accede a qué."
     >
       <template #action>
-        <button
-          v-if="canCreateRole"
-          type="button"
-          class="create-btn"
-          @click="openCreate"
-        >
+        <button v-if="canCreateRole" type="button" class="create-btn" @click="openCreate">
           <Plus :size="16" :stroke-width="1.8" />
           <span>Crear rol</span>
         </button>
@@ -161,10 +152,7 @@ const hasError = computed(
         @toggle-active="(v: boolean) => onToggleActive(role, v)"
         @edit="openEdit(role)"
       />
-      <div
-        v-if="orderedRoles.length === 0 && !isLoading"
-        class="empty"
-      >
+      <div v-if="orderedRoles.length === 0 && !isLoading" class="empty">
         Aún no hay roles creados. Empezá con "Crear rol".
       </div>
     </div>
@@ -196,6 +184,7 @@ const hasError = computed(
   max-width: 1320px;
   margin: 0 auto;
 }
+
 .create-btn {
   display: inline-flex;
   align-items: center;
@@ -213,26 +202,31 @@ const hasError = computed(
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.5);
+  box-shadow:
+    0 1px 2px rgb(50 20 80 / 8%),
+    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 50%);
   transition: filter 0.12s ease;
 }
+
 .create-btn:hover {
   filter: brightness(1.05);
 }
+
 .banner-error {
-  background: oklch(96% 0.04 25);
-  border: 1px solid oklch(85% 0.06 25);
-  color: oklch(40% 0.16 25);
+  background: oklch(96% 0.04 25deg);
+  border: 1px solid oklch(85% 0.06 25deg);
+  color: oklch(40% 0.16 25deg);
   border-radius: 9px;
   padding: 10px 14px;
   font-size: 13px;
 }
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
   gap: 14px;
 }
+
 .empty {
   grid-column: 1 / -1;
   text-align: center;
@@ -244,7 +238,7 @@ const hasError = computed(
   font-size: 13px;
 }
 
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .create-btn {
     align-self: flex-start;
   }

@@ -1,5 +1,4 @@
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>
 
 <template>
   <div class="placeholder">
@@ -17,6 +16,7 @@
   color: var(--warm-800);
   font-family: var(--font-sans);
 }
+
 .placeholder h2 {
   margin: 0 0 8px;
   font-size: 22px;
@@ -24,6 +24,7 @@
   letter-spacing: -0.01em;
   color: var(--warm-900);
 }
+
 .placeholder p {
   margin: 0;
   font-size: 13.5px;

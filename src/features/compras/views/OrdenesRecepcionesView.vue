@@ -128,17 +128,31 @@ onMounted(refresh)
           <p class="sub">Pedidos a proveedores y entrada de mercancía al inventario</p>
         </div>
       </div>
-      <button v-if="tab === 'ordenes' && canPoCreate" type="button" class="btn primary" @click="openCreatePo">
+      <button
+        v-if="tab === 'ordenes' && canPoCreate"
+        type="button"
+        class="btn primary"
+        @click="openCreatePo"
+      >
         <Plus :size="16" :stroke-width="1.9" /> Nueva orden
       </button>
-      <button v-else-if="tab === 'recepciones' && canGrCreate" type="button" class="btn primary" @click="grModal = true">
+      <button
+        v-else-if="tab === 'recepciones' && canGrCreate"
+        type="button"
+        class="btn primary"
+        @click="grModal = true"
+      >
         <Plus :size="16" :stroke-width="1.9" /> Nueva recepción
       </button>
     </header>
 
     <div class="tabs">
-      <button type="button" :class="{ active: tab === 'ordenes' }" @click="tab = 'ordenes'">Órdenes de compra</button>
-      <button type="button" :class="{ active: tab === 'recepciones' }" @click="tab = 'recepciones'">Recepciones</button>
+      <button type="button" :class="{ active: tab === 'ordenes' }" @click="tab = 'ordenes'">
+        Órdenes de compra
+      </button>
+      <button type="button" :class="{ active: tab === 'recepciones' }" @click="tab = 'recepciones'">
+        Recepciones
+      </button>
     </div>
 
     <p v-if="error" class="server-error">{{ error }}</p>
@@ -147,24 +161,67 @@ onMounted(refresh)
     <table v-if="tab === 'ordenes'" class="grid-table">
       <thead>
         <tr>
-          <th>#</th><th>Proveedor</th><th>Fecha</th><th>Esperada</th>
-          <th class="num">Total</th><th>Estado</th><th class="actions-col"></th>
+          <th>#</th>
+          <th>Proveedor</th>
+          <th>Fecha</th>
+          <th>Esperada</th>
+          <th class="num">Total</th>
+          <th>Estado</th>
+          <th class="actions-col"></th>
         </tr>
       </thead>
       <tbody>
-        <tr v-if="orderRows.length === 0"><td colspan="7" class="empty-row">No hay órdenes de compra.</td></tr>
+        <tr v-if="orderRows.length === 0">
+          <td colspan="7" class="empty-row">No hay órdenes de compra.</td>
+        </tr>
         <tr v-for="po in orderRows" :key="po.id">
           <td class="strong">#{{ po.id }}</td>
           <td>{{ po.supplier.name }}</td>
           <td>{{ formatDate(po.orderDate) }}</td>
           <td>{{ formatDate(po.expectedDate) }}</td>
           <td class="num">{{ formatMoney(poTotal(po)) }}</td>
-          <td><span class="pill" :class="po.status.toLowerCase()">{{ PO_STATUS[po.status] }}</span></td>
+          <td>
+            <span class="pill" :class="po.status.toLowerCase().replaceAll('_', '-')">
+              {{ PO_STATUS[po.status] }}
+            </span>
+          </td>
           <td class="actions">
-            <button v-if="canPoUpdate && po.status === 'DRAFT'" type="button" class="icon-btn" title="Editar" @click="openEditPo(po)"><Pencil :size="15" /></button>
-            <button v-if="canPoUpdate && po.status === 'DRAFT'" type="button" class="icon-btn go" title="Emitir" @click="placePo(po)"><Send :size="15" /></button>
-            <button v-if="canPoUpdate && (po.status === 'DRAFT' || po.status === 'PLACED')" type="button" class="icon-btn" title="Anular" @click="cancelPo(po)"><Ban :size="15" /></button>
-            <button v-if="canPoDelete && po.status === 'DRAFT'" type="button" class="icon-btn danger" title="Eliminar" @click="deletePo(po)"><Trash2 :size="15" /></button>
+            <button
+              v-if="canPoUpdate && po.status === 'DRAFT'"
+              type="button"
+              class="icon-btn"
+              title="Editar"
+              @click="openEditPo(po)"
+            >
+              <Pencil :size="15" />
+            </button>
+            <button
+              v-if="canPoUpdate && po.status === 'DRAFT'"
+              type="button"
+              class="icon-btn go"
+              title="Emitir"
+              @click="placePo(po)"
+            >
+              <Send :size="15" />
+            </button>
+            <button
+              v-if="canPoUpdate && (po.status === 'DRAFT' || po.status === 'PLACED')"
+              type="button"
+              class="icon-btn"
+              title="Anular"
+              @click="cancelPo(po)"
+            >
+              <Ban :size="15" />
+            </button>
+            <button
+              v-if="canPoDelete && po.status === 'DRAFT'"
+              type="button"
+              class="icon-btn danger"
+              title="Eliminar"
+              @click="deletePo(po)"
+            >
+              <Trash2 :size="15" />
+            </button>
           </td>
         </tr>
       </tbody>
@@ -174,12 +231,20 @@ onMounted(refresh)
     <table v-else class="grid-table">
       <thead>
         <tr>
-          <th>#</th><th>Proveedor</th><th>Fecha</th><th>Factura</th><th>OC</th>
-          <th class="num">Líneas</th><th>Estado</th><th class="actions-col"></th>
+          <th>#</th>
+          <th>Proveedor</th>
+          <th>Fecha</th>
+          <th>Factura</th>
+          <th>OC</th>
+          <th class="num">Líneas</th>
+          <th>Estado</th>
+          <th class="actions-col"></th>
         </tr>
       </thead>
       <tbody>
-        <tr v-if="receiptRows.length === 0"><td colspan="8" class="empty-row">No hay recepciones registradas.</td></tr>
+        <tr v-if="receiptRows.length === 0">
+          <td colspan="8" class="empty-row">No hay recepciones registradas.</td>
+        </tr>
         <tr v-for="gr in receiptRows" :key="gr.id">
           <td class="strong">#{{ gr.id }}</td>
           <td>{{ gr.supplier.name }}</td>
@@ -187,17 +252,49 @@ onMounted(refresh)
           <td>{{ gr.supplierInvoiceNumber ?? '—' }}</td>
           <td>{{ gr.purchaseOrderId ? '#' + gr.purchaseOrderId : '—' }}</td>
           <td class="num">{{ gr.lines.length }}</td>
-          <td><span class="pill" :class="gr.status.toLowerCase()">{{ GR_STATUS[gr.status] }}</span></td>
+          <td>
+            <span class="pill" :class="gr.status.toLowerCase()">{{ GR_STATUS[gr.status] }}</span>
+          </td>
           <td class="actions">
-            <button v-if="canGrCreate && gr.status === 'DRAFT'" type="button" class="icon-btn go" title="Confirmar" @click="confirmGr(gr.id)"><CheckCircle2 :size="15" /></button>
-            <button v-if="canGrCancel && gr.status === 'CONFIRMED'" type="button" class="icon-btn" title="Anular" @click="cancelGr(gr.id)"><Ban :size="15" /></button>
+            <button
+              v-if="canGrCreate && gr.status === 'DRAFT'"
+              type="button"
+              class="icon-btn go"
+              title="Confirmar"
+              @click="confirmGr(gr.id)"
+            >
+              <CheckCircle2 :size="15" />
+            </button>
+            <button
+              v-if="canGrCancel && gr.status === 'CONFIRMED'"
+              type="button"
+              class="icon-btn"
+              title="Anular"
+              @click="cancelGr(gr.id)"
+            >
+              <Ban :size="15" />
+            </button>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <PurchaseOrderModal :open="poModal" :order="editingPo" @close="poModal = false" @saved="refresh" />
-    <GoodsReceiptModal :open="grModal" @close="grModal = false" @saved="() => { tab = 'recepciones'; refresh() }" />
+    <PurchaseOrderModal
+      :open="poModal"
+      :order="editingPo"
+      @close="poModal = false"
+      @saved="refresh"
+    />
+    <GoodsReceiptModal
+      :open="grModal"
+      @close="grModal = false"
+      @saved="
+        () => {
+          tab = 'recepciones'
+          refresh()
+        }
+      "
+    />
   </div>
 </template>
 
@@ -208,18 +305,21 @@ onMounted(refresh)
   padding: 24px 28px;
   font-family: var(--font-sans);
 }
+
 .page-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 18px;
 }
+
 .title-wrap {
   display: flex;
   gap: 12px;
   align-items: center;
   color: var(--amatista-700, #5c2d8c);
 }
+
 .title-wrap h1 {
   margin: 0;
   font-family: var(--font-serif);
@@ -227,17 +327,20 @@ onMounted(refresh)
   font-weight: 400;
   color: var(--warm-900);
 }
+
 .sub {
   margin: 2px 0 0;
   font-size: 13px;
   color: var(--warm-500);
 }
+
 .tabs {
   display: flex;
   gap: 4px;
   margin-bottom: 18px;
   border-bottom: 1px solid var(--warm-200);
 }
+
 .tabs button {
   border: none;
   background: none;
@@ -250,15 +353,18 @@ onMounted(refresh)
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
 }
+
 .tabs button.active {
   color: var(--amatista-700, #5c2d8c);
   border-bottom-color: var(--amatista-600, #5c2d8c);
 }
+
 .grid-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 }
+
 .grid-table th {
   text-align: left;
   color: var(--warm-500);
@@ -268,27 +374,33 @@ onMounted(refresh)
   padding: 8px;
   border-bottom: 1px solid var(--warm-200);
 }
+
 .grid-table td {
   padding: 9px 8px;
   border-bottom: 1px solid var(--warm-100);
   color: var(--warm-700);
 }
+
 .strong {
   font-weight: 600;
   color: var(--warm-900);
 }
+
 .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
 .actions-col {
   width: 150px;
 }
+
 .actions {
   display: flex;
   gap: 5px;
   justify-content: flex-end;
 }
+
 .icon-btn {
   border: none;
   background: var(--warm-100);
@@ -298,17 +410,21 @@ onMounted(refresh)
   cursor: pointer;
   display: inline-flex;
 }
+
 .icon-btn:hover {
   background: var(--warm-200);
 }
+
 .icon-btn.go:hover {
-  background: oklch(92% 0.08 150);
-  color: oklch(40% 0.12 150);
+  background: oklch(92% 0.08 150deg);
+  color: oklch(40% 0.12 150deg);
 }
+
 .icon-btn.danger:hover {
-  background: oklch(92% 0.06 25);
-  color: oklch(50% 0.2 25);
+  background: oklch(92% 0.06 25deg);
+  color: oklch(50% 0.2 25deg);
 }
+
 .pill {
   display: inline-block;
   padding: 2px 10px;
@@ -318,40 +434,48 @@ onMounted(refresh)
   background: var(--warm-100);
   color: var(--warm-600);
 }
+
 .pill.draft {
-  background: oklch(93% 0.03 260);
+  background: oklch(93% 0.03 260deg);
   color: var(--warm-600);
 }
+
 .pill.placed {
-  background: oklch(92% 0.07 250);
-  color: oklch(45% 0.14 250);
+  background: oklch(92% 0.07 250deg);
+  color: oklch(45% 0.14 250deg);
 }
-.pill.partially_received {
-  background: oklch(93% 0.07 75);
-  color: oklch(45% 0.12 75);
+
+.pill.partially-received {
+  background: oklch(93% 0.07 75deg);
+  color: oklch(45% 0.12 75deg);
 }
+
 .pill.received,
 .pill.confirmed {
-  background: oklch(92% 0.08 150);
-  color: oklch(40% 0.12 150);
+  background: oklch(92% 0.08 150deg);
+  color: oklch(40% 0.12 150deg);
 }
+
 .pill.cancelled {
   background: var(--warm-100);
   color: var(--warm-500);
 }
+
 .empty-row {
   text-align: center;
   color: var(--warm-400);
   padding: 26px;
 }
+
 .server-error {
   margin: 0 0 14px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: oklch(94% 0.06 25);
-  color: oklch(45% 0.18 25);
+  background: oklch(94% 0.06 25deg);
+  color: oklch(45% 0.18 25deg);
   font-size: 13px;
 }
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -363,6 +487,7 @@ onMounted(refresh)
   font-weight: 600;
   cursor: pointer;
 }
+
 .btn.primary {
   background: var(--amatista-600, #5c2d8c);
   color: #fff;

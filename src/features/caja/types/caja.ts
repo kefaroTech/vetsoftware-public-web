@@ -3,12 +3,7 @@
 export type CashSessionStatus = 'OPEN' | 'CLOSED'
 export type CashPaymentMethod = 'CASH' | 'CARD' | 'TRANSFER'
 export type CashMovementType =
-  | 'SALE_IN'
-  | 'OPEN_ACCOUNT_IN'
-  | 'MANUAL_IN'
-  | 'WITHDRAWAL'
-  | 'EXPENSE'
-  | 'VOID_OUT'
+  'SALE_IN' | 'OPEN_ACCOUNT_IN' | 'MANUAL_IN' | 'WITHDRAWAL' | 'EXPENSE' | 'VOID_OUT'
 export type CashReferenceType = 'POS_DOCUMENT' | 'OPEN_ACCOUNT_PAYMENT' | 'MANUAL'
 
 /** Tipos manuales que el operador puede registrar desde la UI. */

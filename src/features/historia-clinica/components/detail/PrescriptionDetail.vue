@@ -20,9 +20,7 @@ defineProps<{ data: PrescriptionResponse }>()
         </span>
       </div>
 
-      <div v-if="data.medicaments.length === 0" class="empty">
-        Sin medicamentos registrados.
-      </div>
+      <div v-if="data.medicaments.length === 0" class="empty">Sin medicamentos registrados.</div>
 
       <ul v-else class="medicaments">
         <li v-for="med in data.medicaments" :key="med.id" class="med">
@@ -42,11 +40,7 @@ defineProps<{ data: PrescriptionResponse }>()
       </ul>
     </div>
 
-    <DetailField
-      v-if="data.consultation"
-      label="Consulta vinculada"
-      span="full"
-    >
+    <DetailField v-if="data.consultation" label="Consulta vinculada" span="full">
       #{{ data.consultation.id }} · {{ formatEventDate(data.consultation.date) }}
     </DetailField>
   </div>
@@ -58,7 +52,8 @@ defineProps<{ data: PrescriptionResponse }>()
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px 24px;
 }
-@media (max-width: 560px) {
+
+@media (width <= 560px) {
   .detail-grid {
     grid-template-columns: 1fr;
   }
@@ -70,11 +65,13 @@ defineProps<{ data: PrescriptionResponse }>()
   flex-direction: column;
   gap: 10px;
 }
+
 .medicaments-head {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .medicaments-label {
   font-size: 11.5px;
   color: var(--warm-500);
@@ -82,10 +79,12 @@ defineProps<{ data: PrescriptionResponse }>()
   text-transform: uppercase;
   font-weight: 500;
 }
+
 .medicaments-count {
   font-size: 11.5px;
   color: var(--warm-400);
 }
+
 .empty {
   padding: 14px 16px;
   font-size: 13px;
@@ -94,6 +93,7 @@ defineProps<{ data: PrescriptionResponse }>()
   border: 1px dashed var(--warm-200);
   border-radius: 10px;
 }
+
 .medicaments {
   list-style: none;
   margin: 0;
@@ -102,6 +102,7 @@ defineProps<{ data: PrescriptionResponse }>()
   flex-direction: column;
   gap: 8px;
 }
+
 .med {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
@@ -111,22 +112,26 @@ defineProps<{ data: PrescriptionResponse }>()
   flex-direction: column;
   gap: 6px;
 }
+
 .med-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
 }
+
 .med-name {
   font-size: 14px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .med-qty {
   font-size: 12.5px;
   color: var(--warm-600);
   font-family: var(--font-mono);
 }
+
 .med-line {
   display: flex;
   gap: 8px;
@@ -134,6 +139,7 @@ defineProps<{ data: PrescriptionResponse }>()
   color: var(--warm-700);
   line-height: 1.4;
 }
+
 .med-tag {
   font-size: 11px;
   color: var(--warm-500);

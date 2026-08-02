@@ -13,7 +13,12 @@ export interface ConsumeDraft {
   reason: string | null
 }
 
-const props = defineProps<{ open: boolean; product: ProductResponse | null; branchName?: string; current?: number }>()
+const props = defineProps<{
+  open: boolean
+  product: ProductResponse | null
+  branchName?: string
+  current?: number
+}>()
 const emit = defineEmits<{ close: []; confirm: [draft: ConsumeDraft] }>()
 
 const form = reactive({ qty: '', reason: '' })
@@ -43,7 +48,11 @@ function submit() {
   <ModalShell
     :open="open"
     title="Consumo clínico"
-    :subtitle="product ? `${product.name}${branchName ? ` · ${branchName}` : ''}${current != null ? ` · disponible ${current} u` : ''}` : ''"
+    :subtitle="
+      product
+        ? `${product.name}${branchName ? ` · ${branchName}` : ''}${current != null ? ` · disponible ${current} u` : ''}`
+        : ''
+    "
     :icon="Syringe"
     :width="460"
     @close="emit('close')"
@@ -52,12 +61,23 @@ function submit() {
       <div class="body">
         <BaseField label="Unidades consumidas" required :error="qtyError">
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="form.qty" :invalid="!!qtyError" inputmode="numeric" placeholder="0" />
+            <BaseInput
+              :id="id"
+              v-model="form.qty"
+              :invalid="!!qtyError"
+              inputmode="numeric"
+              placeholder="0"
+            />
           </template>
         </BaseField>
         <BaseField label="Motivo / paciente">
           <template #default="{ id }">
-            <BaseTextarea :id="id" v-model="form.reason" :rows="2" placeholder="Opcional (paciente, procedimiento…)" />
+            <BaseTextarea
+              :id="id"
+              v-model="form.reason"
+              :rows="2"
+              placeholder="Opcional (paciente, procedimiento…)"
+            />
           </template>
         </BaseField>
       </div>
@@ -71,15 +91,40 @@ function submit() {
 </template>
 
 <style scoped>
-.body { display: flex; flex-direction: column; gap: 14px; }
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .btn-primary {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  border: none; color: white;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  border: none;
+  color: white;
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
 }
+
 .btn-ghost {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  background: transparent; border: 1px solid var(--warm-200); color: var(--warm-700);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  color: var(--warm-700);
 }
-.btn-ghost:hover { background: var(--warm-100); }
+.btn-ghost:hover {
+  background: var(--warm-100);
+}
 </style>

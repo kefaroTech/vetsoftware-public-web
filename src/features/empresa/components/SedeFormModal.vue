@@ -79,12 +79,13 @@ const isValid = computed(() => Object.values(errors.value).every((e) => !e))
 
 type ErrorKey = 'name' | 'code' | 'city'
 function err(field: ErrorKey): string | undefined {
-  return submitted.value && errors.value[field] ? errors.value[field]! : undefined
+  return submitted.value ? (errors.value[field] ?? undefined) : undefined
 }
 
 function submit() {
   submitted.value = true
-  if (!isValid.value) {
+  const selectedCityId = committedCityId.value
+  if (!isValid.value || selectedCityId == null) {
     scrollToFirstError()
     return
   }
@@ -93,7 +94,7 @@ function submit() {
     code: draft.code.trim().toUpperCase(),
     address: draft.address.trim() || null,
     phone: draft.phone.trim() || null,
-    cityId: committedCityId.value!,
+    cityId: selectedCityId,
   }
   emit('save', { id: props.initial?.id ?? null, body })
 }
@@ -103,7 +104,11 @@ function submit() {
   <ModalShell
     :open="open"
     :title="isEditing ? 'Editar sede' : 'Nueva sede'"
-    :subtitle="isEditing ? 'Actualiza los datos de la sucursal.' : 'Registra una nueva sucursal de la empresa.'"
+    :subtitle="
+      isEditing
+        ? 'Actualiza los datos de la sucursal.'
+        : 'Registra una nueva sucursal de la empresa.'
+    "
     :icon="isEditing ? Pencil : MapPin"
     accent="amatista"
     :width="520"
@@ -129,7 +134,11 @@ function submit() {
                 v-model="draft.code"
                 placeholder="SUR"
                 :invalid="!!err('code')"
-                @update:model-value="draft.code = String($event).replace(/[^A-Za-z0-9]/g, '').toUpperCase()"
+                @update:model-value="
+                  draft.code = String($event)
+                    .replace(/[^A-Za-z0-9]/g, '')
+                    .toUpperCase()
+                "
               />
             </template>
           </BaseField>
@@ -139,7 +148,11 @@ function submit() {
           label="Ubicación"
           required
           :error="err('city')"
-          :hint="isEditing && currentCityName && !cityId ? `Ciudad actual: ${currentCityName}. Elige país, departamento y ciudad para cambiarla.` : undefined"
+          :hint="
+            isEditing && currentCityName && !cityId
+              ? `Ciudad actual: ${currentCityName}. Elige país, departamento y ciudad para cambiarla.`
+              : undefined
+          "
         >
           <template #default>
             <div class="grid-3">
@@ -199,22 +212,26 @@ function submit() {
   flex-direction: column;
   gap: 18px;
 }
+
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 18px 22px;
 }
+
 .grid-3 {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 12px;
 }
-@media (max-width: 620px) {
+
+@media (width <= 620px) {
   .grid-2,
   .grid-3 {
     grid-template-columns: 1fr;
   }
 }
+
 .btn-ghost {
   padding: 9px 16px;
   border-radius: 9px;
@@ -225,18 +242,26 @@ function submit() {
   font-weight: 500;
   cursor: pointer;
 }
+
 .btn-ghost:hover {
   background: var(--warm-100);
 }
+
 .btn-primary {
   padding: 9px 18px;
   border-radius: 9px;
   border: none;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
   color: #fff;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08), 0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.45);
+  box-shadow:
+    0 1px 2px rgb(50 20 80 / 8%),
+    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 45%);
 }
 </style>

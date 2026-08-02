@@ -81,7 +81,11 @@ function diffClass(diff: number): string {
   <ModalShell
     :open="open"
     :title="phase === 'done' ? 'Caja cerrada' : 'Cerrar caja'"
-    :subtitle="phase === 'done' ? 'Arqueo listo para descargar' : 'Cuenta el efectivo y concilia por medio de pago'"
+    :subtitle="
+      phase === 'done'
+        ? 'Arqueo listo para descargar'
+        : 'Cuenta el efectivo y concilia por medio de pago'
+    "
     :icon="phase === 'done' ? FileDown : LockKeyhole"
     :width="640"
     compact
@@ -122,12 +126,18 @@ function diffClass(diff: number): string {
               <td>Total</td>
               <td class="num">{{ formatMoney(totalExpected) }}</td>
               <td class="num">{{ formatMoney(totalCounted) }}</td>
-              <td class="num" :class="diffClass(totalDifference)">{{ formatMoney(totalDifference) }}</td>
+              <td class="num" :class="diffClass(totalDifference)">
+                {{ formatMoney(totalDifference) }}
+              </td>
             </tr>
           </tfoot>
         </table>
 
-        <BaseField label="Nota de cierre" hint="Opcional (justifica una diferencia, etc.)" class="note-field">
+        <BaseField
+          label="Nota de cierre"
+          hint="Opcional (justifica una diferencia, etc.)"
+          class="note-field"
+        >
           <BaseTextarea v-model="note" placeholder="Observaciones del arqueo…" />
         </BaseField>
       </div>
@@ -135,7 +145,8 @@ function diffClass(diff: number): string {
       <div v-else class="done">
         <p class="done-msg">
           La caja se cerró correctamente. Diferencia total del arqueo:
-          <strong :class="diffClass(totalDifference)">{{ formatMoney(totalDifference) }}</strong>.
+          <strong :class="diffClass(totalDifference)">{{ formatMoney(totalDifference) }}</strong
+          >.
         </p>
         <div class="download-row">
           <button type="button" class="btn ghost" @click="download('csv')">
@@ -166,6 +177,7 @@ function diffClass(diff: number): string {
   border-collapse: collapse;
   font-size: 13.5px;
 }
+
 .arqueo th {
   text-align: left;
   color: var(--warm-500);
@@ -175,50 +187,61 @@ function diffClass(diff: number): string {
   padding: 6px 8px;
   border-bottom: 1px solid var(--warm-200);
 }
+
 .arqueo td {
   padding: 8px;
   border-bottom: 1px solid var(--warm-100);
 }
+
 .arqueo tfoot td {
   font-weight: 700;
   border-top: 2px solid var(--warm-300);
 }
+
 .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
 .count-input {
   max-width: 140px;
   margin-left: auto;
 }
+
 .pos {
   color: #2f7d4f;
   font-weight: 600;
 }
+
 .neg {
   color: #b4453a;
   font-weight: 600;
 }
+
 .note-field {
   margin-top: 18px;
 }
+
 .server-error {
   margin: 0 0 14px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: oklch(94% 0.06 25);
-  color: oklch(45% 0.18 25);
+  background: oklch(94% 0.06 25deg);
+  color: oklch(45% 0.18 25deg);
   font-size: 13px;
 }
+
 .done-msg {
   font-size: 14px;
   color: var(--warm-800);
   margin: 0 0 16px;
 }
+
 .download-row {
   display: flex;
   gap: 10px;
 }
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -230,14 +253,17 @@ function diffClass(diff: number): string {
   font-weight: 600;
   cursor: pointer;
 }
+
 .btn.ghost {
   background: var(--warm-100);
   color: var(--warm-700);
 }
+
 .btn.primary {
   background: var(--amatista-600, #5c2d8c);
   color: #fff;
 }
+
 .btn.primary:disabled {
   opacity: 0.6;
   cursor: default;

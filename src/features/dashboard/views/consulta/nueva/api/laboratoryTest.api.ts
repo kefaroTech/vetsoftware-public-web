@@ -83,20 +83,12 @@ export const laboratoryTestApi = {
   },
 
   async findById(id: number): Promise<LaboratoryTestResponse> {
-    const { data } = await http.get<LaboratoryTestResponse>(
-      `/laboratory-tests/${id}`,
-    )
+    const { data } = await http.get<LaboratoryTestResponse>(`/laboratory-tests/${id}`)
     return data
   },
 
-  async update(
-    id: number,
-    payload: CreateLaboratoryTestPayload,
-  ): Promise<LaboratoryTestResponse> {
-    const { data } = await http.put<LaboratoryTestResponse>(
-      `/laboratory-tests/${id}`,
-      payload,
-    )
+  async update(id: number, payload: CreateLaboratoryTestPayload): Promise<LaboratoryTestResponse> {
+    const { data } = await http.put<LaboratoryTestResponse>(`/laboratory-tests/${id}`, payload)
     return data
   },
 
@@ -104,14 +96,10 @@ export const laboratoryTestApi = {
     await http.delete(`/laboratory-tests/${id}`)
   },
 
-  async changeStatus(
-    id: number,
-    status: LaboratoryTestStatus,
-  ): Promise<LaboratoryTestResponse> {
-    const { data } = await http.patch<LaboratoryTestResponse>(
-      `/laboratory-tests/${id}/status`,
-      { status },
-    )
+  async changeStatus(id: number, status: LaboratoryTestStatus): Promise<LaboratoryTestResponse> {
+    const { data } = await http.patch<LaboratoryTestResponse>(`/laboratory-tests/${id}/status`, {
+      status,
+    })
     return data
   },
 }

@@ -160,9 +160,7 @@ function onSave() {
               <span class="counter">{{ selectedBranchIds.size }} seleccionadas</span>
             </div>
           </div>
-          <p class="hint">
-            Un empleado opera solo en sus sedes. Debe tener al menos una.
-          </p>
+          <p class="hint">Un empleado opera solo en sus sedes. Debe tener al menos una.</p>
           <BranchSelectorGrid
             :available-branches="availableBranches"
             :selected-ids="selectedBranchIds"
@@ -210,6 +208,7 @@ function onSave() {
   flex-direction: column;
   gap: 22px;
 }
+
 .identity {
   display: flex;
   align-items: center;
@@ -218,37 +217,44 @@ function onSave() {
   background: var(--warm-100);
   border-radius: 11px;
 }
+
 .identity-info {
   min-width: 0;
   flex: 1;
 }
+
 .identity-name {
   font-size: 14px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .identity-meta {
   font-size: 12px;
   color: var(--warm-600);
   margin-top: 2px;
   word-break: break-all;
 }
+
 .section {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
+
 .section-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
+
 .head-actions {
   display: inline-flex;
   align-items: center;
   gap: 12px;
 }
+
 .link-btn {
   background: none;
   border: none;
@@ -259,10 +265,12 @@ function onSave() {
   color: var(--amatista-700);
   cursor: pointer;
 }
+
 .link-btn:disabled {
   color: var(--warm-400);
   cursor: not-allowed;
 }
+
 .label {
   font-size: 11.5px;
   letter-spacing: 0.08em;
@@ -270,6 +278,7 @@ function onSave() {
   color: var(--warm-500);
   font-weight: 500;
 }
+
 .counter {
   font-size: 11.5px;
   padding: 2px 8px;
@@ -278,30 +287,35 @@ function onSave() {
   color: var(--warm-600);
   font-weight: 500;
 }
+
 .current-pills {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
+
 .branch-pill {
   font-size: 12px;
   font-weight: 500;
   padding: 3px 10px;
   border-radius: 999px;
   background: var(--amatista-50);
-  color: var(--amatista-800, oklch(35% 0.12 300));
-  border: 1px solid var(--amatista-200, oklch(88% 0.05 300));
+  color: var(--amatista-800, oklch(35% 0.12 300deg));
+  border: 1px solid var(--amatista-200, oklch(88% 0.05 300deg));
 }
+
 .no-current {
   font-size: 12.5px;
   color: var(--warm-500);
   font-style: italic;
 }
+
 .hint {
   margin: 0;
   font-size: 12px;
   color: var(--warm-600);
 }
+
 .banner {
   display: flex;
   flex-direction: column;
@@ -310,24 +324,28 @@ function onSave() {
   border-radius: 9px;
   font-size: 12.5px;
 }
+
 .banner.error {
   flex-direction: row;
   align-items: center;
-  background: oklch(95% 0.06 25);
-  border: 1px solid oklch(85% 0.12 25);
-  color: oklch(40% 0.18 25);
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
 }
+
 .banner.warn {
-  background: oklch(95% 0.05 80);
-  border: 1px solid oklch(85% 0.08 80);
-  color: oklch(35% 0.1 80);
+  background: oklch(95% 0.05 80deg);
+  border: 1px solid oklch(85% 0.08 80deg);
+  color: oklch(35% 0.1 80deg);
 }
+
 .banner-head {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-weight: 500;
 }
+
 .diff-list {
   margin: 0;
   padding: 0;
@@ -336,18 +354,22 @@ function onSave() {
   flex-direction: column;
   gap: 4px;
 }
+
 .diff-list li {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 12.5px;
 }
+
 .diff-add {
-  color: oklch(45% 0.13 145);
+  color: oklch(45% 0.13 145deg);
 }
+
 .diff-remove {
-  color: oklch(48% 0.18 25);
+  color: oklch(48% 0.18 25deg);
 }
+
 .ghost,
 .primary {
   padding: 8px 14px;
@@ -358,21 +380,26 @@ function onSave() {
   font-weight: 500;
   border: 1px solid transparent;
 }
+
 .ghost {
   background: var(--warm-50);
   color: var(--warm-700);
   border-color: var(--warm-200);
 }
+
 .ghost:hover:not(:disabled) {
   background: var(--warm-100);
 }
+
 .primary {
   background: var(--amatista-700);
   color: white;
 }
+
 .primary:hover:not(:disabled) {
   background: var(--amatista-800);
 }
+
 .ghost:disabled,
 .primary:disabled {
   cursor: not-allowed;

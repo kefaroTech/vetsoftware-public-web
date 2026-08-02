@@ -154,4 +154,4 @@ export const PERMISSIONS = {
   COMPANY_TAX_PROFILE_READ: 'companyTaxProfile.read',
 } as const
 
-export type PermissionCode = typeof PERMISSIONS[keyof typeof PERMISSIONS]
+export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS]

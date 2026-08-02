@@ -61,12 +61,11 @@ watch(
 
 const errors = computed(() => ({
   name: draft.name.trim().length < 2 ? 'Mínimo 2 caracteres' : null,
-  description:
-    draft.description.length > 500 ? 'Máximo 500 caracteres' : null,
+  description: draft.description.length > 500 ? 'Máximo 500 caracteres' : null,
 }))
 
 function err(field: FieldKey): string | undefined {
-  return touched[field] ? errors.value[field] ?? undefined : undefined
+  return touched[field] ? (errors.value[field] ?? undefined) : undefined
 }
 
 const isValid = computed(() => Object.values(errors.value).every((e) => e === null))
@@ -139,8 +138,8 @@ async function submit() {
           </template>
         </BaseField>
         <p class="note">
-          La presentación, cantidad y posología se indican al recetar; aquí solo se
-          registra el medicamento del catálogo.
+          La presentación, cantidad y posología se indican al recetar; aquí solo se registra el
+          medicamento del catálogo.
         </p>
       </div>
     </template>
@@ -155,18 +154,59 @@ async function submit() {
 </template>
 
 <style scoped>
-.form { display: flex; flex-direction: column; gap: 16px; }
-.note { margin: 0; font-size: 12.5px; color: var(--warm-500); line-height: 1.55; }
-.banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.note {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--warm-500);
+  line-height: 1.55;
+}
+.banner.error {
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
 .btn-primary {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  border: none; color: white;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  border: none;
+  color: white;
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
 }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-ghost {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  background: transparent; border: 1px solid var(--warm-200); color: var(--warm-700);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  color: var(--warm-700);
 }
-.btn-ghost:hover { background: var(--warm-100); }
+.btn-ghost:hover {
+  background: var(--warm-100);
+}
 </style>

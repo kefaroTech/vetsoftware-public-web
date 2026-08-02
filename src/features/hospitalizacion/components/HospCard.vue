@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import HospStatusPill from './HospStatusPill.vue'
-import { initials, formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
+import {
+  initials,
+  formatDateShort,
+} from '@/features/dashboard/views/consulta/nueva/composables/format'
 import { daysSince } from '../composables/mar'
 import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
 
@@ -23,9 +26,7 @@ defineEmits<{ open: [] }>()
       </div>
     </div>
     <p class="reason">{{ patient.reason }}</p>
-    <div class="foot">
-      Ingreso · {{ formatDateShort(patient.startDate) }}
-    </div>
+    <div class="foot">Ingreso · {{ formatDateShort(patient.startDate) }}</div>
   </button>
 </template>
 
@@ -42,27 +43,34 @@ defineEmits<{ open: [] }>()
   border-radius: 14px;
   cursor: pointer;
   font-family: inherit;
-  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
 }
+
 .card:hover {
   border-color: var(--amatista-300);
-  box-shadow: 0 6px 18px -10px rgba(20, 15, 30, 0.25);
+  box-shadow: 0 6px 18px -10px rgb(20 15 30 / 25%);
 }
+
 .top {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
+
 .day {
   font-size: 11.5px;
   color: var(--warm-500);
   font-weight: 500;
 }
+
 .ident {
   display: flex;
   align-items: center;
   gap: 12px;
 }
+
 .avatar {
   width: 44px;
   height: 44px;
@@ -76,16 +84,19 @@ defineEmits<{ open: [] }>()
   font-weight: 500;
   flex-shrink: 0;
 }
+
 .name {
   font-size: 15px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .code {
   font-size: 12px;
   color: var(--warm-500);
   font-family: var(--font-mono);
 }
+
 .reason {
   margin: 0;
   font-size: 13px;
@@ -96,6 +107,7 @@ defineEmits<{ open: [] }>()
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
 .foot {
   font-size: 11.5px;
   color: var(--warm-500);

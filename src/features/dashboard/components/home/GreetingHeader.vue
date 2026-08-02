@@ -31,7 +31,8 @@ const subtitle = computed(() => {
 <template>
   <header class="greeting">
     <h1 class="title">
-      {{ greeting }}, <em>{{ firstName }}</em>.
+      {{ greeting }}, <em>{{ firstName }}</em
+      >.
     </h1>
     <p class="subtitle">{{ subtitle }}</p>
   </header>
@@ -41,6 +42,7 @@ const subtitle = computed(() => {
 .greeting {
   margin-bottom: 32px;
 }
+
 .title {
   margin: 0;
   font-family: var(--font-serif);
@@ -50,10 +52,12 @@ const subtitle = computed(() => {
   font-weight: 400;
   color: var(--warm-900);
 }
+
 .title em {
   font-style: italic;
   color: var(--amatista-700);
 }
+
 .subtitle {
   margin: 8px 0 0;
   font-size: 14px;

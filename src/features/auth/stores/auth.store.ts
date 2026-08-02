@@ -17,10 +17,7 @@ function decodeJwt(token: string): JwtClaims | null {
     const payload = token.split('.')[1]
     if (!payload) return null
     const normalized = payload.replace(/-/g, '+').replace(/_/g, '/')
-    const padded = normalized.padEnd(
-      normalized.length + ((4 - (normalized.length % 4)) % 4),
-      '=',
-    )
+    const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=')
     const json = decodeURIComponent(
       atob(padded)
         .split('')
@@ -101,7 +98,11 @@ export const useAuthStore = defineStore('auth', () => {
   /** Limpia sesión y storage sin redirigir (útil para expiración proactiva vía router). */
   function clearSession() {
     // Conserva preferencias y el aviso SESSION_REPLACED; solo elimina credenciales de auth.
-    try { localStorage.removeItem(AUTH_STORAGE_KEY) } catch { /* ignore */ }
+    try {
+      localStorage.removeItem(AUTH_STORAGE_KEY)
+    } catch {
+      /* ignore */
+    }
     session.value = null
     me.value = null
   }
@@ -109,7 +110,11 @@ export const useAuthStore = defineStore('auth', () => {
   async function logout() {
     // Logout server-side (best-effort): revoca los refresh tokens del usuario. Aunque falle,
     // limpiamos la sesión local igual.
-    try { await authApi.logout() } catch { /* ignore */ }
+    try {
+      await authApi.logout()
+    } catch {
+      /* ignore */
+    }
     clearSession()
     window.location.assign('/login')
   }

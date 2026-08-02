@@ -86,8 +86,9 @@ function submit() {
       <p class="intro">
         La contraseña anterior de
         <strong>{{ employee?.name ?? 'este empleado' }}</strong>
-        ya está cifrada y no se puede recuperar. Escribe una nueva contraseña provisional; se enviará por
-        correo a <strong>{{ employee?.email }}</strong> y deberá cambiarla en su próximo ingreso.
+        ya está cifrada y no se puede recuperar. Escribe una nueva contraseña provisional; se
+        enviará por correo a <strong>{{ employee?.email }}</strong> y deberá cambiarla en su próximo
+        ingreso.
       </p>
 
       <div class="form">
@@ -131,25 +132,28 @@ function submit() {
 
 <style scoped>
 .banner {
-  background: oklch(95% 0.06 25);
-  border: 1px solid oklch(85% 0.12 25);
-  color: oklch(40% 0.18 25);
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
   padding: 9px 12px;
   border-radius: 8px;
   font-size: 12.5px;
   margin-bottom: 14px;
 }
+
 .intro {
   margin: 0 0 16px;
   font-size: 13px;
   line-height: 1.55;
   color: var(--warm-600);
 }
+
 .form {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
+
 .ghost,
 .primary {
   padding: 8px 14px;
@@ -160,21 +164,26 @@ function submit() {
   font-weight: 500;
   border: 1px solid transparent;
 }
+
 .ghost {
   background: var(--warm-50);
   color: var(--warm-700);
   border-color: var(--warm-200);
 }
+
 .ghost:hover:not(:disabled) {
   background: var(--warm-100);
 }
+
 .primary {
   background: var(--amatista-700);
   color: white;
 }
+
 .primary:hover:not(:disabled) {
   background: var(--amatista-800);
 }
+
 .ghost:disabled,
 .primary:disabled {
   cursor: not-allowed;

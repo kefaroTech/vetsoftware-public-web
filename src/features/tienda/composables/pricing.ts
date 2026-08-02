@@ -44,7 +44,10 @@ export function formatMoney(n: number): string {
 }
 
 /** Porcentaje (0–100) de impuesto efectivo de un ítem; 0 si no aplica. */
-export function effectiveTaxRate(aplicaIva: boolean, taxPercentage: number | null | undefined): number {
+export function effectiveTaxRate(
+  aplicaIva: boolean,
+  taxPercentage: number | null | undefined,
+): number {
   if (!aplicaIva || taxPercentage == null) return 0
   return taxPercentage
 }

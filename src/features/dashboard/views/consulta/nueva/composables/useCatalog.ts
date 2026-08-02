@@ -65,10 +65,7 @@ export function createCatalog<T extends CatalogItem>(config: CatalogConfig<T>) {
       }
     }
 
-    async function create(data: {
-      name: string
-      description?: string
-    }): Promise<T> {
+    async function create(data: { name: string; description?: string }): Promise<T> {
       const created = await config.creator({
         name: data.name,
         description: data.description ?? '',

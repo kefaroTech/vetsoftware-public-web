@@ -36,9 +36,7 @@ const firstName = computed(() => props.employee?.name.split(' ')[0] ?? '')
     </template>
 
     <template #footer-actions>
-      <button type="button" class="ghost" :disabled="busy" @click="emit('cancel')">
-        Cancelar
-      </button>
+      <button type="button" class="ghost" :disabled="busy" @click="emit('cancel')">Cancelar</button>
       <button type="button" class="danger" :disabled="busy" @click="emit('confirm')">
         <Power :size="14" :stroke-width="1.7" />
         Desactivar
@@ -54,6 +52,7 @@ const firstName = computed(() => props.employee?.name.split(' ')[0] ?? '')
   color: var(--warm-600);
   line-height: 1.55;
 }
+
 .ghost,
 .danger {
   display: inline-flex;
@@ -67,22 +66,27 @@ const firstName = computed(() => props.employee?.name.split(' ')[0] ?? '')
   font-weight: 500;
   border: 1px solid transparent;
 }
+
 .ghost {
   background: var(--warm-50);
   color: var(--warm-700);
   border-color: var(--warm-200);
 }
+
 .ghost:hover:not(:disabled) {
   background: var(--warm-100);
 }
+
 .danger {
-  background: oklch(94% 0.05 25);
-  color: oklch(48% 0.18 25);
-  border-color: oklch(48% 0.18 25);
+  background: oklch(94% 0.05 25deg);
+  color: oklch(48% 0.18 25deg);
+  border-color: oklch(48% 0.18 25deg);
 }
+
 .danger:hover:not(:disabled) {
-  background: oklch(91% 0.07 25);
+  background: oklch(91% 0.07 25deg);
 }
+
 .ghost:disabled,
 .danger:disabled {
   cursor: not-allowed;

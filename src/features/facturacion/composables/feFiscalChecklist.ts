@@ -6,11 +6,7 @@ import type { PersonType, TaxRegime } from '../types/facturacion'
 
 /** Tipos de documento del adquiriente (con código DIAN). Incluye PEP (no está en el emisor). */
 export type OwnerDocumentType =
-  | 'CEDULA_CIUDADANIA'
-  | 'NIT'
-  | 'CEDULA_EXTRANJERIA'
-  | 'PASAPORTE'
-  | 'PEP'
+  'CEDULA_CIUDADANIA' | 'NIT' | 'CEDULA_EXTRANJERIA' | 'PASAPORTE' | 'PEP'
 
 export const OWNER_DOCTYPE_LABEL: Record<OwnerDocumentType, string> = {
   CEDULA_CIUDADANIA: 'Cédula de ciudadanía (13)',

@@ -51,7 +51,10 @@ async function handleAction(item: LaboratoryTestResponse, kind: LabActionKind) {
     }
     if (viewing.value?.id === item.id) viewing.value = null
   } catch (e) {
-    toast.error('Ocurrió un error', e instanceof Error ? e.message : 'No se pudo actualizar la muestra.')
+    toast.error(
+      'Ocurrió un error',
+      e instanceof Error ? e.message : 'No se pudo actualizar la muestra.',
+    )
   }
 }
 
@@ -77,7 +80,10 @@ async function onResultsUploaded() {
     await queue.transition(item, 'PENDING_VALIDATION')
     toast.success('Resultados cargados', 'La muestra pasó a Por validar.')
   } catch (e) {
-    toast.error('Ocurrió un error', e instanceof Error ? e.message : 'No se pudo enviar a validación.')
+    toast.error(
+      'Ocurrió un error',
+      e instanceof Error ? e.message : 'No se pudo enviar a validación.',
+    )
   } finally {
     resultsFor.value = null
   }
@@ -137,13 +143,18 @@ async function onResultsUploaded() {
 </template>
 
 <style scoped>
-.page { font-family: var(--font-sans); color: var(--warm-900); }
+.page {
+  font-family: var(--font-sans);
+  color: var(--warm-900);
+}
+
 .tabs {
   display: flex;
   gap: 4px;
   border-bottom: 1px solid var(--warm-200);
   margin-bottom: 20px;
 }
+
 .tabs button {
   font-family: inherit;
   font-size: 13.5px;
@@ -156,15 +167,19 @@ async function onResultsUploaded() {
   margin-bottom: -1px;
   cursor: pointer;
 }
-.tabs button:hover { color: var(--warm-800); }
+.tabs button:hover {
+  color: var(--warm-800);
+}
+
 .tabs button.active {
   color: var(--amatista-700);
   border-bottom-color: var(--amatista-700);
 }
+
 .banner.error {
-  background: oklch(95% 0.06 25);
-  border: 1px solid oklch(85% 0.12 25);
-  color: oklch(40% 0.18 25);
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 13px;

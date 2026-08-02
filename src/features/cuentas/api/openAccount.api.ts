@@ -34,7 +34,10 @@ export const openAccountApi = {
   },
 
   async create(ownerId: number): Promise<OpenAccountResponse> {
-    const { data } = await http.post<OpenAccountResponse>('/open-accounts', withBranchBody({ ownerId }))
+    const { data } = await http.post<OpenAccountResponse>(
+      '/open-accounts',
+      withBranchBody({ ownerId }),
+    )
     return data
   },
 

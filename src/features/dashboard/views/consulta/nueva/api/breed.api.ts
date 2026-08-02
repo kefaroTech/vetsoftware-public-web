@@ -14,9 +14,7 @@ export interface BreedResponse {
 
 export const breedApi = {
   async listBySpecie(specieId: number): Promise<BreedResponse[]> {
-    const { data } = await http.get<BreedResponse[]>(
-      `/species/${specieId}/breeds`,
-    )
+    const { data } = await http.get<BreedResponse[]>(`/species/${specieId}/breeds`)
     return data
   },
 

@@ -14,9 +14,7 @@ const props = defineProps<{
 const emit = defineEmits<{ confirm: []; close: [] }>()
 
 const isMed = computed(() => props.order?.kind === 'med')
-const dose = computed(() =>
-  props.order?.kind === 'med' ? (props.order.dose ?? '') : '',
-)
+const dose = computed(() => (props.order?.kind === 'med' ? (props.order.dose ?? '') : ''))
 </script>
 
 <template>
@@ -24,9 +22,11 @@ const dose = computed(() =>
     :open="open"
     :icon="CircleCheck"
     :title="isMed ? '¿Registrar dosis aplicada?' : '¿Registrar procedimiento?'"
-    :subtitle="isMed
-      ? 'Se marcará la toma como administrada en este momento.'
-      : 'Se marcará la ejecución como realizada en este momento.'"
+    :subtitle="
+      isMed
+        ? 'Se marcará la toma como administrada en este momento.'
+        : 'Se marcará la ejecución como realizada en este momento.'
+    "
     :width="480"
     @close="emit('close')"
   >
@@ -63,6 +63,7 @@ const dose = computed(() =>
   flex-direction: column;
   gap: 10px;
 }
+
 .row {
   display: flex;
   justify-content: space-between;
@@ -70,7 +71,11 @@ const dose = computed(() =>
   padding-bottom: 10px;
   border-bottom: 1px solid var(--warm-150);
 }
-.row:last-child { border-bottom: none; padding-bottom: 0; }
+.row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
 .row dt {
   font-size: 12px;
   text-transform: uppercase;
@@ -78,6 +83,7 @@ const dose = computed(() =>
   color: var(--warm-500);
   font-weight: 500;
 }
+
 .row dd {
   margin: 0;
   font-size: 14px;
@@ -85,6 +91,7 @@ const dose = computed(() =>
   font-weight: 500;
   text-align: right;
 }
+
 .btn-ghost,
 .btn-primary {
   font-family: inherit;
@@ -95,17 +102,23 @@ const dose = computed(() =>
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn-ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-900);
 }
-.btn-ghost:hover { background: var(--warm-100); }
+.btn-ghost:hover {
+  background: var(--warm-100);
+}
+
 .btn-primary {
-  background: oklch(48% 0.16 150);
+  background: oklch(48% 0.16 150deg);
   color: white;
   border: none;
   padding: 9px 18px;
 }
-.btn-primary:hover { filter: brightness(1.05); }
+.btn-primary:hover {
+  filter: brightness(1.05);
+}
 </style>

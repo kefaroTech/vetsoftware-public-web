@@ -92,7 +92,11 @@ const childrenCountLabel = computed(() =>
         label="Frec. respiratoria"
         :value="withUnit(data.respiratoryRate, 'rpm')"
       />
-      <DetailField v-if="clean(data.mucousMembranes)" label="Mucosas" :value="data.mucousMembranes" />
+      <DetailField
+        v-if="clean(data.mucousMembranes)"
+        label="Mucosas"
+        :value="data.mucousMembranes"
+      />
       <DetailField
         v-if="clean(data.capillaryRefill)"
         label="Llenado capilar"
@@ -156,12 +160,7 @@ const childrenCountLabel = computed(() =>
                 {{ c.summary || 'Sin descripción' }}
               </div>
             </div>
-            <ChevronRight
-              v-if="isNavigable(c)"
-              class="child-chev"
-              :size="16"
-              :stroke-width="1.6"
-            />
+            <ChevronRight v-if="isNavigable(c)" class="child-chev" :size="16" :stroke-width="1.6" />
           </button>
         </li>
       </ul>
@@ -175,7 +174,8 @@ const childrenCountLabel = computed(() =>
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px 24px;
 }
-@media (max-width: 560px) {
+
+@media (width <= 560px) {
   .detail-grid {
     grid-template-columns: 1fr;
   }
@@ -187,11 +187,13 @@ const childrenCountLabel = computed(() =>
   flex-direction: column;
   gap: 10px;
 }
+
 .children-head {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .children-label {
   font-size: 11.5px;
   color: var(--warm-500);
@@ -199,10 +201,12 @@ const childrenCountLabel = computed(() =>
   text-transform: uppercase;
   font-weight: 500;
 }
+
 .children-count {
   font-size: 11.5px;
   color: var(--warm-400);
 }
+
 .empty {
   padding: 14px 16px;
   font-size: 13px;
@@ -211,6 +215,7 @@ const childrenCountLabel = computed(() =>
   border: 1px dashed var(--warm-200);
   border-radius: 10px;
 }
+
 .children-list {
   list-style: none;
   margin: 0;
@@ -219,6 +224,7 @@ const childrenCountLabel = computed(() =>
   flex-direction: column;
   gap: 8px;
 }
+
 .child {
   display: flex;
   align-items: flex-start;
@@ -231,30 +237,38 @@ const childrenCountLabel = computed(() =>
   border-radius: 10px;
   padding: 10px 14px;
   cursor: default;
-  transition: border-color 0.12s ease, background 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
 }
+
 .child.navigable {
   cursor: pointer;
 }
+
 .child.navigable:hover {
   border-color: var(--amatista-300);
   background: var(--amatista-50);
 }
+
 .child-chev {
   color: var(--warm-400);
   align-self: center;
   flex-shrink: 0;
 }
+
 .child-icon {
   font-size: 18px;
   line-height: 1;
   margin-top: 2px;
   flex-shrink: 0;
 }
+
 .child-body {
   flex: 1;
   min-width: 0;
 }
+
 .child-head {
   display: flex;
   align-items: center;
@@ -262,19 +276,22 @@ const childrenCountLabel = computed(() =>
   margin-bottom: 4px;
   flex-wrap: wrap;
 }
+
 .child-date {
   font-size: 12px;
   color: var(--warm-500);
 }
+
 .child-id {
   font-size: 11px;
   color: var(--warm-400);
   font-family: var(--font-mono);
 }
+
 .child-summary {
   font-size: 13px;
   color: var(--warm-800);
   line-height: 1.45;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 </style>

@@ -24,8 +24,8 @@ export const useConsultaResumeGuardStore = defineStore('consultaResumeGuard', ()
     ownerName: '',
     petName: '',
     step: 1,
-    onContinue: () => {},
-    onCreateNew: () => {},
+    onContinue: () => undefined,
+    onCreateNew: () => undefined,
   })
 
   function show(opts: ResumeOrNewOptions) {

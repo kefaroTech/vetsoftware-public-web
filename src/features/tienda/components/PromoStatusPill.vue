@@ -30,6 +30,7 @@ const TONE: Record<DerivedPromoStatus, { bg: string; fg: string; dot: string }> 
   white-space: nowrap;
   font-family: var(--font-sans);
 }
+
 .dot {
   width: 6px;
   height: 6px;

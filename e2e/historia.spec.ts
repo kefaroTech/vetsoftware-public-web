@@ -88,9 +88,7 @@ test.describe('B · Búsqueda de propietario', () => {
 
   test('buscar por nombre también lo encuentra', async ({ page }) => {
     await ownerSearchInput(page).fill(patient.owner.name)
-    await expect(
-      page.locator('.result-row', { hasText: patient.owner.document }),
-    ).toBeVisible()
+    await expect(page.locator('.result-row', { hasText: patient.owner.document })).toBeVisible()
   })
 
   test('seleccionar un resultado avanza al paso 2 (mascotas)', async ({ page }) => {
@@ -119,7 +117,9 @@ test.describe('B · Búsqueda de propietario', () => {
 // C · Paso 2 — Selección de mascota (contra /animals/by-owner real)
 // ════════════════════════════════════════════════════════════════════════════
 test.describe('C · Selección de mascota', () => {
-  test('el propietario sembrado lista su mascota con especie, raza, sexo y peso', async ({ page }) => {
+  test('el propietario sembrado lista su mascota con especie, raza, sexo y peso', async ({
+    page,
+  }) => {
     await gotoHistorialStep1(page)
     await ownerSearchInput(page).fill(patient.owner.document)
     await page.locator('.result-row', { hasText: patient.owner.document }).first().click()
@@ -140,7 +140,9 @@ test.describe('C · Selección de mascota', () => {
     await gotoHistorialStep1(page)
     await ownerSearchInput(page).fill(emptyOwnerDoc)
     await page.locator('.result-row', { hasText: emptyOwnerDoc }).first().click()
-    await expect(page.getByText('Este propietario aún no tiene mascotas registradas.')).toBeVisible()
+    await expect(
+      page.getByText('Este propietario aún no tiene mascotas registradas.'),
+    ).toBeVisible()
     await expect(page.getByText('Sin mascotas registradas')).toBeVisible()
   })
 
@@ -195,7 +197,8 @@ test.describe('E · Timeline de eventos', () => {
     await gotoHistorialStep1(page)
     const [resp] = await Promise.all([
       page.waitForResponse(
-        (r) => /\/animals\/\d+\/clinical-history(\?|$)/.test(r.url()) && r.request().method() === 'GET',
+        (r) =>
+          /\/animals\/\d+\/clinical-history(\?|$)/.test(r.url()) && r.request().method() === 'GET',
       ),
       pickOwnerAndPet(page, patient),
     ])
@@ -203,7 +206,9 @@ test.describe('E · Timeline de eventos', () => {
     await expect(page.locator('.month-group').first()).toBeVisible()
   })
 
-  test('aparecen los chips de los tipos sembrados (consulta, vacuna, plan terapéutico)', async ({ page }) => {
+  test('aparecen los chips de los tipos sembrados (consulta, vacuna, plan terapéutico)', async ({
+    page,
+  }) => {
     await openHistoryFor(page, patient)
     await expect(page.getByRole('button', { name: /Todos ·/ })).toBeVisible()
     await expect(page.getByRole('button', { name: /Consulta ·/ })).toBeVisible()
@@ -279,7 +284,9 @@ test.describe('G · Detalle de evento', () => {
     await expect(vacuna).toContainText(VACC_LOT_SEED)
   })
 
-  test('cerrar un procedimiento asociado vuelve a la consulta (no cierra el modal)', async ({ page }) => {
+  test('cerrar un procedimiento asociado vuelve a la consulta (no cierra el modal)', async ({
+    page,
+  }) => {
     await openHistoryFor(page, patient)
     await page.locator('.event-row', { hasText: 'Consulta' }).first().locator('.card').click()
     const consulta = page.getByRole('dialog', { name: /Consulta/ })
@@ -385,7 +392,9 @@ test.describe('H · Historial de peso', () => {
     await expect(wp.getByText('El peso debe ser mayor a 0')).toBeVisible()
   })
 
-  test('validación de tipo: peso no numérico se rechaza y marca el campo inválido', async ({ page }) => {
+  test('validación de tipo: peso no numérico se rechaza y marca el campo inválido', async ({
+    page,
+  }) => {
     await openHistoryFor(page, patient)
     await openWeightPanel(page)
     const wp = weightPanel(page)
@@ -406,7 +415,9 @@ test.describe('H · Historial de peso', () => {
     await expect(wp.locator('.wp-form')).toHaveCount(0)
   })
 
-  test('round-trip real: registrar un peso lo agrega y eliminarlo lo quita (POST/DELETE 2xx)', async ({ page }) => {
+  test('round-trip real: registrar un peso lo agrega y eliminarlo lo quita (POST/DELETE 2xx)', async ({
+    page,
+  }) => {
     // Paciente DEDICADO para no interferir con los conteos del compartido.
     const api = trackApiWrites(page)
     const dedicated = await seedPlainPatient(page)
@@ -420,7 +431,8 @@ test.describe('H · Historial de peso', () => {
     await wp.getByLabel(/^Peso/).fill('31.5')
     const [createResp] = await Promise.all([
       page.waitForResponse(
-        (r) => /\/weight-records$/.test(new URL(r.url()).pathname) && r.request().method() === 'POST',
+        (r) =>
+          /\/weight-records$/.test(new URL(r.url()).pathname) && r.request().method() === 'POST',
       ),
       wp.getByRole('button', { name: 'Guardar' }).click(),
     ])
@@ -431,7 +443,9 @@ test.describe('H · Historial de peso', () => {
     // Eliminar el recién creado (primer registro) → DELETE 2xx y vuelve al conteo previo.
     const [delResp] = await Promise.all([
       page.waitForResponse(
-        (r) => /\/weight-records\/\d+$/.test(new URL(r.url()).pathname) && r.request().method() === 'DELETE',
+        (r) =>
+          /\/weight-records\/\d+$/.test(new URL(r.url()).pathname) &&
+          r.request().method() === 'DELETE',
       ),
       wp.locator('.wp-item').first().locator('.wp-del').click(),
     ])
@@ -471,7 +485,9 @@ test.describe('I · Exportar PDF', () => {
 // J · Habilitación de botones (el usuario de prueba tiene los permisos)
 // ════════════════════════════════════════════════════════════════════════════
 test.describe('J · Botones de acción', () => {
-  test('"Nueva consulta" está visible y navega al wizard con el paciente cargado', async ({ page }) => {
+  test('"Nueva consulta" está visible y navega al wizard con el paciente cargado', async ({
+    page,
+  }) => {
     await openHistoryFor(page, patient)
     const btn = page.getByRole('button', { name: 'Nueva consulta' })
     await expect(btn).toBeVisible()
@@ -494,19 +510,31 @@ test.describe('K · Breadcrumbs', () => {
   test('en el paso 3 reflejan propietario y mascota', async ({ page }) => {
     await openHistoryFor(page, patient)
     const crumbs = page.locator('.crumbs')
-    await expect(crumbs.getByRole('button', { name: new RegExp(`Propietario · ${escapeRe(patient.owner.name)}`) })).toBeVisible()
-    await expect(crumbs.getByRole('button', { name: new RegExp(`Mascota · ${escapeRe(patient.petName)}`) })).toBeVisible()
+    await expect(
+      crumbs.getByRole('button', {
+        name: new RegExp(`Propietario · ${escapeRe(patient.owner.name)}`),
+      }),
+    ).toBeVisible()
+    await expect(
+      crumbs.getByRole('button', { name: new RegExp(`Mascota · ${escapeRe(patient.petName)}`) }),
+    ).toBeVisible()
   })
 
   test('el crumb "Propietario" vuelve al paso 1', async ({ page }) => {
     await openHistoryFor(page, patient)
-    await page.locator('.crumbs').getByRole('button', { name: /Propietario/ }).click()
+    await page
+      .locator('.crumbs')
+      .getByRole('button', { name: /Propietario/ })
+      .click()
     await expect(page.getByRole('heading', { name: '¿De quién es la mascota?' })).toBeVisible()
   })
 
   test('el crumb "Mascota" vuelve al paso 2', async ({ page }) => {
     await openHistoryFor(page, patient)
-    await page.locator('.crumbs').getByRole('button', { name: /Mascota/ }).click()
+    await page
+      .locator('.crumbs')
+      .getByRole('button', { name: /Mascota/ })
+      .click()
     await expect(page.getByRole('heading', { name: /Qué mascota quieres consultar/ })).toBeVisible()
   })
 

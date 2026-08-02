@@ -7,7 +7,7 @@ withDefaults(
   }>(),
   { tone: 'error', closable: true },
 )
-const emit = defineEmits<{ (e: 'close'): void }>()
+const emit = defineEmits<(e: 'close') => void>()
 </script>
 
 <template>
@@ -39,27 +39,33 @@ const emit = defineEmits<{ (e: 'close'): void }>()
   line-height: 1.45;
   border: 1px solid;
 }
+
 .pub-banner--error {
   background: var(--pub-err-bg);
   border-color: var(--pub-err-bd);
   color: var(--pub-err-tx-2);
 }
+
 .pub-banner--warning {
   background: var(--pub-warn-bg);
   border-color: var(--pub-warn-bd);
   color: var(--pub-warn-tx);
 }
+
 .pub-banner-ico {
   flex-shrink: 0;
   margin-top: 1px;
 }
+
 .pub-banner-body {
   flex: 1;
 }
+
 .pub-banner-body :deep(a) {
   color: inherit;
   font-weight: 600;
 }
+
 .pub-banner-close {
   border: none;
   background: transparent;
@@ -71,6 +77,7 @@ const emit = defineEmits<{ (e: 'close'): void }>()
   place-items: center;
   flex-shrink: 0;
 }
+
 .pub-banner-close:hover {
   opacity: 1;
 }

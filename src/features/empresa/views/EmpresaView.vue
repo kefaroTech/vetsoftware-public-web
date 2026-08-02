@@ -7,10 +7,7 @@ import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useFacturacionAccess } from '@/features/facturacion/composables/useFacturacionAccess'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { PERMISSIONS } from '@/constants/permissions'
-import {
-  COMPANY_DOCTYPE_LABEL,
-  TAX_REGIME_LABEL,
-} from '@/features/facturacion/types/facturacion'
+import { COMPANY_DOCTYPE_LABEL, TAX_REGIME_LABEL } from '@/features/facturacion/types/facturacion'
 import { useEmpresa } from '../composables/useEmpresa'
 import { useSedes } from '@/features/branches/composables/useSedes'
 import type { BranchResponse, SaveBranchRequest } from '@/features/branches/api/branch.api'
@@ -49,7 +46,11 @@ const taxRegimeLabel = computed(() =>
   taxProfile.value ? TAX_REGIME_LABEL[taxProfile.value.taxRegime] : null,
 )
 const personType = computed(() =>
-  taxProfile.value ? (taxProfile.value.companyDocumentType === 'NIT' ? 'Jurídica' : 'Natural') : null,
+  taxProfile.value
+    ? taxProfile.value.companyDocumentType === 'NIT'
+      ? 'Jurídica'
+      : 'Natural'
+    : null,
 )
 const createdDate = computed(() =>
   (taxProfile.value?.createdDate || company.value?.createdDate || '').slice(0, 10),
@@ -126,7 +127,9 @@ onMounted(() => {
       <div class="heroinfo">
         <div class="heroname">{{ legalName }}</div>
         <div class="herotags">
-          <span v-if="docTypeLabel && idDisplay" class="tag mono">{{ docTypeLabel }} · {{ idDisplay }}</span>
+          <span v-if="docTypeLabel && idDisplay" class="tag mono"
+            >{{ docTypeLabel }} · {{ idDisplay }}</span
+          >
           <span v-else-if="idDisplay" class="tag mono">{{ idDisplay }}</span>
           <span v-if="taxRegimeLabel" class="tag amatista">{{ taxRegimeLabel }}</span>
           <span v-if="personType" class="tag">{{ personType }}</span>
@@ -147,16 +150,33 @@ onMounted(() => {
           <h3>Identidad fiscal</h3>
         </header>
         <div v-if="taxProfile" class="rows">
-          <div class="row"><span class="row-label">Razón social</span><span class="row-value">{{ legalName }}</span></div>
-          <div class="row"><span class="row-label">Tipo de documento</span><span class="row-value">{{ docTypeLabel }}</span></div>
-          <div class="row"><span class="row-label">Número de documento</span><span class="row-value mono">{{ idDisplay }}</span></div>
-          <div class="row"><span class="row-label">Régimen tributario</span><span class="row-value">{{ taxRegimeLabel }}</span></div>
-          <div class="row"><span class="row-label">Tipo de persona</span><span class="row-value">{{ personType }}</span></div>
+          <div class="row">
+            <span class="row-label">Razón social</span
+            ><span class="row-value">{{ legalName }}</span>
+          </div>
+          <div class="row">
+            <span class="row-label">Tipo de documento</span
+            ><span class="row-value">{{ docTypeLabel }}</span>
+          </div>
+          <div class="row">
+            <span class="row-label">Número de documento</span
+            ><span class="row-value mono">{{ idDisplay }}</span>
+          </div>
+          <div class="row">
+            <span class="row-label">Régimen tributario</span
+            ><span class="row-value">{{ taxRegimeLabel }}</span>
+          </div>
+          <div class="row">
+            <span class="row-label">Tipo de persona</span
+            ><span class="row-value">{{ personType }}</span>
+          </div>
         </div>
         <div v-else class="empty-card">
           <Building2 :size="18" :stroke-width="1.6" />
           <p>Aún no has configurado el perfil fiscal de la empresa.</p>
-          <button v-if="feCanConfig" type="button" class="empty-cta" @click="goEditFiscal">Configurar</button>
+          <button v-if="feCanConfig" type="button" class="empty-cta" @click="goEditFiscal">
+            Configurar
+          </button>
         </div>
       </section>
 
@@ -166,10 +186,22 @@ onMounted(() => {
           <h3>Contacto y ubicación</h3>
         </header>
         <div class="rows">
-          <div class="row"><span class="row-label">Correo fiscal</span><span class="row-value">{{ taxProfile?.fiscalEmail || '—' }}</span></div>
-          <div class="row"><span class="row-label">Teléfono</span><span class="row-value">{{ company?.contactNumber || '—' }}</span></div>
-          <div class="row"><span class="row-label">Dirección</span><span class="row-value">{{ company?.address || '—' }}</span></div>
-          <div class="row"><span class="row-label">Ciudad</span><span class="row-value">{{ company?.city?.name || '—' }}</span></div>
+          <div class="row">
+            <span class="row-label">Correo fiscal</span
+            ><span class="row-value">{{ taxProfile?.fiscalEmail || '—' }}</span>
+          </div>
+          <div class="row">
+            <span class="row-label">Teléfono</span
+            ><span class="row-value">{{ company?.contactNumber || '—' }}</span>
+          </div>
+          <div class="row">
+            <span class="row-label">Dirección</span
+            ><span class="row-value">{{ company?.address || '—' }}</span>
+          </div>
+          <div class="row">
+            <span class="row-label">Ciudad</span
+            ><span class="row-value">{{ company?.city?.name || '—' }}</span>
+          </div>
         </div>
       </section>
     </div>
@@ -180,8 +212,8 @@ onMounted(() => {
         <div class="sedestitle">
           <h3>Sedes</h3>
           <span class="sedescount">
-            {{ sedes.length }} {{ sedes.length === 1 ? 'sede' : 'sedes' }} ·
-            {{ activeCount }} {{ activeCount === 1 ? 'activa' : 'activas' }}
+            {{ sedes.length }} {{ sedes.length === 1 ? 'sede' : 'sedes' }} · {{ activeCount }}
+            {{ activeCount === 1 ? 'activa' : 'activas' }}
           </span>
         </div>
         <button v-if="canManageSedes" type="button" class="cta" @click="openAdd">
@@ -223,6 +255,7 @@ onMounted(() => {
   margin: 0 auto;
   padding: 4px 4px 40px;
 }
+
 .emp-header {
   display: flex;
   align-items: flex-start;
@@ -230,6 +263,7 @@ onMounted(() => {
   gap: 16px;
   margin-bottom: 22px;
 }
+
 .kicker {
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -237,6 +271,7 @@ onMounted(() => {
   color: var(--amatista-600);
   font-weight: 600;
 }
+
 .title {
   margin: 6px 0 4px;
   font-family: var(--font-serif);
@@ -246,10 +281,12 @@ onMounted(() => {
   color: var(--warm-900);
   line-height: 1.05;
 }
+
 .lead {
   font-size: 13.5px;
   color: var(--warm-600);
 }
+
 .editbtn {
   display: inline-flex;
   align-items: center;
@@ -265,8 +302,11 @@ onMounted(() => {
   cursor: pointer;
   height: fit-content;
   white-space: nowrap;
-  transition: background 0.14s ease, border-color 0.14s ease;
+  transition:
+    background 0.14s ease,
+    border-color 0.14s ease;
 }
+
 .editbtn:hover {
   background: var(--warm-100);
   border-color: var(--warm-400);
@@ -283,6 +323,7 @@ onMounted(() => {
   border: 1px solid var(--amatista-100);
   margin-bottom: 20px;
 }
+
 .mark {
   width: 58px;
   height: 58px;
@@ -296,12 +337,14 @@ onMounted(() => {
   font-style: italic;
   font-weight: 600;
   font-size: 30px;
-  box-shadow: 0 6px 16px -6px oklch(45% 0.18 var(--hue) / 0.5);
+  box-shadow: 0 6px 16px -6px oklch(45% 0.18 var(--hue) / 50%);
 }
+
 .heroinfo {
   flex: 1;
   min-width: 0;
 }
+
 .heroname {
   font-family: var(--font-serif);
   font-size: 24px;
@@ -310,12 +353,14 @@ onMounted(() => {
   color: var(--warm-900);
   line-height: 1.1;
 }
+
 .herotags {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 10px;
 }
+
 .tag {
   font-size: 12px;
   padding: 4px 10px;
@@ -324,18 +369,22 @@ onMounted(() => {
   color: var(--warm-700);
   font-weight: 500;
 }
+
 .tag.mono {
   font-family: var(--font-mono);
   font-size: 11.5px;
 }
+
 .tag.amatista {
   background: var(--amatista-100);
   color: var(--amatista-700);
 }
+
 .tag.warn {
-  background: oklch(95% 0.06 80);
-  color: oklch(45% 0.13 80);
+  background: oklch(95% 0.06 80deg);
+  color: oklch(45% 0.13 80deg);
 }
+
 .herometa {
   display: flex;
   flex-direction: column;
@@ -343,12 +392,14 @@ onMounted(() => {
   text-align: right;
   flex-shrink: 0;
 }
+
 .herometa-label {
   font-size: 11px;
   color: var(--warm-500);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+
 .herometa-value {
   font-size: 14px;
   color: var(--warm-800);
@@ -364,24 +415,28 @@ onMounted(() => {
   gap: 16px;
   margin-bottom: 28px;
 }
+
 .card {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 14px;
   padding: 20px 22px;
 }
+
 .cardhead {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 16px;
 }
+
 .cardhead h3 {
   margin: 0;
   font-size: 14px;
   font-weight: 600;
   color: var(--warm-800);
 }
+
 .cardic {
   width: 30px;
   height: 30px;
@@ -392,10 +447,12 @@ onMounted(() => {
   color: var(--amatista-700);
   flex-shrink: 0;
 }
+
 .rows {
   display: flex;
   flex-direction: column;
 }
+
 .row {
   display: flex;
   align-items: baseline;
@@ -404,14 +461,17 @@ onMounted(() => {
   padding: 9px 0;
   border-bottom: 1px solid var(--warm-150);
 }
+
 .row:last-child {
   border-bottom: none;
 }
+
 .row-label {
   font-size: 12.5px;
   color: var(--warm-500);
   flex-shrink: 0;
 }
+
 .row-value {
   font-size: 13px;
   color: var(--warm-900);
@@ -419,10 +479,12 @@ onMounted(() => {
   text-align: right;
   min-width: 0;
 }
+
 .row-value.mono {
   font-family: var(--font-mono);
   font-size: 12.5px;
 }
+
 .empty-card {
   display: flex;
   flex-direction: column;
@@ -431,9 +493,11 @@ onMounted(() => {
   color: var(--warm-500);
   font-size: 12.5px;
 }
+
 .empty-card p {
   margin: 0;
 }
+
 .empty-cta {
   margin-top: 4px;
   padding: 6px 12px;
@@ -451,6 +515,7 @@ onMounted(() => {
 .sedes {
   margin-top: 4px;
 }
+
 .sedeshead {
   display: flex;
   align-items: flex-end;
@@ -458,6 +523,7 @@ onMounted(() => {
   gap: 16px;
   margin-bottom: 16px;
 }
+
 .sedestitle h3 {
   margin: 0;
   font-family: var(--font-serif);
@@ -466,12 +532,14 @@ onMounted(() => {
   letter-spacing: -0.015em;
   color: var(--warm-900);
 }
+
 .sedescount {
   font-size: 12.5px;
   color: var(--warm-500);
   margin-top: 2px;
   display: block;
 }
+
 .cta {
   display: inline-flex;
   align-items: center;
@@ -479,20 +547,28 @@ onMounted(() => {
   padding: 9px 15px;
   border-radius: 9px;
   border: none;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
   color: #fff;
   font-family: inherit;
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08), 0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.45);
+  box-shadow:
+    0 1px 2px rgb(50 20 80 / 8%),
+    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 45%);
 }
+
 .sedesgrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 14px;
 }
+
 .sedes-empty {
   display: flex;
   flex-direction: column;
@@ -502,14 +578,16 @@ onMounted(() => {
   color: var(--warm-500);
   font-size: 13px;
 }
+
 .sedes-empty p {
   margin: 0;
 }
 
-@media (max-width: 900px) {
+@media (width <= 900px) {
   .cards {
     grid-template-columns: 1fr;
   }
+
   .hero {
     flex-wrap: wrap;
   }

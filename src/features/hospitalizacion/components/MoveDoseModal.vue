@@ -32,18 +32,17 @@ const emit = defineEmits<{
         </p>
         <ul class="opts">
           <li>
-            <strong>Solo esta toma</strong> — mueve únicamente esta toma; las siguientes no
-            cambian.
+            <strong>Solo esta toma</strong> — mueve únicamente esta toma; las siguientes no cambian.
           </li>
           <li>
-            <strong>Esta y las siguientes</strong> — recalcula las tomas pendientes
-            posteriores sumando el intervalo desde la nueva hora.
+            <strong>Esta y las siguientes</strong> — recalcula las tomas pendientes posteriores
+            sumando el intervalo desde la nueva hora.
           </li>
         </ul>
       </template>
       <p v-else class="lead">
-        Esta orden usa pauta <strong>fija</strong>: se moverá solo esta toma; las demás se
-        mantienen en sus horas de reloj.
+        Esta orden usa pauta <strong>fija</strong>: se moverá solo esta toma; las demás se mantienen
+        en sus horas de reloj.
       </p>
     </template>
 
@@ -71,6 +70,7 @@ const emit = defineEmits<{
   color: var(--warm-800);
   line-height: 1.5;
 }
+
 .opts {
   margin: 0;
   padding-left: 18px;
@@ -81,9 +81,11 @@ const emit = defineEmits<{
   color: var(--warm-700);
   line-height: 1.45;
 }
+
 .opts strong {
   color: var(--warm-900);
 }
+
 .btn-ghost,
 .btn-secondary,
 .btn-primary {
@@ -95,23 +97,32 @@ const emit = defineEmits<{
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn-ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-900);
 }
-.btn-ghost:hover { background: var(--warm-100); }
+.btn-ghost:hover {
+  background: var(--warm-100);
+}
+
 .btn-secondary {
   background: var(--warm-100);
   border-color: var(--warm-200);
   color: var(--warm-900);
 }
-.btn-secondary:hover { background: var(--warm-200); }
+.btn-secondary:hover {
+  background: var(--warm-200);
+}
+
 .btn-primary {
   background: var(--amatista-700);
   color: white;
   border: none;
   padding: 9px 18px;
 }
-.btn-primary:hover { filter: brightness(1.05); }
+.btn-primary:hover {
+  filter: brightness(1.05);
+}
 </style>

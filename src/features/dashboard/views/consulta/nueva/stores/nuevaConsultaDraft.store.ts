@@ -103,13 +103,7 @@ export interface NuevaConsultaDraft {
 }
 
 export type ActionKind =
-  | 'receta'
-  | 'lab'
-  | 'imaging'
-  | 'vaccination'
-  | 'hospitalization'
-  | 'deworming'
-  | 'surgery'
+  'receta' | 'lab' | 'imaging' | 'vaccination' | 'hospitalization' | 'deworming' | 'surgery'
 
 const STORAGE_KEY = 'vetrina:nueva-consulta-draft'
 
@@ -323,20 +317,48 @@ export const useNuevaConsultaDraftStore = defineStore('nuevaConsultaDraft', () =
     )
   })
 
-  function addPrescription(p: Prescription) { state.prescriptions.push(p) }
-  function removePrescription(idx: number) { state.prescriptions.splice(idx, 1) }
-  function addLaboratoryTest(t: LaboratoryTest) { state.laboratoryTests.push(t) }
-  function removeLaboratoryTest(idx: number) { state.laboratoryTests.splice(idx, 1) }
-  function addDiagnosticImaging(i: DiagnosticImaging) { state.diagnosticImagings.push(i) }
-  function removeDiagnosticImaging(idx: number) { state.diagnosticImagings.splice(idx, 1) }
-  function addVaccination(v: Vaccination) { state.vaccinations.push(v) }
-  function removeVaccination(idx: number) { state.vaccinations.splice(idx, 1) }
-  function addHospitalization(h: Hospitalization) { state.hospitalizations.push(h) }
-  function removeHospitalization(idx: number) { state.hospitalizations.splice(idx, 1) }
-  function addDeworming(d: Deworming) { state.dewormings.push(d) }
-  function removeDeworming(idx: number) { state.dewormings.splice(idx, 1) }
-  function addSurgery(s: Surgery) { state.surgeries.push(s) }
-  function removeSurgery(idx: number) { state.surgeries.splice(idx, 1) }
+  function addPrescription(p: Prescription) {
+    state.prescriptions.push(p)
+  }
+  function removePrescription(idx: number) {
+    state.prescriptions.splice(idx, 1)
+  }
+  function addLaboratoryTest(t: LaboratoryTest) {
+    state.laboratoryTests.push(t)
+  }
+  function removeLaboratoryTest(idx: number) {
+    state.laboratoryTests.splice(idx, 1)
+  }
+  function addDiagnosticImaging(i: DiagnosticImaging) {
+    state.diagnosticImagings.push(i)
+  }
+  function removeDiagnosticImaging(idx: number) {
+    state.diagnosticImagings.splice(idx, 1)
+  }
+  function addVaccination(v: Vaccination) {
+    state.vaccinations.push(v)
+  }
+  function removeVaccination(idx: number) {
+    state.vaccinations.splice(idx, 1)
+  }
+  function addHospitalization(h: Hospitalization) {
+    state.hospitalizations.push(h)
+  }
+  function removeHospitalization(idx: number) {
+    state.hospitalizations.splice(idx, 1)
+  }
+  function addDeworming(d: Deworming) {
+    state.dewormings.push(d)
+  }
+  function removeDeworming(idx: number) {
+    state.dewormings.splice(idx, 1)
+  }
+  function addSurgery(s: Surgery) {
+    state.surgeries.push(s)
+  }
+  function removeSurgery(idx: number) {
+    state.surgeries.splice(idx, 1)
+  }
 
   function updatePrescription(index: number, p: Prescription) {
     const prev = state.prescriptions[index]
@@ -378,7 +400,9 @@ export const useNuevaConsultaDraftStore = defineStore('nuevaConsultaDraft', () =
     state.surgeries[index] = { ...s, savedId: prev.savedId }
   }
 
-  function markConsultationCreated(id: number) { state.consultationCreatedId = id }
+  function markConsultationCreated(id: number) {
+    state.consultationCreatedId = id
+  }
   function markPrescriptionSaved(index: number, id: number) {
     const p = state.prescriptions[index]
     if (p) p.savedId = id

@@ -24,18 +24,14 @@ const BASE = '/procedure-schedules'
 
 export const procedureScheduleApi = {
   /** Regenera (borra plan previo + crea) las ejecuciones de un procedimiento. */
-  async generate(
-    hospitalizationProcedureId: number,
-  ): Promise<ProcedureScheduleResponse[]> {
+  async generate(hospitalizationProcedureId: number): Promise<ProcedureScheduleResponse[]> {
     const { data } = await http.post<ProcedureScheduleResponse[]>(
       `${BASE}/generate/${hospitalizationProcedureId}`,
     )
     return data
   },
 
-  async listByHospitalization(
-    hospitalizationId: number,
-  ): Promise<ProcedureScheduleResponse[]> {
+  async listByHospitalization(hospitalizationId: number): Promise<ProcedureScheduleResponse[]> {
     const { data } = await http.get<ProcedureScheduleResponse[]>(
       `${BASE}/by-hospitalization/${hospitalizationId}`,
     )
@@ -44,9 +40,7 @@ export const procedureScheduleApi = {
 
   /** Marca la ejecución como aplicada. Devuelve el plan completo de ese procedimiento. */
   async apply(scheduleId: number): Promise<ProcedureScheduleResponse[]> {
-    const { data } = await http.patch<ProcedureScheduleResponse[]>(
-      `${BASE}/${scheduleId}/apply`,
-    )
+    const { data } = await http.patch<ProcedureScheduleResponse[]>(`${BASE}/${scheduleId}/apply`)
     return data
   },
 
@@ -64,9 +58,7 @@ export const procedureScheduleApi = {
   },
 
   /** Soft-delete de las ejecuciones pendientes (al suspender). Devuelve las aplicadas. */
-  async suspendPending(
-    hospitalizationProcedureId: number,
-  ): Promise<ProcedureScheduleResponse[]> {
+  async suspendPending(hospitalizationProcedureId: number): Promise<ProcedureScheduleResponse[]> {
     const { data } = await http.patch<ProcedureScheduleResponse[]>(
       `${BASE}/by-procedure/${hospitalizationProcedureId}/suspend-pending`,
     )

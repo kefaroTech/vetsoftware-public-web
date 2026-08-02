@@ -43,7 +43,11 @@ const num = (v: string) => Number((v || '').replace(',', '.'))
 const subtotalN = computed(() => num(form.subtotal))
 const taxN = computed(() => num(form.taxAmount))
 const withN = computed(() => num(form.withholdingAmount || '0'))
-const totalN = computed(() => (Number.isNaN(subtotalN.value) ? 0 : subtotalN.value) + (Number.isNaN(taxN.value) ? 0 : taxN.value))
+const totalN = computed(
+  () =>
+    (Number.isNaN(subtotalN.value) ? 0 : subtotalN.value) +
+    (Number.isNaN(taxN.value) ? 0 : taxN.value),
+)
 const payableN = computed(() => totalN.value - (Number.isNaN(withN.value) ? 0 : withN.value))
 
 const errors = computed(() => ({
@@ -55,16 +59,23 @@ const errors = computed(() => ({
     : form.issueDate && form.dueDate < form.issueDate
       ? 'El vencimiento no puede ser anterior a la emisión.'
       : null,
-  subtotal: form.subtotal.trim() && !Number.isNaN(subtotalN.value) && subtotalN.value >= 0 ? null : 'Base inválida.',
-  taxAmount: form.taxAmount.trim() && !Number.isNaN(taxN.value) && taxN.value >= 0 ? null : 'Impuesto inválido.',
+  subtotal:
+    form.subtotal.trim() && !Number.isNaN(subtotalN.value) && subtotalN.value >= 0
+      ? null
+      : 'Base inválida.',
+  taxAmount:
+    form.taxAmount.trim() && !Number.isNaN(taxN.value) && taxN.value >= 0
+      ? null
+      : 'Impuesto inválido.',
   withholdingAmount:
-    form.withholdingAmount.trim() === '' || (!Number.isNaN(withN.value) && withN.value >= 0 && withN.value <= totalN.value)
+    form.withholdingAmount.trim() === '' ||
+    (!Number.isNaN(withN.value) && withN.value >= 0 && withN.value <= totalN.value)
       ? null
       : 'Retención inválida (no puede superar el total).',
 }))
 const hasErrors = computed(() => Object.values(errors.value).some((e) => e !== null))
 function err(k: keyof typeof errors.value) {
-  return submitted.value ? errors.value[k] ?? undefined : undefined
+  return submitted.value ? (errors.value[k] ?? undefined) : undefined
 }
 
 // Prefill vencimiento = emisión + días de crédito del proveedor (si el usuario no lo fijó aún).
@@ -141,37 +152,68 @@ async function submit() {
       <p v-if="serverError" class="server-error">{{ serverError }}</p>
       <div class="grid">
         <BaseField label="Proveedor" required :error="err('supplierId')">
-          <BaseSelect v-model="form.supplierId" :options="supplierOptions" placeholder="Selecciona proveedor"
-            :invalid="!!err('supplierId')" />
+          <BaseSelect
+            v-model="form.supplierId"
+            :options="supplierOptions"
+            placeholder="Selecciona proveedor"
+            :invalid="!!err('supplierId')"
+          />
         </BaseField>
         <BaseField label="N.º de factura" required :error="err('invoiceNumber')">
-          <BaseInput v-model="form.invoiceNumber" placeholder="FV-1024" :invalid="!!err('invoiceNumber')" />
+          <BaseInput
+            v-model="form.invoiceNumber"
+            placeholder="FV-1024"
+            :invalid="!!err('invoiceNumber')"
+          />
         </BaseField>
         <BaseField label="Fecha de emisión" required :error="err('issueDate')">
           <DateInput v-model="form.issueDate" :invalid="!!err('issueDate')" />
         </BaseField>
         <BaseField label="Vencimiento" required :error="err('dueDate')">
-          <DateInput v-model="form.dueDate" :min="form.issueDate || undefined" :invalid="!!err('dueDate')" />
+          <DateInput
+            v-model="form.dueDate"
+            :min="form.issueDate || undefined"
+            :invalid="!!err('dueDate')"
+          />
         </BaseField>
         <BaseField label="Base gravable" required :error="err('subtotal')">
-          <BaseInput v-model="form.subtotal" placeholder="0" inputmode="decimal" suffix="COP"
-            :invalid="!!err('subtotal')" />
+          <BaseInput
+            v-model="form.subtotal"
+            placeholder="0"
+            inputmode="decimal"
+            suffix="COP"
+            :invalid="!!err('subtotal')"
+          />
         </BaseField>
         <BaseField label="Impuesto (IVA/INC)" required :error="err('taxAmount')">
-          <BaseInput v-model="form.taxAmount" placeholder="0" inputmode="decimal" suffix="COP"
-            :invalid="!!err('taxAmount')" />
+          <BaseInput
+            v-model="form.taxAmount"
+            placeholder="0"
+            inputmode="decimal"
+            suffix="COP"
+            :invalid="!!err('taxAmount')"
+          />
         </BaseField>
         <BaseField label="Retención practicada" hint="Opcional" :error="err('withholdingAmount')">
-          <BaseInput v-model="form.withholdingAmount" placeholder="0" inputmode="decimal" suffix="COP"
-            :invalid="!!err('withholdingAmount')" />
+          <BaseInput
+            v-model="form.withholdingAmount"
+            placeholder="0"
+            inputmode="decimal"
+            suffix="COP"
+            :invalid="!!err('withholdingAmount')"
+          />
         </BaseField>
         <BaseField class="col-2" label="Notas" hint="Opcional">
           <BaseTextarea v-model="form.notes" placeholder="Observaciones…" :rows="2" />
         </BaseField>
       </div>
       <div class="totals-preview">
-        <span>Total: <strong>{{ formatMoney(totalN) }}</strong></span>
-        <span>Neto a pagar: <strong>{{ formatMoney(payableN) }}</strong></span>
+        <span
+          >Total: <strong>{{ formatMoney(totalN) }}</strong></span
+        >
+        <span
+          >Neto a pagar: <strong>{{ formatMoney(payableN) }}</strong></span
+        >
       </div>
     </template>
     <template #footer-actions>
@@ -189,14 +231,17 @@ async function submit() {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px 20px;
 }
+
 .col-2 {
   grid-column: 1 / -1;
 }
-@media (max-width: 640px) {
+
+@media (width <= 640px) {
   .grid {
     grid-template-columns: 1fr;
   }
 }
+
 .totals-preview {
   display: flex;
   gap: 24px;
@@ -207,17 +252,20 @@ async function submit() {
   font-size: 14px;
   color: var(--warm-700);
 }
+
 .totals-preview strong {
   color: var(--warm-900);
 }
+
 .server-error {
   margin: 0 0 14px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: oklch(94% 0.06 25);
-  color: oklch(45% 0.18 25);
+  background: oklch(94% 0.06 25deg);
+  color: oklch(45% 0.18 25deg);
   font-size: 13px;
 }
+
 .btn {
   border: none;
   border-radius: 9px;
@@ -226,14 +274,17 @@ async function submit() {
   font-weight: 600;
   cursor: pointer;
 }
+
 .btn.ghost {
   background: var(--warm-100);
   color: var(--warm-700);
 }
+
 .btn.primary {
   background: var(--amatista-600, #5c2d8c);
   color: #fff;
 }
+
 .btn.primary:disabled {
   opacity: 0.6;
   cursor: default;

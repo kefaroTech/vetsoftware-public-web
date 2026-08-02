@@ -1,15 +1,7 @@
 import type { ClinicalEventType } from '../types/historia'
 
 export type EventTypeColor =
-  | 'amatista'
-  | 'red'
-  | 'green'
-  | 'teal'
-  | 'amber'
-  | 'blue'
-  | 'indigo'
-  | 'pink'
-  | 'gray'
+  'amatista' | 'red' | 'green' | 'teal' | 'amber' | 'blue' | 'indigo' | 'pink' | 'gray'
 
 export interface EventTypeMeta {
   label: string
@@ -83,9 +75,7 @@ export const TYPE_COLORS: Record<EventTypeColor, EventTypeColorTokens> = {
   },
 }
 
-export const EVENT_TYPE_DETAILABLE: ReadonlySet<ClinicalEventType> = new Set<
-  ClinicalEventType
->([
+export const EVENT_TYPE_DETAILABLE: ReadonlySet<ClinicalEventType> = new Set<ClinicalEventType>([
   'CONSULTATION',
   'SURGERY',
   'VACCINATION',

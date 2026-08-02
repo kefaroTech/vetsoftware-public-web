@@ -1,7 +1,4 @@
-import {
-  useBillingPromptStore,
-  type BillingPromptOptions,
-} from '../stores/billingPrompt.store'
+import { useBillingPromptStore, type BillingPromptOptions } from '../stores/billingPrompt.store'
 
 export type { BillingPromptOptions }
 

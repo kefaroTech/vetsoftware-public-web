@@ -6,7 +6,7 @@ import { useOwnerSearch } from '@/features/dashboard/views/consulta/nueva/compos
 import { initialsFromName } from '../composables/format'
 import type { Owner } from '@/types/domain'
 
-const emit = defineEmits<{ (e: 'select', owner: Owner): void }>()
+const emit = defineEmits<(e: 'select', owner: Owner) => void>()
 
 const query = ref('')
 const { results, loading, error, reset } = useOwnerSearch(query)
@@ -37,11 +37,9 @@ watch(query, (q) => {
     <div v-if="error" class="status error">{{ error }}</div>
 
     <div v-if="hasQuery" class="results">
-      <div
-        v-if="!loading && results.length === 0 && !error"
-        class="status empty"
-      >
-        Sin coincidencias para "<strong>{{ query }}</strong>"
+      <div v-if="!loading && results.length === 0 && !error" class="status empty">
+        Sin coincidencias para "<strong>{{ query }}</strong
+        >"
       </div>
 
       <button
@@ -71,9 +69,7 @@ watch(query, (q) => {
       </button>
     </div>
 
-    <div v-else class="hint">
-      Empieza a escribir para buscar al propietario.
-    </div>
+    <div v-else class="hint">Empieza a escribir para buscar al propietario.</div>
   </div>
 </template>
 
@@ -83,6 +79,7 @@ watch(query, (q) => {
   flex-direction: column;
   gap: 14px;
 }
+
 .search-box {
   display: flex;
   align-items: center;
@@ -92,10 +89,12 @@ watch(query, (q) => {
   border-radius: 12px;
   padding: 12px 14px;
 }
+
 .search-icon {
   color: var(--warm-500);
   flex-shrink: 0;
 }
+
 .search-input {
   flex: 1;
   border: none;
@@ -106,9 +105,11 @@ watch(query, (q) => {
   color: var(--warm-900);
   min-width: 0;
 }
+
 .search-input::placeholder {
   color: var(--warm-400);
 }
+
 .loader-inline {
   display: inline-flex;
 }
@@ -119,6 +120,7 @@ watch(query, (q) => {
   border-radius: 12px;
   overflow: hidden;
 }
+
 .result-row {
   display: flex;
   align-items: center;
@@ -133,15 +135,19 @@ watch(query, (q) => {
   font-family: inherit;
   transition: background 0.12s ease;
 }
+
 .result-row:last-child {
   border-bottom: none;
 }
+
 .result-row.striped {
-  background: oklch(98% 0.005 60);
+  background: oklch(98% 0.005 60deg);
 }
+
 .result-row:hover {
   background: var(--amatista-50);
 }
+
 .avatar {
   width: 40px;
   height: 40px;
@@ -154,10 +160,12 @@ watch(query, (q) => {
   font-size: 13px;
   flex-shrink: 0;
 }
+
 .info {
   flex: 1;
   min-width: 0;
 }
+
 .name {
   font-size: 14.5px;
   font-weight: 500;
@@ -166,6 +174,7 @@ watch(query, (q) => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .meta {
   font-size: 12px;
   color: var(--warm-500);
@@ -175,9 +184,11 @@ watch(query, (q) => {
   gap: 6px;
   flex-wrap: wrap;
 }
+
 .meta .dot {
   color: var(--warm-300);
 }
+
 .chev {
   color: var(--warm-400);
   flex-shrink: 0;
@@ -192,10 +203,11 @@ watch(query, (q) => {
   border-radius: 12px;
   font-size: 13.5px;
 }
+
 .status.error {
-  color: oklch(48% 0.18 25);
-  background: oklch(97% 0.02 25);
-  border-color: oklch(85% 0.06 25);
+  color: oklch(48% 0.18 25deg);
+  background: oklch(97% 0.02 25deg);
+  border-color: oklch(85% 0.06 25deg);
 }
 
 .hint {

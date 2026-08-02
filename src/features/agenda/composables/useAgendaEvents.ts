@@ -47,7 +47,13 @@ export function useAgendaEvents(cursor: Ref<Date>) {
     await fetchForCursor(cursor.value)
   }
 
-  watch(cursor, (next) => { void fetchForCursor(next) }, { immediate: true })
+  watch(
+    cursor,
+    (next) => {
+      void fetchForCursor(next)
+    },
+    { immediate: true },
+  )
 
   return { events, loading, error, refresh }
 }

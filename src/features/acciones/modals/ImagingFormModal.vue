@@ -98,7 +98,7 @@ const valid = computed(
 )
 
 function err(field: keyof typeof errors.value): string | undefined {
-  return submitted.value ? errors.value[field] ?? undefined : undefined
+  return submitted.value ? (errors.value[field] ?? undefined) : undefined
 }
 
 async function onCreateType(data: { name: string; description: string }) {
@@ -142,8 +142,7 @@ async function save() {
     emit('saved', result)
     emit('close')
   } catch (e) {
-    saveError.value =
-      e instanceof Error ? e.message : 'No se pudo guardar el estudio'
+    saveError.value = e instanceof Error ? e.message : 'No se pudo guardar el estudio'
   } finally {
     saving.value = false
   }
@@ -155,7 +154,9 @@ async function save() {
     :open="open"
     :icon="ScanLine"
     :title="isEdit ? 'Editar estudio de imagen diagnóstica' : 'Nuevo estudio de imagen diagnóstica'"
-    :subtitle="isEdit ? 'Modifica los datos del estudio' : 'Crea un estudio independiente de una consulta'"
+    :subtitle="
+      isEdit ? 'Modifica los datos del estudio' : 'Crea un estudio independiente de una consulta'
+    "
     :width="820"
     @close="emit('close')"
   >
@@ -163,7 +164,12 @@ async function save() {
       <div v-if="typesError" class="banner error">{{ typesError }}</div>
       <div v-if="saveError" class="banner error">{{ saveError }}</div>
 
-      <BaseField v-if="!preSelectedAnimal && !isEdit" label="Paciente" required :error="err('patient')">
+      <BaseField
+        v-if="!preSelectedAnimal && !isEdit"
+        label="Paciente"
+        required
+        :error="err('patient')"
+      >
         <PatientCascadePicker v-model="patientId" :invalid="!!err('patient')" />
       </BaseField>
       <div v-else-if="isEdit && initial" class="patient-fixed">
@@ -215,11 +221,7 @@ async function save() {
           />
         </BaseField>
         <BaseField label="Diagnóstico" required :error="err('diagnosis')" class="full">
-          <BaseTextarea
-            v-model="draft.diagnosis"
-            :rows="2"
-            :invalid="!!err('diagnosis')"
-          />
+          <BaseTextarea v-model="draft.diagnosis" :rows="2" :invalid="!!err('diagnosis')" />
         </BaseField>
         <BaseField label="Observaciones" class="full">
           <BaseTextarea v-model="draft.observations" :rows="2" />
@@ -240,14 +242,15 @@ async function save() {
 
 <style scoped>
 .banner.error {
-  background: oklch(95% 0.06 25);
-  border: 1px solid oklch(85% 0.12 25);
-  color: oklch(40% 0.18 25);
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
   border-radius: 8px;
   padding: 8px 12px;
   font-size: 12.5px;
   margin-bottom: 12px;
 }
+
 .patient-fixed {
   display: flex;
   align-items: center;
@@ -257,6 +260,7 @@ async function save() {
   border-radius: 9px;
   padding: 10px 12px;
 }
+
 .patient-fixed .paw {
   width: 28px;
   height: 28px;
@@ -266,26 +270,36 @@ async function save() {
   display: grid;
   place-items: center;
 }
+
 .patient-fixed .name {
   font-size: 13px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .patient-fixed .meta {
   font-size: 11.5px;
   color: var(--warm-500);
   margin-top: 2px;
 }
+
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px 16px;
   margin-top: 14px;
 }
+
 .grid .full {
   grid-column: 1 / -1;
 }
-@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+
+@media (width <= 760px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .btn-ghost,
 .btn-primary {
   font-family: inherit;
@@ -296,17 +310,27 @@ async function save() {
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn-ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-700);
 }
-.btn-ghost:hover:not(:disabled) { background: var(--warm-100); }
+.btn-ghost:hover:not(:disabled) {
+  background: var(--warm-100);
+}
+
 .btn-primary {
   background: var(--amatista-700);
   color: white;
 }
-.btn-primary:hover:not(:disabled) { filter: brightness(1.05); }
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
 .btn-primary:disabled,
-.btn-ghost:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn-ghost:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 </style>

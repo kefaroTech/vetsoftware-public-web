@@ -28,17 +28,20 @@ const fullBleed = computed(() => Boolean(route.meta.fullBleed))
   font-family: var(--font-sans);
   overflow: hidden;
 }
+
 .app-main {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
+
 .app-content {
   flex: 1;
   padding: 24px 28px;
   overflow: auto;
 }
+
 .app-content.fullbleed {
   padding: 0;
   overflow: hidden;
@@ -46,7 +49,7 @@ const fullBleed = computed(() => Boolean(route.meta.fullBleed))
   flex-direction: column;
 }
 
-@media (max-width: 1024px) {
+@media (width <= 1024px) {
   .app-content {
     padding: 18px;
   }

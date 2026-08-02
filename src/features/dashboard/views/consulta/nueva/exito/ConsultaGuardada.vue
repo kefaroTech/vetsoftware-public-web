@@ -109,22 +109,25 @@ function createAnother() {
   place-items: center;
   overflow: auto;
 }
+
 .inner {
   text-align: center;
   max-width: 460px;
   padding: 40px;
 }
+
 .badge {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: oklch(92% 0.06 145);
-  color: oklch(45% 0.15 145);
+  background: oklch(92% 0.06 145deg);
+  color: oklch(45% 0.15 145deg);
   display: grid;
   place-items: center;
   margin: 0 auto 20px;
-  box-shadow: 0 8px 32px -8px oklch(50% 0.15 145 / 0.4);
+  box-shadow: 0 8px 32px -8px oklch(50% 0.15 145deg / 40%);
 }
+
 .title {
   margin: 0 0 8px;
   font-family: var(--font-serif);
@@ -134,16 +137,19 @@ function createAnother() {
   color: var(--warm-900);
   letter-spacing: -0.01em;
 }
+
 .who {
   margin: 0 0 4px;
   font-size: 14px;
   color: var(--warm-600);
 }
+
 .meta {
   margin: 0 0 28px;
   font-size: 13px;
   color: var(--warm-500);
 }
+
 .rx-block {
   margin: 0 0 20px;
   padding: 14px 16px;
@@ -151,6 +157,7 @@ function createAnother() {
   border: 1px solid var(--warm-200);
   border-radius: 12px;
 }
+
 .rx-title {
   font-size: 11.5px;
   color: var(--warm-500);
@@ -159,30 +166,36 @@ function createAnother() {
   font-weight: 500;
   margin-bottom: 10px;
 }
+
 .rx-buttons {
   display: flex;
   gap: 8px;
   justify-content: center;
   flex-wrap: wrap;
 }
+
 .btn.rx {
   background: white;
   border-color: var(--amatista-300);
   color: var(--amatista-700);
 }
+
 .btn.rx:hover:not(:disabled) {
   background: var(--amatista-50);
 }
+
 .btn.rx:disabled {
   opacity: 0.6;
   cursor: default;
 }
+
 .actions {
   display: flex;
   gap: 10px;
   justify-content: center;
   flex-wrap: wrap;
 }
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -195,18 +208,22 @@ function createAnother() {
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn.primary {
   background: var(--amatista-700);
   color: white;
 }
+
 .btn.primary:hover {
   filter: brightness(1.05);
 }
+
 .btn.ghost {
   background: var(--warm-50);
   border-color: var(--warm-200);
   color: var(--warm-900);
 }
+
 .btn.ghost:hover {
   background: var(--warm-100);
 }

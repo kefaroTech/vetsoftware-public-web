@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import {
-  EVENT_TYPES,
-  TYPE_COLORS,
-} from '@/features/historia-clinica/constants/eventTypes'
+import { EVENT_TYPES, TYPE_COLORS } from '@/features/historia-clinica/constants/eventTypes'
 import type { AgendaEvent } from '../types/agenda'
 
 const props = defineProps<{ event: AgendaEvent | null }>()
@@ -37,10 +34,7 @@ const rangeLabel = computed(() => {
     <template #body>
       <div v-if="event && meta && tokens" class="body">
         <div class="header-row">
-          <span
-            class="badge"
-            :style="{ background: tokens.bg, color: tokens.fg }"
-          >
+          <span class="badge" :style="{ background: tokens.bg, color: tokens.fg }">
             <span aria-hidden="true">{{ meta.icon }}</span>
             {{ meta.label }}
           </span>
@@ -79,11 +73,13 @@ const rangeLabel = computed(() => {
   flex-direction: column;
   gap: 14px;
 }
+
 .header-row {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -93,20 +89,24 @@ const rangeLabel = computed(() => {
   font-size: 12.5px;
   font-weight: 500;
 }
+
 .fields {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
   margin: 0;
 }
+
 .field {
   border-bottom: 1px solid var(--warm-150);
   padding-bottom: 10px;
 }
+
 .field:last-child {
   border-bottom: none;
   padding-bottom: 0;
 }
+
 .field dt {
   font-size: 11px;
   letter-spacing: 0.04em;
@@ -114,11 +114,13 @@ const rangeLabel = computed(() => {
   color: var(--warm-500);
   margin-bottom: 4px;
 }
+
 .field dd {
   margin: 0;
   font-size: 13.5px;
   color: var(--warm-900);
 }
+
 .btn-ghost {
   font-family: inherit;
   font-size: 13px;
@@ -130,6 +132,7 @@ const rangeLabel = computed(() => {
   border: 1px solid var(--warm-200);
   color: var(--warm-700);
 }
+
 .btn-ghost:hover {
   background: var(--warm-100);
 }

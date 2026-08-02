@@ -12,6 +12,7 @@ Front del **empleado de clínica** (veterinario, recepcionista, admin de empresa
 - Datepicker: `@vuepic/vue-datepicker`
 
 Repos hermanos:
+
 - `../VetSoftware/` — Backend único.
 - `../VetSoftwareFront/` — Front del admin de plataforma (no confundir).
 
@@ -24,15 +25,15 @@ Repos hermanos:
 
 ## Features bajo `src/features/`
 
-| Feature | Propósito | Endpoints clave |
-|---|---|---|
-| `auth/` | Login del empleado + hidratación de permisos | `POST /auth/login/employee`, `GET /auth/me` |
-| `registration/` | Signup público de empresa nueva | `POST /register`, `/countries`, `/countries/{id}/states`, `/states/{id}/cities` |
-| `dashboard/` | Wizard de Nueva Consulta + catálogos + 7 modales clínicos. Sub-features: `consulta/nueva/`, `consulta/historial/`, `vacunacion`, `hospital`. | `/owners`, `/animals`, `/consultations`, `/prescriptions`, `/medicament-prescriptions`, todos los procedimientos clínicos (vaccinations, hospitalizations, dewormings, laboratory-tests, surgeries, diagnostic-imagings), `*-types/available`, `/species`, `/breeds`, `/animal-colors`, `/consultation-types` |
-| `employees/` | Gestión de empleados de la empresa | `/employees`, `/employees/by-company`, `POST /employee-roles` (asignación al crear) |
-| `roles/` | Gestión de roles y permisos company-scoped | `/roles/by-company`, `/permissions/by-company`, `/modules`, `/sub-modules`, `/role-permissions`, `PUT /role-permissions/by-role/{id}` |
-| `acciones/` ⭐ | Pantallas standalone para procedimientos clínicos sin consulta abierta. Vistas: Lab, Imagen, Vacuna, Hosp, Desparasitación, Cirugía. | Reutiliza APIs clínicos del wizard + `GET /by-animal/{id}` + `PATCH /{id}/status` (en labs/cirugías/imágenes) |
-| `historia-clinica/` ⭐ | Wizard owner→pet→timeline mensual | `GET /animals/{animalId}/clinical-history?types&from&to` |
+| Feature                | Propósito                                                                                                                                    | Endpoints clave                                                                                                                                                                                                                                                                                               |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth/`                | Login del empleado + hidratación de permisos                                                                                                 | `POST /auth/login/employee`, `GET /auth/me`                                                                                                                                                                                                                                                                   |
+| `registration/`        | Signup público de empresa nueva                                                                                                              | `POST /register`, `/countries`, `/countries/{id}/states`, `/states/{id}/cities`                                                                                                                                                                                                                               |
+| `dashboard/`           | Wizard de Nueva Consulta + catálogos + 7 modales clínicos. Sub-features: `consulta/nueva/`, `consulta/historial/`, `vacunacion`, `hospital`. | `/owners`, `/animals`, `/consultations`, `/prescriptions`, `/medicament-prescriptions`, todos los procedimientos clínicos (vaccinations, hospitalizations, dewormings, laboratory-tests, surgeries, diagnostic-imagings), `*-types/available`, `/species`, `/breeds`, `/animal-colors`, `/consultation-types` |
+| `employees/`           | Gestión de empleados de la empresa                                                                                                           | `/employees`, `/employees/by-company`, `POST /employee-roles` (asignación al crear)                                                                                                                                                                                                                           |
+| `roles/`               | Gestión de roles y permisos company-scoped                                                                                                   | `/roles/by-company`, `/permissions/by-company`, `/modules`, `/sub-modules`, `/role-permissions`, `PUT /role-permissions/by-role/{id}`                                                                                                                                                                         |
+| `acciones/` ⭐         | Pantallas standalone para procedimientos clínicos sin consulta abierta. Vistas: Lab, Imagen, Vacuna, Hosp, Desparasitación, Cirugía.         | Reutiliza APIs clínicos del wizard + `GET /by-animal/{id}` + `PATCH /{id}/status` (en labs/cirugías/imágenes)                                                                                                                                                                                                 |
+| `historia-clinica/` ⭐ | Wizard owner→pet→timeline mensual                                                                                                            | `GET /animals/{animalId}/clinical-history?types&from&to`                                                                                                                                                                                                                                                      |
 
 ⭐ = añadido desde 2026-05-10.
 
@@ -66,6 +67,7 @@ Single file `src/router/index.ts`. Guards globales:
 5. `meta.permissionsAny` (string[]) — análogo OR.
 
 Rutas principales (todas bajo `/dashboard` con layout `AppLayout.vue`):
+
 - `home`
 - `consulta/nueva` y `consulta/nueva/exito` (`consultation.create`)
 - `consulta/historial/...` (wizard owner→pet→timeline)
@@ -83,6 +85,7 @@ Rutas principales (todas bajo `/dashboard` con layout `AppLayout.vue`):
 ## Mappers
 
 Patrón `id:number → string` vivo en:
+
 - `src/features/employees/api/employee.mapper.ts`
 - `src/features/dashboard/views/consulta/nueva/api/owner.mapper.ts`
 - `src/features/dashboard/views/consulta/nueva/api/animal.mapper.ts`
@@ -91,18 +94,19 @@ Patrón `id:number → string` vivo en:
 
 ## Workarounds vivos por gaps de backend
 
-| Workaround | Por qué |
-|---|---|
-| Botón "Restablecer contraseña" en `EmpleadoDrawer.vue` `disabled` | No existe `/employees/{id}/reset-password` |
-| `useEmployees.setStatus` hace PUT completo | No existen `/employees/{id}/activate` ni `/deactivate` |
-| Búsqueda de empleados client-side en `EmpleadosTable.vue` | No existe `/employees/search?q=` |
-| `RoleSelector.vue` orphan/disabled (cambio de rol post-creación) | Backend tiene endpoints, falta wire en UI |
-| Constante `ROLES` hardcoded en `constants/employee-roles.ts` | Sólo fallback visual; se puede borrar tras conectar `RoleSelector` |
-| `useEmployees.update()` reinyecta `roles` desde cache | El PUT no los devuelve |
+| Workaround                                                        | Por qué                                                            |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Botón "Restablecer contraseña" en `EmpleadoDrawer.vue` `disabled` | No existe `/employees/{id}/reset-password`                         |
+| `useEmployees.setStatus` hace PUT completo                        | No existen `/employees/{id}/activate` ni `/deactivate`             |
+| Búsqueda de empleados client-side en `EmpleadosTable.vue`         | No existe `/employees/search?q=`                                   |
+| `RoleSelector.vue` orphan/disabled (cambio de rol post-creación)  | Backend tiene endpoints, falta wire en UI                          |
+| Constante `ROLES` hardcoded en `constants/employee-roles.ts`      | Sólo fallback visual; se puede borrar tras conectar `RoleSelector` |
+| `useEmployees.update()` reinyecta `roles` desde cache             | El PUT no los devuelve                                             |
 
 ## Cambios desde 2026-05-10
 
 7 commits relevantes:
+
 1. **Pantalla de empleados conectada al backend** (`c3ab02f`, 2026-05-10).
 2. **Pantalla de roles conectada** (`a2010c3`, 2026-05-14).
 3. **Modales clínicos del wizard expandidos + roles company-scoped** (`1aa2fc8`, 2026-05-15).

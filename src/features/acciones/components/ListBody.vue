@@ -24,8 +24,9 @@ const query = ref('')
 
 const filtered = computed(() => {
   const q = query.value.trim().toLowerCase()
-  if (!q || !props.searchFn) return props.items
-  return props.items.filter((it) => props.searchFn!(it, q))
+  const searchFn = props.searchFn
+  if (!q || !searchFn) return props.items
+  return props.items.filter((it) => searchFn(it, q))
 })
 
 const { slice, page, pageCount, total, pageSize } = usePaged(filtered, props.pageSize)
@@ -36,12 +37,7 @@ const { slice, page, pageCount, total, pageSize } = usePaged(filtered, props.pag
     <div class="search-row">
       <div class="search">
         <Search :size="14" :stroke-width="1.7" class="icon" />
-        <input
-          v-model="query"
-          type="text"
-          :placeholder="placeholder"
-          class="input"
-        />
+        <input v-model="query" type="text" :placeholder="placeholder" class="input" />
       </div>
       <slot name="actions" />
     </div>
@@ -54,7 +50,7 @@ const { slice, page, pageCount, total, pageSize } = usePaged(filtered, props.pag
           <slot name="header" />
         </thead>
         <tbody>
-          <slot name="row" v-for="item in slice" :item="item" :key="(item as { id: number }).id" />
+          <slot v-for="item in slice" :key="(item as { id: number }).id" name="row" :item="item" />
         </tbody>
       </table>
     </div>
@@ -74,6 +70,7 @@ const { slice, page, pageCount, total, pageSize } = usePaged(filtered, props.pag
   font-family: var(--font-sans);
   color: var(--warm-900);
 }
+
 .search-row {
   display: flex;
   flex-wrap: wrap;
@@ -81,15 +78,18 @@ const { slice, page, pageCount, total, pageSize } = usePaged(filtered, props.pag
   gap: 12px;
   margin-bottom: 14px;
 }
+
 .tbl-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+
 .search {
   flex: 1;
   position: relative;
   max-width: 360px;
 }
+
 .icon {
   position: absolute;
   left: 12px;
@@ -97,6 +97,7 @@ const { slice, page, pageCount, total, pageSize } = usePaged(filtered, props.pag
   transform: translateY(-50%);
   color: var(--warm-500);
 }
+
 .input {
   width: 100%;
   background: var(--warm-50);
@@ -107,12 +108,16 @@ const { slice, page, pageCount, total, pageSize } = usePaged(filtered, props.pag
   font-size: 13px;
   color: var(--warm-900);
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
+
 .input:focus {
   border-color: var(--amatista-500);
   box-shadow: 0 0 0 3px color-mix(in oklch, var(--amatista-500) 16%, transparent);
 }
+
 .state {
   padding: 32px 16px;
   text-align: center;
@@ -122,6 +127,7 @@ const { slice, page, pageCount, total, pageSize } = usePaged(filtered, props.pag
   border: 1px solid var(--warm-200);
   border-radius: 12px;
 }
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -131,9 +137,11 @@ const { slice, page, pageCount, total, pageSize } = usePaged(filtered, props.pag
   overflow: hidden;
   font-size: 13px;
 }
+
 .table :deep(thead tr) {
   background: var(--warm-100);
 }
+
 .table :deep(th) {
   text-align: left;
   font-size: 11.5px;
@@ -144,15 +152,18 @@ const { slice, page, pageCount, total, pageSize } = usePaged(filtered, props.pag
   padding: 10px 14px;
   border-bottom: 1px solid var(--warm-200);
 }
+
 .table :deep(td) {
   padding: 12px 14px;
   border-bottom: 1px solid var(--warm-150);
   color: var(--warm-800);
   vertical-align: middle;
 }
+
 .table :deep(tbody tr:last-child td) {
   border-bottom: none;
 }
+
 .table :deep(tbody tr:hover) {
   background: var(--warm-100);
 }

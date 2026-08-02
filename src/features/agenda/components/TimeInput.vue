@@ -64,6 +64,7 @@ function setMinute(m: string) {
   align-items: center;
   gap: 6px;
 }
+
 .sep {
   font-family: var(--font-mono);
   font-weight: 600;

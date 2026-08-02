@@ -22,9 +22,12 @@ import AuthInput from '@/components/public/AuthInput.vue'
 import AuthSelect from '@/components/public/AuthSelect.vue'
 import SectionHead from '@/components/public/SectionHead.vue'
 
-type Opt = { value: string; label: string }
+interface Opt {
+  value: string
+  label: string
+}
 
-const emit = defineEmits<{ (e: 'success', email: string): void }>()
+const emit = defineEmits<(e: 'success', email: string) => void>()
 
 type FieldKey =
   | 'companyIdentifier'
@@ -76,9 +79,9 @@ const submitting = ref(false)
 const docTypeOptions: Opt[] = (
   Object.entries(COMPANY_DOCTYPE_LABEL) as [CompanyDocumentType, string][]
 ).map(([value, label]) => ({ value, label }))
-const regimeOptions: Opt[] = (
-  Object.entries(TAX_REGIME_LABEL) as [TaxRegime, string][]
-).map(([value, label]) => ({ value, label }))
+const regimeOptions: Opt[] = (Object.entries(TAX_REGIME_LABEL) as [TaxRegime, string][]).map(
+  ([value, label]) => ({ value, label }),
+)
 
 const isNit = computed(() => form.documentType === 'NIT')
 const docHint = computed(() =>
@@ -237,7 +240,8 @@ watch(
 watch(
   () => form.documentType,
   () => {
-    if (touched.companyIdentifier) serverErrors.value = { ...serverErrors.value, companyIdentifier: '' }
+    if (touched.companyIdentifier)
+      serverErrors.value = { ...serverErrors.value, companyIdentifier: '' }
   },
 )
 
@@ -282,7 +286,10 @@ async function submit() {
     serverErrors.value = getProblemDetailFieldErrors(e)
     // Un email = una veterinaria: si el correo ya está registrado, se marca el campo de email.
     if (getProblemDetailCode(e) === 'EMAIL_ALREADY_REGISTERED') {
-      serverErrors.value = { ...serverErrors.value, employeeEmail: 'Ese correo ya está registrado.' }
+      serverErrors.value = {
+        ...serverErrors.value,
+        employeeEmail: 'Ese correo ya está registrado.',
+      }
       touched.employeeEmail = true
     }
     globalError.value = getProblemDetailMessage(e, 'No se pudo crear la cuenta')
@@ -542,6 +549,7 @@ async function submit() {
   overflow-y: auto;
   margin: 0 auto;
 }
+
 .reg-card {
   background: #fff;
   border-radius: 16px;
@@ -549,6 +557,7 @@ async function submit() {
   box-shadow: var(--pub-card-shadow);
   padding: clamp(24px, 4vw, 40px);
 }
+
 .reg-eyebrow {
   font-size: 11px;
   font-weight: 600;
@@ -557,6 +566,7 @@ async function submit() {
   text-transform: uppercase;
   margin-bottom: 8px;
 }
+
 .reg-title {
   font-family: 'Instrument Serif', serif;
   font-size: 30px;
@@ -565,36 +575,44 @@ async function submit() {
   letter-spacing: -0.02em;
   line-height: 1.08;
 }
+
 .reg-sub {
   font-size: 13.5px;
   color: var(--pub-ink-500);
   margin: 9px 0 0;
   line-height: 1.5;
 }
+
 .reg-banner-wrap {
   margin-top: 20px;
 }
+
 .reg-section {
   margin-top: 28px;
 }
+
 .reg-fields {
   display: flex;
   flex-direction: column;
   gap: 15px;
   margin-top: 18px;
 }
+
 .reg-divider {
   height: 1px;
   background: var(--pub-line-2);
   margin: 28px 0;
 }
+
 .reg-recaptcha {
   margin-top: 26px;
 }
+
 .reg-recaptcha-widget {
   display: flex;
   justify-content: center;
 }
+
 .reg-recaptcha-err {
   font-size: 11.5px;
   color: var(--pub-err-tx);
@@ -605,18 +623,22 @@ async function submit() {
   justify-content: center;
   gap: 5px;
 }
+
 .reg-recaptcha-warn {
   margin-top: 10px;
 }
+
 .reg-submit {
   margin-top: 22px;
 }
+
 .reg-foot {
   font-size: 13px;
   color: var(--pub-ink-500);
   text-align: center;
   margin: 18px 0 0;
 }
+
 .reg-foot :deep(a) {
   color: var(--pub-ame-700);
   font-weight: 600;

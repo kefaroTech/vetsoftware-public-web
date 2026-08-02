@@ -31,7 +31,7 @@ watch(
   () => props.open,
   (open) => {
     if (open) {
-      for (const k of Object.keys(counted)) delete counted[Number(k)]
+      for (const k of Object.keys(counted)) Reflect.deleteProperty(counted, Number(k))
       note.value = ''
       search.value = ''
       catFilter.value = ''
@@ -94,8 +94,9 @@ function submit() {
   >
     <template #body>
       <p class="hint">
-        Escribe lo que contaste físicamente en <strong>Contado</strong>. Solo se ajustan las filas que llenes
-        (puedes contar por categoría para hacer conteos cíclicos). La diferencia se aplica como ajuste automático.
+        Escribe lo que contaste físicamente en <strong>Contado</strong>. Solo se ajustan las filas
+        que llenes (puedes contar por categoría para hacer conteos cíclicos). La diferencia se
+        aplica como ajuste automático.
       </p>
 
       <div class="filters">
@@ -109,7 +110,9 @@ function submit() {
         </select>
       </div>
 
-      <div v-if="submitted && !canConfirm" class="banner error">Cuenta al menos un producto antes de confirmar.</div>
+      <div v-if="submitted && !canConfirm" class="banner error">
+        Cuenta al menos un producto antes de confirmar.
+      </div>
 
       <div class="scroll">
         <table class="table">
@@ -123,9 +126,13 @@ function submit() {
             </tr>
           </thead>
           <tbody>
-            <tr v-if="filtered.length === 0"><td colspan="5" class="empty">Sin productos para el filtro.</td></tr>
+            <tr v-if="filtered.length === 0">
+              <td colspan="5" class="empty">Sin productos para el filtro.</td>
+            </tr>
             <tr v-for="p in filtered" v-else :key="p.id">
-              <td class="tname">{{ p.name }} <span class="sku">{{ p.code }}</span></td>
+              <td class="tname">
+                {{ p.name }} <span class="sku">{{ p.code }}</span>
+              </td>
               <td class="tcat">{{ p.productCategory.name }}</td>
               <td class="num sys">{{ systemOf(p.id) }}</td>
               <td class="num">
@@ -142,8 +149,13 @@ function submit() {
                 <span
                   v-if="diffOf(p.id) !== null"
                   class="diff"
-                  :class="{ zero: diffOf(p.id) === 0, neg: (diffOf(p.id) ?? 0) < 0, pos: (diffOf(p.id) ?? 0) > 0 }"
-                >{{ (diffOf(p.id) ?? 0) > 0 ? '+' : '' }}{{ diffOf(p.id) }}</span>
+                  :class="{
+                    zero: diffOf(p.id) === 0,
+                    neg: (diffOf(p.id) ?? 0) < 0,
+                    pos: (diffOf(p.id) ?? 0) > 0,
+                  }"
+                  >{{ (diffOf(p.id) ?? 0) > 0 ? '+' : '' }}{{ diffOf(p.id) }}</span
+                >
                 <span v-else class="muted">—</span>
               </td>
             </tr>
@@ -153,69 +165,268 @@ function submit() {
 
       <label class="note">
         <span>Nota (opcional)</span>
-        <input v-model="note" type="text" placeholder="Conteo semanal, cierre de mes…" maxlength="255" />
+        <input
+          v-model="note"
+          type="text"
+          placeholder="Conteo semanal, cierre de mes…"
+          maxlength="255"
+        />
       </label>
     </template>
 
     <template #footer-left>
-      <button type="button" class="link" @click="emit('history')"><History :size="14" :stroke-width="1.8" /> Historial</button>
+      <button type="button" class="link" @click="emit('history')">
+        <History :size="14" :stroke-width="1.8" /> Historial
+      </button>
       <span class="counter">{{ countedCount }} contado(s) · {{ diffCount }} con diferencia</span>
     </template>
     <template #footer-actions>
       <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn-primary" :disabled="!canConfirm" @click="submit">Confirmar conteo</button>
+      <button type="button" class="btn-primary" :disabled="!canConfirm" @click="submit">
+        Confirmar conteo
+      </button>
     </template>
   </ModalShell>
 </template>
 
 <style scoped>
-.hint { margin: 0 0 12px; font-size: 12.5px; color: var(--warm-600); line-height: 1.5; }
-.filters { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
-.search { display: flex; align-items: center; gap: 9px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 9px; padding: 9px 12px; max-width: 320px; flex: 1; }
-.search:focus-within { border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
-.s-icon { color: var(--warm-500); flex-shrink: 0; }
-.search input { flex: 1; border: none; outline: none; background: transparent; font-family: inherit; font-size: 13px; color: var(--warm-900); min-width: 0; }
+.hint {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  color: var(--warm-600);
+  line-height: 1.5;
+}
+.filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 9px;
+  padding: 9px 12px;
+  max-width: 320px;
+  flex: 1;
+}
+.search:focus-within {
+  border-color: var(--amatista-500);
+  box-shadow: 0 0 0 3px var(--amatista-50);
+}
+.s-icon {
+  color: var(--warm-500);
+  flex-shrink: 0;
+}
+.search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--warm-900);
+  min-width: 0;
+}
+
 .fsel {
-  appearance: none; border: 1px solid var(--warm-200); background: var(--warm-50); border-radius: 9px;
-  padding: 9px 30px 9px 13px; font-family: inherit; font-size: 13px; color: var(--warm-800); cursor: pointer;
+  appearance: none;
+  border: 1px solid var(--warm-200);
+  background: var(--warm-50);
+  border-radius: 9px;
+  padding: 9px 30px 9px 13px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--warm-800);
+  cursor: pointer;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23999' stroke-width='1.5' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: right 11px center;
+  background-repeat: no-repeat;
+  background-position: right 11px center;
 }
-.fsel:focus { outline: none; border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
-.banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 9px 13px; font-size: 12.5px; margin-bottom: 10px; }
-.scroll { max-height: 46vh; overflow-y: auto; border: 1px solid var(--warm-200); border-radius: 10px; }
-.table { width: 100%; border-collapse: collapse; font-size: 12.5px; background: var(--warm-50); }
-.table th { position: sticky; top: 0; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--warm-500); font-weight: 600; padding: 9px 12px; background: var(--warm-100); border-bottom: 1px solid var(--warm-200); z-index: 1; }
-.table td { padding: 7px 12px; border-bottom: 1px solid var(--warm-150); color: var(--warm-800); }
-.table tbody tr:last-child td { border-bottom: none; }
-.empty { text-align: center; padding: 28px; color: var(--warm-500); }
-.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.tname { font-weight: 500; color: var(--warm-900); }
-.tcat { color: var(--warm-600); }
-.sku { font-family: var(--font-mono); font-size: 11px; color: var(--warm-500); }
-.sys { color: var(--warm-600); }
-.count-input { width: 76px; text-align: right; border: 1px solid var(--warm-200); background: var(--warm-50); border-radius: 7px; padding: 5px 8px; font-family: inherit; font-size: 12.5px; color: var(--warm-900); font-variant-numeric: tabular-nums; }
-.count-input:focus { outline: none; border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
-.diff { font-weight: 600; }
-.diff.zero { color: oklch(55% 0.12 150); }
-.diff.neg { color: oklch(52% 0.18 25); }
-.diff.pos { color: oklch(52% 0.12 70); }
-.muted { color: var(--warm-400); }
-.note { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; font-size: 12px; color: var(--warm-600); }
-.note input { border: 1px solid var(--warm-200); background: var(--warm-50); border-radius: 9px; padding: 9px 12px; font-family: inherit; font-size: 13px; color: var(--warm-900); }
-.note input:focus { outline: none; border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
-.link { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: none; color: var(--amatista-700); font-family: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; padding: 0; }
-.link:hover { text-decoration: underline; }
-.counter { font-size: 12px; color: var(--warm-500); margin-left: 12px; }
+.fsel:focus {
+  outline: none;
+  border-color: var(--amatista-500);
+  box-shadow: 0 0 0 3px var(--amatista-50);
+}
+.banner.error {
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
+  border-radius: 8px;
+  padding: 9px 13px;
+  font-size: 12.5px;
+  margin-bottom: 10px;
+}
+.scroll {
+  max-height: 46vh;
+  overflow-y: auto;
+  border: 1px solid var(--warm-200);
+  border-radius: 10px;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  background: var(--warm-50);
+}
+.table th {
+  position: sticky;
+  top: 0;
+  text-align: left;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--warm-500);
+  font-weight: 600;
+  padding: 9px 12px;
+  background: var(--warm-100);
+  border-bottom: 1px solid var(--warm-200);
+  z-index: 1;
+}
+.table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--warm-150);
+  color: var(--warm-800);
+}
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+.empty {
+  text-align: center;
+  padding: 28px;
+  color: var(--warm-500);
+}
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tname {
+  font-weight: 500;
+  color: var(--warm-900);
+}
+.tcat {
+  color: var(--warm-600);
+}
+.sku {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--warm-500);
+}
+.sys {
+  color: var(--warm-600);
+}
+.count-input {
+  width: 76px;
+  text-align: right;
+  border: 1px solid var(--warm-200);
+  background: var(--warm-50);
+  border-radius: 7px;
+  padding: 5px 8px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--warm-900);
+  font-variant-numeric: tabular-nums;
+}
+.count-input:focus {
+  outline: none;
+  border-color: var(--amatista-500);
+  box-shadow: 0 0 0 3px var(--amatista-50);
+}
+.diff {
+  font-weight: 600;
+}
+.diff.zero {
+  color: oklch(55% 0.12 150deg);
+}
+.diff.neg {
+  color: oklch(52% 0.18 25deg);
+}
+.diff.pos {
+  color: oklch(52% 0.12 70deg);
+}
+.muted {
+  color: var(--warm-400);
+}
+.note {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--warm-600);
+}
+.note input {
+  border: 1px solid var(--warm-200);
+  background: var(--warm-50);
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--warm-900);
+}
+.note input:focus {
+  outline: none;
+  border-color: var(--amatista-500);
+  box-shadow: 0 0 0 3px var(--amatista-50);
+}
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--amatista-700);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+}
+.link:hover {
+  text-decoration: underline;
+}
+.counter {
+  font-size: 12px;
+  color: var(--warm-500);
+  margin-left: 12px;
+}
+
 .btn-primary {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  border: none; color: white;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  border: none;
+  color: white;
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
 }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .btn-ghost {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  background: transparent; border: 1px solid var(--warm-200); color: var(--warm-700);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  color: var(--warm-700);
 }
-.btn-ghost:hover { background: var(--warm-100); }
+.btn-ghost:hover {
+  background: var(--warm-100);
+}
 </style>

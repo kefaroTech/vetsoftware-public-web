@@ -35,6 +35,7 @@ const benefits = [
   align-items: center;
   gap: 12px;
 }
+
 .upsell-ic {
   width: 72px;
   height: 72px;
@@ -44,6 +45,7 @@ const benefits = [
   background: var(--amatista-100);
   color: var(--amatista-700);
 }
+
 .upsell-title {
   margin: 8px 0 0;
   font-family: var(--font-serif);
@@ -53,12 +55,14 @@ const benefits = [
   color: var(--warm-900);
   line-height: 1.15;
 }
+
 .upsell-sub {
   margin: 0;
   font-size: 14px;
   color: var(--warm-600);
   line-height: 1.5;
 }
+
 .upsell-list {
   display: flex;
   flex-direction: column;
@@ -66,6 +70,7 @@ const benefits = [
   margin: 12px 0;
   text-align: left;
 }
+
 .upsell-item {
   display: flex;
   align-items: center;
@@ -73,19 +78,27 @@ const benefits = [
   font-size: 13.5px;
   color: var(--warm-800);
 }
+
 .upsell-item :deep(svg) {
-  color: oklch(50% 0.13 150);
+  color: oklch(50% 0.13 150deg);
 }
+
 .upsell-cta {
   margin-top: 6px;
   padding: 11px 24px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
   color: #fff;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08), 0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.45);
+  box-shadow:
+    0 1px 2px rgb(50 20 80 / 8%),
+    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 45%);
 }
 </style>

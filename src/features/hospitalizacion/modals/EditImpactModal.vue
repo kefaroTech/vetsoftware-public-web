@@ -24,8 +24,15 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
     <template #body>
       <p class="lead">
         Hay <strong>{{ appliedCount }}</strong>
-        {{ kind === 'med' ? (appliedCount === 1 ? 'dosis aplicada' : 'dosis aplicadas') : (appliedCount === 1 ? 'ejecución aplicada' : 'ejecuciones aplicadas') }}.
-        Son un registro histórico y <strong>no se modifican</strong>.
+        {{
+          kind === 'med'
+            ? appliedCount === 1
+              ? 'dosis aplicada'
+              : 'dosis aplicadas'
+            : appliedCount === 1
+              ? 'ejecución aplicada'
+              : 'ejecuciones aplicadas'
+        }}. Son un registro histórico y <strong>no se modifican</strong>.
       </p>
       <ul class="facts">
         <li>Las {{ kind === 'med' ? 'dosis' : 'ejecuciones' }} aplicadas se conservan tal cual.</li>
@@ -50,6 +57,7 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
   color: var(--warm-800);
   line-height: 1.5;
 }
+
 .facts {
   margin: 0;
   padding-left: 18px;
@@ -60,6 +68,7 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
   color: var(--warm-700);
   line-height: 1.45;
 }
+
 .btn-ghost,
 .btn-primary {
   font-family: inherit;
@@ -70,17 +79,23 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn-ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-900);
 }
-.btn-ghost:hover { background: var(--warm-100); }
+.btn-ghost:hover {
+  background: var(--warm-100);
+}
+
 .btn-primary {
-  background: oklch(55% 0.16 80);
+  background: oklch(55% 0.16 80deg);
   color: white;
   border: none;
   padding: 9px 18px;
 }
-.btn-primary:hover { filter: brightness(1.05); }
+.btn-primary:hover {
+  filter: brightness(1.05);
+}
 </style>

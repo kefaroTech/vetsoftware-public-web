@@ -105,18 +105,32 @@ async function submit() {
     <template #body>
       <p v-if="serverError" class="server-error">{{ serverError }}</p>
       <div class="grid">
-        <BaseField class="col-2" label="Nombre / Razón social" required
-          :error="submitted ? nameError ?? undefined : undefined">
-          <BaseInput v-model="form.name" placeholder="Distribuidora Veterinaria S.A.S"
-            :invalid="submitted && !!nameError" />
+        <BaseField
+          class="col-2"
+          label="Nombre / Razón social"
+          required
+          :error="submitted ? (nameError ?? undefined) : undefined"
+        >
+          <BaseInput
+            v-model="form.name"
+            placeholder="Distribuidora Veterinaria S.A.S"
+            :invalid="submitted && !!nameError"
+          />
         </BaseField>
         <BaseField label="NIT / documento">
           <BaseInput v-model="form.taxId" placeholder="900123456-7" />
         </BaseField>
-        <BaseField label="Días de crédito" hint="Opcional"
-          :error="submitted ? termsError ?? undefined : undefined">
-          <BaseInput v-model="form.paymentTermsDays" placeholder="30" inputmode="numeric"
-            :invalid="submitted && !!termsError" />
+        <BaseField
+          label="Días de crédito"
+          hint="Opcional"
+          :error="submitted ? (termsError ?? undefined) : undefined"
+        >
+          <BaseInput
+            v-model="form.paymentTermsDays"
+            placeholder="30"
+            inputmode="numeric"
+            :invalid="submitted && !!termsError"
+          />
         </BaseField>
         <BaseField label="Contacto">
           <BaseInput v-model="form.contactName" placeholder="Nombre del contacto" />
@@ -124,9 +138,12 @@ async function submit() {
         <BaseField label="Teléfono">
           <BaseInput v-model="form.phone" placeholder="3001234567" />
         </BaseField>
-        <BaseField label="Correo" :error="submitted ? emailError ?? undefined : undefined">
-          <BaseInput v-model="form.email" placeholder="ventas@proveedor.com"
-            :invalid="submitted && !!emailError" />
+        <BaseField label="Correo" :error="submitted ? (emailError ?? undefined) : undefined">
+          <BaseInput
+            v-model="form.email"
+            placeholder="ventas@proveedor.com"
+            :invalid="submitted && !!emailError"
+          />
         </BaseField>
         <BaseField label="Dirección">
           <BaseInput v-model="form.address" placeholder="Cra 1 # 2-3" />
@@ -151,22 +168,26 @@ async function submit() {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px 20px;
 }
+
 .col-2 {
   grid-column: 1 / -1;
 }
-@media (max-width: 640px) {
+
+@media (width <= 640px) {
   .grid {
     grid-template-columns: 1fr;
   }
 }
+
 .server-error {
   margin: 0 0 14px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: oklch(94% 0.06 25);
-  color: oklch(45% 0.18 25);
+  background: oklch(94% 0.06 25deg);
+  color: oklch(45% 0.18 25deg);
   font-size: 13px;
 }
+
 .btn {
   border: none;
   border-radius: 9px;
@@ -175,14 +196,17 @@ async function submit() {
   font-weight: 600;
   cursor: pointer;
 }
+
 .btn.ghost {
   background: var(--warm-100);
   color: var(--warm-700);
 }
+
 .btn.primary {
   background: var(--amatista-600, #5c2d8c);
   color: #fff;
 }
+
 .btn.primary:disabled {
   opacity: 0.6;
   cursor: default;

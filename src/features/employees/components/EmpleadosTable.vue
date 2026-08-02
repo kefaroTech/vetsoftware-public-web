@@ -88,6 +88,7 @@ const emit = defineEmits<{
   border: 1px solid var(--warm-200);
   border-radius: 10px;
 }
+
 .search {
   flex: 1;
   display: flex;
@@ -97,9 +98,11 @@ const emit = defineEmits<{
   background: var(--warm-100);
   border-radius: 7px;
 }
+
 .search .ic {
   color: var(--warm-500);
 }
+
 .search input {
   flex: 1;
   border: none;
@@ -110,6 +113,7 @@ const emit = defineEmits<{
   font-family: inherit;
   min-width: 0;
 }
+
 .search input::placeholder {
   color: var(--warm-500);
 }
@@ -122,6 +126,7 @@ const emit = defineEmits<{
   display: flex;
   flex-direction: column;
 }
+
 .head {
   display: flex;
   align-items: center;
@@ -135,30 +140,39 @@ const emit = defineEmits<{
   color: var(--warm-500);
   font-weight: 500;
 }
+
 .cell {
   min-width: 0;
 }
+
 .avatar-cell {
   flex: 0 0 36px;
 }
+
 .name-cell {
   flex: 1.8;
 }
+
 .role-cell {
   flex: 1.2;
 }
+
 .sedes-cell {
   flex: 1.4;
 }
+
 .contact-cell {
   flex: 1.4;
 }
+
 .status-cell {
   flex: 0 0 96px;
 }
+
 .chev-cell {
   flex: 0 0 28px;
 }
+
 .empty {
   padding: 60px 20px;
   text-align: center;

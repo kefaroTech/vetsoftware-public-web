@@ -22,22 +22,27 @@ defineProps<{
   letter-spacing: 0.01em;
   white-space: nowrap;
 }
+
 .tone-success {
-  background: oklch(94% 0.06 145);
-  color: oklch(38% 0.13 145);
+  background: oklch(94% 0.06 145deg);
+  color: oklch(38% 0.13 145deg);
 }
+
 .tone-warn {
-  background: oklch(95% 0.07 80);
-  color: oklch(40% 0.13 80);
+  background: oklch(95% 0.07 80deg);
+  color: oklch(40% 0.13 80deg);
 }
+
 .tone-neutral {
   background: var(--warm-150);
   color: var(--warm-700);
 }
+
 .tone-danger {
-  background: oklch(94% 0.07 25);
-  color: oklch(42% 0.18 25);
+  background: oklch(94% 0.07 25deg);
+  color: oklch(42% 0.18 25deg);
 }
+
 .tone-info {
   background: var(--amatista-100);
   color: var(--amatista-700);

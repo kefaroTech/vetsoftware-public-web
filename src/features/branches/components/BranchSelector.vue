@@ -26,19 +26,20 @@ const { options, selectedValue, hasBranches, loading } = useBranches()
   gap: 5px;
   padding: 4px 10px 12px;
   margin-bottom: 4px;
-  border-bottom: 1px solid oklch(75% 0.04 var(--hue) / 0.14);
+  border-bottom: 1px solid oklch(75% 0.04 var(--hue) / 14%);
 }
+
 .bs-label {
   font-size: 10.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: oklch(75% 0.04 var(--hue) / 0.55);
+  color: oklch(75% 0.04 var(--hue) / 55%);
   font-weight: 500;
 }
 
 /* En el sidebar colapsado (≤1024px, icon-only) el selector no cabe: se oculta. La sede persistida
    sigue aplicando como contexto en las peticiones. */
-@media (max-width: 1024px) {
+@media (width <= 1024px) {
   .branch-selector {
     display: none;
   }

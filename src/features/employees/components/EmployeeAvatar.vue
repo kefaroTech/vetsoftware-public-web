@@ -44,6 +44,7 @@ const fontSize = computed(() => `${Math.round(props.size * 0.34)}px`)
   letter-spacing: 0.01em;
   flex-shrink: 0;
 }
+
 .dot {
   position: absolute;
   bottom: -1px;

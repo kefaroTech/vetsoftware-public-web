@@ -71,11 +71,13 @@ function go(n: number) {
   flex-direction: column;
   gap: 24px;
 }
+
 .wiz-top {
   display: flex;
   align-items: center;
   gap: 16px;
 }
+
 .wiz-exit {
   display: inline-flex;
   align-items: center;
@@ -89,20 +91,24 @@ function go(n: number) {
   padding: 6px 8px;
   border-radius: 8px;
 }
+
 .wiz-exit:hover {
   background: var(--amatista-50);
   color: var(--amatista-700);
 }
+
 .wiz-title {
   font-family: var(--font-serif);
   font-size: 18px;
   color: var(--warm-900);
 }
+
 .stepper {
   display: flex;
   align-items: center;
   gap: 6px;
 }
+
 .wstep {
   display: inline-flex;
   align-items: center;
@@ -113,6 +119,7 @@ function go(n: number) {
   padding: 4px 6px;
   color: var(--warm-500);
 }
+
 .wstep-dot {
   width: 26px;
   height: 26px;
@@ -124,21 +131,26 @@ function go(n: number) {
   font-size: 12.5px;
   font-weight: 600;
 }
+
 .wstep.cur .wstep-dot {
   background: var(--amatista-600);
   color: #fff;
 }
+
 .wstep.done .wstep-dot {
-  background: oklch(55% 0.15 150);
+  background: oklch(55% 0.15 150deg);
   color: #fff;
 }
+
 .wstep-lbl {
   font-size: 12.5px;
   font-weight: 500;
 }
+
 .wstep.cur .wstep-lbl {
   color: var(--warm-900);
 }
+
 .wstep-bar {
   flex: 1;
   height: 2px;
@@ -146,7 +158,8 @@ function go(n: number) {
   border-radius: 2px;
   min-width: 14px;
 }
+
 .wstep-bar.done {
-  background: oklch(70% 0.12 150);
+  background: oklch(70% 0.12 150deg);
 }
 </style>

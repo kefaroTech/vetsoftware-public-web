@@ -72,8 +72,8 @@ const canOpenCash = computed(
 const canCloseCurrentSession = computed(
   () =>
     canClose.value &&
-      subjectId.value != null &&
-      current.value?.openedByEmployeeId === subjectId.value,
+    subjectId.value != null &&
+    current.value?.openedByEmployeeId === subjectId.value,
 )
 
 const openModal = ref(false)
@@ -486,9 +486,7 @@ watch(
         <label class="filter-field">
           <span>Sede</span>
           <select v-model="historyBranchId" :disabled="historyLoading">
-            <option :value="null">
-              Todas las sedes asignadas
-            </option>
+            <option :value="null">Todas las sedes asignadas</option>
             <option v-for="branch in historyBranchOptions" :key="branch.id" :value="branch.id">
               {{ branch.name }}{{ branch.active ? '' : ' (inactiva)' }}
             </option>
@@ -496,10 +494,7 @@ watch(
         </label>
         <label class="filter-field">
           <span>Empleado que abrió</span>
-          <select
-            v-model="historyEmployeeId"
-            :disabled="historyLoading || historyEmployeesLoading"
-          >
+          <select v-model="historyEmployeeId" :disabled="historyLoading || historyEmployeesLoading">
             <option :value="null">
               {{ historyEmployeesLoading ? 'Cargando empleados…' : 'Todos los empleados' }}
             </option>
@@ -515,8 +510,8 @@ watch(
         <label class="filter-field date-field">
           <span>Desde</span>
           <DateInput
-            v-model="historyFrom"
             id="cash-history-from"
+            v-model="historyFrom"
             placeholder="Fecha inicial"
             :max="historyTo || undefined"
             :disabled="historyLoading"
@@ -525,8 +520,8 @@ watch(
         <label class="filter-field date-field">
           <span>Hasta</span>
           <DateInput
-            v-model="historyTo"
             id="cash-history-to"
+            v-model="historyTo"
             placeholder="Fecha final"
             :min="historyFrom || undefined"
             :disabled="historyLoading"
@@ -536,7 +531,12 @@ watch(
           <button type="submit" class="btn primary" :disabled="historyLoading">
             <Filter :size="14" :stroke-width="1.8" /> Filtrar
           </button>
-          <button type="button" class="btn ghost" :disabled="historyLoading" @click="clearHistoryFilters">
+          <button
+            type="button"
+            class="btn ghost"
+            :disabled="historyLoading"
+            @click="clearHistoryFilters"
+          >
             <RotateCcw :size="14" :stroke-width="1.8" /> Limpiar
           </button>
         </div>
@@ -762,18 +762,21 @@ watch(
   padding: 24px 28px;
   font-family: var(--font-sans);
 }
+
 .page-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
 }
+
 .title-wrap {
   display: flex;
   gap: 12px;
   align-items: center;
   color: var(--amatista-700, #5c2d8c);
 }
+
 .title-wrap h1 {
   margin: 0;
   font-family: var(--font-serif);
@@ -781,11 +784,13 @@ watch(
   font-weight: 400;
   color: var(--warm-900);
 }
+
 .sub {
   margin: 2px 0 0;
   font-size: 13px;
   color: var(--warm-500);
 }
+
 .cash-tabs {
   display: flex;
   align-items: flex-end;
@@ -795,9 +800,11 @@ watch(
   overflow-x: auto;
   scrollbar-width: none;
 }
+
 .cash-tabs::-webkit-scrollbar {
   display: none;
 }
+
 .cash-tab {
   position: relative;
   display: inline-flex;
@@ -814,6 +821,7 @@ watch(
   font-weight: 600;
   cursor: pointer;
 }
+
 .cash-tab::after {
   position: absolute;
   right: 10px;
@@ -824,15 +832,19 @@ watch(
   background: transparent;
   content: '';
 }
+
 .cash-tab:hover {
   color: var(--warm-800);
 }
+
 .cash-tab.active {
   color: var(--amatista-700, #5c2d8c);
 }
+
 .cash-tab.active::after {
   background: var(--amatista-600, #5c2d8c);
 }
+
 .tab-count {
   min-width: 20px;
   padding: 1px 6px;
@@ -843,10 +855,12 @@ watch(
   line-height: 18px;
   text-align: center;
 }
+
 .cash-tab.active .tab-count {
   background: var(--amatista-100, #efe6f7);
   color: var(--amatista-700, #5c2d8c);
 }
+
 .tab-status {
   width: 7px;
   height: 7px;
@@ -854,6 +868,7 @@ watch(
   background: #2f9d62;
   box-shadow: 0 0 0 3px rgb(47 157 98 / 12%);
 }
+
 .open-overview,
 .my-cash {
   background: var(--warm-50);
@@ -861,12 +876,15 @@ watch(
   border-radius: 16px;
   padding: 18px 22px;
 }
+
 .open-overview {
   margin-bottom: 20px;
 }
+
 .my-cash {
   margin-bottom: 26px;
 }
+
 .my-cash--detail {
   margin: 0;
   padding: 0;
@@ -874,33 +892,40 @@ watch(
   border: 0;
   border-radius: 0;
 }
+
 .open-table {
   min-width: 850px;
 }
+
 .branch-name {
   color: var(--warm-800);
   font-weight: 600;
   white-space: nowrap;
 }
+
 .my-cash-detail {
   margin-top: 20px;
   padding-top: 20px;
   border-top: 1px solid var(--warm-200);
 }
+
 .my-cash--detail .my-cash-detail {
   margin: 0;
   padding: 0;
   border: 0;
 }
+
 .detail-page-head {
   margin-bottom: 24px;
 }
+
 .detail-title-wrap {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
 }
+
 .detail-eyebrow {
   color: var(--amatista-700, #5c2d8c);
   font-size: 11px;
@@ -908,6 +933,7 @@ watch(
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+
 .detail-title-wrap h1 {
   margin: 4px 0 2px;
   color: var(--warm-900);
@@ -915,15 +941,18 @@ watch(
   font-size: 28px;
   font-weight: 400;
 }
+
 .detail-title-wrap p {
   margin: 0;
   color: var(--warm-500);
   font-size: 13px;
 }
+
 .detail-loading {
   min-height: 280px;
   color: var(--warm-500);
 }
+
 .cash-detail-state {
   min-height: 220px;
   display: grid;
@@ -932,22 +961,27 @@ watch(
   color: var(--warm-500);
   text-align: center;
 }
+
 .cash-detail-state.error {
   color: #b4453a;
 }
+
 .cash-detail-state p {
   margin: 0;
 }
+
 .cash-detail {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
+
 .cash-detail-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
+
 .cash-detail-field {
   min-height: 66px;
   padding: 12px 14px;
@@ -962,6 +996,7 @@ watch(
   color: var(--warm-800);
   font-size: 13px;
 }
+
 .cash-detail-label {
   color: var(--warm-500);
   font-size: 10.5px;
@@ -969,6 +1004,7 @@ watch(
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
+
 .cash-detail-section-title {
   margin: 0 0 -8px;
   color: var(--warm-800);
@@ -976,9 +1012,11 @@ watch(
   font-size: 16px;
   font-weight: 400;
 }
+
 .cash-detail-totals {
   margin-bottom: 0;
 }
+
 .panel-head {
   display: flex;
   justify-content: space-between;
@@ -987,14 +1025,17 @@ watch(
   gap: 12px;
   margin-bottom: 18px;
 }
+
 .opened {
   font-size: 12.5px;
   color: var(--warm-500);
 }
+
 .panel-actions {
   display: flex;
   gap: 8px;
 }
+
 .pill {
   display: inline-block;
   padding: 2px 10px;
@@ -1002,20 +1043,24 @@ watch(
   font-size: 11.5px;
   font-weight: 600;
 }
+
 .pill.open {
-  background: oklch(92% 0.08 150);
-  color: oklch(40% 0.12 150);
+  background: oklch(92% 0.08 150deg);
+  color: oklch(40% 0.12 150deg);
 }
+
 .pill.closed {
   background: var(--warm-100);
   color: var(--warm-600);
 }
+
 .totals {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
   margin-bottom: 22px;
 }
+
 .total-card {
   background: var(--warm-100);
   border-radius: 10px;
@@ -1024,20 +1069,24 @@ watch(
   flex-direction: column;
   gap: 4px;
 }
+
 .total-card.base {
   background: var(--amatista-100, #efe6f7);
 }
+
 .total-card .lbl {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--warm-500);
 }
+
 .total-card .val {
   font-size: 18px;
   font-weight: 700;
   color: var(--warm-900);
 }
+
 .section-title {
   display: flex;
   align-items: center;
@@ -1048,6 +1097,7 @@ watch(
   color: var(--warm-800);
   margin: 8px 0 10px;
 }
+
 .movement-title {
   margin: 8px 0 10px;
   font-family: var(--font-serif);
@@ -1055,14 +1105,17 @@ watch(
   font-weight: 400;
   color: var(--warm-800);
 }
+
 .movements-table {
   min-width: 760px;
 }
+
 .movs {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 }
+
 .movs th {
   text-align: left;
   color: var(--warm-500);
@@ -1072,43 +1125,52 @@ watch(
   padding: 6px 8px;
   border-bottom: 1px solid var(--warm-200);
 }
+
 .movs td {
   padding: 7px 8px;
   border-bottom: 1px solid var(--warm-100);
 }
+
 .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
 .pos {
   color: #2f7d4f;
   font-weight: 600;
 }
+
 .neg {
   color: #b4453a;
   font-weight: 600;
 }
+
 .empty-row {
   text-align: center;
   color: var(--warm-400);
   padding: 22px;
 }
+
 .history {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 16px;
   padding: 20px 22px;
 }
+
 .history-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
+
 .history-count {
   color: var(--warm-500);
   font-size: 12px;
 }
+
 .history-filters {
   display: grid;
   grid-template-columns: minmax(160px, 1fr) minmax(190px, 1.2fr) 170px 170px auto;
@@ -1120,12 +1182,14 @@ watch(
   border-radius: 12px;
   background: var(--warm-100);
 }
+
 .filter-field {
   display: flex;
   min-width: 0;
   flex-direction: column;
   gap: 6px;
 }
+
 .filter-field > span {
   color: var(--warm-500);
   font-size: 10.5px;
@@ -1133,6 +1197,7 @@ watch(
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+
 .filter-field select {
   width: 100%;
   height: 38px;
@@ -1145,44 +1210,55 @@ watch(
   font: inherit;
   font-size: 12.5px;
 }
+
 .filter-field select:focus {
   border-color: var(--amatista-500, #76519d);
   box-shadow: 0 0 0 3px rgb(92 45 140 / 10%);
 }
+
 .filter-field select:disabled {
   cursor: wait;
   opacity: 0.65;
 }
+
 .date-field :deep(.date-wrap) {
   min-width: 0;
 }
+
 .filter-actions {
   display: flex;
   gap: 7px;
 }
+
 .table-scroll {
   width: 100%;
   overflow-x: auto;
   scrollbar-width: thin;
 }
+
 .history-table {
   min-width: 1180px;
 }
+
 .duration,
 .employee {
   white-space: nowrap;
 }
+
 .duration {
   color: var(--warm-600);
   font-variant-numeric: tabular-nums;
 }
+
 .employee {
   color: var(--warm-600);
   font-size: 12px;
 }
+
 .actions-cell {
   white-space: nowrap;
 }
+
 .link {
   background: none;
   border: none;
@@ -1195,9 +1271,11 @@ watch(
   align-items: center;
   gap: 3px;
 }
+
 .link:hover {
   text-decoration: underline;
 }
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -1209,43 +1287,51 @@ watch(
   font-weight: 600;
   cursor: pointer;
 }
+
 .btn.ghost {
   background: var(--warm-100);
   color: var(--warm-700);
 }
+
 .btn.primary {
   background: var(--amatista-600, #5c2d8c);
   color: #fff;
 }
+
 .btn:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
 
-@media (max-width: 1100px) {
+@media (width <= 1100px) {
   .history-filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
   .filter-actions {
     grid-column: 1 / -1;
   }
 }
 
-@media (max-width: 720px) {
+@media (width <= 720px) {
   .caja {
     padding: 18px 14px;
   }
+
   .history,
   .my-cash,
   .open-overview {
     padding: 16px;
   }
+
   .cash-detail-grid {
     grid-template-columns: 1fr;
   }
+
   .history-filters {
     grid-template-columns: 1fr;
   }
+
   .filter-actions {
     grid-column: auto;
     flex-wrap: wrap;

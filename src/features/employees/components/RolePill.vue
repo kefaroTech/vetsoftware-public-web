@@ -15,11 +15,7 @@ const tokens = computed(() => colorsForCode(props.code))
 </script>
 
 <template>
-  <span
-    class="pill"
-    :class="`size-${size}`"
-    :style="{ background: tokens.bg, color: tokens.fg }"
-  >
+  <span class="pill" :class="`size-${size}`" :style="{ background: tokens.bg, color: tokens.fg }">
     <span class="dot" :style="{ background: tokens.dot }" />
     {{ name }}
   </span>
@@ -35,14 +31,17 @@ const tokens = computed(() => colorsForCode(props.code))
   white-space: nowrap;
   font-family: var(--font-sans);
 }
+
 .pill.size-md {
   padding: 3px 10px;
   font-size: 12px;
 }
+
 .pill.size-lg {
   padding: 5px 12px;
   font-size: 13px;
 }
+
 .dot {
   width: 6px;
   height: 6px;

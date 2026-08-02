@@ -38,9 +38,7 @@ async function ensureOwner(id: string) {
 onMounted(() => ensureOwner(ownerIdParam.value))
 watch(ownerIdParam, (id) => ensureOwner(id))
 
-const firstName = computed(
-  () => state.owner?.name.split(' ')[0] ?? '',
-)
+const firstName = computed(() => state.owner?.name.split(' ')[0] ?? '')
 const countLabel = computed(() => {
   const n = pets.value.length
   if (n === 0) return 'Sin mascotas registradas'
@@ -73,7 +71,8 @@ function back() {
     </div>
     <h1 class="title">¿Qué mascota quieres consultar?</h1>
     <p v-if="state.owner" class="sub">
-      {{ countLabel }}<template v-if="firstName"> a nombre de {{ firstName }}</template>.
+      {{ countLabel }}<template v-if="firstName"> a nombre de {{ firstName }}</template
+      >.
     </p>
 
     <div v-if="ownerError" class="banner error">{{ ownerError }}</div>
@@ -83,20 +82,12 @@ function back() {
       <PawLoader :size="42" :glow="false" :speed="900" />
     </div>
 
-    <div
-      v-else-if="pets.length === 0 && !error && !ownerError"
-      class="empty-card"
-    >
+    <div v-else-if="pets.length === 0 && !error && !ownerError" class="empty-card">
       Este propietario aún no tiene mascotas registradas.
     </div>
 
     <div v-else class="grid">
-      <PetCard
-        v-for="p in pets"
-        :key="p.id"
-        :pet="p"
-        @select="pick"
-      />
+      <PetCard v-for="p in pets" :key="p.id" :pet="p" @select="pick" />
     </div>
   </div>
 </template>
@@ -110,6 +101,7 @@ function back() {
   width: 100%;
   margin: 0 auto;
 }
+
 .back-btn {
   display: inline-flex;
   align-items: center;
@@ -123,9 +115,11 @@ function back() {
   padding: 0;
   margin-bottom: 14px;
 }
+
 .back-btn:hover {
   color: var(--amatista-700);
 }
+
 .step-label {
   font-size: 11.5px;
   color: var(--warm-500);
@@ -134,6 +128,7 @@ function back() {
   font-weight: 500;
   margin-bottom: 6px;
 }
+
 .title {
   font-family: var(--font-serif);
   font-size: 32px;
@@ -143,25 +138,29 @@ function back() {
   margin: 0;
   line-height: 1.05;
 }
+
 .sub {
   font-size: 13.5px;
   color: var(--warm-600);
   margin: 6px 0 22px;
 }
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 12px;
 }
+
 .banner.error {
   margin: 12px 0;
   padding: 12px 14px;
   font-size: 13px;
   border-radius: 10px;
-  background: oklch(97% 0.02 25);
-  color: oklch(48% 0.18 25);
-  border: 1px solid oklch(85% 0.06 25);
+  background: oklch(97% 0.02 25deg);
+  color: oklch(48% 0.18 25deg);
+  border: 1px solid oklch(85% 0.06 25deg);
 }
+
 .empty-card {
   padding: 40px 20px;
   text-align: center;
@@ -171,6 +170,7 @@ function back() {
   border-radius: 12px;
   font-size: 14px;
 }
+
 .loading-row {
   display: grid;
   place-items: center;

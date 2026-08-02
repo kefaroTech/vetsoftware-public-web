@@ -113,9 +113,9 @@ async function loadTerminals(selectedBranchId = branchId.value): Promise<void> {
     if (requestSequence !== terminalLoadSequence) return
     const branchTerminals = loaded.filter((terminal) => terminal.branchId === selectedId)
     terminals.value = branchTerminals
-    if (availableTerminals.value.length === 1) {
-      terminalId.value = String(availableTerminals.value[0]!.id)
-    }
+    const [onlyTerminal] = availableTerminals.value
+    if (onlyTerminal && availableTerminals.value.length === 1)
+      terminalId.value = String(onlyTerminal.id)
   } catch (e) {
     if (requestSequence !== terminalLoadSequence) return
     serverError.value = getProblemDetailMessage(e, 'No se pudieron cargar los terminales')
@@ -267,14 +267,16 @@ async function submit() {
   flex-direction: column;
   gap: 18px;
 }
+
 .server-error {
   margin: 0 0 14px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: oklch(94% 0.06 25);
-  color: oklch(45% 0.18 25);
+  background: oklch(94% 0.06 25deg);
+  color: oklch(45% 0.18 25deg);
   font-size: 13px;
 }
+
 .branch-warning {
   margin: -8px 0 0;
   padding: 10px 12px;
@@ -285,6 +287,7 @@ async function submit() {
   font-size: 13px;
   line-height: 1.45;
 }
+
 .btn {
   border: none;
   border-radius: 9px;
@@ -293,14 +296,17 @@ async function submit() {
   font-weight: 600;
   cursor: pointer;
 }
+
 .btn.ghost {
   background: var(--warm-100);
   color: var(--warm-700);
 }
+
 .btn.primary {
   background: var(--amatista-600, #5c2d8c);
   color: #fff;
 }
+
 .btn.primary:disabled {
   opacity: 0.6;
   cursor: default;

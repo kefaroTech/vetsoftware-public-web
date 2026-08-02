@@ -18,7 +18,10 @@ export const purchaseOrdersApi = {
     return data
   },
   async update(id: number, payload: PurchaseOrderRequest): Promise<PurchaseOrder> {
-    const { data } = await http.put<PurchaseOrder>(`/purchase-orders/${id}`, withBranchBody(payload))
+    const { data } = await http.put<PurchaseOrder>(
+      `/purchase-orders/${id}`,
+      withBranchBody(payload),
+    )
     return data
   },
   async place(id: number): Promise<PurchaseOrder> {

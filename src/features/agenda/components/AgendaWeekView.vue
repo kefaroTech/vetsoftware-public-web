@@ -87,10 +87,10 @@ function countLabel(n: number): string {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 12px;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: auto hidden;
   -webkit-overflow-scrolling: touch;
 }
+
 .header-row {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -98,6 +98,7 @@ function countLabel(n: number): string {
   background: var(--warm-100);
   border-bottom: 1px solid var(--warm-200);
 }
+
 .header-cell {
   display: flex;
   flex-direction: column;
@@ -109,9 +110,11 @@ function countLabel(n: number): string {
   cursor: pointer;
   font-family: inherit;
 }
+
 .header-cell:hover {
   background: var(--warm-150);
 }
+
 .weekday {
   font-size: 11px;
   font-weight: 500;
@@ -119,11 +122,13 @@ function countLabel(n: number): string {
   color: var(--warm-600);
   text-transform: uppercase;
 }
+
 .day-number {
   font-size: 16px;
   font-weight: 600;
   color: var(--warm-800);
 }
+
 .day-number.today {
   width: 30px;
   height: 30px;
@@ -133,16 +138,19 @@ function countLabel(n: number): string {
   display: grid;
   place-items: center;
 }
+
 .day-count {
   font-size: 10.5px;
   color: var(--warm-500);
 }
+
 .grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   min-width: 640px;
   min-height: 600px;
 }
+
 .col {
   display: flex;
   flex-direction: column;
@@ -151,17 +159,21 @@ function countLabel(n: number): string {
   background: var(--warm-50);
   border-right: 1px solid var(--warm-150);
 }
+
 .col:nth-child(7n) {
   border-right: none;
 }
+
 .col.today {
   background: var(--amatista-50);
 }
+
 .events {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
+
 .empty {
   text-align: center;
   color: var(--warm-400);

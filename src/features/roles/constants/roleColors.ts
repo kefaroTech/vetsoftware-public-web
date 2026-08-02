@@ -18,8 +18,7 @@ export const ROLE_COLORS: Record<RoleColor, RoleColorTokens> = {
     border: 'var(--amatista-200)',
     avatarBg: 'var(--amatista-100)',
     avatarFg: 'var(--amatista-700)',
-    headerGradient:
-      'linear-gradient(180deg, var(--amatista-100) 0%, var(--warm-50) 100%)',
+    headerGradient: 'linear-gradient(180deg, var(--amatista-100) 0%, var(--warm-50) 100%)',
   },
   green: {
     bg: 'oklch(94% 0.06 150)',
@@ -28,8 +27,7 @@ export const ROLE_COLORS: Record<RoleColor, RoleColorTokens> = {
     border: 'oklch(88% 0.08 150)',
     avatarBg: 'oklch(94% 0.06 150)',
     avatarFg: 'oklch(40% 0.13 150)',
-    headerGradient:
-      'linear-gradient(180deg, oklch(94% 0.06 150) 0%, var(--warm-50) 100%)',
+    headerGradient: 'linear-gradient(180deg, oklch(94% 0.06 150) 0%, var(--warm-50) 100%)',
   },
   blue: {
     bg: 'oklch(94% 0.04 240)',
@@ -38,8 +36,7 @@ export const ROLE_COLORS: Record<RoleColor, RoleColorTokens> = {
     border: 'oklch(88% 0.06 240)',
     avatarBg: 'oklch(94% 0.04 240)',
     avatarFg: 'oklch(40% 0.15 240)',
-    headerGradient:
-      'linear-gradient(180deg, oklch(94% 0.04 240) 0%, var(--warm-50) 100%)',
+    headerGradient: 'linear-gradient(180deg, oklch(94% 0.04 240) 0%, var(--warm-50) 100%)',
   },
   amber: {
     bg: 'oklch(94% 0.07 80)',
@@ -48,8 +45,7 @@ export const ROLE_COLORS: Record<RoleColor, RoleColorTokens> = {
     border: 'oklch(88% 0.09 80)',
     avatarBg: 'oklch(94% 0.07 80)',
     avatarFg: 'oklch(45% 0.13 70)',
-    headerGradient:
-      'linear-gradient(180deg, oklch(94% 0.07 80) 0%, var(--warm-50) 100%)',
+    headerGradient: 'linear-gradient(180deg, oklch(94% 0.07 80) 0%, var(--warm-50) 100%)',
   },
   gray: {
     bg: 'var(--warm-200)',
@@ -58,8 +54,7 @@ export const ROLE_COLORS: Record<RoleColor, RoleColorTokens> = {
     border: 'var(--warm-300)',
     avatarBg: 'var(--warm-200)',
     avatarFg: 'var(--warm-700)',
-    headerGradient:
-      'linear-gradient(180deg, var(--warm-200) 0%, var(--warm-50) 100%)',
+    headerGradient: 'linear-gradient(180deg, var(--warm-200) 0%, var(--warm-50) 100%)',
   },
 }
 

@@ -41,17 +41,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
         </div>
         <h2 class="title">¿Descartar esta consulta?</h2>
         <p class="desc">
-          Perderás todos los datos ingresados<span v-if="petName"> de
-            <strong>{{ petName }}</strong></span>. Esta acción no se puede
-          deshacer.
+          Perderás todos los datos ingresados<span v-if="petName">
+            de <strong>{{ petName }}</strong></span
+          >. Esta acción no se puede deshacer.
         </p>
         <div class="actions">
-          <button
-            ref="keepBtn"
-            type="button"
-            class="btn ghost"
-            @click="$emit('cancel')"
-          >
+          <button ref="keepBtn" type="button" class="btn ghost" @click="$emit('cancel')">
             Seguir editando
           </button>
           <button type="button" class="btn danger" @click="$emit('confirm')">
@@ -68,37 +63,41 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(30, 20, 50, 0.45);
+  background: rgb(30 20 50 / 45%);
   backdrop-filter: blur(2px);
   display: grid;
   place-items: center;
   z-index: 100;
   animation: fade 0.15s ease-out;
 }
+
 @keyframes fade {
   from {
     opacity: 0;
   }
 }
+
 .card {
   width: 440px;
   max-width: calc(100vw - 32px);
   background: var(--warm-50);
   border-radius: 16px;
   padding: 28px;
-  box-shadow: 0 20px 60px rgba(40, 20, 80, 0.3);
+  box-shadow: 0 20px 60px rgb(40 20 80 / 30%);
   font-family: var(--font-sans);
 }
+
 .icon {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: oklch(94% 0.06 25);
-  color: oklch(50% 0.18 25);
+  background: oklch(94% 0.06 25deg);
+  color: oklch(50% 0.18 25deg);
   display: grid;
   place-items: center;
   margin-bottom: 14px;
 }
+
 .title {
   margin: 0 0 6px;
   font-size: 18px;
@@ -106,17 +105,20 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   letter-spacing: -0.01em;
   color: var(--warm-900);
 }
+
 .desc {
   margin: 0 0 22px;
   font-size: 13.5px;
   color: var(--warm-600);
   line-height: 1.55;
 }
+
 .actions {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
 }
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -129,21 +131,26 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn.ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-900);
 }
+
 .btn.ghost:hover {
   background: var(--warm-100);
 }
+
 .btn.danger {
-  background: oklch(50% 0.18 25);
+  background: oklch(50% 0.18 25deg);
   color: white;
 }
+
 .btn.danger:hover {
   filter: brightness(1.05);
 }
+
 .btn:focus-visible {
   outline: 2px solid var(--amatista-700);
   outline-offset: 2px;

@@ -44,12 +44,14 @@ defineEmits<{ reset: [] }>()
   margin-bottom: 14px;
   font-family: var(--font-sans);
 }
+
 .crumb {
   display: flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
 }
+
 .badge {
   width: 22px;
   height: 22px;
@@ -60,21 +62,26 @@ defineEmits<{ reset: [] }>()
   place-items: center;
   flex-shrink: 0;
 }
+
 .badge.paw {
   border-radius: 7px;
 }
+
 .name {
   font-size: 13px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .meta {
   font-size: 11.5px;
   color: var(--warm-500);
 }
+
 .sep {
   color: var(--warm-400);
 }
+
 .reset {
   margin-left: auto;
   display: inline-flex;
@@ -88,8 +95,11 @@ defineEmits<{ reset: [] }>()
   font-size: 12px;
   color: var(--warm-700);
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
 }
+
 .reset:hover {
   background: var(--warm-50);
   border-color: var(--warm-300);

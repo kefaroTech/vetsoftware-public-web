@@ -22,7 +22,8 @@ defineProps<{ data: SpaResponse }>()
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px 24px;
 }
-@media (max-width: 560px) {
+
+@media (width <= 560px) {
   .detail-grid {
     grid-template-columns: 1fr;
   }

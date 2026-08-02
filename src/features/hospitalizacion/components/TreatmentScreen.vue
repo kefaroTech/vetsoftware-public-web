@@ -1,13 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import {
-  ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Pencil,
-  Ban,
-} from 'lucide-vue-next'
+import { ArrowLeft, ChevronLeft, ChevronRight, Plus, Pencil, Ban } from 'lucide-vue-next'
 import WeeklyMAR from './WeeklyMAR.vue'
 import MoveDoseModal from './MoveDoseModal.vue'
 import ApplyDoseModal from './ApplyDoseModal.vue'
@@ -272,7 +265,10 @@ function onSuspendConfirm() {
 </template>
 
 <style scoped>
-.treat { font-family: var(--font-sans); }
+.treat {
+  font-family: var(--font-sans);
+}
+
 .back {
   display: inline-flex;
   align-items: center;
@@ -287,11 +283,13 @@ function onSuspendConfirm() {
   cursor: pointer;
   margin-bottom: 14px;
 }
+
 .back:hover {
   background: var(--amatista-50);
   border-color: var(--amatista-300);
   color: var(--amatista-700);
 }
+
 .head {
   display: flex;
   align-items: flex-end;
@@ -300,6 +298,7 @@ function onSuspendConfirm() {
   flex-wrap: wrap;
   margin-bottom: 14px;
 }
+
 .kicker {
   font-size: 11.5px;
   text-transform: uppercase;
@@ -307,6 +306,7 @@ function onSuspendConfirm() {
   color: var(--warm-500);
   font-weight: 500;
 }
+
 .title {
   margin: 4px 0 0;
   font-family: var(--font-serif);
@@ -315,11 +315,13 @@ function onSuspendConfirm() {
   color: var(--warm-900);
   line-height: 1.05;
 }
+
 .weeknav {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
 .nav,
 .today {
   border: 1px solid var(--warm-200);
@@ -331,9 +333,21 @@ function onSuspendConfirm() {
   display: grid;
   place-items: center;
 }
-.nav { width: 32px; height: 32px; }
-.today { padding: 0 12px; height: 32px; font-size: 12.5px; font-weight: 500; }
-.nav:hover, .today:hover { border-color: var(--amatista-300); }
+.nav {
+  width: 32px;
+  height: 32px;
+}
+.today {
+  padding: 0 12px;
+  height: 32px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.nav:hover,
+.today:hover {
+  border-color: var(--amatista-300);
+}
+
 .weeklabel {
   font-family: var(--font-serif);
   font-size: 16px;
@@ -341,29 +355,35 @@ function onSuspendConfirm() {
   min-width: 120px;
   text-align: center;
 }
+
 .volatile-banner {
   margin: 0 0 16px;
   padding: 9px 12px;
   font-size: 12px;
   line-height: 1.5;
-  color: oklch(45% 0.13 70);
-  background: oklch(96% 0.04 80);
-  border-left: 3px solid oklch(70% 0.13 75);
+  color: oklch(45% 0.13 70deg);
+  background: oklch(96% 0.04 80deg);
+  border-left: 3px solid oklch(70% 0.13 75deg);
   border-radius: 0 8px 8px 0;
 }
-.plan { margin-top: 26px; }
+.plan {
+  margin-top: 26px;
+}
+
 .plan-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
 }
+
 .plan-head h3 {
   margin: 0;
   font-size: 15px;
   font-weight: 600;
   color: var(--warm-900);
 }
+
 .add {
   display: inline-flex;
   align-items: center;
@@ -378,13 +398,17 @@ function onSuspendConfirm() {
   font-weight: 500;
   cursor: pointer;
 }
-.add:hover { border-color: var(--amatista-500); }
+.add:hover {
+  border-color: var(--amatista-500);
+}
+
 .plan-empty {
   margin: 0;
   font-size: 13px;
   color: var(--warm-500);
   padding: 8px 0;
 }
+
 .row {
   display: flex;
   align-items: center;
@@ -394,11 +418,13 @@ function onSuspendConfirm() {
   border-radius: 10px;
   margin-bottom: 6px;
 }
+
 .row.suspended {
   opacity: 0.6;
   background: var(--warm-50);
   border: 1px dashed var(--warm-300);
 }
+
 .susp-badge {
   display: inline-block;
   margin-left: 8px;
@@ -407,21 +433,27 @@ function onSuspendConfirm() {
   font-size: 11px;
   font-weight: 600;
   vertical-align: middle;
-  background: oklch(94% 0.05 25);
-  color: oklch(48% 0.18 25);
-  border: 1px solid oklch(85% 0.08 25);
+  background: oklch(94% 0.05 25deg);
+  color: oklch(48% 0.18 25deg);
+  border: 1px solid oklch(85% 0.08 25deg);
 }
-.row-main { flex: 1; min-width: 0; }
+.row-main {
+  flex: 1;
+  min-width: 0;
+}
+
 .row-name {
   font-size: 13.5px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .row-detail {
   font-size: 12px;
   color: var(--warm-600);
   margin-top: 2px;
 }
+
 .icon {
   width: 30px;
   height: 30px;
@@ -434,5 +466,8 @@ function onSuspendConfirm() {
   color: var(--warm-600);
   flex-shrink: 0;
 }
-.icon:hover { background: var(--warm-100); color: var(--warm-900); }
+.icon:hover {
+  background: var(--warm-100);
+  color: var(--warm-900);
+}
 </style>

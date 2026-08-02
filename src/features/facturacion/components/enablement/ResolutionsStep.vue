@@ -61,7 +61,10 @@ function consumo(r: NumberingResolutionResponse) {
 async function onSave(payload: { id: number | null; body: SaveNumberingResolutionRequest }) {
   try {
     await upsertResolution(payload.id, payload.body)
-    toast.success(payload.id ? 'Resolución actualizada' : 'Resolución creada', payload.body.resolutionNumber)
+    toast.success(
+      payload.id ? 'Resolución actualizada' : 'Resolución creada',
+      payload.body.resolutionNumber,
+    )
     formOpen.value = false
   } catch {
     toast.error('No se pudo guardar', 'Revisa los datos de la resolución.')
@@ -166,11 +169,13 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
   flex-direction: column;
   gap: 18px;
 }
+
 .resgrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
 }
+
 .rescard {
   border: 1px solid var(--warm-200);
   border-radius: 14px;
@@ -180,15 +185,18 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
   flex-direction: column;
   gap: 8px;
 }
+
 .rescard.set {
   border-color: var(--amatista-200);
 }
+
 .rescard-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
 }
+
 .rescard-type {
   font-weight: 600;
   font-size: 14px;
@@ -197,6 +205,7 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
   align-items: center;
   gap: 8px;
 }
+
 .keyreq {
   font-size: 10px;
   text-transform: uppercase;
@@ -207,24 +216,29 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
   border-radius: 5px;
   font-weight: 600;
 }
+
 .badge {
   font-size: 11px;
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 999px;
 }
+
 .badge.ok {
-  background: oklch(94% 0.06 150);
-  color: oklch(40% 0.13 150);
+  background: oklch(94% 0.06 150deg);
+  color: oklch(40% 0.13 150deg);
 }
+
 .badge.pend {
   background: var(--warm-200);
   color: var(--warm-600);
 }
+
 .rescard-meta {
   font-size: 12px;
   color: var(--warm-600);
 }
+
 .branchtag {
   align-self: flex-start;
   font-size: 10.5px;
@@ -235,34 +249,41 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
   padding: 2px 8px;
   border-radius: 999px;
 }
+
 .rescard-empty {
   font-size: 12.5px;
   color: var(--warm-500);
   padding: 6px 0;
 }
+
 .consumo {
   margin-top: 2px;
 }
+
 .bar {
   height: 6px;
   border-radius: 999px;
   background: var(--warm-200);
   overflow: hidden;
 }
+
 .bar span {
   display: block;
   height: 100%;
   border-radius: 999px;
 }
+
 .barlbl {
   margin-top: 5px;
   font-size: 11px;
   color: var(--warm-500);
 }
+
 .warn {
-  color: oklch(55% 0.18 25);
+  color: oklch(55% 0.18 25deg);
   font-weight: 600;
 }
+
 .rescard-btn {
   align-self: flex-start;
   margin-top: 4px;
@@ -278,13 +299,16 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
   color: var(--warm-700);
   cursor: pointer;
 }
+
 .rescard-btn:hover {
   background: var(--warm-100);
 }
+
 .rescard-btn.add {
   border-color: var(--amatista-300);
   color: var(--amatista-700);
 }
+
 .help {
   margin: 0;
   font-size: 12px;

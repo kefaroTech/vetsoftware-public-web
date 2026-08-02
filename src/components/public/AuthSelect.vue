@@ -55,10 +55,10 @@ function onBlur() {
 .pub-select {
   position: relative;
 }
+
 .pub-select select {
   width: 100%;
   appearance: none;
-  -webkit-appearance: none;
   padding: 10px 38px 10px 12px;
   font-family: inherit;
   font-size: 14px;
@@ -72,24 +72,30 @@ function onBlur() {
     border-color 0.15s,
     box-shadow 0.15s;
 }
+
 .pub-select select.is-placeholder {
   color: #a89bbd;
 }
+
 .pub-select select:disabled {
   background: #faf8fc;
   cursor: not-allowed;
   opacity: 0.6;
 }
+
 .pub-select.is-focused select {
   border-color: var(--pub-ame-500);
-  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.14);
+  box-shadow: 0 0 0 3px rgb(168 85 247 / 14%);
 }
+
 .pub-select.is-invalid select {
   border-color: var(--pub-err-tx);
 }
+
 .pub-select.is-invalid.is-focused select {
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  box-shadow: 0 0 0 3px rgb(220 38 38 / 10%);
 }
+
 .pub-select-tail {
   position: absolute;
   right: 12px;
@@ -100,6 +106,7 @@ function onBlur() {
   display: grid;
   place-items: center;
 }
+
 .pub-select-spin {
   width: 14px;
   height: 14px;

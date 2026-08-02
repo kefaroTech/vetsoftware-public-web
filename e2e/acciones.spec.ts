@@ -61,14 +61,21 @@ test.describe('Acciones · Picker de paciente (gate)', () => {
   test('[det] el gate muestra el buscador y el enlace de crear propietario', async ({ page }) => {
     await gotoAccion(page, 'laboratorio')
     await expect(page.getByPlaceholder(PICKER_SEARCH)).toBeVisible()
-    await expect(page.getByRole('button', { name: /Crear propietario nuevo/ }).first()).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /Crear propietario nuevo/ }).first(),
+    ).toBeVisible()
     // Sin paciente, la pantalla NO expone aún el botón "Nueva X".
     await expect(page.getByRole('button', { name: ACCIONES.laboratorio.nueva })).toHaveCount(0)
   })
 
-  test('[det] crear propietario inline: click "Crear y seleccionar" vacío valida y no avanza', async ({ page }) => {
+  test('[det] crear propietario inline: click "Crear y seleccionar" vacío valida y no avanza', async ({
+    page,
+  }) => {
     await gotoAccion(page, 'laboratorio')
-    await page.getByRole('button', { name: /Crear propietario nuevo/ }).first().click()
+    await page
+      .getByRole('button', { name: /Crear propietario nuevo/ })
+      .first()
+      .click()
     const btn = page.getByRole('button', { name: 'Crear y seleccionar' })
     await expect(btn).toBeEnabled()
     await btn.click()
@@ -78,7 +85,9 @@ test.describe('Acciones · Picker de paciente (gate)', () => {
     await expect(page.getByRole('button', { name: 'Crear y seleccionar' })).toBeVisible()
   })
 
-  test('[data] seleccionar un paciente EXISTENTE resuelve el gate y expone "Nueva solicitud"', async ({ page }) => {
+  test('[data] seleccionar un paciente EXISTENTE resuelve el gate y expone "Nueva solicitud"', async ({
+    page,
+  }) => {
     await gotoAccion(page, 'laboratorio')
     await pickerSelectExisting(page, patient.owner.document, patient.petName)
     // Gate resuelto: buscador oculto + botón de alta visible + breadcrumb del paciente.
@@ -86,7 +95,9 @@ test.describe('Acciones · Picker de paciente (gate)', () => {
     await expect(page.getByText(patient.petName)).toBeVisible()
   })
 
-  test('[data] crear propietario + mascota inline resuelve el gate (flujo completo)', async ({ page }) => {
+  test('[data] crear propietario + mascota inline resuelve el gate (flujo completo)', async ({
+    page,
+  }) => {
     await gotoAccion(page, 'imagen')
     const writes = trackApiWrites(page)
     await pickerCreateOwnerAndPet(page)
@@ -124,7 +135,9 @@ for (const key of KEYS) {
       await expect(dialog.getByPlaceholder(PICKER_SEARCH)).toHaveCount(0)
     })
 
-    test('[data] el `*` marca EXACTAMENTE los campos obligatorios (opcionales sin `*`)', async ({ page }) => {
+    test('[data] el `*` marca EXACTAMENTE los campos obligatorios (opcionales sin `*`)', async ({
+      page,
+    }) => {
       await openNueva(page, key)
       const { required, optional } = await modalAsteriskAudit(page)
       expect(required).toEqual(EXPECTED_REQUIRED[key])
@@ -134,7 +147,9 @@ for (const key of KEYS) {
       }
     })
 
-    test('[data] botón Guardar SIEMPRE activo; guardar vacío dispara validación y NO guarda', async ({ page }) => {
+    test('[data] botón Guardar SIEMPRE activo; guardar vacío dispara validación y NO guarda', async ({
+      page,
+    }) => {
       const dialog = await openNueva(page, key)
       const writes = trackApiWrites(page)
       await expect(modalSave(page)).toBeEnabled()
@@ -148,7 +163,9 @@ for (const key of KEYS) {
       await expect(page).not.toHaveURL(/error/)
     })
 
-    test('[data] happy path: llenar requeridos → Guardar → POST 2xx → fila creada', async ({ page }) => {
+    test('[data] happy path: llenar requeridos → Guardar → POST 2xx → fila creada', async ({
+      page,
+    }) => {
       // GAP DE BACKEND (Spa): POST /api/v1/spa-types responde 403 Forbidden
       // ("Access denied") — el permiso de crear tipos de spa no está otorgado al
       // rol (ver handoff §14: falta registrar el permiso SPA en el backend). El
@@ -186,7 +203,9 @@ test.describe('Acciones · casos de borde por tipo de dato', () => {
     await expect(page.getByRole('button', { name: ACCIONES.laboratorio.nueva })).toBeVisible()
   })
 
-  test('[data] laboratorio: cantidad 0 es inválida (mínimo 1) y bloquea el guardado', async ({ page }) => {
+  test('[data] laboratorio: cantidad 0 es inválida (mínimo 1) y bloquea el guardado', async ({
+    page,
+  }) => {
     const dialog = await openNueva(page, 'laboratorio')
     const writes = trackApiWrites(page)
     // Llena el tipo válido pero fuerza cantidad = 0.
@@ -250,7 +269,9 @@ test.describe('Laboratorio · documento de resultado (ver / descargar)', () => {
     return { dialog, fileName, pdf }
   }
 
-  test('[data] el detalle muestra el documento adjunto con acciones Ver/Descargar', async ({ page }) => {
+  test('[data] el detalle muestra el documento adjunto con acciones Ver/Descargar', async ({
+    page,
+  }) => {
     const { dialog, fileName } = await seedTestWithResultFile(page)
     await expect(dialog.getByText('Resultados adjuntos')).toBeVisible()
     await expect(dialog.getByText(fileName)).toBeVisible()
@@ -258,7 +279,9 @@ test.describe('Laboratorio · documento de resultado (ver / descargar)', () => {
     await expect(dialog.getByRole('button', { name: 'Descargar', exact: true })).toBeVisible()
   })
 
-  test('[data] DESCARGAR: baja el archivo con nombre, tipo y contenido correctos', async ({ page }) => {
+  test('[data] DESCARGAR: baja el archivo con nombre, tipo y contenido correctos', async ({
+    page,
+  }) => {
     const { dialog, fileName, pdf } = await seedTestWithResultFile(page)
 
     const [download, dlResp] = await Promise.all([
@@ -275,7 +298,10 @@ test.describe('Laboratorio · documento de resultado (ver / descargar)', () => {
     expect(download.suggestedFilename()).toBe(fileName)
     const savedPath = await download.path()
     const bytes = await readFile(savedPath)
-    expect(bytes.equals(pdf), 'el contenido descargado coincide byte a byte con el subido').toBeTruthy()
+    expect(
+      bytes.equals(pdf),
+      'el contenido descargado coincide byte a byte con el subido',
+    ).toBeTruthy()
   })
 
   test('[data] VER: abre el documento en una pestaña nueva (preview inline)', async ({ page }) => {

@@ -38,7 +38,9 @@ const submitted = ref(false)
 const saving = ref(false)
 const serverError = ref<string | null>(null)
 
-const supplierOptions = computed(() => suppliers.value.map((s) => ({ value: String(s.id), label: s.name })))
+const supplierOptions = computed(() =>
+  suppliers.value.map((s) => ({ value: String(s.id), label: s.name })),
+)
 const productOptions = computed(() =>
   tienda.products.value.map((p) => ({ value: String(p.id), label: `${p.name} (${p.code})` })),
 )
@@ -59,7 +61,7 @@ const errors = computed(() => ({
 }))
 const hasErrors = computed(() => Object.values(errors.value).some((e) => e !== null))
 function err(k: keyof typeof errors.value) {
-  return submitted.value ? errors.value[k] ?? undefined : undefined
+  return submitted.value ? (errors.value[k] ?? undefined) : undefined
 }
 
 function addLine() {
@@ -136,8 +138,12 @@ async function submit() {
       <p v-if="serverError" class="server-error">{{ serverError }}</p>
       <div class="head-grid">
         <BaseField label="Proveedor" required :error="err('supplierId')">
-          <BaseSelect v-model="form.supplierId" :options="supplierOptions" placeholder="Selecciona proveedor"
-            :invalid="!!err('supplierId')" />
+          <BaseSelect
+            v-model="form.supplierId"
+            :options="supplierOptions"
+            placeholder="Selecciona proveedor"
+            :invalid="!!err('supplierId')"
+          />
         </BaseField>
         <BaseField label="Fecha de orden" required :error="err('orderDate')">
           <DateInput v-model="form.orderDate" :invalid="!!err('orderDate')" />
@@ -150,15 +156,21 @@ async function submit() {
       <div class="lines">
         <div class="lines-head">
           <h3>Líneas</h3>
-          <button type="button" class="btn ghost sm" @click="addLine"><Plus :size="14" /> Agregar</button>
+          <button type="button" class="btn ghost sm" @click="addLine">
+            <Plus :size="14" /> Agregar
+          </button>
         </div>
         <p v-if="err('lines')" class="line-error">{{ err('lines') }}</p>
         <div v-for="(l, i) in lines" :key="i" class="line-row">
           <BaseSelect v-model="l.productId" :options="productOptions" placeholder="Producto" />
           <BaseInput v-model="l.quantity" placeholder="Cant." inputmode="numeric" />
           <BaseInput v-model="l.unitCost" placeholder="Costo unit." inputmode="decimal" />
-          <span class="line-sub">{{ formatMoney((Number(l.quantity) || 0) * (Number(l.unitCost) || 0)) }}</span>
-          <button type="button" class="icon-btn danger" @click="removeLine(i)"><Trash2 :size="14" /></button>
+          <span class="line-sub">{{
+            formatMoney((Number(l.quantity) || 0) * (Number(l.unitCost) || 0))
+          }}</span>
+          <button type="button" class="icon-btn danger" @click="removeLine(i)">
+            <Trash2 :size="14" />
+          </button>
         </div>
       </div>
 
@@ -166,7 +178,9 @@ async function submit() {
         <BaseTextarea v-model="form.notes" placeholder="Observaciones…" :rows="2" />
       </BaseField>
 
-      <div class="total-row">Total estimado: <strong>{{ formatMoney(total) }}</strong></div>
+      <div class="total-row">
+        Total estimado: <strong>{{ formatMoney(total) }}</strong>
+      </div>
     </template>
     <template #footer-actions>
       <button type="button" class="btn ghost" @click="emit('close')">Cancelar</button>
@@ -184,20 +198,24 @@ async function submit() {
   gap: 16px 18px;
   margin-bottom: 18px;
 }
-@media (max-width: 640px) {
+
+@media (width <= 640px) {
   .head-grid {
     grid-template-columns: 1fr;
   }
 }
+
 .lines {
   margin-bottom: 16px;
 }
+
 .lines-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
 }
+
 .lines-head h3 {
   margin: 0;
   font-size: 13px;
@@ -205,6 +223,7 @@ async function submit() {
   letter-spacing: 0.05em;
   color: var(--warm-500);
 }
+
 .line-row {
   display: grid;
   grid-template-columns: 2.4fr 0.8fr 1fr 1.1fr auto;
@@ -212,17 +231,20 @@ async function submit() {
   align-items: center;
   margin-bottom: 8px;
 }
+
 .line-sub {
   font-size: 12.5px;
   text-align: right;
   font-variant-numeric: tabular-nums;
   color: var(--warm-600);
 }
+
 .line-error {
-  color: oklch(50% 0.2 25);
+  color: oklch(50% 0.2 25deg);
   font-size: 12.5px;
   margin: 0 0 8px;
 }
+
 .total-row {
   text-align: right;
   margin-top: 14px;
@@ -231,9 +253,11 @@ async function submit() {
   font-size: 14px;
   color: var(--warm-700);
 }
+
 .total-row strong {
   color: var(--warm-900);
 }
+
 .icon-btn {
   border: none;
   background: var(--warm-100);
@@ -242,18 +266,21 @@ async function submit() {
   padding: 8px;
   cursor: pointer;
 }
+
 .icon-btn.danger:hover {
-  background: oklch(92% 0.06 25);
-  color: oklch(50% 0.2 25);
+  background: oklch(92% 0.06 25deg);
+  color: oklch(50% 0.2 25deg);
 }
+
 .server-error {
   margin: 0 0 14px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: oklch(94% 0.06 25);
-  color: oklch(45% 0.18 25);
+  background: oklch(94% 0.06 25deg);
+  color: oklch(45% 0.18 25deg);
   font-size: 13px;
 }
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -265,18 +292,22 @@ async function submit() {
   font-weight: 600;
   cursor: pointer;
 }
+
 .btn.sm {
   padding: 6px 11px;
   font-size: 12.5px;
 }
+
 .btn.ghost {
   background: var(--warm-100);
   color: var(--warm-700);
 }
+
 .btn.primary {
   background: var(--amatista-600, #5c2d8c);
   color: #fff;
 }
+
 .btn.primary:disabled {
   opacity: 0.6;
   cursor: default;

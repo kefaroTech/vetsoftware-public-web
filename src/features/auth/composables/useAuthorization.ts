@@ -16,15 +16,11 @@ export function useAuthorization() {
   }
 
   function canAny(...perms: string[]): ComputedRef<boolean> {
-    return computed(
-      () => perms.some((p) => permissions.value.includes(p)),
-    )
+    return computed(() => perms.some((p) => permissions.value.includes(p)))
   }
 
   function canAll(...perms: string[]): ComputedRef<boolean> {
-    return computed(
-      () => perms.every((p) => permissions.value.includes(p)),
-    )
+    return computed(() => perms.every((p) => permissions.value.includes(p)))
   }
 
   function hasPermission(perm: string): boolean {

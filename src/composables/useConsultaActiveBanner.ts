@@ -9,17 +9,13 @@ export function useConsultaActiveBanner() {
   const route = useRoute()
 
   const isInsideWizard = computed(
-    () =>
-      route.name === 'consulta-nueva' || route.name === 'consulta-nueva-exito',
+    () => route.name === 'consulta-nueva' || route.name === 'consulta-nueva-exito',
   )
 
   // Auto-resetear el dismiss cuando vuelve al wizard o cambia el owner
-  watch(
-    [() => draft.state.owner?.id, isInsideWizard],
-    ([_ownerId, inside]) => {
-      if (inside) store.reset()
-    },
-  )
+  watch([() => draft.state.owner?.id, isInsideWizard], ([_ownerId, inside]) => {
+    if (inside) store.reset()
+  })
 
   const visible = computed<boolean>(
     () => !!draft.state.owner && !isInsideWizard.value && !store.dismissed,

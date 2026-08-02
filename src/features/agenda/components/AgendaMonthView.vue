@@ -91,10 +91,10 @@ const MAX_VISIBLE = 3
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 12px;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: auto hidden;
   -webkit-overflow-scrolling: touch;
 }
+
 .weekday-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -102,6 +102,7 @@ const MAX_VISIBLE = 3
   background: var(--warm-100);
   border-bottom: 1px solid var(--warm-200);
 }
+
 .weekday {
   padding: 10px 12px;
   text-align: center;
@@ -111,12 +112,14 @@ const MAX_VISIBLE = 3
   color: var(--warm-500);
   text-transform: uppercase;
 }
+
 .grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   min-width: 640px;
   grid-auto-rows: minmax(110px, auto);
 }
+
 .cell {
   display: flex;
   flex-direction: column;
@@ -133,22 +136,28 @@ const MAX_VISIBLE = 3
   min-height: 110px;
   transition: background 0.12s ease;
 }
+
 .cell:hover {
   background: var(--warm-100);
 }
+
 .cell:nth-child(7n) {
   border-right: none;
 }
+
 .cell.other-month {
   background: var(--warm-100);
   opacity: 0.55;
 }
+
 .cell.today {
   background: var(--amatista-50);
 }
+
 .cell.today:hover {
   background: var(--amatista-100);
 }
+
 .day-num {
   display: flex;
   align-items: center;
@@ -158,6 +167,7 @@ const MAX_VISIBLE = 3
   color: var(--warm-700);
   margin-bottom: 2px;
 }
+
 .today-marker {
   display: inline-flex;
   align-items: center;
@@ -169,6 +179,7 @@ const MAX_VISIBLE = 3
   color: white;
   font-weight: 600;
 }
+
 .day-count {
   font-size: 10px;
   font-weight: 500;
@@ -177,12 +188,14 @@ const MAX_VISIBLE = 3
   color: var(--amatista-700);
   border-radius: 4px;
 }
+
 .events {
   display: flex;
   flex-direction: column;
   gap: 3px;
   min-width: 0;
 }
+
 .more {
   font-size: 11px;
   color: var(--warm-600);

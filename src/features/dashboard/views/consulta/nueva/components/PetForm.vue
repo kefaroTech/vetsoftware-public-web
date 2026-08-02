@@ -14,12 +14,10 @@ import { weightUnitLabel } from '../composables/format'
 import type { PetDraft } from '../composables/useNuevaConsultaDraft'
 
 const props = defineProps<{ modelValue: PetDraft }>()
-defineEmits<{ 'update:modelValue': [value: PetDraft] }>()
 
 const draft = computed(() => props.modelValue)
 
-const { options: speciesOptions, loading: loadingSpecies, error: speciesError } =
-  useSpecies()
+const { options: speciesOptions, loading: loadingSpecies, error: speciesError } = useSpecies()
 
 const specieIdRef = toRef(() => props.modelValue.specieId)
 const {
@@ -28,11 +26,7 @@ const {
   error: breedsError,
 } = useBreedsBySpecie(specieIdRef)
 
-const {
-  options: colorOptions,
-  loading: loadingColors,
-  error: colorsError,
-} = useAnimalColors()
+const { options: colorOptions, loading: loadingColors, error: colorsError } = useAnimalColors()
 
 watch(specieIdRef, (val, prev) => {
   if (val !== prev) draft.value.breedId = ''
@@ -138,14 +132,11 @@ const errors = computed(() => ({
   bod: validateBod(draft.value.bod),
   weight: validateWeight(draft.value.weight),
   size: validateSize(draft.value.size),
-  reproductiveState: validateRequired(
-    draft.value.reproductiveState,
-    'El estado reproductivo',
-  ),
+  reproductiveState: validateRequired(draft.value.reproductiveState, 'El estado reproductivo'),
 }))
 
 function err(field: FieldKey): string | undefined {
-  return touched[field] && errors.value[field] ? errors.value[field]! : undefined
+  return touched[field] ? (errors.value[field] ?? undefined) : undefined
 }
 
 function markTouched(field: FieldKey) {
@@ -180,9 +171,7 @@ const sizeModel = computed({
 
 function validate(): boolean {
   ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = true))
-  return (Object.keys(errors.value) as FieldKey[]).every(
-    (k) => !errors.value[k],
-  )
+  return (Object.keys(errors.value) as FieldKey[]).every((k) => !errors.value[k])
 }
 
 defineExpose({ validate })
@@ -190,10 +179,7 @@ defineExpose({ validate })
 
 <template>
   <div class="form">
-    <div
-      v-if="speciesError || breedsError || colorsError"
-      class="catalog-error"
-    >
+    <div v-if="speciesError || breedsError || colorsError" class="catalog-error">
       <TriangleAlert :size="13" :stroke-width="1.7" />
       <span>{{ speciesError ?? breedsError ?? colorsError }}</span>
     </div>
@@ -235,9 +221,7 @@ defineExpose({ validate })
               :id="id"
               v-model="draft.specieId"
               :options="speciesOptions"
-              :placeholder="
-                loadingSpecies ? 'Cargando…' : 'Selecciona especie'
-              "
+              :placeholder="loadingSpecies ? 'Cargando…' : 'Selecciona especie'"
               :disabled="loadingSpecies"
               :invalid="!!err('specieId')"
               @blur="markTouched('specieId')"
@@ -281,9 +265,7 @@ defineExpose({ validate })
               :id="id"
               v-model="draft.colorId"
               :options="colorOptions"
-              :placeholder="
-                loadingColors ? 'Cargando…' : 'Selecciona color'
-              "
+              :placeholder="loadingColors ? 'Cargando…' : 'Selecciona color'"
               :disabled="loadingColors"
               :invalid="!!err('colorId')"
               @blur="markTouched('colorId')"
@@ -334,11 +316,7 @@ defineExpose({ validate })
         </BaseField>
         <BaseField label="Unidad de peso">
           <template #default="{ id }">
-            <BaseSelect
-              :id="id"
-              v-model="draft.weightType"
-              :options="weightUnitOptions"
-            />
+            <BaseSelect :id="id" v-model="draft.weightType" :options="weightUnitOptions" />
           </template>
         </BaseField>
         <BaseField label="Tamaño (cm)" hint="Altura a la cruz" :error="err('size')">
@@ -354,11 +332,7 @@ defineExpose({ validate })
           </template>
         </BaseField>
       </div>
-      <BaseField
-        label="Estado reproductivo"
-        required
-        :error="err('reproductiveState')"
-      >
+      <BaseField label="Estado reproductivo" required :error="err('reproductiveState')">
         <SegmentedRadio
           v-model="draft.reproductiveState"
           :options="reproductiveOptions"
@@ -375,34 +349,39 @@ defineExpose({ validate })
   flex-direction: column;
   gap: 18px;
 }
+
 .catalog-error {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 12.5px;
   padding: 10px 14px;
-  background: oklch(94% 0.06 25);
-  border: 1px solid oklch(85% 0.10 25);
-  color: oklch(35% 0.15 25);
+  background: oklch(94% 0.06 25deg);
+  border: 1px solid oklch(85% 0.1 25deg);
+  color: oklch(35% 0.15 25deg);
   border-radius: 10px;
 }
+
 .grid-2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 22px 28px;
 }
+
 .grid-3 {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 22px 28px;
   margin-bottom: 22px;
 }
-@media (max-width: 980px) {
+
+@media (width <= 980px) {
   .grid-3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-@media (max-width: 640px) {
+
+@media (width <= 640px) {
   .grid-2,
   .grid-3 {
     grid-template-columns: 1fr;

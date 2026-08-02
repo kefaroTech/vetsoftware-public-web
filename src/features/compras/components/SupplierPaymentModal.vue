@@ -31,8 +31,10 @@ const serverError = ref<string | null>(null)
 const balance = computed(() => props.invoice?.balance ?? 0)
 const amountN = computed(() => Number((form.amount || '').replace(',', '.')))
 const amountError = computed(() => {
-  if (form.amount.trim() === '' || Number.isNaN(amountN.value) || amountN.value <= 0) return 'Ingresa un monto válido.'
-  if (amountN.value > balance.value) return `No puede superar el saldo (${formatMoney(balance.value)}).`
+  if (form.amount.trim() === '' || Number.isNaN(amountN.value) || amountN.value <= 0)
+    return 'Ingresa un monto válido.'
+  if (amountN.value > balance.value)
+    return `No puede superar el saldo (${formatMoney(balance.value)}).`
   return null
 })
 
@@ -91,9 +93,18 @@ async function submit() {
         <strong>{{ formatMoney(balance) }}</strong>
       </div>
       <div class="grid">
-        <BaseField label="Monto del abono" required :error="submitted ? amountError ?? undefined : undefined">
-          <BaseInput v-model="form.amount" placeholder="0" inputmode="decimal" suffix="COP"
-            :invalid="submitted && !!amountError" />
+        <BaseField
+          label="Monto del abono"
+          required
+          :error="submitted ? (amountError ?? undefined) : undefined"
+        >
+          <BaseInput
+            v-model="form.amount"
+            placeholder="0"
+            inputmode="decimal"
+            suffix="COP"
+            :invalid="submitted && !!amountError"
+          />
         </BaseField>
         <BaseField label="Fecha de pago" required>
           <DateInput v-model="form.paymentDate" />
@@ -124,6 +135,7 @@ async function submit() {
   flex-direction: column;
   gap: 16px;
 }
+
 .balance-row {
   display: flex;
   justify-content: space-between;
@@ -135,18 +147,21 @@ async function submit() {
   font-size: 14px;
   color: var(--warm-700);
 }
+
 .balance-row strong {
   font-size: 17px;
   color: var(--amatista-700, #5c2d8c);
 }
+
 .server-error {
   margin: 0 0 14px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: oklch(94% 0.06 25);
-  color: oklch(45% 0.18 25);
+  background: oklch(94% 0.06 25deg);
+  color: oklch(45% 0.18 25deg);
   font-size: 13px;
 }
+
 .btn {
   border: none;
   border-radius: 9px;
@@ -155,14 +170,17 @@ async function submit() {
   font-weight: 600;
   cursor: pointer;
 }
+
 .btn.ghost {
   background: var(--warm-100);
   color: var(--warm-700);
 }
+
 .btn.primary {
   background: var(--amatista-600, #5c2d8c);
   color: #fff;
 }
+
 .btn.primary:disabled {
   opacity: 0.6;
   cursor: default;

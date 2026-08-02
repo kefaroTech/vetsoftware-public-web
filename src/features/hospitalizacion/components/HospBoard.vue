@@ -15,12 +15,7 @@ defineEmits<{ open: [patient: HospitalizationResponse] }>()
       <span>Las hospitalizaciones activas (sin fecha de alta) aparecen aquí.</span>
     </div>
     <div v-else class="grid">
-      <HospCard
-        v-for="p in items"
-        :key="p.id"
-        :patient="p"
-        @open="$emit('open', p)"
-      />
+      <HospCard v-for="p in items" :key="p.id" :patient="p" @open="$emit('open', p)" />
     </div>
   </div>
 </template>
@@ -31,6 +26,7 @@ defineEmits<{ open: [patient: HospitalizationResponse] }>()
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 14px;
 }
+
 .empty {
   display: flex;
   flex-direction: column;
@@ -40,12 +36,14 @@ defineEmits<{ open: [patient: HospitalizationResponse] }>()
   color: var(--warm-500);
   text-align: center;
 }
+
 .empty p {
   margin: 0;
   font-size: 15px;
   font-weight: 500;
   color: var(--warm-700);
 }
+
 .empty span {
   font-size: 13px;
   max-width: 360px;

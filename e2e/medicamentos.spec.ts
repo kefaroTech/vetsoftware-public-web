@@ -37,11 +37,7 @@ async function openNew(page: Page): Promise<Locator> {
 }
 
 /** Crea un medicamento por la UI (nombre + descripción opcional) y espera el 201. */
-async function createMedicament(
-  page: Page,
-  name: string,
-  description?: string,
-): Promise<void> {
+async function createMedicament(page: Page, name: string, description?: string): Promise<void> {
   const d = await openNew(page)
   await d.getByLabel(/^Nombre/).fill(name)
   if (description) await d.getByLabel(/Descripción/).fill(description)
@@ -66,7 +62,9 @@ function escapeRe(s: string): string {
 // A. Carga de la pantalla y listas (HTTP)
 // ════════════════════════════════════════════════════════════════════════════
 test.describe('Medicamentos · carga y listas', () => {
-  test('[http] al abrir, GET /medicaments/available responde 2xx con un array', async ({ page }) => {
+  test('[http] al abrir, GET /medicaments/available responde 2xx con un array', async ({
+    page,
+  }) => {
     await login(page)
     const respP = page.waitForResponse(
       (r) =>
@@ -199,7 +197,8 @@ test.describe('Medicamentos · editar y ciclo de vida', () => {
     await expect(d).toBeVisible()
     await d.getByLabel(/^Nombre/).fill(renamed)
     const putP = page.waitForResponse(
-      (r) => /\/medicaments\/\d+$/.test(new URL(r.url()).pathname) && r.request().method() === 'PUT',
+      (r) =>
+        /\/medicaments\/\d+$/.test(new URL(r.url()).pathname) && r.request().method() === 'PUT',
     )
     await d.getByRole('button', { name: 'Guardar cambios' }).click()
     const resp = await putP

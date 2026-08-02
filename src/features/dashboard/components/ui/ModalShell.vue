@@ -70,9 +70,7 @@ const cardWidth = computed(() =>
 // largos crecen hasta el tope y el cuerpo scrollea). En compact el tope es casi la
 // pantalla completa (pero igual manda el contenido).
 const cardMaxHeight = computed(() =>
-  props.compact
-    ? 'calc(100vh - 32px)'
-    : `min(${props.heightVh ?? 90}vh, calc(100vh - 24px))`,
+  props.compact ? 'calc(100vh - 32px)' : `min(${props.heightVh ?? 90}vh, calc(100vh - 24px))`,
 )
 
 function onKey(e: KeyboardEvent) {
@@ -157,35 +155,39 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(20, 15, 30, 0.55);
+  background: rgb(20 15 30 / 55%);
   backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
   display: grid;
   place-items: center;
   z-index: 1500;
   font-family: var(--font-sans);
 }
+
 /* Modal anidado: se apila por encima de otro modal ya abierto. */
 .overlay.elevated {
   z-index: 1600;
 }
+
 .modal-fade-enter-active,
 .modal-fade-leave-active {
   transition: opacity 0.18s ease;
 }
+
 .modal-fade-enter-from,
 .modal-fade-leave-to {
   opacity: 0;
 }
+
 .card {
   background: var(--warm-50);
   border-radius: 16px;
-  box-shadow: 0 30px 80px rgba(20, 15, 30, 0.35);
+  box-shadow: 0 30px 80px rgb(20 15 30 / 35%);
   display: flex;
   flex-direction: column;
   max-height: calc(100vh - 48px);
   overflow: hidden;
 }
+
 .head {
   display: flex;
   align-items: flex-start;
@@ -197,6 +199,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   top: 0;
   z-index: 1;
 }
+
 .icon-box {
   width: 38px;
   height: 38px;
@@ -205,22 +208,27 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   place-items: center;
   flex-shrink: 0;
 }
+
 .accent-amatista .icon-box {
   background: var(--amatista-100);
   color: var(--amatista-700);
 }
+
 .accent-danger .icon-box {
-  background: oklch(94% 0.06 25);
-  color: oklch(50% 0.18 25);
+  background: oklch(94% 0.06 25deg);
+  color: oklch(50% 0.18 25deg);
 }
+
 .accent-warn .icon-box {
-  background: oklch(95% 0.06 80);
-  color: oklch(45% 0.13 80);
+  background: oklch(95% 0.06 80deg);
+  color: oklch(45% 0.13 80deg);
 }
+
 .head-text {
   flex: 1;
   min-width: 0;
 }
+
 .title {
   margin: 0;
   font-family: var(--font-serif);
@@ -230,12 +238,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   color: var(--warm-900);
   line-height: 1.15;
 }
+
 .subtitle {
   margin: 4px 0 0;
   font-size: 12.5px;
   color: var(--warm-500);
   line-height: 1.4;
 }
+
 .close {
   background: transparent;
   border: none;
@@ -249,15 +259,18 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   flex-shrink: 0;
   transition: background 0.12s ease;
 }
+
 .close:hover {
   background: var(--warm-100);
   color: var(--warm-900);
 }
+
 .body {
   flex: 1;
   overflow: auto;
   padding: clamp(20px, 1.6vw + 10px, 32px) clamp(20px, 2vw + 12px, 36px);
 }
+
 .foot {
   display: flex;
   align-items: center;
@@ -268,38 +281,47 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   position: sticky;
   bottom: 0;
 }
+
 .foot-left {
   flex: 1;
   font-size: 12.5px;
   color: var(--warm-500);
 }
+
 .foot-actions {
   display: flex;
   gap: 8px;
 }
-@media (max-width: 560px) {
+
+@media (width <= 560px) {
   .card {
     border-radius: 14px;
   }
+
   .head {
     padding: 18px 20px 14px;
   }
+
   .body {
     padding: 18px 20px;
   }
+
   .foot {
     align-items: stretch;
     flex-direction: column;
     padding: 12px 20px 14px;
   }
+
   .foot-left {
     flex: none;
     width: 100%;
     line-height: 1.35;
   }
+
   .foot-actions {
     width: 100%;
   }
+
   .foot-actions :deep(button) {
     flex: 1;
     justify-content: center;

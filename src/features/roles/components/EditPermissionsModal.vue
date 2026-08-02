@@ -157,9 +157,12 @@ function init() {
   expandedSubModules.value = new Set()
 }
 
-watch(() => props.open, (open) => {
-  if (open) init()
-})
+watch(
+  () => props.open,
+  (open) => {
+    if (open) init()
+  },
+)
 
 watch(
   () => props.role?.id,
@@ -171,9 +174,7 @@ watch(
 )
 
 function getPermissionIdsInSub(subModuleId: number): number[] {
-  return (permissionsCatalog.bySubModule.value.get(subModuleId) ?? []).map(
-    (p) => p.id,
-  )
+  return (permissionsCatalog.bySubModule.value.get(subModuleId) ?? []).map((p) => p.id)
 }
 
 function toggleSub(subModuleId: number) {
@@ -257,10 +258,7 @@ async function save() {
     emit('saved')
     emit('close')
   } catch (err) {
-    submitError.value = getProblemDetailMessage(
-      err,
-      'No se pudo guardar el rol. Reintentalo.',
-    )
+    submitError.value = getProblemDetailMessage(err, 'No se pudo guardar el rol. Reintentalo.')
   } finally {
     saving.value = false
   }
@@ -270,12 +268,7 @@ async function save() {
 <template>
   <Teleport to="body">
     <Transition name="modal-fade">
-      <div
-        v-if="open"
-        class="overlay"
-        role="dialog"
-        aria-modal="true"
-      >
+      <div v-if="open" class="overlay" role="dialog" aria-modal="true">
         <div class="card">
           <header class="head" :style="{ background: tokens.headerGradient }">
             <button
@@ -288,10 +281,7 @@ async function save() {
               <X :size="18" :stroke-width="1.7" />
             </button>
             <div class="head-body">
-              <div
-                class="avatar"
-                :style="{ background: tokens.avatarBg, color: tokens.avatarFg }"
-              >
+              <div class="avatar" :style="{ background: tokens.avatarBg, color: tokens.avatarFg }">
                 <Shield :size="22" :stroke-width="1.7" />
               </div>
               <div class="head-content">
@@ -310,11 +300,7 @@ async function save() {
                   :readonly="readOnly"
                 />
                 <div class="head-meta">
-                  <RolePill
-                    :label="draftName || 'Sin nombre'"
-                    :color="color"
-                    size="lg"
-                  />
+                  <RolePill :label="draftName || 'Sin nombre'" :color="color" size="lg" />
                   <span class="sep" />
                   <SwitchToggle
                     v-model="draftActive"
@@ -330,7 +316,8 @@ async function save() {
           <div v-if="readOnly" class="readonly-banner">
             <Lock :size="14" :stroke-width="1.8" />
             <span>
-              Este es un rol del sistema. Sus permisos y datos pueden consultarse pero no modificarse.
+              Este es un rol del sistema. Sus permisos y datos pueden consultarse pero no
+              modificarse.
             </span>
           </div>
 
@@ -395,12 +382,7 @@ async function save() {
             </div>
             <div class="foot-actions">
               <div v-if="submitError" class="error">{{ submitError }}</div>
-              <button
-                type="button"
-                class="btn ghost"
-                :disabled="saving"
-                @click="emit('close')"
-              >
+              <button type="button" class="btn ghost" :disabled="saving" @click="emit('close')">
                 {{ readOnly ? 'Cerrar' : 'Cancelar' }}
               </button>
               <button
@@ -424,30 +406,32 @@ async function save() {
 .overlay {
   position: fixed;
   inset: 0;
-  background: oklch(15% 0.05 var(--hue) / 0.45);
+  background: oklch(15% 0.05 var(--hue) / 45%);
   backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
   display: grid;
   place-items: center;
   z-index: 1500;
   font-family: var(--font-sans);
   padding: 24px;
 }
+
 .modal-fade-enter-active,
 .modal-fade-leave-active {
   transition: opacity 0.18s ease;
 }
+
 .modal-fade-enter-from,
 .modal-fade-leave-to {
   opacity: 0;
 }
+
 .card {
   width: 100%;
   max-width: 1100px;
   max-height: calc(100vh - 48px);
   background: var(--warm-50);
   border-radius: 16px;
-  box-shadow: 0 30px 80px oklch(15% 0.05 var(--hue) / 0.35);
+  box-shadow: 0 30px 80px oklch(15% 0.05 var(--hue) / 35%);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -459,6 +443,7 @@ async function save() {
   padding: 22px 26px 18px;
   border-bottom: 1px solid var(--warm-200);
 }
+
 .close {
   position: absolute;
   top: 14px;
@@ -474,18 +459,22 @@ async function save() {
   cursor: pointer;
   transition: background 0.12s ease;
 }
+
 .close:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgb(255 255 255 / 60%);
 }
+
 .close:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
 .head-body {
   display: flex;
   align-items: flex-start;
   gap: 16px;
 }
+
 .avatar {
   width: 56px;
   height: 56px;
@@ -494,10 +483,12 @@ async function save() {
   place-items: center;
   flex-shrink: 0;
 }
+
 .head-content {
   flex: 1;
   min-width: 0;
 }
+
 .kicker {
   font-size: 11.5px;
   text-transform: uppercase;
@@ -506,6 +497,7 @@ async function save() {
   margin-bottom: 4px;
   font-weight: 500;
 }
+
 .name-input {
   width: 100%;
   font-family: var(--font-serif);
@@ -520,24 +512,30 @@ async function save() {
   outline: none;
   line-height: 1.1;
 }
+
 .kicker .req {
-  color: oklch(55% 0.18 25);
+  color: oklch(55% 0.18 25deg);
   margin-left: 3px;
   font-weight: 600;
 }
+
 .name-input:focus {
   border-bottom-color: var(--amatista-300);
 }
+
 .name-input.invalid {
   border-bottom-style: solid;
-  border-bottom-color: oklch(55% 0.18 25);
+  border-bottom-color: oklch(55% 0.18 25deg);
 }
+
 .name-input::placeholder {
   color: var(--warm-400);
 }
+
 .name-input:read-only {
   cursor: default;
 }
+
 .readonly-banner {
   display: flex;
   align-items: center;
@@ -548,10 +546,12 @@ async function save() {
   color: var(--warm-700);
   font-size: 12.5px;
 }
+
 .readonly-banner :deep(svg) {
   flex-shrink: 0;
   color: var(--warm-600);
 }
+
 .head-meta {
   display: flex;
   align-items: center;
@@ -559,11 +559,13 @@ async function save() {
   margin-top: 10px;
   flex-wrap: wrap;
 }
+
 .sep {
   width: 1px;
   height: 18px;
   background: var(--warm-300);
 }
+
 .active-text {
   font-size: 12.5px;
   color: var(--warm-700);
@@ -582,6 +584,7 @@ async function save() {
   top: 0;
   z-index: 1;
 }
+
 .search {
   flex: 1;
   display: flex;
@@ -593,10 +596,12 @@ async function save() {
   border-radius: 7px;
   min-width: 180px;
 }
+
 .search-icon {
   color: var(--warm-500);
   flex-shrink: 0;
 }
+
 .search-input {
   flex: 1;
   background: transparent;
@@ -606,9 +611,11 @@ async function save() {
   font-size: 13px;
   color: var(--warm-900);
 }
+
 .search-input::placeholder {
   color: var(--warm-500);
 }
+
 .ghost {
   background: transparent;
   border: 1px solid transparent;
@@ -620,17 +627,22 @@ async function save() {
   border-radius: 7px;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
 }
+
 .ghost:hover {
   background: var(--warm-100);
   color: var(--warm-900);
 }
+
 .bar {
   width: 1px;
   height: 22px;
   background: var(--warm-200);
 }
+
 .counter {
   font-size: 12px;
   font-weight: 500;
@@ -650,17 +662,20 @@ async function save() {
   flex-direction: column;
   gap: 18px;
 }
+
 .empty {
   font-size: 13px;
   color: var(--warm-500);
   padding: 32px 0;
   text-align: center;
 }
+
 .module-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
+
 .module-label {
   font-size: 11px;
   text-transform: uppercase;
@@ -668,6 +683,7 @@ async function save() {
   color: var(--warm-500);
   font-weight: 600;
 }
+
 .subs {
   display: flex;
   flex-direction: column;
@@ -683,32 +699,38 @@ async function save() {
   border-top: 1px solid var(--warm-200);
   background: var(--warm-100);
 }
+
 .foot-left {
   flex: 1;
   font-size: 12.5px;
   color: var(--warm-600);
 }
+
 .foot-left strong {
   color: var(--warm-900);
   font-weight: 600;
 }
+
 .filter-hint {
   color: var(--warm-500);
   font-style: italic;
 }
+
 .foot-actions {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .error {
   font-size: 12.5px;
-  color: oklch(45% 0.18 25);
-  background: oklch(96% 0.04 25);
-  border: 1px solid oklch(85% 0.06 25);
+  color: oklch(45% 0.18 25deg);
+  background: oklch(96% 0.04 25deg);
+  border: 1px solid oklch(85% 0.06 25deg);
   padding: 4px 10px;
   border-radius: 7px;
 }
+
 .btn {
   font-family: inherit;
   font-size: 13px;
@@ -717,20 +739,27 @@ async function save() {
   padding: 8px 14px;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: background 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    opacity 0.12s ease;
 }
+
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
 .btn.ghost {
   background: transparent;
   border-color: var(--warm-300);
   color: var(--warm-700);
 }
+
 .btn.ghost:hover:not(:disabled) {
   background: var(--warm-150);
 }
+
 .btn.primary {
   background: linear-gradient(
     135deg,
@@ -738,18 +767,21 @@ async function save() {
     oklch(38% 0.18 calc(var(--hue) - 5))
   );
   color: #fff;
-  box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.5);
+  box-shadow:
+    0 1px 2px rgb(50 20 80 / 8%),
+    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 50%);
 }
+
 .btn.primary:hover:not(:disabled) {
   filter: brightness(1.05);
 }
 
 /* RESPONSIVE */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .overlay {
     padding: 0;
   }
+
   .card {
     max-width: 100vw;
     max-height: 100vh;
@@ -757,36 +789,45 @@ async function save() {
     height: 100vh;
     border-radius: 0;
   }
+
   .head {
     padding: 18px 18px 16px;
   }
+
   .name-input {
     font-size: 24px;
   }
+
   .avatar {
     width: 48px;
     height: 48px;
   }
+
   .toolbar {
     flex-wrap: wrap;
     padding: 10px 18px;
   }
+
   .search {
     flex-basis: 100%;
     order: -1;
   }
+
   .bar {
     display: none;
   }
+
   .body {
     padding: 14px 18px;
   }
+
   .foot {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
     padding: 12px 18px;
   }
+
   .foot-actions {
     justify-content: flex-end;
   }

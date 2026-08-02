@@ -32,24 +32,29 @@ const tokens = computed(() => ROLE_COLORS[props.color])
   white-space: nowrap;
   line-height: 1;
 }
+
 .pill.md {
   padding: 3px 10px;
   font-size: 12px;
 }
+
 .pill.lg {
   padding: 5px 12px;
   font-size: 13px;
 }
+
 .dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
 }
+
 .pill.md .dot {
   width: 5px;
   height: 5px;
 }
+
 .label {
   white-space: nowrap;
 }

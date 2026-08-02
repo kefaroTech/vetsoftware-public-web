@@ -24,16 +24,34 @@ const emit = defineEmits<{
 const lang = {
   formatLocale: {
     months: [
-      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
     ],
     monthsShort: [
-      'ene', 'feb', 'mar', 'abr', 'may', 'jun',
-      'jul', 'ago', 'sep', 'oct', 'nov', 'dic',
+      'ene',
+      'feb',
+      'mar',
+      'abr',
+      'may',
+      'jun',
+      'jul',
+      'ago',
+      'sep',
+      'oct',
+      'nov',
+      'dic',
     ],
-    weekdays: [
-      'domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado',
-    ],
+    weekdays: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
     weekdaysShort: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
     weekdaysMin: ['do', 'lu', 'ma', 'mi', 'ju', 'vi', 'sá'],
     firstDayOfWeek: 1,
@@ -91,31 +109,52 @@ function onUpdate(value: string | null) {
 .date-wrap {
   width: 100%;
 }
+
 .date-wrap.invalid {
   animation: shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
+
 .date-wrap.disabled {
   opacity: 0.6;
 }
+
 @keyframes shake {
-  10%, 90% { transform: translateX(-1px); }
-  20%, 80% { transform: translateX(2px); }
-  30%, 50%, 70% { transform: translateX(-3px); }
-  40%, 60% { transform: translateX(3px); }
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-3px);
+  }
+  40%,
+  60% {
+    transform: translateX(3px);
+  }
 }
 </style>
 
 <style>
 /* ------------------------------------------------------------------ */
+
 /* Tema amatista para vue-datepicker-next. El input vive en el árbol   */
-/* del componente; el panel se teletransporta a <body> (append-to-body)*/
+
+/* del componente; el panel se teletransporta a <body> (append-to-body) */
+
 /* → estos overrides son globales, acotados por .date-wrap / .mx-*.    */
+
 /* ------------------------------------------------------------------ */
 
 /* --- Input (trigger) --- */
 .date-wrap .mx-datepicker {
   width: 100%;
 }
+
 .date-wrap .mx-input {
   height: auto;
   box-sizing: border-box;
@@ -128,37 +167,48 @@ function onUpdate(value: string | null) {
   color: var(--warm-900);
   box-shadow: none;
   cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
 }
+
 .date-wrap .mx-input:hover {
   border-color: var(--warm-300);
 }
+
 .date-wrap .mx-input:focus {
   border-color: var(--amatista-500);
   box-shadow: 0 0 0 3px var(--amatista-50);
 }
+
 .date-wrap .mx-input::placeholder {
   color: var(--warm-500);
 }
+
 .date-wrap .mx-icon-calendar {
   left: 12px;
   right: auto;
   color: var(--warm-500);
   font-size: inherit;
 }
+
 .date-wrap .dp-icon {
   display: block;
 }
+
 .date-wrap.invalid .mx-input {
-  border-color: oklch(60% 0.2 25);
-  background: oklch(98.5% 0.02 25);
+  border-color: oklch(60% 0.2 25deg);
+  background: oklch(98.5% 0.02 25deg);
 }
+
 .date-wrap.invalid .mx-input:focus {
-  border-color: oklch(55% 0.22 25);
-  box-shadow: 0 0 0 3px oklch(92% 0.06 25);
+  border-color: oklch(55% 0.22 25deg);
+  box-shadow: 0 0 0 3px oklch(92% 0.06 25deg);
 }
+
 .date-wrap.invalid .mx-icon-calendar {
-  color: oklch(55% 0.22 25);
+  color: oklch(55% 0.22 25deg);
 }
 
 /* --- Panel (teletransportado a body) --- */
@@ -168,60 +218,74 @@ function onUpdate(value: string | null) {
   color: var(--warm-900);
   border: 1px solid var(--warm-200);
   border-radius: 12px;
-  box-shadow: 0 14px 38px rgba(40, 20, 80, 0.18);
+  box-shadow: 0 14px 38px rgb(40 20 80 / 18%);
 }
+
 .mx-datepicker-main {
   width: auto;
 }
+
 .mx-datepicker-main .mx-calendar {
   width: 256px;
   box-sizing: border-box;
   padding: 8px 10px;
 }
+
 /* La tabla del calendario nunca debe forzar el ancho del panel. */
 .mx-datepicker-main .mx-calendar-content,
 .mx-datepicker-main .mx-table {
   width: 100%;
   min-width: 0;
 }
+
 .mx-datepicker-main .mx-calendar-header {
   height: auto;
   margin-bottom: 4px;
 }
+
 .mx-datepicker-main .mx-calendar-header-label {
   font-weight: 600;
   color: var(--warm-900);
 }
+
 .mx-datepicker-main .mx-btn {
   color: var(--warm-700);
 }
+
 .mx-datepicker-main .mx-btn:hover {
   color: var(--amatista-600);
   border-color: transparent;
 }
+
 .mx-datepicker-main .mx-calendar-content .mx-table th {
   color: var(--warm-500);
   font-weight: 500;
 }
+
 .mx-datepicker-main .mx-table-date .cell {
   color: var(--warm-800);
   border-radius: 8px;
 }
+
 .mx-datepicker-main .mx-table-date .cell:hover {
   background: var(--amatista-50);
   color: var(--amatista-700);
 }
+
 .mx-datepicker-main .mx-table-date .cell.active {
   background: var(--amatista-600);
   color: #fff;
 }
+
 .mx-datepicker-main .mx-table-date .cell.today {
   color: var(--amatista-600);
   font-weight: 600;
 }
+
 .mx-datepicker-main .mx-table-date .cell.not-current-month {
   color: var(--warm-300);
 }
+
 .mx-datepicker-main .mx-table-date .cell.disabled {
   color: var(--warm-200);
   background: transparent;

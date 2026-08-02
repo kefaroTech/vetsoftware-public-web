@@ -20,9 +20,7 @@ const tokens = computed(() => apptTypeTokens(props.appt.type))
 const terminal = computed(() => APPT_TERMINAL.has(props.appt.status))
 const cancelled = computed(() => props.appt.status === 'CANCELLED')
 const hasClash = computed(() => (props.appt.overlappingAppointmentIds?.length ?? 0) > 0)
-const subject = computed(
-  () => props.appt.animal?.name || props.appt.clientName || 'Sin asignar',
-)
+const subject = computed(() => props.appt.animal?.name || props.appt.clientName || 'Sin asignar')
 const secondary = computed(() => {
   if (props.appt.animal) return props.appt.owner?.name || 'Dueño s/registro'
   return props.appt.clientPhone || 'Contacto libre'
@@ -79,27 +77,36 @@ const secondary = computed(() => {
   text-align: left;
   font-family: inherit;
   width: 100%;
-  transition: border-color 0.12s, box-shadow 0.12s, transform 0.06s;
+  transition:
+    border-color 0.12s,
+    box-shadow 0.12s,
+    transform 0.06s;
 }
+
 .card:hover {
-  box-shadow: 0 4px 16px -8px rgba(40, 20, 60, 0.25);
+  box-shadow: 0 4px 16px -8px rgb(40 20 60 / 25%);
 }
+
 .card:active {
   transform: translateY(1px);
 }
+
 .card.terminal {
   opacity: 0.62;
 }
+
 .card.cancelled .title {
   text-decoration: line-through;
   text-decoration-color: var(--warm-400);
 }
+
 .card-time {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
 }
+
 .hh {
   font-family: var(--font-mono);
   font-size: 15px;
@@ -107,24 +114,29 @@ const secondary = computed(() => {
   color: var(--warm-900);
   letter-spacing: -0.02em;
 }
+
 .type-ic {
   font-size: 15px;
   margin-top: 1px;
 }
+
 .card-main {
   min-width: 0;
 }
+
 .line1 {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
+
 .title {
   font-size: 14px;
   font-weight: 600;
   color: var(--warm-900);
 }
+
 .clash-flag {
   display: inline-flex;
   align-items: center;
@@ -133,9 +145,10 @@ const secondary = computed(() => {
   font-weight: 500;
   padding: 2px 7px;
   border-radius: 5px;
-  background: oklch(95% 0.07 80);
-  color: oklch(45% 0.14 60);
+  background: oklch(95% 0.07 80deg);
+  color: oklch(45% 0.14 60deg);
 }
+
 .line2 {
   font-size: 12.5px;
   color: var(--warm-600);
@@ -145,15 +158,19 @@ const secondary = computed(() => {
   gap: 7px;
   flex-wrap: wrap;
 }
+
 .secondary {
   color: var(--warm-500);
 }
+
 .dot-sep {
   color: var(--warm-300);
 }
+
 .notes {
   color: var(--warm-500);
 }
+
 .card-right {
   display: flex;
   flex-direction: column;

@@ -1,5 +1,8 @@
 import type { EventTypeColor } from '@/features/historia-clinica/constants/eventTypes'
-import { TYPE_COLORS, type EventTypeColorTokens } from '@/features/historia-clinica/constants/eventTypes'
+import {
+  TYPE_COLORS,
+  type EventTypeColorTokens,
+} from '@/features/historia-clinica/constants/eventTypes'
 
 // ── Enums (espejo exacto del backend) ────────────────────────────────
 export type AppointmentType =
@@ -14,13 +17,7 @@ export type AppointmentType =
   | 'OTHER'
 
 export type AppointmentStatus =
-  | 'REQUESTED'
-  | 'CONFIRMED'
-  | 'ARRIVED'
-  | 'IN_PROGRESS'
-  | 'COMPLETED'
-  | 'NO_SHOW'
-  | 'CANCELLED'
+  'REQUESTED' | 'CONFIRMED' | 'ARRIVED' | 'IN_PROGRESS' | 'COMPLETED' | 'NO_SHOW' | 'CANCELLED'
 
 // ── Contratos REST ───────────────────────────────────────────────────
 export interface AppointmentAnimalRef {
@@ -214,7 +211,7 @@ export function apptInitials(name: string): string {
 
 /** Hue determinista por empleado para colorear el badge del vet. */
 export function apptVetHue(employeeId: number): number {
-  return ((employeeId * 57) % 360 + 360) % 360
+  return (((employeeId * 57) % 360) + 360) % 360
 }
 
 /** Combina fecha (yyyy-MM-dd) + hora (HH:mm) en un ISO LocalDateTime. */

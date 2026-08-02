@@ -40,10 +40,7 @@ import {
   consultationApi,
   type ConsultationResponse,
 } from '@/features/dashboard/views/consulta/nueva/api/consultation.api'
-import {
-  spaApi,
-  type SpaResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/spa.api'
+import { spaApi, type SpaResponse } from '@/features/dashboard/views/consulta/nueva/api/spa.api'
 
 import VaccinationDetail from './detail/VaccinationDetail.vue'
 import LaboratoryTestDetail from './detail/LaboratoryTestDetail.vue'
@@ -171,13 +168,7 @@ function printReceta() {
 </script>
 
 <template>
-  <ModalShell
-    :open="open"
-    :title="title"
-    :subtitle="subtitle"
-    :width="1120"
-    @close="emit('close')"
-  >
+  <ModalShell :open="open" :title="title" :subtitle="subtitle" :width="1120" @close="emit('close')">
     <template #body>
       <div v-if="loading" class="state-row">
         <PawLoader :size="56" :glow="false" :speed="900" />
@@ -187,15 +178,9 @@ function printReceta() {
 
       <template v-else-if="payload">
         <VaccinationDetail v-if="payload.type === 'VACCINATION'" :data="payload.data" />
-        <LaboratoryTestDetail
-          v-else-if="payload.type === 'LABORATORY_TEST'"
-          :data="payload.data"
-        />
+        <LaboratoryTestDetail v-else-if="payload.type === 'LABORATORY_TEST'" :data="payload.data" />
         <SurgeryDetail v-else-if="payload.type === 'SURGERY'" :data="payload.data" />
-        <DewormingDetail
-          v-else-if="payload.type === 'DEWORMING'"
-          :data="payload.data"
-        />
+        <DewormingDetail v-else-if="payload.type === 'DEWORMING'" :data="payload.data" />
         <HospitalizationDetail
           v-else-if="payload.type === 'HOSPITALIZATION'"
           :data="payload.data"
@@ -204,10 +189,7 @@ function printReceta() {
           v-else-if="payload.type === 'DIAGNOSTIC_IMAGING'"
           :data="payload.data"
         />
-        <PrescriptionDetail
-          v-else-if="payload.type === 'PRESCRIPTION'"
-          :data="payload.data"
-        />
+        <PrescriptionDetail v-else-if="payload.type === 'PRESCRIPTION'" :data="payload.data" />
         <ConsultationDetail
           v-else-if="payload.type === 'CONSULTATION'"
           :data="payload.data"
@@ -240,14 +222,16 @@ function printReceta() {
   place-items: center;
   padding: 40px 0;
 }
+
 .banner.error {
   padding: 12px 14px;
   font-size: 13px;
   border-radius: 10px;
-  background: oklch(97% 0.02 25);
-  color: oklch(48% 0.18 25);
-  border: 1px solid oklch(85% 0.06 25);
+  background: oklch(97% 0.02 25deg);
+  color: oklch(48% 0.18 25deg);
+  border: 1px solid oklch(85% 0.06 25deg);
 }
+
 .btn-print {
   display: inline-flex;
   align-items: center;
@@ -262,13 +246,16 @@ function printReceta() {
   cursor: pointer;
   font-family: inherit;
 }
+
 .btn-print:hover:not(:disabled) {
   background: var(--amatista-50);
 }
+
 .btn-print:disabled {
   opacity: 0.6;
   cursor: default;
 }
+
 .btn-close {
   padding: 8px 16px;
   font-size: 13px;
@@ -280,6 +267,7 @@ function printReceta() {
   cursor: pointer;
   font-family: inherit;
 }
+
 .btn-close:hover {
   background: var(--amatista-600);
 }

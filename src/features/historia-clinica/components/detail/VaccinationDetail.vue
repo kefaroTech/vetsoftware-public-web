@@ -16,11 +16,7 @@ defineProps<{ data: VaccinationResponse }>()
       :value="data.nextVaccination ? formatEventDate(data.nextVaccination) : null"
     />
     <DetailField label="Notas" :value="data.notes" span="full" />
-    <DetailField
-      v-if="data.consultation"
-      label="Consulta vinculada"
-      span="full"
-    >
+    <DetailField v-if="data.consultation" label="Consulta vinculada" span="full">
       #{{ data.consultation.id }} · {{ formatEventDate(data.consultation.date) }}
     </DetailField>
   </div>
@@ -32,7 +28,8 @@ defineProps<{ data: VaccinationResponse }>()
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px 24px;
 }
-@media (max-width: 560px) {
+
+@media (width <= 560px) {
   .detail-grid {
     grid-template-columns: 1fr;
   }

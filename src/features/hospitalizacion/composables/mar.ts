@@ -18,8 +18,18 @@ export interface ScheduleSlotSource {
 
 export const WEEKDAYS_SHORT = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 export const MONTHS_LONG = [
-  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
 ]
 
 const INDEFINITE_HORIZON_DAYS = 14
@@ -70,12 +80,18 @@ export function combine(dateIso: string, time: string): Date {
 /** Horas del intervalo de una frecuencia, o null si no es discreta. */
 export function intervalFromFrequency(f: MedicationFrequency | null): number | null {
   switch (f) {
-    case 'EVERY_4H': return 4
-    case 'EVERY_6H': return 6
-    case 'EVERY_8H': return 8
-    case 'EVERY_12H': return 12
-    case 'EVERY_24H': return 24
-    default: return null // CONTINUOUS / SINGLE / null
+    case 'EVERY_4H':
+      return 4
+    case 'EVERY_6H':
+      return 6
+    case 'EVERY_8H':
+      return 8
+    case 'EVERY_12H':
+      return 12
+    case 'EVERY_24H':
+      return 24
+    default:
+      return null // CONTINUOUS / SINGLE / null
   }
 }
 
@@ -84,9 +100,10 @@ function addHours(d: Date, hours: number): { date: string; time: string } {
   const next = new Date(d.getTime() + hours * 3600_000)
   return {
     date: isoFromDate(next),
-    time: `${String(next.getHours()).padStart(2, '0')}:${String(
-      next.getMinutes(),
-    ).padStart(2, '0')}`,
+    time: `${String(next.getHours()).padStart(2, '0')}:${String(next.getMinutes()).padStart(
+      2,
+      '0',
+    )}`,
   }
 }
 

@@ -27,10 +27,7 @@ const REASON_LEAVING_LABEL: Record<ReasonLeaving, string> = {
     <DetailField label="Tipo" :value="TYPE_LABEL[data.type]" />
     <DetailField label="Fecha" :value="formatEventDate(data.date)" />
     <DetailField label="Inicio" :value="formatEventDate(data.startDate)" />
-    <DetailField
-      label="Fin"
-      :value="data.endDate ? formatEventDate(data.endDate) : null"
-    />
+    <DetailField label="Fin" :value="data.endDate ? formatEventDate(data.endDate) : null" />
     <DetailField
       label="Motivo de egreso"
       :value="data.reasonLeaving ? REASON_LEAVING_LABEL[data.reasonLeaving] : null"
@@ -38,11 +35,7 @@ const REASON_LEAVING_LABEL: Record<ReasonLeaving, string> = {
     />
     <DetailField label="Motivo" :value="data.reason" span="full" />
     <DetailField label="Observaciones" :value="data.observations" span="full" />
-    <DetailField
-      v-if="data.consultation"
-      label="Consulta vinculada"
-      span="full"
-    >
+    <DetailField v-if="data.consultation" label="Consulta vinculada" span="full">
       #{{ data.consultation.id }} · {{ formatEventDate(data.consultation.date) }}
     </DetailField>
   </div>
@@ -54,7 +47,8 @@ const REASON_LEAVING_LABEL: Record<ReasonLeaving, string> = {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px 24px;
 }
-@media (max-width: 560px) {
+
+@media (width <= 560px) {
   .detail-grid {
     grid-template-columns: 1fr;
   }

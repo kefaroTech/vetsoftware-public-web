@@ -1,306 +1,700 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es" xmlns="http://www.w3.org/1999/xhtml">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="color-scheme" content="light only" />
     <meta name="supported-color-schemes" content="light only" />
     <title>Tu cita quedó agendada — Vetrina</title>
-    <!--[if mso]> <style>* { font-family: Arial, sans-serif !important; }</style> <![endif]-->
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Instrument+Serif&display=swap');
-        body { margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-        table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-        img { border: 0; line-height: 100%; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
-        a { text-decoration: none; }
-        @media only screen and (max-width: 620px) {
-            .container { width: 100% !important; }
-            .px { padding-left: 24px !important; padding-right: 24px !important; }
-            .det-label { display: block !important; width: 100% !important; padding-bottom: 2px !important; text-align: left !important; }
-            .det-value { display: block !important; width: 100% !important; text-align: left !important; }
-            .when-cell { display: block !important; width: 100% !important; border-right: 0 !important; padding: 16px 0 !important; }
-            .when-divider { display: none !important; }
+    <!--[if mso]>
+      <style>
+        * {
+          font-family: Arial, sans-serif !important;
         }
+      </style>
+    <![endif]-->
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Instrument+Serif&display=swap');
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100% !important;
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+      }
+      table {
+        border-collapse: collapse;
+        mso-table-lspace: 0pt;
+        mso-table-rspace: 0pt;
+      }
+      img {
+        border: 0;
+        line-height: 100%;
+        outline: none;
+        text-decoration: none;
+        -ms-interpolation-mode: bicubic;
+      }
+      a {
+        text-decoration: none;
+      }
+      @media only screen and (max-width: 620px) {
+        .container {
+          width: 100% !important;
+        }
+        .px {
+          padding-left: 24px !important;
+          padding-right: 24px !important;
+        }
+        .det-label {
+          display: block !important;
+          width: 100% !important;
+          padding-bottom: 2px !important;
+          text-align: left !important;
+        }
+        .det-value {
+          display: block !important;
+          width: 100% !important;
+          text-align: left !important;
+        }
+        .when-cell {
+          display: block !important;
+          width: 100% !important;
+          border-right: 0 !important;
+          padding: 16px 0 !important;
+        }
+        .when-divider {
+          display: none !important;
+        }
+      }
     </style>
-</head>
-<body style="margin:0; padding:0; background-color:#F1ECE5;">
-<!-- Preheader (texto de vista previa; oculto en el cuerpo) -->
-<div style="display:none; max-height:0; overflow:hidden; opacity:0; font-size:1px; line-height:1px; color:#F1ECE5;">
-    Tu cita en {{{COMPANY_NAME}}} quedó agendada para el {{{APPOINTMENT_DATE}}} a las {{{APPOINTMENT_TIME}}}.
-    &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
-</div>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #f1ece5">
+    <!-- Preheader (texto de vista previa; oculto en el cuerpo) -->
+    <div
+      style="
+        display: none;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        font-size: 1px;
+        line-height: 1px;
+        color: #f1ece5;
+      "
+    >
+      Tu cita en {{{COMPANY_NAME}}} quedó agendada para el {{{APPOINTMENT_DATE}}} a las
+      {{{APPOINTMENT_TIME}}}.
+      &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+    </div>
 
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F1ECE5;">
-    <tr>
-        <td align="center" style="padding:32px 16px;">
-            <!-- ===== Card container ===== -->
-            <table
-                    role="presentation"
-                    class="container"
-                    width="600"
-                    cellpadding="0"
-                    cellspacing="0"
-                    style="width:600px; max-width:600px; background-color:#FFFFFF; border-radius:18px; overflow:hidden; box-shadow:0 12px 40px -12px rgba(60,30,80,0.20);"
-            >
-                <!-- ===== Brand bar ===== -->
-                <tr>
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background-color: #f1ece5"
+    >
+      <tr>
+        <td align="center" style="padding: 32px 16px">
+          <!-- ===== Card container ===== -->
+          <table
+            role="presentation"
+            class="container"
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            style="
+              width: 600px;
+              max-width: 600px;
+              background-color: #ffffff;
+              border-radius: 18px;
+              overflow: hidden;
+              box-shadow: 0 12px 40px -12px rgba(60, 30, 80, 0.2);
+            "
+          >
+            <!-- ===== Brand bar ===== -->
+            <tr>
+              <td
+                style="
+                  background-color: #4e2470;
+                  background-image: linear-gradient(135deg, #6a2e92 0%, #43215f 100%);
+                  padding: 26px 40px;
+                "
+              >
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td align="left" valign="middle">
+                      <div
+                        style="
+                          font-family: 'Geist', Arial, sans-serif;
+                          font-size: 19px;
+                          font-weight: 600;
+                          color: #ffffff;
+                          letter-spacing: -0.01em;
+                          line-height: 1;
+                        "
+                      >
+                        Vetrina
+                      </div>
+                      <div
+                        style="
+                          font-family: 'Geist', Arial, sans-serif;
+                          font-size: 10px;
+                          font-weight: 500;
+                          letter-spacing: 0.12em;
+                          text-transform: uppercase;
+                          color: #d8c4e8;
+                          padding-top: 4px;
+                        "
+                      >
+                        Software Veterinario
+                      </div>
+                    </td>
+                    <td align="right" valign="middle">
+                      <span
+                        style="
+                          font-family: 'Geist', Arial, sans-serif;
+                          font-size: 11px;
+                          font-weight: 500;
+                          color: #e7d8f2;
+                          background-color: rgba(255, 255, 255, 0.14);
+                          padding: 6px 12px;
+                          border-radius: 999px;
+                        "
+                        >Confirmación de cita</span
+                      >
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- ===== Hero ===== -->
+            <tr>
+              <td class="px" style="padding: 40px 40px 8px 40px">
+                <div
+                  style="
+                    font-family: 'Geist', Arial, sans-serif;
+                    font-size: 12px;
+                    font-weight: 600;
+                    letter-spacing: 0.08em;
+                    text-transform: uppercase;
+                    color: #9a6fb8;
+                  "
+                >
+                  Tu cita quedó agendada
+                </div>
+                <h1
+                  style="
+                    margin: 10px 0 0 0;
+                    font-family: 'Instrument Serif', Georgia, serif;
+                    font-weight: 400;
+                    font-size: 34px;
+                    line-height: 1.12;
+                    color: #2a2622;
+                    letter-spacing: -0.01em;
+                  "
+                >
+                  Confirmación de tu cita
+                </h1>
+              </td>
+            </tr>
+
+            <!-- ===== Body copy ===== -->
+            <tr>
+              <td class="px" style="padding: 18px 40px 0 40px">
+                <p
+                  style="
+                    margin: 0;
+                    font-family: 'Geist', Arial, sans-serif;
+                    font-size: 15px;
+                    line-height: 1.62;
+                    color: #4a443d;
+                  "
+                >
+                  Hola <strong style="color: #2a2622">{{{RECIPIENT_NAME}}}</strong>,
+                </p>
+                <p
+                  style="
+                    margin: 14px 0 0 0;
+                    font-family: 'Geist', Arial, sans-serif;
+                    font-size: 15px;
+                    line-height: 1.62;
+                    color: #4a443d;
+                  "
+                >
+                  Registramos una cita para ti en
+                  <strong style="color: #2a2622">{{{COMPANY_NAME}}}</strong>. Estos son los
+                  detalles:
+                </p>
+              </td>
+            </tr>
+
+            <!-- ===== When highlight (fecha + hora) ===== -->
+            <tr>
+              <td class="px" style="padding: 24px 40px 0 40px">
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  style="background-color: #f7f1fb; border: 1px solid #e7d8f2; border-radius: 14px"
+                >
+                  <tr>
                     <td
-                            style="background-color:#4E2470; background-image:linear-gradient(135deg,#6A2E92 0%,#43215F 100%); padding:26px 40px;"
+                      class="when-cell"
+                      width="58%"
+                      valign="middle"
+                      style="padding: 20px 24px; border-right: 1px solid #e7d8f2"
                     >
-                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                            <tr>
-                                <td align="left" valign="middle">
-                                    <div
-                                            style="font-family:'Geist',Arial,sans-serif; font-size:19px; font-weight:600; color:#FFFFFF; letter-spacing:-0.01em; line-height:1;"
-                                    >
-                                        Vetrina
-                                    </div>
-                                    <div
-                                            style="font-family:'Geist',Arial,sans-serif; font-size:10px; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:#D8C4E8; padding-top:4px;"
-                                    >
-                                        Software Veterinario
-                                    </div>
-                                </td>
-                                <td align="right" valign="middle">
-                                    <span
-                                            style="font-family:'Geist',Arial,sans-serif; font-size:11px; font-weight:500; color:#E7D8F2; background-color:rgba(255,255,255,0.14); padding:6px 12px; border-radius:999px;"
-                                    >Confirmación de cita</span>
-                                </td>
-                            </tr>
-                        </table>
+                      <div
+                        style="
+                          font-family: 'Geist', Arial, sans-serif;
+                          font-size: 11px;
+                          font-weight: 600;
+                          letter-spacing: 0.07em;
+                          text-transform: uppercase;
+                          color: #9a6fb8;
+                        "
+                      >
+                        Fecha
+                      </div>
+                      <div
+                        style="
+                          font-family: 'Instrument Serif', Georgia, serif;
+                          font-size: 22px;
+                          line-height: 1.25;
+                          color: #2a2622;
+                          padding-top: 5px;
+                        "
+                      >
+                        {{{APPOINTMENT_DATE}}}
+                      </div>
                     </td>
-                </tr>
-
-                <!-- ===== Hero ===== -->
-                <tr>
-                    <td class="px" style="padding:40px 40px 8px 40px;">
-                        <div
-                                style="font-family:'Geist',Arial,sans-serif; font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#9A6FB8;"
-                        >
-                            Tu cita quedó agendada
-                        </div>
-                        <h1
-                                style="margin:10px 0 0 0; font-family:'Instrument Serif',Georgia,serif; font-weight:400; font-size:34px; line-height:1.12; color:#2A2622; letter-spacing:-0.01em;"
-                        >
-                            Confirmación de tu cita
-                        </h1>
+                    <td class="when-divider" width="1" style="font-size: 0; line-height: 0">
+                      &nbsp;
                     </td>
-                </tr>
-
-                <!-- ===== Body copy ===== -->
-                <tr>
-                    <td class="px" style="padding:18px 40px 0 40px;">
-                        <p style="margin:0; font-family:'Geist',Arial,sans-serif; font-size:15px; line-height:1.62; color:#4A443D;">
-                            Hola <strong style="color:#2A2622;">{{{RECIPIENT_NAME}}}</strong>,
-                        </p>
-                        <p style="margin:14px 0 0 0; font-family:'Geist',Arial,sans-serif; font-size:15px; line-height:1.62; color:#4A443D;">
-                            Registramos una cita para ti en <strong style="color:#2A2622;">{{{COMPANY_NAME}}}</strong>.
-                            Estos son los detalles:
-                        </p>
+                    <td class="when-cell" valign="middle" style="padding: 20px 24px">
+                      <div
+                        style="
+                          font-family: 'Geist', Arial, sans-serif;
+                          font-size: 11px;
+                          font-weight: 600;
+                          letter-spacing: 0.07em;
+                          text-transform: uppercase;
+                          color: #9a6fb8;
+                        "
+                      >
+                        Hora
+                      </div>
+                      <div
+                        style="
+                          font-family: 'Instrument Serif', Georgia, serif;
+                          font-size: 22px;
+                          line-height: 1.25;
+                          color: #2a2622;
+                          padding-top: 5px;
+                        "
+                      >
+                        {{{APPOINTMENT_TIME}}}
+                      </div>
                     </td>
-                </tr>
+                  </tr>
+                </table>
+              </td>
+            </tr>
 
-                <!-- ===== When highlight (fecha + hora) ===== -->
-                <tr>
-                    <td class="px" style="padding:24px 40px 0 40px;">
-                        <table
-                                role="presentation"
-                                width="100%"
-                                cellpadding="0"
-                                cellspacing="0"
-                                style="background-color:#F7F1FB; border:1px solid #E7D8F2; border-radius:14px;"
-                        >
-                            <tr>
-                                <td
-                                        class="when-cell"
-                                        width="58%"
-                                        valign="middle"
-                                        style="padding:20px 24px; border-right:1px solid #E7D8F2;"
-                                >
-                                    <div style="font-family:'Geist',Arial,sans-serif; font-size:11px; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; color:#9A6FB8;">
-                                        Fecha
-                                    </div>
-                                    <div style="font-family:'Instrument Serif',Georgia,serif; font-size:22px; line-height:1.25; color:#2A2622; padding-top:5px;">
-                                        {{{APPOINTMENT_DATE}}}
-                                    </div>
-                                </td>
-                                <td class="when-divider" width="1" style="font-size:0; line-height:0;">&nbsp;</td>
-                                <td
-                                        class="when-cell"
-                                        valign="middle"
-                                        style="padding:20px 24px;"
-                                >
-                                    <div style="font-family:'Geist',Arial,sans-serif; font-size:11px; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; color:#9A6FB8;">
-                                        Hora
-                                    </div>
-                                    <div style="font-family:'Instrument Serif',Georgia,serif; font-size:22px; line-height:1.25; color:#2A2622; padding-top:5px;">
-                                        {{{APPOINTMENT_TIME}}}
-                                    </div>
-                                </td>
-                            </tr>
-                        </table>
+            <!-- ===== Details card ===== -->
+            <tr>
+              <td class="px" style="padding: 16px 40px 0 40px">
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  style="background-color: #faf7fc; border: 1px solid #eadff2; border-radius: 14px"
+                >
+                  <tr>
+                    <td style="padding: 22px 24px 6px 24px">
+                      <div
+                        style="
+                          font-family: 'Geist', Arial, sans-serif;
+                          font-size: 11px;
+                          font-weight: 600;
+                          letter-spacing: 0.07em;
+                          text-transform: uppercase;
+                          color: #9a6fb8;
+                        "
+                      >
+                        Detalles de la cita
+                      </div>
                     </td>
-                </tr>
+                  </tr>
 
-                <!-- ===== Details card ===== -->
-                <tr>
-                    <td class="px" style="padding:16px 40px 0 40px;">
-                        <table
-                                role="presentation"
-                                width="100%"
-                                cellpadding="0"
-                                cellspacing="0"
-                                style="background-color:#FAF7FC; border:1px solid #EADFF2; border-radius:14px;"
-                        >
-                            <tr>
-                                <td style="padding:22px 24px 6px 24px;">
-                                    <div style="font-family:'Geist',Arial,sans-serif; font-size:11px; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; color:#9A6FB8;">
-                                        Detalles de la cita
-                                    </div>
-                                </td>
-                            </tr>
-
-                            <!-- Tipo -->
-                            <tr>
-                                <td style="padding:8px 24px;">
-                                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                                        <tr>
-                                            <td class="det-label" width="170" valign="middle" style="font-family:'Geist',Arial,sans-serif; font-size:13px; color:#6B655E; padding:6px 0;">
-                                                Tipo de cita
-                                            </td>
-                                            <td class="det-value" valign="middle" align="right" style="padding:6px 0;">
-                                                <span style="font-family:'Geist',Arial,sans-serif; font-size:13px; font-weight:600; color:#2C7A4B; background-color:#E4F3EA; padding:6px 12px; border-radius:999px; display:inline-block;">{{{APPOINTMENT_TYPE}}}</span>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-
-                            <!-- Divider -->
-                            <tr><td style="padding:0 24px;"><div style="height:1px; background-color:#EADFF2; line-height:1px; font-size:0;">&nbsp;</div></td></tr>
-
-                            <!-- Veterinario/a -->
-                            <tr>
-                                <td style="padding:8px 24px;">
-                                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                                        <tr>
-                                            <td class="det-label" width="170" valign="middle" style="font-family:'Geist',Arial,sans-serif; font-size:13px; color:#6B655E; padding:6px 0;">
-                                                Veterinario/a
-                                            </td>
-                                            <td class="det-value" valign="middle" align="right" style="font-family:'Geist',Arial,sans-serif; font-size:15px; font-weight:600; color:#2A2622; padding:6px 0;">
-                                                {{{VET_NAME}}}
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-
-                            <!-- Divider -->
-                            <tr><td style="padding:0 24px;"><div style="height:1px; background-color:#EADFF2; line-height:1px; font-size:0;">&nbsp;</div></td></tr>
-
-                            <!-- Mascota (fallback "—" para contactos sin mascota) -->
-                            <tr>
-                                <td style="padding:8px 24px;">
-                                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                                        <tr>
-                                            <td class="det-label" width="170" valign="middle" style="font-family:'Geist',Arial,sans-serif; font-size:13px; color:#6B655E; padding:6px 0;">
-                                                Mascota
-                                            </td>
-                                            <td class="det-value" valign="middle" align="right" style="font-family:'Geist',Arial,sans-serif; font-size:15px; font-weight:600; color:#2A2622; padding:6px 0;">
-                                                {{{PET_NAME}}}
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-
-                            <!-- Divider -->
-                            <tr><td style="padding:0 24px;"><div style="height:1px; background-color:#EADFF2; line-height:1px; font-size:0;">&nbsp;</div></td></tr>
-
-                            <!-- Sede -->
-                            <tr>
-                                <td style="padding:8px 24px;">
-                                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                                        <tr>
-                                            <td class="det-label" width="170" valign="top" style="font-family:'Geist',Arial,sans-serif; font-size:13px; color:#6B655E; padding:6px 0;">
-                                                Sede
-                                            </td>
-                                            <td class="det-value" valign="top" align="right" style="padding:6px 0;">
-                                                <div style="font-family:'Geist',Arial,sans-serif; font-size:15px; font-weight:600; color:#2A2622;">{{{BRANCH_NAME}}}</div>
-                                                <div style="font-family:'Geist',Arial,sans-serif; font-size:13px; color:#857F76; padding-top:3px;">{{{BRANCH_ADDRESS}}}</div>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-
-                            <!-- Divider -->
-                            <tr><td style="padding:0 24px;"><div style="height:1px; background-color:#EADFF2; line-height:1px; font-size:0;">&nbsp;</div></td></tr>
-
-                            <!-- Motivo / notas (fallback "Sin observaciones.") -->
-                            <tr>
-                                <td style="padding:8px 24px 20px 24px;">
-                                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                                        <tr>
-                                            <td class="det-label" width="170" valign="top" style="font-family:'Geist',Arial,sans-serif; font-size:13px; color:#6B655E; padding:6px 0;">
-                                                Motivo / notas
-                                            </td>
-                                            <td class="det-value" valign="top" align="right" style="font-family:'Geist',Arial,sans-serif; font-size:14px; line-height:1.5; color:#4A443D; padding:6px 0;">
-                                                {{{NOTES}}}
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
+                  <!-- Tipo -->
+                  <tr>
+                    <td style="padding: 8px 24px">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td
+                            class="det-label"
+                            width="170"
+                            valign="middle"
+                            style="
+                              font-family: 'Geist', Arial, sans-serif;
+                              font-size: 13px;
+                              color: #6b655e;
+                              padding: 6px 0;
+                            "
+                          >
+                            Tipo de cita
+                          </td>
+                          <td
+                            class="det-value"
+                            valign="middle"
+                            align="right"
+                            style="padding: 6px 0"
+                          >
+                            <span
+                              style="
+                                font-family: 'Geist', Arial, sans-serif;
+                                font-size: 13px;
+                                font-weight: 600;
+                                color: #2c7a4b;
+                                background-color: #e4f3ea;
+                                padding: 6px 12px;
+                                border-radius: 999px;
+                                display: inline-block;
+                              "
+                              >{{{APPOINTMENT_TYPE}}}</span
+                            >
+                          </td>
+                        </tr>
+                      </table>
                     </td>
-                </tr>
+                  </tr>
 
-                <!-- ===== Reminder note ===== -->
-                <tr>
-                    <td class="px" style="padding:20px 40px 0 40px;">
-                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#FBF6EC; border:1px solid #F0E2C6; border-radius:12px;">
-                            <tr>
-                                <td style="padding:16px 18px; font-family:'Geist',Arial,sans-serif; font-size:13px; line-height:1.55; color:#7A6A3F;">
-                                    Te recomendamos llegar <strong>unos minutos antes</strong> de la hora. Si necesitas
-                                    <strong>reprogramar o cancelar</strong>, comunícate con la clínica con anticipación.
-                                </td>
-                            </tr>
-                        </table>
+                  <!-- Divider -->
+                  <tr>
+                    <td style="padding: 0 24px">
+                      <div
+                        style="
+                          height: 1px;
+                          background-color: #eadff2;
+                          line-height: 1px;
+                          font-size: 0;
+                        "
+                      >
+                        &nbsp;
+                      </div>
                     </td>
-                </tr>
+                  </tr>
 
-                <!-- ===== Sign-off ===== -->
-                <tr>
-                    <td class="px" style="padding:28px 40px 36px 40px;">
-                        <p style="margin:0; font-family:'Geist',Arial,sans-serif; font-size:14px; line-height:1.6; color:#4A443D;">
-                            ¡Te esperamos!
-                        </p>
-                        <p style="margin:14px 0 0 0; font-family:'Geist',Arial,sans-serif; font-size:14px; line-height:1.6; color:#4A443D;">
-                            Un saludo,<br /><strong style="color:#2A2622;">{{{COMPANY_NAME}}}</strong>
-                        </p>
+                  <!-- Veterinario/a -->
+                  <tr>
+                    <td style="padding: 8px 24px">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td
+                            class="det-label"
+                            width="170"
+                            valign="middle"
+                            style="
+                              font-family: 'Geist', Arial, sans-serif;
+                              font-size: 13px;
+                              color: #6b655e;
+                              padding: 6px 0;
+                            "
+                          >
+                            Veterinario/a
+                          </td>
+                          <td
+                            class="det-value"
+                            valign="middle"
+                            align="right"
+                            style="
+                              font-family: 'Geist', Arial, sans-serif;
+                              font-size: 15px;
+                              font-weight: 600;
+                              color: #2a2622;
+                              padding: 6px 0;
+                            "
+                          >
+                            {{{VET_NAME}}}
+                          </td>
+                        </tr>
+                      </table>
                     </td>
-                </tr>
-            </table>
-            <!-- ===== /Card ===== -->
+                  </tr>
 
-            <!-- ===== Footer ===== -->
-            <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" style="width:600px; max-width:600px;">
-                <tr>
-                    <td align="center" style="padding:24px 40px 8px 40px;">
-                        <div style="font-family:'Geist',Arial,sans-serif; font-size:12px; line-height:1.6; color:#948D84;">
-                            Este correo se envió a <span style="color:#6B655E;">{{{RECIPIENT_EMAIL}}}</span> porque se agendó una
-                            cita a tu nombre en {{{COMPANY_NAME}}}.
-                        </div>
-                        <div style="font-family:'Geist',Arial,sans-serif; font-size:12px; line-height:1.6; color:#B4ADA4; padding-top:10px;">
-                            © 2026 Vetrina · Software de gestión veterinaria
-                        </div>
+                  <!-- Divider -->
+                  <tr>
+                    <td style="padding: 0 24px">
+                      <div
+                        style="
+                          height: 1px;
+                          background-color: #eadff2;
+                          line-height: 1px;
+                          font-size: 0;
+                        "
+                      >
+                        &nbsp;
+                      </div>
                     </td>
-                </tr>
-            </table>
+                  </tr>
+
+                  <!-- Mascota (fallback "—" para contactos sin mascota) -->
+                  <tr>
+                    <td style="padding: 8px 24px">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td
+                            class="det-label"
+                            width="170"
+                            valign="middle"
+                            style="
+                              font-family: 'Geist', Arial, sans-serif;
+                              font-size: 13px;
+                              color: #6b655e;
+                              padding: 6px 0;
+                            "
+                          >
+                            Mascota
+                          </td>
+                          <td
+                            class="det-value"
+                            valign="middle"
+                            align="right"
+                            style="
+                              font-family: 'Geist', Arial, sans-serif;
+                              font-size: 15px;
+                              font-weight: 600;
+                              color: #2a2622;
+                              padding: 6px 0;
+                            "
+                          >
+                            {{{PET_NAME}}}
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <!-- Divider -->
+                  <tr>
+                    <td style="padding: 0 24px">
+                      <div
+                        style="
+                          height: 1px;
+                          background-color: #eadff2;
+                          line-height: 1px;
+                          font-size: 0;
+                        "
+                      >
+                        &nbsp;
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- Sede -->
+                  <tr>
+                    <td style="padding: 8px 24px">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td
+                            class="det-label"
+                            width="170"
+                            valign="top"
+                            style="
+                              font-family: 'Geist', Arial, sans-serif;
+                              font-size: 13px;
+                              color: #6b655e;
+                              padding: 6px 0;
+                            "
+                          >
+                            Sede
+                          </td>
+                          <td class="det-value" valign="top" align="right" style="padding: 6px 0">
+                            <div
+                              style="
+                                font-family: 'Geist', Arial, sans-serif;
+                                font-size: 15px;
+                                font-weight: 600;
+                                color: #2a2622;
+                              "
+                            >
+                              {{{BRANCH_NAME}}}
+                            </div>
+                            <div
+                              style="
+                                font-family: 'Geist', Arial, sans-serif;
+                                font-size: 13px;
+                                color: #857f76;
+                                padding-top: 3px;
+                              "
+                            >
+                              {{{BRANCH_ADDRESS}}}
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <!-- Divider -->
+                  <tr>
+                    <td style="padding: 0 24px">
+                      <div
+                        style="
+                          height: 1px;
+                          background-color: #eadff2;
+                          line-height: 1px;
+                          font-size: 0;
+                        "
+                      >
+                        &nbsp;
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- Motivo / notas (fallback "Sin observaciones.") -->
+                  <tr>
+                    <td style="padding: 8px 24px 20px 24px">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td
+                            class="det-label"
+                            width="170"
+                            valign="top"
+                            style="
+                              font-family: 'Geist', Arial, sans-serif;
+                              font-size: 13px;
+                              color: #6b655e;
+                              padding: 6px 0;
+                            "
+                          >
+                            Motivo / notas
+                          </td>
+                          <td
+                            class="det-value"
+                            valign="top"
+                            align="right"
+                            style="
+                              font-family: 'Geist', Arial, sans-serif;
+                              font-size: 14px;
+                              line-height: 1.5;
+                              color: #4a443d;
+                              padding: 6px 0;
+                            "
+                          >
+                            {{{NOTES}}}
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- ===== Reminder note ===== -->
+            <tr>
+              <td class="px" style="padding: 20px 40px 0 40px">
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  style="background-color: #fbf6ec; border: 1px solid #f0e2c6; border-radius: 12px"
+                >
+                  <tr>
+                    <td
+                      style="
+                        padding: 16px 18px;
+                        font-family: 'Geist', Arial, sans-serif;
+                        font-size: 13px;
+                        line-height: 1.55;
+                        color: #7a6a3f;
+                      "
+                    >
+                      Te recomendamos llegar <strong>unos minutos antes</strong> de la hora. Si
+                      necesitas <strong>reprogramar o cancelar</strong>, comunícate con la clínica
+                      con anticipación.
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- ===== Sign-off ===== -->
+            <tr>
+              <td class="px" style="padding: 28px 40px 36px 40px">
+                <p
+                  style="
+                    margin: 0;
+                    font-family: 'Geist', Arial, sans-serif;
+                    font-size: 14px;
+                    line-height: 1.6;
+                    color: #4a443d;
+                  "
+                >
+                  ¡Te esperamos!
+                </p>
+                <p
+                  style="
+                    margin: 14px 0 0 0;
+                    font-family: 'Geist', Arial, sans-serif;
+                    font-size: 14px;
+                    line-height: 1.6;
+                    color: #4a443d;
+                  "
+                >
+                  Un saludo,<br /><strong style="color: #2a2622">{{{COMPANY_NAME}}}</strong>
+                </p>
+              </td>
+            </tr>
+          </table>
+          <!-- ===== /Card ===== -->
+
+          <!-- ===== Footer ===== -->
+          <table
+            role="presentation"
+            class="container"
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            style="width: 600px; max-width: 600px"
+          >
+            <tr>
+              <td align="center" style="padding: 24px 40px 8px 40px">
+                <div
+                  style="
+                    font-family: 'Geist', Arial, sans-serif;
+                    font-size: 12px;
+                    line-height: 1.6;
+                    color: #948d84;
+                  "
+                >
+                  Este correo se envió a
+                  <span style="color: #6b655e">{{{RECIPIENT_EMAIL}}}</span> porque se agendó una
+                  cita a tu nombre en {{{COMPANY_NAME}}}.
+                </div>
+                <div
+                  style="
+                    font-family: 'Geist', Arial, sans-serif;
+                    font-size: 12px;
+                    line-height: 1.6;
+                    color: #b4ada4;
+                    padding-top: 10px;
+                  "
+                >
+                  © 2026 Vetrina · Software de gestión veterinaria
+                </div>
+              </td>
+            </tr>
+          </table>
         </td>
-    </tr>
-</table>
-</body>
+      </tr>
+    </table>
+  </body>
 </html>

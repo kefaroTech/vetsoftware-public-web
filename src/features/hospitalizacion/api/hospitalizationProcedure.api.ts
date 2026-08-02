@@ -1,9 +1,5 @@
 import { http } from '@/services/http/http.client'
-import type {
-  MedicationFrequency,
-  GuidelineType,
-  DurationMeasure,
-} from '@/types/domain'
+import type { MedicationFrequency, GuidelineType, DurationMeasure } from '@/types/domain'
 
 /** Procedimientos: igual que medicación, `dose` opcional y normalmente vacío. */
 export interface CreateHospitalizationProcedurePayload {
@@ -68,10 +64,7 @@ export const hospitalizationProcedureApi = {
     id: number,
     payload: UpdateHospitalizationProcedurePayload,
   ): Promise<HospitalizationProcedureResponse> {
-    const { data } = await http.put<HospitalizationProcedureResponse>(
-      `${BASE}/${id}`,
-      payload,
-    )
+    const { data } = await http.put<HospitalizationProcedureResponse>(`${BASE}/${id}`, payload)
     return data
   },
 
