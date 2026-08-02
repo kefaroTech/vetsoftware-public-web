@@ -70,6 +70,7 @@ function jumpTo(target: 1 | 2) {
   min-height: 0;
   background: var(--warm-100);
 }
+
 .crumbs {
   height: 56px;
   padding: 0 28px;
@@ -80,6 +81,7 @@ function jumpTo(target: 1 | 2) {
   gap: 8px;
   flex-shrink: 0;
 }
+
 .sep {
   color: var(--warm-300);
   font-size: 11px;

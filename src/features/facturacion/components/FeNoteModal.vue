@@ -39,7 +39,9 @@ function submit() {
   <ModalShell
     :open="open"
     :title="isCredit ? 'Emitir nota crédito' : 'Emitir nota débito'"
-    :subtitle="isCredit ? 'Anulación, devolución o rebaja sobre la factura' : 'Aumento sobre la factura'"
+    :subtitle="
+      isCredit ? 'Anulación, devolución o rebaja sobre la factura' : 'Aumento sobre la factura'
+    "
     :icon="FileText"
     :accent="isCredit ? 'danger' : 'amatista'"
     :width="460"
@@ -83,6 +85,7 @@ function submit() {
   padding-left: 10px;
   line-height: 1.5;
 }
+
 .btn-ghost {
   padding: 9px 16px;
   border-radius: 9px;
@@ -93,16 +96,22 @@ function submit() {
   font-weight: 500;
   cursor: pointer;
 }
+
 .btn-primary {
   padding: 9px 18px;
   border-radius: 9px;
   border: none;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
   color: #fff;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
+
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;

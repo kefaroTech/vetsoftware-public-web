@@ -68,9 +68,7 @@ const finalConsumer = ref(false)
 // ── FE obligatoria por superar 5 UVT ──────────────────────────────────────────
 // El umbral se evalúa sobre el TOTAL de la cuenta (valor del documento), no el saldo.
 const { isOverThreshold } = useFeUvt()
-const overUvt = computed(
-  () => canEmit.value && isOverThreshold(props.account?.totalAmount ?? 0),
-)
+const overUvt = computed(() => canEmit.value && isOverThreshold(props.account?.totalAmount ?? 0))
 const ownerFull = ref<OwnerResponse | null>(null)
 const feCustomer = ref<FiscalCustomer | null>(null)
 const fiscalModalOpen = ref(false)
@@ -95,9 +93,7 @@ function fromOwnerSummary(o: OwnerSummary): FiscalCustomer {
   }
 }
 const feComplete = computed(() =>
-  overUvt.value && motivo.value === 'COBRADA'
-    ? feFiscalChecklist(feCustomer.value).complete
-    : true,
+  overUvt.value && motivo.value === 'COBRADA' ? feFiscalChecklist(feCustomer.value).complete : true,
 )
 
 function toFiscalCustomer(o: OwnerResponse): FiscalCustomer {
@@ -317,7 +313,12 @@ async function confirm() {
     // 1. Cobrada con saldo: registrar el abono UNA sola vez (idempotente en reintento).
     //    El backend exige saldo cero para CLOSE, así que el abono va antes del cambio de estado.
     if (motivo.value === 'COBRADA' && outstanding.value > 0 && !paymentDone.value) {
-      await store.addPaymentNoRefresh(accountId, outstanding.value, method.value, paymentRequestId.value)
+      await store.addPaymentNoRefresh(
+        accountId,
+        outstanding.value,
+        method.value,
+        paymentRequestId.value,
+      )
       charged.value = outstanding.value
       paymentDone.value = true
     }
@@ -405,7 +406,9 @@ function onShellClose() {
             :class="{ active: motivo === 'COBRADA' }"
             @click="motivo = 'COBRADA'"
           >
-            <span class="do-check"><Check v-if="motivo === 'COBRADA'" :size="13" :stroke-width="3" /></span>
+            <span class="do-check"
+              ><Check v-if="motivo === 'COBRADA'" :size="13" :stroke-width="3"
+            /></span>
             <span class="do-text">
               <span class="do-title">Cobrar y cerrar</span>
               <span class="do-sub">Registra el pago del saldo y cierra la cuenta.</span>
@@ -417,7 +420,9 @@ function onShellClose() {
             :class="{ active: motivo === 'CANCELADA' }"
             @click="motivo = 'CANCELADA'"
           >
-            <span class="do-check"><Check v-if="motivo === 'CANCELADA'" :size="13" :stroke-width="3" /></span>
+            <span class="do-check"
+              ><Check v-if="motivo === 'CANCELADA'" :size="13" :stroke-width="3"
+            /></span>
             <span class="do-text">
               <span class="do-title">Cancelar cuenta</span>
               <span class="do-sub">Cierra sin cobro; el saldo queda anulado.</span>
@@ -427,14 +432,19 @@ function onShellClose() {
 
         <!-- Desglose fiscal de la cuenta -->
         <div class="desglose">
-          <div class="dg-row"><span>Base gravable + exenta</span><span>{{ formatMoney(breakdown.base) }}</span></div>
+          <div class="dg-row">
+            <span>Base gravable + exenta</span><span>{{ formatMoney(breakdown.base) }}</span>
+          </div>
           <div v-for="r in breakdown.taxRows" :key="r.name" class="dg-row dg-tax">
-            <span>{{ r.name }}</span><span>{{ formatMoney(r.tax) }}</span>
+            <span>{{ r.name }}</span
+            ><span>{{ formatMoney(r.tax) }}</span>
           </div>
           <div v-if="breakdown.taxRows.length === 0" class="dg-row dg-tax">
             <span>Impuestos</span><span>Sin impuestos</span>
           </div>
-          <div class="dg-row dg-total"><span>Total cuenta</span><span>{{ formatMoney(breakdown.total) }}</span></div>
+          <div class="dg-row dg-total">
+            <span>Total cuenta</span><span>{{ formatMoney(breakdown.total) }}</span>
+          </div>
           <div v-if="(account?.paidAmount ?? 0) > 0" class="dg-row">
             <span>Ya abonado</span><span>− {{ formatMoney(account?.paidAmount ?? 0) }}</span>
           </div>
@@ -489,10 +499,14 @@ function onShellClose() {
               :class="{ on: finalConsumer }"
               @click="finalConsumer = !finalConsumer"
             >
-              <span class="fc-box"><Check v-if="finalConsumer" :size="12" :stroke-width="2.6" /></span>
+              <span class="fc-box"
+                ><Check v-if="finalConsumer" :size="12" :stroke-width="2.6"
+              /></span>
               Consumidor final
             </button>
-            <p class="fe-hint">Se emite a la DIAN al cerrar la venta. La validación es asíncrona.</p>
+            <p class="fe-hint">
+              Se emite a la DIAN al cerrar la venta. La validación es asíncrona.
+            </p>
           </div>
         </template>
 
@@ -500,7 +514,7 @@ function onShellClose() {
           v-if="motivo === 'CANCELADA'"
           label="Motivo de la cancelación"
           required
-          :error="submitted ? reasonError ?? undefined : undefined"
+          :error="submitted ? (reasonError ?? undefined) : undefined"
         >
           <template #default="{ id }">
             <BaseInput
@@ -529,9 +543,15 @@ function onShellClose() {
         <div class="rec-title">{{ receiptTitle }}</div>
         <div class="rec-amt">{{ formatMoney(result.charged) }}</div>
         <div class="rec-rows">
-          <div class="rec-row"><span>Acumulado</span><span>{{ formatMoney(result.account.totalAmount) }}</span></div>
-          <div class="rec-row"><span>Abonado</span><span>{{ formatMoney(result.account.paidAmount) }}</span></div>
-          <div class="rec-row total"><span>Cobrado ahora</span><span>{{ formatMoney(result.charged) }}</span></div>
+          <div class="rec-row">
+            <span>Acumulado</span><span>{{ formatMoney(result.account.totalAmount) }}</span>
+          </div>
+          <div class="rec-row">
+            <span>Abonado</span><span>{{ formatMoney(result.account.paidAmount) }}</span>
+          </div>
+          <div class="rec-row total">
+            <span>Cobrado ahora</span><span>{{ formatMoney(result.charged) }}</span>
+          </div>
         </div>
         <div v-if="receiptCancel && result.account.closeReason" class="rec-reason">
           <span class="rec-reason-lab">Motivo</span>
@@ -576,99 +596,439 @@ function onShellClose() {
 </template>
 
 <style scoped>
-.w-seg { display: inline-flex; border: 1px solid var(--warm-300); border-radius: 8px; padding: 2px; gap: 2px; }
-.w-seg button {
-  font-family: inherit; font-size: 12px; font-weight: 500; padding: 5px 10px; border-radius: 6px; cursor: pointer;
-  border: none; background: transparent; color: var(--warm-600);
+.w-seg {
+  display: inline-flex;
+  border: 1px solid var(--warm-300);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
 }
-.w-seg button.on { background: var(--warm-100); color: var(--warm-900); }
-.form { display: flex; flex-direction: column; gap: 16px; }
-.field-lab { font-size: 12.5px; font-weight: 600; color: var(--warm-700); margin-bottom: -6px; }
+
+.w-seg button {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--warm-600);
+}
+.w-seg button.on {
+  background: var(--warm-100);
+  color: var(--warm-900);
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.field-lab {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--warm-700);
+  margin-bottom: -6px;
+}
 
 /* Tarjetas-radio de motivo */
-.mode { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media (max-width: 520px) { .mode { grid-template-columns: 1fr; } }
-.destopt {
-  display: flex; align-items: flex-start; gap: 10px; text-align: left; font-family: inherit; cursor: pointer;
-  padding: 13px; border-radius: 12px; background: var(--warm-50); border: 1px solid var(--warm-200);
-  transition: border-color 0.12s, background 0.12s;
+.mode {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
-.destopt:hover { border-color: var(--amatista-300); }
-.destopt.active { border-color: var(--amatista-500); background: var(--amatista-50); }
-.do-check { width: 18px; height: 18px; border-radius: 6px; flex-shrink: 0; margin-top: 1px; display: grid; place-items: center; border: 1px solid var(--warm-300); background: var(--warm-50); color: white; }
-.destopt.active .do-check { background: var(--amatista-600); border-color: var(--amatista-600); }
-.do-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.do-title { font-size: 13px; font-weight: 600; color: var(--warm-900); line-height: 1.25; }
-.do-sub { font-size: 11.5px; color: var(--warm-500); line-height: 1.35; }
 
-.note { margin: 0; font-size: 12.5px; color: var(--warm-600); line-height: 1.4; }
+@media (width <= 520px) {
+  .mode {
+    grid-template-columns: 1fr;
+  }
+}
+
+.destopt {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 13px;
+  border-radius: 12px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  transition:
+    border-color 0.12s,
+    background 0.12s;
+}
+.destopt:hover {
+  border-color: var(--amatista-300);
+}
+.destopt.active {
+  border-color: var(--amatista-500);
+  background: var(--amatista-50);
+}
+.do-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--warm-300);
+  background: var(--warm-50);
+  color: white;
+}
+.destopt.active .do-check {
+  background: var(--amatista-600);
+  border-color: var(--amatista-600);
+}
+.do-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.do-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--warm-900);
+  line-height: 1.25;
+}
+.do-sub {
+  font-size: 11.5px;
+  color: var(--warm-500);
+  line-height: 1.35;
+}
+
+.note {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--warm-600);
+  line-height: 1.4;
+}
 
 /* Bloque de facturación electrónica */
-.fe-block { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 12px; background: var(--amatista-50); border: 1px solid var(--amatista-100); }
+.fe-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--amatista-50);
+  border: 1px solid var(--amatista-100);
+}
+
 .fc-toggle {
-  display: inline-flex; align-items: center; gap: 9px; align-self: flex-start; font-family: inherit; font-size: 13px;
-  cursor: pointer; padding: 8px 12px; border-radius: 9px; background: white; border: 1px solid var(--warm-200); color: var(--warm-800);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  align-self: flex-start;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 9px;
+  background: white;
+  border: 1px solid var(--warm-200);
+  color: var(--warm-800);
 }
-.fc-toggle.on { border-color: var(--amatista-500); color: var(--amatista-700); }
-.fc-box { width: 18px; height: 18px; border-radius: 5px; display: grid; place-items: center; border: 1px solid var(--warm-300); background: white; color: white; }
-.fc-toggle.on .fc-box { background: var(--amatista-600); border-color: var(--amatista-600); }
-.fe-hint { margin: 0; font-size: 11.5px; color: var(--warm-500); }
-.fe-block.uvt { background: transparent; border: none; padding: 0; gap: 12px; }
-.doctypesel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.doctype { display: flex; align-items: center; gap: 7px; padding: 11px 13px; border-radius: 10px; font-size: 13px; font-weight: 600; position: relative; }
-.doctype.on { background: var(--amatista-50); border: 1.5px solid var(--amatista-400); color: var(--amatista-700); }
-.doctype.off { background: var(--warm-100); border: 1.5px solid var(--warm-200); color: var(--warm-400); cursor: not-allowed; }
-.lock { margin-left: auto; width: 18px; height: 18px; border-radius: 50%; background: var(--warm-200); color: var(--warm-500); display: grid; place-items: center; }
-.fe-loading { font-size: 12.5px; color: var(--warm-500); padding: 12px 14px; border-radius: 11px; background: var(--warm-50); border: 1px solid var(--warm-200); }
-.desglose { display: flex; flex-direction: column; gap: 6px; padding: 13px 15px; border-radius: 12px; background: var(--warm-50); border: 1px solid var(--warm-200); }
-.dg-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--warm-600); }
-.dg-row span:last-child { color: var(--warm-800); font-variant-numeric: tabular-nums; }
-.dg-tax { font-size: 12.5px; color: var(--warm-500); padding-left: 10px; }
-.dg-total { padding-top: 8px; margin-top: 2px; border-top: 1px solid var(--warm-200); }
-.dg-total span { color: var(--warm-900); font-weight: 600; }
-.dg-saldo span { color: var(--warm-900); font-weight: 700; }
-.dg-saldo span:last-child { color: var(--amatista-700); }
-.fe-preloadhint { margin: 0; display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--warm-500); }
-.fe-preloadhint svg { flex-shrink: 0; color: var(--warm-400); }
-.fe-loaderr { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; border-radius: 10px; font-size: 12px; background: oklch(96% 0.05 25); border: 1px solid oklch(89% 0.07 25); color: oklch(46% 0.16 25); }
-.fe-loaderr button { font-family: inherit; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 7px; border: 1px solid currentColor; background: transparent; color: inherit; cursor: pointer; flex-shrink: 0; }
+.fc-toggle.on {
+  border-color: var(--amatista-500);
+  color: var(--amatista-700);
+}
+.fc-box {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--warm-300);
+  background: white;
+  color: white;
+}
+.fc-toggle.on .fc-box {
+  background: var(--amatista-600);
+  border-color: var(--amatista-600);
+}
+.fe-hint {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--warm-500);
+}
+.fe-block.uvt {
+  background: transparent;
+  border: none;
+  padding: 0;
+  gap: 12px;
+}
+.doctypesel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.doctype {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  position: relative;
+}
+.doctype.on {
+  background: var(--amatista-50);
+  border: 1.5px solid var(--amatista-400);
+  color: var(--amatista-700);
+}
+.doctype.off {
+  background: var(--warm-100);
+  border: 1.5px solid var(--warm-200);
+  color: var(--warm-400);
+  cursor: not-allowed;
+}
+.lock {
+  margin-left: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--warm-200);
+  color: var(--warm-500);
+  display: grid;
+  place-items: center;
+}
+.fe-loading {
+  font-size: 12.5px;
+  color: var(--warm-500);
+  padding: 12px 14px;
+  border-radius: 11px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+}
+.desglose {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 13px 15px;
+  border-radius: 12px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+}
+.dg-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--warm-600);
+}
+.dg-row span:last-child {
+  color: var(--warm-800);
+  font-variant-numeric: tabular-nums;
+}
+.dg-tax {
+  font-size: 12.5px;
+  color: var(--warm-500);
+  padding-left: 10px;
+}
+.dg-total {
+  padding-top: 8px;
+  margin-top: 2px;
+  border-top: 1px solid var(--warm-200);
+}
+.dg-total span {
+  color: var(--warm-900);
+  font-weight: 600;
+}
+.dg-saldo span {
+  color: var(--warm-900);
+  font-weight: 700;
+}
+.dg-saldo span:last-child {
+  color: var(--amatista-700);
+}
+.fe-preloadhint {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--warm-500);
+}
+.fe-preloadhint svg {
+  flex-shrink: 0;
+  color: var(--warm-400);
+}
+.fe-loaderr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  background: oklch(96% 0.05 25deg);
+  border: 1px solid oklch(89% 0.07 25deg);
+  color: oklch(46% 0.16 25deg);
+}
+.fe-loaderr button {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 7px;
+  border: 1px solid currentcolor;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 .retry-hint {
-  margin: 0; padding: 11px 14px; border-radius: 10px; font-size: 12.5px; line-height: 1.4;
-  background: oklch(95% 0.06 80); border: 1px solid oklch(88% 0.09 80); color: oklch(40% 0.10 70);
+  margin: 0;
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  background: oklch(95% 0.06 80deg);
+  border: 1px solid oklch(88% 0.09 80deg);
+  color: oklch(40% 0.1 70deg);
 }
-.retry-hint strong { font-weight: 600; }
+.retry-hint strong {
+  font-weight: 600;
+}
 
 /* Recibo */
-.receipt { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 6px 0; }
-.badge {
-  width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
-  background: var(--success-bg); color: var(--success-fg);
+.receipt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 6px 0;
 }
-.badge.cancel { background: oklch(92% 0.06 60); color: oklch(50% 0.10 60); }
-.rec-title { font-size: 15px; font-weight: 600; color: var(--warm-900); }
-.rec-amt { font-family: var(--font-serif); font-size: 34px; color: var(--warm-900); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-.rec-rows { width: 100%; margin-top: 8px; display: flex; flex-direction: column; gap: 2px; }
-.rec-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--warm-600); padding: 7px 4px; border-bottom: 1px solid var(--warm-100); }
-.rec-row span:last-child { font-variant-numeric: tabular-nums; color: var(--warm-900); }
-.rec-row.total { border-bottom: none; border-top: 1.5px solid var(--warm-200); margin-top: 4px; font-weight: 600; }
-.rec-row.total span:last-child { color: var(--success-fg); }
-.rec-reason { width: 100%; margin-top: 10px; padding: 10px 12px; background: var(--warm-100); border-radius: 9px; text-align: left; font-size: 12.5px; color: var(--warm-700); }
-.rec-reason-lab { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--warm-500); margin-bottom: 2px; }
+
+.badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+.badge.cancel {
+  background: oklch(92% 0.06 60deg);
+  color: oklch(50% 0.1 60deg);
+}
+.rec-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--warm-900);
+}
+.rec-amt {
+  font-family: var(--font-serif);
+  font-size: 34px;
+  color: var(--warm-900);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.rec-rows {
+  width: 100%;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rec-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--warm-600);
+  padding: 7px 4px;
+  border-bottom: 1px solid var(--warm-100);
+}
+.rec-row span:last-child {
+  font-variant-numeric: tabular-nums;
+  color: var(--warm-900);
+}
+.rec-row.total {
+  border-bottom: none;
+  border-top: 1.5px solid var(--warm-200);
+  margin-top: 4px;
+  font-weight: 600;
+}
+.rec-row.total span:last-child {
+  color: var(--success-fg);
+}
+.rec-reason {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--warm-100);
+  border-radius: 9px;
+  text-align: left;
+  font-size: 12.5px;
+  color: var(--warm-700);
+}
+.rec-reason-lab {
+  display: block;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--warm-500);
+  margin-bottom: 2px;
+}
 
 /* Footer */
-.foottotal { font-size: 13px; color: var(--warm-600); }
-.foottotal strong { font-size: 15px; color: var(--amatista-700); font-variant-numeric: tabular-nums; margin-left: 4px; }
+.foottotal {
+  font-size: 13px;
+  color: var(--warm-600);
+}
+.foottotal strong {
+  font-size: 15px;
+  color: var(--amatista-700);
+  font-variant-numeric: tabular-nums;
+  margin-left: 4px;
+}
+
 .btn-primary {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  border: none; color: white; background: var(--amatista-700);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  border: none;
+  color: white;
+  background: var(--amatista-700);
 }
-.btn-primary:hover:not(:disabled) { filter: brightness(1.05); }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-ghost {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  background: transparent; border: 1px solid var(--warm-200); color: var(--warm-700);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  color: var(--warm-700);
 }
-.btn-ghost:hover { background: var(--warm-100); }
+.btn-ghost:hover {
+  background: var(--warm-100);
+}
 </style>

@@ -30,7 +30,12 @@ const busy = ref(false)
 const requestId = ref('')
 
 // Paso de confirmación tras registrar el abono (snapshot del resultado).
-type Done = { amount: number; method: PaymentMethod; prevOutstanding: number; newOutstanding: number }
+interface Done {
+  amount: number
+  method: PaymentMethod
+  prevOutstanding: number
+  newOutstanding: number
+}
 const done = ref<Done | null>(null)
 
 const METHOD_OPTIONS = [
@@ -63,7 +68,11 @@ const amountDisplay = computed({
   },
 })
 const amountError = computed(() =>
-  !(amountNum.value > 0) ? 'Ingresa un monto válido' : amountNum.value > props.outstanding ? 'No puede superar el saldo' : null,
+  !(amountNum.value > 0)
+    ? 'Ingresa un monto válido'
+    : amountNum.value > props.outstanding
+      ? 'No puede superar el saldo'
+      : null,
 )
 const newOutstanding = computed(() => Math.max(0, props.outstanding - (amountNum.value || 0)))
 
@@ -117,9 +126,19 @@ function finish() {
     <template #body>
       <!-- Paso 1 · formulario -->
       <div v-if="!done" class="form">
-        <BaseField label="Monto" required :error="submitted ? amountError ?? undefined : undefined">
+        <BaseField
+          label="Monto"
+          required
+          :error="submitted ? (amountError ?? undefined) : undefined"
+        >
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="amountDisplay" :invalid="submitted && !!amountError" inputmode="numeric" placeholder="$0" />
+            <BaseInput
+              :id="id"
+              v-model="amountDisplay"
+              :invalid="submitted && !!amountError"
+              inputmode="numeric"
+              placeholder="$0"
+            />
           </template>
         </BaseField>
         <BaseField label="Método de pago" required>
@@ -128,9 +147,15 @@ function finish() {
           </template>
         </BaseField>
         <div v-if="amountNum > 0 && !amountError" class="breakdown">
-          <div class="brow"><span>Saldo actual</span><span>{{ formatMoney(outstanding) }}</span></div>
-          <div class="brow"><span>Abono</span><span>− {{ formatMoney(amountNum) }}</span></div>
-          <div class="brow saldo"><span>Saldo restante</span><span>{{ formatMoney(newOutstanding) }}</span></div>
+          <div class="brow">
+            <span>Saldo actual</span><span>{{ formatMoney(outstanding) }}</span>
+          </div>
+          <div class="brow">
+            <span>Abono</span><span>− {{ formatMoney(amountNum) }}</span>
+          </div>
+          <div class="brow saldo">
+            <span>Saldo restante</span><span>{{ formatMoney(newOutstanding) }}</span>
+          </div>
         </div>
       </div>
 
@@ -140,9 +165,15 @@ function finish() {
         <div class="rec-title">Abono registrado</div>
         <div class="rec-amt">{{ formatMoney(done.amount) }}</div>
         <div class="rec-rows">
-          <div class="brow"><span>Método</span><span>{{ methodLabel(done.method) }}</span></div>
-          <div class="brow"><span>Saldo anterior</span><span>{{ formatMoney(done.prevOutstanding) }}</span></div>
-          <div class="brow saldo"><span>Saldo restante</span><span>{{ formatMoney(done.newOutstanding) }}</span></div>
+          <div class="brow">
+            <span>Método</span><span>{{ methodLabel(done.method) }}</span>
+          </div>
+          <div class="brow">
+            <span>Saldo anterior</span><span>{{ formatMoney(done.prevOutstanding) }}</span>
+          </div>
+          <div class="brow saldo">
+            <span>Saldo restante</span><span>{{ formatMoney(done.newOutstanding) }}</span>
+          </div>
         </div>
         <p v-if="done.newOutstanding <= 0" class="rec-note">
           Con este abono el saldo queda en cero. Puedes cerrar la cuenta.
@@ -165,30 +196,127 @@ function finish() {
 </template>
 
 <style scoped>
-.form { display: flex; flex-direction: column; gap: 16px; }
-.breakdown { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 11px; background: var(--warm-50); border: 1px solid var(--warm-200); }
-.brow { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--warm-600); }
-.brow span:last-child { color: var(--warm-800); font-variant-numeric: tabular-nums; }
-.brow.saldo { padding-top: 8px; margin-top: 2px; border-top: 1px solid var(--warm-200); font-size: 14px; }
-.brow.saldo span { color: var(--warm-900); font-weight: 600; }
-.brow.saldo span:last-child { color: var(--amatista-700); }
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+}
+.brow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--warm-600);
+}
+.brow span:last-child {
+  color: var(--warm-800);
+  font-variant-numeric: tabular-nums;
+}
+.brow.saldo {
+  padding-top: 8px;
+  margin-top: 2px;
+  border-top: 1px solid var(--warm-200);
+  font-size: 14px;
+}
+.brow.saldo span {
+  color: var(--warm-900);
+  font-weight: 600;
+}
+.brow.saldo span:last-child {
+  color: var(--amatista-700);
+}
+
 /* Recibo de confirmación */
-.receipt { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; }
-.badge { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; background: var(--amatista-100); color: var(--amatista-700); margin-bottom: 6px; }
-.rec-title { font-size: 15px; font-weight: 600; color: var(--warm-900); }
-.rec-amt { font-size: 28px; font-weight: 700; color: var(--amatista-700); font-variant-numeric: tabular-nums; margin-bottom: 12px; }
-.rec-rows { width: 100%; display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 11px; background: var(--warm-50); border: 1px solid var(--warm-200); text-align: left; }
-.rec-note { font-size: 12.5px; color: var(--amatista-700); margin: 12px 0 0; }
+.receipt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+.badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: var(--amatista-100);
+  color: var(--amatista-700);
+  margin-bottom: 6px;
+}
+.rec-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--warm-900);
+}
+.rec-amt {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--amatista-700);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 12px;
+}
+.rec-rows {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  text-align: left;
+}
+.rec-note {
+  font-size: 12.5px;
+  color: var(--amatista-700);
+  margin: 12px 0 0;
+}
+
 .btn-primary {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  border: none; color: white;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  border: none;
+  color: white;
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
 }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-ghost {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  background: transparent; border: 1px solid var(--warm-200); color: var(--warm-700);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  color: var(--warm-700);
 }
-.btn-ghost:hover { background: var(--warm-100); }
+.btn-ghost:hover {
+  background: var(--warm-100);
+}
 </style>

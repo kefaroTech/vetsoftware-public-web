@@ -25,20 +25,24 @@ withDefaults(
   letter-spacing: -0.005em;
   white-space: nowrap;
 }
+
 .v-neutral {
   background: var(--warm-150);
   color: var(--warm-600);
 }
+
 .v-accent {
   background: var(--amatista-100);
   color: var(--amatista-700);
 }
+
 .v-success {
-  background: oklch(94% 0.04 145);
-  color: oklch(40% 0.10 145);
+  background: oklch(94% 0.04 145deg);
+  color: oklch(40% 0.1 145deg);
 }
+
 .v-warn {
-  background: oklch(94% 0.05 80);
-  color: oklch(40% 0.12 80);
+  background: oklch(94% 0.05 80deg);
+  color: oklch(40% 0.12 80deg);
 }
 </style>

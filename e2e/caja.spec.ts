@@ -58,7 +58,16 @@ function setRequiredDb(company: number, value: 'true' | 'false'): boolean {
   try {
     execFileSync(
       'docker',
-      ['exec', 'vetsoftware_mysql', 'mysql', '-ucronos', '-pcronos2026*', 'vetsoftware_db', '-e', sql],
+      [
+        'exec',
+        'vetsoftware_mysql',
+        'mysql',
+        '-ucronos',
+        '-pcronos2026*',
+        'vetsoftware_db',
+        '-e',
+        sql,
+      ],
       { stdio: 'pipe' },
     )
     return true
@@ -68,8 +77,13 @@ function setRequiredDb(company: number, value: 'true' | 'false'): boolean {
 }
 
 async function currentCaja(request: APIRequestContext) {
-  const { body } = await req(request, 'get', '/cash-sessions/current', { params: { branchId: branchA } })
-  return (body && (body as Record<string, unknown>).id ? body : null) as Record<string, unknown> | null
+  const { body } = await req(request, 'get', '/cash-sessions/current', {
+    params: { branchId: branchA },
+  })
+  return (body && (body as Record<string, unknown>).id ? body : null) as Record<
+    string,
+    unknown
+  > | null
 }
 
 /** Cierra cualquier caja OPEN de la sede para dejar estado limpio entre escenarios. */
@@ -96,7 +110,9 @@ test.beforeAll(async ({ request }) => {
   expect(companyId, 'companyId de /auth/me').toBeTruthy()
 
   const branches = await req(request, 'get', '/branches')
-  const active = (branches.body as unknown as Array<Record<string, unknown>>).filter((b) => b.active)
+  const active = (branches.body as unknown as Array<Record<string, unknown>>).filter(
+    (b) => b.active,
+  )
   expect(active.length, 'se requiere ≥1 sede activa').toBeGreaterThan(0)
   branchA = active[0].id as number
 })
@@ -127,7 +143,9 @@ test.describe('ciclo básico de caja', () => {
     expect(body.code).toBe('CASH_SESSION_ALREADY_OPEN')
   })
 
-  test('registra ingreso / retiro / gasto y actualiza el esperado en efectivo', async ({ request }) => {
+  test('registra ingreso / retiro / gasto y actualiza el esperado en efectivo', async ({
+    request,
+  }) => {
     await req(request, 'post', `/cash-sessions/${sessionId}/movements`, {
       data: { type: 'MANUAL_IN', method: 'CASH', amount: 50000, note: 'ingreso' },
     })
@@ -139,7 +157,9 @@ test.describe('ciclo básico de caja', () => {
     })
     expect(last.status).toBe(201)
     // 100000 base + 50000 − 20000 − 10000 = 120000
-    const cash = (last.body.totals as Array<Record<string, unknown>>).find((t) => t.method === 'CASH')
+    const cash = (last.body.totals as Array<Record<string, unknown>>).find(
+      (t) => t.method === 'CASH',
+    )
     expect(Number(cash?.expectedAmount)).toBe(120000)
   })
 
@@ -173,7 +193,9 @@ test.describe('ciclo básico de caja', () => {
   })
 
   test('el historial incluye la sesión cerrada', async ({ request }) => {
-    const { body } = await req(request, 'get', '/cash-sessions', { params: { branchId: branchA, pageSize: 50 } })
+    const { body } = await req(request, 'get', '/cash-sessions', {
+      params: { branchId: branchA, pageSize: 50 },
+    })
     const ids = (body.content as Array<Record<string, unknown>>).map((s) => s.id)
     expect(ids).toContain(sessionId)
   })
@@ -203,7 +225,11 @@ test.describe('bloqueo caja requerida y orquestación de abonos', () => {
   test('un abono sin caja abierta se bloquea con 409 NO_OPEN_CASH_SESSION', async ({ request }) => {
     test.skip(accountId === 0, 'requiere una cuenta abierta OPEN con saldo pendiente')
     const { status, body } = await req(request, 'post', '/debt-open-accounts', {
-      data: { openAccountId: accountId, amount: Math.min(1000, outstanding), paymentMethod: 'CASH' },
+      data: {
+        openAccountId: accountId,
+        amount: Math.min(1000, outstanding),
+        paymentMethod: 'CASH',
+      },
     })
     expect(status).toBe(409)
     expect(body.code).toBe('NO_OPEN_CASH_SESSION')
@@ -218,7 +244,11 @@ test.describe('bloqueo caja requerida y orquestación de abonos', () => {
     const sessionId = (await currentCaja(request))?.id as number
 
     const abono = await req(request, 'post', '/debt-open-accounts', {
-      data: { openAccountId: accountId, amount: Math.min(1000, outstanding), paymentMethod: 'CASH' },
+      data: {
+        openAccountId: accountId,
+        amount: Math.min(1000, outstanding),
+        paymentMethod: 'CASH',
+      },
     })
     expect([200, 201], JSON.stringify(abono.body)).toContain(abono.status)
 

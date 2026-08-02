@@ -76,43 +76,36 @@ const router = createRouter({
         {
           path: 'consulta/nueva',
           name: 'consulta-nueva',
-          component: () =>
-            import('@/features/dashboard/views/consulta/nueva/NuevaView.vue'),
+          component: () => import('@/features/dashboard/views/consulta/nueva/NuevaView.vue'),
           meta: { fullBleed: true, hideTopbar: true, permission: PERMISSIONS.CONSULTATION_CREATE },
         },
         {
           path: 'consulta/nueva/exito',
           name: 'consulta-nueva-exito',
           component: () =>
-            import(
-              '@/features/dashboard/views/consulta/nueva/exito/ConsultaGuardada.vue'
-            ),
+            import('@/features/dashboard/views/consulta/nueva/exito/ConsultaGuardada.vue'),
           meta: { fullBleed: true, hideTopbar: true, permission: PERMISSIONS.CONSULTATION_CREATE },
         },
         {
           path: 'consulta/historial',
-          component: () =>
-            import('@/features/historia-clinica/views/HistoriaClinicaView.vue'),
+          component: () => import('@/features/historia-clinica/views/HistoriaClinicaView.vue'),
           meta: { fullBleed: true, hideTopbar: true },
           children: [
             {
               path: '',
               name: 'consulta-historial',
-              component: () =>
-                import('@/features/historia-clinica/views/OwnerStep.vue'),
+              component: () => import('@/features/historia-clinica/views/OwnerStep.vue'),
             },
             {
               path: ':ownerId/mascotas',
               name: 'consulta-historial-pet',
-              component: () =>
-                import('@/features/historia-clinica/views/PetStep.vue'),
+              component: () => import('@/features/historia-clinica/views/PetStep.vue'),
               props: true,
             },
             {
               path: ':ownerId/mascotas/:petId',
               name: 'consulta-historial-detail',
-              component: () =>
-                import('@/features/historia-clinica/views/HistoryStep.vue'),
+              component: () => import('@/features/historia-clinica/views/HistoryStep.vue'),
               props: true,
             },
           ],
@@ -180,8 +173,7 @@ const router = createRouter({
         {
           path: 'hospital',
           name: 'hospital-ward',
-          component: () =>
-            import('@/features/hospitalizacion/views/HospitalizacionView.vue'),
+          component: () => import('@/features/hospitalizacion/views/HospitalizacionView.vue'),
           meta: { permission: PERMISSIONS.HOSPITALIZATION_READ },
         },
         {
@@ -230,7 +222,9 @@ const router = createRouter({
           path: 'compras/ordenes',
           name: 'compras-ordenes',
           component: () => import('@/features/compras/views/OrdenesRecepcionesView.vue'),
-          meta: { permissionsAny: [PERMISSIONS.PURCHASE_ORDER_READ, PERMISSIONS.GOODS_RECEIPT_READ] },
+          meta: {
+            permissionsAny: [PERMISSIONS.PURCHASE_ORDER_READ, PERMISSIONS.GOODS_RECEIPT_READ],
+          },
         },
         {
           path: 'compras/facturas',
@@ -359,10 +353,7 @@ router.beforeEach(async (to, from) => {
   if (required && !permissions.value.includes(required)) {
     return redirect({ name: 'home' })
   }
-  if (
-    requiredAny &&
-    !requiredAny.some((p) => permissions.value.includes(p))
-  ) {
+  if (requiredAny && !requiredAny.some((p) => permissions.value.includes(p))) {
     return redirect({ name: 'home' })
   }
   return true

@@ -210,7 +210,9 @@ onBeforeUnmount(() => {
       @click="toggle"
       @keydown="onKeydown"
     >
-      <span :class="['value', { placeholder: !selected }]">{{ selected?.label ?? placeholder }}</span>
+      <span :class="['value', { placeholder: !selected }]">{{
+        selected?.label ?? placeholder
+      }}</span>
       <ChevronDown :size="13" :stroke-width="1.8" class="chev" />
     </button>
 
@@ -242,6 +244,7 @@ onBeforeUnmount(() => {
   position: relative;
   font-family: var(--font-sans);
 }
+
 .trigger {
   width: 100%;
   display: flex;
@@ -255,41 +258,65 @@ onBeforeUnmount(() => {
   font-size: 13.5px;
   color: var(--warm-900);
   cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
 }
-.select:not(.open):not(.disabled):not(.invalid) .trigger:hover {
+
+.select:not(.open, .disabled, .invalid) .trigger:hover {
   border-color: var(--warm-300);
 }
+
 .select.open .trigger,
 .trigger:focus-visible {
   outline: none;
   border-color: var(--amatista-500);
   box-shadow: 0 0 0 3px var(--amatista-50);
 }
+
 .select.disabled .trigger {
   background: var(--warm-100);
   color: var(--warm-500);
   cursor: not-allowed;
 }
+
 .select.invalid .trigger {
-  border-color: oklch(60% 0.2 25);
-  background: oklch(98.5% 0.02 25);
+  border-color: oklch(60% 0.2 25deg);
+  background: oklch(98.5% 0.02 25deg);
   animation: shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
+
 .select.invalid.open .trigger,
 .select.invalid .trigger:focus-visible {
-  border-color: oklch(55% 0.22 25);
-  box-shadow: 0 0 0 3px oklch(92% 0.06 25);
+  border-color: oklch(55% 0.22 25deg);
+  box-shadow: 0 0 0 3px oklch(92% 0.06 25deg);
 }
+
 .select.invalid .chev {
-  color: oklch(55% 0.22 25);
+  color: oklch(55% 0.22 25deg);
 }
+
 @keyframes shake {
-  10%, 90% { transform: translateX(-1px); }
-  20%, 80% { transform: translateX(2px); }
-  30%, 50%, 70% { transform: translateX(-3px); }
-  40%, 60% { transform: translateX(3px); }
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-3px);
+  }
+  40%,
+  60% {
+    transform: translateX(3px);
+  }
 }
+
 .value {
   flex: 1;
   min-width: 0;
@@ -298,15 +325,20 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .value.placeholder {
   color: var(--warm-400);
 }
+
 .chev {
   flex-shrink: 0;
   color: var(--warm-500);
   pointer-events: none;
-  transition: transform 0.18s ease, color 0.15s ease;
+  transition:
+    transform 0.18s ease,
+    color 0.15s ease;
 }
+
 .select.open .chev {
   transform: rotate(180deg);
   color: var(--amatista-500);
@@ -324,14 +356,22 @@ onBeforeUnmount(() => {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 11px;
-  box-shadow: 0 14px 38px rgba(40, 20, 80, 0.18);
+  box-shadow: 0 14px 38px rgb(40 20 80 / 18%);
   font-family: var(--font-sans);
   animation: bsel-pop 0.13s ease;
 }
+
 @keyframes bsel-pop {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 .panel[role='listbox'] .item {
   display: flex;
   align-items: center;
@@ -342,9 +382,11 @@ onBeforeUnmount(() => {
   color: var(--warm-800);
   cursor: pointer;
 }
+
 .panel[role='listbox'] .item + .item {
   margin-top: 2px;
 }
+
 .panel[role='listbox'] .item .item-label {
   flex: 1;
   min-width: 0;
@@ -352,18 +394,22 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .panel[role='listbox'] .item .item-check {
   flex-shrink: 0;
   color: var(--amatista-600);
 }
+
 .panel[role='listbox'] .item.active {
   background: var(--amatista-50);
   color: var(--amatista-700);
 }
+
 .panel[role='listbox'] .item.selected {
   font-weight: 600;
   color: var(--amatista-700);
 }
+
 .panel[role='listbox'] .empty {
   padding: 12px 11px;
   font-size: 12.5px;

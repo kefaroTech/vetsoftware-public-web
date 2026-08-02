@@ -16,7 +16,7 @@ const retencionesOpen = ref(false)
 
 onMounted(() => {
   // El error se refleja en el ref `error`; ignoramos el rechazo de la promesa.
-  void reload().catch(() => {})
+  void reload().catch(() => undefined)
 })
 
 function openWizard(step: number) {
@@ -39,16 +39,8 @@ function openWizard(step: number) {
 
     <p v-if="error" class="error-banner">{{ error }}</p>
 
-    <EnablementWizard
-      v-if="mode === 'wizard'"
-      :initial-step="wizardStep"
-      @exit="mode = 'panel'"
-    />
-    <StatusPanel
-      v-else
-      @open-wizard="openWizard"
-      @open-retenciones="retencionesOpen = true"
-    />
+    <EnablementWizard v-if="mode === 'wizard'" :initial-step="wizardStep" @exit="mode = 'panel'" />
+    <StatusPanel v-else @open-wizard="openWizard" @open-retenciones="retencionesOpen = true" />
 
     <RetencionesModal :open="retencionesOpen" @close="retencionesOpen = false" />
   </div>
@@ -60,12 +52,14 @@ function openWizard(step: number) {
   flex-direction: column;
   gap: 22px;
 }
+
 .pagehead {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
 }
+
 .kicker {
   display: flex;
   align-items: center;
@@ -76,6 +70,7 @@ function openWizard(step: number) {
   color: var(--warm-500);
   font-weight: 500;
 }
+
 .premium {
   text-transform: none;
   letter-spacing: 0;
@@ -86,6 +81,7 @@ function openWizard(step: number) {
   color: var(--amatista-700);
   background: var(--amatista-100);
 }
+
 .title {
   margin: 6px 0 0;
   font-family: var(--font-serif);
@@ -95,13 +91,14 @@ function openWizard(step: number) {
   color: var(--warm-900);
   line-height: 1.05;
 }
+
 .error-banner {
   margin: 0;
   padding: 12px 16px;
   border-radius: 10px;
-  background: oklch(95% 0.05 25);
-  border: 1px solid oklch(85% 0.08 25);
-  color: oklch(45% 0.16 25);
+  background: oklch(95% 0.05 25deg);
+  border: 1px solid oklch(85% 0.08 25deg);
+  color: oklch(45% 0.16 25deg);
   font-size: 13px;
 }
 </style>

@@ -5,7 +5,6 @@ import { onMounted, ref, watch } from 'vue'
 const props = defineProps<{
   modelValue: string
   resultsCount: number
-  hasFocus?: boolean
   autofocus?: boolean
 }>()
 
@@ -31,10 +30,7 @@ const focused = ref(false)
 </script>
 
 <template>
-  <div
-    class="search"
-    :class="{ active: focused || (modelValue && modelValue.length > 0) }"
-  >
+  <div class="search" :class="{ active: focused || (modelValue && modelValue.length > 0) }">
     <Search :size="17" :stroke-width="1.6" class="icon" />
     <input
       ref="inputEl"
@@ -63,20 +59,27 @@ const focused = ref(false)
   border: 1px solid var(--warm-200);
   border-radius: 10px;
   padding: 12px 14px;
-  transition: background 0.15s, border 0.15s, box-shadow 0.15s;
+  transition:
+    background 0.15s,
+    border 0.15s,
+    box-shadow 0.15s;
 }
+
 .search.active {
   background: var(--warm-50);
   border: 1.5px solid var(--amatista-700);
   box-shadow: 0 0 0 3px var(--amatista-50);
 }
+
 .icon {
   color: var(--warm-500);
   flex-shrink: 0;
 }
+
 .search.active .icon {
   color: var(--amatista-700);
 }
+
 input {
   flex: 1;
   border: none;
@@ -87,14 +90,17 @@ input {
   color: var(--warm-900);
   min-width: 0;
 }
+
 input::placeholder {
   color: var(--warm-500);
 }
+
 .count {
   font-size: 11px;
   color: var(--warm-600);
   flex-shrink: 0;
 }
+
 .count.muted {
   color: var(--warm-500);
 }

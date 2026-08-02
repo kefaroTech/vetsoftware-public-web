@@ -1,8 +1,5 @@
 import { http } from '@/services/http/http.client'
-import type {
-  SaveWithholdingConfigRequest,
-  WithholdingConfigResponse,
-} from '../types/facturacion'
+import type { SaveWithholdingConfigRequest, WithholdingConfigResponse } from '../types/facturacion'
 
 export const withholdingConfigApi = {
   /** Devuelve null si la empresa aún no tiene tarifas configuradas (404). */
@@ -24,6 +21,10 @@ export const withholdingConfigApi = {
 }
 
 function isNotFound(e: unknown): boolean {
-  return !!e && typeof e === 'object' && 'response' in e &&
+  return (
+    !!e &&
+    typeof e === 'object' &&
+    'response' in e &&
     (e as { response?: { status?: number } }).response?.status === 404
+  )
 }

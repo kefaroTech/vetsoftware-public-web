@@ -47,10 +47,7 @@ const STATUS_TONE: Record<LaboratoryTestStatus, { bg: string; fg: string; dot: s
 </script>
 
 <template>
-  <span
-    class="pill"
-    :style="{ background: STATUS_TONE[status].bg, color: STATUS_TONE[status].fg }"
-  >
+  <span class="pill" :style="{ background: STATUS_TONE[status].bg, color: STATUS_TONE[status].fg }">
     <span class="dot" :style="{ background: STATUS_TONE[status].dot }" />
     {{ STATUS_LABEL[status] }}
   </span>
@@ -68,6 +65,7 @@ const STATUS_TONE: Record<LaboratoryTestStatus, { bg: string; fg: string; dot: s
   white-space: nowrap;
   font-family: var(--font-sans);
 }
+
 .dot {
   width: 6px;
   height: 6px;

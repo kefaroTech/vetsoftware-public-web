@@ -8,6 +8,8 @@ interface Option {
   hint?: string
 }
 
+type CreateResult = Option | undefined
+
 const props = withDefaults(
   defineProps<{
     modelValue?: string | null
@@ -16,11 +18,7 @@ const props = withDefaults(
     disabled?: boolean
     loading?: boolean
     invalid?: boolean
-    onCreate?: (opt: { name: string; description: string }) => Promise<{
-      value: string
-      label: string
-      hint?: string
-    } | void> | void
+    onCreate?: (opt: { name: string; description: string }) => CreateResult | Promise<CreateResult>
     createLabel?: string
   }>(),
   {
@@ -76,16 +74,12 @@ const newHint = ref('')
 const submitting = ref(false)
 const createError = ref<string | null>(null)
 
-const selected = computed(() =>
-  props.options.find((o) => o.value === props.modelValue),
-)
+const selected = computed(() => props.options.find((o) => o.value === props.modelValue))
 
 const filtered = computed(() => {
   if (!q.value.trim()) return props.options
   const needle = q.value.trim().toLowerCase()
-  return props.options.filter((o) =>
-    `${o.label} ${o.hint ?? ''}`.toLowerCase().includes(needle),
-  )
+  return props.options.filter((o) => `${o.label} ${o.hint ?? ''}`.toLowerCase().includes(needle))
 })
 
 const showCreate = computed(() => !!props.onCreate && !creating.value)
@@ -204,96 +198,88 @@ onBeforeUnmount(() => {
       @click="toggle"
     >
       <span :class="['value', { placeholder: !selected }]">
-        {{ loading ? 'Cargando…' : selected?.label ?? placeholder }}
+        {{ loading ? 'Cargando…' : (selected?.label ?? placeholder) }}
       </span>
       <ChevronDown :size="13" :stroke-width="1.8" class="caret" />
     </button>
 
     <Teleport to="body">
       <div v-if="open" ref="panel" class="panel" :style="panelStyle">
-      <template v-if="!creating">
-        <div class="search-wrap">
-          <Search :size="13" :stroke-width="1.7" class="search-icon" />
-          <input
-            ref="searchInput"
-            v-model="q"
-            type="text"
-            class="search-input"
-            placeholder="Buscar…"
-            @keydown.escape.prevent="close"
-          />
-        </div>
-        <div class="list">
-          <div v-if="filtered.length === 0" class="empty">Sin coincidencias</div>
-          <button
-            v-for="o in filtered"
-            :key="o.value"
-            type="button"
-            class="item"
-            :class="{ selected: o.value === modelValue }"
-            @mousedown.prevent="pick(o)"
-          >
-            <span class="item-label">{{ o.label }}</span>
-            <span v-if="o.hint" class="item-hint">{{ o.hint }}</span>
+        <template v-if="!creating">
+          <div class="search-wrap">
+            <Search :size="13" :stroke-width="1.7" class="search-icon" />
+            <input
+              ref="searchInput"
+              v-model="q"
+              type="text"
+              class="search-input"
+              placeholder="Buscar…"
+              @keydown.escape.prevent="close"
+            />
+          </div>
+          <div class="list">
+            <div v-if="filtered.length === 0" class="empty">Sin coincidencias</div>
+            <button
+              v-for="o in filtered"
+              :key="o.value"
+              type="button"
+              class="item"
+              :class="{ selected: o.value === modelValue }"
+              @mousedown.prevent="pick(o)"
+            >
+              <span class="item-label">{{ o.label }}</span>
+              <span v-if="o.hint" class="item-hint">{{ o.hint }}</span>
+            </button>
+          </div>
+          <button v-if="showCreate" type="button" class="create" @click="startCreate">
+            <Plus :size="13" :stroke-width="1.8" />
+            <template v-if="q.trim()">
+              <span
+                >Crear <strong>"{{ q.trim() }}"</strong></span
+              >
+            </template>
+            <template v-else>
+              <span>{{ createLabel }}</span>
+            </template>
           </button>
-        </div>
-        <button
-          v-if="showCreate"
-          type="button"
-          class="create"
-          @click="startCreate"
-        >
-          <Plus :size="13" :stroke-width="1.8" />
-          <template v-if="q.trim()">
-            <span>Crear <strong>"{{ q.trim() }}"</strong></span>
-          </template>
-          <template v-else>
-            <span>{{ createLabel }}</span>
-          </template>
-        </button>
-      </template>
+        </template>
 
-      <div v-else class="form" @mousedown.stop>
-        <div class="form-title">{{ createLabel }}</div>
-        <input
-          ref="newNameInput"
-          v-model="newName"
-          type="text"
-          class="form-input"
-          placeholder="Nombre"
-          :disabled="submitting"
-          @keydown.enter.prevent="confirmCreate"
-          @keydown.escape.prevent="cancelCreate"
-        />
-        <input
-          v-model="newHint"
-          type="text"
-          class="form-input"
-          placeholder="Descripción (opcional)"
-          :disabled="submitting"
-          @keydown.enter.prevent="confirmCreate"
-          @keydown.escape.prevent="cancelCreate"
-        />
-        <div v-if="createError" class="form-error">{{ createError }}</div>
-        <div class="form-actions">
-          <button
-            type="button"
-            class="btn-ghost"
+        <div v-else class="form" @mousedown.stop>
+          <div class="form-title">{{ createLabel }}</div>
+          <input
+            ref="newNameInput"
+            v-model="newName"
+            type="text"
+            class="form-input"
+            placeholder="Nombre"
             :disabled="submitting"
-            @click="cancelCreate"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            class="btn-primary"
-            :disabled="!newName.trim() || submitting"
-            @click="confirmCreate"
-          >
-            {{ submitting ? 'Creando…' : 'Crear y seleccionar' }}
-          </button>
+            @keydown.enter.prevent="confirmCreate"
+            @keydown.escape.prevent="cancelCreate"
+          />
+          <input
+            v-model="newHint"
+            type="text"
+            class="form-input"
+            placeholder="Descripción (opcional)"
+            :disabled="submitting"
+            @keydown.enter.prevent="confirmCreate"
+            @keydown.escape.prevent="cancelCreate"
+          />
+          <div v-if="createError" class="form-error">{{ createError }}</div>
+          <div class="form-actions">
+            <button type="button" class="btn-ghost" :disabled="submitting" @click="cancelCreate">
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="btn-primary"
+              :disabled="!newName.trim() || submitting"
+              @click="confirmCreate"
+            >
+              {{ submitting ? 'Creando…' : 'Crear y seleccionar' }}
+            </button>
+          </div>
         </div>
-      </div>
       </div>
     </Teleport>
   </div>
@@ -304,6 +290,7 @@ onBeforeUnmount(() => {
   position: relative;
   font-family: var(--font-sans);
 }
+
 .trigger {
   width: 100%;
   background: var(--warm-50);
@@ -317,33 +304,54 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
+
 .ss.open .trigger,
 .trigger:focus-visible {
   outline: none;
   border-color: var(--amatista-500);
   box-shadow: 0 0 0 3px color-mix(in oklch, var(--amatista-500) 18%, transparent);
 }
+
 .ss.disabled .trigger {
   background: var(--warm-100);
   color: var(--warm-500);
   cursor: not-allowed;
 }
+
 .ss.invalid .trigger {
-  border-color: oklch(60% 0.20 25);
-  background: oklch(98.5% 0.02 25);
+  border-color: oklch(60% 0.2 25deg);
+  background: oklch(98.5% 0.02 25deg);
   animation: shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
+
 .ss.invalid.open .trigger {
-  box-shadow: 0 0 0 3px oklch(92% 0.06 25);
+  box-shadow: 0 0 0 3px oklch(92% 0.06 25deg);
 }
+
 @keyframes shake {
-  10%, 90% { transform: translateX(-1px); }
-  20%, 80% { transform: translateX(2px); }
-  30%, 50%, 70% { transform: translateX(-3px); }
-  40%, 60% { transform: translateX(3px); }
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-3px);
+  }
+  40%,
+  60% {
+    transform: translateX(3px);
+  }
 }
+
 .value {
   flex: 1;
   text-align: left;
@@ -351,13 +359,16 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .value.placeholder {
   color: var(--warm-400);
 }
+
 .caret {
   color: var(--warm-500);
   flex-shrink: 0;
 }
+
 /* Teletransportado a <body> y posicionado con estilo inline (position: fixed).
    z-index por encima del overlay del modal (1500/1600). */
 .panel {
@@ -365,16 +376,18 @@ onBeforeUnmount(() => {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 10px;
-  box-shadow: 0 12px 32px rgba(40, 20, 80, 0.14);
+  box-shadow: 0 12px 32px rgb(40 20 80 / 14%);
   z-index: 2100;
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
+
 .search-wrap {
   position: relative;
   border-bottom: 1px solid var(--warm-200);
 }
+
 .search-icon {
   position: absolute;
   left: 12px;
@@ -382,6 +395,7 @@ onBeforeUnmount(() => {
   transform: translateY(-50%);
   color: var(--warm-500);
 }
+
 .search-input {
   width: 100%;
   padding: 10px 12px 10px 32px;
@@ -392,6 +406,7 @@ onBeforeUnmount(() => {
   font-size: 13px;
   color: var(--warm-900);
 }
+
 .list {
   flex: 1 1 auto;
   min-height: 0;
@@ -399,12 +414,14 @@ onBeforeUnmount(() => {
   overflow: auto;
   padding: 4px;
 }
+
 .empty {
   padding: 14px 12px;
   font-size: 12.5px;
   color: var(--warm-500);
   text-align: center;
 }
+
 .item {
   width: 100%;
   background: transparent;
@@ -418,21 +435,26 @@ onBeforeUnmount(() => {
   font-family: inherit;
   cursor: pointer;
 }
+
 .item:hover {
   background: var(--warm-100);
 }
+
 .item.selected {
   background: var(--amatista-100);
 }
+
 .item-label {
   font-size: 13px;
   color: var(--warm-900);
   font-weight: 500;
 }
+
 .item-hint {
   font-size: 11.5px;
   color: var(--warm-500);
 }
+
 .create {
   border-top: 1px solid var(--warm-200);
   padding: 10px 14px;
@@ -451,24 +473,29 @@ onBeforeUnmount(() => {
   justify-content: flex-start;
   text-align: left;
 }
+
 .create:hover {
   background: var(--amatista-50);
 }
+
 .create strong {
   font-weight: 600;
 }
+
 .form {
   padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
+
 .form-title {
   font-size: 12.5px;
   font-weight: 500;
   color: var(--warm-700);
   margin-bottom: 2px;
 }
+
 .form-input {
   background: var(--warm-100);
   border: 1px solid var(--warm-200);
@@ -478,23 +505,29 @@ onBeforeUnmount(() => {
   font-size: 13px;
   color: var(--warm-900);
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
+
 .form-input:focus {
   border-color: var(--amatista-500);
   background: var(--warm-50);
   box-shadow: 0 0 0 3px color-mix(in oklch, var(--amatista-500) 18%, transparent);
 }
+
 .form-error {
   font-size: 12px;
-  color: oklch(50% 0.18 25);
+  color: oklch(50% 0.18 25deg);
 }
+
 .form-actions {
   display: flex;
   gap: 6px;
   justify-content: flex-end;
   margin-top: 4px;
 }
+
 .btn-ghost,
 .btn-primary {
   font-family: inherit;
@@ -505,21 +538,26 @@ onBeforeUnmount(() => {
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn-ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-700);
 }
+
 .btn-ghost:hover:not(:disabled) {
   background: var(--warm-100);
 }
+
 .btn-primary {
   background: var(--amatista-700);
   color: white;
 }
+
 .btn-primary:hover:not(:disabled) {
   filter: brightness(1.05);
 }
+
 .btn-primary:disabled,
 .btn-ghost:disabled {
   opacity: 0.5;

@@ -54,7 +54,10 @@ async function submit() {
     sent.value = true
     startCooldown()
   } catch (e) {
-    submitError.value = getProblemDetailMessage(e, 'No se pudo procesar la solicitud. Inténtalo de nuevo.')
+    submitError.value = getProblemDetailMessage(
+      e,
+      'No se pudo procesar la solicitud. Inténtalo de nuevo.',
+    )
   } finally {
     submitting.value = false
   }
@@ -68,7 +71,10 @@ async function resend() {
     await authApi.forgotPassword(form.employeeCode.trim())
     startCooldown()
   } catch (e) {
-    submitError.value = getProblemDetailMessage(e, 'No se pudo reenviar el correo. Inténtalo de nuevo.')
+    submitError.value = getProblemDetailMessage(
+      e,
+      'No se pudo reenviar el correo. Inténtalo de nuevo.',
+    )
   } finally {
     resending.value = false
   }
@@ -86,8 +92,8 @@ async function resend() {
         <div class="rc-eyebrow">Recuperar contraseña</div>
         <h1 class="rc-title">¿Olvidaste tu contraseña?</h1>
         <p class="rc-sub">
-          Escribe tu <strong>código de usuario</strong> y te enviaremos un enlace al correo registrado para
-          crear una contraseña nueva.
+          Escribe tu <strong>código de usuario</strong> y te enviaremos un enlace al correo
+          registrado para crear una contraseña nueva.
         </p>
 
         <form class="rc-form" novalidate @submit.prevent="submit">
@@ -117,22 +123,18 @@ async function resend() {
         </div>
         <h1 class="rc-title">Revisa tu correo</h1>
         <p class="rc-sub">
-          Si el código <strong>{{ form.employeeCode.trim() }}</strong> corresponde a una cuenta, enviamos un
-          enlace al correo registrado. El enlace vence en 1 hora.
+          Si el código <strong>{{ form.employeeCode.trim() }}</strong> corresponde a una cuenta,
+          enviamos un enlace al correo registrado. El enlace vence en 1 hora.
         </p>
 
         <div v-if="submitError" class="rc-error rc-error--sent">{{ submitError }}</div>
 
         <div class="rc-resend">
           <span>¿No lo recibiste?</span>
-          <span v-if="cooldown > 0" class="rc-resend-wait">Podrás reenviar en {{ cooldown }} s</span>
-          <button
-            v-else
-            type="button"
-            class="rc-resend-btn"
-            :disabled="resending"
-            @click="resend"
+          <span v-if="cooldown > 0" class="rc-resend-wait"
+            >Podrás reenviar en {{ cooldown }} s</span
           >
+          <button v-else type="button" class="rc-resend-btn" :disabled="resending" @click="resend">
             {{ resending ? 'Reenviando…' : 'Reenviar correo' }}
           </button>
         </div>
@@ -156,6 +158,7 @@ async function resend() {
   padding: 40px 44px;
   text-align: left;
 }
+
 .rc-eyebrow {
   font-size: 11px;
   font-weight: 600;
@@ -164,6 +167,7 @@ async function resend() {
   text-transform: uppercase;
   margin-bottom: 8px;
 }
+
 .rc-title {
   font-family: 'Instrument Serif', serif;
   font-size: 32px;
@@ -172,18 +176,21 @@ async function resend() {
   letter-spacing: -0.02em;
   line-height: 1.06;
 }
+
 .rc-sub {
   font-size: 13px;
   color: var(--pub-ink-500);
   margin: 10px 0 26px;
   line-height: 1.55;
 }
+
 .rc-form {
-  font-family: 'Inter', sans-serif;
+  font-family: Inter, sans-serif;
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
+
 .rc-error {
   background: var(--pub-err-bg);
   border: 1px solid var(--pub-err-bd);
@@ -192,6 +199,7 @@ async function resend() {
   border-radius: 8px;
   font-size: 12.5px;
 }
+
 .rc-icon {
   width: 68px;
   height: 68px;
@@ -203,9 +211,11 @@ async function resend() {
   border: 1px solid var(--pub-ok-bd);
   color: var(--pub-ok-tx);
 }
+
 .rc-error--sent {
   margin: 0 0 16px;
 }
+
 .rc-resend {
   display: flex;
   align-items: center;
@@ -214,10 +224,12 @@ async function resend() {
   font-size: 13px;
   color: var(--pub-ink-500);
 }
+
 .rc-resend-wait {
   color: var(--pub-ink-400, #a08bbd);
   font-weight: 500;
 }
+
 .rc-resend-btn {
   background: transparent;
   border: none;
@@ -228,26 +240,32 @@ async function resend() {
   font-size: 13px;
   font-weight: 600;
 }
+
 .rc-resend-btn:hover:not(:disabled) {
   text-decoration: underline;
 }
+
 .rc-resend-btn:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
+
 .rc-actions {
   margin-top: 24px;
 }
+
 .rc-link {
   color: var(--pub-ame-700);
   font-weight: 600;
   font-size: 14px;
   text-decoration: none;
 }
+
 .rc-link:hover {
   text-decoration: underline;
 }
-@media (max-width: 520px) {
+
+@media (width <= 520px) {
   .rc-card {
     padding: 32px 24px;
   }

@@ -60,9 +60,7 @@ export const surgeryApi = {
   },
 
   async listByAnimal(animalId: number): Promise<SurgeryResponse[]> {
-    const { data } = await http.get<SurgeryResponse[]>(
-      `/surgeries/by-animal/${animalId}`,
-    )
+    const { data } = await http.get<SurgeryResponse[]>(`/surgeries/by-animal/${animalId}`)
     return data
   },
 
@@ -71,10 +69,7 @@ export const surgeryApi = {
     return data
   },
 
-  async update(
-    id: number,
-    payload: CreateSurgeryPayload,
-  ): Promise<SurgeryResponse> {
+  async update(id: number, payload: CreateSurgeryPayload): Promise<SurgeryResponse> {
     const { data } = await http.put<SurgeryResponse>(`/surgeries/${id}`, payload)
     return data
   },

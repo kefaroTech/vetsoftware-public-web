@@ -106,10 +106,18 @@ export const useCuentasStore = defineStore('cuentas', () => {
         // El total de la línea escala por la cantidad cobrada (unitPrice * quantity).
         const lineTotal = c.unitPrice * c.quantity
         unified.push({
-          id: c.id, kind: 'product', animalId: c.animal.id, animalName: c.animal.name,
-          concept: c.product.name, amount: lineTotal, quantity: c.quantity, date: c.createdDate,
+          id: c.id,
+          kind: 'product',
+          animalId: c.animal.id,
+          animalName: c.animal.name,
+          concept: c.product.name,
+          amount: lineTotal,
+          quantity: c.quantity,
+          date: c.createdDate,
           createdByName: c.createdBy?.name ?? '',
-          voided: c.voided, voidedByName: c.voidedBy?.name ?? '', voidReason: c.voidReason ?? '',
+          voided: c.voided,
+          voidedByName: c.voidedBy?.name ?? '',
+          voidReason: c.voidReason ?? '',
         })
         const p = tienda.products.find((x) => x.id === c.product.id)
         const rate = p && appliesIva(p.taxTreatment) ? (p.tax?.percentage ?? 0) : 0
@@ -117,10 +125,18 @@ export const useCuentasStore = defineStore('cuentas', () => {
       }
       for (const c of svc.filter((x) => x.enabled)) {
         unified.push({
-          id: c.id, kind: 'service', animalId: c.animal.id, animalName: c.animal.name,
-          concept: c.service.name, amount: c.unitPrice, quantity: 1, date: c.createdDate,
+          id: c.id,
+          kind: 'service',
+          animalId: c.animal.id,
+          animalName: c.animal.name,
+          concept: c.service.name,
+          amount: c.unitPrice,
+          quantity: 1,
+          date: c.createdDate,
           createdByName: c.createdBy?.name ?? '',
-          voided: c.voided, voidedByName: c.voidedBy?.name ?? '', voidReason: c.voidReason ?? '',
+          voided: c.voided,
+          voidedByName: c.voidedBy?.name ?? '',
+          voidReason: c.voidReason ?? '',
         })
         const s = tienda.services.find((x) => x.id === c.service.id)
         const rate = s && appliesIva(s.taxTreatment) ? (s.tax?.percentage ?? 0) : 0
@@ -128,10 +144,18 @@ export const useCuentasStore = defineStore('cuentas', () => {
       }
       for (const c of gen.filter((x) => x.enabled)) {
         unified.push({
-          id: c.id, kind: 'general', animalId: null, animalName: null,
-          concept: c.name, amount: c.unitAmount * c.quantity, quantity: c.quantity, date: c.createdDate,
+          id: c.id,
+          kind: 'general',
+          animalId: null,
+          animalName: null,
+          concept: c.name,
+          amount: c.unitAmount * c.quantity,
+          quantity: c.quantity,
+          date: c.createdDate,
           createdByName: c.createdBy?.name ?? '',
-          voided: c.voided, voidedByName: c.voidedBy?.name ?? '', voidReason: c.voidReason ?? '',
+          voided: c.voided,
+          voidedByName: c.voidedBy?.name ?? '',
+          voidReason: c.voidReason ?? '',
         })
         const rate = c.hasTax ? (c.taxPercentage ?? c.tax?.percentage ?? 0) : 0
         lines.push({ gross: c.unitAmount * c.quantity, ratePct: rate, voided: c.voided })
@@ -173,12 +197,18 @@ export const useCuentasStore = defineStore('cuentas', () => {
 
   /** Cargos agrupados por mascota; "General" al final. */
   const chargesByPet = computed(() => {
-    const groups = new Map<number | 'general', { key: number | 'general'; name: string; charges: UnifiedCharge[]; subtotal: number }>()
+    const groups = new Map<
+      number | 'general',
+      { key: number | 'general'; name: string; charges: UnifiedCharge[]; subtotal: number }
+    >()
     for (const c of charges.value) {
       const key = c.animalId ?? ('general' as const)
       const name = c.animalName ?? 'General'
-      if (!groups.has(key)) groups.set(key, { key, name, charges: [], subtotal: 0 })
-      const g = groups.get(key)!
+      let g = groups.get(key)
+      if (!g) {
+        g = { key, name, charges: [], subtotal: 0 }
+        groups.set(key, g)
+      }
       g.charges.push(c)
       // Los cargos anulados se muestran (tachados) pero no cuentan en el subtotal ni en el total.
       if (!c.voided) g.subtotal += c.amount
@@ -237,14 +267,26 @@ export const useCuentasStore = defineStore('cuentas', () => {
     clientRequestId?: string,
   ) {
     await productChargeApi.create({
-      animalId, productId, openAccountId: accountId, quantity, clientRequestId,
+      animalId,
+      productId,
+      openAccountId: accountId,
+      quantity,
+      clientRequestId,
       expectedVersion: accountVersion(accountId),
     })
     await refreshAccount(accountId)
   }
-  async function addServiceCharge(accountId: number, animalId: number, serviceId: number, clientRequestId?: string) {
+  async function addServiceCharge(
+    accountId: number,
+    animalId: number,
+    serviceId: number,
+    clientRequestId?: string,
+  ) {
     await serviceChargeApi.create({
-      animalId, serviceId, openAccountId: accountId, clientRequestId,
+      animalId,
+      serviceId,
+      openAccountId: accountId,
+      clientRequestId,
       expectedVersion: accountVersion(accountId),
     })
     await refreshAccount(accountId)
@@ -270,9 +312,19 @@ export const useCuentasStore = defineStore('cuentas', () => {
     clientRequestId?: string,
   ): Promise<void> {
     if (kind === 'service') {
-      await serviceChargeApi.create({ animalId, serviceId: refId, openAccountId: accountId, clientRequestId })
+      await serviceChargeApi.create({
+        animalId,
+        serviceId: refId,
+        openAccountId: accountId,
+        clientRequestId,
+      })
     } else {
-      await productChargeApi.create({ animalId, productId: refId, openAccountId: accountId, clientRequestId })
+      await productChargeApi.create({
+        animalId,
+        productId: refId,
+        openAccountId: accountId,
+        clientRequestId,
+      })
     }
   }
 
@@ -294,9 +346,19 @@ export const useCuentasStore = defineStore('cuentas', () => {
       for (let i = 0; i < it.qty; i++) {
         // Idempotency key por unidad: protege reintentos de transporte de duplicar el cargo en el backend.
         if (it.kind === 'service') {
-          await serviceChargeApi.create({ animalId, serviceId: it.id, openAccountId: accountId, clientRequestId: crypto.randomUUID() })
+          await serviceChargeApi.create({
+            animalId,
+            serviceId: it.id,
+            openAccountId: accountId,
+            clientRequestId: crypto.randomUUID(),
+          })
         } else {
-          await productChargeApi.create({ animalId, productId: it.id, openAccountId: accountId, clientRequestId: crypto.randomUUID() })
+          await productChargeApi.create({
+            animalId,
+            productId: it.id,
+            openAccountId: accountId,
+            clientRequestId: crypto.randomUUID(),
+          })
         }
       }
     }
@@ -310,7 +372,10 @@ export const useCuentasStore = defineStore('cuentas', () => {
     clientRequestId?: string,
   ) {
     await debtOpenAccountApi.create({
-      amount, paymentMethod, openAccountId: accountId, clientRequestId,
+      amount,
+      paymentMethod,
+      openAccountId: accountId,
+      clientRequestId,
       expectedVersion: accountVersion(accountId),
     })
     await refreshAccount(accountId)
@@ -327,7 +392,12 @@ export const useCuentasStore = defineStore('cuentas', () => {
     paymentMethod: PaymentMethod,
     clientRequestId?: string,
   ): Promise<void> {
-    await debtOpenAccountApi.create({ amount, paymentMethod, openAccountId: accountId, clientRequestId })
+    await debtOpenAccountApi.create({
+      amount,
+      paymentMethod,
+      openAccountId: accountId,
+      clientRequestId,
+    })
   }
 
   /**

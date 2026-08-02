@@ -19,8 +19,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  quality:
-    name: Lint and build
+  frontend-quality-gate:
+    name: Frontend quality gate
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
@@ -45,15 +45,15 @@ jobs:
       - name: Audit dependencies
         run: npm audit --audit-level=high
 
-      - name: Lint
-        run: npm run lint
+      - name: Run global quality gate
+        run: npm run quality
 
       - name: Build
         run: npm run build
 
   e2e-smoke:
     name: Playwright smoke test
-    needs: quality
+    needs: frontend-quality-gate
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:

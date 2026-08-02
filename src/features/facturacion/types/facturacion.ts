@@ -43,11 +43,26 @@ export interface StatusTone {
 }
 
 export const STATUS_META: Record<DianStatus, { label: string; tone: StatusTone }> = {
-  PENDIENTE: { label: 'Validando…', tone: { bg: 'oklch(94% 0.04 240)', fg: 'oklch(42% 0.14 240)', dot: 'oklch(55% 0.16 240)' } },
-  VALIDADO: { label: 'Validado', tone: { bg: 'oklch(94% 0.06 150)', fg: 'oklch(40% 0.13 150)', dot: 'oklch(55% 0.15 150)' } },
-  RECHAZADO: { label: 'Rechazado', tone: { bg: 'oklch(94% 0.06 25)', fg: 'oklch(48% 0.19 25)', dot: 'oklch(58% 0.20 25)' } },
-  CONTINGENCIA: { label: 'En contingencia', tone: { bg: 'oklch(94% 0.07 80)', fg: 'oklch(45% 0.13 70)', dot: 'oklch(65% 0.14 75)' } },
-  NO_ELECTRONICO: { label: 'No electrónico', tone: { bg: 'var(--warm-200)', fg: 'var(--warm-600)', dot: 'var(--warm-500)' } },
+  PENDIENTE: {
+    label: 'Validando…',
+    tone: { bg: 'oklch(94% 0.04 240)', fg: 'oklch(42% 0.14 240)', dot: 'oklch(55% 0.16 240)' },
+  },
+  VALIDADO: {
+    label: 'Validado',
+    tone: { bg: 'oklch(94% 0.06 150)', fg: 'oklch(40% 0.13 150)', dot: 'oklch(55% 0.15 150)' },
+  },
+  RECHAZADO: {
+    label: 'Rechazado',
+    tone: { bg: 'oklch(94% 0.06 25)', fg: 'oklch(48% 0.19 25)', dot: 'oklch(58% 0.20 25)' },
+  },
+  CONTINGENCIA: {
+    label: 'En contingencia',
+    tone: { bg: 'oklch(94% 0.07 80)', fg: 'oklch(45% 0.13 70)', dot: 'oklch(65% 0.14 75)' },
+  },
+  NO_ELECTRONICO: {
+    label: 'No electrónico',
+    tone: { bg: 'var(--warm-200)', fg: 'var(--warm-600)', dot: 'var(--warm-500)' },
+  },
 }
 
 export const COMPANY_DOCTYPE_LABEL: Record<CompanyDocumentType, string> = {

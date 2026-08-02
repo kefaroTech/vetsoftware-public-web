@@ -25,7 +25,10 @@ onMounted(async () => {
     await registrationApi.verifyEmail(token)
     state.value = 'success'
   } catch (e) {
-    errorMessage.value = getProblemDetailMessage(e, 'El enlace de verificación no es válido o expiró.')
+    errorMessage.value = getProblemDetailMessage(
+      e,
+      'El enlace de verificación no es válido o expiró.',
+    )
     state.value = 'error'
   }
 })
@@ -63,7 +66,9 @@ onMounted(async () => {
         <h1 class="verify-title">No pudimos verificar</h1>
         <p class="verify-text">{{ errorMessage }}</p>
         <div class="verify-actions verify-actions--stack">
-          <PrimaryButton @click="router.push({ name: 'signup' })">Volver a registrarme</PrimaryButton>
+          <PrimaryButton @click="router.push({ name: 'signup' })"
+            >Volver a registrarme</PrimaryButton
+          >
           <button type="button" class="verify-textbtn" @click="router.push({ name: 'login' })">
             Ir a iniciar sesión
           </button>
@@ -84,6 +89,7 @@ onMounted(async () => {
   box-shadow: var(--pub-card-shadow);
   padding: clamp(30px, 5vw, 46px) clamp(26px, 5vw, 44px);
 }
+
 .verify-icon {
   width: 74px;
   height: 74px;
@@ -92,19 +98,23 @@ onMounted(async () => {
   display: grid;
   place-items: center;
 }
+
 .verify-icon--load {
   border-radius: 0;
 }
+
 .verify-icon--ok {
   background: var(--pub-ok-bg);
   border: 1px solid var(--pub-ok-bd);
   color: var(--pub-ok-tx);
 }
+
 .verify-icon--err {
   background: var(--pub-err-bg);
   border: 1px solid var(--pub-err-bd);
   color: var(--pub-err-tx);
 }
+
 .verify-spin {
   width: 46px;
   height: 46px;
@@ -114,6 +124,7 @@ onMounted(async () => {
   display: block;
   animation: pub-spin 0.8s linear infinite;
 }
+
 .verify-title {
   font-family: 'Instrument Serif', serif;
   font-size: 30px;
@@ -122,6 +133,7 @@ onMounted(async () => {
   letter-spacing: -0.02em;
   line-height: 1.08;
 }
+
 .verify-text {
   font-size: 14.5px;
   color: var(--pub-ink-600);
@@ -129,14 +141,17 @@ onMounted(async () => {
   margin: 12px auto 0;
   max-width: 380px;
 }
+
 .verify-actions {
   margin-top: 26px;
 }
+
 .verify-actions--stack {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
+
 .verify-textbtn {
   background: transparent;
   border: none;
@@ -146,6 +161,7 @@ onMounted(async () => {
   font-size: 13px;
   font-weight: 500;
 }
+
 .verify-textbtn:hover {
   color: var(--pub-ame-700);
 }

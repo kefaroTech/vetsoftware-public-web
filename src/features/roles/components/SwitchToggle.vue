@@ -43,26 +43,31 @@ function toggle() {
   transition: background 0.15s ease;
   flex-shrink: 0;
 }
+
 .switch.on {
   background: var(--amatista-600);
 }
+
 .switch.disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
 .dot {
   display: block;
   width: 14px;
   height: 14px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
   transform: translateX(0);
   transition: transform 0.15s ease;
 }
+
 .switch.on .dot {
   transform: translateX(14px);
 }
+
 .switch:focus-visible {
   outline: 2px solid var(--amatista-400);
   outline-offset: 2px;

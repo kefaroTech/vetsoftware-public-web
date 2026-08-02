@@ -51,13 +51,8 @@ export interface HospitalizationResponse {
 }
 
 export const hospitalizationApi = {
-  async create(
-    payload: CreateHospitalizationPayload,
-  ): Promise<HospitalizationResponse> {
-    const { data } = await http.post<HospitalizationResponse>(
-      '/hospitalizations',
-      payload,
-    )
+  async create(payload: CreateHospitalizationPayload): Promise<HospitalizationResponse> {
+    const { data } = await http.post<HospitalizationResponse>('/hospitalizations', payload)
     return data
   },
 
@@ -74,9 +69,7 @@ export const hospitalizationApi = {
   },
 
   async findById(id: number): Promise<HospitalizationResponse> {
-    const { data } = await http.get<HospitalizationResponse>(
-      `/hospitalizations/${id}`,
-    )
+    const { data } = await http.get<HospitalizationResponse>(`/hospitalizations/${id}`)
     return data
   },
 
@@ -84,10 +77,7 @@ export const hospitalizationApi = {
     id: number,
     payload: CreateHospitalizationPayload,
   ): Promise<HospitalizationResponse> {
-    const { data } = await http.put<HospitalizationResponse>(
-      `/hospitalizations/${id}`,
-      payload,
-    )
+    const { data } = await http.put<HospitalizationResponse>(`/hospitalizations/${id}`, payload)
     return data
   },
 

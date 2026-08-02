@@ -97,7 +97,9 @@ test.describe('Modales · catálogo de medicamentos', () => {
     await expect(page.getByRole('dialog', { name: 'Nuevo medicamento' })).toBeVisible()
   })
 
-  test('[centrado] el modal de formulario queda centrado y dentro del viewport', async ({ page }) => {
+  test('[centrado] el modal de formulario queda centrado y dentro del viewport', async ({
+    page,
+  }) => {
     const vp = viewport(page)
     await page.getByRole('button', { name: 'Nuevo medicamento' }).click()
     const b = await boxOf(modalCard(page))
@@ -141,7 +143,9 @@ test.describe('Modales · catálogo de medicamentos', () => {
     await form.getByRole('button', { name: 'Crear medicamento' }).click()
     await expect(form).toBeHidden()
 
-    const row = page.getByRole('row', { name: new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) })
+    const row = page.getByRole('row', {
+      name: new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')),
+    })
     await row.getByRole('button', { name: 'Pausar' }).click()
 
     const confirm = page.getByRole('dialog', { name: 'Pausar medicamento' })
@@ -163,7 +167,9 @@ test.describe('Modales · catálogo de medicamentos', () => {
     await form.getByRole('button', { name: 'Crear medicamento' }).click()
     await expect(form).toBeHidden()
 
-    const row = page.getByRole('row', { name: new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) })
+    const row = page.getByRole('row', {
+      name: new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')),
+    })
     await row.getByRole('button', { name: 'Editar' }).click()
     const edit = page.getByRole('dialog', { name: 'Editar medicamento' })
     await expect(edit).toBeVisible()
@@ -208,7 +214,10 @@ test.describe('Modales · plan terapéutico y desplegables', () => {
     expectWithinViewport(b, vp)
     expectCentered(b, vp)
     const expected = Math.min(0.9 * vp.width, 1600, vp.width - 32)
-    expect(Math.abs(b.width - expected), `ancho ${Math.round(b.width)} ≈ ${Math.round(expected)}`).toBeLessThanOrEqual(8)
+    expect(
+      Math.abs(b.width - expected),
+      `ancho ${Math.round(b.width)} ≈ ${Math.round(expected)}`,
+    ).toBeLessThanOrEqual(8)
     // Un modal con contenido: su alto llega hasta el tope (~90vh) sin recortarse.
     expect(b.height, 'alto acotado ≤ 90vh').toBeLessThanOrEqual(0.9 * vp.height + 2)
   })
@@ -218,17 +227,26 @@ test.describe('Modales · plan terapéutico y desplegables', () => {
   }) => {
     const vp = viewport(page)
     const d = await openQuickAction(page, /Plan terapéutico/, 'Nuevo plan terapéutico')
-    await d.locator('.field', { hasText: 'Nombre del medicamento' }).first().locator('button.trigger').click()
+    await d
+      .locator('.field', { hasText: 'Nombre del medicamento' })
+      .first()
+      .locator('button.trigger')
+      .click()
 
     const panel = page.locator('div.panel')
     await expect(panel).toBeVisible()
     // Teletransportado: el panel NO está dentro del overlay del modal.
-    await expect(page.locator('.overlay div.panel'), 'el panel se teletransporta fuera del modal').toHaveCount(0)
+    await expect(
+      page.locator('.overlay div.panel'),
+      'el panel se teletransporta fuera del modal',
+    ).toHaveCount(0)
     // Y NUNCA se recorta: cabe completo dentro del viewport.
     expectWithinViewport(await boxOf(panel), vp)
   })
 
-  test('[desplegable] muestra el catálogo global y seleccionar actualiza el campo', async ({ page }) => {
+  test('[desplegable] muestra el catálogo global y seleccionar actualiza el campo', async ({
+    page,
+  }) => {
     const d = await openQuickAction(page, /Plan terapéutico/, 'Nuevo plan terapéutico')
     const field = d.locator('.field', { hasText: 'Nombre del medicamento' }).first()
     await field.locator('button.trigger').click()
@@ -242,7 +260,11 @@ test.describe('Modales · plan terapéutico y desplegables', () => {
     page,
   }) => {
     const d = await openQuickAction(page, /Plan terapéutico/, 'Nuevo plan terapéutico')
-    await d.locator('.field', { hasText: 'Nombre del medicamento' }).first().locator('button.trigger').click()
+    await d
+      .locator('.field', { hasText: 'Nombre del medicamento' })
+      .first()
+      .locator('button.trigger')
+      .click()
     const panel = page.locator('div.panel')
     await panel.locator('button.create').click()
     // El panel sigue abierto y ahora muestra el form de creación.
@@ -251,7 +273,9 @@ test.describe('Modales · plan terapéutico y desplegables', () => {
     await expect(panel.getByRole('button', { name: 'Crear y seleccionar' })).toBeVisible()
   })
 
-  test('[desplegable] crear inline dispara POST /medicaments 201 y auto-selecciona', async ({ page }) => {
+  test('[desplegable] crear inline dispara POST /medicaments 201 y auto-selecciona', async ({
+    page,
+  }) => {
     const name = `MedInline ${uniqueSuffix()}`
     const d = await openQuickAction(page, /Plan terapéutico/, 'Nuevo plan terapéutico')
     const postP = page.waitForResponse(
@@ -273,7 +297,9 @@ test.describe('Modales · plan terapéutico y desplegables', () => {
     for (let i = 0; i < 3; i++) {
       await d.getByRole('button', { name: 'Agregar otro medicamento' }).click()
     }
-    const triggers = d.locator('.field', { hasText: 'Nombre del medicamento' }).locator('button.trigger')
+    const triggers = d
+      .locator('.field', { hasText: 'Nombre del medicamento' })
+      .locator('button.trigger')
     await expect(triggers).toHaveCount(4)
     const last = triggers.last()
     await last.scrollIntoViewIfNeeded()

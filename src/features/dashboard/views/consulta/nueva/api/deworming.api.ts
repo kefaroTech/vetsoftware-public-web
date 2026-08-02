@@ -58,9 +58,7 @@ export const dewormingApi = {
   },
 
   async listByAnimal(animalId: number): Promise<DewormingResponse[]> {
-    const { data } = await http.get<DewormingResponse[]>(
-      `/dewormings/by-animal/${animalId}`,
-    )
+    const { data } = await http.get<DewormingResponse[]>(`/dewormings/by-animal/${animalId}`)
     return data
   },
 
@@ -69,10 +67,7 @@ export const dewormingApi = {
     return data
   },
 
-  async update(
-    id: number,
-    payload: CreateDewormingPayload,
-  ): Promise<DewormingResponse> {
+  async update(id: number, payload: CreateDewormingPayload): Promise<DewormingResponse> {
     const { data } = await http.put<DewormingResponse>(`/dewormings/${id}`, payload)
     return data
   },

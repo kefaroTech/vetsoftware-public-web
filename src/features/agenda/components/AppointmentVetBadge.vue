@@ -23,6 +23,7 @@ const hue = computed(() => apptVetHue(props.employeeId))
   font-size: 11.5px;
   color: var(--warm-600);
 }
+
 .vet-dot {
   width: 18px;
   height: 18px;

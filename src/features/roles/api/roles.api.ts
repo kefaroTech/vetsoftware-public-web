@@ -1,9 +1,5 @@
 import { http } from '@/services/http/http.client'
-import type {
-  CreateRoleRequest,
-  RoleResponse,
-  UpdateRoleRequest,
-} from '../types'
+import type { CreateRoleRequest, RoleResponse, UpdateRoleRequest } from '../types'
 
 export const rolesApi = {
   async listByCompany(): Promise<RoleResponse[]> {

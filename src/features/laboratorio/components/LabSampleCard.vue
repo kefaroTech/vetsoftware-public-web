@@ -72,29 +72,36 @@ const actions = computed<CardAction[]>(() => {
   flex-direction: column;
   gap: 6px;
   cursor: pointer;
-  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
 }
+
 .card:hover {
   border-color: var(--amatista-300);
-  box-shadow: 0 2px 8px -4px rgba(20, 15, 30, 0.14);
+  box-shadow: 0 2px 8px -4px rgb(20 15 30 / 14%);
 }
+
 .top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
+
 .code {
   font-family: var(--font-mono);
   font-size: 11.5px;
   color: var(--warm-600);
 }
+
 .test {
   font-size: 13.5px;
   font-weight: 500;
   color: var(--warm-900);
   line-height: 1.25;
 }
+
 .patient {
   display: flex;
   align-items: center;
@@ -102,6 +109,7 @@ const actions = computed<CardAction[]>(() => {
   font-size: 12px;
   color: var(--warm-600);
 }
+
 .paw {
   width: 20px;
   height: 20px;
@@ -112,15 +120,18 @@ const actions = computed<CardAction[]>(() => {
   place-items: center;
   flex-shrink: 0;
 }
+
 .date {
   font-size: 11.5px;
   color: var(--warm-500);
 }
+
 .actions {
   display: flex;
   gap: 6px;
   margin-top: 4px;
 }
+
 .act {
   flex: 1;
   font-family: inherit;
@@ -131,18 +142,22 @@ const actions = computed<CardAction[]>(() => {
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .act.primary {
   background: var(--amatista-700);
   color: white;
 }
+
 .act.primary:hover {
   filter: brightness(1.05);
 }
+
 .act.ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-700);
 }
+
 .act.ghost:hover {
   background: var(--warm-100);
 }

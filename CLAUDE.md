@@ -25,7 +25,9 @@ Convención (espejo en ambos fronts):
    ```ts
    export const useXxxStore = defineStore('xxx', () => {
      const items = ref<T[]>([])
-     async function fetchAll() { /* ... */ }
+     async function fetchAll() {
+       /* ... */
+     }
      return { items, fetchAll }
    })
    ```
@@ -133,22 +135,22 @@ Consulta).
 
 7. **El padre invoca `validate()`** antes de avanzar / guardar. Si retorna
    `false`, muestra un banner de tipo `"Revisa los campos marcados antes de
-   continuar."` y aborta el envío.
+continuar."` y aborta el envío.
 
 ### Validadores comunes
 
 Usar siempre estas reglas para campos equivalentes:
 
-| Campo               | Regla                                                                 |
-| ------------------- | --------------------------------------------------------------------- |
-| Nombre              | requerido, ≥ 2 caracteres                                             |
-| Documento identidad | requerido, alfanumérico (sin espacios ni símbolos), 5–20 caracteres   |
-| Teléfono            | requerido, sólo `[+\d\s\-()]`, mínimo 7 dígitos, máximo 15            |
+| Campo               | Regla                                                                      |
+| ------------------- | -------------------------------------------------------------------------- |
+| Nombre              | requerido, ≥ 2 caracteres                                                  |
+| Documento identidad | requerido, alfanumérico (sin espacios ni símbolos), 5–20 caracteres        |
+| Teléfono            | requerido, sólo `[+\d\s\-()]`, mínimo 7 dígitos, máximo 15                 |
 | Email               | opcional; si está presente debe matchear `/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/` |
-| Selects requeridos  | requerido (`!v` => mensaje específico del campo)                      |
-| Número de chip      | opcional; si está presente: 15 dígitos exactos (ISO 11784)            |
-| Peso / Tamaño       | requerido (peso) u opcional (tamaño), número > 0, acepta `,` o `.`    |
-| Fecha de nacimiento | requerida, fecha válida y no futura                                   |
+| Selects requeridos  | requerido (`!v` => mensaje específico del campo)                           |
+| Número de chip      | opcional; si está presente: 15 dígitos exactos (ISO 11784)                 |
+| Peso / Tamaño       | requerido (peso) u opcional (tamaño), número > 0, acepta `,` o `.`         |
+| Fecha de nacimiento | requerida, fecha válida y no futura                                        |
 
 ### Plantilla mínima de formulario
 
@@ -165,7 +167,9 @@ const errors = computed(() => ({
 function err(field: FieldKey): string | undefined {
   return touched[field] && errors.value[field] ? errors.value[field]! : undefined
 }
-function markTouched(field: FieldKey) { touched[field] = true }
+function markTouched(field: FieldKey) {
+  touched[field] = true
+}
 
 function validate(): boolean {
   ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = true))
@@ -268,13 +272,13 @@ con borde amatista.
 `NuevaView.saveConsultation()` ejecuta cascada de POST en orden:
 
 1. `POST /consultations` con `{date, consultationTypeId, anamnesis,
-   diagnosis, therapeuticPlan, diagnosisPlan, nextControl, animalId}` →
+diagnosis, therapeuticPlan, diagnosisPlan, nextControl, animalId}` →
    devuelve `consultationId`. `diagnosis`, `therapeuticPlan` y
    `diagnosisPlan` son opcionales en el backend: se mandan como `null`
    cuando están vacíos en el draft (solo tipo + anamnesis son
    obligatorios, alineado con la UX).
 2. Por cada item del draft, POST a su endpoint con `{...item, animalId,
-   consultationId, companyId}`. `companyId` sale del JWT vía
+consultationId, companyId}`. `companyId` sale del JWT vía
    `useAuth().companyId`.
 3. Receta es cascada interna: `POST /prescriptions` → con el
    `prescriptionId` retornado, `POST /medicament-prescriptions` por cada
@@ -317,13 +321,14 @@ de carga — HTTP, transición, cómputo bloqueante — debe rutearse al
 acotados (búsqueda incremental, etc).
 
 **Componentes** en `src/components/ui/`:
+
 - `PawLoader.vue` — la huella amatista que palpita (SVG inline + filtro
   glow). Props: `size`, `color`, `glow`, `speed`, `label`. Respeta
   `prefers-reduced-motion`.
 - `PageLoader.vue` — overlay full-screen `position: fixed; inset: 0` con
   fondo `rgba(15, 7, 30, 0.72)` + `backdrop-filter: blur(4px)`,
   z-index 2000, cursor `wait`. Renderiza `<PawLoader :size="192"
-  color="#ffffff" />` centrado. Sin Teleport — vive dentro del `<v-app>`
+color="#ffffff" />` centrado. Sin Teleport — vive dentro del `<v-app>`
   y el z-index 2000 es suficiente para sobreponerse a contenido normal
   sin colisionar con dialogs de Vuetify.
 
@@ -334,6 +339,7 @@ el delay, `visible` pasa a `true` y el `PageLoader` montado en `App.vue`
 aparece.
 
 **Timings** (`useGlobalLoader.ts`):
+
 - `SHOW_DELAY_MS = 200` — requests < 200ms nunca lo disparan.
 - `MIN_VISIBLE_MS = 300` — una vez visible, queda ≥300ms para evitar
   parpadeo.
@@ -354,7 +360,11 @@ augmentation. Por defecto déjalo OFF (loader activo). Hoy sólo lo usa
 ```ts
 import { pushLoader, popLoader } from '@/composables/useGlobalLoader'
 pushLoader()
-try { await doSomething() } finally { popLoader() }
+try {
+  await doSomething()
+} finally {
+  popLoader()
+}
 ```
 
 **`PawLoader` inline** (cuando el global no aplica, ej. el opt-out de
@@ -383,12 +393,12 @@ y deben replicarse exactamente en `src/types/domain.ts` con los mismos string
 literales. Las opciones del select se construyen localmente (no hay endpoint).
 Referencia: `uml/Veterinaria.puml` en el repo del backend.
 
-| Enum                | Valores backend                         | Estado frontend |
-| ------------------- | --------------------------------------- | --------------- |
-| `AnimalType`        | `SERVICE`, `SUPPORT`, `NONE`            | ✅ alineado      |
-| `Gender`            | `MALE`, `FEMALE`                        | ✅ alineado      |
-| `WeightType`        | `GRAMS`, `POUNDS`, `KILOGRAMS`          | ✅ alineado      |
-| `ReproductiveState` | `STERILIZED`, `NO_STERILIZED`, `UNKNOWN`| ✅ alineado      |
+| Enum                | Valores backend                          | Estado frontend |
+| ------------------- | ---------------------------------------- | --------------- |
+| `AnimalType`        | `SERVICE`, `SUPPORT`, `NONE`             | ✅ alineado     |
+| `Gender`            | `MALE`, `FEMALE`                         | ✅ alineado     |
+| `WeightType`        | `GRAMS`, `POUNDS`, `KILOGRAMS`           | ✅ alineado     |
+| `ReproductiveState` | `STERILIZED`, `NO_STERILIZED`, `UNKNOWN` | ✅ alineado     |
 
 Para el display en español, las funciones `genderLabel` /
 `reproductiveLabel` / `weightUnitLabel` en `composables/format.ts` traducen

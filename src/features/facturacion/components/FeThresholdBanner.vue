@@ -28,17 +28,19 @@ const { uvtThresholdQty, threshold, thresholdBreakdown } = useFeUvt()
   border-radius: 11px;
   font-size: 12.5px;
   line-height: 1.5;
-  background: oklch(95% 0.06 80);
-  border: 1px solid oklch(88% 0.09 80);
-  color: oklch(40% 0.11 70);
+  background: oklch(95% 0.06 80deg);
+  border: 1px solid oklch(88% 0.09 80deg);
+  color: oklch(40% 0.11 70deg);
 }
+
 .uvtbanner :deep(svg) {
   flex-shrink: 0;
   margin-top: 1px;
 }
+
 .sub {
   font-size: 11px;
-  color: oklch(50% 0.08 70);
+  color: oklch(50% 0.08 70deg);
   margin-top: 3px;
 }
 </style>

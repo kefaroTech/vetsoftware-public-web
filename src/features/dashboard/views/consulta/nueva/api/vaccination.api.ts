@@ -58,9 +58,7 @@ export const vaccinationApi = {
   },
 
   async listByAnimal(animalId: number): Promise<VaccinationResponse[]> {
-    const { data } = await http.get<VaccinationResponse[]>(
-      `/vaccinations/by-animal/${animalId}`,
-    )
+    const { data } = await http.get<VaccinationResponse[]>(`/vaccinations/by-animal/${animalId}`)
     return data
   },
 
@@ -69,14 +67,8 @@ export const vaccinationApi = {
     return data
   },
 
-  async update(
-    id: number,
-    payload: CreateVaccinationPayload,
-  ): Promise<VaccinationResponse> {
-    const { data } = await http.put<VaccinationResponse>(
-      `/vaccinations/${id}`,
-      payload,
-    )
+  async update(id: number, payload: CreateVaccinationPayload): Promise<VaccinationResponse> {
+    const { data } = await http.put<VaccinationResponse>(`/vaccinations/${id}`, payload)
     return data
   },
 

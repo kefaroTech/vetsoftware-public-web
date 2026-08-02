@@ -76,11 +76,7 @@ function pick(action: QuickAction) {
             }}
           </div>
         </div>
-        <div
-          v-if="a.kind && counts[a.kind] > 0"
-          class="count-badge"
-          aria-hidden="true"
-        >
+        <div v-if="a.kind && counts[a.kind] > 0" class="count-badge" aria-hidden="true">
           {{ counts[a.kind] }}
         </div>
       </button>
@@ -94,11 +90,13 @@ function pick(action: QuickAction) {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
-@media (max-width: 880px) {
+
+@media (width <= 880px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
 .action {
   position: relative;
   background: var(--warm-50);
@@ -111,26 +109,33 @@ function pick(action: QuickAction) {
   flex-direction: column;
   gap: 8px;
   text-align: left;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
+
 .action:hover {
   border-color: var(--amatista-700);
   background: var(--amatista-50);
 }
+
 .action.muted {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
 .action.muted:hover {
   border-color: var(--warm-200);
   background: var(--warm-50);
 }
+
 .action.highlighted {
   border-width: 1.5px;
   border-color: var(--amatista-500);
   background: var(--amatista-50);
   padding: 11.5px;
 }
+
 .ic {
   width: 34px;
   height: 34px;
@@ -140,22 +145,28 @@ function pick(action: QuickAction) {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
+
 .ic.filled {
   background: var(--amatista-700);
   color: white;
 }
+
 .lab {
   font-size: 13px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .sub {
   font-size: 11.5px;
   color: var(--warm-500);
   margin-top: 2px;
 }
+
 .count-badge {
   position: absolute;
   top: 10px;

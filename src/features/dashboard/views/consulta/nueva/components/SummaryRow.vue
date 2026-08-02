@@ -27,9 +27,11 @@ defineProps<{
   padding: 8px 0;
   border-bottom: 1px solid var(--warm-200);
 }
+
 .row.last {
   border-bottom: none;
 }
+
 .lab {
   font-size: 11.5px;
   color: var(--warm-500);
@@ -37,19 +39,22 @@ defineProps<{
   letter-spacing: 0.04em;
   padding-top: 2px;
 }
+
 .val {
   font-size: 13px;
   color: var(--warm-900);
   line-height: 1.5;
-  word-break: break-word;
+  overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
+
 .val.muted em {
   color: var(--warm-500);
   font-style: italic;
   font-weight: 400;
 }
-@media (max-width: 640px) {
+
+@media (width <= 640px) {
   .row {
     grid-template-columns: 1fr;
     gap: 4px;

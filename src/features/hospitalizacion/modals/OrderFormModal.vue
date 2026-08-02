@@ -17,11 +17,7 @@ import {
   type OrderKind,
   type OrderVM,
 } from '../types/hospital'
-import type {
-  MedicationFrequency,
-  GuidelineType,
-  DurationMeasure,
-} from '@/types/domain'
+import type { MedicationFrequency, GuidelineType, DurationMeasure } from '@/types/domain'
 import type { CreateHospitalizationMedicationPayload } from '../api/hospitalizationMedication.api'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
@@ -47,9 +43,10 @@ const appliedCount = computed(
 )
 const hasApplied = computed(() => appliedCount.value > 0)
 
-const frequencyOptions = (Object.keys(FREQUENCY_LABEL) as MedicationFrequency[]).map(
-  (v) => ({ value: v, label: FREQUENCY_LABEL[v] }),
-)
+const frequencyOptions = (Object.keys(FREQUENCY_LABEL) as MedicationFrequency[]).map((v) => ({
+  value: v,
+  label: FREQUENCY_LABEL[v],
+}))
 const guidelineOptions = (Object.keys(GUIDELINE_LABEL) as GuidelineType[]).map((v) => ({
   value: v,
   label: GUIDELINE_LABEL[v],
@@ -112,9 +109,7 @@ watch(
 )
 
 const needsQuantity = computed(() => draft.durationMeasure !== 'INDEFINITE')
-const isDiscrete = computed(
-  () => draft.frequency !== 'CONTINUOUS' && draft.frequency !== 'SINGLE',
-)
+const isDiscrete = computed(() => draft.frequency !== 'CONTINUOUS' && draft.frequency !== 'SINGLE')
 
 const errors = computed(() => ({
   name: draft.name.trim().length < 2 ? 'Indica el nombre' : null,
@@ -196,7 +191,9 @@ function confirmImpact() {
           ? 'Añadir medicamento'
           : 'Añadir procedimiento'
     "
-    :subtitle="isMed ? 'Orden de medicación del plan de tratamiento' : 'Procedimiento o control programado'"
+    :subtitle="
+      isMed ? 'Orden de medicación del plan de tratamiento' : 'Procedimiento o control programado'
+    "
     :width="760"
     @close="emit('close')"
   >
@@ -205,10 +202,15 @@ function confirmImpact() {
         <Lock :size="15" :stroke-width="1.8" />
         <span>
           Tiene <strong>{{ appliedCount }}</strong>
-          {{ isMed
-            ? (appliedCount === 1 ? 'dosis aplicada' : 'dosis aplicadas')
-            : (appliedCount === 1 ? 'ejecución aplicada' : 'ejecuciones aplicadas') }};
-          esas se conservan, los cambios solo afectan las pendientes.
+          {{
+            isMed
+              ? appliedCount === 1
+                ? 'dosis aplicada'
+                : 'dosis aplicadas'
+              : appliedCount === 1
+                ? 'ejecución aplicada'
+                : 'ejecuciones aplicadas'
+          }}; esas se conservan, los cambios solo afectan las pendientes.
         </span>
       </div>
 
@@ -225,11 +227,7 @@ function confirmImpact() {
         </BaseField>
         <BaseField v-if="isMed" label="Dosis">
           <template #default="{ id }">
-            <BaseInput
-              :id="id"
-              v-model="draft.dose"
-              placeholder="Ej. 22 mg/kg"
-            />
+            <BaseInput :id="id" v-model="draft.dose" placeholder="Ej. 22 mg/kg" />
           </template>
         </BaseField>
         <BaseField label="Frecuencia">
@@ -287,8 +285,7 @@ function confirmImpact() {
       </div>
 
       <p v-if="!isDiscrete" class="note">
-        Las frecuencias «Continua» y «Única» no generan tomas individuales en el
-        calendario.
+        Las frecuencias «Continua» y «Única» no generan tomas individuales en el calendario.
       </p>
 
       <BaseField label="Notas">
@@ -327,9 +324,13 @@ function confirmImpact() {
   gap: 14px;
   margin-bottom: 14px;
 }
-@media (max-width: 640px) {
-  .grid-2 { grid-template-columns: 1fr; }
+
+@media (width <= 640px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
 }
+
 .applied-banner {
   display: flex;
   align-items: flex-start;
@@ -338,12 +339,16 @@ function confirmImpact() {
   padding: 10px 13px;
   font-size: 12.5px;
   line-height: 1.45;
-  color: oklch(45% 0.13 70);
-  background: oklch(96% 0.04 80);
-  border-left: 3px solid oklch(70% 0.13 75);
+  color: oklch(45% 0.13 70deg);
+  background: oklch(96% 0.04 80deg);
+  border-left: 3px solid oklch(70% 0.13 75deg);
   border-radius: 0 8px 8px 0;
 }
-.applied-banner svg { flex-shrink: 0; margin-top: 1px; }
+.applied-banner svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
 .pauta-help {
   margin: -6px 0 16px;
   padding: 9px 12px;
@@ -354,11 +359,13 @@ function confirmImpact() {
   border-left: 3px solid var(--amatista-500);
   border-radius: 0 8px 8px 0;
 }
+
 .note {
   margin: -4px 0 14px;
   font-size: 12px;
   color: var(--warm-500);
 }
+
 .btn-ghost,
 .btn-primary {
   font-family: inherit;
@@ -369,17 +376,23 @@ function confirmImpact() {
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn-ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-900);
 }
-.btn-ghost:hover { background: var(--warm-100); }
+.btn-ghost:hover {
+  background: var(--warm-100);
+}
+
 .btn-primary {
   background: var(--amatista-700);
   color: white;
   border: none;
   padding: 9px 18px;
 }
-.btn-primary:hover { filter: brightness(1.05); }
+.btn-primary:hover {
+  filter: brightness(1.05);
+}
 </style>

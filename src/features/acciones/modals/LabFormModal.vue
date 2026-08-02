@@ -68,7 +68,8 @@ const saveError = ref<string | null>(null)
 // Sede por defecto: la del menú si el usuario la tiene asignada; si no, su primera sede asignada.
 function resolveDefaultBranch(): number | null {
   const ids = assignedBranches.value.map((b) => b.id)
-  if (selectedBranchId.value != null && ids.includes(selectedBranchId.value)) return selectedBranchId.value
+  if (selectedBranchId.value != null && ids.includes(selectedBranchId.value))
+    return selectedBranchId.value
   return assignedBranches.value[0]?.id ?? null
 }
 // Sede de la solicitud: solo se elige al crear y si el usuario tiene ≥2 sedes asignadas.
@@ -145,8 +146,7 @@ const errors = computed(() => ({
   patient: patientId.value == null ? 'Selecciona un paciente' : null,
   rows: draft.rows.map((r) => ({
     testTypeId: !r.testTypeId ? 'Selecciona un tipo' : null,
-    quantity:
-      !r.quantity.trim() || Number(r.quantity) < 1 ? 'Cantidad inválida' : null,
+    quantity: !r.quantity.trim() || Number(r.quantity) < 1 ? 'Cantidad inválida' : null,
     diagnosis: null, // Observaciones es opcional.
   })),
 }))
@@ -166,7 +166,7 @@ function removeRow(i: number) {
 }
 
 function err(field: 'patient'): string | undefined {
-  return submitted.value ? errors.value[field] ?? undefined : undefined
+  return submitted.value ? (errors.value[field] ?? undefined) : undefined
 }
 function rowErr(i: number, k: keyof TestRow): string | undefined {
   if (!submitted.value) return undefined
@@ -212,7 +212,11 @@ async function doSave() {
   saveError.value = null
   try {
     if (props.initial) {
-      const r = draft.rows[0]!
+      const r = draft.rows[0]
+      if (!r) {
+        saveError.value = 'Agrega al menos un examen para guardar.'
+        return
+      }
       let updated = await laboratoryTestApi.update(props.initial.id, {
         date: draft.date,
         testTypeId: Number(r.testTypeId),
@@ -225,9 +229,7 @@ async function doSave() {
       // Si el checkbox aplica y cambió respecto al status actual, dispara el
       // cambio via PATCH /status (el PUT no acepta status en este endpoint).
       if (showSampleCollected.value) {
-        const desired = draft.sampleCollected
-          ? 'PENDING_PROCESSING'
-          : 'PENDING_COLLECTION'
+        const desired = draft.sampleCollected ? 'PENDING_PROCESSING' : 'PENDING_COLLECTION'
         if (desired !== props.initial.status) {
           updated = await laboratoryTestApi.changeStatus(props.initial.id, desired)
         }
@@ -252,8 +254,7 @@ async function doSave() {
     }
     emit('close')
   } catch (e) {
-    saveError.value =
-      e instanceof Error ? e.message : 'No se pudo guardar la solicitud'
+    saveError.value = e instanceof Error ? e.message : 'No se pudo guardar la solicitud'
   } finally {
     saving.value = false
   }
@@ -265,7 +266,9 @@ async function doSave() {
     :open="open"
     :icon="Beaker"
     :title="isEdit ? 'Editar examen de laboratorio' : 'Nueva solicitud de laboratorio'"
-    :subtitle="isEdit ? 'Modifica los datos del examen' : 'Crea una solicitud independiente de una consulta'"
+    :subtitle="
+      isEdit ? 'Modifica los datos del examen' : 'Crea una solicitud independiente de una consulta'
+    "
     :width="900"
     @close="emit('close')"
   >
@@ -275,136 +278,141 @@ async function doSave() {
         <div>
           <p class="bc-title">Sede distinta a la del menú</p>
           <p class="bc-text">
-            Vas a registrar esta solicitud en <b>{{ branchName(branchId) }}</b>, que es
-            <b>diferente</b> a la sede por defecto
-            (<b>{{ branchName(defaultBranchId) }}</b>). ¿Seguro que quieres usar esa sede?
+            Vas a registrar esta solicitud en <b>{{ branchName(branchId) }}</b
+            >, que es <b>diferente</b> a la sede por defecto (<b>{{
+              branchName(defaultBranchId)
+            }}</b
+            >). ¿Seguro que quieres usar esa sede?
           </p>
         </div>
       </div>
       <template v-else>
-      <div v-if="typesError" class="banner error">{{ typesError }}</div>
-      <div v-if="saveError" class="banner error">{{ saveError }}</div>
+        <div v-if="typesError" class="banner error">{{ typesError }}</div>
+        <div v-if="saveError" class="banner error">{{ saveError }}</div>
 
-      <BaseField v-if="!preSelectedAnimal && !isEdit" label="Paciente" required :error="err('patient')">
-        <PatientCascadePicker
-          v-model="patientId"
-          :invalid="!!err('patient')"
-        />
-      </BaseField>
-      <div v-else-if="isEdit && initial" class="patient-fixed">
-        <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
-        <div class="info">
-          <div class="name">{{ initial.animal.name }}</div>
-          <div class="meta">{{ initial.animal.code }}</div>
-        </div>
-      </div>
-      <div v-else-if="preSelectedAnimal" class="patient-fixed">
-        <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
-        <div class="info">
-          <div class="name">{{ preSelectedAnimal.name }}</div>
-          <div class="meta">
-            {{ preSelectedAnimal.specie.name }} · {{ preSelectedAnimal.breed.name }}
-            <span v-if="preSelectedAnimal.owner"> · {{ preSelectedAnimal.owner.name }}</span>
+        <BaseField
+          v-if="!preSelectedAnimal && !isEdit"
+          label="Paciente"
+          required
+          :error="err('patient')"
+        >
+          <PatientCascadePicker v-model="patientId" :invalid="!!err('patient')" />
+        </BaseField>
+        <div v-else-if="isEdit && initial" class="patient-fixed">
+          <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
+          <div class="info">
+            <div class="name">{{ initial.animal.name }}</div>
+            <div class="meta">{{ initial.animal.code }}</div>
           </div>
         </div>
-      </div>
-
-      <BaseField label="Fecha" required>
-        <DateInput v-model="draft.date" />
-      </BaseField>
-
-      <BaseField
-        v-if="showBranchField"
-        label="Sede"
-        required
-        hint="Por defecto, la sede seleccionada en el menú principal."
-      >
-        <BaseSelect
-          :model-value="branchId != null ? String(branchId) : null"
-          :options="branchOptions"
-          placeholder="Selecciona una sede"
-          @update:model-value="(v: string) => (branchId = Number(v))"
-        />
-      </BaseField>
-
-      <div class="rows">
-        <div v-for="(row, i) in draft.rows" :key="i" class="row-card">
-          <div class="row-head">
-            <span class="row-num">Examen #{{ i + 1 }}</span>
-            <button
-              v-if="!isEdit && draft.rows.length > 1"
-              type="button"
-              class="remove"
-              aria-label="Quitar"
-              @click="removeRow(i)"
-            >
-              <X :size="14" :stroke-width="1.8" />
-            </button>
-          </div>
-          <div class="row-grid">
-            <BaseField label="Tipo de examen" required :error="rowErr(i, 'testTypeId')">
-              <SearchableSelect
-                v-model="row.testTypeId"
-                :options="testOptions"
-                :loading="loadingTypes"
-                :invalid="!!rowErr(i, 'testTypeId')"
-                placeholder="Selecciona o crea un tipo"
-                :on-create="onCreateType"
-                create-label="Crear tipo de examen"
-              />
-            </BaseField>
-            <BaseField label="Cantidad" required :error="rowErr(i, 'quantity')">
-              <BaseInput
-                v-model="row.quantity"
-                type="number"
-                min="1"
-                :invalid="!!rowErr(i, 'quantity')"
-              />
-            </BaseField>
-            <BaseField label="Observaciones" :error="rowErr(i, 'diagnosis')" class="full">
-              <BaseTextarea
-                v-model="row.diagnosis"
-                :rows="2"
-                :invalid="!!rowErr(i, 'diagnosis')"
-                placeholder="Observaciones sobre el examen solicitado"
-              />
-            </BaseField>
+        <div v-else-if="preSelectedAnimal" class="patient-fixed">
+          <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
+          <div class="info">
+            <div class="name">{{ preSelectedAnimal.name }}</div>
+            <div class="meta">
+              {{ preSelectedAnimal.specie.name }} · {{ preSelectedAnimal.breed.name }}
+              <span v-if="preSelectedAnimal.owner"> · {{ preSelectedAnimal.owner.name }}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <button v-if="!isEdit" type="button" class="add-row" @click="addRow">
-        <Plus :size="14" :stroke-width="1.8" /> Agregar otro examen
-      </button>
+        <BaseField label="Fecha" required>
+          <DateInput v-model="draft.date" />
+        </BaseField>
 
-      <label
-        v-if="showSampleCollected"
-        class="sample-collected"
-        :class="{ checked: draft.sampleCollected }"
-      >
-        <span class="cb-box" :class="{ checked: draft.sampleCollected }">
-          <Check v-if="draft.sampleCollected" :size="12" :stroke-width="3" />
-        </span>
-        <input
-          v-model="draft.sampleCollected"
-          type="checkbox"
-          class="sr-only"
-        />
-        <div>
-          <div class="title">La muestra ya fue recolectada</div>
-          <div class="desc">
-            Marca esta opción si la muestra está tomada y solo falta procesarla en
-            laboratorio. El estado pasará a
-            <strong>Pendiente por procesar</strong>.
+        <BaseField
+          v-if="showBranchField"
+          label="Sede"
+          required
+          hint="Por defecto, la sede seleccionada en el menú principal."
+        >
+          <BaseSelect
+            :model-value="branchId != null ? String(branchId) : null"
+            :options="branchOptions"
+            placeholder="Selecciona una sede"
+            @update:model-value="(v: string) => (branchId = Number(v))"
+          />
+        </BaseField>
+
+        <div class="rows">
+          <div v-for="(row, i) in draft.rows" :key="i" class="row-card">
+            <div class="row-head">
+              <span class="row-num">Examen #{{ i + 1 }}</span>
+              <button
+                v-if="!isEdit && draft.rows.length > 1"
+                type="button"
+                class="remove"
+                aria-label="Quitar"
+                @click="removeRow(i)"
+              >
+                <X :size="14" :stroke-width="1.8" />
+              </button>
+            </div>
+            <div class="row-grid">
+              <BaseField label="Tipo de examen" required :error="rowErr(i, 'testTypeId')">
+                <SearchableSelect
+                  v-model="row.testTypeId"
+                  :options="testOptions"
+                  :loading="loadingTypes"
+                  :invalid="!!rowErr(i, 'testTypeId')"
+                  placeholder="Selecciona o crea un tipo"
+                  :on-create="onCreateType"
+                  create-label="Crear tipo de examen"
+                />
+              </BaseField>
+              <BaseField label="Cantidad" required :error="rowErr(i, 'quantity')">
+                <BaseInput
+                  v-model="row.quantity"
+                  type="number"
+                  min="1"
+                  :invalid="!!rowErr(i, 'quantity')"
+                />
+              </BaseField>
+              <BaseField label="Observaciones" :error="rowErr(i, 'diagnosis')" class="full">
+                <BaseTextarea
+                  v-model="row.diagnosis"
+                  :rows="2"
+                  :invalid="!!rowErr(i, 'diagnosis')"
+                  placeholder="Observaciones sobre el examen solicitado"
+                />
+              </BaseField>
+            </div>
           </div>
         </div>
-      </label>
+
+        <button v-if="!isEdit" type="button" class="add-row" @click="addRow">
+          <Plus :size="14" :stroke-width="1.8" /> Agregar otro examen
+        </button>
+
+        <label
+          v-if="showSampleCollected"
+          class="sample-collected"
+          :class="{ checked: draft.sampleCollected }"
+        >
+          <span class="cb-box" :class="{ checked: draft.sampleCollected }">
+            <Check v-if="draft.sampleCollected" :size="12" :stroke-width="3" />
+          </span>
+          <input v-model="draft.sampleCollected" type="checkbox" class="sr-only" />
+          <div>
+            <div class="title">La muestra ya fue recolectada</div>
+            <div class="desc">
+              Marca esta opción si la muestra está tomada y solo falta procesarla en laboratorio. El
+              estado pasará a
+              <strong>Pendiente por procesar</strong>.
+            </div>
+          </div>
+        </label>
       </template>
     </template>
 
     <template #footer-actions>
       <template v-if="confirmingBranch">
-        <button type="button" class="btn-ghost" :disabled="saving" @click="confirmingBranch = false">
+        <button
+          type="button"
+          class="btn-ghost"
+          :disabled="saving"
+          @click="confirmingBranch = false"
+        >
           Volver
         </button>
         <button type="button" class="btn-primary" :disabled="saving" @click="doSave">
@@ -425,42 +433,48 @@ async function doSave() {
 
 <style scoped>
 .banner.error {
-  background: oklch(95% 0.06 25);
-  border: 1px solid oklch(85% 0.12 25);
-  color: oklch(40% 0.18 25);
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
   border-radius: 8px;
   padding: 8px 12px;
   font-size: 12.5px;
   margin-bottom: 12px;
 }
+
 .branch-confirm {
   display: flex;
   gap: 12px;
   padding: 16px 18px;
   border-radius: 11px;
-  background: oklch(96% 0.05 80);
-  border: 1px solid oklch(88% 0.09 80);
+  background: oklch(96% 0.05 80deg);
+  border: 1px solid oklch(88% 0.09 80deg);
 }
+
 .bc-ic {
   flex-shrink: 0;
-  color: oklch(55% 0.14 60);
+  color: oklch(55% 0.14 60deg);
   margin-top: 2px;
 }
+
 .bc-title {
   margin: 0 0 4px;
   font-size: 14px;
   font-weight: 600;
-  color: oklch(38% 0.13 60);
+  color: oklch(38% 0.13 60deg);
 }
+
 .bc-text {
   margin: 0;
   font-size: 13px;
   line-height: 1.55;
   color: var(--warm-700);
 }
+
 .bc-text b {
   font-weight: 600;
 }
+
 .patient-fixed {
   display: flex;
   align-items: center;
@@ -470,6 +484,7 @@ async function doSave() {
   border-radius: 9px;
   padding: 10px 12px;
 }
+
 .patient-fixed .paw {
   width: 28px;
   height: 28px;
@@ -479,34 +494,40 @@ async function doSave() {
   display: grid;
   place-items: center;
 }
+
 .patient-fixed .name {
   font-size: 13px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .patient-fixed .meta {
   font-size: 11.5px;
   color: var(--warm-500);
   margin-top: 2px;
 }
+
 .rows {
   display: flex;
   flex-direction: column;
   gap: 12px;
   margin-top: 14px;
 }
+
 .row-card {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 12px;
   padding: 14px;
 }
+
 .row-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
 }
+
 .row-num {
   font-size: 12px;
   color: var(--warm-600);
@@ -514,6 +535,7 @@ async function doSave() {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+
 .remove {
   background: transparent;
   border: 1px solid var(--warm-200);
@@ -525,20 +547,29 @@ async function doSave() {
   display: grid;
   place-items: center;
 }
+
 .remove:hover {
-  background: oklch(95% 0.06 25);
-  color: oklch(45% 0.18 25);
-  border-color: oklch(85% 0.12 25);
+  background: oklch(95% 0.06 25deg);
+  color: oklch(45% 0.18 25deg);
+  border-color: oklch(85% 0.12 25deg);
 }
+
 .row-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px 16px;
 }
+
 .row-grid .full {
   grid-column: 1 / -1;
 }
-@media (max-width: 760px) { .row-grid { grid-template-columns: 1fr; } }
+
+@media (width <= 760px) {
+  .row-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .add-row {
   margin-top: 12px;
   background: transparent;
@@ -553,10 +584,12 @@ async function doSave() {
   align-items: center;
   gap: 6px;
 }
+
 .add-row:hover {
   border-color: var(--amatista-500);
   background: var(--amatista-50);
 }
+
 .btn-ghost,
 .btn-primary {
   font-family: inherit;
@@ -567,26 +600,32 @@ async function doSave() {
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn-ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-700);
 }
+
 .btn-ghost:hover:not(:disabled) {
   background: var(--warm-100);
 }
+
 .btn-primary {
   background: var(--amatista-700);
   color: white;
 }
+
 .btn-primary:hover:not(:disabled) {
   filter: brightness(1.05);
 }
+
 .btn-primary:disabled,
 .btn-ghost:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
 .sample-collected {
   display: flex;
   align-items: flex-start;
@@ -598,15 +637,20 @@ async function doSave() {
   cursor: pointer;
   margin-top: 12px;
   position: relative;
-  transition: border-color 0.15s ease, background 0.12s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.12s ease;
 }
+
 .sample-collected:hover {
   border-color: var(--amatista-300);
 }
+
 .sample-collected.checked {
-  background: linear-gradient(135deg, oklch(95% 0.06 80), oklch(96% 0.02 var(--hue)));
-  border-color: oklch(70% 0.13 75);
+  background: linear-gradient(135deg, oklch(95% 0.06 80deg), oklch(96% 0.02 var(--hue)));
+  border-color: oklch(70% 0.13 75deg);
 }
+
 .cb-box {
   width: 18px;
   height: 18px;
@@ -618,31 +662,39 @@ async function doSave() {
   flex-shrink: 0;
   margin-top: 1px;
   color: white;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
 }
+
 .sample-collected:hover .cb-box:not(.checked) {
   border-color: var(--amatista-400);
 }
+
 .cb-box.checked {
-  background: oklch(58% 0.16 75);
-  border-color: oklch(58% 0.16 75);
+  background: oklch(58% 0.16 75deg);
+  border-color: oklch(58% 0.16 75deg);
 }
+
 .sample-collected .title {
   font-size: 13.5px;
   font-weight: 500;
   color: var(--warm-900);
   line-height: 1.3;
 }
+
 .sample-collected .desc {
   font-size: 12px;
   color: var(--warm-600);
   margin-top: 3px;
   line-height: 1.5;
 }
+
 .sample-collected .desc strong {
-  color: oklch(40% 0.13 75);
+  color: oklch(40% 0.13 75deg);
   font-weight: 600;
 }
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -650,7 +702,7 @@ async function doSave() {
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }

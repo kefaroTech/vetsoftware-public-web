@@ -130,9 +130,7 @@ const errors = computed(() => ({
 }))
 
 const valid = computed<boolean>(() =>
-  errors.value.vaccinations.every(
-    (v) => !v.vaccinationTypeId && !v.lot && !v.nextVaccination,
-  ),
+  errors.value.vaccinations.every((v) => !v.vaccinationTypeId && !v.lot && !v.nextVaccination),
 )
 
 type VacErrKey = 'vaccinationTypeId' | 'lot' | 'nextVaccination'
@@ -154,10 +152,7 @@ function typeLabel(id: string): string {
   return typeOptions.value.find((o) => o.value === id)?.label ?? 'Tipo no encontrado'
 }
 
-async function onCreateVaccinationType(data: {
-  name: string
-  description: string
-}) {
+async function onCreateVaccinationType(data: { name: string; description: string }) {
   const created = await createVaccinationType(data)
   return {
     value: String(created.id),
@@ -168,9 +163,7 @@ async function onCreateVaccinationType(data: {
 
 // Un formulario nuevo "vacío" (nada escrito) no cuenta como ítem a agregar.
 function isNewDraftEmpty(): boolean {
-  return draft.vaccinations.every(
-    (v) => !v.vaccinationTypeId && !v.lot.trim() && !v.notes.trim(),
-  )
+  return draft.vaccinations.every((v) => !v.vaccinationTypeId && !v.lot.trim() && !v.notes.trim())
 }
 
 function save() {
@@ -217,17 +210,10 @@ function save() {
     <template #body>
       <div v-if="typesError" class="catalog-error">{{ typesError }}</div>
 
-      <section
-        v-if="props.existing.length > 0 && editingIndex === null"
-        class="existing-section"
-      >
+      <section v-if="props.existing.length > 0 && editingIndex === null" class="existing-section">
         <h4 class="existing-title">Ya aplicadas ({{ props.existing.length }})</h4>
         <ul class="existing-list">
-          <li
-            v-for="(item, idx) in props.existing"
-            :key="idx"
-            class="existing-card"
-          >
+          <li v-for="(item, idx) in props.existing" :key="idx" class="existing-card">
             <div class="existing-summary">
               <div class="existing-main">
                 {{ formatDateShort(item.date) }} ·
@@ -243,9 +229,7 @@ function save() {
                 :class="{ active: editingIndex === idx }"
                 aria-label="Editar vacuna"
                 :disabled="editingIndex !== null && editingIndex !== idx"
-                @click="
-                  editingIndex === idx ? cancelEditing() : startEditing(idx)
-                "
+                @click="editingIndex === idx ? cancelEditing() : startEditing(idx)"
               >
                 <Pencil :size="14" :stroke-width="1.7" />
               </button>
@@ -287,11 +271,7 @@ function save() {
             </button>
           </div>
           <div class="vac-grid">
-            <BaseField
-              label="Tipo de vacuna"
-              required
-              :error="vacErr(i, 'vaccinationTypeId')"
-            >
+            <BaseField label="Tipo de vacuna" required :error="vacErr(i, 'vaccinationTypeId')">
               <template #default>
                 <SearchableSelect
                   v-model="v.vaccinationTypeId"
@@ -333,12 +313,7 @@ function save() {
         </div>
       </div>
 
-      <button
-        v-if="editingIndex === null"
-        type="button"
-        class="add-btn"
-        @click="addVac"
-      >
+      <button v-if="editingIndex === null" type="button" class="add-btn" @click="addVac">
         <Plus :size="14" :stroke-width="1.8" />
         <span>Agregar otra vacuna</span>
       </button>
@@ -347,21 +322,13 @@ function save() {
     <template #footer-left>
       <span v-if="editingIndex !== null">Editando vacuna existente</span>
       <span v-else>
-        {{ draft.vaccinations.length }} vacuna{{
-          draft.vaccinations.length === 1 ? '' : 's'
-        }}
+        {{ draft.vaccinations.length }} vacuna{{ draft.vaccinations.length === 1 ? '' : 's' }}
         · Se vinculará a la consulta
       </span>
     </template>
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">
-        Cancelar
-      </button>
-      <button
-        type="button"
-        class="btn-primary"
-        @click="save"
-      >
+      <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
+      <button type="button" class="btn-primary" @click="save">
         {{ editingIndex !== null ? 'Guardar cambios' : 'Registrar vacunación' }}
       </button>
     </template>
@@ -370,35 +337,40 @@ function save() {
 
 <style scoped>
 .catalog-error {
-  background: oklch(94% 0.06 25);
-  border: 1px solid oklch(85% 0.10 25);
-  color: oklch(35% 0.15 25);
+  background: oklch(94% 0.06 25deg);
+  border: 1px solid oklch(85% 0.1 25deg);
+  color: oklch(35% 0.15 25deg);
   padding: 10px 14px;
   border-radius: 10px;
   font-size: 12.5px;
   margin-bottom: 14px;
 }
+
 .row-date {
   max-width: 280px;
   margin-bottom: 14px;
 }
+
 .vacs-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
+
 .vac-card {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 11px;
   padding: 14px;
 }
+
 .vac-head {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 12px;
 }
+
 .vac-num {
   width: 24px;
   height: 24px;
@@ -410,12 +382,14 @@ function save() {
   display: grid;
   place-items: center;
 }
+
 .vac-title {
   flex: 1;
   font-size: 12.5px;
   font-weight: 500;
   color: var(--warm-600);
 }
+
 .remove {
   background: transparent;
   border: none;
@@ -424,34 +398,42 @@ function save() {
   padding: 4px;
   border-radius: 6px;
 }
+
 .remove:hover {
   background: var(--warm-100);
-  color: oklch(50% 0.18 25);
+  color: oklch(50% 0.18 25deg);
 }
+
 .vac-grid {
   display: grid;
   grid-template-columns: minmax(280px, 2fr) minmax(180px, 1fr) minmax(220px, 1fr);
   gap: 16px 18px;
 }
+
 .notes-field {
   grid-column: 1 / -1;
 }
-@media (max-width: 980px) {
+
+@media (width <= 980px) {
   .vac-grid {
     grid-template-columns: 1fr 1fr;
   }
+
   .notes-field {
     grid-column: 1 / -1;
   }
 }
-@media (max-width: 640px) {
+
+@media (width <= 640px) {
   .vac-grid {
     grid-template-columns: 1fr;
   }
+
   .notes-field {
     grid-column: auto;
   }
 }
+
 .add-btn {
   margin-top: 10px;
   width: 100%;
@@ -469,11 +451,13 @@ function save() {
   justify-content: center;
   gap: 7px;
 }
+
 .add-btn:hover {
   background: var(--warm-100);
   border-color: var(--amatista-500);
   color: var(--amatista-700);
 }
+
 .btn-ghost,
 .btn-primary {
   font-family: inherit;
@@ -484,27 +468,33 @@ function save() {
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn-ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-900);
 }
+
 .btn-ghost:hover {
   background: var(--warm-100);
 }
+
 .btn-primary {
   background: var(--amatista-700);
   color: white;
   border: none;
   padding: 9px 18px;
 }
+
 .btn-primary:hover:not(:disabled) {
   filter: brightness(1.05);
 }
+
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
 .existing-section {
   margin-bottom: 22px;
   padding: 14px 16px;
@@ -512,12 +502,14 @@ function save() {
   border: 1px solid var(--amatista-200);
   border-radius: 12px;
 }
+
 .existing-title {
   font-size: 14px;
   font-weight: 600;
   color: var(--amatista-700);
   margin: 0 0 10px;
 }
+
 .existing-list {
   list-style: none;
   padding: 0;
@@ -526,6 +518,7 @@ function save() {
   flex-direction: column;
   gap: 8px;
 }
+
 .existing-card {
   display: flex;
   align-items: center;
@@ -536,10 +529,12 @@ function save() {
   border: 1px solid var(--warm-200);
   border-radius: 10px;
 }
+
 .existing-summary {
   min-width: 0;
   flex: 1;
 }
+
 .existing-main {
   font-size: 14.5px;
   font-weight: 500;
@@ -549,6 +544,7 @@ function save() {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .existing-sub {
   font-size: 13px;
   color: var(--warm-600);
@@ -557,16 +553,18 @@ function save() {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .saved-chip {
   font-size: 12px;
   font-weight: 500;
   padding: 5px 10px;
   border-radius: 999px;
-  background: oklch(94% 0.06 150);
-  color: oklch(40% 0.15 150);
-  border: 1px solid oklch(85% 0.10 150);
+  background: oklch(94% 0.06 150deg);
+  color: oklch(40% 0.15 150deg);
+  border: 1px solid oklch(85% 0.1 150deg);
   white-space: nowrap;
 }
+
 .remove-existing {
   background: transparent;
   border: 1px solid var(--warm-200);
@@ -579,15 +577,18 @@ function save() {
   color: var(--warm-600);
   flex-shrink: 0;
 }
+
 .remove-existing:hover:not(:disabled) {
-  background: oklch(94% 0.06 25);
-  border-color: oklch(85% 0.10 25);
-  color: oklch(35% 0.15 25);
+  background: oklch(94% 0.06 25deg);
+  border-color: oklch(85% 0.1 25deg);
+  color: oklch(35% 0.15 25deg);
 }
+
 .remove-existing:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
 .edit-existing {
   background: transparent;
   border: 1px solid var(--warm-200);
@@ -600,20 +601,24 @@ function save() {
   color: var(--warm-600);
   flex-shrink: 0;
 }
+
 .edit-existing:hover:not(:disabled) {
   background: var(--amatista-50);
   border-color: var(--amatista-500);
   color: var(--amatista-700);
 }
+
 .edit-existing.active {
   background: var(--amatista-700);
   border-color: var(--amatista-700);
   color: white;
 }
+
 .edit-existing:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
 .editing-banner {
   display: flex;
   align-items: center;
@@ -626,11 +631,13 @@ function save() {
   font-size: 13px;
   font-weight: 500;
 }
+
 .editing-banner span {
   flex: 1;
 }
+
 .editing-cancel {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgb(255 255 255 / 18%);
   border: none;
   padding: 5px 12px;
   border-radius: 6px;
@@ -640,7 +647,8 @@ function save() {
   color: white;
   cursor: pointer;
 }
+
 .editing-cancel:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgb(255 255 255 / 28%);
 }
 </style>

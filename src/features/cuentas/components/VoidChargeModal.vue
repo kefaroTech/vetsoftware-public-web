@@ -41,7 +41,9 @@ watch(
   },
 )
 
-const reasonError = computed(() => (reason.value.trim().length < 3 ? 'Indica el motivo de la anulación' : null))
+const reasonError = computed(() =>
+  reason.value.trim().length < 3 ? 'Indica el motivo de la anulación' : null,
+)
 
 const subtitle = computed(() => {
   const c = props.charge
@@ -89,9 +91,10 @@ async function submit() {
       <div v-if="wouldGoNegative" class="blocked">
         <p class="blocked-title">No se puede anular este cargo</p>
         <p class="blocked-desc">
-          El saldo pendiente quedaría en negativo: este cargo ({{ formatMoney(charge?.amount ?? 0) }})
-          es mayor que el saldo actual ({{ formatMoney(outstanding) }}) porque ya hay abonos que lo
-          cubren. <strong>Anula primero los abonos necesarios</strong> y vuelve a intentarlo.
+          El saldo pendiente quedaría en negativo: este cargo ({{
+            formatMoney(charge?.amount ?? 0)
+          }}) es mayor que el saldo actual ({{ formatMoney(outstanding) }}) porque ya hay abonos que
+          lo cubren. <strong>Anula primero los abonos necesarios</strong> y vuelve a intentarlo.
         </p>
       </div>
 
@@ -100,7 +103,11 @@ async function submit() {
           El cargo quedará registrado como <strong>anulado</strong> (visible, tachado) y dejará de
           contar en el total. Esta acción registra tu autoría y el motivo.
         </p>
-        <BaseField label="Motivo de la anulación" required :error="submitted ? reasonError ?? undefined : undefined">
+        <BaseField
+          label="Motivo de la anulación"
+          required
+          :error="submitted ? (reasonError ?? undefined) : undefined"
+        >
           <template #default="{ id }">
             <BaseTextarea
               :id="id"
@@ -131,22 +138,70 @@ async function submit() {
 </template>
 
 <style scoped>
-.form { display: flex; flex-direction: column; gap: 16px; }
-.warn { margin: 0; font-size: 13px; line-height: 1.5; color: var(--warm-600); }
-.warn strong { color: oklch(48% 0.18 25); }
-.blocked { padding: 14px 16px; background: oklch(96% 0.04 25); border: 1px solid oklch(88% 0.09 25); border-radius: 11px; }
-.blocked-title { margin: 0 0 6px; font-size: 14px; font-weight: 600; color: oklch(45% 0.18 25); }
-.blocked-desc { margin: 0; font-size: 13px; line-height: 1.5; color: var(--warm-700); }
-.blocked-desc strong { color: oklch(45% 0.18 25); }
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.warn {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--warm-600);
+}
+.warn strong {
+  color: oklch(48% 0.18 25deg);
+}
+.blocked {
+  padding: 14px 16px;
+  background: oklch(96% 0.04 25deg);
+  border: 1px solid oklch(88% 0.09 25deg);
+  border-radius: 11px;
+}
+.blocked-title {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: oklch(45% 0.18 25deg);
+}
+.blocked-desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--warm-700);
+}
+.blocked-desc strong {
+  color: oklch(45% 0.18 25deg);
+}
+
 .btn-danger {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  border: none; color: white;
-  background: linear-gradient(135deg, oklch(52% 0.18 25), oklch(45% 0.18 22));
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  border: none;
+  color: white;
+  background: linear-gradient(135deg, oklch(52% 0.18 25deg), oklch(45% 0.18 22deg));
 }
-.btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-ghost {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  background: transparent; border: 1px solid var(--warm-200); color: var(--warm-700);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  color: var(--warm-700);
 }
-.btn-ghost:hover { background: var(--warm-100); }
+.btn-ghost:hover {
+  background: var(--warm-100);
+}
 </style>

@@ -67,20 +67,26 @@ defineEmits<{
   padding: 16px 18px;
   display: flex;
   flex-direction: column;
-  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+  transition:
+    border-color 0.14s ease,
+    box-shadow 0.14s ease;
 }
+
 .branchcard:hover {
   border-color: var(--amatista-200);
-  box-shadow: 0 6px 18px -12px oklch(45% 0.12 var(--hue) / 0.4);
+  box-shadow: 0 6px 18px -12px oklch(45% 0.12 var(--hue) / 40%);
 }
+
 .branchcard.inactive {
   opacity: 0.72;
 }
+
 .top {
   display: flex;
   align-items: flex-start;
   gap: 11px;
 }
+
 .ic {
   width: 34px;
   height: 34px;
@@ -91,26 +97,31 @@ defineEmits<{
   background: var(--amatista-100);
   color: var(--amatista-700);
 }
+
 .branchcard.inactive .ic {
   background: var(--warm-200);
   color: var(--warm-500);
 }
+
 .head {
   flex: 1;
   min-width: 0;
 }
+
 .name {
   font-size: 14.5px;
   font-weight: 600;
   color: var(--warm-900);
   line-height: 1.15;
 }
+
 .code {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--warm-500);
   margin-top: 2px;
 }
+
 .badges {
   display: flex;
   flex-direction: column;
@@ -118,6 +129,7 @@ defineEmits<{
   gap: 4px;
   flex-shrink: 0;
 }
+
 .badge {
   font-size: 10.5px;
   font-weight: 600;
@@ -126,24 +138,29 @@ defineEmits<{
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
+
 .badge.principal {
   background: var(--amatista-100);
   color: var(--amatista-700);
 }
+
 .badge.active {
   background: var(--success-bg);
   color: var(--success-fg);
 }
+
 .badge.off {
   background: var(--warm-200);
   color: var(--warm-600);
 }
+
 .meta {
   display: flex;
   flex-direction: column;
   gap: 6px;
   margin: 14px 0 12px;
 }
+
 .line {
   display: flex;
   align-items: center;
@@ -152,10 +169,12 @@ defineEmits<{
   color: var(--warm-600);
   min-width: 0;
 }
+
 .line :deep(svg) {
   color: var(--warm-400);
   flex-shrink: 0;
 }
+
 .foot {
   margin-top: auto;
   padding-top: 12px;
@@ -164,6 +183,7 @@ defineEmits<{
   justify-content: space-between;
   gap: 8px;
 }
+
 .act {
   display: inline-flex;
   align-items: center;
@@ -177,20 +197,26 @@ defineEmits<{
   font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
 }
+
 .act.edit:hover {
   background: var(--amatista-50);
   border-color: var(--amatista-300);
   color: var(--amatista-700);
 }
+
 .act.toggle:hover {
   background: var(--warm-100);
   border-color: var(--warm-300);
 }
+
 .act.toggle.danger:hover {
-  background: oklch(95% 0.04 25);
-  border-color: oklch(75% 0.12 25);
-  color: oklch(50% 0.18 25);
+  background: oklch(95% 0.04 25deg);
+  border-color: oklch(75% 0.12 25deg);
+  color: oklch(50% 0.18 25deg);
 }
 </style>

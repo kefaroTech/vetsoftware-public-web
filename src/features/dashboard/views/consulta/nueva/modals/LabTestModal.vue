@@ -60,7 +60,8 @@ const confirmingBranch = ref(false)
 // Sede por defecto: la del menú si el usuario la tiene asignada; si no, su primera sede asignada.
 function resolveDefaultBranch(): number | null {
   const ids = assignedBranches.value.map((b) => b.id)
-  if (selectedBranchId.value != null && ids.includes(selectedBranchId.value)) return selectedBranchId.value
+  if (selectedBranchId.value != null && ids.includes(selectedBranchId.value))
+    return selectedBranchId.value
   return assignedBranches.value[0]?.id ?? null
 }
 // Sede de la solicitud: se elige si el usuario tiene ≥2 sedes asignadas.
@@ -135,9 +136,7 @@ const errors = computed(() => ({
   tests: draft.tests.map((t) => ({
     testTypeId: !t.testTypeId ? 'Selecciona un tipo' : null,
     quantity:
-      !t.quantity.trim() ||
-      !Number.isFinite(Number(t.quantity)) ||
-      Number(t.quantity) < 1
+      !t.quantity.trim() || !Number.isFinite(Number(t.quantity)) || Number(t.quantity) < 1
         ? 'Cantidad inválida'
         : null,
     diagnosis: null, // Observaciones es opcional.
@@ -145,9 +144,7 @@ const errors = computed(() => ({
 }))
 
 const valid = computed<boolean>(() =>
-  errors.value.tests.every(
-    (t) => !t.testTypeId && !t.quantity && !t.diagnosis,
-  ),
+  errors.value.tests.every((t) => !t.testTypeId && !t.quantity && !t.diagnosis),
 )
 
 function addTest() {
@@ -239,146 +236,123 @@ function doSave() {
         <div>
           <p class="bc-title">Sede distinta a la del menú</p>
           <p class="bc-text">
-            Vas a registrar esta solicitud en <b>{{ branchName(branchId) }}</b>, que es
-            <b>diferente</b> a la sede por defecto
-            (<b>{{ branchName(defaultBranchId) }}</b>). ¿Seguro que quieres usar esa sede?
+            Vas a registrar esta solicitud en <b>{{ branchName(branchId) }}</b
+            >, que es <b>diferente</b> a la sede por defecto (<b>{{
+              branchName(defaultBranchId)
+            }}</b
+            >). ¿Seguro que quieres usar esa sede?
           </p>
         </div>
       </div>
       <template v-else>
-      <div v-if="typesError" class="catalog-error">{{ typesError }}</div>
+        <div v-if="typesError" class="catalog-error">{{ typesError }}</div>
 
-      <BaseField v-if="showBranchField" label="Sede" required class="branch-field">
-        <BaseSelect
-          :model-value="branchId != null ? String(branchId) : null"
-          :options="branchOptions"
-          placeholder="Selecciona una sede"
-          @update:model-value="(v: string) => (branchId = Number(v))"
-        />
-      </BaseField>
+        <BaseField v-if="showBranchField" label="Sede" required class="branch-field">
+          <BaseSelect
+            :model-value="branchId != null ? String(branchId) : null"
+            :options="branchOptions"
+            placeholder="Selecciona una sede"
+            @update:model-value="(v: string) => (branchId = Number(v))"
+          />
+        </BaseField>
 
-      <section
-        v-if="props.existing.length > 0 && editingIndex === null"
-        class="existing-section"
-      >
-        <h4 class="existing-title">Ya solicitados ({{ props.existing.length }})</h4>
-        <ul class="existing-list">
-          <li
-            v-for="(item, idx) in props.existing"
-            :key="idx"
-            class="existing-card"
-          >
-            <div class="existing-summary">
-              <div class="existing-main">
-                {{ formatDateShort(item.date) }} · {{ typeLabel(item.testTypeId) }}
+        <section v-if="props.existing.length > 0 && editingIndex === null" class="existing-section">
+          <h4 class="existing-title">Ya solicitados ({{ props.existing.length }})</h4>
+          <ul class="existing-list">
+            <li v-for="(item, idx) in props.existing" :key="idx" class="existing-card">
+              <div class="existing-summary">
+                <div class="existing-main">
+                  {{ formatDateShort(item.date) }} · {{ typeLabel(item.testTypeId) }}
+                </div>
+                <div class="existing-sub">
+                  {{ item.quantity }} unidad{{ item.quantity === 1 ? '' : 'es' }} ·
+                  {{ item.diagnosis || 'sin observaciones' }}
+                </div>
               </div>
-              <div class="existing-sub">
-                {{ item.quantity }} unidad{{ item.quantity === 1 ? '' : 'es' }}
-                · {{ item.diagnosis || 'sin observaciones' }}
-              </div>
+              <span v-if="item.savedId" class="saved-chip">✓ Guardado</span>
+              <template v-else>
+                <button
+                  type="button"
+                  class="edit-existing"
+                  :class="{ active: editingIndex === idx }"
+                  aria-label="Editar examen"
+                  :disabled="editingIndex !== null && editingIndex !== idx"
+                  @click="editingIndex === idx ? cancelEditing() : startEditing(idx)"
+                >
+                  <Pencil :size="14" :stroke-width="1.7" />
+                </button>
+                <button
+                  type="button"
+                  class="remove-existing"
+                  aria-label="Eliminar examen"
+                  :disabled="editingIndex !== null"
+                  @click="emit('remove-existing', idx)"
+                >
+                  <X :size="14" :stroke-width="1.7" />
+                </button>
+              </template>
+            </li>
+          </ul>
+        </section>
+
+        <div class="tests-list">
+          <div v-for="(t, i) in draft.tests" :key="i" class="test-card">
+            <div class="test-head">
+              <div class="test-num">{{ i + 1 }}</div>
+              <div class="test-title">Examen {{ i + 1 }}</div>
+              <button
+                v-if="draft.tests.length > 1"
+                type="button"
+                class="remove"
+                aria-label="Quitar examen"
+                @click="removeTest(i)"
+              >
+                <Trash2 :size="14" :stroke-width="1.7" />
+              </button>
             </div>
-            <span v-if="item.savedId" class="saved-chip">✓ Guardado</span>
-            <template v-else>
-              <button
-                type="button"
-                class="edit-existing"
-                :class="{ active: editingIndex === idx }"
-                aria-label="Editar examen"
-                :disabled="editingIndex !== null && editingIndex !== idx"
-                @click="
-                  editingIndex === idx ? cancelEditing() : startEditing(idx)
-                "
-              >
-                <Pencil :size="14" :stroke-width="1.7" />
-              </button>
-              <button
-                type="button"
-                class="remove-existing"
-                aria-label="Eliminar examen"
-                :disabled="editingIndex !== null"
-                @click="emit('remove-existing', idx)"
-              >
-                <X :size="14" :stroke-width="1.7" />
-              </button>
-            </template>
-          </li>
-        </ul>
-      </section>
-
-      <div class="tests-list">
-        <div v-for="(t, i) in draft.tests" :key="i" class="test-card">
-          <div class="test-head">
-            <div class="test-num">{{ i + 1 }}</div>
-            <div class="test-title">Examen {{ i + 1 }}</div>
-            <button
-              v-if="draft.tests.length > 1"
-              type="button"
-              class="remove"
-              aria-label="Quitar examen"
-              @click="removeTest(i)"
-            >
-              <Trash2 :size="14" :stroke-width="1.7" />
-            </button>
-          </div>
-          <div class="test-grid">
-            <BaseField
-              label="Tipo de examen"
-              required
-              :error="testErr(i, 'testTypeId')"
-            >
-              <template #default>
-                <SearchableSelect
-                  v-model="t.testTypeId"
-                  :options="testOptions"
-                  :loading="loadingTypes"
-                  placeholder="Selecciona un tipo"
-                  create-label="Crear tipo de examen"
-                  :invalid="!!testErr(i, 'testTypeId')"
-                  :on-create="onCreateTestType"
-                />
-              </template>
-            </BaseField>
-            <BaseField
-              label="Cantidad"
-              required
-              :error="testErr(i, 'quantity')"
-            >
-              <template #default="{ id }">
-                <BaseInput
-                  :id="id"
-                  v-model="t.quantity"
-                  inputmode="numeric"
-                  placeholder="1"
-                  :invalid="!!testErr(i, 'quantity')"
-                />
-              </template>
-            </BaseField>
-            <BaseField
-              label="Observaciones"
-              :error="testErr(i, 'diagnosis')"
-            >
-              <template #default="{ id }">
-                <BaseTextarea
-                  :id="id"
-                  v-model="t.diagnosis"
-                  :rows="2"
-                  placeholder="Observaciones sobre el examen solicitado"
-                />
-              </template>
-            </BaseField>
+            <div class="test-grid">
+              <BaseField label="Tipo de examen" required :error="testErr(i, 'testTypeId')">
+                <template #default>
+                  <SearchableSelect
+                    v-model="t.testTypeId"
+                    :options="testOptions"
+                    :loading="loadingTypes"
+                    placeholder="Selecciona un tipo"
+                    create-label="Crear tipo de examen"
+                    :invalid="!!testErr(i, 'testTypeId')"
+                    :on-create="onCreateTestType"
+                  />
+                </template>
+              </BaseField>
+              <BaseField label="Cantidad" required :error="testErr(i, 'quantity')">
+                <template #default="{ id }">
+                  <BaseInput
+                    :id="id"
+                    v-model="t.quantity"
+                    inputmode="numeric"
+                    placeholder="1"
+                    :invalid="!!testErr(i, 'quantity')"
+                  />
+                </template>
+              </BaseField>
+              <BaseField label="Observaciones" :error="testErr(i, 'diagnosis')">
+                <template #default="{ id }">
+                  <BaseTextarea
+                    :id="id"
+                    v-model="t.diagnosis"
+                    :rows="2"
+                    placeholder="Observaciones sobre el examen solicitado"
+                  />
+                </template>
+              </BaseField>
+            </div>
           </div>
         </div>
-      </div>
 
-      <button
-        v-if="editingIndex === null"
-        type="button"
-        class="add-btn"
-        @click="addTest"
-      >
-        <Plus :size="14" :stroke-width="1.8" />
-        <span>Agregar otro examen</span>
-      </button>
+        <button v-if="editingIndex === null" type="button" class="add-btn" @click="addTest">
+          <Plus :size="14" :stroke-width="1.8" />
+          <span>Agregar otro examen</span>
+        </button>
       </template>
     </template>
 
@@ -392,17 +366,11 @@ function doSave() {
     </template>
     <template #footer-actions>
       <template v-if="confirmingBranch">
-        <button type="button" class="btn-ghost" @click="confirmingBranch = false">
-          Volver
-        </button>
-        <button type="button" class="btn-primary" @click="doSave">
-          Sí, usar esta sede
-        </button>
+        <button type="button" class="btn-ghost" @click="confirmingBranch = false">Volver</button>
+        <button type="button" class="btn-primary" @click="doSave">Sí, usar esta sede</button>
       </template>
       <template v-else>
-        <button type="button" class="btn-ghost" @click="emit('close')">
-          Cancelar
-        </button>
+        <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
         <button type="button" class="btn-primary" @click="save">
           {{ editingIndex !== null ? 'Guardar cambios' : 'Guardar solicitud' }}
         </button>
@@ -413,63 +381,73 @@ function doSave() {
 
 <style scoped>
 .catalog-error {
-  background: oklch(94% 0.06 25);
-  border: 1px solid oklch(85% 0.10 25);
-  color: oklch(35% 0.15 25);
+  background: oklch(94% 0.06 25deg);
+  border: 1px solid oklch(85% 0.1 25deg);
+  color: oklch(35% 0.15 25deg);
   padding: 10px 14px;
   border-radius: 10px;
   font-size: 12.5px;
   margin-bottom: 14px;
 }
+
 .branch-field {
   margin-bottom: 16px;
   max-width: 380px;
 }
+
 .branch-confirm {
   display: flex;
   gap: 12px;
   padding: 16px 18px;
   border-radius: 11px;
-  background: oklch(96% 0.05 80);
-  border: 1px solid oklch(88% 0.09 80);
+  background: oklch(96% 0.05 80deg);
+  border: 1px solid oklch(88% 0.09 80deg);
 }
+
 .bc-ic {
   flex-shrink: 0;
-  color: oklch(55% 0.14 60);
+  color: oklch(55% 0.14 60deg);
   margin-top: 2px;
 }
+
 .bc-title {
   margin: 0 0 4px;
   font-size: 14px;
   font-weight: 600;
-  color: oklch(38% 0.13 60);
+  color: oklch(38% 0.13 60deg);
 }
+
 .bc-text {
   margin: 0;
   font-size: 13px;
   line-height: 1.55;
   color: var(--warm-700);
 }
+
 .bc-text b {
   font-weight: 600;
 }
+
 .tests-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
+
 .test-card {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 11px;
   padding: 14px;
 }
+
 .test-head {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 12px;
 }
+
 .test-num {
   width: 24px;
   height: 24px;
@@ -481,12 +459,14 @@ function doSave() {
   display: grid;
   place-items: center;
 }
+
 .test-title {
   flex: 1;
   font-size: 12.5px;
   font-weight: 500;
   color: var(--warm-600);
 }
+
 .remove {
   background: transparent;
   border: none;
@@ -495,20 +475,24 @@ function doSave() {
   padding: 4px;
   border-radius: 6px;
 }
+
 .remove:hover {
   background: var(--warm-100);
-  color: oklch(50% 0.18 25);
+  color: oklch(50% 0.18 25deg);
 }
+
 .test-grid {
   display: grid;
   grid-template-columns: 2fr 120px 2fr;
   gap: 12px;
 }
-@media (max-width: 880px) {
+
+@media (width <= 880px) {
   .test-grid {
     grid-template-columns: 1fr;
   }
 }
+
 .add-btn {
   margin-top: 10px;
   width: 100%;
@@ -526,11 +510,13 @@ function doSave() {
   justify-content: center;
   gap: 7px;
 }
+
 .add-btn:hover {
   background: var(--warm-100);
   border-color: var(--amatista-500);
   color: var(--amatista-700);
 }
+
 .btn-ghost,
 .btn-primary {
   font-family: inherit;
@@ -541,27 +527,33 @@ function doSave() {
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn-ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-900);
 }
+
 .btn-ghost:hover {
   background: var(--warm-100);
 }
+
 .btn-primary {
   background: var(--amatista-700);
   color: white;
   border: none;
   padding: 9px 18px;
 }
+
 .btn-primary:hover:not(:disabled) {
   filter: brightness(1.05);
 }
+
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
 .existing-section {
   margin-bottom: 22px;
   padding: 14px 16px;
@@ -569,12 +561,14 @@ function doSave() {
   border: 1px solid var(--amatista-200);
   border-radius: 12px;
 }
+
 .existing-title {
   font-size: 14px;
   font-weight: 600;
   color: var(--amatista-700);
   margin: 0 0 10px;
 }
+
 .existing-list {
   list-style: none;
   padding: 0;
@@ -583,6 +577,7 @@ function doSave() {
   flex-direction: column;
   gap: 8px;
 }
+
 .existing-card {
   display: flex;
   align-items: center;
@@ -593,10 +588,12 @@ function doSave() {
   border: 1px solid var(--warm-200);
   border-radius: 10px;
 }
+
 .existing-summary {
   min-width: 0;
   flex: 1;
 }
+
 .existing-main {
   font-size: 14.5px;
   font-weight: 500;
@@ -606,6 +603,7 @@ function doSave() {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .existing-sub {
   font-size: 13px;
   color: var(--warm-600);
@@ -614,16 +612,18 @@ function doSave() {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .saved-chip {
   font-size: 12px;
   font-weight: 500;
   padding: 5px 10px;
   border-radius: 999px;
-  background: oklch(94% 0.06 150);
-  color: oklch(40% 0.15 150);
-  border: 1px solid oklch(85% 0.10 150);
+  background: oklch(94% 0.06 150deg);
+  color: oklch(40% 0.15 150deg);
+  border: 1px solid oklch(85% 0.1 150deg);
   white-space: nowrap;
 }
+
 .remove-existing {
   background: transparent;
   border: 1px solid var(--warm-200);
@@ -636,15 +636,18 @@ function doSave() {
   color: var(--warm-600);
   flex-shrink: 0;
 }
+
 .remove-existing:hover:not(:disabled) {
-  background: oklch(94% 0.06 25);
-  border-color: oklch(85% 0.10 25);
-  color: oklch(35% 0.15 25);
+  background: oklch(94% 0.06 25deg);
+  border-color: oklch(85% 0.1 25deg);
+  color: oklch(35% 0.15 25deg);
 }
+
 .remove-existing:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
 .edit-existing {
   background: transparent;
   border: 1px solid var(--warm-200);
@@ -657,20 +660,24 @@ function doSave() {
   color: var(--warm-600);
   flex-shrink: 0;
 }
+
 .edit-existing:hover:not(:disabled) {
   background: var(--amatista-50);
   border-color: var(--amatista-500);
   color: var(--amatista-700);
 }
+
 .edit-existing.active {
   background: var(--amatista-700);
   border-color: var(--amatista-700);
   color: white;
 }
+
 .edit-existing:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
 .editing-banner {
   display: flex;
   align-items: center;
@@ -683,11 +690,13 @@ function doSave() {
   font-size: 13px;
   font-weight: 500;
 }
+
 .editing-banner span {
   flex: 1;
 }
+
 .editing-cancel {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgb(255 255 255 / 18%);
   border: none;
   padding: 5px 12px;
   border-radius: 6px;
@@ -697,7 +706,8 @@ function doSave() {
   color: white;
   cursor: pointer;
 }
+
 .editing-cancel:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgb(255 255 255 / 28%);
 }
 </style>

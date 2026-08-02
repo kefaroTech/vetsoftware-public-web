@@ -42,24 +42,30 @@ function onClick() {
   place-items: center;
   cursor: pointer;
   padding: 0;
-  transition: background 0.12s, border-color 0.12s;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
   flex-shrink: 0;
 }
+
 .tri.partial,
 .tri.full {
   background: var(--amatista-600);
   border-color: var(--amatista-600);
 }
+
 .tri:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
 .mark {
   font-size: 10px;
   line-height: 1;
   color: #fff;
   font-weight: 700;
 }
+
 .tri:focus-visible {
   outline: 2px solid var(--amatista-400);
   outline-offset: 2px;

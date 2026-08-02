@@ -24,7 +24,10 @@ const editing = ref<Supplier | null>(null)
 let debounce: ReturnType<typeof setTimeout> | undefined
 function onSearch() {
   clearTimeout(debounce)
-  debounce = setTimeout(() => void search({ q: q.value.trim() || undefined, page: 0, pageSize: 50 }), 300)
+  debounce = setTimeout(
+    () => void search({ q: q.value.trim() || undefined, page: 0, pageSize: 50 }),
+    300,
+  )
 }
 
 function refresh() {
@@ -71,7 +74,12 @@ onMounted(refresh)
 
     <div class="search-bar">
       <Search :size="16" :stroke-width="1.7" />
-      <input v-model="q" type="text" placeholder="Buscar por nombre, NIT o contacto…" @input="onSearch" />
+      <input
+        v-model="q"
+        type="text"
+        placeholder="Buscar por nombre, NIT o contacto…"
+        @input="onSearch"
+      />
     </div>
 
     <p v-if="error" class="server-error">{{ error }}</p>
@@ -79,8 +87,13 @@ onMounted(refresh)
     <table class="grid-table">
       <thead>
         <tr>
-          <th>Nombre</th><th>NIT</th><th>Contacto</th><th>Teléfono</th><th>Correo</th>
-          <th class="num">Crédito</th><th class="actions-col"></th>
+          <th>Nombre</th>
+          <th>NIT</th>
+          <th>Contacto</th>
+          <th>Teléfono</th>
+          <th>Correo</th>
+          <th class="num">Crédito</th>
+          <th class="actions-col"></th>
         </tr>
       </thead>
       <tbody>
@@ -95,10 +108,22 @@ onMounted(refresh)
           <td>{{ s.email ?? '—' }}</td>
           <td class="num">{{ s.paymentTermsDays != null ? s.paymentTermsDays + ' días' : '—' }}</td>
           <td class="actions">
-            <button v-if="canUpdate" type="button" class="icon-btn" title="Editar" @click="openEdit(s)">
+            <button
+              v-if="canUpdate"
+              type="button"
+              class="icon-btn"
+              title="Editar"
+              @click="openEdit(s)"
+            >
               <Pencil :size="15" :stroke-width="1.7" />
             </button>
-            <button v-if="canDelete" type="button" class="icon-btn danger" title="Eliminar" @click="onDelete(s)">
+            <button
+              v-if="canDelete"
+              type="button"
+              class="icon-btn danger"
+              title="Eliminar"
+              @click="onDelete(s)"
+            >
               <Trash2 :size="15" :stroke-width="1.7" />
             </button>
           </td>
@@ -107,7 +132,12 @@ onMounted(refresh)
     </table>
     <p class="count">{{ total }} proveedor(es)</p>
 
-    <SupplierModal :open="modalOpen" :supplier="editing" @close="modalOpen = false" @saved="refresh" />
+    <SupplierModal
+      :open="modalOpen"
+      :supplier="editing"
+      @close="modalOpen = false"
+      @saved="refresh"
+    />
   </div>
 </template>
 
@@ -118,18 +148,21 @@ onMounted(refresh)
   padding: 24px 28px;
   font-family: var(--font-sans);
 }
+
 .page-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
 }
+
 .title-wrap {
   display: flex;
   gap: 12px;
   align-items: center;
   color: var(--amatista-700, #5c2d8c);
 }
+
 .title-wrap h1 {
   margin: 0;
   font-family: var(--font-serif);
@@ -137,11 +170,13 @@ onMounted(refresh)
   font-weight: 400;
   color: var(--warm-900);
 }
+
 .sub {
   margin: 2px 0 0;
   font-size: 13px;
   color: var(--warm-500);
 }
+
 .search-bar {
   display: flex;
   align-items: center;
@@ -153,6 +188,7 @@ onMounted(refresh)
   margin-bottom: 16px;
   color: var(--warm-500);
 }
+
 .search-bar input {
   flex: 1;
   border: none;
@@ -162,11 +198,13 @@ onMounted(refresh)
   color: var(--warm-900);
   outline: none;
 }
+
 .grid-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 }
+
 .grid-table th {
   text-align: left;
   color: var(--warm-500);
@@ -176,27 +214,33 @@ onMounted(refresh)
   padding: 8px;
   border-bottom: 1px solid var(--warm-200);
 }
+
 .grid-table td {
   padding: 9px 8px;
   border-bottom: 1px solid var(--warm-100);
   color: var(--warm-700);
 }
+
 .strong {
   font-weight: 600;
   color: var(--warm-900);
 }
+
 .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
 .actions-col {
   width: 90px;
 }
+
 .actions {
   display: flex;
   gap: 6px;
   justify-content: flex-end;
 }
+
 .icon-btn {
   border: none;
   background: var(--warm-100);
@@ -206,31 +250,37 @@ onMounted(refresh)
   cursor: pointer;
   display: inline-flex;
 }
+
 .icon-btn:hover {
   background: var(--warm-200);
 }
+
 .icon-btn.danger:hover {
-  background: oklch(92% 0.06 25);
-  color: oklch(50% 0.2 25);
+  background: oklch(92% 0.06 25deg);
+  color: oklch(50% 0.2 25deg);
 }
+
 .empty-row {
   text-align: center;
   color: var(--warm-400);
   padding: 26px;
 }
+
 .count {
   margin-top: 10px;
   font-size: 12px;
   color: var(--warm-500);
 }
+
 .server-error {
   margin: 0 0 14px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: oklch(94% 0.06 25);
-  color: oklch(45% 0.18 25);
+  background: oklch(94% 0.06 25deg);
+  color: oklch(45% 0.18 25deg);
   font-size: 13px;
 }
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -242,6 +292,7 @@ onMounted(refresh)
   font-weight: 600;
   cursor: pointer;
 }
+
 .btn.primary {
   background: var(--amatista-600, #5c2d8c);
   color: #fff;

@@ -12,9 +12,7 @@ import type { LabSearchCriteria, PageResponse } from '../types/lab'
  * cambio de estado PATCH /laboratory-tests/{id}/status.
  */
 export const laboratorioInternoApi = {
-  async search(
-    criteria: LabSearchCriteria,
-  ): Promise<PageResponse<LaboratoryTestResponse>> {
+  async search(criteria: LabSearchCriteria): Promise<PageResponse<LaboratoryTestResponse>> {
     const params: Record<string, string | number> = {
       page: criteria.page ?? 0,
       pageSize: criteria.pageSize ?? 20,

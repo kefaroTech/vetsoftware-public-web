@@ -94,15 +94,10 @@ const subtitle = computed(() => {
 
 const errors = computed(() => ({
   surgeryTypeId: !draft.surgeryTypeId ? 'Selecciona un tipo' : null,
-  description:
-    draft.description.trim().length < 4
-      ? 'Mínimo 4 caracteres'
-      : null,
+  description: draft.description.trim().length < 4 ? 'Mínimo 4 caracteres' : null,
 }))
 
-const valid = computed<boolean>(
-  () => !errors.value.surgeryTypeId && !errors.value.description,
-)
+const valid = computed<boolean>(() => !errors.value.surgeryTypeId && !errors.value.description)
 
 function err<K extends keyof typeof errors.value>(k: K): string | undefined {
   if (!submitted.value) return undefined
@@ -118,10 +113,7 @@ function truncate(s: string, max = 60): string {
   return s.length > max ? s.slice(0, max - 1) + '…' : s
 }
 
-async function onCreateSurgeryType(data: {
-  name: string
-  description: string
-}) {
+async function onCreateSurgeryType(data: { name: string; description: string }) {
   const created = await createSurgeryType(data)
   return {
     value: String(created.id),
@@ -185,17 +177,10 @@ function save() {
     <template #body>
       <div v-if="typesError" class="catalog-error">{{ typesError }}</div>
 
-      <section
-        v-if="props.existing.length > 0 && editingIndex === null"
-        class="existing-section"
-      >
+      <section v-if="props.existing.length > 0 && editingIndex === null" class="existing-section">
         <h4 class="existing-title">Ya agregadas ({{ props.existing.length }})</h4>
         <ul class="existing-list">
-          <li
-            v-for="(item, idx) in props.existing"
-            :key="idx"
-            class="existing-card"
-          >
+          <li v-for="(item, idx) in props.existing" :key="idx" class="existing-card">
             <div class="existing-summary">
               <div class="existing-main">
                 {{ formatDateShort(item.date) }} ·
@@ -211,9 +196,7 @@ function save() {
                 :class="{ active: editingIndex === idx }"
                 aria-label="Editar cirugía"
                 :disabled="editingIndex !== null && editingIndex !== idx"
-                @click="
-                  editingIndex === idx ? cancelEditing() : startEditing(idx)
-                "
+                @click="editingIndex === idx ? cancelEditing() : startEditing(idx)"
               >
                 <Pencil :size="14" :stroke-width="1.7" />
               </button>
@@ -237,11 +220,7 @@ function save() {
             <DateInput v-model="draft.date" />
           </template>
         </BaseField>
-        <BaseField
-          label="Tipo de cirugía"
-          required
-          :error="err('surgeryTypeId')"
-        >
+        <BaseField label="Tipo de cirugía" required :error="err('surgeryTypeId')">
           <template #default>
             <SearchableSelect
               v-model="draft.surgeryTypeId"
@@ -256,11 +235,7 @@ function save() {
         </BaseField>
       </div>
 
-      <BaseField
-        label="Descripción del procedimiento"
-        required
-        :error="err('description')"
-      >
+      <BaseField label="Descripción del procedimiento" required :error="err('description')">
         <template #default="{ id }">
           <BaseTextarea
             :id="id"
@@ -271,10 +246,7 @@ function save() {
         </template>
       </BaseField>
 
-      <BaseField
-        label="Anestesia / Premedicación"
-        hint="Protocolo y dosis"
-      >
+      <BaseField label="Anestesia / Premedicación" hint="Protocolo y dosis">
         <template #default="{ id }">
           <BaseInput
             :id="id"
@@ -313,14 +285,8 @@ function save() {
       <span v-else>1 cirugía · Se vinculará a la consulta</span>
     </template>
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">
-        Cancelar
-      </button>
-      <button
-        type="button"
-        class="btn-primary"
-        @click="save"
-      >
+      <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
+      <button type="button" class="btn-primary" @click="save">
         {{ editingIndex !== null ? 'Guardar cambios' : 'Guardar' }}
       </button>
     </template>
@@ -329,25 +295,28 @@ function save() {
 
 <style scoped>
 .catalog-error {
-  background: oklch(94% 0.06 25);
-  border: 1px solid oklch(85% 0.10 25);
-  color: oklch(35% 0.15 25);
+  background: oklch(94% 0.06 25deg);
+  border: 1px solid oklch(85% 0.1 25deg);
+  color: oklch(35% 0.15 25deg);
   padding: 10px 14px;
   border-radius: 10px;
   font-size: 12.5px;
   margin-bottom: 14px;
 }
+
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
   margin-bottom: 14px;
 }
-@media (max-width: 720px) {
+
+@media (width <= 720px) {
   .grid-2 {
     grid-template-columns: 1fr;
   }
 }
+
 .btn-ghost,
 .btn-primary {
   font-family: inherit;
@@ -358,27 +327,33 @@ function save() {
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn-ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-900);
 }
+
 .btn-ghost:hover {
   background: var(--warm-100);
 }
+
 .btn-primary {
   background: var(--amatista-700);
   color: white;
   border: none;
   padding: 9px 18px;
 }
+
 .btn-primary:hover:not(:disabled) {
   filter: brightness(1.05);
 }
+
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
 .existing-section {
   margin-bottom: 22px;
   padding: 14px 16px;
@@ -386,12 +361,14 @@ function save() {
   border: 1px solid var(--amatista-200);
   border-radius: 12px;
 }
+
 .existing-title {
   font-size: 14px;
   font-weight: 600;
   color: var(--amatista-700);
   margin: 0 0 10px;
 }
+
 .existing-list {
   list-style: none;
   padding: 0;
@@ -400,6 +377,7 @@ function save() {
   flex-direction: column;
   gap: 8px;
 }
+
 .existing-card {
   display: flex;
   align-items: center;
@@ -410,10 +388,12 @@ function save() {
   border: 1px solid var(--warm-200);
   border-radius: 10px;
 }
+
 .existing-summary {
   min-width: 0;
   flex: 1;
 }
+
 .existing-main {
   font-size: 14.5px;
   font-weight: 500;
@@ -423,6 +403,7 @@ function save() {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .existing-sub {
   font-size: 13px;
   color: var(--warm-600);
@@ -431,16 +412,18 @@ function save() {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .saved-chip {
   font-size: 12px;
   font-weight: 500;
   padding: 5px 10px;
   border-radius: 999px;
-  background: oklch(94% 0.06 150);
-  color: oklch(40% 0.15 150);
-  border: 1px solid oklch(85% 0.10 150);
+  background: oklch(94% 0.06 150deg);
+  color: oklch(40% 0.15 150deg);
+  border: 1px solid oklch(85% 0.1 150deg);
   white-space: nowrap;
 }
+
 .remove-existing {
   background: transparent;
   border: 1px solid var(--warm-200);
@@ -453,15 +436,18 @@ function save() {
   color: var(--warm-600);
   flex-shrink: 0;
 }
+
 .remove-existing:hover:not(:disabled) {
-  background: oklch(94% 0.06 25);
-  border-color: oklch(85% 0.10 25);
-  color: oklch(35% 0.15 25);
+  background: oklch(94% 0.06 25deg);
+  border-color: oklch(85% 0.1 25deg);
+  color: oklch(35% 0.15 25deg);
 }
+
 .remove-existing:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
 .edit-existing {
   background: transparent;
   border: 1px solid var(--warm-200);
@@ -474,20 +460,24 @@ function save() {
   color: var(--warm-600);
   flex-shrink: 0;
 }
+
 .edit-existing:hover:not(:disabled) {
   background: var(--amatista-50);
   border-color: var(--amatista-500);
   color: var(--amatista-700);
 }
+
 .edit-existing.active {
   background: var(--amatista-700);
   border-color: var(--amatista-700);
   color: white;
 }
+
 .edit-existing:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
 .editing-banner {
   display: flex;
   align-items: center;
@@ -500,11 +490,13 @@ function save() {
   font-size: 13px;
   font-weight: 500;
 }
+
 .editing-banner span {
   flex: 1;
 }
+
 .editing-cancel {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgb(255 255 255 / 18%);
   border: none;
   padding: 5px 12px;
   border-radius: 6px;
@@ -514,7 +506,8 @@ function save() {
   color: white;
   cursor: pointer;
 }
+
 .editing-cancel:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgb(255 255 255 / 28%);
 }
 </style>

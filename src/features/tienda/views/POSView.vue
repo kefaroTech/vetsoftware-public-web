@@ -221,6 +221,7 @@ const catalog = computed<CatalogCard[]>(() => {
       .filter((p) => !cat.value || String(p.productCategory.id) === cat.value)
       .filter((p) => !q || p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q))
       .map((p) => {
+        const stockCount = stockCountOf(p.id)
         const applied = applyPromo(
           p,
           'product',
@@ -238,9 +239,8 @@ const catalog = computed<CatalogCard[]>(() => {
           taxTreatment: p.taxTreatment,
           taxPercentage: appliesIva(p.taxTreatment) ? (p.tax?.percentage ?? 0) : 0,
           taxName: p.tax?.name,
-          stockState:
-            stockCountOf(p.id) == null ? null : stockState(stockCountOf(p.id)!, stockMinOf(p.id)),
-          stockCount: stockCountOf(p.id),
+          stockState: stockCount == null ? null : stockState(stockCount, stockMinOf(p.id)),
+          stockCount,
           isService: false,
           toneBg: productCategoryTone(p.productCategory).bg,
           toneFg: productCategoryTone(p.productCategory).fg,
@@ -598,7 +598,7 @@ function openFiscalPicker() {
                 <span
                   v-if="!c.isService && c.stockState"
                   class="pcard-stock"
-                  :class="`st-${c.stockState}`"
+                  :class="`st-${c.stockState.toLowerCase()}`"
                 >
                   {{ c.stockState === 'AGOTADO' ? 'Agotado' : c.stockCount + ' u' }}
                 </span>
@@ -729,6 +729,7 @@ function openFiscalPicker() {
   font-family: var(--font-sans);
   color: var(--warm-900);
 }
+
 .cash-gate {
   position: relative;
   min-height: 520px;
@@ -740,6 +741,7 @@ function openFiscalPicker() {
   padding: 32px;
   background: linear-gradient(145deg, var(--warm-50), var(--amatista-50, #f7f1fb));
 }
+
 .cash-gate::before {
   content: '';
   position: absolute;
@@ -751,6 +753,7 @@ function openFiscalPicker() {
   background-size: 42px 42px;
   mask-image: linear-gradient(to bottom, #000, transparent 88%);
 }
+
 .cash-gate-card {
   position: relative;
   z-index: 1;
@@ -763,9 +766,10 @@ function openFiscalPicker() {
   border: 1px solid color-mix(in srgb, var(--amatista-300, #c9a9df) 55%, transparent);
   border-radius: 18px;
   background: color-mix(in srgb, var(--warm-50) 94%, transparent);
-  box-shadow: 0 22px 55px -34px rgba(40, 24, 55, 0.45);
+  box-shadow: 0 22px 55px -34px rgb(40 24 55 / 45%);
   backdrop-filter: blur(8px);
 }
+
 .cash-lock-icon {
   width: 64px;
   height: 64px;
@@ -777,11 +781,13 @@ function openFiscalPicker() {
   background: var(--amatista-100, #efe6f7);
   box-shadow: inset 0 0 0 1px var(--amatista-200, #ddc9eb);
 }
+
 .cash-lock-icon.error {
-  color: oklch(48% 0.18 25);
-  background: oklch(94% 0.05 25);
-  box-shadow: inset 0 0 0 1px oklch(84% 0.1 25);
+  color: oklch(48% 0.18 25deg);
+  background: oklch(94% 0.05 25deg);
+  box-shadow: inset 0 0 0 1px oklch(84% 0.1 25deg);
 }
+
 .cash-gate-kicker {
   color: var(--amatista-700);
   font-size: 11px;
@@ -789,6 +795,7 @@ function openFiscalPicker() {
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
+
 .cash-gate h2 {
   margin: 8px 0 10px;
   font-family: var(--font-serif);
@@ -796,6 +803,7 @@ function openFiscalPicker() {
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .cash-gate p {
   max-width: 450px;
   margin: 0;
@@ -803,6 +811,7 @@ function openFiscalPicker() {
   font-size: 14px;
   line-height: 1.65;
 }
+
 .cash-gate-btn {
   display: inline-flex;
   align-items: center;
@@ -820,48 +829,56 @@ function openFiscalPicker() {
   cursor: pointer;
   box-shadow: 0 8px 20px -12px var(--amatista-900, #3e1d61);
 }
+
 .cash-gate-btn:hover {
   filter: brightness(1.06);
 }
+
 .cash-gate-btn.secondary {
   color: var(--amatista-700);
   background: var(--warm-50);
   border: 1px solid var(--amatista-300, #c9a9df);
   box-shadow: none;
 }
+
 .spin {
   animation: cash-spin 0.9s linear infinite;
 }
+
 @keyframes cash-spin {
   to {
     transform: rotate(360deg);
   }
 }
+
 .banner.error {
-  background: oklch(95% 0.06 25);
-  border: 1px solid oklch(85% 0.12 25);
-  color: oklch(40% 0.18 25);
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 13px;
   margin-bottom: 14px;
 }
+
 .banner.warn {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: oklch(97% 0.05 85);
-  border: 1px solid oklch(85% 0.11 85);
-  color: oklch(40% 0.09 70);
+  background: oklch(97% 0.05 85deg);
+  border: 1px solid oklch(85% 0.11 85deg);
+  color: oklch(40% 0.09 70deg);
   border-radius: 8px;
   padding: 12px 14px;
   margin-bottom: 14px;
 }
+
 .banner.warn .warn-icon {
   flex: 0 0 auto;
   margin-top: 1px;
-  color: oklch(60% 0.15 70);
+  color: oklch(60% 0.15 70deg);
 }
+
 .banner.warn .warn-text {
   display: flex;
   flex-direction: column;
@@ -869,34 +886,39 @@ function openFiscalPicker() {
   font-size: 13px;
   min-width: 0;
 }
+
 .banner.warn .warn-text strong {
   font-weight: 600;
 }
+
 .banner.warn .warn-text span {
-  color: oklch(45% 0.05 70);
+  color: oklch(45% 0.05 70deg);
 }
+
 .banner.warn .warn-cta {
   flex: 0 0 auto;
   margin-left: auto;
   align-self: center;
-  border: 1px solid oklch(60% 0.15 70);
-  background: oklch(99% 0.02 85);
-  color: oklch(40% 0.12 70);
+  border: 1px solid oklch(60% 0.15 70deg);
+  background: oklch(99% 0.02 85deg);
+  color: oklch(40% 0.12 70deg);
   border-radius: 7px;
   padding: 7px 14px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
+
 .banner.warn .warn-cta:hover {
-  background: oklch(95% 0.06 85);
+  background: oklch(95% 0.06 85deg);
 }
+
 .banner.warn .warn-hint {
   flex: 0 0 auto;
   margin-left: auto;
   align-self: center;
   font-size: 12.5px;
-  color: oklch(50% 0.05 70);
+  color: oklch(50% 0.05 70deg);
 }
 
 .pos {
@@ -905,12 +927,14 @@ function openFiscalPicker() {
   gap: 18px;
   align-items: start;
 }
-@media (max-width: 1100px) {
+
+@media (width <= 1100px) {
   .pos {
     grid-template-columns: 1fr 340px;
   }
 }
-@media (max-width: 900px) {
+
+@media (width <= 900px) {
   .pos {
     grid-template-columns: 1fr;
   }
@@ -921,6 +945,7 @@ function openFiscalPicker() {
   flex-direction: column;
   min-height: 0;
 }
+
 .catalog-head {
   display: flex;
   flex-direction: column;
@@ -937,6 +962,7 @@ function openFiscalPicker() {
   padding: 3px;
   align-self: flex-start;
 }
+
 .modetab {
   display: inline-flex;
   align-items: center;
@@ -951,10 +977,11 @@ function openFiscalPicker() {
   color: var(--warm-600);
   cursor: pointer;
 }
+
 .modetab.active {
   background: var(--warm-50);
   color: var(--amatista-700);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
 }
 
 .search {
@@ -966,14 +993,17 @@ function openFiscalPicker() {
   border-radius: 9px;
   padding: 10px 13px;
 }
+
 .search:focus-within {
   border-color: var(--amatista-500);
   box-shadow: 0 0 0 3px var(--amatista-50);
 }
+
 .s-icon {
   color: var(--warm-500);
   flex-shrink: 0;
 }
+
 .search input {
   flex: 1;
   border: none;
@@ -990,6 +1020,7 @@ function openFiscalPicker() {
   flex-wrap: wrap;
   gap: 6px;
 }
+
 .cat {
   padding: 6px 13px;
   border-radius: 999px;
@@ -1000,9 +1031,11 @@ function openFiscalPicker() {
   color: var(--warm-700);
   cursor: pointer;
 }
+
 .cat:hover {
   border-color: var(--amatista-300);
 }
+
 .cat.active {
   background: var(--amatista-700);
   color: #fff;
@@ -1016,6 +1049,7 @@ function openFiscalPicker() {
   gap: 12px;
   align-content: start;
 }
+
 .grid-empty {
   grid-column: 1 / -1;
   padding: 40px;
@@ -1023,6 +1057,7 @@ function openFiscalPicker() {
   color: var(--warm-500);
   font-size: 13px;
 }
+
 .pcard {
   position: relative;
   display: flex;
@@ -1039,28 +1074,34 @@ function openFiscalPicker() {
     border-color 0.12s ease,
     box-shadow 0.12s ease;
 }
+
 .pcard:hover:not(.disabled) {
   border-color: var(--amatista-300);
-  box-shadow: 0 4px 14px -8px rgba(20, 15, 30, 0.18);
+  box-shadow: 0 4px 14px -8px rgb(20 15 30 / 18%);
 }
+
 .pcard.disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
 .pcard-thumb {
   height: 56px;
   border-radius: 9px;
   display: grid;
   place-items: center;
 }
+
 .pcard-thumb.prod {
   background: var(--warm-150);
   color: var(--warm-600);
 }
+
 .pcard-thumb.svc {
   background: var(--amatista-50);
   color: var(--amatista-700);
 }
+
 .pcard-name {
   font-size: 13px;
   font-weight: 500;
@@ -1073,17 +1114,20 @@ function openFiscalPicker() {
   overflow: hidden;
   min-height: 34px;
 }
+
 .pcard-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 6px;
 }
+
 .pcard-price {
   font-size: 14px;
   font-weight: 600;
   color: var(--warm-900);
 }
+
 .price-old {
   font-size: 11px;
   color: var(--warm-400);
@@ -1091,6 +1135,7 @@ function openFiscalPicker() {
   margin-right: 6px;
   font-weight: 400;
 }
+
 .pcard-stock {
   font-size: 11px;
   padding: 2px 7px;
@@ -1099,14 +1144,17 @@ function openFiscalPicker() {
   color: var(--warm-600);
   white-space: nowrap;
 }
-.pcard-stock.st-BAJO {
-  background: oklch(94% 0.07 80);
-  color: oklch(45% 0.13 70);
+
+.pcard-stock.st-bajo {
+  background: oklch(94% 0.07 80deg);
+  color: oklch(45% 0.13 70deg);
 }
-.pcard-stock.st-AGOTADO {
-  background: oklch(93% 0.06 25);
-  color: oklch(48% 0.19 25);
+
+.pcard-stock.st-agotado {
+  background: oklch(93% 0.06 25deg);
+  color: oklch(48% 0.19 25deg);
 }
+
 .pcard-svc {
   font-size: 11px;
   padding: 2px 7px;
@@ -1114,6 +1162,7 @@ function openFiscalPicker() {
   background: var(--amatista-50);
   color: var(--amatista-700);
 }
+
 .promo-badge {
   position: absolute;
   top: 8px;
@@ -1125,7 +1174,7 @@ function openFiscalPicker() {
   letter-spacing: 0.04em;
   padding: 2px 7px;
   border-radius: 999px;
-  background: oklch(58% 0.18 25);
+  background: oklch(58% 0.18 25deg);
   color: #fff;
 }
 
@@ -1139,6 +1188,7 @@ function openFiscalPicker() {
   border-radius: 14px;
   overflow: hidden;
 }
+
 .ticket-head {
   display: flex;
   align-items: center;
@@ -1149,9 +1199,11 @@ function openFiscalPicker() {
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .ticket-head svg {
   color: var(--amatista-600);
 }
+
 .customer {
   display: flex;
   align-items: center;
@@ -1166,12 +1218,15 @@ function openFiscalPicker() {
   color: var(--warm-700);
   cursor: pointer;
 }
+
 .customer:hover {
   background: var(--warm-150);
 }
+
 .cust-x {
   margin-left: auto;
 }
+
 .lines {
   flex: 1;
   overflow-y: auto;
@@ -1181,6 +1236,7 @@ function openFiscalPicker() {
   gap: 4px;
   max-height: 360px;
 }
+
 .lines-empty {
   flex: 1;
   display: flex;
@@ -1193,6 +1249,7 @@ function openFiscalPicker() {
   padding: 40px 20px;
   text-align: center;
 }
+
 .line {
   display: flex;
   align-items: center;
@@ -1200,18 +1257,22 @@ function openFiscalPicker() {
   padding: 9px 10px;
   border-radius: 9px;
 }
+
 .line:hover {
   background: var(--warm-100);
 }
+
 .line-info {
   flex: 1;
   min-width: 0;
 }
+
 .line-name {
   font-size: 13px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .line-tag {
   display: inline-block;
   font-size: 9.5px;
@@ -1225,11 +1286,13 @@ function openFiscalPicker() {
   margin-right: 6px;
   vertical-align: middle;
 }
+
 .line-price {
   font-size: 11px;
   color: var(--warm-500);
   margin-top: 1px;
 }
+
 .qty {
   display: flex;
   align-items: center;
@@ -1237,6 +1300,7 @@ function openFiscalPicker() {
   border-radius: 7px;
   overflow: hidden;
 }
+
 .qty button {
   width: 24px;
   height: 26px;
@@ -1247,15 +1311,18 @@ function openFiscalPicker() {
   display: grid;
   place-items: center;
 }
+
 .qty button:hover {
   background: var(--warm-200);
 }
+
 .qty span {
   min-width: 26px;
   text-align: center;
   font-size: 13px;
   font-weight: 500;
 }
+
 .line-total {
   font-size: 13px;
   font-weight: 600;
@@ -1263,6 +1330,7 @@ function openFiscalPicker() {
   min-width: 64px;
   text-align: right;
 }
+
 .line-x {
   width: 26px;
   height: 26px;
@@ -1274,9 +1342,10 @@ function openFiscalPicker() {
   display: grid;
   place-items: center;
 }
+
 .line-x:hover {
-  background: oklch(94% 0.05 25);
-  color: oklch(48% 0.18 25);
+  background: oklch(94% 0.05 25deg);
+  color: oklch(48% 0.18 25deg);
 }
 
 .summary {
@@ -1286,6 +1355,7 @@ function openFiscalPicker() {
   flex-direction: column;
   gap: 7px;
 }
+
 .srow {
   display: flex;
   align-items: center;
@@ -1293,9 +1363,11 @@ function openFiscalPicker() {
   font-size: 13px;
   color: var(--warm-600);
 }
+
 .srow.savings {
-  color: oklch(45% 0.13 150);
+  color: oklch(45% 0.13 150deg);
 }
+
 .srow.grand {
   font-size: 17px;
   font-weight: 600;
@@ -1304,6 +1376,7 @@ function openFiscalPicker() {
   margin-top: 3px;
   border-top: 1px solid var(--warm-150);
 }
+
 .charge {
   margin-top: 10px;
   padding: 12px;
@@ -1320,15 +1393,17 @@ function openFiscalPicker() {
   font-weight: 600;
   cursor: pointer;
 }
+
 .charge:hover:not(:disabled) {
   filter: brightness(1.05);
 }
+
 .charge:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-@media (max-width: 760px) {
+@media (width <= 760px) {
   .cash-gate {
     min-height: 440px;
     padding: 16px;

@@ -16,6 +16,7 @@ defineProps<{
 .heading {
   margin-bottom: 24px;
 }
+
 .title {
   margin: 0;
   font-size: 22px;
@@ -23,6 +24,7 @@ defineProps<{
   letter-spacing: -0.015em;
   color: var(--warm-900);
 }
+
 .subtitle {
   margin: 4px 0 0;
   font-size: 13.5px;

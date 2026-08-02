@@ -165,10 +165,7 @@ const TICKET_STYLES = `
 
 /** Escapa texto para insertarlo de forma segura en el HTML del ticket. */
 function esc(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
 function totalsBlock(rows: ReceiptTotalRow[]): string {

@@ -92,15 +92,16 @@ const chart = computed(() => {
   const n = pts.length
   const xFor = (i: number) =>
     n === 1 ? CHART_W / 2 : PAD_X + (i * (CHART_W - 2 * PAD_X)) / (n - 1)
-  const yFor = (kg: number) =>
-    CHART_H - PAD_Y - ((kg - min) / span) * (CHART_H - 2 * PAD_Y)
+  const yFor = (kg: number) => CHART_H - PAD_Y - ((kg - min) / span) * (CHART_H - 2 * PAD_Y)
   const coords = pts.map((p, i) => ({
     x: xFor(i),
     y: yFor(p.kg),
     record: p.record,
     kg: p.kg,
   }))
-  const line = coords.map((c, i) => `${i === 0 ? 'M' : 'L'}${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ')
+  const line = coords
+    .map((c, i) => `${i === 0 ? 'M' : 'L'}${c.x.toFixed(1)},${c.y.toFixed(1)}`)
+    .join(' ')
   const area =
     `M${coords[0].x.toFixed(1)},${(CHART_H - PAD_Y).toFixed(1)} ` +
     coords.map((c) => `L${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ') +
@@ -200,12 +201,7 @@ async function remove(id: number) {
         <h2>Historial de peso</h2>
         <span v-if="records.length" class="wp-count">{{ records.length }}</span>
       </div>
-      <button
-        v-if="canEdit && !showForm"
-        type="button"
-        class="wp-add"
-        @click="openForm"
-      >
+      <button v-if="canEdit && !showForm" type="button" class="wp-add" @click="openForm">
         <Plus :size="14" :stroke-width="1.8" />
         Registrar peso
       </button>
@@ -221,7 +217,11 @@ async function remove(id: number) {
       <!-- Formulario de alta -->
       <form v-if="showForm" class="wp-form" @submit.prevent="submit">
         <div class="wp-form-grid">
-          <BaseField label="Peso" required :error="submitted ? valueError ?? undefined : undefined">
+          <BaseField
+            label="Peso"
+            required
+            :error="submitted ? (valueError ?? undefined) : undefined"
+          >
             <template #default="{ id }">
               <BaseInput
                 :id="id"
@@ -261,9 +261,7 @@ async function remove(id: number) {
         </div>
       </form>
 
-      <div v-if="records.length === 0" class="wp-empty">
-        Sin registros de peso todavía.
-      </div>
+      <div v-if="records.length === 0" class="wp-empty">Sin registros de peso todavía.</div>
 
       <template v-else>
         <!-- Resumen + gráfico de tendencia -->
@@ -271,7 +269,9 @@ async function remove(id: number) {
           <div v-if="trend" class="wp-trend" :class="trend.diff >= 0 ? 'up' : 'down'">
             {{ trend.diff >= 0 ? '▲' : '▼' }}
             {{ Math.abs(trend.diff).toFixed(2) }} kg
-            <span class="wp-trend-pct">({{ trend.pct >= 0 ? '+' : '' }}{{ trend.pct.toFixed(1) }}%)</span>
+            <span class="wp-trend-pct"
+              >({{ trend.pct >= 0 ? '+' : '' }}{{ trend.pct.toFixed(1) }}%)</span
+            >
             <span class="wp-trend-cap">vs. registro anterior</span>
           </div>
           <svg
@@ -350,6 +350,7 @@ async function remove(id: number) {
   padding: 18px 20px;
   margin-bottom: 18px;
 }
+
 .wp-head {
   display: flex;
   align-items: center;
@@ -357,12 +358,14 @@ async function remove(id: number) {
   gap: 12px;
   margin-bottom: 14px;
 }
+
 .wp-title {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   color: var(--amatista-700);
 }
+
 .wp-title h2 {
   font-family: var(--font-serif);
   font-size: 20px;
@@ -370,6 +373,7 @@ async function remove(id: number) {
   color: var(--warm-900);
   margin: 0;
 }
+
 .wp-count {
   font-size: 11.5px;
   font-weight: 600;
@@ -378,6 +382,7 @@ async function remove(id: number) {
   border-radius: 999px;
   padding: 1px 8px;
 }
+
 .wp-add {
   display: inline-flex;
   align-items: center;
@@ -392,23 +397,27 @@ async function remove(id: number) {
   cursor: pointer;
   font-family: inherit;
 }
+
 .wp-add:hover {
   background: var(--amatista-600);
 }
+
 .wp-loading {
   display: grid;
   place-items: center;
   padding: 30px 0;
 }
+
 .wp-banner.error {
   padding: 10px 12px;
   font-size: 12.5px;
   border-radius: 9px;
-  background: oklch(97% 0.02 25);
-  color: oklch(48% 0.18 25);
-  border: 1px solid oklch(85% 0.06 25);
+  background: oklch(97% 0.02 25deg);
+  color: oklch(48% 0.18 25deg);
+  border: 1px solid oklch(85% 0.06 25deg);
   margin-bottom: 12px;
 }
+
 .wp-form {
   background: white;
   border: 1px solid var(--warm-200);
@@ -416,20 +425,24 @@ async function remove(id: number) {
   padding: 16px;
   margin-bottom: 16px;
 }
+
 .wp-form-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px 16px;
 }
+
 .wp-note {
   grid-column: 1 / -1;
 }
+
 .wp-form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
   margin-top: 14px;
 }
+
 .wp-btn-primary {
   padding: 8px 16px;
   font-size: 13px;
@@ -441,10 +454,12 @@ async function remove(id: number) {
   cursor: pointer;
   font-family: inherit;
 }
+
 .wp-btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
 .wp-btn-ghost {
   display: inline-flex;
   align-items: center;
@@ -458,15 +473,18 @@ async function remove(id: number) {
   cursor: pointer;
   font-family: inherit;
 }
+
 .wp-empty {
   padding: 28px 16px;
   text-align: center;
   color: var(--warm-500);
   font-size: 13px;
 }
+
 .wp-chart-wrap {
   margin-bottom: 14px;
 }
+
 .wp-trend {
   display: inline-flex;
   align-items: baseline;
@@ -475,25 +493,31 @@ async function remove(id: number) {
   font-weight: 600;
   margin-bottom: 8px;
 }
+
 .wp-trend.up {
-  color: oklch(52% 0.16 150);
+  color: oklch(52% 0.16 150deg);
 }
+
 .wp-trend.down {
-  color: oklch(55% 0.18 25);
+  color: oklch(55% 0.18 25deg);
 }
+
 .wp-trend-pct {
   font-weight: 500;
 }
+
 .wp-trend-cap {
   font-size: 11.5px;
   font-weight: 400;
   color: var(--warm-500);
 }
+
 .wp-chart {
   width: 100%;
   height: 150px;
   display: block;
 }
+
 .wp-chart-axis {
   display: flex;
   justify-content: space-between;
@@ -501,6 +525,7 @@ async function remove(id: number) {
   color: var(--warm-500);
   margin-top: 2px;
 }
+
 .wp-list {
   list-style: none;
   margin: 0;
@@ -509,6 +534,7 @@ async function remove(id: number) {
   flex-direction: column;
   gap: 2px;
 }
+
 .wp-item {
   display: flex;
   align-items: center;
@@ -516,24 +542,29 @@ async function remove(id: number) {
   padding: 9px 10px;
   border-radius: 9px;
 }
+
 .wp-item:hover {
   background: var(--warm-100);
 }
+
 .wp-item-main {
   display: flex;
   align-items: baseline;
   gap: 10px;
   min-width: 150px;
 }
+
 .wp-item-value {
   font-size: 14.5px;
   font-weight: 600;
   color: var(--warm-900);
 }
+
 .wp-item-date {
   font-size: 12px;
   color: var(--warm-500);
 }
+
 .wp-item-meta {
   flex: 1;
   display: flex;
@@ -541,6 +572,7 @@ async function remove(id: number) {
   gap: 10px;
   min-width: 0;
 }
+
 .wp-src {
   font-size: 11px;
   font-weight: 500;
@@ -549,14 +581,17 @@ async function remove(id: number) {
   background: var(--warm-200);
   color: var(--warm-700);
 }
+
 .wp-src.src-consultation {
   background: var(--amatista-100);
   color: var(--amatista-700);
 }
+
 .wp-src.src-hospitalization {
-  background: oklch(93% 0.05 250);
-  color: oklch(45% 0.15 250);
+  background: oklch(93% 0.05 250deg);
+  color: oklch(45% 0.15 250deg);
 }
+
 .wp-item-note {
   font-size: 12.5px;
   color: var(--warm-600);
@@ -564,6 +599,7 @@ async function remove(id: number) {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .wp-del {
   background: transparent;
   border: none;
@@ -573,20 +609,24 @@ async function remove(id: number) {
   border-radius: 6px;
   flex-shrink: 0;
 }
+
 .wp-del:hover {
-  color: oklch(55% 0.18 25);
-  background: oklch(96% 0.02 25);
+  color: oklch(55% 0.18 25deg);
+  background: oklch(96% 0.02 25deg);
 }
+
 .wp-del:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-@media (max-width: 720px) {
+
+@media (width <= 720px) {
   .wp-form-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-@media (max-width: 480px) {
+
+@media (width <= 480px) {
   .wp-form-grid {
     grid-template-columns: 1fr;
   }

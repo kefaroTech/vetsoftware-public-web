@@ -33,13 +33,21 @@ export const inventoryApi = {
   async lots(productId: number, branchId?: number | null): Promise<StockLotView[]> {
     const params: Record<string, number> = {}
     if (branchId != null) params.branchId = branchId
-    const { data } = await http.get<StockLotView[]>(`/inventory/products/${productId}/lots`, { params })
+    const { data } = await http.get<StockLotView[]>(`/inventory/products/${productId}/lots`, {
+      params,
+    })
     return data
   },
 
   async kardex(
     productId: number,
-    opts: { branchId?: number | null; from?: string | null; to?: string | null; page?: number; pageSize?: number } = {},
+    opts: {
+      branchId?: number | null
+      from?: string | null
+      to?: string | null
+      page?: number
+      pageSize?: number
+    } = {},
   ): Promise<PageResponse<StockMovementView>> {
     const params: Record<string, string | number> = {
       page: opts.page ?? 0,
@@ -67,7 +75,11 @@ export const inventoryApi = {
     await http.post('/inventory/transfers', payload)
   },
 
-  async setMinStock(productId: number, branchId: number | null | undefined, minStock: number): Promise<void> {
+  async setMinStock(
+    productId: number,
+    branchId: number | null | undefined,
+    minStock: number,
+  ): Promise<void> {
     await http.put(`/inventory/products/${productId}/min-stock`, { branchId, minStock })
   },
 
@@ -92,9 +104,18 @@ export const inventoryApi = {
   },
 
   async purchases(
-    opts: { branchId?: number | null; from?: string | null; to?: string | null; page?: number; pageSize?: number } = {},
+    opts: {
+      branchId?: number | null
+      from?: string | null
+      to?: string | null
+      page?: number
+      pageSize?: number
+    } = {},
   ): Promise<PageResponse<PurchaseView>> {
-    const params: Record<string, string | number> = { page: opts.page ?? 0, pageSize: opts.pageSize ?? 20 }
+    const params: Record<string, string | number> = {
+      page: opts.page ?? 0,
+      pageSize: opts.pageSize ?? 20,
+    }
     if (opts.branchId != null) params.branchId = opts.branchId
     if (opts.from) params.from = opts.from
     if (opts.to) params.to = opts.to
@@ -111,9 +132,14 @@ export const inventoryApi = {
   async counts(
     opts: { branchId?: number | null; page?: number; pageSize?: number } = {},
   ): Promise<PageResponse<InventoryCountView>> {
-    const params: Record<string, string | number> = { page: opts.page ?? 0, pageSize: opts.pageSize ?? 20 }
+    const params: Record<string, string | number> = {
+      page: opts.page ?? 0,
+      pageSize: opts.pageSize ?? 20,
+    }
     if (opts.branchId != null) params.branchId = opts.branchId
-    const { data } = await http.get<PageResponse<InventoryCountView>>('/inventory/counts', { params })
+    const { data } = await http.get<PageResponse<InventoryCountView>>('/inventory/counts', {
+      params,
+    })
     return data
   },
 
@@ -125,19 +151,34 @@ export const inventoryApi = {
   // ── Export (CSV/PDF) ──
   async exportKardex(
     productId: number,
-    opts: { branchId?: number | null; from?: string | null; to?: string | null; format: 'csv' | 'pdf' },
+    opts: {
+      branchId?: number | null
+      from?: string | null
+      to?: string | null
+      format: 'csv' | 'pdf'
+    },
   ): Promise<void> {
     const params: Record<string, string | number> = { format: opts.format }
     if (opts.branchId != null) params.branchId = opts.branchId
     if (opts.from) params.from = opts.from
     if (opts.to) params.to = opts.to
-    const res = await http.get(`/inventory/products/${productId}/kardex/export`, { params, responseType: 'blob' })
-    saveFile(res.data as Blob, res.headers['content-disposition'], `kardex_${productId}.${opts.format}`)
+    const res = await http.get(`/inventory/products/${productId}/kardex/export`, {
+      params,
+      responseType: 'blob',
+    })
+    saveFile(
+      res.data as Blob,
+      res.headers['content-disposition'],
+      `kardex_${productId}.${opts.format}`,
+    )
   },
 
-  async exportPurchases(
-    opts: { branchId?: number | null; from?: string | null; to?: string | null; format: 'csv' | 'pdf' },
-  ): Promise<void> {
+  async exportPurchases(opts: {
+    branchId?: number | null
+    from?: string | null
+    to?: string | null
+    format: 'csv' | 'pdf'
+  }): Promise<void> {
     const params: Record<string, string | number> = { format: opts.format }
     if (opts.branchId != null) params.branchId = opts.branchId
     if (opts.from) params.from = opts.from

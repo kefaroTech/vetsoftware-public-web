@@ -1,8 +1,4 @@
-import type {
-  MedicationFrequency,
-  GuidelineType,
-  DurationMeasure,
-} from '@/types/domain'
+import type { MedicationFrequency, GuidelineType, DurationMeasure } from '@/types/domain'
 import type { HospitalizationMedicationResponse } from '../api/hospitalizationMedication.api'
 import type { HospitalizationProcedureResponse } from '../api/hospitalizationProcedure.api'
 
@@ -72,10 +68,7 @@ export function guidelineLabel(g: GuidelineType | null): string {
 }
 
 /** "por 3 días" / "hasta completar 15 tomas" / "hasta nueva orden". */
-export function durationLabel(
-  measure: DurationMeasure | null,
-  quantity: number | null,
-): string {
+export function durationLabel(measure: DurationMeasure | null, quantity: number | null): string {
   if (!measure || measure === 'INDEFINITE') return 'Hasta nueva orden'
   if (measure === 'DAYS') return `Por ${quantity ?? '—'} día${quantity === 1 ? '' : 's'}`
   return `Hasta completar ${quantity ?? '—'} toma${quantity === 1 ? '' : 's'}`

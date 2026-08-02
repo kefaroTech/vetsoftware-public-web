@@ -8,7 +8,7 @@ withDefaults(
   }>(),
   { type: 'button', loading: false, loadingText: 'Cargando…' },
 )
-const emit = defineEmits<{ (e: 'click'): void }>()
+const emit = defineEmits<(e: 'click') => void>()
 </script>
 
 <template>
@@ -19,9 +19,7 @@ const emit = defineEmits<{ (e: 'click'): void }>()
     :disabled="loading"
     @click="emit('click')"
   >
-    <template v-if="loading">
-      <span class="pub-btn-spin" /> {{ loadingText }}
-    </template>
+    <template v-if="loading"> <span class="pub-btn-spin" /> {{ loadingText }} </template>
     <template v-else>
       <slot />
     </template>
@@ -50,19 +48,22 @@ const emit = defineEmits<{ (e: 'click'): void }>()
     box-shadow 0.15s,
     background 0.15s;
 }
+
 .pub-btn:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: var(--pub-btn-shadow-hover);
 }
+
 .pub-btn--loading {
   background: #a78bce;
   box-shadow: none;
   cursor: wait;
 }
+
 .pub-btn-spin {
   width: 15px;
   height: 15px;
-  border: 2px solid rgba(255, 255, 255, 0.4);
+  border: 2px solid rgb(255 255 255 / 40%);
   border-top-color: #fff;
   border-radius: 50%;
   display: block;

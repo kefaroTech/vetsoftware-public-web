@@ -64,6 +64,7 @@ const orderedRoles = computed(() =>
   flex-direction: column;
   gap: 8px;
 }
+
 .option {
   display: flex;
   align-items: center;
@@ -75,19 +76,20 @@ const orderedRoles = computed(() =>
   font-family: inherit;
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.12s ease, background 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
 }
+
 .option:hover:not(.selected) {
   border-color: var(--amatista-300);
 }
+
 .option.selected {
   border-color: var(--amatista-600);
-  background: linear-gradient(
-    135deg,
-    var(--amatista-50) 0%,
-    oklch(98% 0.01 var(--hue)) 100%
-  );
+  background: linear-gradient(135deg, var(--amatista-50) 0%, oklch(98% 0.01 var(--hue)) 100%);
 }
+
 .checkbox {
   width: 18px;
   height: 18px;
@@ -98,18 +100,23 @@ const orderedRoles = computed(() =>
   place-items: center;
   flex-shrink: 0;
   color: white;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
 }
+
 .checkbox.checked {
   background: var(--amatista-700);
   border-color: var(--amatista-700);
 }
+
 .dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
 }
+
 .info {
   display: flex;
   flex-direction: column;
@@ -117,17 +124,20 @@ const orderedRoles = computed(() =>
   min-width: 0;
   flex: 1;
 }
+
 .name-row {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
+
 .name {
   font-size: 13.5px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .badge-actual {
   font-size: 10px;
   font-weight: 500;
@@ -138,6 +148,7 @@ const orderedRoles = computed(() =>
   background: var(--warm-200);
   color: var(--warm-700);
 }
+
 .desc {
   font-size: 12px;
   color: var(--warm-600);

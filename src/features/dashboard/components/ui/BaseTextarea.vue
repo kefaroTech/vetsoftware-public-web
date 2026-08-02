@@ -44,38 +44,61 @@ defineEmits<{
   line-height: 1.55;
   color: var(--warm-900);
   resize: vertical;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
   box-sizing: border-box;
 }
-.textarea:hover:not(:focus):not(:disabled):not(.invalid) {
+
+.textarea:hover:not(:focus, :disabled, .invalid) {
   border-color: var(--warm-300);
 }
+
 .textarea:focus {
   outline: none;
   border-color: var(--amatista-500);
   box-shadow: 0 0 0 3px var(--amatista-50);
 }
+
 .textarea::placeholder {
   color: var(--warm-500);
 }
+
 .textarea:disabled {
   background: var(--warm-100);
   color: var(--warm-500);
   cursor: not-allowed;
 }
+
 .textarea.invalid {
-  border-color: oklch(60% 0.20 25);
-  background: oklch(98.5% 0.02 25);
+  border-color: oklch(60% 0.2 25deg);
+  background: oklch(98.5% 0.02 25deg);
   animation: shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
+
 .textarea.invalid:focus {
-  border-color: oklch(55% 0.22 25);
-  box-shadow: 0 0 0 3px oklch(92% 0.06 25);
+  border-color: oklch(55% 0.22 25deg);
+  box-shadow: 0 0 0 3px oklch(92% 0.06 25deg);
 }
+
 @keyframes shake {
-  10%, 90% { transform: translateX(-1px); }
-  20%, 80% { transform: translateX(2px); }
-  30%, 50%, 70% { transform: translateX(-3px); }
-  40%, 60% { transform: translateX(3px); }
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-3px);
+  }
+  40%,
+  60% {
+    transform: translateX(3px);
+  }
 }
 </style>

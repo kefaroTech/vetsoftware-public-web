@@ -61,9 +61,7 @@ watch(
   },
 )
 
-const typeMeta = computed(() =>
-  props.appointment ? APPT_TYPES[props.appointment.type] : null,
-)
+const typeMeta = computed(() => (props.appointment ? APPT_TYPES[props.appointment.type] : null))
 const isTerminal = computed(() =>
   props.appointment ? APPT_TERMINAL.has(props.appointment.status) : true,
 )
@@ -92,9 +90,7 @@ const reasonModel = computed({
 })
 
 const notesCancellation = computed(() =>
-  props.appointment?.status === 'CANCELLED'
-    ? props.appointment.cancellationReason
-    : null,
+  props.appointment?.status === 'CANCELLED' ? props.appointment.cancellationReason : null,
 )
 </script>
 
@@ -277,17 +273,20 @@ const notesCancellation = computed(() =>
   gap: 26px;
   align-items: start;
 }
+
 .detail-col {
   display: flex;
   flex-direction: column;
   gap: 16px;
   min-width: 0;
 }
+
 .status-hero {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .hero-time {
   font-family: var(--font-mono);
   font-size: 22px;
@@ -295,11 +294,13 @@ const notesCancellation = computed(() =>
   letter-spacing: -0.02em;
   color: var(--warm-900);
 }
+
 .dfield {
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
+
 .dlabel {
   font-size: 11px;
   letter-spacing: 0.06em;
@@ -307,14 +308,17 @@ const notesCancellation = computed(() =>
   color: var(--warm-500);
   font-weight: 600;
 }
+
 .dvalue {
   font-size: 14px;
   color: var(--warm-900);
   line-height: 1.5;
 }
+
 .muted {
   color: var(--warm-500);
 }
+
 .freewalk {
   display: inline-flex;
   align-items: center;
@@ -327,6 +331,7 @@ const notesCancellation = computed(() =>
   background: var(--warm-150);
   color: var(--warm-600);
 }
+
 .section-title {
   font-size: 12px;
   font-weight: 600;
@@ -334,6 +339,7 @@ const notesCancellation = computed(() =>
   text-transform: uppercase;
   color: var(--warm-500);
 }
+
 .terminal-note {
   font-size: 12.5px;
   color: var(--warm-500);
@@ -343,11 +349,13 @@ const notesCancellation = computed(() =>
   padding: 12px 13px;
   line-height: 1.5;
 }
+
 .transitions {
   display: flex;
   flex-direction: column;
   gap: 7px;
 }
+
 .trans-btn {
   display: flex;
   align-items: center;
@@ -365,33 +373,40 @@ const notesCancellation = computed(() =>
   color: var(--warm-800);
   transition: all 0.1s;
 }
+
 .trans-btn:hover:not(:disabled) {
   border-color: var(--amatista-400);
   background: var(--amatista-50);
   color: var(--amatista-700);
 }
+
 .trans-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
 .trans-btn b {
   font-weight: 600;
 }
+
 .trans-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
 }
+
 .trans-arrow {
   margin-left: auto;
   color: var(--warm-400);
 }
+
 .trans-btn.danger:hover {
-  border-color: oklch(75% 0.12 25);
-  background: oklch(96% 0.04 25);
-  color: oklch(48% 0.18 25);
+  border-color: oklch(75% 0.12 25deg);
+  background: oklch(96% 0.04 25deg);
+  color: oklch(48% 0.18 25deg);
 }
+
 .cancel-box {
   display: flex;
   flex-direction: column;
@@ -401,10 +416,12 @@ const notesCancellation = computed(() =>
   border-radius: 10px;
   padding: 12px;
 }
+
 .cancel-actions {
   display: flex;
   gap: 8px;
 }
+
 .banner {
   display: flex;
   gap: 9px;
@@ -413,36 +430,44 @@ const notesCancellation = computed(() =>
   font-size: 12.5px;
   line-height: 1.5;
 }
+
 .banner-ic {
   flex-shrink: 0;
   margin-top: 1px;
 }
+
 .banner.warn {
-  background: oklch(95% 0.07 80);
-  color: oklch(42% 0.13 60);
-  border: 1px solid oklch(88% 0.09 80);
+  background: oklch(95% 0.07 80deg);
+  color: oklch(42% 0.13 60deg);
+  border: 1px solid oklch(88% 0.09 80deg);
 }
+
 .banner.neutral {
   background: var(--warm-100);
   color: var(--warm-700);
   border: 1px solid var(--warm-200);
 }
+
 .banner b {
   font-weight: 600;
 }
+
 .foot-left-actions {
   display: flex;
   gap: 8px;
 }
+
 .confirm-delete {
   display: flex;
   gap: 8px;
   align-items: center;
 }
+
 .confirm-label {
   font-size: 12px;
   color: var(--warm-600);
 }
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -455,30 +480,37 @@ const notesCancellation = computed(() =>
   border-radius: 9px;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: filter 0.12s, background 0.12s;
+  transition:
+    filter 0.12s,
+    background 0.12s;
   white-space: nowrap;
 }
+
 .btn.grow {
   flex: 1;
 }
+
 .btn-ghost {
   background: var(--warm-50);
   border-color: var(--warm-200);
   color: var(--warm-700);
 }
+
 .btn-ghost:hover {
   background: var(--warm-100);
 }
+
 .btn-danger {
-  background: oklch(95% 0.05 25);
-  border-color: oklch(85% 0.08 25);
-  color: oklch(48% 0.18 25);
-}
-.btn-danger:hover {
-  background: oklch(92% 0.07 25);
+  background: oklch(95% 0.05 25deg);
+  border-color: oklch(85% 0.08 25deg);
+  color: oklch(48% 0.18 25deg);
 }
 
-@media (max-width: 720px) {
+.btn-danger:hover {
+  background: oklch(92% 0.07 25deg);
+}
+
+@media (width <= 720px) {
   .detail-cols {
     grid-template-columns: 1fr;
   }

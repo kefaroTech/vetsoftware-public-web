@@ -25,6 +25,7 @@ defineProps<{
   align-items: center;
   gap: 11px;
 }
+
 .pub-sechead-chip {
   width: 34px;
   height: 34px;
@@ -36,12 +37,14 @@ defineProps<{
   color: var(--pub-ame-700);
   flex-shrink: 0;
 }
+
 .pub-sechead-title {
   font-size: 14.5px;
   font-weight: 700;
   color: var(--pub-ink-900);
   letter-spacing: -0.01em;
 }
+
 .pub-sechead-desc {
   font-size: 12px;
   color: var(--pub-ink-400);

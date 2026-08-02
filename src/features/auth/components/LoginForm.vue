@@ -54,7 +54,8 @@ async function submit() {
     if (code === 'EMAIL_NOT_VERIFIED') {
       emailNotVerified.value = true
     } else if (code === 'INVALID_CREDENTIALS') {
-      submitError.value = 'El empleado o la contraseña no son correctos. Revísalos e intenta de nuevo.'
+      submitError.value =
+        'El empleado o la contraseña no son correctos. Revísalos e intenta de nuevo.'
     } else {
       submitError.value = getProblemDetailMessage(e, 'No se pudo iniciar sesión')
     }
@@ -127,16 +128,19 @@ async function submit() {
 
 <style scoped>
 .login-form {
-  font-family: 'Inter', sans-serif;
+  font-family: Inter, sans-serif;
 }
+
 .login-banner {
   margin-bottom: 20px;
 }
+
 .login-fields {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
+
 .login-forgot {
   margin-top: -4px;
   text-align: right;
@@ -146,35 +150,42 @@ async function submit() {
   gap: 8px;
   flex-wrap: wrap;
 }
+
 .login-forgot a {
   font-size: 13px;
   font-weight: 500;
   color: var(--pub-ame-700);
   text-decoration: none;
 }
+
 .login-forgot a:hover {
   text-decoration: underline;
 }
+
 .login-forgot-sep {
   color: var(--pub-line);
   font-size: 12px;
 }
+
 .login-divider {
   display: flex;
   align-items: center;
   gap: 12px;
   margin: 24px 0 18px;
 }
+
 .login-divider-line {
   flex: 1;
   height: 1px;
   background: var(--pub-line);
 }
+
 .login-divider-word {
   font-size: 11px;
   color: #a08bbd;
   font-weight: 500;
 }
+
 .login-secondary {
   display: flex;
   align-items: center;
@@ -190,10 +201,12 @@ async function submit() {
   text-decoration: none;
   transition: all 0.15s;
 }
+
 .login-secondary:hover {
   border-color: #d6c8ea;
   background: #faf6ff;
 }
+
 .login-secondary :deep(.v-icon) {
   color: var(--pub-ame-700);
 }

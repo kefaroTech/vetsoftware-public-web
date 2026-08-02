@@ -22,6 +22,7 @@ defineProps<{
   gap: 10px;
   padding: 10px 6px 22px;
 }
+
 .mark {
   width: 30px;
   height: 30px;
@@ -36,23 +37,26 @@ defineProps<{
   font-weight: 700;
   font-size: 15px;
 }
+
 .text {
   display: flex;
   flex-direction: column;
   line-height: 1.1;
 }
+
 .name {
   font-size: 14px;
   font-weight: 500;
   color: oklch(96% 0.02 var(--hue));
 }
+
 .clinic {
   font-size: 11.5px;
-  color: oklch(80% 0.04 var(--hue) / 0.7);
+  color: oklch(80% 0.04 var(--hue) / 70%);
   margin-top: 2px;
 }
 
-@media (max-width: 1024px) {
+@media (width <= 1024px) {
   .brand {
     justify-content: center;
     padding: 8px 0 18px;

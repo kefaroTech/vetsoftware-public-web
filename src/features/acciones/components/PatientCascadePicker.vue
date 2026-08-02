@@ -2,7 +2,10 @@
 import { ref, watch } from 'vue'
 import { Search, User, PawPrint, X, Plus, ArrowLeft, TriangleAlert } from 'lucide-vue-next'
 import { useOwnerSearch } from '@/features/dashboard/views/consulta/nueva/composables/useOwnerSearch'
-import { animalApi, type AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import {
+  animalApi,
+  type AnimalResponse,
+} from '@/features/dashboard/views/consulta/nueva/api/animal.api'
 import { ownerApi } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
 import { mapOwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.mapper'
 import { buildCreateAnimalRequest } from '@/features/dashboard/views/consulta/nueva/api/animal.mapper'
@@ -262,7 +265,10 @@ watch(
         </div>
         <div v-if="searching" class="results state">Buscando…</div>
         <div v-else-if="ownerQuery && ownerResults.length === 0" class="empty">
-          <span>Sin resultados para "<strong>{{ ownerQuery }}</strong>"</span>
+          <span
+            >Sin resultados para "<strong>{{ ownerQuery }}</strong
+            >"</span
+          >
           <button type="button" class="create-btn" @click="startCreateOwner">
             <Plus :size="15" :stroke-width="2.2" /> Crear propietario nuevo
           </button>
@@ -367,21 +373,25 @@ watch(
   flex-direction: column;
   gap: 10px;
 }
+
 /* En modo creación el picker cede el fondo/borde a los forms (SectionCard) para que respiren */
 .picker.creating {
   background: transparent;
   border-color: transparent;
   padding: 0;
 }
+
 .picker.invalid {
-  border-color: oklch(60% 0.20 25);
-  background: oklch(98.5% 0.02 25);
+  border-color: oklch(60% 0.2 25deg);
+  background: oklch(98.5% 0.02 25deg);
 }
+
 .step {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
+
 .hint {
   font-size: 11.5px;
   font-weight: 500;
@@ -389,9 +399,11 @@ watch(
   text-transform: uppercase;
   color: var(--warm-600);
 }
+
 .search {
   position: relative;
 }
+
 .search-icon {
   position: absolute;
   left: 12px;
@@ -399,6 +411,7 @@ watch(
   transform: translateY(-50%);
   color: var(--warm-500);
 }
+
 .input {
   width: 100%;
   background: var(--warm-50);
@@ -409,12 +422,16 @@ watch(
   font-size: 13px;
   color: var(--warm-900);
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
+
 .input:focus {
   border-color: var(--amatista-500);
   box-shadow: 0 0 0 3px color-mix(in oklch, var(--amatista-500) 16%, transparent);
 }
+
 .results {
   display: flex;
   flex-direction: column;
@@ -425,15 +442,18 @@ watch(
   border-radius: 9px;
   background: var(--warm-50);
 }
+
 .state {
   padding: 14px;
   text-align: center;
   font-size: 12.5px;
   color: var(--warm-500);
 }
+
 .state.error {
-  color: oklch(45% 0.18 25);
+  color: oklch(45% 0.18 25deg);
 }
+
 .result {
   display: flex;
   align-items: center;
@@ -446,9 +466,11 @@ watch(
   cursor: pointer;
   transition: background 0.12s;
 }
+
 .result:hover {
   background: var(--warm-100);
 }
+
 .avatar,
 .badge {
   width: 28px;
@@ -460,25 +482,30 @@ watch(
   place-items: center;
   flex-shrink: 0;
 }
+
 .badge {
   width: 24px;
   height: 24px;
 }
+
 .info {
   min-width: 0;
   flex: 1;
 }
+
 .name {
   font-size: 13px;
   color: var(--warm-900);
   font-weight: 500;
   line-height: 1.2;
 }
+
 .meta {
   font-size: 11.5px;
   color: var(--warm-500);
   margin-top: 2px;
 }
+
 /* Estado vacío con CTA de creación */
 .empty {
   display: flex;
@@ -493,6 +520,7 @@ watch(
   border-radius: 9px;
   background: var(--warm-50);
 }
+
 /* Botón "crear" primario (dentro de estado vacío) */
 .create-btn {
   display: inline-flex;
@@ -508,9 +536,11 @@ watch(
   font-weight: 500;
   cursor: pointer;
 }
+
 .create-btn:hover {
   filter: brightness(1.05);
 }
+
 /* Enlace "crear" secundario (ghost, siempre visible bajo resultados) */
 .create-link {
   display: inline-flex;
@@ -526,12 +556,16 @@ watch(
   font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.12s;
+  transition:
+    border-color 0.15s,
+    background 0.12s;
 }
+
 .create-link:hover {
   border-color: var(--amatista-500);
   background: var(--amatista-50);
 }
+
 .picked {
   display: flex;
   align-items: center;
@@ -541,21 +575,25 @@ watch(
   border-radius: 9px;
   padding: 8px 12px;
 }
+
 .picked-line {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .picked-name {
   font-size: 13px;
   font-weight: 500;
   color: var(--warm-900);
   line-height: 1.2;
 }
+
 .picked-meta {
   font-size: 11px;
   color: var(--warm-500);
 }
+
 .link {
   background: transparent;
   border: none;
@@ -569,14 +607,17 @@ watch(
   padding: 4px 6px;
   border-radius: 6px;
 }
+
 .link:hover {
   background: var(--amatista-50);
 }
+
 .animals-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 8px;
 }
+
 .animal-card {
   display: flex;
   align-items: center;
@@ -588,16 +629,21 @@ watch(
   font-family: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.12s;
+  transition:
+    border-color 0.15s,
+    background 0.12s;
 }
+
 .animal-card:hover {
   border-color: var(--amatista-300);
   background: var(--amatista-50);
 }
+
 .animal-card.selected {
   border-color: var(--amatista-500);
   background: var(--amatista-100);
 }
+
 .paw {
   width: 28px;
   height: 28px;
@@ -607,14 +653,17 @@ watch(
   display: grid;
   place-items: center;
 }
+
 .animal-card.selected .paw {
   background: var(--amatista-200);
 }
+
 /* Formularios de creación inline */
 .form-head {
   display: flex;
   align-items: center;
 }
+
 .back {
   display: inline-flex;
   align-items: center;
@@ -629,9 +678,11 @@ watch(
   padding: 4px 6px;
   border-radius: 6px;
 }
+
 .back:hover {
   background: var(--amatista-50);
 }
+
 .form-banner {
   display: flex;
   align-items: center;
@@ -639,15 +690,17 @@ watch(
   padding: 10px 12px;
   border-radius: 9px;
   font-size: 12.5px;
-  background: oklch(94% 0.06 25);
-  border: 1px solid oklch(85% 0.10 25);
-  color: oklch(35% 0.15 25);
+  background: oklch(94% 0.06 25deg);
+  border: 1px solid oklch(85% 0.1 25deg);
+  color: oklch(35% 0.15 25deg);
 }
+
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
+
 .btn-ghost {
   padding: 9px 18px;
   border-radius: 8px;
@@ -659,9 +712,11 @@ watch(
   color: var(--warm-800);
   cursor: pointer;
 }
+
 .btn-ghost:hover {
   background: var(--warm-100);
 }
+
 .btn-primary {
   padding: 9px 18px;
   border-radius: 8px;
@@ -673,9 +728,11 @@ watch(
   font-weight: 500;
   cursor: pointer;
 }
+
 .btn-primary:hover:not(:disabled) {
   filter: brightness(1.05);
 }
+
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;

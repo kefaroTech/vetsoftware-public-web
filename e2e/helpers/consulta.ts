@@ -28,9 +28,7 @@ export async function gotoNuevaConsulta(page: Page): Promise<void> {
   await login(page)
   await expect(page).toHaveURL(/\/dashboard/)
   await page.goto(NUEVA_CONSULTA_URL)
-  await expect(
-    page.getByRole('heading', { name: /Quién es el propietario/ }),
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Quién es el propietario/ })).toBeVisible()
 }
 
 // ── Propietario ──────────────────────────────────────────────────────────────
@@ -50,9 +48,7 @@ export function unlikelyTerm(): string {
 
 export async function startCreateOwnerFromEmpty(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Registrar nuevo propietario' }).click()
-  await expect(
-    page.getByRole('heading', { name: 'Registrar nuevo propietario' }),
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Registrar nuevo propietario' })).toBeVisible()
 }
 
 /** El botón del footer del wizard (label cambia según el sub-estado). */
@@ -177,9 +173,7 @@ export async function createAndSelectOwner(
  * Crea propietario + mascota nuevos (datos aleatorios únicos), deja la mascota
  * seleccionada y devuelve ambos datos. Útil para sembrar un "paciente" reutilizable.
  */
-export async function createOwnerWithPet(
-  page: Page,
-): Promise<{ owner: OwnerData; pet: PetData }> {
+export async function createOwnerWithPet(page: Page): Promise<{ owner: OwnerData; pet: PetData }> {
   const owner = await createAndSelectOwner(page)
   await startCreatePet(page)
   const pet = randomPet()
@@ -206,11 +200,7 @@ export async function selectExistingOwnerAndPet(
   await searchOwner(page, owner.document)
   // Solo las filas de resultado (.row); excluye el botón "¿No encuentras a "<query>"?"
   // (.not-found), cuyo texto también contiene el documento buscado.
-  await page
-    .locator('.results')
-    .locator('button.row', { hasText: owner.document })
-    .first()
-    .click()
+  await page.locator('.results').locator('button.row', { hasText: owner.document }).first().click()
   await page.getByRole('button').filter({ hasText: petName }).first().click()
   await footerNext(page, 'Continuar a la consulta').click()
   await expect(page.getByRole('heading', { name: /Datos de la consulta/ })).toBeVisible()
@@ -255,10 +245,7 @@ export async function pickBirthDate(page: Page): Promise<void> {
   const panel = page.locator('.mx-datepicker-main')
   await expect(panel).toBeVisible()
   await panel.locator('.mx-btn-icon-double-left').click() // -1 año ⇒ nunca futura
-  await panel
-    .locator('.mx-table-date .cell:not(.not-current-month):not(.disabled)')
-    .first()
-    .click()
+  await panel.locator('.mx-table-date .cell:not(.not-current-month):not(.disabled)').first().click()
   await expect(panel).toBeHidden()
 }
 
@@ -307,7 +294,13 @@ export async function asteriskAudit(
   const optional: string[] = []
   for (let i = 0; i < n; i++) {
     const f = fields.nth(i)
-    const label = (await f.locator('label.label').first().innerText().catch(() => ''))
+    const label = (
+      await f
+        .locator('label.label')
+        .first()
+        .innerText()
+        .catch(() => '')
+    )
       .replace('*', '')
       .trim()
     if (!label) continue
@@ -445,7 +438,16 @@ export async function fillReceta(
 ): Promise<void> {
   const d = page.getByRole('dialog', { name: 'Nuevo plan terapéutico' })
   await selectInSearchable(page, 'Nombre del medicamento', opts.medName ?? 'Meloxicam')
-  await d.getByLabel(/Presentación/).first().fill('Comprimido 250 mg')
-  await d.getByLabel(/Cantidad/).first().fill('14')
-  await d.getByLabel(/Posología/).first().fill('1 comp. cada 12h por 7 días')
+  await d
+    .getByLabel(/Presentación/)
+    .first()
+    .fill('Comprimido 250 mg')
+  await d
+    .getByLabel(/Cantidad/)
+    .first()
+    .fill('14')
+  await d
+    .getByLabel(/Posología/)
+    .first()
+    .fill('1 comp. cada 12h por 7 días')
 }

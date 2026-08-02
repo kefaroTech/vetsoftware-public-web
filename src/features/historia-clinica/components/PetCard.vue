@@ -7,7 +7,7 @@ interface Props {
   pet: Animal
 }
 const props = defineProps<Props>()
-const emit = defineEmits<{ (e: 'select', pet: Animal): void }>()
+const emit = defineEmits<(e: 'select', pet: Animal) => void>()
 
 const initials = computed(() => initialsFromName(props.pet.name))
 
@@ -16,11 +16,7 @@ const sexLabel = computed(() => (props.pet.gender === 'FEMALE' ? 'Hembra' : 'Mac
 const weightLabel = computed(() => {
   if (props.pet.weight == null) return 'Sin registro'
   const unit =
-    props.pet.weightType === 'GRAMS'
-      ? 'g'
-      : props.pet.weightType === 'POUNDS'
-        ? 'lb'
-        : 'kg'
+    props.pet.weightType === 'GRAMS' ? 'g' : props.pet.weightType === 'POUNDS' ? 'lb' : 'kg'
   return `${props.pet.weight} ${unit}`
 })
 </script>
@@ -36,9 +32,7 @@ const weightLabel = computed(() => {
         <span class="sep">·</span>
         <span class="muted">Peso:</span> {{ weightLabel }}
       </div>
-      <div v-if="pet.bod" class="row">
-        <span class="muted">Nacimiento:</span> {{ pet.bod }}
-      </div>
+      <div v-if="pet.bod" class="row"><span class="muted">Nacimiento:</span> {{ pet.bod }}</div>
     </div>
   </button>
 </template>
@@ -55,12 +49,16 @@ const weightLabel = computed(() => {
   cursor: pointer;
   font-family: inherit;
   text-align: left;
-  transition: border-color 0.12s ease, background 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
 }
+
 .pet-card:hover {
   border-color: var(--amatista-300);
   background: var(--amatista-50);
 }
+
 .avatar {
   width: 48px;
   height: 48px;
@@ -73,31 +71,38 @@ const weightLabel = computed(() => {
   font-size: 15px;
   flex-shrink: 0;
 }
+
 .body {
   flex: 1;
   min-width: 0;
 }
+
 .name {
   font-size: 15px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .taxa {
   font-size: 12px;
   color: var(--warm-500);
   margin-top: 3px;
 }
+
 .row {
   font-size: 12px;
   color: var(--warm-600);
   margin-top: 6px;
 }
+
 .row + .row {
   margin-top: 2px;
 }
+
 .muted {
   color: var(--warm-500);
 }
+
 .sep {
   color: var(--warm-300);
   margin: 0 6px;

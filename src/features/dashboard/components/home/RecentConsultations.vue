@@ -45,26 +45,31 @@ defineProps<{
   align-items: center;
   margin-bottom: 14px;
 }
+
 .title {
   margin: 0;
   font-size: 13px;
   font-weight: 500;
   color: var(--warm-800);
 }
+
 .link {
   font-size: 12px;
   color: var(--amatista-700);
   text-decoration: none;
 }
+
 .link:hover {
   text-decoration: underline;
 }
+
 .list {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 12px;
   overflow: hidden;
 }
+
 .row {
   display: grid;
   grid-template-columns: 32px 1.4fr 1fr 1fr 1fr auto;
@@ -74,9 +79,11 @@ defineProps<{
   font-size: 13px;
   border-bottom: 1px solid var(--warm-150);
 }
+
 .row.last {
   border-bottom: none;
 }
+
 .avatar {
   width: 32px;
   height: 32px;
@@ -87,19 +94,23 @@ defineProps<{
   align-items: center;
   justify-content: center;
 }
+
 .patient {
   display: flex;
   flex-direction: column;
 }
+
 .name {
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .meta {
   font-size: 11.5px;
   color: var(--warm-500);
   margin-top: 1px;
 }
+
 .cell {
   font-size: 12.5px;
   color: var(--warm-600);

@@ -44,29 +44,34 @@ const stats = computed(() => {
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
+
 .stat {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 12px;
   padding: 13px 15px;
 }
+
 .stat-label {
   font-size: 11.5px;
   color: var(--warm-500);
   margin-bottom: 5px;
 }
+
 .stat-value {
   font-size: 25px;
   font-weight: 500;
   letter-spacing: -0.02em;
   color: var(--warm-900);
 }
+
 .stat-sub {
   font-size: 11.5px;
   margin-top: 3px;
   color: var(--warm-500);
 }
-@media (max-width: 820px) {
+
+@media (width <= 820px) {
   .summary {
     grid-template-columns: repeat(2, 1fr);
   }

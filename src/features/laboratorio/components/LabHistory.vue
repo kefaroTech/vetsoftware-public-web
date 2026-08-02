@@ -168,7 +168,10 @@ onMounted(() => history.fetch())
 </template>
 
 <style scoped>
-.history { font-family: var(--font-sans); }
+.history {
+  font-family: var(--font-sans);
+}
+
 .filters {
   display: flex;
   flex-wrap: wrap;
@@ -176,8 +179,13 @@ onMounted(() => history.fetch())
   gap: 10px;
   margin-bottom: 16px;
 }
-.field { min-width: 180px; }
-.field.date { min-width: 150px; }
+.field {
+  min-width: 180px;
+}
+.field.date {
+  min-width: 150px;
+}
+
 .filter-btn,
 .clear {
   display: inline-flex;
@@ -193,11 +201,13 @@ onMounted(() => history.fetch())
   color: var(--warm-700);
   cursor: pointer;
 }
+
 .filter-btn:hover,
 .clear:hover {
   background: var(--warm-100);
   border-color: var(--warm-300);
 }
+
 .chip {
   display: inline-flex;
   align-items: center;
@@ -210,6 +220,7 @@ onMounted(() => history.fetch())
   border-radius: 999px;
   padding: 6px 8px 6px 12px;
 }
+
 .chip button {
   background: transparent;
   border: none;
@@ -220,7 +231,10 @@ onMounted(() => history.fetch())
   padding: 2px;
   border-radius: 50%;
 }
-.chip button:hover { background: var(--amatista-100); }
+.chip button:hover {
+  background: var(--amatista-100);
+}
+
 .select {
   font-family: inherit;
   font-size: 13.5px;
@@ -231,32 +245,37 @@ onMounted(() => history.fetch())
   padding: 10px 14px;
   cursor: pointer;
 }
+
 .select:focus {
   outline: none;
   border-color: var(--amatista-500);
   box-shadow: 0 0 0 3px var(--amatista-50);
 }
+
 .banner.error {
-  background: oklch(95% 0.06 25);
-  border: 1px solid oklch(85% 0.12 25);
-  color: oklch(40% 0.18 25);
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 13px;
   margin-bottom: 14px;
 }
+
 .table-wrap {
   border: 1px solid var(--warm-200);
   border-radius: 12px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+
 .table {
   width: 100%;
   min-width: 640px;
   border-collapse: collapse;
   font-size: 13px;
 }
+
 .table th {
   text-align: left;
   font-size: 11px;
@@ -268,14 +287,30 @@ onMounted(() => history.fetch())
   background: var(--warm-100);
   border-bottom: 1px solid var(--warm-200);
 }
+
 .table td {
   padding: 12px 16px;
   border-bottom: 1px solid var(--warm-150, var(--warm-100));
   color: var(--warm-800);
 }
-.table tbody tr:last-child td { border-bottom: none; }
-.mono { font-family: var(--font-mono); font-size: 12px; color: var(--warm-600); }
-.state { text-align: center; color: var(--warm-500); padding: 24px 16px; }
-.clickable-row { cursor: pointer; transition: background 0.12s ease; }
-.clickable-row:hover td { background: var(--amatista-50); }
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+.mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--warm-600);
+}
+.state {
+  text-align: center;
+  color: var(--warm-500);
+  padding: 24px 16px;
+}
+.clickable-row {
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.clickable-row:hover td {
+  background: var(--amatista-50);
+}
 </style>

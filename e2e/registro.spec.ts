@@ -134,7 +134,10 @@ const PASSWORD = 'Empleado1234*'
 
 /** Espera a que el loader global (que intercepta clicks) desaparezca. */
 async function waitLoaderGone(page: Page): Promise<void> {
-  await page.locator('.page-loader').waitFor({ state: 'detached', timeout: 20_000 }).catch(() => {})
+  await page
+    .locator('.page-loader')
+    .waitFor({ state: 'detached', timeout: 20_000 })
+    .catch(() => {})
 }
 
 /**
@@ -150,7 +153,10 @@ async function vSelect(page: Page, label: string, which: 'first' | string): Prom
   await options.first().waitFor({ state: 'visible', timeout: 15_000 })
   if (which === 'first') await options.first().click()
   else await page.locator('.v-overlay-container .v-list-item', { hasText: which }).first().click()
-  await options.first().waitFor({ state: 'hidden' }).catch(() => {})
+  await options
+    .first()
+    .waitFor({ state: 'hidden' })
+    .catch(() => {})
 }
 
 interface RegisteredCompany {
@@ -250,7 +256,9 @@ async function createEmployee(
   // Selecciona EXCLUSIVAMENTE el rol correspondiente (tile de RoleSelectorGrid).
   const roleTile = dialog.getByRole('button', { name: roleName })
   await roleTile.click()
-  await expect(roleTile, `el tile del rol "${roleName}" debe quedar seleccionado`).toHaveClass(/selected/)
+  await expect(roleTile, `el tile del rol "${roleName}" debe quedar seleccionado`).toHaveClass(
+    /selected/,
+  )
   await dialog.getByRole('button', { name: 'Crear empleado' }).click()
   // Al crear, el form cierra y se abre el drawer del empleado (selectedId). Confirmamos
   // el cierre del form (su botón submit desaparece) y cerramos el drawer con Escape.
@@ -259,7 +267,9 @@ async function createEmployee(
     `el empleado "${roleName}" debe crearse (el form debe cerrarse)`,
   ).toBeHidden({ timeout: 15_000 })
   await adminPage.keyboard.press('Escape')
-  await expect(adminPage.getByRole('button', { name: 'Nuevo empleado' })).toBeVisible({ timeout: 10_000 })
+  await expect(adminPage.getByRole('button', { name: 'Nuevo empleado' })).toBeVisible({
+    timeout: 10_000,
+  })
   return { code, password: PASSWORD }
 }
 
@@ -322,7 +332,10 @@ test.describe('Registro de veterinaria + roles base + visibilidad por permiso', 
     // El admin (dueño) debe poder ver TODAS las secciones gated (tiene admin.all o el set completo).
     for (const { label, gate } of SIDEBAR_GATES) {
       const shouldSee = gate(adminPerms)
-      expect(shouldSee, `admin debería tener acceso a "${label}" (perms: ${[...adminPerms].join(',')})`).toBe(true)
+      expect(
+        shouldSee,
+        `admin debería tener acceso a "${label}" (perms: ${[...adminPerms].join(',')})`,
+      ).toBe(true)
       await expect(
         adminPage.getByRole('button', { name: label }),
         `el admin debe ver "${label}" en el sidebar`,
@@ -345,7 +358,8 @@ test.describe('Registro de veterinaria + roles base + visibilidad por permiso', 
     // Fallback robusto: contar las tarjetas por nombre conocido no aplica a ADMIN;
     // se valida que además del set base exista al menos una tarjeta más (ADMIN).
     const count = await roleCards.count()
-    if (count > 0) expect(count, 'debe haber ADMIN + los 6 roles base (>=7)').toBeGreaterThanOrEqual(7)
+    if (count > 0)
+      expect(count, 'debe haber ADMIN + los 6 roles base (>=7)').toBeGreaterThanOrEqual(7)
   })
 
   // ── 3) El dueño quedó asignado SOLO al rol ADMIN ───────────────────────────
@@ -386,7 +400,9 @@ test.describe('Registro de veterinaria + roles base + visibilidad por permiso', 
       // No debe auto-loguear: permanece en /signup y muestra el banner de error
       // (el v-alert de submitError; se filtra por texto para no chocar con los
       // mensajes de campo que Vuetify también expone como role="alert").
-      await expect(page, 'no debe entrar al dashboard con identificador duplicado').toHaveURL(/\/signup/)
+      await expect(page, 'no debe entrar al dashboard con identificador duplicado').toHaveURL(
+        /\/signup/,
+      )
       await expect(
         page.locator('.v-alert').filter({ hasText: /in use|uso|No se pudo crear/i }),
         'debe mostrarse el error de duplicidad en el signup',
@@ -416,7 +432,10 @@ test.describe('Registro de veterinaria + roles base + visibilidad por permiso', 
         const perms = new Set<string>(
           ((await (await meProm).json()) as { permissions?: string[] }).permissions ?? [],
         )
-        expect(perms.size, `el rol "${roleName}" debe tener al menos 1 permiso real`).toBeGreaterThan(0)
+        expect(
+          perms.size,
+          `el rol "${roleName}" debe tener al menos 1 permiso real`,
+        ).toBeGreaterThan(0)
 
         // (a0) INVARIANTE DE DISEÑO: permisos que el rol NO debe tener.
         //   - Cajero → sin facturación electrónica (DIAN, Opción A).

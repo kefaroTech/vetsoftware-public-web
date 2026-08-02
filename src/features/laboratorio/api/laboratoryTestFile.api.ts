@@ -12,18 +12,13 @@ export interface LaboratoryTestFileResponse {
 }
 
 export const laboratoryTestFileApi = {
-  async upload(
-    laboratoryTestId: number,
-    file: File,
-  ): Promise<LaboratoryTestFileResponse> {
+  async upload(laboratoryTestId: number, file: File): Promise<LaboratoryTestFileResponse> {
     const form = new FormData()
     form.append('laboratoryTestId', String(laboratoryTestId))
     form.append('file', file)
-    const { data } = await http.post<LaboratoryTestFileResponse>(
-      '/laboratory-test-files',
-      form,
-      { headers: { 'Content-Type': 'multipart/form-data' } },
-    )
+    const { data } = await http.post<LaboratoryTestFileResponse>('/laboratory-test-files', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
     return data
   },
 

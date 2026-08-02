@@ -82,10 +82,16 @@ function vigencia(promo: PromotionResponse): string {
 
 function targetName(promo: PromotionResponse): string {
   if (promo.applicationType === 'PRODUCT') {
-    return store.products.value.find((p) => p.id === promo.applicationItem)?.name ?? `#${promo.applicationItem}`
+    return (
+      store.products.value.find((p) => p.id === promo.applicationItem)?.name ??
+      `#${promo.applicationItem}`
+    )
   }
   if (promo.applicationType === 'SERVICE') {
-    return store.services.value.find((s) => s.id === promo.applicationItem)?.name ?? `#${promo.applicationItem}`
+    return (
+      store.services.value.find((s) => s.id === promo.applicationItem)?.name ??
+      `#${promo.applicationItem}`
+    )
   }
   const cat =
     store.productCategories.value.find((c) => c.id === promo.applicationItem) ??
@@ -108,7 +114,10 @@ function openNew() {
 }
 function onSaved(item: PromotionResponse) {
   const wasEdit = editing.value !== null
-  toast.success('Promoción guardada', wasEdit ? 'Los cambios se guardaron.' : `${item.name} se creó.`)
+  toast.success(
+    'Promoción guardada',
+    wasEdit ? 'Los cambios se guardaron.' : `${item.name} se creó.`,
+  )
 }
 function onFormClose() {
   modalOpen.value = false
@@ -178,7 +187,9 @@ async function onConfirmDelete() {
       <template #row="{ item }">
         <tr>
           <td>{{ item.name }}</td>
-          <td><span class="typepill">{{ TYPE_LABEL[item.promotionType] }}</span></td>
+          <td>
+            <span class="typepill">{{ TYPE_LABEL[item.promotionType] }}</span>
+          </td>
           <td>{{ APP_LABEL[item.applicationType] }}</td>
           <td class="truncate">{{ targetName(item) }}</td>
           <td>{{ valueLabel(item) }}</td>
@@ -195,12 +206,26 @@ async function onConfirmDelete() {
               :aria-checked="item.promotionStatus === 'ACTIVE'"
               @click="togglePromo(item)"
             >
-              <span class="knob"><Check v-if="item.promotionStatus === 'ACTIVE'" :size="10" :stroke-width="3" /></span>
+              <span class="knob"
+                ><Check v-if="item.promotionStatus === 'ACTIVE'" :size="10" :stroke-width="3"
+              /></span>
             </button>
-            <button v-if="canUpdate" type="button" class="icon-btn" title="Editar" @click="editing = item">
+            <button
+              v-if="canUpdate"
+              type="button"
+              class="icon-btn"
+              title="Editar"
+              @click="editing = item"
+            >
               <Pencil :size="15" :stroke-width="1.7" />
             </button>
-            <button v-if="canDelete" type="button" class="icon-btn danger" title="Eliminar" @click="deleting = item">
+            <button
+              v-if="canDelete"
+              type="button"
+              class="icon-btn danger"
+              title="Eliminar"
+              @click="deleting = item"
+            >
               <Trash2 :size="15" :stroke-width="1.7" />
             </button>
           </td>
@@ -227,30 +252,139 @@ async function onConfirmDelete() {
 </template>
 
 <style scoped>
-.page { font-family: var(--font-sans); color: var(--warm-900); }
+.page {
+  font-family: var(--font-sans);
+  color: var(--warm-900);
+}
+
 .cta {
-  display: flex; align-items: center; gap: 8px; padding: 10px 16px; font-size: 13.5px; font-weight: 500;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
-  color: white; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; white-space: nowrap;
-  box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08), 0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.5);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 13.5px;
+  font-weight: 500;
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
+  color: white;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  box-shadow:
+    0 1px 2px rgb(50 20 80 / 8%),
+    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 50%);
 }
-.banner { border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
-.banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); }
-.alert { display: flex; align-items: center; gap: 9px; padding: 11px 14px; margin-bottom: 16px; background: oklch(95% 0.05 150); border: 1px solid oklch(86% 0.07 150); border-radius: 10px; font-size: 13px; color: oklch(38% 0.13 150); }
-.alert strong { color: oklch(34% 0.14 150); }
-.switch { width: 34px; height: 20px; border-radius: 999px; border: none; background: var(--warm-300); position: relative; cursor: pointer; padding: 0; flex-shrink: 0; transition: background 0.15s ease; }
-.switch.on { background: oklch(55% 0.16 150); }
-.knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; display: grid; place-items: center; color: oklch(45% 0.15 150); transition: left 0.15s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-.switch.on .knob { left: 16px; }
-.typepill { display: inline-flex; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 500; white-space: nowrap; background: var(--amatista-100); color: var(--amatista-700); }
-.truncate { max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dates { font-size: 12px; color: var(--warm-600); white-space: nowrap; }
-.actions-col { width: 88px; text-align: right; }
-.actions { display: flex; gap: 6px; justify-content: flex-end; }
+.banner {
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+.banner.error {
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
+}
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 14px;
+  margin-bottom: 16px;
+  background: oklch(95% 0.05 150deg);
+  border: 1px solid oklch(86% 0.07 150deg);
+  border-radius: 10px;
+  font-size: 13px;
+  color: oklch(38% 0.13 150deg);
+}
+.alert strong {
+  color: oklch(34% 0.14 150deg);
+}
+.switch {
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  border: none;
+  background: var(--warm-300);
+  position: relative;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+.switch.on {
+  background: oklch(55% 0.16 150deg);
+}
+.knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  color: oklch(45% 0.15 150deg);
+  transition: left 0.15s ease;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+}
+.switch.on .knob {
+  left: 16px;
+}
+.typepill {
+  display: inline-flex;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  background: var(--amatista-100);
+  color: var(--amatista-700);
+}
+.truncate {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dates {
+  font-size: 12px;
+  color: var(--warm-600);
+  white-space: nowrap;
+}
+.actions-col {
+  width: 88px;
+  text-align: right;
+}
+.actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
 .icon-btn {
-  display: grid; place-items: center; width: 28px; height: 28px; border-radius: 7px;
-  border: 1px solid var(--warm-200); background: transparent; color: var(--warm-700); cursor: pointer;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--warm-200);
+  background: transparent;
+  color: var(--warm-700);
+  cursor: pointer;
 }
-.icon-btn:hover { background: var(--warm-100); }
-.icon-btn.danger:hover { background: oklch(95% 0.06 25); color: oklch(40% 0.18 25); border-color: oklch(85% 0.12 25); }
+.icon-btn:hover {
+  background: var(--warm-100);
+}
+.icon-btn.danger:hover {
+  background: oklch(95% 0.06 25deg);
+  color: oklch(40% 0.18 25deg);
+  border-color: oklch(85% 0.12 25deg);
+}
 </style>

@@ -34,6 +34,7 @@ const id = useId()
   gap: 6px;
   min-width: 0;
 }
+
 .label {
   font-size: 12px;
   font-weight: 500;
@@ -43,18 +44,21 @@ const id = useId()
   gap: 4px;
   letter-spacing: -0.005em;
 }
+
 .required {
-  color: oklch(55% 0.18 25);
+  color: oklch(55% 0.18 25deg);
 }
+
 .hint {
   margin: 0;
   font-size: 11.5px;
   color: var(--warm-500);
 }
+
 .error {
   margin: 0;
   font-size: 11.5px;
-  color: oklch(55% 0.18 25);
+  color: oklch(55% 0.18 25deg);
   display: flex;
   align-items: center;
   gap: 4px;

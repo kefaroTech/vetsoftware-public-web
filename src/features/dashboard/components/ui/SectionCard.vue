@@ -44,6 +44,7 @@ withDefaults(
   overflow: hidden;
   container-type: inline-size;
 }
+
 .head {
   padding: 20px clamp(22px, 2vw + 12px, 36px);
   border-bottom: 1px solid var(--warm-200);
@@ -51,6 +52,7 @@ withDefaults(
   align-items: center;
   gap: 14px;
 }
+
 .icon {
   width: 34px;
   height: 34px;
@@ -61,14 +63,17 @@ withDefaults(
   place-items: center;
   flex-shrink: 0;
 }
+
 .icon.accent {
   background: var(--amatista-100);
   color: var(--amatista-700);
 }
+
 .meta {
   flex: 1;
   min-width: 0;
 }
+
 .title {
   margin: 0;
   font-size: 14.5px;
@@ -76,15 +81,18 @@ withDefaults(
   color: var(--warm-900);
   letter-spacing: -0.005em;
 }
+
 .subtitle {
   margin: 2px 0 0;
   font-size: 12px;
   color: var(--warm-600);
 }
+
 .action {
   flex-shrink: 0;
 }
+
 .body.padded {
-  padding: clamp(22px, 2vw + 12px, 36px) clamp(22px, 2vw + 12px, 36px);
+  padding: clamp(22px, 2vw + 12px, 36px);
 }
 </style>

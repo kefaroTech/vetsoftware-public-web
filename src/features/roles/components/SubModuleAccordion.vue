@@ -42,12 +42,7 @@ function isHighlighted(text: string): boolean {
 
 <template>
   <div class="acc" :class="{ open: expanded }">
-    <button
-      type="button"
-      class="row"
-      :aria-expanded="expanded"
-      @click="emit('toggle-expand')"
-    >
+    <button type="button" class="row" :aria-expanded="expanded" @click="emit('toggle-expand')">
       <ChevronRight class="chev" :class="{ open: expanded }" :size="14" :stroke-width="1.7" />
       <span class="cb-wrap" @click.stop>
         <TristateCheckbox
@@ -58,7 +53,9 @@ function isHighlighted(text: string): boolean {
         />
       </span>
       <span class="meta">
-        <span class="name" :class="{ hl: isHighlighted(subModule.name) }">{{ subModule.name }}</span>
+        <span class="name" :class="{ hl: isHighlighted(subModule.name) }">{{
+          subModule.name
+        }}</span>
         <span class="count">{{ selectedCount }} de {{ total }} permisos</span>
       </span>
       <span class="status" :class="tristate">{{ statusLabel }}</span>
@@ -88,9 +85,11 @@ function isHighlighted(text: string): boolean {
   background: var(--warm-50);
   overflow: hidden;
 }
+
 .acc.open {
   border-color: var(--amatista-200);
 }
+
 .row {
   width: 100%;
   display: flex;
@@ -103,21 +102,26 @@ function isHighlighted(text: string): boolean {
   cursor: pointer;
   text-align: left;
 }
+
 .row:hover {
   background: var(--warm-100);
 }
+
 .chev {
   color: var(--warm-500);
   transition: transform 0.15s ease;
   flex-shrink: 0;
 }
+
 .chev.open {
   transform: rotate(90deg);
 }
+
 .cb-wrap {
   display: inline-flex;
   align-items: center;
 }
+
 .meta {
   flex: 1;
   display: flex;
@@ -125,22 +129,26 @@ function isHighlighted(text: string): boolean {
   gap: 1px;
   min-width: 0;
 }
+
 .name {
   font-size: 13.5px;
   font-weight: 500;
   color: var(--warm-900);
   line-height: 1.2;
 }
+
 .name.hl {
-  background: oklch(96% 0.08 80);
+  background: oklch(96% 0.08 80deg);
   border-radius: 3px;
   padding: 0 3px;
   margin: 0 -3px;
 }
+
 .count {
   font-size: 11.5px;
   color: var(--warm-500);
 }
+
 .status {
   font-size: 11px;
   font-weight: 500;
@@ -149,29 +157,36 @@ function isHighlighted(text: string): boolean {
   white-space: nowrap;
   flex-shrink: 0;
 }
+
 .status.empty {
   background: var(--warm-200);
   color: var(--warm-600);
 }
+
 .status.partial {
   background: var(--amatista-100);
   color: var(--amatista-700);
 }
+
 .status.full {
   background: var(--amatista-200);
   color: var(--amatista-700);
 }
+
 .perm-list {
   list-style: none;
   margin: 0;
   padding: 0 16px 10px 44px;
 }
+
 .perm-row {
   border-bottom: 1px solid var(--warm-150);
 }
+
 .perm-row:last-child {
   border-bottom: none;
 }
+
 .perm-label {
   display: flex;
   align-items: center;
@@ -182,9 +197,11 @@ function isHighlighted(text: string): boolean {
   color: var(--warm-700);
   user-select: none;
 }
+
 .perm-label:hover .perm-name {
   color: var(--warm-900);
 }
+
 .native {
   width: 16px;
   height: 16px;
@@ -192,14 +209,17 @@ function isHighlighted(text: string): boolean {
   cursor: pointer;
   flex-shrink: 0;
 }
+
 .native:checked + .perm-name {
   color: var(--warm-900);
 }
+
 .perm-name {
   flex: 1;
 }
+
 .perm-name.hl {
-  background: oklch(96% 0.08 80);
+  background: oklch(96% 0.08 80deg);
   border-radius: 3px;
   padding: 0 3px;
   margin: 0 -3px;

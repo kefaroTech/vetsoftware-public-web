@@ -29,7 +29,10 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
           Se eliminan las {{ kind === 'med' ? 'tomas' : 'ejecuciones' }}
           <strong>pendientes</strong> del calendario.
         </li>
-        <li>Las {{ kind === 'med' ? 'dosis' : 'ejecuciones' }} <strong>ya aplicadas</strong> se conservan (registro histórico).</li>
+        <li>
+          Las {{ kind === 'med' ? 'dosis' : 'ejecuciones' }} <strong>ya aplicadas</strong> se
+          conservan (registro histórico).
+        </li>
         <li>La orden queda marcada como <strong>Suspendida</strong> (no se elimina).</li>
       </ul>
     </template>
@@ -42,7 +45,12 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
 </template>
 
 <style scoped>
-.lead { margin: 0 0 10px; font-size: 13.5px; color: var(--warm-800); }
+.lead {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  color: var(--warm-800);
+}
+
 .facts {
   margin: 0;
   padding-left: 18px;
@@ -53,6 +61,7 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
   color: var(--warm-700);
   line-height: 1.45;
 }
+
 .btn-ghost,
 .btn-primary {
   font-family: inherit;
@@ -63,17 +72,23 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn-ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-900);
 }
-.btn-ghost:hover { background: var(--warm-100); }
+.btn-ghost:hover {
+  background: var(--warm-100);
+}
+
 .btn-primary {
-  background: oklch(55% 0.16 80);
+  background: oklch(55% 0.16 80deg);
   color: white;
   border: none;
   padding: 9px 18px;
 }
-.btn-primary:hover { filter: brightness(1.05); }
+.btn-primary:hover {
+  filter: brightness(1.05);
+}
 </style>

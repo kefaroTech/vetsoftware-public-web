@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import {
-  EVENT_TYPES,
-  TYPE_COLORS,
-} from '@/features/historia-clinica/constants/eventTypes'
+import { EVENT_TYPES, TYPE_COLORS } from '@/features/historia-clinica/constants/eventTypes'
 import type { ClinicalEventType } from '@/features/historia-clinica/types/historia'
 import type { AgendaEvent } from '../types/agenda'
 
@@ -56,13 +53,15 @@ function select(value: ClinicalEventType | 'ALL') {
       type="button"
       class="chip"
       :class="{ active: modelValue === type }"
-      :style="modelValue === type
-        ? {
-            background: TYPE_COLORS[EVENT_TYPES[type].color].bg,
-            color: TYPE_COLORS[EVENT_TYPES[type].color].fg,
-            borderColor: 'transparent',
-          }
-        : {}"
+      :style="
+        modelValue === type
+          ? {
+              background: TYPE_COLORS[EVENT_TYPES[type].color].bg,
+              color: TYPE_COLORS[EVENT_TYPES[type].color].fg,
+              borderColor: 'transparent',
+            }
+          : {}
+      "
       @click="select(type)"
     >
       <span class="icon" aria-hidden="true">{{ EVENT_TYPES[type].icon }}</span>
@@ -79,6 +78,7 @@ function select(value: ClinicalEventType | 'ALL') {
   gap: 6px;
   margin-top: 12px;
 }
+
 .chip {
   display: inline-flex;
   align-items: center;
@@ -92,25 +92,33 @@ function select(value: ClinicalEventType | 'ALL') {
   color: var(--warm-700);
   border: 1px solid var(--warm-200);
   cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
 }
+
 .chip:hover:not(.active) {
   background: var(--warm-100);
   border-color: var(--warm-300);
 }
+
 .chip.active {
   background: var(--amatista-100);
   color: var(--amatista-700);
   border-color: transparent;
 }
+
 .all-chip.active {
   background: var(--amatista-700);
   color: white;
 }
+
 .icon {
   font-size: 12.5px;
   line-height: 1;
 }
+
 .count {
   font-size: 11px;
   padding: 0 6px;
@@ -120,12 +128,14 @@ function select(value: ClinicalEventType | 'ALL') {
   min-width: 18px;
   text-align: center;
 }
+
 .chip.active .count {
-  background: oklch(0% 0 0 / 0.08);
+  background: oklch(0% 0 0deg / 8%);
   color: inherit;
 }
+
 .all-chip.active .count {
-  background: oklch(100% 0 0 / 0.18);
+  background: oklch(100% 0 0deg / 18%);
   color: white;
 }
 </style>

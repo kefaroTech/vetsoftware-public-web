@@ -10,7 +10,7 @@ interface Props {
   events: ClinicalEvent[]
 }
 const props = defineProps<Props>()
-const emit = defineEmits<{ (e: 'select', event: ClinicalEvent): void }>()
+const emit = defineEmits<(e: 'select', event: ClinicalEvent) => void>()
 
 const monthLabel = computed(() => formatMonthLabel(props.monthKey))
 const countLabel = computed(() =>
@@ -43,10 +43,7 @@ const nodes = computed<TimelineNode[]>(() => {
   for (const ev of props.events) {
     if (ev.eventType === 'CONSULTATION') {
       result.push({ parent: ev, children: childrenByParent.get(ev.sourceId) ?? [] })
-    } else if (
-      ev.consultationId != null &&
-      consultationIds.has(ev.consultationId)
-    ) {
+    } else if (ev.consultationId != null && consultationIds.has(ev.consultationId)) {
       // skip — already nested under its parent consultation
     } else {
       result.push({ parent: ev, children: [] })
@@ -97,12 +94,14 @@ function isNavigable(eventType: ClinicalEvent['eventType']): boolean {
 .month-group {
   margin-bottom: 24px;
 }
+
 .month-head {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
 }
+
 .label {
   font-size: 12px;
   color: var(--warm-500);
@@ -110,19 +109,23 @@ function isNavigable(eventType: ClinicalEvent['eventType']): boolean {
   text-transform: uppercase;
   font-weight: 500;
 }
+
 .divider {
   flex: 1;
   height: 1px;
   background: var(--warm-200);
 }
+
 .count {
   font-size: 12px;
   color: var(--warm-500);
 }
+
 .timeline {
   position: relative;
   padding-left: 38px;
 }
+
 .rail {
   position: absolute;
   left: 14px;
@@ -132,6 +135,7 @@ function isNavigable(eventType: ClinicalEvent['eventType']): boolean {
   background: var(--warm-200);
   border-radius: 1px;
 }
+
 .children {
   position: relative;
   margin: -4px 0 14px 32px;

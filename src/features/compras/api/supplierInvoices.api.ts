@@ -40,7 +40,10 @@ export const supplierInvoicesApi = {
   },
 
   async update(id: number, payload: SupplierInvoiceRequest): Promise<SupplierInvoice> {
-    const { data } = await http.put<SupplierInvoice>(`/supplier-invoices/${id}`, withBranchBody(payload))
+    const { data } = await http.put<SupplierInvoice>(
+      `/supplier-invoices/${id}`,
+      withBranchBody(payload),
+    )
     return data
   },
 

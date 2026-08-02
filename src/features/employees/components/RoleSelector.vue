@@ -33,7 +33,11 @@ const currentId = computed(() => props.currentCode.trim().toLowerCase())
         <div class="body">
           <div class="title-row">
             <span class="role-name">{{ r.name }}</span>
-            <span v-if="r.id === currentId" class="actual" :style="{ color: ROLE_COLORS[r.color].fg }">
+            <span
+              v-if="r.id === currentId"
+              class="actual"
+              :style="{ color: ROLE_COLORS[r.color].fg }"
+            >
               · actual
             </span>
           </div>
@@ -55,17 +59,19 @@ const currentId = computed(() => props.currentCode.trim().toLowerCase())
 .hint {
   font-size: 12px;
   color: var(--warm-500);
-  background: oklch(95% 0.06 80);
-  border: 1px solid oklch(85% 0.08 80);
+  background: oklch(95% 0.06 80deg);
+  border: 1px solid oklch(85% 0.08 80deg);
   border-radius: 8px;
   padding: 8px 12px;
   margin-bottom: 14px;
 }
+
 .list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
+
 .item {
   display: flex;
   align-items: flex-start;
@@ -77,10 +83,12 @@ const currentId = computed(() => props.currentCode.trim().toLowerCase())
   cursor: not-allowed;
   opacity: 0.85;
 }
+
 .item.selected {
   border-width: 1.5px;
   opacity: 1;
 }
+
 .dot {
   width: 8px;
   height: 8px;
@@ -88,30 +96,36 @@ const currentId = computed(() => props.currentCode.trim().toLowerCase())
   margin-top: 7px;
   flex-shrink: 0;
 }
+
 .body {
   flex: 1;
   min-width: 0;
 }
+
 .title-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
 .role-name {
   font-size: 14px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .actual {
   font-size: 11px;
   font-weight: 500;
 }
+
 .desc {
   font-size: 12.5px;
   color: var(--warm-600);
   margin-top: 4px;
   line-height: 1.45;
 }
+
 .cancel {
   margin-top: 14px;
   padding: 8px 14px;
@@ -123,6 +137,7 @@ const currentId = computed(() => props.currentCode.trim().toLowerCase())
   cursor: pointer;
   font-family: inherit;
 }
+
 .cancel:hover {
   background: var(--warm-100);
 }

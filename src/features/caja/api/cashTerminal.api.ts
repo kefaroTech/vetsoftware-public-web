@@ -28,7 +28,10 @@ export const cashTerminalApi = {
     return data
   },
 
-  async update(id: number, payload: Omit<SaveCashTerminalRequest, 'branchId'>): Promise<CashTerminal> {
+  async update(
+    id: number,
+    payload: Omit<SaveCashTerminalRequest, 'branchId'>,
+  ): Promise<CashTerminal> {
     const { data } = await http.put<CashTerminal>(`/cash-terminals/${id}`, payload)
     return data
   },

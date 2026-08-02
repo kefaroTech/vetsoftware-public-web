@@ -36,30 +36,37 @@ const meta = computed(() => {
   border-radius: 999px;
   font-weight: 500;
 }
+
 .dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
 }
+
 .pill-amatista {
   background: var(--amatista-100);
   color: var(--amatista-700);
 }
+
 .pill-amatista .dot {
   background: var(--amatista-500);
 }
+
 .pill-wait {
   background: var(--warm-150);
   color: var(--warm-700);
 }
+
 .pill-wait .dot {
   background: var(--warm-500);
 }
+
 .pill-ok {
   background: var(--success-bg);
   color: var(--success-fg);
 }
+
 .pill-ok .dot {
   background: var(--success-dot);
 }

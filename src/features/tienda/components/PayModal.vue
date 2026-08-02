@@ -140,7 +140,9 @@ const receivedDisplay = computed({
 const change = computed(() => Math.max(0, receivedNum.value - due.value))
 const cashOk = computed(() => !isCash.value || receivedNum.value >= due.value)
 const canConfirm = computed(() => cashOk.value && feComplete.value && !uvtUncertain.value)
-const confirmLabel = computed(() => (overUvt.value ? 'Emitir factura electrónica' : 'Confirmar cobro'))
+const confirmLabel = computed(() =>
+  overUvt.value ? 'Emitir factura electrónica' : 'Confirmar cobro',
+)
 
 function confirm() {
   if (!canConfirm.value) return
@@ -160,13 +162,15 @@ function confirm() {
     <template #body>
       <div class="form">
         <div v-if="uvtUncertain" class="uvt-warn">
-          No se pudieron cargar los parámetros fiscales (UVT). No es posible determinar si esta venta requiere
-          factura electrónica; reintenta en un momento para cobrar este monto.
+          No se pudieron cargar los parámetros fiscales (UVT). No es posible determinar si esta
+          venta requiere factura electrónica; reintenta en un momento para cobrar este monto.
         </div>
         <template v-if="overUvt">
           <FeThresholdBanner :total="total" />
           <div class="doctypesel">
-            <div class="doctype on"><FileText :size="15" :stroke-width="1.8" /> Factura electrónica</div>
+            <div class="doctype on">
+              <FileText :size="15" :stroke-width="1.8" /> Factura electrónica
+            </div>
             <div class="doctype off" title="No disponible por encima de 5 UVT">
               <ShieldCheck :size="14" :stroke-width="1.8" style="opacity: 0.5" /> Documento POS
               <span class="lock"><X :size="11" :stroke-width="2.4" /></span>
@@ -213,24 +217,103 @@ function confirm() {
 </template>
 
 <style scoped>
-.form { display: flex; flex-direction: column; gap: 16px; }
-.uvt-warn { padding: 11px 14px; border-radius: 10px; font-size: 12.5px; line-height: 1.4; background: oklch(95% 0.06 80); border: 1px solid oklch(88% 0.09 80); color: oklch(40% 0.10 70); }
-.change { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--amatista-50); border-radius: 10px; font-size: 14px; color: var(--warm-800); }
-.change strong { font-size: 17px; color: var(--amatista-700); }
-.doctypesel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.doctype { display: flex; align-items: center; gap: 7px; padding: 11px 13px; border-radius: 10px; font-size: 13px; font-weight: 600; position: relative; }
-.doctype.on { background: var(--amatista-50); border: 1.5px solid var(--amatista-400); color: var(--amatista-700); }
-.doctype.off { background: var(--warm-100); border: 1.5px solid var(--warm-200); color: var(--warm-400); cursor: not-allowed; }
-.lock { margin-left: auto; width: 18px; height: 18px; border-radius: 50%; background: var(--warm-200); color: var(--warm-500); display: grid; place-items: center; }
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.uvt-warn {
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  background: oklch(95% 0.06 80deg);
+  border: 1px solid oklch(88% 0.09 80deg);
+  color: oklch(40% 0.1 70deg);
+}
+.change {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--amatista-50);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--warm-800);
+}
+.change strong {
+  font-size: 17px;
+  color: var(--amatista-700);
+}
+.doctypesel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.doctype {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  position: relative;
+}
+.doctype.on {
+  background: var(--amatista-50);
+  border: 1.5px solid var(--amatista-400);
+  color: var(--amatista-700);
+}
+.doctype.off {
+  background: var(--warm-100);
+  border: 1.5px solid var(--warm-200);
+  color: var(--warm-400);
+  cursor: not-allowed;
+}
+.lock {
+  margin-left: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--warm-200);
+  color: var(--warm-500);
+  display: grid;
+  place-items: center;
+}
+
 .btn-primary {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  border: none; color: white;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  border: none;
+  color: white;
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
 }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-ghost {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  background: transparent; border: 1px solid var(--warm-200); color: var(--warm-700);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  color: var(--warm-700);
 }
-.btn-ghost:hover { background: var(--warm-100); }
+.btn-ghost:hover {
+  background: var(--warm-100);
+}
 </style>

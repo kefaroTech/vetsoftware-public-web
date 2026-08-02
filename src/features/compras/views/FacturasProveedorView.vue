@@ -43,16 +43,25 @@ function refresh() {
 }
 
 watch(statusFilter, refresh)
-watch(() => branchStore.selectedBranchId, () => {
-  refresh()
-  if (tab.value === 'cxp') void loadAging()
-})
+watch(
+  () => branchStore.selectedBranchId,
+  () => {
+    refresh()
+    if (tab.value === 'cxp') void loadAging()
+  },
+)
 watch(tab, (t) => {
   if (t === 'cxp') void loadAging()
 })
 
 function statusClass(s: SupplierInvoiceStatus): string {
-  return s === 'PAID' ? 'paid' : s === 'CANCELLED' ? 'cancelled' : s === 'PARTIAL' ? 'partial' : 'pending'
+  return s === 'PAID'
+    ? 'paid'
+    : s === 'CANCELLED'
+      ? 'cancelled'
+      : s === 'PARTIAL'
+        ? 'partial'
+        : 'pending'
 }
 
 function openCreate() {
@@ -110,8 +119,12 @@ onMounted(refresh)
     </header>
 
     <div class="tabs">
-      <button type="button" :class="{ active: tab === 'facturas' }" @click="tab = 'facturas'">Facturas</button>
-      <button type="button" :class="{ active: tab === 'cxp' }" @click="tab = 'cxp'">Cuentas por pagar</button>
+      <button type="button" :class="{ active: tab === 'facturas' }" @click="tab = 'facturas'">
+        Facturas
+      </button>
+      <button type="button" :class="{ active: tab === 'cxp' }" @click="tab = 'cxp'">
+        Cuentas por pagar
+      </button>
     </div>
 
     <p v-if="error" class="server-error">{{ error }}</p>
@@ -128,8 +141,14 @@ onMounted(refresh)
       <table class="grid-table">
         <thead>
           <tr>
-            <th>Factura</th><th>Proveedor</th><th>Emisión</th><th>Vence</th>
-            <th class="num">Total</th><th class="num">Saldo</th><th>Estado</th><th class="actions-col"></th>
+            <th>Factura</th>
+            <th>Proveedor</th>
+            <th>Emisión</th>
+            <th>Vence</th>
+            <th class="num">Total</th>
+            <th class="num">Saldo</th>
+            <th>Estado</th>
+            <th class="actions-col"></th>
           </tr>
         </thead>
         <tbody>
@@ -143,21 +162,46 @@ onMounted(refresh)
             <td>{{ formatDate(inv.dueDate) }}</td>
             <td class="num">{{ formatMoney(inv.total) }}</td>
             <td class="num">{{ formatMoney(inv.balance) }}</td>
-            <td><span class="pill" :class="statusClass(inv.status)">{{ invoiceStatusLabel(inv.status) }}</span></td>
+            <td>
+              <span class="pill" :class="statusClass(inv.status)">{{
+                invoiceStatusLabel(inv.status)
+              }}</span>
+            </td>
             <td class="actions">
-              <button v-if="canUpdate && (inv.status === 'PENDING' || inv.status === 'PARTIAL')"
-                type="button" class="icon-btn pay" title="Registrar abono" @click="openPay(inv)">
+              <button
+                v-if="canUpdate && (inv.status === 'PENDING' || inv.status === 'PARTIAL')"
+                type="button"
+                class="icon-btn pay"
+                title="Registrar abono"
+                @click="openPay(inv)"
+              >
                 <Banknote :size="15" :stroke-width="1.7" />
               </button>
-              <button v-if="canUpdate && inv.status === 'PENDING'"
-                type="button" class="icon-btn" title="Editar" @click="openEdit(inv)">
+              <button
+                v-if="canUpdate && inv.status === 'PENDING'"
+                type="button"
+                class="icon-btn"
+                title="Editar"
+                @click="openEdit(inv)"
+              >
                 <Pencil :size="15" :stroke-width="1.7" />
               </button>
-              <button v-if="canUpdate && inv.status === 'PENDING'"
-                type="button" class="icon-btn" title="Anular" @click="onCancel(inv)">
+              <button
+                v-if="canUpdate && inv.status === 'PENDING'"
+                type="button"
+                class="icon-btn"
+                title="Anular"
+                @click="onCancel(inv)"
+              >
                 <Ban :size="15" :stroke-width="1.7" />
               </button>
-              <button v-if="canDelete" type="button" class="icon-btn danger" title="Eliminar" @click="onDelete(inv)">
+              <button
+                v-if="canDelete"
+                type="button"
+                class="icon-btn danger"
+                title="Eliminar"
+                @click="onDelete(inv)"
+              >
                 <Trash2 :size="15" :stroke-width="1.7" />
               </button>
             </td>
@@ -169,13 +213,18 @@ onMounted(refresh)
 
     <!-- Cuentas por pagar (aging) -->
     <template v-else>
-      <p class="aging-asof" v-if="aging">Antigüedad de saldos al {{ formatDate(aging.asOf) }}</p>
+      <p v-if="aging" class="aging-asof">Antigüedad de saldos al {{ formatDate(aging.asOf) }}</p>
       <table class="grid-table">
         <thead>
           <tr>
-            <th>Proveedor</th><th>NIT</th>
-            <th class="num">Al día</th><th class="num">1–30</th><th class="num">31–60</th>
-            <th class="num">61–90</th><th class="num">+90</th><th class="num">Total</th>
+            <th>Proveedor</th>
+            <th>NIT</th>
+            <th class="num">Al día</th>
+            <th class="num">1–30</th>
+            <th class="num">31–60</th>
+            <th class="num">61–90</th>
+            <th class="num">+90</th>
+            <th class="num">Total</th>
           </tr>
         </thead>
         <tbody>
@@ -207,9 +256,23 @@ onMounted(refresh)
       </table>
     </template>
 
-    <SupplierInvoiceModal :open="invoiceModal" :invoice="editing" @close="invoiceModal = false" @saved="refresh" />
-    <SupplierPaymentModal :open="paymentModal" :invoice="paying" @close="paymentModal = false"
-      @saved="() => { refresh(); if (tab === 'cxp') loadAging() }" />
+    <SupplierInvoiceModal
+      :open="invoiceModal"
+      :invoice="editing"
+      @close="invoiceModal = false"
+      @saved="refresh"
+    />
+    <SupplierPaymentModal
+      :open="paymentModal"
+      :invoice="paying"
+      @close="paymentModal = false"
+      @saved="
+        () => {
+          refresh()
+          if (tab === 'cxp') loadAging()
+        }
+      "
+    />
   </div>
 </template>
 
@@ -220,18 +283,21 @@ onMounted(refresh)
   padding: 24px 28px;
   font-family: var(--font-sans);
 }
+
 .page-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 18px;
 }
+
 .title-wrap {
   display: flex;
   gap: 12px;
   align-items: center;
   color: var(--amatista-700, #5c2d8c);
 }
+
 .title-wrap h1 {
   margin: 0;
   font-family: var(--font-serif);
@@ -239,17 +305,20 @@ onMounted(refresh)
   font-weight: 400;
   color: var(--warm-900);
 }
+
 .sub {
   margin: 2px 0 0;
   font-size: 13px;
   color: var(--warm-500);
 }
+
 .tabs {
   display: flex;
   gap: 4px;
   margin-bottom: 18px;
   border-bottom: 1px solid var(--warm-200);
 }
+
 .tabs button {
   border: none;
   background: none;
@@ -262,10 +331,12 @@ onMounted(refresh)
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
 }
+
 .tabs button.active {
   color: var(--amatista-700, #5c2d8c);
   border-bottom-color: var(--amatista-600, #5c2d8c);
 }
+
 .filter-row {
   display: flex;
   align-items: center;
@@ -274,6 +345,7 @@ onMounted(refresh)
   font-size: 13px;
   color: var(--warm-600);
 }
+
 .mini-select {
   padding: 7px 10px;
   border: 1px solid var(--warm-200);
@@ -283,11 +355,13 @@ onMounted(refresh)
   font-size: 13px;
   color: var(--warm-900);
 }
+
 .grid-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 }
+
 .grid-table th {
   text-align: left;
   color: var(--warm-500);
@@ -297,35 +371,43 @@ onMounted(refresh)
   padding: 8px;
   border-bottom: 1px solid var(--warm-200);
 }
+
 .grid-table td {
   padding: 9px 8px;
   border-bottom: 1px solid var(--warm-100);
   color: var(--warm-700);
 }
+
 .grid-table tfoot td {
   border-top: 2px solid var(--warm-300);
   font-weight: 700;
   color: var(--warm-900);
 }
+
 .strong {
   font-weight: 600;
   color: var(--warm-900);
 }
+
 .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
 .over {
   color: #b4453a;
 }
+
 .actions-col {
   width: 140px;
 }
+
 .actions {
   display: flex;
   gap: 5px;
   justify-content: flex-end;
 }
+
 .icon-btn {
   border: none;
   background: var(--warm-100);
@@ -335,17 +417,21 @@ onMounted(refresh)
   cursor: pointer;
   display: inline-flex;
 }
+
 .icon-btn:hover {
   background: var(--warm-200);
 }
+
 .icon-btn.pay:hover {
-  background: oklch(92% 0.08 150);
-  color: oklch(40% 0.12 150);
+  background: oklch(92% 0.08 150deg);
+  color: oklch(40% 0.12 150deg);
 }
+
 .icon-btn.danger:hover {
-  background: oklch(92% 0.06 25);
-  color: oklch(50% 0.2 25);
+  background: oklch(92% 0.06 25deg);
+  color: oklch(50% 0.2 25deg);
 }
+
 .pill {
   display: inline-block;
   padding: 2px 10px;
@@ -353,45 +439,54 @@ onMounted(refresh)
   font-size: 11.5px;
   font-weight: 600;
 }
+
 .pill.pending {
-  background: oklch(93% 0.07 75);
-  color: oklch(45% 0.12 75);
+  background: oklch(93% 0.07 75deg);
+  color: oklch(45% 0.12 75deg);
 }
+
 .pill.partial {
-  background: oklch(92% 0.07 250);
-  color: oklch(45% 0.14 250);
+  background: oklch(92% 0.07 250deg);
+  color: oklch(45% 0.14 250deg);
 }
+
 .pill.paid {
-  background: oklch(92% 0.08 150);
-  color: oklch(40% 0.12 150);
+  background: oklch(92% 0.08 150deg);
+  color: oklch(40% 0.12 150deg);
 }
+
 .pill.cancelled {
   background: var(--warm-100);
   color: var(--warm-500);
 }
+
 .empty-row {
   text-align: center;
   color: var(--warm-400);
   padding: 26px;
 }
+
 .count {
   margin-top: 10px;
   font-size: 12px;
   color: var(--warm-500);
 }
+
 .aging-asof {
   font-size: 13px;
   color: var(--warm-500);
   margin: 0 0 12px;
 }
+
 .server-error {
   margin: 0 0 14px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: oklch(94% 0.06 25);
-  color: oklch(45% 0.18 25);
+  background: oklch(94% 0.06 25deg);
+  color: oklch(45% 0.18 25deg);
   font-size: 13px;
 }
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -403,6 +498,7 @@ onMounted(refresh)
   font-weight: 600;
   cursor: pointer;
 }
+
 .btn.primary {
   background: var(--amatista-600, #5c2d8c);
   color: #fff;

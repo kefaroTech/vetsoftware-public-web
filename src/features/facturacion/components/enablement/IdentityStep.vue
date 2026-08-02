@@ -60,9 +60,7 @@ const selectedActivity = computed(() =>
 const filteredActivities = computed(() => {
   const q = activityQuery.value.trim().toLowerCase()
   if (!q) return activities.value.slice(0, 8)
-  return activities.value
-    .filter((a) => `${a.code} ${a.name}`.toLowerCase().includes(q))
-    .slice(0, 8)
+  return activities.value.filter((a) => `${a.code} ${a.name}`.toLowerCase().includes(q)).slice(0, 8)
 })
 
 const docTypeOptions = (Object.keys(COMPANY_DOCTYPE_LABEL) as CompanyDocumentType[]).map((k) => ({
@@ -91,7 +89,7 @@ const isValid = computed(() => Object.values(errors.value).every((e) => !e))
 
 type ErrorKey = 'companyDocumentId' | 'legalName' | 'fiscalEmail' | 'responsibilities'
 function err(field: ErrorKey): string | undefined {
-  return submitted.value && errors.value[field] ? errors.value[field]! : undefined
+  return submitted.value ? (errors.value[field] ?? undefined) : undefined
 }
 
 function toggleResponsibility(code: string) {
@@ -150,11 +148,7 @@ async function save() {
           </template>
         </BaseField>
         <div class="doc-row">
-          <BaseField
-            label="Número de documento"
-            required
-            :error="err('companyDocumentId')"
-          >
+          <BaseField label="Número de documento" required :error="err('companyDocumentId')">
             <template #default="{ id }">
               <BaseInput
                 :id="id"
@@ -208,7 +202,9 @@ async function save() {
               <BaseInput
                 :id="id"
                 :model-value="
-                  selectedActivity ? `${selectedActivity.code} · ${selectedActivity.name}` : activityQuery
+                  selectedActivity
+                    ? `${selectedActivity.code} · ${selectedActivity.name}`
+                    : activityQuery
                 "
                 placeholder="Busca por código o descripción…"
                 @update:model-value="
@@ -236,9 +232,7 @@ async function save() {
       </div>
 
       <div class="resp">
-        <div class="resp-label">
-          Responsabilidades fiscales (RUT)
-        </div>
+        <div class="resp-label">Responsabilidades fiscales (RUT)</div>
         <p class="help" style="margin: 4px 0 10px">Selecciona las que apliquen según tu RUT.</p>
         <div class="resplist">
           <button
@@ -256,7 +250,9 @@ async function save() {
                 :stroke-width="2.6"
               />
             </span>
-            <span><strong>{{ opt.code }}</strong> · {{ opt.description }}</span>
+            <span
+              ><strong>{{ opt.code }}</strong> · {{ opt.description }}</span
+            >
           </button>
         </div>
         <p v-if="err('responsibilities')" class="resp-err">{{ err('responsibilities') }}</p>
@@ -280,41 +276,49 @@ async function save() {
   flex-direction: column;
   gap: 18px;
 }
+
 .card {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 14px;
   padding: clamp(20px, 2vw, 28px);
 }
+
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px 22px;
 }
-@media (max-width: 760px) {
+
+@media (width <= 760px) {
   .grid {
     grid-template-columns: 1fr;
   }
 }
+
 .span-2 {
   grid-column: 1 / -1;
 }
+
 .doc-row {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 10px;
   align-items: end;
 }
+
 .dv {
   text-align: center;
   padding: 0 4px 4px;
 }
+
 .dv-lbl {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--warm-500);
 }
+
 .dv-val {
   font-family: var(--font-mono);
   font-size: 18px;
@@ -325,14 +329,17 @@ async function save() {
   padding: 6px 12px;
   min-width: 40px;
 }
+
 .help {
   margin: 0;
   font-size: 11.5px;
   color: var(--warm-500);
 }
+
 .actpick {
   position: relative;
 }
+
 .actlist {
   position: absolute;
   z-index: 5;
@@ -343,11 +350,12 @@ async function save() {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 10px;
-  box-shadow: 0 12px 30px -10px rgba(20, 15, 30, 0.25);
+  box-shadow: 0 12px 30px -10px rgb(20 15 30 / 25%);
   overflow: hidden;
   max-height: 240px;
   overflow-y: auto;
 }
+
 .actrow {
   display: block;
   width: 100%;
@@ -359,18 +367,22 @@ async function save() {
   border: none;
   cursor: pointer;
 }
+
 .actrow:hover {
   background: var(--amatista-50);
 }
+
 .actrow.empty {
   color: var(--warm-500);
   cursor: default;
 }
+
 .resp {
   margin-top: 22px;
   padding-top: 20px;
   border-top: 1px solid var(--warm-200);
 }
+
 .resp-label {
   font-size: 11.5px;
   text-transform: uppercase;
@@ -378,14 +390,17 @@ async function save() {
   color: var(--warm-500);
   font-weight: 600;
 }
+
 .req {
-  color: oklch(55% 0.18 25);
+  color: oklch(55% 0.18 25deg);
 }
+
 .resplist {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
+
 .respitem {
   display: flex;
   align-items: center;
@@ -398,15 +413,20 @@ async function save() {
   color: var(--warm-800);
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.14s, background 0.14s;
+  transition:
+    border-color 0.14s,
+    background 0.14s;
 }
+
 .respitem:hover {
   border-color: var(--amatista-300);
 }
+
 .respitem.on {
   border-color: var(--amatista-600);
   background: linear-gradient(135deg, var(--amatista-50), var(--warm-50));
 }
+
 .respbox {
   width: 18px;
   height: 18px;
@@ -417,13 +437,15 @@ async function save() {
   flex-shrink: 0;
   color: #fff;
 }
+
 .respitem.on .respbox {
   background: var(--amatista-600);
   border-color: var(--amatista-600);
 }
+
 .resp-err {
   margin: 8px 0 0;
   font-size: 11.5px;
-  color: oklch(55% 0.18 25);
+  color: oklch(55% 0.18 25deg);
 }
 </style>

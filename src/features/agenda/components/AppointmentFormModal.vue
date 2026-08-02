@@ -55,7 +55,10 @@ const { vets, load: loadVets } = useVets()
 const { assignedBranches, selectedBranchId } = useBranches()
 const animalsStore = useAnimalsByOwnerStore()
 
-const typeEntries = Object.entries(APPT_TYPES) as [AppointmentType, (typeof APPT_TYPES)[AppointmentType]][]
+const typeEntries = Object.entries(APPT_TYPES) as [
+  AppointmentType,
+  (typeof APPT_TYPES)[AppointmentType],
+][]
 
 // ── Draft ────────────────────────────────────────────────────────────
 const date = ref('')
@@ -144,7 +147,8 @@ watch(assignedBranches, () => {
 // Sede por defecto: la del menú si el usuario la tiene asignada; si no, su primera sede asignada.
 function resolveDefaultBranch(): number | null {
   const ids = assignedBranches.value.map((b) => b.id)
-  if (selectedBranchId.value != null && ids.includes(selectedBranchId.value)) return selectedBranchId.value
+  if (selectedBranchId.value != null && ids.includes(selectedBranchId.value))
+    return selectedBranchId.value
   return assignedBranches.value[0]?.id ?? null
 }
 // El select de sede solo se muestra al crear y si el usuario tiene ≥2 sedes asignadas.
@@ -362,9 +366,11 @@ function doEmit() {
         <div>
           <p class="bc-title">Sede distinta a la del menú</p>
           <p class="bc-text">
-            Vas a agendar esta cita en <b>{{ branchName(branchId) }}</b>, que es
-            <b>diferente</b> a la sede por defecto
-            (<b>{{ branchName(defaultBranchId) }}</b>). ¿Seguro que quieres agendar en esa sede?
+            Vas a agendar esta cita en <b>{{ branchName(branchId) }}</b
+            >, que es <b>diferente</b> a la sede por defecto (<b>{{
+              branchName(defaultBranchId)
+            }}</b
+            >). ¿Seguro que quieres agendar en esa sede?
           </p>
         </div>
       </div>
@@ -423,7 +429,8 @@ function doEmit() {
               :class="{ sel: type === key }"
               @click="type = key"
             >
-              <span class="typebtn-ic" aria-hidden="true">{{ m.icon }}</span>{{ m.label }}
+              <span class="typebtn-ic" aria-hidden="true">{{ m.icon }}</span
+              >{{ m.label }}
             </button>
           </div>
         </div>
@@ -433,8 +440,8 @@ function doEmit() {
           <AlertTriangle :size="16" :stroke-width="1.7" class="banner-ic" />
           <span>
             <b>Choque de horario.</b> {{ clashVetName }} ya tiene
-            {{ clashing.length === 1 ? 'otra cita' : `${clashing.length} citas` }} a las
-            {{ time }}. Se puede agendar igual — sólo es una advertencia.
+            {{ clashing.length === 1 ? 'otra cita' : `${clashing.length} citas` }} a las {{ time }}.
+            Se puede agendar igual — sólo es una advertencia.
           </span>
         </div>
 
@@ -540,11 +547,15 @@ function doEmit() {
     </template>
 
     <template #footer-left>
-      <span v-if="!confirmingBranch">Los campos con <span class="req">*</span> son obligatorios.</span>
+      <span v-if="!confirmingBranch"
+        >Los campos con <span class="req">*</span> son obligatorios.</span
+      >
     </template>
     <template #footer-actions>
       <template v-if="confirmingBranch">
-        <button type="button" class="btn btn-ghost" @click="confirmingBranch = false">Volver</button>
+        <button type="button" class="btn btn-ghost" @click="confirmingBranch = false">
+          Volver
+        </button>
         <button type="button" class="btn btn-primary" @click="doEmit">
           <Check :size="16" :stroke-width="1.8" /> Sí, agendar en esta sede
         </button>
@@ -565,60 +576,71 @@ function doEmit() {
   flex-direction: column;
   gap: 18px;
 }
+
 .branch-confirm {
   display: flex;
   gap: 12px;
   padding: 16px 18px;
   border-radius: 11px;
-  background: oklch(96% 0.05 80);
-  border: 1px solid oklch(88% 0.09 80);
+  background: oklch(96% 0.05 80deg);
+  border: 1px solid oklch(88% 0.09 80deg);
 }
+
 .bc-ic {
   flex-shrink: 0;
-  color: oklch(55% 0.14 60);
+  color: oklch(55% 0.14 60deg);
   margin-top: 2px;
 }
+
 .bc-title {
   margin: 0 0 4px;
   font-size: 14px;
   font-weight: 600;
-  color: oklch(38% 0.13 60);
+  color: oklch(38% 0.13 60deg);
 }
+
 .bc-text {
   margin: 0;
   font-size: 13px;
   line-height: 1.55;
   color: var(--warm-700);
 }
+
 .bc-text b {
   font-weight: 600;
 }
+
 .cols {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
   align-items: start;
 }
+
 .col {
   display: flex;
   flex-direction: column;
   gap: 16px;
   min-width: 0;
 }
+
 .field {
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-width: 0;
 }
+
 .field.grow {
   flex: 1;
 }
+
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
+
 .flabel {
   font-size: 11.5px;
   font-weight: 600;
@@ -626,30 +648,36 @@ function doEmit() {
   text-transform: uppercase;
   color: var(--warm-500);
 }
+
 .req {
-  color: oklch(60% 0.2 25);
+  color: oklch(60% 0.2 25deg);
 }
+
 .opt {
   color: var(--warm-400);
   font-weight: 400;
   text-transform: none;
   letter-spacing: 0;
 }
+
 .fhint {
   font-size: 11.5px;
   color: var(--warm-500);
   line-height: 1.45;
 }
+
 .charcount {
   font-size: 11px;
   color: var(--warm-400);
   text-align: right;
 }
+
 .typegrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
   gap: 6px;
 }
+
 .typebtn {
   display: flex;
   flex-direction: column;
@@ -666,18 +694,22 @@ function doEmit() {
   color: var(--warm-700);
   transition: all 0.1s;
 }
+
 .typebtn:hover {
   border-color: var(--amatista-300);
 }
+
 .typebtn.sel {
   border-color: var(--amatista-500);
   background: var(--amatista-50);
   color: var(--amatista-700);
   box-shadow: 0 0 0 1px var(--amatista-400) inset;
 }
+
 .typebtn-ic {
   font-size: 18px;
 }
+
 .subject-toggle {
   display: inline-flex;
   background: var(--warm-150);
@@ -686,6 +718,7 @@ function doEmit() {
   padding: 3px;
   gap: 2px;
 }
+
 .subject-toggle button {
   border: none;
   background: transparent;
@@ -697,15 +730,18 @@ function doEmit() {
   padding: 6px 12px;
   border-radius: 6px;
 }
+
 .subject-toggle button.active {
   background: var(--warm-50);
   color: var(--warm-900);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
 }
+
 .divider {
   height: 1px;
   background: var(--warm-200);
 }
+
 .banner {
   display: flex;
   gap: 9px;
@@ -714,23 +750,28 @@ function doEmit() {
   font-size: 12.5px;
   line-height: 1.5;
 }
+
 .banner-ic {
   flex-shrink: 0;
   margin-top: 1px;
 }
+
 .banner.warn {
-  background: oklch(95% 0.07 80);
-  color: oklch(42% 0.13 60);
-  border: 1px solid oklch(88% 0.09 80);
+  background: oklch(95% 0.07 80deg);
+  color: oklch(42% 0.13 60deg);
+  border: 1px solid oklch(88% 0.09 80deg);
 }
+
 .banner.err {
-  background: oklch(95% 0.05 25);
-  color: oklch(48% 0.18 25);
-  border: 1px solid oklch(88% 0.07 25);
+  background: oklch(95% 0.05 25deg);
+  color: oklch(48% 0.18 25deg);
+  border: 1px solid oklch(88% 0.07 25deg);
 }
+
 .banner b {
   font-weight: 600;
 }
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -743,25 +784,31 @@ function doEmit() {
   border-radius: 9px;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: filter 0.12s, background 0.12s;
+  transition:
+    filter 0.12s,
+    background 0.12s;
 }
+
 .btn-primary {
   background: var(--amatista-700);
   color: white;
 }
+
 .btn-primary:hover {
   filter: brightness(1.07);
 }
+
 .btn-ghost {
   background: var(--warm-50);
   border-color: var(--warm-200);
   color: var(--warm-700);
 }
+
 .btn-ghost:hover {
   background: var(--warm-100);
 }
 
-@media (max-width: 720px) {
+@media (width <= 720px) {
   .cols {
     grid-template-columns: 1fr;
   }

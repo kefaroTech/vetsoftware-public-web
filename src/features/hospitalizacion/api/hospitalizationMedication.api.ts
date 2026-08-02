@@ -1,9 +1,5 @@
 import { http } from '@/services/http/http.client'
-import type {
-  MedicationFrequency,
-  GuidelineType,
-  DurationMeasure,
-} from '@/types/domain'
+import type { MedicationFrequency, GuidelineType, DurationMeasure } from '@/types/domain'
 
 /** Payload de creación — el backend deriva createdBy del JWT. */
 export interface CreateHospitalizationMedicationPayload {
@@ -69,10 +65,7 @@ export const hospitalizationMedicationApi = {
     id: number,
     payload: UpdateHospitalizationMedicationPayload,
   ): Promise<HospitalizationMedicationResponse> {
-    const { data } = await http.put<HospitalizationMedicationResponse>(
-      `${BASE}/${id}`,
-      payload,
-    )
+    const { data } = await http.put<HospitalizationMedicationResponse>(`${BASE}/${id}`, payload)
     return data
   },
 

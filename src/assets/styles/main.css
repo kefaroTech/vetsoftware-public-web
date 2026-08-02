@@ -18,14 +18,17 @@ button {
   width: 10px;
   height: 10px;
 }
+
 *::-webkit-scrollbar-track {
   background: transparent;
 }
+
 *::-webkit-scrollbar-thumb {
   background: var(--warm-300);
   border-radius: 6px;
   border: 2px solid var(--warm-100);
 }
+
 *::-webkit-scrollbar-thumb:hover {
   background: var(--warm-400);
 }
@@ -45,5 +48,6 @@ select:focus {
 
 .v-field--focused .v-field__outline {
   --v-field-border-opacity: 1;
+
   color: var(--amatista-500);
 }

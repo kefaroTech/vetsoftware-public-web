@@ -156,11 +156,7 @@ async function onDischarge(reason: ReasonLeaving) {
         title="Pacientes internados"
         lead="Animales hospitalizados: plan de tratamiento, administración de dosis y evolución."
       />
-      <HospBoard
-        :items="board"
-        :loading="boardLoading"
-        @open="openPatient"
-      />
+      <HospBoard :items="board" :loading="boardLoading" @open="openPatient" />
     </template>
 
     <HospDetail
@@ -192,11 +188,15 @@ async function onDischarge(reason: ReasonLeaving) {
 </template>
 
 <style scoped>
-.page { font-family: var(--font-sans); color: var(--warm-900); }
+.page {
+  font-family: var(--font-sans);
+  color: var(--warm-900);
+}
+
 .banner.error {
-  background: oklch(95% 0.06 25);
-  border: 1px solid oklch(85% 0.12 25);
-  color: oklch(40% 0.18 25);
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 13px;

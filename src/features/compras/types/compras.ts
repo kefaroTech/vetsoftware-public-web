@@ -129,11 +129,7 @@ export interface AccountsPayableAging {
 
 // ── Órdenes de compra (purchaseorder) ─────────────────────────────────────
 export type PurchaseOrderStatus =
-  | 'DRAFT'
-  | 'PLACED'
-  | 'PARTIALLY_RECEIVED'
-  | 'RECEIVED'
-  | 'CANCELLED'
+  'DRAFT' | 'PLACED' | 'PARTIALLY_RECEIVED' | 'RECEIVED' | 'CANCELLED'
 
 export interface ProductSummary {
   id: number

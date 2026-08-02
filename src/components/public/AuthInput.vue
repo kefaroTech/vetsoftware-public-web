@@ -84,27 +84,34 @@ function onBlur() {
     border-color 0.15s,
     box-shadow 0.15s;
 }
+
 .pub-input.is-focused {
   border-color: var(--pub-ame-500);
-  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.14);
+  box-shadow: 0 0 0 3px rgb(168 85 247 / 14%);
 }
+
 .pub-input.is-invalid {
   border-color: var(--pub-err-tx);
 }
+
 .pub-input.is-invalid.is-focused {
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  box-shadow: 0 0 0 3px rgb(220 38 38 / 10%);
 }
+
 .pub-input.is-disabled {
   background: #faf8fc;
   opacity: 0.6;
 }
+
 .pub-input-ico {
   color: #a89bbd;
   flex-shrink: 0;
 }
+
 .pub-input.is-focused .pub-input-ico {
   color: var(--pub-ame-700);
 }
+
 .pub-input input {
   flex: 1;
   border: none;
@@ -115,6 +122,7 @@ function onBlur() {
   min-width: 0;
   outline: none;
 }
+
 .pub-input-eye {
   border: none;
   background: transparent;

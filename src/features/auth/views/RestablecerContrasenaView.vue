@@ -86,7 +86,9 @@ async function submit() {
       <template v-else-if="state === 'form'">
         <div class="rp-eyebrow">Restablecer contraseña</div>
         <h1 class="rp-title">Crea una contraseña nueva</h1>
-        <p class="rp-sub">Elige una contraseña nueva para tu cuenta. La usarás cada vez que inicies sesión.</p>
+        <p class="rp-sub">
+          Elige una contraseña nueva para tu cuenta. La usarás cada vez que inicies sesión.
+        </p>
 
         <form class="rp-form" novalidate @submit.prevent="submit">
           <div v-if="submitError" class="rp-error">{{ submitError }}</div>
@@ -141,7 +143,9 @@ async function submit() {
           <v-icon size="38">mdi-alert-circle-outline</v-icon>
         </div>
         <h1 class="rp-title">Enlace no válido</h1>
-        <p class="rp-sub">El enlace de restablecimiento no es válido, expiró o ya se usó. Solicita uno nuevo.</p>
+        <p class="rp-sub">
+          El enlace de restablecimiento no es válido, expiró o ya se usó. Solicita uno nuevo.
+        </p>
         <div class="rp-actions rp-actions--stack">
           <PrimaryButton @click="router.push({ name: 'recuperar-contrasena' })">
             Solicitar uno nuevo
@@ -165,6 +169,7 @@ async function submit() {
   box-shadow: var(--pub-card-shadow);
   padding: 40px 44px;
 }
+
 .rp-eyebrow {
   font-size: 11px;
   font-weight: 600;
@@ -173,6 +178,7 @@ async function submit() {
   text-transform: uppercase;
   margin-bottom: 8px;
 }
+
 .rp-title {
   font-family: 'Instrument Serif', serif;
   font-size: 32px;
@@ -181,18 +187,21 @@ async function submit() {
   letter-spacing: -0.02em;
   line-height: 1.06;
 }
+
 .rp-sub {
   font-size: 13px;
   color: var(--pub-ink-500);
   margin: 10px 0 26px;
   line-height: 1.55;
 }
+
 .rp-form {
-  font-family: 'Inter', sans-serif;
+  font-family: Inter, sans-serif;
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
+
 .rp-error {
   background: var(--pub-err-bg);
   border: 1px solid var(--pub-err-bd);
@@ -201,6 +210,7 @@ async function submit() {
   border-radius: 8px;
   font-size: 12.5px;
 }
+
 .rp-center {
   display: flex;
   flex-direction: column;
@@ -208,6 +218,7 @@ async function submit() {
   gap: 14px;
   padding: 20px 0;
 }
+
 .rp-spin {
   width: 42px;
   height: 42px;
@@ -217,6 +228,7 @@ async function submit() {
   display: block;
   animation: pub-spin 0.8s linear infinite;
 }
+
 .rp-icon {
   width: 68px;
   height: 68px;
@@ -225,24 +237,29 @@ async function submit() {
   display: grid;
   place-items: center;
 }
+
 .rp-icon--ok {
   background: var(--pub-ok-bg);
   border: 1px solid var(--pub-ok-bd);
   color: var(--pub-ok-tx);
 }
+
 .rp-icon--err {
   background: var(--pub-err-bg);
   border: 1px solid var(--pub-err-bd);
   color: var(--pub-err-tx);
 }
+
 .rp-actions {
   margin-top: 24px;
 }
+
 .rp-actions--stack {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
+
 .rp-textbtn {
   background: transparent;
   border: none;
@@ -252,10 +269,12 @@ async function submit() {
   font-size: 13px;
   font-weight: 500;
 }
+
 .rp-textbtn:hover {
   color: var(--pub-ame-700);
 }
-@media (max-width: 520px) {
+
+@media (width <= 520px) {
   .rp-card {
     padding: 32px 24px;
   }

@@ -1,10 +1,5 @@
 import { http } from '@/services/http/http.client'
-import type {
-  AnimalType,
-  Gender,
-  ReproductiveState,
-  WeightUnit,
-} from '@/types/domain'
+import type { AnimalType, Gender, ReproductiveState, WeightUnit } from '@/types/domain'
 
 export interface AnimalSpecieSummary {
   id: number
@@ -87,9 +82,7 @@ export const animalApi = {
   },
 
   async listByOwner(ownerId: number): Promise<AnimalResponse[]> {
-    const { data } = await http.get<AnimalResponse[]>(
-      `/animals/by-owner/${ownerId}`,
-    )
+    const { data } = await http.get<AnimalResponse[]>(`/animals/by-owner/${ownerId}`)
     return data
   },
 }

@@ -30,12 +30,16 @@ defineEmits<{ click: [] }>()
   font-family: inherit;
   color: var(--warm-600);
   text-align: center;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
+
 .add:hover {
   border-color: var(--amatista-500);
   background: var(--amatista-50);
 }
+
 .icon {
   width: 46px;
   height: 46px;
@@ -45,11 +49,13 @@ defineEmits<{ click: [] }>()
   display: grid;
   place-items: center;
 }
+
 .title {
   font-size: 14px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .subtitle {
   font-size: 12px;
   color: var(--warm-500);

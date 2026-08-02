@@ -68,19 +68,25 @@ function selectView(v: ViewMode) {
           class="view-btn"
           :class="{ active: view === 'month' }"
           @click="selectView('month')"
-        >Mes</button>
+        >
+          Mes
+        </button>
         <button
           type="button"
           class="view-btn"
           :class="{ active: view === 'week' }"
           @click="selectView('week')"
-        >Semana</button>
+        >
+          Semana
+        </button>
         <button
           type="button"
           class="view-btn"
           :class="{ active: view === 'day' }"
           @click="selectView('day')"
-        >Día</button>
+        >
+          Día
+        </button>
       </div>
     </div>
   </div>
@@ -98,11 +104,13 @@ function selectView(v: ViewMode) {
   border-radius: 12px;
   margin-top: 16px;
 }
+
 .left {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
 .today-btn {
   font-family: inherit;
   font-size: 12.5px;
@@ -114,9 +122,11 @@ function selectView(v: ViewMode) {
   border-radius: 8px;
   cursor: pointer;
 }
+
 .today-btn:hover {
   background: var(--warm-100);
 }
+
 .arrow-btn {
   width: 30px;
   height: 30px;
@@ -128,10 +138,12 @@ function selectView(v: ViewMode) {
   place-items: center;
   cursor: pointer;
 }
+
 .arrow-btn:hover {
   background: var(--warm-100);
   color: var(--warm-900);
 }
+
 .cursor-label {
   margin-left: 8px;
   font-family: var(--font-serif);
@@ -140,6 +152,7 @@ function selectView(v: ViewMode) {
   color: var(--warm-900);
   letter-spacing: -0.01em;
 }
+
 .view-toggle {
   display: inline-flex;
   background: var(--warm-150);
@@ -147,6 +160,7 @@ function selectView(v: ViewMode) {
   padding: 3px;
   gap: 2px;
 }
+
 .view-btn {
   font-family: inherit;
   font-size: 12.5px;
@@ -158,13 +172,14 @@ function selectView(v: ViewMode) {
   border-radius: 7px;
   cursor: pointer;
 }
+
 .view-btn.active {
   background: var(--warm-50);
   color: var(--warm-900);
-  box-shadow: 0 1px 2px rgba(20, 15, 30, 0.08);
+  box-shadow: 0 1px 2px rgb(20 15 30 / 8%);
 }
 
-@media (max-width: 760px) {
+@media (width <= 760px) {
   .toolbar {
     align-items: stretch;
     flex-direction: column;

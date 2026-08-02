@@ -41,7 +41,9 @@ const submitted = ref(false)
 const saving = ref(false)
 const serverError = ref<string | null>(null)
 
-const supplierOptions = computed(() => suppliers.value.map((s) => ({ value: String(s.id), label: s.name })))
+const supplierOptions = computed(() =>
+  suppliers.value.map((s) => ({ value: String(s.id), label: s.name })),
+)
 const productOptions = computed(() =>
   tienda.products.value.map((p) => ({ value: String(p.id), label: `${p.name} (${p.code})` })),
 )
@@ -52,7 +54,10 @@ const orderOptions = computed(() => {
       (o.status === 'PLACED' || o.status === 'PARTIALLY_RECEIVED') &&
       (!form.supplierId || String(o.supplier.id) === form.supplierId),
   )
-  return [{ value: '', label: 'Sin orden (recepción directa)' }, ...open.map((o) => ({ value: String(o.id), label: `OC #${o.id} · ${o.supplier.name}` }))]
+  return [
+    { value: '', label: 'Sin orden (recepción directa)' },
+    ...open.map((o) => ({ value: String(o.id), label: `OC #${o.id} · ${o.supplier.name}` })),
+  ]
 })
 
 const linesValid = computed(
@@ -67,11 +72,18 @@ const errors = computed(() => ({
 }))
 const hasErrors = computed(() => Object.values(errors.value).some((e) => e !== null))
 function err(k: keyof typeof errors.value) {
-  return submitted.value ? errors.value[k] ?? undefined : undefined
+  return submitted.value ? (errors.value[k] ?? undefined) : undefined
 }
 
 function addLine() {
-  lines.value.push({ productId: '', purchaseOrderLineId: null, lotNumber: '', expireDate: '', quantity: '1', unitCost: '' })
+  lines.value.push({
+    productId: '',
+    purchaseOrderLineId: null,
+    lotNumber: '',
+    expireDate: '',
+    quantity: '1',
+    unitCost: '',
+  })
 }
 function removeLine(i: number) {
   lines.value.splice(i, 1)
@@ -111,7 +123,16 @@ watch(
     form.receiptDate = new Date().toISOString().slice(0, 10)
     form.supplierInvoiceNumber = ''
     form.notes = ''
-    lines.value = [{ productId: '', purchaseOrderLineId: null, lotNumber: '', expireDate: '', quantity: '1', unitCost: '' }]
+    lines.value = [
+      {
+        productId: '',
+        purchaseOrderLineId: null,
+        lotNumber: '',
+        expireDate: '',
+        quantity: '1',
+        unitCost: '',
+      },
+    ]
   },
 )
 
@@ -159,11 +180,19 @@ async function submit() {
       <p v-if="serverError" class="server-error">{{ serverError }}</p>
       <div class="head-grid">
         <BaseField label="Orden de compra" hint="Opcional · prellena líneas">
-          <BaseSelect v-model="form.purchaseOrderId" :options="orderOptions" placeholder="Sin orden" />
+          <BaseSelect
+            v-model="form.purchaseOrderId"
+            :options="orderOptions"
+            placeholder="Sin orden"
+          />
         </BaseField>
         <BaseField label="Proveedor" required :error="err('supplierId')">
-          <BaseSelect v-model="form.supplierId" :options="supplierOptions" placeholder="Selecciona proveedor"
-            :invalid="!!err('supplierId')" />
+          <BaseSelect
+            v-model="form.supplierId"
+            :options="supplierOptions"
+            placeholder="Selecciona proveedor"
+            :invalid="!!err('supplierId')"
+          />
         </BaseField>
         <BaseField label="Fecha de recepción" required :error="err('receiptDate')">
           <DateInput v-model="form.receiptDate" :invalid="!!err('receiptDate')" />
@@ -176,11 +205,14 @@ async function submit() {
       <div class="lines">
         <div class="lines-head">
           <h3>Productos recibidos</h3>
-          <button type="button" class="btn ghost sm" @click="addLine"><Plus :size="14" /> Agregar</button>
+          <button type="button" class="btn ghost sm" @click="addLine">
+            <Plus :size="14" /> Agregar
+          </button>
         </div>
         <p v-if="err('lines')" class="line-error">{{ err('lines') }}</p>
         <div class="line-head-row">
-          <span>Producto</span><span>Lote</span><span>Vence</span><span>Cant.</span><span>Costo</span><span></span>
+          <span>Producto</span><span>Lote</span><span>Vence</span><span>Cant.</span
+          ><span>Costo</span><span></span>
         </div>
         <div v-for="(l, i) in lines" :key="i" class="line-row">
           <BaseSelect v-model="l.productId" :options="productOptions" placeholder="Producto" />
@@ -188,7 +220,9 @@ async function submit() {
           <DateInput v-model="l.expireDate" placeholder="—" />
           <BaseInput v-model="l.quantity" placeholder="0" inputmode="numeric" />
           <BaseInput v-model="l.unitCost" placeholder="0" inputmode="decimal" />
-          <button type="button" class="icon-btn danger" @click="removeLine(i)"><Trash2 :size="14" /></button>
+          <button type="button" class="icon-btn danger" @click="removeLine(i)">
+            <Trash2 :size="14" />
+          </button>
         </div>
       </div>
 
@@ -212,20 +246,24 @@ async function submit() {
   gap: 16px 18px;
   margin-bottom: 18px;
 }
-@media (max-width: 640px) {
+
+@media (width <= 640px) {
   .head-grid {
     grid-template-columns: 1fr;
   }
 }
+
 .lines {
   margin-bottom: 16px;
 }
+
 .lines-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
 }
+
 .lines-head h3 {
   margin: 0;
   font-size: 13px;
@@ -233,6 +271,7 @@ async function submit() {
   letter-spacing: 0.05em;
   color: var(--warm-500);
 }
+
 .line-head-row,
 .line-row {
   display: grid;
@@ -240,6 +279,7 @@ async function submit() {
   gap: 8px;
   align-items: center;
 }
+
 .line-head-row {
   font-size: 10.5px;
   text-transform: uppercase;
@@ -248,14 +288,17 @@ async function submit() {
   margin-bottom: 6px;
   padding: 0 4px;
 }
+
 .line-row {
   margin-bottom: 8px;
 }
+
 .line-error {
-  color: oklch(50% 0.2 25);
+  color: oklch(50% 0.2 25deg);
   font-size: 12.5px;
   margin: 0 0 8px;
 }
+
 .icon-btn {
   border: none;
   background: var(--warm-100);
@@ -264,18 +307,21 @@ async function submit() {
   padding: 8px;
   cursor: pointer;
 }
+
 .icon-btn.danger:hover {
-  background: oklch(92% 0.06 25);
-  color: oklch(50% 0.2 25);
+  background: oklch(92% 0.06 25deg);
+  color: oklch(50% 0.2 25deg);
 }
+
 .server-error {
   margin: 0 0 14px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: oklch(94% 0.06 25);
-  color: oklch(45% 0.18 25);
+  background: oklch(94% 0.06 25deg);
+  color: oklch(45% 0.18 25deg);
   font-size: 13px;
 }
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -287,18 +333,22 @@ async function submit() {
   font-weight: 600;
   cursor: pointer;
 }
+
 .btn.sm {
   padding: 6px 11px;
   font-size: 12.5px;
 }
+
 .btn.ghost {
   background: var(--warm-100);
   color: var(--warm-700);
 }
+
 .btn.primary {
   background: var(--amatista-600, #5c2d8c);
   color: #fff;
 }
+
 .btn.primary:disabled {
   opacity: 0.6;
   cursor: default;

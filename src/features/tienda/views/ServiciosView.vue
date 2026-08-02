@@ -70,7 +70,8 @@ const groups = computed(() => {
 
 const categoryCounts = computed<Record<number, number>>(() => {
   const counts: Record<number, number> = {}
-  for (const s of store.services.value) counts[s.serviceCategory.id] = (counts[s.serviceCategory.id] ?? 0) + 1
+  for (const s of store.services.value)
+    counts[s.serviceCategory.id] = (counts[s.serviceCategory.id] ?? 0) + 1
   return counts
 })
 
@@ -82,7 +83,10 @@ async function switchMode(m: 'active' | 'paused') {
     try {
       await store.loadPausedServices()
     } catch (e) {
-      toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudieron cargar los pausados'))
+      toast.error(
+        'Ocurrió un error',
+        getProblemDetailMessage(e, 'No se pudieron cargar los pausados'),
+      )
     } finally {
       pausedLoading.value = false
     }
@@ -99,7 +103,10 @@ function onRowClick(s: ServiceResponse) {
 }
 function onSaved(item: ServiceResponse) {
   const wasEdit = editing.value !== null
-  toast.success('Servicio guardado', wasEdit ? 'Los cambios se guardaron.' : `${item.name} se añadió.`)
+  toast.success(
+    'Servicio guardado',
+    wasEdit ? 'Los cambios se guardaron.' : `${item.name} se añadió.`,
+  )
 }
 function onFormClose() {
   modalOpen.value = false
@@ -131,7 +138,12 @@ async function onReactivate(s: ServiceResponse) {
   }
 }
 
-async function onCategoryUpsert(p: { id: number | null; name: string; description: string; version?: number }) {
+async function onCategoryUpsert(p: {
+  id: number | null
+  name: string
+  description: string
+  version?: number
+}) {
   try {
     if (p.id) await store.updateServiceCategory(p.id, p.name, p.description, p.version ?? 0)
     else await store.createServiceCategory(p.name, p.description)
@@ -164,10 +176,19 @@ async function onCategoryRemove(id: number) {
       </div>
       <div class="head-actions">
         <div class="seg" role="tablist">
-          <button type="button" :class="{ on: mode === 'active' }" @click="switchMode('active')">Activos</button>
-          <button type="button" :class="{ on: mode === 'paused' }" @click="switchMode('paused')">Pausados</button>
+          <button type="button" :class="{ on: mode === 'active' }" @click="switchMode('active')">
+            Activos
+          </button>
+          <button type="button" :class="{ on: mode === 'paused' }" @click="switchMode('paused')">
+            Pausados
+          </button>
         </div>
-        <button v-if="canManageCategories" type="button" class="ghost-cta" @click="categoriesOpen = true">
+        <button
+          v-if="canManageCategories"
+          type="button"
+          class="ghost-cta"
+          @click="categoriesOpen = true"
+        >
           <Package :size="14" :stroke-width="1.8" /> Categorías
         </button>
         <button v-if="canCreate && mode === 'active'" type="button" class="cta" @click="openNew">
@@ -187,7 +208,9 @@ async function onCategoryRemove(id: number) {
         </div>
         <select v-model="cat" class="fsel">
           <option value="">Todas las categorías</option>
-          <option v-for="c in store.serviceCategories.value" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
+          <option v-for="c in store.serviceCategories.value" :key="c.id" :value="String(c.id)">
+            {{ c.name }}
+          </option>
         </select>
       </div>
 
@@ -214,10 +237,22 @@ async function onCategoryRemove(id: number) {
             </div>
             <div class="svc-price">{{ formatMoney(s.price) }}</div>
             <div class="svc-actions" @click.stop>
-              <button v-if="canUpdate" type="button" class="icon-btn" title="Editar" @click="editing = s">
+              <button
+                v-if="canUpdate"
+                type="button"
+                class="icon-btn"
+                title="Editar"
+                @click="editing = s"
+              >
                 <Pencil :size="14" :stroke-width="1.7" />
               </button>
-              <button v-if="canDelete" type="button" class="icon-btn" title="Pausar" @click="pausing = s">
+              <button
+                v-if="canDelete"
+                type="button"
+                class="icon-btn"
+                title="Pausar"
+                @click="pausing = s"
+              >
                 <PauseCircle :size="14" :stroke-width="1.7" />
               </button>
             </div>
@@ -228,9 +263,13 @@ async function onCategoryRemove(id: number) {
 
     <!-- ─────────── Modo PAUSADOS ─────────── -->
     <template v-else>
-      <p class="paused-hint">Servicios pausados (ocultos del punto de venta). Reactívalos para volver a ofrecerlos.</p>
+      <p class="paused-hint">
+        Servicios pausados (ocultos del punto de venta). Reactívalos para volver a ofrecerlos.
+      </p>
       <div v-if="pausedLoading" class="state">Cargando…</div>
-      <div v-else-if="store.pausedServices.value.length === 0" class="state">No hay servicios pausados.</div>
+      <div v-else-if="store.pausedServices.value.length === 0" class="state">
+        No hay servicios pausados.
+      </div>
       <div v-else class="svc-list">
         <div v-for="s in store.pausedServices.value" :key="s.id" class="svc-row static">
           <div class="svc-info">
@@ -247,7 +286,12 @@ async function onCategoryRemove(id: number) {
       </div>
     </template>
 
-    <ServiceFormModal :open="modalOpen || editing !== null" :initial="editing" @close="onFormClose" @saved="onSaved" />
+    <ServiceFormModal
+      :open="modalOpen || editing !== null"
+      :initial="editing"
+      @close="onFormClose"
+      @saved="onSaved"
+    />
     <CategoryManagerModal
       :open="categoriesOpen"
       title="Categorías de servicio"
@@ -264,7 +308,11 @@ async function onCategoryRemove(id: number) {
       :open="pausing !== null"
       title="Pausar servicio"
       action-label="Pausar"
-      :message="pausing ? `${pausing.name} dejará de aparecer en el punto de venta. Podrás reactivarlo desde la pestaña “Pausados”. Las ventas ya registradas no se modifican.` : ''"
+      :message="
+        pausing
+          ? `${pausing.name} dejará de aparecer en el punto de venta. Podrás reactivarlo desde la pestaña “Pausados”. Las ventas ya registradas no se modifican.`
+          : ''
+      "
       :busy="pausingBusy"
       @cancel="pausing = null"
       @confirm="onConfirmPause"
@@ -273,61 +321,293 @@ async function onCategoryRemove(id: number) {
 </template>
 
 <style scoped>
-.inv { font-family: var(--font-sans); color: var(--warm-900); }
-.head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
-.kicker { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--warm-500); font-weight: 500; margin-bottom: 6px; }
-.title { margin: 0; font-family: var(--font-serif); font-size: 36px; font-weight: 400; letter-spacing: -0.015em; line-height: 1.05; color: var(--warm-900); }
-.head-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
-.seg { display: inline-flex; background: var(--warm-100); border: 1px solid var(--warm-200); border-radius: 9px; padding: 2px; }
-.seg button { border: none; background: transparent; font-family: inherit; font-size: 12.5px; font-weight: 500; color: var(--warm-600); padding: 6px 12px; border-radius: 7px; cursor: pointer; }
-.seg button.on { background: var(--warm-50); color: var(--amatista-700); box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08); }
-.cta {
-  display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 9px;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
-  color: #fff; border: none; font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
-  box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08), 0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.45);
+.inv {
+  font-family: var(--font-sans);
+  color: var(--warm-900);
 }
-.ghost-cta {
-  display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 9px;
-  background: transparent; border: 1px solid var(--warm-200); color: var(--warm-700); font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
 }
-.ghost-cta:hover { background: var(--warm-100); }
-.banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
-.paused-hint { margin: 0 0 14px; font-size: 12.5px; color: var(--warm-500); }
-.filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-.search { display: flex; align-items: center; gap: 9px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 9px; padding: 10px 13px; max-width: 340px; flex: 1; }
-.search:focus-within { border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
-.s-icon { color: var(--warm-500); flex-shrink: 0; }
-.search input { flex: 1; border: none; outline: none; background: transparent; font-family: inherit; font-size: 13.5px; color: var(--warm-900); min-width: 0; }
-.fsel {
-  appearance: none; border: 1px solid var(--warm-200); background: var(--warm-50); border-radius: 9px;
-  padding: 10px 30px 10px 14px; font-family: inherit; font-size: 13.5px; color: var(--warm-800); cursor: pointer;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23999' stroke-width='1.5' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: right 11px center;
+.kicker {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--warm-500);
+  font-weight: 500;
+  margin-bottom: 6px;
 }
-.fsel:focus { outline: none; border-color: var(--amatista-500); box-shadow: 0 0 0 3px var(--amatista-50); }
-.state { padding: 48px; text-align: center; color: var(--warm-500); font-size: 13px; }
-.svc-group { margin-bottom: 18px; }
-.svc-group-head { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
-.svc-group-count { font-size: 12px; color: var(--warm-500); }
-.catpill { display: inline-flex; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 500; white-space: nowrap; background: var(--warm-150); color: var(--warm-700); }
-.svc-list { display: flex; flex-direction: column; gap: 6px; }
-.svc-row { display: flex; align-items: center; gap: 14px; background: var(--warm-50); border: 1px solid var(--warm-200); border-radius: 11px; padding: 12px 14px; cursor: pointer; transition: border-color 0.12s ease; }
-.svc-row:hover { border-color: var(--amatista-300); }
-.svc-row.static { cursor: default; }
-.svc-row.static:hover { border-color: var(--warm-200); }
-.svc-info { flex: 1; min-width: 0; }
-.svc-name { font-size: 14px; font-weight: 500; color: var(--warm-900); }
-.svc-notes { font-size: 12px; color: var(--warm-500); margin-top: 2px; }
-.svc-cat { font-size: 12px; color: var(--warm-500); margin-top: 2px; }
-.svc-price { font-size: 15px; font-weight: 600; color: var(--warm-900); white-space: nowrap; }
-.svc-actions { display: flex; gap: 4px; flex-shrink: 0; align-items: center; }
-.icon-btn { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--warm-200); background: transparent; color: var(--warm-700); cursor: pointer; }
-.icon-btn:hover { background: var(--warm-100); }
-.reactivate { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--amatista-200); background: var(--amatista-50); color: var(--amatista-700); font-family: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; white-space: nowrap; }
-.reactivate:hover { background: var(--amatista-100); }
+.title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 36px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.05;
+  color: var(--warm-900);
+}
+.head-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  align-items: center;
+}
+.seg {
+  display: inline-flex;
+  background: var(--warm-100);
+  border: 1px solid var(--warm-200);
+  border-radius: 9px;
+  padding: 2px;
+}
+.seg button {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--warm-600);
+  padding: 6px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.seg button.on {
+  background: var(--warm-50);
+  color: var(--amatista-700);
+  box-shadow: 0 1px 2px rgb(50 20 80 / 8%);
+}
 
-@media (max-width: 760px) {
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: 9px;
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
+  color: #fff;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow:
+    0 1px 2px rgb(50 20 80 / 8%),
+    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 45%);
+}
+
+.ghost-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border-radius: 9px;
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  color: var(--warm-700);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ghost-cta:hover {
+  background: var(--warm-100);
+}
+.banner.error {
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+.paused-hint {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  color: var(--warm-500);
+}
+.filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 9px;
+  padding: 10px 13px;
+  max-width: 340px;
+  flex: 1;
+}
+.search:focus-within {
+  border-color: var(--amatista-500);
+  box-shadow: 0 0 0 3px var(--amatista-50);
+}
+.s-icon {
+  color: var(--warm-500);
+  flex-shrink: 0;
+}
+.search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--warm-900);
+  min-width: 0;
+}
+
+.fsel {
+  appearance: none;
+  border: 1px solid var(--warm-200);
+  background: var(--warm-50);
+  border-radius: 9px;
+  padding: 10px 30px 10px 14px;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--warm-800);
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23999' stroke-width='1.5' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+}
+.fsel:focus {
+  outline: none;
+  border-color: var(--amatista-500);
+  box-shadow: 0 0 0 3px var(--amatista-50);
+}
+.state {
+  padding: 48px;
+  text-align: center;
+  color: var(--warm-500);
+  font-size: 13px;
+}
+.svc-group {
+  margin-bottom: 18px;
+}
+.svc-group-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 8px;
+}
+.svc-group-count {
+  font-size: 12px;
+  color: var(--warm-500);
+}
+.catpill {
+  display: inline-flex;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  background: var(--warm-150);
+  color: var(--warm-700);
+}
+.svc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.svc-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--warm-50);
+  border: 1px solid var(--warm-200);
+  border-radius: 11px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+.svc-row:hover {
+  border-color: var(--amatista-300);
+}
+.svc-row.static {
+  cursor: default;
+}
+.svc-row.static:hover {
+  border-color: var(--warm-200);
+}
+.svc-info {
+  flex: 1;
+  min-width: 0;
+}
+.svc-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--warm-900);
+}
+.svc-notes {
+  font-size: 12px;
+  color: var(--warm-500);
+  margin-top: 2px;
+}
+.svc-cat {
+  font-size: 12px;
+  color: var(--warm-500);
+  margin-top: 2px;
+}
+.svc-price {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--warm-900);
+  white-space: nowrap;
+}
+.svc-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  align-items: center;
+}
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--warm-200);
+  background: transparent;
+  color: var(--warm-700);
+  cursor: pointer;
+}
+.icon-btn:hover {
+  background: var(--warm-100);
+}
+.reactivate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--amatista-200);
+  background: var(--amatista-50);
+  color: var(--amatista-700);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.reactivate:hover {
+  background: var(--amatista-100);
+}
+
+@media (width <= 760px) {
   .head {
     align-items: stretch;
     flex-direction: column;

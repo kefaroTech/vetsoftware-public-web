@@ -17,7 +17,20 @@ function formatDate(iso: string): string {
   if (!iso) return '—'
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return iso
-  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+  const months = [
+    'ene',
+    'feb',
+    'mar',
+    'abr',
+    'may',
+    'jun',
+    'jul',
+    'ago',
+    'sep',
+    'oct',
+    'nov',
+    'dic',
+  ]
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
 }
 </script>
@@ -54,6 +67,7 @@ function formatDate(iso: string): string {
   display: flex;
   flex-direction: column;
 }
+
 .row {
   display: flex;
   align-items: flex-start;
@@ -61,10 +75,12 @@ function formatDate(iso: string): string {
   padding: 14px 0;
   border-top: 1px solid var(--warm-150);
 }
+
 .row.first {
   border-top: none;
   padding-top: 0;
 }
+
 .ic {
   width: 32px;
   height: 32px;
@@ -75,10 +91,12 @@ function formatDate(iso: string): string {
   place-items: center;
   flex-shrink: 0;
 }
+
 .data {
   flex: 1;
   min-width: 0;
 }
+
 .label {
   font-size: 11.5px;
   color: var(--warm-500);
@@ -86,20 +104,24 @@ function formatDate(iso: string): string {
   text-transform: uppercase;
   margin-bottom: 3px;
 }
+
 .value {
   font-size: 14px;
   color: var(--warm-900);
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
+
 .value.muted {
   color: var(--warm-500);
   font-style: italic;
 }
+
 .chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
+
 .chip {
   padding: 3px 10px;
   font-size: 12.5px;

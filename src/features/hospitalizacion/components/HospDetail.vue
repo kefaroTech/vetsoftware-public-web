@@ -12,7 +12,10 @@ import {
 import HospStatusPill from './HospStatusPill.vue'
 import TextNoteModal from '../modals/TextNoteModal.vue'
 import DischargeDialog from '../modals/DischargeDialog.vue'
-import { initials, formatDateLong } from '@/features/dashboard/views/consulta/nueva/composables/format'
+import {
+  initials,
+  formatDateLong,
+} from '@/features/dashboard/views/consulta/nueva/composables/format'
 import { daysSince } from '../composables/mar'
 import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
 import type { HospitalizationObservationResponse } from '../api/hospitalizationObservation.api'
@@ -130,7 +133,12 @@ function fmtStamp(iso: string): string {
       subtitle="Indicación o cuidado para el paciente"
       label="Observación"
       placeholder="Ej. No dar comida sólida hasta nueva orden."
-      @save="(t) => { emit('add-observation', t); obsOpen = false }"
+      @save="
+        (t) => {
+          emit('add-observation', t)
+          obsOpen = false
+        }
+      "
       @close="obsOpen = false"
     />
     <TextNoteModal
@@ -140,20 +148,33 @@ function fmtStamp(iso: string): string {
       subtitle="Estado y evolución del turno"
       label="Nota"
       placeholder="Estado general, evolución, incidencias del turno…"
-      @save="(t) => { emit('add-note', t); noteOpen = false }"
+      @save="
+        (t) => {
+          emit('add-note', t)
+          noteOpen = false
+        }
+      "
       @close="noteOpen = false"
     />
     <DischargeDialog
       :open="dischargeOpen"
       :patient-name="patient.animal.name"
-      @confirm="(r) => { emit('discharge', r); dischargeOpen = false }"
+      @confirm="
+        (r) => {
+          emit('discharge', r)
+          dischargeOpen = false
+        }
+      "
       @close="dischargeOpen = false"
     />
   </div>
 </template>
 
 <style scoped>
-.detail { font-family: var(--font-sans); }
+.detail {
+  font-family: var(--font-sans);
+}
+
 .back {
   display: inline-flex;
   align-items: center;
@@ -168,17 +189,20 @@ function fmtStamp(iso: string): string {
   cursor: pointer;
   margin-bottom: 14px;
 }
+
 .back:hover {
   background: var(--amatista-50);
   border-color: var(--amatista-300);
   color: var(--amatista-700);
 }
+
 .head {
   display: flex;
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
 }
+
 .avatar {
   width: 64px;
   height: 64px;
@@ -193,13 +217,18 @@ function fmtStamp(iso: string): string {
   flex-shrink: 0;
   box-shadow: 0 6px 18px -10px oklch(50% 0.18 var(--hue));
 }
-.who { flex: 1; min-width: 0; }
+.who {
+  flex: 1;
+  min-width: 0;
+}
+
 .name-row {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
 }
+
 .name {
   margin: 0;
   font-family: var(--font-serif);
@@ -208,6 +237,7 @@ function fmtStamp(iso: string): string {
   color: var(--warm-900);
   line-height: 1.05;
 }
+
 .meta {
   display: flex;
   gap: 7px;
@@ -216,7 +246,10 @@ function fmtStamp(iso: string): string {
   color: var(--warm-500);
   margin-top: 6px;
 }
-.code { font-family: var(--font-mono); }
+.code {
+  font-family: var(--font-mono);
+}
+
 .discharge {
   display: inline-flex;
   align-items: center;
@@ -232,13 +265,17 @@ function fmtStamp(iso: string): string {
   cursor: pointer;
   flex-shrink: 0;
 }
-.discharge:hover { background: var(--amatista-800); }
+.discharge:hover {
+  background: var(--amatista-800);
+}
+
 .diagnosis {
   margin: 18px 0;
   padding: 14px 16px;
   background: var(--warm-100);
   border-radius: 10px;
 }
+
 .dx-label {
   font-size: 11px;
   text-transform: uppercase;
@@ -246,13 +283,17 @@ function fmtStamp(iso: string): string {
   color: var(--warm-500);
   font-weight: 500;
 }
+
 .dx-text {
   margin: 4px 0 12px;
   font-size: 13.5px;
   color: var(--warm-800);
   line-height: 1.5;
 }
-.dx-text:last-child { margin-bottom: 0; }
+.dx-text:last-child {
+  margin-bottom: 0;
+}
+
 .treat-cta {
   display: flex;
   align-items: center;
@@ -267,7 +308,10 @@ function fmtStamp(iso: string): string {
   font-family: inherit;
   transition: border-color 0.12s ease;
 }
-.treat-cta:hover { border-color: var(--amatista-300); }
+.treat-cta:hover {
+  border-color: var(--amatista-300);
+}
+
 .cta-icon {
   width: 42px;
   height: 42px;
@@ -278,9 +322,21 @@ function fmtStamp(iso: string): string {
   color: var(--amatista-700);
   flex-shrink: 0;
 }
-.cta-text { flex: 1; min-width: 0; }
-.cta-title { font-size: 14.5px; font-weight: 600; color: var(--warm-900); }
-.cta-sub { font-size: 12.5px; color: var(--warm-600); margin-top: 2px; }
+.cta-text {
+  flex: 1;
+  min-width: 0;
+}
+.cta-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--warm-900);
+}
+.cta-sub {
+  font-size: 12.5px;
+  color: var(--warm-600);
+  margin-top: 2px;
+}
+
 .cta-go {
   display: inline-flex;
   align-items: center;
@@ -290,21 +346,27 @@ function fmtStamp(iso: string): string {
   color: var(--amatista-700);
   flex-shrink: 0;
 }
+
 .cols {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   margin-top: 24px;
 }
-@media (max-width: 820px) {
-  .cols { grid-template-columns: 1fr; }
+
+@media (width <= 820px) {
+  .cols {
+    grid-template-columns: 1fr;
+  }
 }
+
 .block-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
 }
+
 .block-head h3 {
   margin: 0;
   display: inline-flex;
@@ -314,6 +376,7 @@ function fmtStamp(iso: string): string {
   font-weight: 600;
   color: var(--warm-900);
 }
+
 .mini {
   display: inline-flex;
   align-items: center;
@@ -328,31 +391,40 @@ function fmtStamp(iso: string): string {
   font-weight: 500;
   cursor: pointer;
 }
-.mini:hover { border-color: var(--amatista-500); }
+.mini:hover {
+  border-color: var(--amatista-500);
+}
+
 .block-empty {
   margin: 0;
   font-size: 13px;
   color: var(--warm-500);
 }
+
 .entry {
   padding: 10px 0;
   border-bottom: 1px solid var(--warm-150);
 }
-.entry:last-child { border-bottom: none; }
+.entry:last-child {
+  border-bottom: none;
+}
+
 .entry-meta {
   font-size: 11.5px;
   color: var(--warm-500);
   font-weight: 500;
 }
+
 .entry-text {
   margin: 5px 0 0;
   font-size: 13px;
   color: var(--warm-800);
   line-height: 1.5;
 }
+
 .entry-text.obs {
-  background: oklch(96% 0.04 80);
-  border-left: 2px solid oklch(70% 0.13 75);
+  background: oklch(96% 0.04 80deg);
+  border-left: 2px solid oklch(70% 0.13 75deg);
   padding: 7px 11px;
   border-radius: 0 6px 6px 0;
 }

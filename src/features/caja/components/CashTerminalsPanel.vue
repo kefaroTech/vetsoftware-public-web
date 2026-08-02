@@ -115,7 +115,10 @@ async function toggle(terminal: CashTerminal) {
     toast.success(terminal.active ? 'Terminal desactivado' : 'Terminal activado', terminal.name)
     await load()
   } catch (e) {
-    toast.error('No se pudo cambiar el estado', getProblemDetailMessage(e, 'El terminal puede tener una caja abierta.'))
+    toast.error(
+      'No se pudo cambiar el estado',
+      getProblemDetailMessage(e, 'El terminal puede tener una caja abierta.'),
+    )
   }
 }
 </script>
@@ -134,7 +137,13 @@ async function toggle(terminal: CashTerminal) {
           placeholder="Selecciona una sede"
           :disabled="branchOptions.length === 0"
         />
-        <button v-if="canManage" type="button" class="cta" :disabled="!selectedBranchId" @click="openCreate">
+        <button
+          v-if="canManage"
+          type="button"
+          class="cta"
+          :disabled="!selectedBranchId"
+          @click="openCreate"
+        >
           <Plus :size="15" :stroke-width="1.8" /> Nuevo terminal
         </button>
       </div>
@@ -142,7 +151,12 @@ async function toggle(terminal: CashTerminal) {
 
     <div v-if="loading" class="empty">Cargando terminales…</div>
     <div v-else-if="terminals.length" class="terminal-grid">
-      <article v-for="terminal in terminals" :key="terminal.id" class="terminal" :class="{ inactive: !terminal.active }">
+      <article
+        v-for="terminal in terminals"
+        :key="terminal.id"
+        class="terminal"
+        :class="{ inactive: !terminal.active }"
+      >
         <span class="terminal-icon"><MonitorSmartphone :size="18" :stroke-width="1.6" /></span>
         <div class="terminal-info">
           <strong>{{ terminal.name }}</strong>
@@ -163,7 +177,11 @@ async function toggle(terminal: CashTerminal) {
       </article>
     </div>
     <div v-else class="empty">
-      {{ selectedBranchId ? 'No hay terminales registrados en esta sede.' : 'No hay sedes activas disponibles.' }}
+      {{
+        selectedBranchId
+          ? 'No hay terminales registrados en esta sede.'
+          : 'No hay sedes activas disponibles.'
+      }}
     </div>
 
     <ModalShell
@@ -176,15 +194,31 @@ async function toggle(terminal: CashTerminal) {
     >
       <template #body>
         <div class="form-grid">
-          <BaseField label="Nombre" required :error="submitted ? nameError ?? undefined : undefined">
-            <BaseInput v-model="draft.name" placeholder="Caja recepción" :invalid="submitted && !!nameError" />
+          <BaseField
+            label="Nombre"
+            required
+            :error="submitted ? (nameError ?? undefined) : undefined"
+          >
+            <BaseInput
+              v-model="draft.name"
+              placeholder="Caja recepción"
+              :invalid="submitted && !!nameError"
+            />
           </BaseField>
-          <BaseField label="Código" required :error="submitted ? codeError ?? undefined : undefined">
+          <BaseField
+            label="Código"
+            required
+            :error="submitted ? (codeError ?? undefined) : undefined"
+          >
             <BaseInput
               v-model="draft.code"
               placeholder="CAJA-01"
               :invalid="submitted && !!codeError"
-              @update:model-value="draft.code = String($event).replace(/[^A-Za-z0-9_-]/g, '').toUpperCase()"
+              @update:model-value="
+                draft.code = String($event)
+                  .replace(/[^A-Za-z0-9_-]/g, '')
+                  .toUpperCase()
+              "
             />
           </BaseField>
         </div>
@@ -200,29 +234,166 @@ async function toggle(terminal: CashTerminal) {
 </template>
 
 <style scoped>
-.terminals-panel { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--warm-200); }
-.panel-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 16px; }
-.panel-head h3 { display: flex; align-items: center; gap: 7px; margin: 0; font-family: var(--font-serif); font-size: 19px; font-weight: 400; color: var(--warm-900); }
-.panel-head p { margin: 4px 0 0; font-size: 12.5px; color: var(--warm-500); }
-.actions { display: flex; align-items: center; gap: 10px; min-width: 390px; }
-.actions :deep(.base-select) { flex: 1; }
-.cta, .primary, .secondary { border: 0; border-radius: 9px; padding: 9px 14px; font: inherit; font-size: 13px; cursor: pointer; }
-.cta, .primary { display: inline-flex; align-items: center; gap: 6px; background: var(--amatista-700); color: white; }
-.secondary { background: var(--warm-100); color: var(--warm-700); }
-button:disabled { opacity: .55; cursor: default; }
-.terminal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
-.terminal { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 14px; border: 1px solid var(--warm-200); border-radius: 12px; background: var(--warm-50); }
-.terminal.inactive { opacity: .7; }
-.terminal-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; background: var(--amatista-100); color: var(--amatista-700); }
-.terminal-info { display: flex; flex-direction: column; min-width: 0; }
-.terminal-info strong { font-size: 13.5px; color: var(--warm-900); }
-.terminal-info span { font-family: var(--font-mono); font-size: 11px; color: var(--warm-500); }
-.status { font-size: 10.5px; font-weight: 600; padding: 3px 8px; border-radius: 999px; }
-.status.active { background: var(--success-bg); color: var(--success-fg); }
-.status.off { background: var(--warm-200); color: var(--warm-600); }
-.terminal-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 7px; padding-top: 10px; border-top: 1px solid var(--warm-150); }
-.terminal-actions button { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border: 1px solid var(--warm-200); border-radius: 7px; background: transparent; color: var(--warm-700); font: inherit; font-size: 11.5px; cursor: pointer; }
-.empty { padding: 24px; text-align: center; border: 1px dashed var(--warm-200); border-radius: 12px; color: var(--warm-500); font-size: 13px; }
-.form-grid { display: grid; gap: 16px; }
-@media (max-width: 720px) { .panel-head { align-items: stretch; flex-direction: column; } .actions { min-width: 0; flex-direction: column; align-items: stretch; } }
+.terminals-panel {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--warm-200);
+}
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.panel-head h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--warm-900);
+}
+.panel-head p {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--warm-500);
+}
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 390px;
+}
+.actions :deep(.base-select) {
+  flex: 1;
+}
+.cta,
+.primary,
+.secondary {
+  border: 0;
+  border-radius: 9px;
+  padding: 9px 14px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.cta,
+.primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--amatista-700);
+  color: white;
+}
+.secondary {
+  background: var(--warm-100);
+  color: var(--warm-700);
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.terminal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+.terminal {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--warm-200);
+  border-radius: 12px;
+  background: var(--warm-50);
+}
+.terminal.inactive {
+  opacity: 0.7;
+}
+.terminal-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--amatista-100);
+  color: var(--amatista-700);
+}
+.terminal-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.terminal-info strong {
+  font-size: 13.5px;
+  color: var(--warm-900);
+}
+.terminal-info span {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--warm-500);
+}
+.status {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.status.active {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+.status.off {
+  background: var(--warm-200);
+  color: var(--warm-600);
+}
+.terminal-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
+  padding-top: 10px;
+  border-top: 1px solid var(--warm-150);
+}
+.terminal-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border: 1px solid var(--warm-200);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--warm-700);
+  font: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+.empty {
+  padding: 24px;
+  text-align: center;
+  border: 1px dashed var(--warm-200);
+  border-radius: 12px;
+  color: var(--warm-500);
+  font-size: 13px;
+}
+.form-grid {
+  display: grid;
+  gap: 16px;
+}
+
+@media (width <= 720px) {
+  .panel-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .actions {
+    min-width: 0;
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
 </style>

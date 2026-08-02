@@ -59,9 +59,7 @@ export function useHospitalizacion() {
     boardError.value = null
     try {
       const all = await hospitalizationApi.listAll()
-      board.value = all.filter(
-        (h) => h.enabled && h.type === 'HOSPITALIZATION' && !h.endDate,
-      )
+      board.value = all.filter((h) => h.enabled && h.type === 'HOSPITALIZATION' && !h.endDate)
     } catch (e) {
       boardError.value = e instanceof Error ? e.message : 'No se pudo cargar el tablero'
     } finally {
@@ -138,10 +136,7 @@ export function useHospitalizacion() {
     meds.value.push(toMedVM(created, schedule.map(scheduleToDoseSlot)))
   }
 
-  async function updateMedication(
-    id: number,
-    payload: UpdateHospitalizationMedicationPayload,
-  ) {
+  async function updateMedication(id: number, payload: UpdateHospitalizationMedicationPayload) {
     const updated = await hospitalizationMedicationApi.update(id, payload)
     // Regenera el calendario (pudo cambiar frecuencia/duración/inicio)
     const schedule = await medicationScheduleApi.generate(id)
@@ -176,10 +171,7 @@ export function useHospitalizacion() {
     procs.value.push(toProcVM(created, schedule.map(scheduleToDoseSlot)))
   }
 
-  async function updateProcedure(
-    id: number,
-    payload: UpdateHospitalizationProcedurePayload,
-  ) {
+  async function updateProcedure(id: number, payload: UpdateHospitalizationProcedurePayload) {
     const updated = await hospitalizationProcedureApi.update(id, payload)
     // Regenera el calendario (pudo cambiar frecuencia/duración/inicio)
     const schedule = await procedureScheduleApi.generate(id)

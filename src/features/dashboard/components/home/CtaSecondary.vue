@@ -30,18 +30,23 @@ import { History, ArrowRight } from 'lucide-vue-next'
   padding: 24px;
   color: inherit;
   text-decoration: none;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
+
 .cta-secondary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px -10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 18px -10px rgb(0 0 0 / 12%);
 }
+
 .header {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
 }
+
 .icon-wrap {
   width: 36px;
   height: 36px;
@@ -53,11 +58,13 @@ import { History, ArrowRight } from 'lucide-vue-next'
   justify-content: center;
   flex-shrink: 0;
 }
+
 .title {
   font-size: 15px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .desc {
   margin: 0;
   font-size: 12.5px;
@@ -65,6 +72,7 @@ import { History, ArrowRight } from 'lucide-vue-next'
   line-height: 1.5;
   flex: 1;
 }
+
 .link {
   display: inline-flex;
   align-items: center;

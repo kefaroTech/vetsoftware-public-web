@@ -103,10 +103,9 @@ export async function expectCreated(
   action: () => Promise<void>,
 ): Promise<number> {
   const [res] = await Promise.all([
-    page.waitForResponse(
-      (r) => r.request().method() === 'POST' && r.url().includes(endpoint),
-      { timeout: 15000 },
-    ),
+    page.waitForResponse((r) => r.request().method() === 'POST' && r.url().includes(endpoint), {
+      timeout: 15000,
+    }),
     action(),
   ])
   const status = res.status()
@@ -163,7 +162,10 @@ export interface SeededPatient {
  */
 export async function pickerCreateOwnerAndPet(page: Page): Promise<SeededPatient> {
   // Propietario nuevo
-  await page.getByRole('button', { name: /Crear propietario nuevo/ }).first().click()
+  await page
+    .getByRole('button', { name: /Crear propietario nuevo/ })
+    .first()
+    .click()
   const owner = randomOwner()
   await fillValidOwner(page, owner)
   await page.getByRole('button', { name: 'Crear y seleccionar' }).click()
@@ -240,7 +242,13 @@ export async function modalAsteriskAudit(
   const optional: string[] = []
   for (let i = 0; i < n; i++) {
     const f = fields.nth(i)
-    const label = (await f.locator('label.label').first().innerText().catch(() => ''))
+    const label = (
+      await f
+        .locator('label.label')
+        .first()
+        .innerText()
+        .catch(() => '')
+    )
       .replace('*', '')
       .trim()
     if (!label) continue

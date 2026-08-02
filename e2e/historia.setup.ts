@@ -2,11 +2,7 @@ import { test as setup } from '@playwright/test'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { PASSWORD } from './helpers/auth'
-import {
-  seedPatientWithHistory,
-  seedEmptyOwner,
-  PATIENT_FIXTURE_PATH,
-} from './helpers/historia'
+import { seedPatientWithHistory, seedEmptyOwner, PATIENT_FIXTURE_PATH } from './helpers/historia'
 
 /**
  * Proyecto de SEMBRADO de la historia clínica (dependencia del proyecto

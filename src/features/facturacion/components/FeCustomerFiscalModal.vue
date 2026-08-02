@@ -69,7 +69,7 @@ const isValid = computed(() => Object.values(errors.value).every((e) => !e))
 
 type ErrKey = 'documentId' | 'legalName' | 'email'
 function err(field: ErrKey): string | undefined {
-  return submitted.value && errors.value[field] ? errors.value[field]! : undefined
+  return submitted.value ? (errors.value[field] ?? undefined) : undefined
 }
 
 function save() {
@@ -193,7 +193,9 @@ function save() {
         </span>
         <span>
           <strong>Agente retenedor</strong>
-          <span class="agenthint">Si está activo se aplicarán retenciones (ReteFuente/IVA/ICA).</span>
+          <span class="agenthint"
+            >Si está activo se aplicarán retenciones (ReteFuente/IVA/ICA).</span
+          >
         </span>
       </button>
     </template>
@@ -211,22 +213,26 @@ function save() {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 18px 22px;
 }
+
 .doc-row.nit {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 10px;
   align-items: start;
 }
+
 .dv {
   text-align: center;
   padding-bottom: 2px;
 }
+
 .dv-lbl {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--warm-400);
 }
+
 .dv-val {
   width: 44px;
   height: 40px;
@@ -241,18 +247,22 @@ function save() {
   font-variant-numeric: tabular-nums;
   margin-top: 3px;
 }
+
 .field {
   margin-top: 16px;
 }
+
 .field-lab {
   font-size: 12px;
   font-weight: 500;
   color: var(--warm-900);
   margin-bottom: 6px;
 }
+
 .req {
-  color: oklch(55% 0.18 25);
+  color: oklch(55% 0.18 25deg);
 }
+
 .segmented {
   display: inline-flex;
   gap: 4px;
@@ -260,6 +270,7 @@ function save() {
   background: var(--warm-150, var(--warm-100));
   border-radius: 9px;
 }
+
 .seg {
   padding: 7px 16px;
   border-radius: 7px;
@@ -271,16 +282,19 @@ function save() {
   color: var(--warm-600);
   cursor: pointer;
 }
+
 .seg.on {
   background: var(--warm-50);
   color: var(--amatista-700);
   font-weight: 600;
-  box-shadow: 0 1px 2px rgba(20, 15, 30, 0.08);
+  box-shadow: 0 1px 2px rgb(20 15 30 / 8%);
 }
+
 .field,
 .city-info {
   margin-top: 16px;
 }
+
 .city-info {
   display: flex;
   align-items: center;
@@ -291,13 +305,16 @@ function save() {
   background: var(--warm-100);
   font-size: 12.5px;
 }
+
 .city-lab {
   color: var(--warm-500);
 }
+
 .city-val {
   color: var(--warm-900);
   font-weight: 600;
 }
+
 .agenttoggle {
   display: flex;
   align-items: flex-start;
@@ -312,10 +329,12 @@ function save() {
   text-align: left;
   width: 100%;
 }
+
 .agenttoggle.on {
   background: var(--amatista-50);
   border-color: var(--amatista-400);
 }
+
 .agentbox {
   width: 18px;
   height: 18px;
@@ -327,19 +346,23 @@ function save() {
   margin-top: 1px;
   color: white;
 }
+
 .agenttoggle.on .agentbox {
   background: var(--amatista-600);
   border-color: var(--amatista-600);
 }
+
 .agenttoggle strong {
   font-size: 13px;
   color: var(--warm-900);
   display: block;
 }
+
 .agenthint {
   font-size: 11.5px;
   color: var(--warm-500);
 }
+
 .btn-ghost {
   padding: 9px 16px;
   border-radius: 9px;
@@ -350,11 +373,16 @@ function save() {
   font-weight: 500;
   cursor: pointer;
 }
+
 .btn-primary {
   padding: 9px 18px;
   border-radius: 9px;
   border: none;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
   color: #fff;
   font-size: 13px;
   font-weight: 600;

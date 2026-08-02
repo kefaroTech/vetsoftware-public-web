@@ -14,10 +14,7 @@ const tokens = computed(() => TYPE_COLORS[meta.value.color])
 </script>
 
 <template>
-  <span
-    class="event-chip"
-    :style="{ background: tokens.bg, color: tokens.fg }"
-  >
+  <span class="event-chip" :style="{ background: tokens.bg, color: tokens.fg }">
     <span v-if="showIcon" class="icon">{{ meta.icon }}</span>
     <span>{{ meta.label }}</span>
   </span>
@@ -35,6 +32,7 @@ const tokens = computed(() => TYPE_COLORS[meta.value.color])
   white-space: nowrap;
   font-family: inherit;
 }
+
 .icon {
   font-size: 12px;
   line-height: 1;

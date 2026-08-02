@@ -1,14 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import {
-  ArrowLeft,
-  Check,
-  History,
-  FileText,
-  FilePlus,
-  ScanLine,
-  X,
-} from 'lucide-vue-next'
+import { ArrowLeft, Check, History, FileText, FilePlus, ScanLine, X } from 'lucide-vue-next'
 import { useToast } from '@/composables/useToast'
 import { useFacturacionAccess } from '../composables/useFacturacionAccess'
 import { useFacturacionDocs } from '../composables/useFacturacionDocs'
@@ -41,7 +33,8 @@ const busy = ref(false)
 const isInvoice = computed(() => props.doc.documentType === 'FE_VENTA')
 const validated = computed(() => props.doc.dianStatus === 'VALIDADO')
 const hasReten = computed(
-  () => props.doc.reteFuenteAmount > 0 || props.doc.reteIvaAmount > 0 || props.doc.reteIcaAmount > 0,
+  () =>
+    props.doc.reteFuenteAmount > 0 || props.doc.reteIvaAmount > 0 || props.doc.reteIcaAmount > 0,
 )
 const idLabel = computed(() => (props.doc.cufe ? 'CUFE' : 'CUDE'))
 const idValue = computed(() => props.doc.cufe || props.doc.cude || '')
@@ -133,7 +126,8 @@ async function issueNote(reason: string) {
 }
 
 function copyId() {
-  if (idValue.value && navigator.clipboard) navigator.clipboard.writeText(idValue.value).catch(() => {})
+  if (idValue.value && navigator.clipboard)
+    navigator.clipboard.writeText(idValue.value).catch(() => undefined)
   toast.success('Copiado', idLabel.value)
 }
 </script>
@@ -176,7 +170,13 @@ function copyId() {
         </template>
       </div>
       <div class="statusactions">
-        <button v-if="doc.dianStatus === 'PENDIENTE'" type="button" class="ghost" :disabled="busy" @click="doRefresh">
+        <button
+          v-if="doc.dianStatus === 'PENDIENTE'"
+          type="button"
+          class="ghost"
+          :disabled="busy"
+          @click="doRefresh"
+        >
           <History :size="14" :stroke-width="1.8" /> Refrescar estado
         </button>
         <button
@@ -204,7 +204,10 @@ function copyId() {
       <X :size="15" :stroke-width="2" />
       <div>
         <strong>Documento rechazado por la DIAN.</strong>
-        <div>Revisa el detalle del rechazo en la bitácora de transmisión y corrige con una nota crédito.</div>
+        <div>
+          Revisa el detalle del rechazo en la bitácora de transmisión y corrige con una nota
+          crédito.
+        </div>
       </div>
     </div>
     <div v-if="doc.dianStatus === 'NO_ELECTRONICO'" class="noelecbox">
@@ -218,9 +221,19 @@ function copyId() {
         <div class="party">
           <div class="party-name">{{ issuerParty.name }}</div>
           <div class="party-rows">
-            <div><span>Documento</span><span>{{ issuerParty.docType }} {{ issuerParty.docId }}<template v-if="issuerParty.dv">-{{ issuerParty.dv }}</template></span></div>
-            <div v-if="issuerParty.regime"><span>Régimen</span><span>{{ issuerParty.regime }}</span></div>
-            <div><span>Correo</span><span>{{ issuerParty.email || '—' }}</span></div>
+            <div>
+              <span>Documento</span
+              ><span
+                >{{ issuerParty.docType }} {{ issuerParty.docId
+                }}<template v-if="issuerParty.dv">-{{ issuerParty.dv }}</template></span
+              >
+            </div>
+            <div v-if="issuerParty.regime">
+              <span>Régimen</span><span>{{ issuerParty.regime }}</span>
+            </div>
+            <div>
+              <span>Correo</span><span>{{ issuerParty.email || '—' }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -229,9 +242,20 @@ function copyId() {
         <div class="party">
           <div class="party-name">{{ customerParty.name }}</div>
           <div class="party-rows">
-            <div><span>Documento</span><span>{{ customerParty.docType }} {{ customerParty.docId }}<template v-if="customerParty.dv">-{{ customerParty.dv }}</template></span></div>
-            <div v-if="customerParty.personType"><span>Tipo</span><span>{{ customerParty.personType === 'JURIDICA' ? 'Jurídica' : 'Natural' }}</span></div>
-            <div><span>Correo</span><span>{{ customerParty.email || '—' }}</span></div>
+            <div>
+              <span>Documento</span
+              ><span
+                >{{ customerParty.docType }} {{ customerParty.docId
+                }}<template v-if="customerParty.dv">-{{ customerParty.dv }}</template></span
+              >
+            </div>
+            <div v-if="customerParty.personType">
+              <span>Tipo</span
+              ><span>{{ customerParty.personType === 'JURIDICA' ? 'Jurídica' : 'Natural' }}</span>
+            </div>
+            <div>
+              <span>Correo</span><span>{{ customerParty.email || '—' }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -249,7 +273,9 @@ function copyId() {
           <FileText :size="12" :stroke-width="1.8" /> Copiar {{ idLabel }}
         </button>
         <div class="meta" style="margin-top: 6px">
-          <template v-if="doc.dianValidationDate">Validado {{ doc.dianValidationDate.replace('T', ' ').slice(0, 16) }} · </template>UUID {{ doc.uuid }}
+          <template v-if="doc.dianValidationDate"
+            >Validado {{ doc.dianValidationDate.replace('T', ' ').slice(0, 16) }} · </template
+          >UUID {{ doc.uuid }}
         </div>
       </div>
     </div>
@@ -257,46 +283,62 @@ function copyId() {
     <div v-if="doc.lines.length" class="card">
       <div class="card-title">Detalle</div>
       <div class="tbl-scroll">
-      <table class="lines">
-        <thead>
-          <tr>
-            <th>Descripción</th>
-            <th>Cant.</th>
-            <th style="text-align: right">V. unit.</th>
-            <th>Imp.</th>
-            <th style="text-align: right">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="l in doc.lines" :key="l.lineNumber">
-            <td>{{ l.description }}</td>
-            <td>{{ l.quantity }}</td>
-            <td style="text-align: right">{{ feMoney(l.unitPrice) }}</td>
-            <td>
-              <span v-if="l.taxScheme" class="taxchip">{{ l.taxScheme }} {{ l.taxRate }}%</span>
-              <span v-else class="taxchip muted">{{ l.taxCategory }}</span>
-            </td>
-            <td style="text-align: right; font-weight: 600">{{ feMoney(l.totalAmount) }}</td>
-          </tr>
-        </tbody>
-      </table>
+        <table class="lines">
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th>Cant.</th>
+              <th style="text-align: right">V. unit.</th>
+              <th>Imp.</th>
+              <th style="text-align: right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="l in doc.lines" :key="l.lineNumber">
+              <td>{{ l.description }}</td>
+              <td>{{ l.quantity }}</td>
+              <td style="text-align: right">{{ feMoney(l.unitPrice) }}</td>
+              <td>
+                <span v-if="l.taxScheme" class="taxchip">{{ l.taxScheme }} {{ l.taxRate }}%</span>
+                <span v-else class="taxchip muted">{{ l.taxCategory }}</span>
+              </td>
+              <td style="text-align: right; font-weight: 600">{{ feMoney(l.totalAmount) }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
     <div class="card totals">
-      <div class="tot-row"><span>Subtotal (base)</span><span>{{ feMoney(doc.lineExtensionAmount) }}</span></div>
-      <div class="tot-row"><span>Total con impuestos</span><span>{{ feMoney(doc.taxInclusiveAmount) }}</span></div>
-      <div class="tot-row sub"><span>Total a pagar</span><span>{{ feMoney(doc.payableAmount) }}</span></div>
+      <div class="tot-row">
+        <span>Subtotal (base)</span><span>{{ feMoney(doc.lineExtensionAmount) }}</span>
+      </div>
+      <div class="tot-row">
+        <span>Total con impuestos</span><span>{{ feMoney(doc.taxInclusiveAmount) }}</span>
+      </div>
+      <div class="tot-row sub">
+        <span>Total a pagar</span><span>{{ feMoney(doc.payableAmount) }}</span>
+      </div>
       <template v-if="hasReten">
         <div class="reten-head">Retenciones del adquiriente</div>
-        <div v-if="doc.reteFuenteAmount > 0" class="tot-row reten"><span>ReteFuente</span><span>−{{ feMoney(doc.reteFuenteAmount) }}</span></div>
-        <div v-if="doc.reteIvaAmount > 0" class="tot-row reten"><span>ReteIVA</span><span>−{{ feMoney(doc.reteIvaAmount) }}</span></div>
-        <div v-if="doc.reteIcaAmount > 0" class="tot-row reten"><span>ReteICA</span><span>−{{ feMoney(doc.reteIcaAmount) }}</span></div>
-        <div class="tot-row net"><span>Neto a pagar</span><span>{{ feMoney(doc.netPayableAmount) }}</span></div>
+        <div v-if="doc.reteFuenteAmount > 0" class="tot-row reten">
+          <span>ReteFuente</span><span>−{{ feMoney(doc.reteFuenteAmount) }}</span>
+        </div>
+        <div v-if="doc.reteIvaAmount > 0" class="tot-row reten">
+          <span>ReteIVA</span><span>−{{ feMoney(doc.reteIvaAmount) }}</span>
+        </div>
+        <div v-if="doc.reteIcaAmount > 0" class="tot-row reten">
+          <span>ReteICA</span><span>−{{ feMoney(doc.reteIcaAmount) }}</span>
+        </div>
+        <div class="tot-row net">
+          <span>Neto a pagar</span><span>{{ feMoney(doc.netPayableAmount) }}</span>
+        </div>
       </template>
       <div class="tot-pay">
         {{ doc.paymentForm === 'CONTADO' ? 'Contado' : 'Crédito' }}
-        <template v-for="p in doc.payments" :key="p.id"> · {{ PAYMENT_MEANS_LABEL[p.paymentMeans] }}</template>
+        <template v-for="p in doc.payments" :key="p.id">
+          · {{ PAYMENT_MEANS_LABEL[p.paymentMeans] }}</template
+        >
       </div>
     </div>
 
@@ -309,7 +351,12 @@ function copyId() {
       </button>
     </div>
 
-    <FeNoteModal :open="!!noteModal" :kind="noteModal" @issue="issueNote" @close="noteModal = null" />
+    <FeNoteModal
+      :open="!!noteModal"
+      :kind="noteModal"
+      @issue="issueNote"
+      @close="noteModal = null"
+    />
   </div>
 </template>
 
@@ -319,6 +366,7 @@ function copyId() {
   flex-direction: column;
   gap: 18px;
 }
+
 .back {
   align-self: flex-start;
   display: inline-flex;
@@ -333,22 +381,26 @@ function copyId() {
   padding: 6px 8px;
   border-radius: 8px;
 }
+
 .back:hover {
   background: var(--amatista-50);
   color: var(--amatista-700);
 }
+
 .head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
 }
+
 .num {
   font-family: var(--font-mono);
   font-size: 13px;
   color: var(--amatista-700);
   font-weight: 600;
 }
+
 .type {
   margin: 4px 0 0;
   font-family: var(--font-serif);
@@ -358,25 +410,29 @@ function copyId() {
   color: var(--warm-900);
   line-height: 1.05;
 }
+
 .meta {
   font-size: 12.5px;
   color: var(--warm-500);
   margin-top: 6px;
 }
+
 .head-right {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 8px;
 }
+
 .reversed {
   font-size: 11.5px;
   font-weight: 600;
-  color: oklch(50% 0.18 25);
-  background: oklch(95% 0.05 25);
+  color: oklch(50% 0.18 25deg);
+  background: oklch(95% 0.05 25deg);
   padding: 3px 9px;
   border-radius: 999px;
 }
+
 .statusbar {
   display: flex;
   align-items: center;
@@ -388,16 +444,19 @@ function copyId() {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
 }
+
 .timeline {
   display: flex;
   align-items: center;
   gap: 6px;
 }
+
 .tlstep {
   display: flex;
   align-items: center;
   gap: 7px;
 }
+
 .tldot {
   width: 22px;
   height: 22px;
@@ -409,29 +468,35 @@ function copyId() {
   font-size: 11px;
   font-weight: 600;
 }
+
 .tlstep.done .tldot {
-  background: oklch(55% 0.15 150);
+  background: oklch(55% 0.15 150deg);
   color: #fff;
 }
+
 .tlstep.err .tldot {
-  background: oklch(58% 0.2 25);
+  background: oklch(58% 0.2 25deg);
   color: #fff;
 }
+
 .tllbl {
   font-size: 12px;
   color: var(--warm-700);
 }
+
 .tlbar {
   width: 28px;
   height: 2px;
   background: var(--warm-200);
   border-radius: 2px;
 }
+
 .statusactions {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
+
 .ghost {
   display: inline-flex;
   align-items: center;
@@ -445,25 +510,29 @@ function copyId() {
   color: var(--warm-700);
   cursor: pointer;
 }
+
 .ghost:hover {
   background: var(--warm-100);
 }
+
 .ghost:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
 .rejectbox {
   display: flex;
   align-items: flex-start;
   gap: 10px;
   padding: 14px 16px;
   border-radius: 12px;
-  background: oklch(95% 0.05 25);
-  border: 1px solid oklch(85% 0.08 25);
-  color: oklch(45% 0.16 25);
+  background: oklch(95% 0.05 25deg);
+  border: 1px solid oklch(85% 0.08 25deg);
+  color: oklch(45% 0.16 25deg);
   font-size: 13px;
   line-height: 1.45;
 }
+
 .noelecbox {
   display: flex;
   align-items: center;
@@ -474,21 +543,25 @@ function copyId() {
   color: var(--warm-600);
   font-size: 12.5px;
 }
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
 }
+
 .tbl-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+
 .card {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 14px;
   padding: 18px 20px;
 }
+
 .card-title {
   font-size: 11.5px;
   text-transform: uppercase;
@@ -497,36 +570,43 @@ function copyId() {
   font-weight: 600;
   margin-bottom: 10px;
 }
+
 .party-name {
   font-weight: 600;
   font-size: 14.5px;
   color: var(--warm-900);
   margin-bottom: 8px;
 }
+
 .party-rows {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
+
 .party-rows > div {
   display: flex;
   justify-content: space-between;
   gap: 12px;
   font-size: 12.5px;
 }
+
 .party-rows span:first-child {
   color: var(--warm-500);
 }
+
 .party-rows span:last-child {
   color: var(--warm-800);
   text-align: right;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
+
 .cufebox {
   display: flex;
   align-items: center;
   gap: 18px;
 }
+
 .qr {
   width: 110px;
   height: 110px;
@@ -538,6 +618,7 @@ function copyId() {
   flex-shrink: 0;
   overflow: hidden;
 }
+
 .qr-img {
   width: 100%;
   height: 100%;
@@ -546,10 +627,12 @@ function copyId() {
   padding: 6px;
   border-radius: 12px;
 }
+
 .cufe-text {
   flex: 1;
   min-width: 0;
 }
+
 .cufeval {
   font-family: var(--font-mono);
   font-size: 12px;
@@ -557,6 +640,7 @@ function copyId() {
   word-break: break-all;
   margin-bottom: 8px;
 }
+
 .copybtn {
   display: inline-flex;
   align-items: center;
@@ -569,11 +653,13 @@ function copyId() {
   color: var(--warm-700);
   cursor: pointer;
 }
+
 .lines {
   width: 100%;
   border-collapse: collapse;
   font-size: 12.5px;
 }
+
 .lines th {
   text-align: left;
   font-weight: 500;
@@ -581,11 +667,13 @@ function copyId() {
   padding: 6px 8px;
   border-bottom: 1px solid var(--warm-200);
 }
+
 .lines td {
   padding: 8px;
   border-bottom: 1px solid var(--warm-100);
   color: var(--warm-800);
 }
+
 .taxchip {
   font-size: 11px;
   padding: 2px 7px;
@@ -594,15 +682,18 @@ function copyId() {
   color: var(--amatista-700);
   font-weight: 600;
 }
+
 .taxchip.muted {
   background: var(--warm-150, var(--warm-100));
   color: var(--warm-600);
 }
+
 .totals {
   display: flex;
   flex-direction: column;
   gap: 7px;
 }
+
 .tot-row {
   display: flex;
   justify-content: space-between;
@@ -610,12 +701,14 @@ function copyId() {
   color: var(--warm-700);
   font-variant-numeric: tabular-nums;
 }
+
 .tot-row.sub {
   font-weight: 700;
   color: var(--warm-900);
   padding-top: 7px;
   border-top: 1px solid var(--warm-200);
 }
+
 .reten-head {
   margin-top: 6px;
   font-size: 11px;
@@ -623,20 +716,24 @@ function copyId() {
   letter-spacing: 0.05em;
   color: var(--warm-500);
 }
+
 .tot-row.reten {
-  color: oklch(50% 0.16 25);
+  color: oklch(50% 0.16 25deg);
 }
+
 .tot-row.net {
   font-weight: 700;
   color: var(--warm-900);
   padding-top: 6px;
   border-top: 1px solid var(--warm-200);
 }
+
 .tot-pay {
   margin-top: 8px;
   font-size: 12px;
   color: var(--warm-500);
 }
+
 .noteactions {
   display: flex;
   gap: 10px;

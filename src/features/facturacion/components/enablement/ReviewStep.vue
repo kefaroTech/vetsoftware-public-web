@@ -2,11 +2,7 @@
 import { computed } from 'vue'
 import { ShieldCheck, Check, ChevronRight, ArrowRight } from 'lucide-vue-next'
 import { useFacturacionEnablement } from '../../composables/useFacturacionEnablement'
-import {
-  COMPANY_DOCTYPE_LABEL,
-  DOC_TYPE_LABEL,
-  TAX_REGIME_LABEL,
-} from '../../types/facturacion'
+import { COMPANY_DOCTYPE_LABEL, DOC_TYPE_LABEL, TAX_REGIME_LABEL } from '../../types/facturacion'
 import SectionHead from './SectionHead.vue'
 
 const emit = defineEmits<{ editStep: [step: number]; exit: [] }>()
@@ -37,7 +33,8 @@ const sections = computed(() => {
     : []
   const resolutionRows: ReviewRow[] = enabledResolutions.value.map((r) => ({
     label: DOC_TYPE_LABEL[r.documentType],
-    value: `${r.prefix ?? ''} ${r.rangeFrom.toLocaleString('es')}–${r.rangeTo.toLocaleString('es')}`.trim(),
+    value:
+      `${r.prefix ?? ''} ${r.rangeFrom.toLocaleString('es')}–${r.rangeTo.toLocaleString('es')}`.trim(),
   }))
   return [
     { step: 1, ok: profileOk.value, title: 'Identidad fiscal', rows: identityRows },
@@ -76,7 +73,8 @@ const missing = computed(() => {
       </div>
       <div v-if="s.rows.length" class="review-rows">
         <div v-for="(r, i) in s.rows" :key="i">
-          <span>{{ r.label }}</span><strong>{{ r.value || '—' }}</strong>
+          <span>{{ r.label }}</span
+          ><strong>{{ r.value || '—' }}</strong>
         </div>
       </div>
       <div v-else class="review-empty">Sin datos todavía.</div>
@@ -110,18 +108,21 @@ const missing = computed(() => {
   flex-direction: column;
   gap: 16px;
 }
+
 .card {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 14px;
   padding: 20px 22px;
 }
+
 .review-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
 }
+
 .review-title {
   display: flex;
   align-items: center;
@@ -130,6 +131,7 @@ const missing = computed(() => {
   font-size: 14px;
   color: var(--warm-900);
 }
+
 .review-badge {
   width: 22px;
   height: 22px;
@@ -140,12 +142,15 @@ const missing = computed(() => {
   font-weight: 700;
   color: #fff;
 }
+
 .review-badge.ok {
-  background: oklch(55% 0.15 150);
+  background: oklch(55% 0.15 150deg);
 }
+
 .review-badge.pend {
-  background: oklch(70% 0.14 75);
+  background: oklch(70% 0.14 75deg);
 }
+
 .editlink {
   display: inline-flex;
   align-items: center;
@@ -157,66 +162,77 @@ const missing = computed(() => {
   font-weight: 500;
   cursor: pointer;
 }
+
 .review-rows {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 10px 22px;
 }
+
 .review-rows > div {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
+
 .review-rows span {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--warm-500);
 }
+
 .review-rows strong {
   font-size: 13px;
   font-weight: 600;
   color: var(--warm-900);
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
+
 .review-empty {
   font-size: 12.5px;
   color: var(--warm-500);
 }
+
 .successbox {
   display: flex;
   align-items: center;
   gap: 16px;
   padding: 20px 22px;
   border-radius: 14px;
-  background: linear-gradient(135deg, oklch(95% 0.05 150), var(--warm-50));
-  border: 1px solid oklch(80% 0.09 150);
+  background: linear-gradient(135deg, oklch(95% 0.05 150deg), var(--warm-50));
+  border: 1px solid oklch(80% 0.09 150deg);
 }
+
 .success-ic {
   width: 46px;
   height: 46px;
   border-radius: 12px;
   display: grid;
   place-items: center;
-  background: oklch(92% 0.08 150);
-  color: oklch(40% 0.13 150);
+  background: oklch(92% 0.08 150deg);
+  color: oklch(40% 0.13 150deg);
   flex-shrink: 0;
 }
+
 .success-text {
   flex: 1;
   min-width: 0;
 }
+
 .success-title {
   font-family: var(--font-serif);
   font-size: 19px;
   color: var(--warm-900);
 }
+
 .success-sub {
   font-size: 12.5px;
   color: var(--warm-600);
   line-height: 1.45;
   margin-top: 2px;
 }
+
 .cta {
   display: inline-flex;
   align-items: center;
@@ -224,25 +240,32 @@ const missing = computed(() => {
   padding: 9px 18px;
   border-radius: 9px;
   border: none;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
   color: #fff;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   flex-shrink: 0;
 }
+
 .blockbox {
   padding: 18px 22px;
   border-radius: 14px;
-  border: 1px solid oklch(88% 0.06 80);
-  background: oklch(97% 0.03 80);
+  border: 1px solid oklch(88% 0.06 80deg);
+  background: oklch(97% 0.03 80deg);
 }
+
 .block-title {
   font-weight: 600;
   font-size: 13.5px;
-  color: oklch(45% 0.13 70);
+  color: oklch(45% 0.13 70deg);
   margin-bottom: 8px;
 }
+
 .blocklist {
   margin: 0;
   padding-left: 18px;

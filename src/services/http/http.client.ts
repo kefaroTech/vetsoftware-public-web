@@ -118,9 +118,7 @@ export function isConcurrencyConflict(error: unknown): boolean {
   return getProblemDetailCode(error) === 'CONCURRENT_MODIFICATION'
 }
 
-export function getProblemDetailFieldErrors(
-  error: unknown,
-): Record<string, string> {
+export function getProblemDetailFieldErrors(error: unknown): Record<string, string> {
   if (!(error instanceof AxiosError)) return {}
   const pd = error.response?.data as ProblemDetail | undefined
   if (!pd?.errors) return {}

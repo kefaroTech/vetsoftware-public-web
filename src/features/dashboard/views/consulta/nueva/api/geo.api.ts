@@ -39,18 +39,14 @@ export const countryApi = {
 
 export const stateApi = {
   async listByCountry(countryId: number): Promise<StateResponse[]> {
-    const { data } = await http.get<StateResponse[]>(
-      `/countries/${countryId}/states`,
-    )
+    const { data } = await http.get<StateResponse[]>(`/countries/${countryId}/states`)
     return data
   },
 }
 
 export const cityApi = {
   async listByState(stateId: number): Promise<CityResponse[]> {
-    const { data } = await http.get<CityResponse[]>(
-      `/states/${stateId}/cities`,
-    )
+    const { data } = await http.get<CityResponse[]>(`/states/${stateId}/cities`)
     return data
   },
 }

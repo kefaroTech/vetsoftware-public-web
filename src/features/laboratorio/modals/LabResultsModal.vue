@@ -75,12 +75,7 @@ async function submit() {
       <div v-if="error" class="banner error">{{ error }}</div>
 
       <label class="label">Archivos de resultado</label>
-      <div
-        class="dropzone"
-        @click="pick"
-        @dragover.prevent
-        @drop.prevent="onDrop"
-      >
+      <div class="dropzone" @click="pick" @dragover.prevent @drop.prevent="onDrop">
         <UploadCloud :size="22" :stroke-width="1.6" />
         <span>Haz clic para adjuntar o arrastra archivos aquí</span>
         <small>PDF o imágenes</small>
@@ -127,14 +122,15 @@ async function submit() {
 
 <style scoped>
 .banner.error {
-  background: oklch(95% 0.06 25);
-  border: 1px solid oklch(85% 0.12 25);
-  color: oklch(40% 0.18 25);
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
   border-radius: 8px;
   padding: 8px 12px;
   font-size: 12.5px;
   margin-bottom: 12px;
 }
+
 .label {
   display: block;
   font-size: 11.5px;
@@ -144,6 +140,7 @@ async function submit() {
   color: var(--warm-600);
   margin-bottom: 8px;
 }
+
 .dropzone {
   display: flex;
   flex-direction: column;
@@ -156,16 +153,21 @@ async function submit() {
   cursor: pointer;
   text-align: center;
   font-size: 13px;
-  transition: border-color 0.15s ease, background 0.12s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.12s ease;
 }
+
 .dropzone:hover {
   border-color: var(--amatista-400);
   background: var(--amatista-50);
 }
+
 .dropzone small {
   font-size: 11.5px;
   color: var(--warm-500);
 }
+
 .files {
   list-style: none;
   margin: 14px 0 0;
@@ -174,6 +176,7 @@ async function submit() {
   flex-direction: column;
   gap: 6px;
 }
+
 .file {
   display: flex;
   align-items: center;
@@ -185,6 +188,7 @@ async function submit() {
   font-size: 12.5px;
   color: var(--warm-800);
 }
+
 .file .name {
   flex: 1;
   min-width: 0;
@@ -192,10 +196,12 @@ async function submit() {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .file .size {
   font-size: 11.5px;
   color: var(--warm-500);
 }
+
 .rm {
   background: transparent;
   border: none;
@@ -206,14 +212,17 @@ async function submit() {
   padding: 2px;
   border-radius: 5px;
 }
+
 .rm:hover {
-  background: oklch(95% 0.06 25);
-  color: oklch(45% 0.18 25);
+  background: oklch(95% 0.06 25deg);
+  color: oklch(45% 0.18 25deg);
 }
+
 .count {
   font-size: 12px;
   color: var(--warm-500);
 }
+
 .btn-ghost,
 .btn-primary {
   font-family: inherit;
@@ -224,26 +233,32 @@ async function submit() {
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn-ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-700);
 }
+
 .btn-ghost:hover:not(:disabled) {
   background: var(--warm-100);
 }
+
 .btn-primary {
   background: var(--amatista-700);
   color: white;
 }
+
 .btn-primary:hover:not(:disabled) {
   filter: brightness(1.05);
 }
+
 .btn-primary:disabled,
 .btn-ghost:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -251,7 +266,7 @@ async function submit() {
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }

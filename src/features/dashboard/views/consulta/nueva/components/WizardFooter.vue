@@ -23,12 +23,7 @@ defineEmits<{ back: []; next: [] }>()
 
 <template>
   <footer class="footer">
-    <button
-      v-if="showBack"
-      type="button"
-      class="btn ghost"
-      @click="$emit('back')"
-    >
+    <button v-if="showBack" type="button" class="btn ghost" @click="$emit('back')">
       <ArrowLeft :size="13" :stroke-width="1.8" />
       <span>Atrás</span>
     </button>
@@ -63,22 +58,26 @@ defineEmits<{ back: []; next: [] }>()
   flex-shrink: 0;
   flex-wrap: wrap;
 }
-@media (max-width: 720px) {
+
+@media (width <= 720px) {
   .footer {
     padding: 12px 16px;
   }
 }
+
 .extra {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
 .end {
   margin-left: auto;
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -89,32 +88,41 @@ defineEmits<{ back: []; next: [] }>()
   border-radius: 8px;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: filter 0.12s, background 0.12s;
+  transition:
+    filter 0.12s,
+    background 0.12s;
 }
+
 .btn:focus-visible {
   outline: 2px solid var(--amatista-700);
   outline-offset: 2px;
 }
+
 .btn.ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-900);
   padding: 9px 16px;
 }
+
 .btn.ghost:hover {
   background: var(--warm-100);
 }
+
 .btn.next {
   background: var(--amatista-700);
   color: white;
   padding: 9px 18px;
 }
+
 .btn.next:hover:not(:disabled) {
   filter: brightness(1.05);
 }
+
 .btn.next.success {
-  background: oklch(50% 0.15 145);
+  background: oklch(50% 0.15 145deg);
 }
+
 .btn.next:disabled {
   background: var(--warm-150);
   color: var(--warm-500);

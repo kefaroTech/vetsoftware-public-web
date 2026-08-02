@@ -25,12 +25,15 @@ withDefaults(
   gap: 4px;
   min-width: 0;
 }
+
 .field.span-2 {
   grid-column: span 2;
 }
+
 .field.span-full {
   grid-column: 1 / -1;
 }
+
 .field__label {
   font-size: 11.5px;
   color: var(--warm-500);
@@ -38,11 +41,12 @@ withDefaults(
   text-transform: uppercase;
   font-weight: 500;
 }
+
 .field__value {
   font-size: 14px;
   color: var(--warm-900);
   line-height: 1.45;
-  word-break: break-word;
+  overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
 </style>

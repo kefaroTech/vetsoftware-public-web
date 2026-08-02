@@ -102,7 +102,8 @@ async function submit() {
           <div class="acc-text">
             <div class="acc-name">{{ a.owner.name }}</div>
             <div class="acc-meta">
-              Cuenta #{{ a.id }}<template v-if="a.closedAt"> · cerrada {{ a.closedAt.slice(0, 10) }}</template>
+              Cuenta #{{ a.id
+              }}<template v-if="a.closedAt"> · cerrada {{ a.closedAt.slice(0, 10) }}</template>
             </div>
           </div>
           <span class="acc-total">{{ feMoney(a.totalAmount) }}</span>
@@ -133,8 +134,8 @@ async function submit() {
       <div v-if="!finalConsumer && selected" class="clientwarn">
         <User :size="14" :stroke-width="1.8" />
         <span>
-          Se facturará a <strong>{{ selected.owner.name }}</strong>. Verifica que tenga documento,
-          tipo y ciudad completos en su ficha fiscal.
+          Se facturará a <strong>{{ selected.owner.name }}</strong
+          >. Verifica que tenga documento, tipo y ciudad completos en su ficha fiscal.
         </span>
       </div>
       <div class="asyncnote">
@@ -162,6 +163,7 @@ async function submit() {
   font-weight: 600;
   margin-bottom: 8px;
 }
+
 .acc-empty {
   padding: 18px;
   text-align: center;
@@ -170,11 +172,13 @@ async function submit() {
   background: var(--warm-100);
   border-radius: 10px;
 }
+
 .acclist {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
+
 .accrow {
   display: flex;
   align-items: center;
@@ -185,15 +189,20 @@ async function submit() {
   background: var(--warm-50);
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.14s, background 0.14s;
+  transition:
+    border-color 0.14s,
+    background 0.14s;
 }
+
 .accrow:hover {
   border-color: var(--amatista-300);
 }
+
 .accrow.on {
   border-color: var(--amatista-600);
   background: var(--amatista-50);
 }
+
 .acc-check {
   width: 20px;
   height: 20px;
@@ -204,38 +213,46 @@ async function submit() {
   flex-shrink: 0;
   color: #fff;
 }
+
 .accrow.on .acc-check {
   background: var(--amatista-600);
   border-color: var(--amatista-600);
 }
+
 .acc-text {
   flex: 1;
   min-width: 0;
 }
+
 .acc-name {
   font-weight: 600;
   font-size: 13.5px;
   color: var(--warm-900);
 }
+
 .acc-meta {
   font-size: 12px;
   color: var(--warm-500);
 }
+
 .acc-total {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   color: var(--warm-900);
 }
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 18px 22px;
   margin-top: 18px;
 }
+
 .toggle-wrap {
   display: flex;
   align-items: flex-end;
 }
+
 .toggle {
   display: inline-flex;
   align-items: center;
@@ -248,11 +265,13 @@ async function submit() {
   color: var(--warm-800);
   cursor: pointer;
 }
+
 .toggle.on {
   border-color: var(--amatista-600);
   background: var(--amatista-50);
   color: var(--amatista-800, var(--amatista-700));
 }
+
 .toggle-box {
   width: 18px;
   height: 18px;
@@ -262,10 +281,12 @@ async function submit() {
   place-items: center;
   color: #fff;
 }
+
 .toggle.on .toggle-box {
   background: var(--amatista-600);
   border-color: var(--amatista-600);
 }
+
 .clientwarn {
   display: flex;
   align-items: flex-start;
@@ -273,12 +294,13 @@ async function submit() {
   margin-top: 16px;
   padding: 11px 14px;
   border-radius: 10px;
-  background: oklch(97% 0.03 80);
-  border: 1px solid oklch(88% 0.06 80);
+  background: oklch(97% 0.03 80deg);
+  border: 1px solid oklch(88% 0.06 80deg);
   font-size: 12.5px;
-  color: oklch(40% 0.1 70);
+  color: oklch(40% 0.1 70deg);
   line-height: 1.45;
 }
+
 .asyncnote {
   display: flex;
   align-items: flex-start;
@@ -288,6 +310,7 @@ async function submit() {
   color: var(--warm-500);
   line-height: 1.45;
 }
+
 .btn-ghost {
   padding: 9px 16px;
   border-radius: 9px;
@@ -298,16 +321,22 @@ async function submit() {
   font-weight: 500;
   cursor: pointer;
 }
+
 .btn-primary {
   padding: 9px 18px;
   border-radius: 9px;
   border: none;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
   color: #fff;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
+
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;

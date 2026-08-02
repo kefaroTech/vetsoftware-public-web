@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { User, Check, X } from 'lucide-vue-next'
-import { feFiscalChecklist, OWNER_DOCTYPE_LABEL, type FiscalCustomer } from '../composables/feFiscalChecklist'
+import {
+  feFiscalChecklist,
+  OWNER_DOCTYPE_LABEL,
+  type FiscalCustomer,
+} from '../composables/feFiscalChecklist'
 
 const props = defineProps<{ customer: FiscalCustomer | null; selectable?: boolean }>()
 const emit = defineEmits<{ select: []; complete: [] }>()
@@ -26,7 +30,9 @@ const docLabel = computed(() => {
     <div class="custempty-ic"><User :size="20" :stroke-width="1.7" /></div>
     <div class="custempty-text">
       <div class="custempty-t">Cliente requerido</div>
-      <div class="custempty-s">La factura electrónica debe ir a nombre de un cliente identificado.</div>
+      <div class="custempty-s">
+        La factura electrónica debe ir a nombre de un cliente identificado.
+      </div>
     </div>
     <button type="button" class="btn-primary" @click="emit('select')">Seleccionar cliente</button>
   </div>
@@ -45,12 +51,7 @@ const docLabel = computed(() => {
     </div>
 
     <div class="checklistgrid">
-      <div
-        v-for="it in checklist.items"
-        :key="it.key"
-        class="clitem"
-        :class="it.ok ? 'ok' : 'bad'"
-      >
+      <div v-for="it in checklist.items" :key="it.key" class="clitem" :class="it.ok ? 'ok' : 'bad'">
         <Check v-if="it.ok" :size="13" :stroke-width="2.6" />
         <X v-else :size="13" :stroke-width="2.6" />
         <span>{{ it.label }}</span>
@@ -73,6 +74,7 @@ const docLabel = computed(() => {
   background: var(--warm-50);
   border: 1.5px dashed var(--warm-300);
 }
+
 .custempty-ic {
   width: 40px;
   height: 40px;
@@ -83,37 +85,44 @@ const docLabel = computed(() => {
   place-items: center;
   flex-shrink: 0;
 }
+
 .custempty-text {
   flex: 1;
   min-width: 0;
 }
+
 .custempty-t {
   font-size: 13.5px;
   font-weight: 600;
   color: var(--warm-900);
 }
+
 .custempty-s {
   font-size: 11.5px;
   color: var(--warm-500);
   margin-top: 1px;
 }
+
 .custcard {
   padding: 14px;
   border-radius: 12px;
   background: var(--warm-50);
-  border: 1.5px solid oklch(88% 0.06 25);
+  border: 1.5px solid oklch(88% 0.06 25deg);
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
+
 .custcard.ok {
-  border-color: oklch(85% 0.08 150);
+  border-color: oklch(85% 0.08 150deg);
 }
+
 .custcard-head {
   display: flex;
   align-items: center;
   gap: 11px;
 }
+
 .custcard-av {
   width: 38px;
   height: 38px;
@@ -126,20 +135,24 @@ const docLabel = computed(() => {
   font-weight: 700;
   flex-shrink: 0;
 }
+
 .custcard-id {
   flex: 1;
   min-width: 0;
 }
+
 .custcard-name {
   font-size: 14px;
   font-weight: 600;
   color: var(--warm-900);
 }
+
 .custcard-doc {
   font-size: 11.5px;
   color: var(--warm-500);
   margin-top: 1px;
 }
+
 .custcard-change {
   background: none;
   border: none;
@@ -149,31 +162,38 @@ const docLabel = computed(() => {
   color: var(--amatista-700);
   cursor: pointer;
 }
+
 .checklistgrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px 14px;
 }
-@media (max-width: 420px) {
+
+@media (width <= 420px) {
   .checklistgrid {
     grid-template-columns: 1fr;
   }
 }
+
 .clitem {
   display: flex;
   align-items: center;
   gap: 7px;
   font-size: 12px;
 }
+
 .clitem.ok {
-  color: oklch(42% 0.12 150);
+  color: oklch(42% 0.12 150deg);
 }
+
 .clitem.bad {
-  color: oklch(52% 0.16 25);
+  color: oklch(52% 0.16 25deg);
 }
+
 .clitem :deep(svg) {
   flex-shrink: 0;
 }
+
 .custcard-cta {
   display: inline-flex;
   align-items: center;
@@ -189,11 +209,16 @@ const docLabel = computed(() => {
   font-weight: 600;
   cursor: pointer;
 }
+
 .btn-primary {
   padding: 9px 16px;
   border-radius: 9px;
   border: none;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
   color: #fff;
   font-size: 13px;
   font-weight: 600;

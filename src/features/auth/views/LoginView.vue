@@ -22,13 +22,7 @@ onMounted(() => {
       <div class="login-eyebrow">Panel administrativo</div>
       <h1 class="login-title">Inicia sesión</h1>
       <p class="login-sub">Accede al panel para administrar VetSoftware.</p>
-      <v-alert
-        v-if="sessionNotice"
-        class="mb-5"
-        type="warning"
-        variant="tonal"
-        density="compact"
-      >
+      <v-alert v-if="sessionNotice" class="mb-5" type="warning" variant="tonal" density="compact">
         {{ sessionNotice }}
       </v-alert>
       <LoginForm />
@@ -46,6 +40,7 @@ onMounted(() => {
   box-shadow: var(--pub-card-shadow);
   padding: 40px 44px;
 }
+
 .login-eyebrow {
   font-size: 11px;
   font-weight: 600;
@@ -54,6 +49,7 @@ onMounted(() => {
   text-transform: uppercase;
   margin-bottom: 8px;
 }
+
 .login-title {
   font-family: 'Instrument Serif', serif;
   font-size: 34px;
@@ -62,13 +58,15 @@ onMounted(() => {
   letter-spacing: -0.02em;
   line-height: 1.05;
 }
+
 .login-sub {
   font-size: 13px;
   color: var(--pub-ink-500);
   margin: 10px 0 28px;
   line-height: 1.5;
 }
-@media (max-width: 520px) {
+
+@media (width <= 520px) {
   .login-card {
     padding: 32px 24px;
   }

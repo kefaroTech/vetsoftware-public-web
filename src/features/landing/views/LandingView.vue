@@ -33,18 +33,36 @@ const trust = [
     <div class="land-glow" :style="{ background: glow }" />
     <div
       class="pub-blob pub-drift"
-      style="top: -160px; right: -120px; width: 480px; height: 480px; animation-delay: 0s;
-             background: radial-gradient(circle, rgba(192,132,252,.3), transparent 60%)"
+      style="
+        top: -160px;
+        right: -120px;
+        width: 480px;
+        height: 480px;
+        animation-delay: 0s;
+        background: radial-gradient(circle, rgb(192 132 252 / 30%), transparent 60%);
+      "
     />
     <div
       class="pub-blob pub-drift"
-      style="bottom: -180px; left: -140px; width: 520px; height: 520px; animation-delay: -7s;
-             background: radial-gradient(circle, rgba(147,51,234,.2), transparent 62%)"
+      style="
+        bottom: -180px;
+        left: -140px;
+        width: 520px;
+        height: 520px;
+        animation-delay: -7s;
+        background: radial-gradient(circle, rgb(147 51 234 / 20%), transparent 62%);
+      "
     />
     <div
       class="pub-blob pub-drift"
-      style="top: 40%; left: 52%; width: 340px; height: 340px; animation-delay: -3.5s;
-             background: radial-gradient(circle, rgba(216,180,254,.28), transparent 60%)"
+      style="
+        top: 40%;
+        left: 52%;
+        width: 340px;
+        height: 340px;
+        animation-delay: -3.5s;
+        background: radial-gradient(circle, rgb(216 180 254 / 28%), transparent 60%);
+      "
     />
     <div class="pub-grid-bg" />
 
@@ -139,9 +157,10 @@ const trust = [
   display: flex;
   flex-direction: column;
   background: radial-gradient(ellipse at top, #f3e8ff 0%, #f5f1fa 48%, #ede8f4 100%);
-  font-family: 'Inter', sans-serif;
+  font-family: Inter, sans-serif;
   color: var(--pub-ink-900);
 }
+
 .land-glow {
   position: absolute;
   inset: 0;
@@ -157,11 +176,13 @@ const trust = [
   justify-content: space-between;
   flex-shrink: 0;
 }
+
 .land-brand {
   display: flex;
   align-items: center;
   gap: 11px;
 }
+
 .land-brand-mark {
   width: 32px;
   height: 32px;
@@ -170,13 +191,15 @@ const trust = [
   display: grid;
   place-items: center;
   color: #fff;
-  box-shadow: 0 4px 10px -2px rgba(126, 34, 206, 0.45);
+  box-shadow: 0 4px 10px -2px rgb(126 34 206 / 45%);
 }
+
 .land-brand-word {
   font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
+
 .land-login-btn {
   display: inline-flex;
   align-items: center;
@@ -188,10 +211,11 @@ const trust = [
   padding: 9px 15px;
   border-radius: 9px;
   border: 1px solid #e6ddf0;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgb(255 255 255 / 60%);
   backdrop-filter: blur(6px);
   transition: all 0.16s;
 }
+
 .land-login-btn:hover {
   background: #fff;
   border-color: #d6c8ea;
@@ -208,13 +232,14 @@ const trust = [
   text-align: center;
   min-height: 0;
 }
+
 .land-eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 6px 13px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgb(255 255 255 / 70%);
   border: 1px solid #ecd9fb;
   font-size: 12px;
   font-weight: 600;
@@ -222,6 +247,7 @@ const trust = [
   color: var(--pub-ame-700);
   text-transform: uppercase;
 }
+
 .land-h1 {
   font-family: 'Instrument Serif', serif;
   font-weight: 400;
@@ -232,10 +258,12 @@ const trust = [
   max-width: 820px;
   text-wrap: balance;
 }
+
 .land-h1-em {
   font-style: italic;
   color: var(--pub-ame-700);
 }
+
 .land-sub {
   font-size: 16px;
   line-height: 1.55;
@@ -252,6 +280,7 @@ const trust = [
   width: 100%;
   max-width: 720px;
 }
+
 .land-card {
   position: relative;
   overflow: hidden;
@@ -266,28 +295,34 @@ const trust = [
     box-shadow 0.2s,
     border-color 0.2s;
 }
+
 .land-card.is-active {
   transform: translateY(-4px);
 }
+
 .land-card--primary {
   background: linear-gradient(160deg, #9333ea, #7e22ce 70%, #6b1fa8);
   color: #fff;
   border: 1px solid transparent;
-  box-shadow: 0 12px 28px -12px rgba(126, 34, 206, 0.4);
+  box-shadow: 0 12px 28px -12px rgb(126 34 206 / 40%);
 }
+
 .land-card--primary.is-active {
-  box-shadow: 0 22px 44px -14px rgba(126, 34, 206, 0.55);
+  box-shadow: 0 22px 44px -14px rgb(126 34 206 / 55%);
 }
+
 .land-card--secondary {
   background: #fff;
   color: var(--pub-ink-900);
   border: 1px solid var(--pub-line);
-  box-shadow: 0 8px 20px -12px rgba(91, 33, 182, 0.12);
+  box-shadow: 0 8px 20px -12px rgb(91 33 182 / 12%);
 }
+
 .land-card--secondary.is-active {
   border-color: #d6c8ea;
-  box-shadow: 0 22px 44px -16px rgba(91, 33, 182, 0.22);
+  box-shadow: 0 22px 44px -16px rgb(91 33 182 / 22%);
 }
+
 .land-card-glow {
   position: absolute;
   top: -40px;
@@ -295,13 +330,15 @@ const trust = [
   width: 160px;
   height: 160px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 65%);
+  background: radial-gradient(circle, rgb(255 255 255 / 18%), transparent 65%);
   pointer-events: none;
   transition: transform 0.3s;
 }
+
 .land-card--primary.is-active .land-card-glow {
   transform: scale(1.15);
 }
+
 .land-card-icon {
   width: 42px;
   height: 42px;
@@ -310,16 +347,19 @@ const trust = [
   place-items: center;
   margin-bottom: 16px;
 }
+
 .land-card--primary .land-card-icon {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgb(255 255 255 / 16%);
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid rgb(255 255 255 / 22%);
 }
+
 .land-card--secondary .land-card-icon {
   background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
   color: var(--pub-ame-700);
   border: 1px solid #ecd9fb;
 }
+
 .land-card-kicker {
   font-size: 11.5px;
   font-weight: 600;
@@ -327,28 +367,35 @@ const trust = [
   text-transform: uppercase;
   margin-bottom: 5px;
 }
+
 .land-card--primary .land-card-kicker {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgb(255 255 255 / 70%);
 }
+
 .land-card--secondary .land-card-kicker {
   color: #a08bbd;
 }
+
 .land-card-title {
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
+
 .land-card-desc {
   font-size: 13.5px;
   line-height: 1.5;
   margin-top: 7px;
 }
+
 .land-card--primary .land-card-desc {
-  color: rgba(255, 255, 255, 0.82);
+  color: rgb(255 255 255 / 82%);
 }
+
 .land-card--secondary .land-card-desc {
   color: var(--pub-ink-500);
 }
+
 .land-card-cta {
   display: inline-flex;
   align-items: center;
@@ -357,15 +404,19 @@ const trust = [
   font-size: 13.5px;
   font-weight: 600;
 }
+
 .land-card--primary .land-card-cta {
   color: #fff;
 }
+
 .land-card--secondary .land-card-cta {
   color: var(--pub-ame-700);
 }
+
 .land-card-arrow {
   transition: transform 0.2s;
 }
+
 .land-card.is-active .land-card-arrow {
   transform: translateX(4px);
 }
@@ -379,11 +430,13 @@ const trust = [
   font-size: 12.5px;
   color: var(--pub-ink-400);
 }
+
 .land-trust-item {
   display: inline-flex;
   align-items: center;
   gap: 7px;
 }
+
 .land-trust-item :deep(.v-icon) {
   color: var(--pub-ame-500);
 }
@@ -398,22 +451,26 @@ const trust = [
   color: var(--pub-ink-400);
   flex-shrink: 0;
 }
+
 .land-footer-links {
   display: flex;
   gap: 18px;
 }
+
 .land-footer-links a {
   color: var(--pub-ink-400);
   text-decoration: none;
 }
+
 .land-footer-links a:hover {
   color: var(--pub-ink-500);
 }
 
-@media (max-width: 720px) {
+@media (width <= 720px) {
   .land-cards {
     grid-template-columns: 1fr;
   }
+
   .land-topbar,
   .land-footer {
     padding-left: 24px;

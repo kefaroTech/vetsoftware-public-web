@@ -18,11 +18,11 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
     :width="440"
     @close="emit('close')"
   >
-    <template #body v-if="test">
+    <template v-if="test" #body>
       <p class="msg">
         Confirma que la muestra de
-        <strong>{{ test.animal.name }} · {{ test.animal.code }}</strong> ya fue recolectada.
-        Pasará a <strong>En cola</strong> para su procesamiento.
+        <strong>{{ test.animal.name }} · {{ test.animal.code }}</strong> ya fue recolectada. Pasará
+        a <strong>En cola</strong> para su procesamiento.
       </p>
     </template>
 
@@ -44,10 +44,12 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
   color: var(--warm-600);
   line-height: 1.55;
 }
+
 .msg strong {
   color: var(--warm-800);
   font-weight: 600;
 }
+
 .btn-ghost,
 .btn-primary {
   font-family: inherit;
@@ -58,21 +60,26 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn-ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-700);
 }
+
 .btn-ghost:hover:not(:disabled) {
   background: var(--warm-100);
 }
+
 .btn-primary {
   background: var(--amatista-700);
   color: white;
 }
+
 .btn-primary:hover:not(:disabled) {
   filter: brightness(1.05);
 }
+
 .btn-ghost:disabled,
 .btn-primary:disabled {
   cursor: not-allowed;

@@ -2,18 +2,24 @@ import type { Owner, Animal } from '@/types/domain'
 import { cities } from './geo'
 import { species, breeds } from './species'
 
-const lima = cities.find((c) => c.name === 'Lima' && c.state?.name === 'Lima')!
-const miraflores = cities.find((c) => c.name === 'Miraflores')!
-const stgo = cities.find((c) => c.name === 'Santiago')!
+function findRequired<T>(items: readonly T[], predicate: (item: T) => boolean, label: string): T {
+  const item = items.find(predicate)
+  if (!item) throw new Error(`Missing required mock fixture: ${label}`)
+  return item
+}
 
-const cat = species.find((s) => s.id === 'sp_cat')!
-const dog = species.find((s) => s.id === 'sp_dog')!
+const lima = findRequired(cities, (c) => c.name === 'Lima' && c.state?.name === 'Lima', 'Lima')
+const miraflores = findRequired(cities, (c) => c.name === 'Miraflores', 'Miraflores')
+const stgo = findRequired(cities, (c) => c.name === 'Santiago', 'Santiago')
 
-const mestizoCat = breeds.find((b) => b.id === 'br_dom_short')!
-const labrador = breeds.find((b) => b.id === 'br_lab')!
-const mestizoDog = breeds.find((b) => b.id === 'br_mestizo_dog')!
-const poodle = breeds.find((b) => b.id === 'br_poodle')!
-const persa = breeds.find((b) => b.id === 'br_persa')!
+const cat = findRequired(species, (s) => s.id === 'sp_cat', 'cat species')
+const dog = findRequired(species, (s) => s.id === 'sp_dog', 'dog species')
+
+const mestizoCat = findRequired(breeds, (b) => b.id === 'br_dom_short', 'domestic shorthair breed')
+const labrador = findRequired(breeds, (b) => b.id === 'br_lab', 'labrador breed')
+const mestizoDog = findRequired(breeds, (b) => b.id === 'br_mestizo_dog', 'mixed dog breed')
+const poodle = findRequired(breeds, (b) => b.id === 'br_poodle', 'poodle breed')
+const persa = findRequired(breeds, (b) => b.id === 'br_persa', 'persian breed')
 
 export const mockOwners: Owner[] = [
   {
@@ -222,10 +228,7 @@ export function searchOwners(query: string, limit = 8): Owner[] {
   const q = query.trim().toLowerCase()
   if (!q) return []
   return mockOwners
-    .filter((o) =>
-      [o.name, o.document, o.phone, o.email]
-        .some((f) => f.toLowerCase().includes(q)),
-    )
+    .filter((o) => [o.name, o.document, o.phone, o.email].some((f) => f.toLowerCase().includes(q)))
     .slice(0, limit)
 }
 

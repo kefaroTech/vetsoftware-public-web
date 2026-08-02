@@ -61,18 +61,12 @@ export const appointmentApi = {
   },
 
   async changeStatus(id: number, payload: ChangeStatusRequest): Promise<AppointmentResponse> {
-    const { data } = await http.patch<AppointmentResponse>(
-      `/appointments/${id}/status`,
-      payload,
-    )
+    const { data } = await http.patch<AppointmentResponse>(`/appointments/${id}/status`, payload)
     return data
   },
 
   async cancel(id: number, payload: CancelAppointmentRequest): Promise<AppointmentResponse> {
-    const { data } = await http.patch<AppointmentResponse>(
-      `/appointments/${id}/cancel`,
-      payload,
-    )
+    const { data } = await http.patch<AppointmentResponse>(`/appointments/${id}/cancel`, payload)
     return data
   },
 

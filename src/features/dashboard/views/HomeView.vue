@@ -24,7 +24,8 @@ import { mockUser, mockDayStats, mockRecentConsultations } from '../data/mock'
   gap: 16px;
   margin-bottom: 28px;
 }
-@media (max-width: 1024px) {
+
+@media (width <= 1024px) {
   .cta-row {
     grid-template-columns: 1fr;
   }

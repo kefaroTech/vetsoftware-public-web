@@ -10,7 +10,11 @@ const meta = computed(() => STATUS_META[props.status] ?? STATUS_META.PENDIENTE)
 </script>
 
 <template>
-  <span class="pill" :class="`size-${size}`" :style="{ background: meta.tone.bg, color: meta.tone.fg }">
+  <span
+    class="pill"
+    :class="`size-${size}`"
+    :style="{ background: meta.tone.bg, color: meta.tone.fg }"
+  >
     <span class="dot" :style="{ background: meta.tone.dot }" />
     {{ meta.label }}
   </span>
@@ -27,10 +31,12 @@ const meta = computed(() => STATUS_META[props.status] ?? STATUS_META.PENDIENTE)
   font-weight: 600;
   white-space: nowrap;
 }
+
 .pill.size-lg {
   padding: 5px 14px;
   font-size: 13px;
 }
+
 .dot {
   width: 7px;
   height: 7px;

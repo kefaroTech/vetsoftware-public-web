@@ -58,9 +58,7 @@ const consultaSubRoutes = [
   'consulta-hospital',
 ] as const
 
-const isConsultaActive = computed(() =>
-  consultaSubRoutes.some((name) => route.name === name),
-)
+const isConsultaActive = computed(() => consultaSubRoutes.some((name) => route.name === name))
 
 // Acordeón del sidebar: solo un desplegable abierto a la vez.
 type SidebarSection = 'consulta' | 'acciones' | 'tienda' | 'compras'
@@ -117,15 +115,17 @@ const historialActiveRoutes = [
   'consulta-historial-detail',
 ]
 
-const subItems = computed(() => [
-  {
-    label: 'Historial clínico',
-    icon: History,
-    to: { name: 'consulta-historial' as const },
-    activeRoutes: historialActiveRoutes,
-    show: true,
-  },
-].filter((item) => item.show))
+const subItems = computed(() =>
+  [
+    {
+      label: 'Historial clínico',
+      icon: History,
+      to: { name: 'consulta-historial' as const },
+      activeRoutes: historialActiveRoutes,
+      show: true,
+    },
+  ].filter((item) => item.show),
+)
 
 const accionesSubRoutes = [
   'acciones-laboratorio',
@@ -137,19 +137,49 @@ const accionesSubRoutes = [
   'acciones-spa',
 ] as const
 
-const isAccionesActive = computed(() =>
-  accionesSubRoutes.some((name) => route.name === name),
-)
+const isAccionesActive = computed(() => accionesSubRoutes.some((name) => route.name === name))
 
-const accionesItems = computed(() => [
-  { label: 'Laboratorio', icon: Beaker, to: { name: 'acciones-laboratorio' as const }, show: canLabTest.value },
-  { label: 'Imagen diagnóstica', icon: ScanLine, to: { name: 'acciones-imagen' as const }, show: canImaging.value },
-  { label: 'Vacunación', icon: Syringe, to: { name: 'acciones-vacunacion' as const }, show: canVaccination.value },
-  { label: 'Hospitalización', icon: BedDouble, to: { name: 'acciones-hospitalizacion' as const }, show: canHospital.value },
-  { label: 'Desparasitación', icon: Bug, to: { name: 'acciones-desparasitacion' as const }, show: canDeworming.value },
-  { label: 'Cirugía', icon: Scissors, to: { name: 'acciones-cirugia' as const }, show: canSurgery.value },
-  { label: 'Spa', icon: Sparkles, to: { name: 'acciones-spa' as const }, show: canSpa.value },
-].filter((item) => item.show))
+const accionesItems = computed(() =>
+  [
+    {
+      label: 'Laboratorio',
+      icon: Beaker,
+      to: { name: 'acciones-laboratorio' as const },
+      show: canLabTest.value,
+    },
+    {
+      label: 'Imagen diagnóstica',
+      icon: ScanLine,
+      to: { name: 'acciones-imagen' as const },
+      show: canImaging.value,
+    },
+    {
+      label: 'Vacunación',
+      icon: Syringe,
+      to: { name: 'acciones-vacunacion' as const },
+      show: canVaccination.value,
+    },
+    {
+      label: 'Hospitalización',
+      icon: BedDouble,
+      to: { name: 'acciones-hospitalizacion' as const },
+      show: canHospital.value,
+    },
+    {
+      label: 'Desparasitación',
+      icon: Bug,
+      to: { name: 'acciones-desparasitacion' as const },
+      show: canDeworming.value,
+    },
+    {
+      label: 'Cirugía',
+      icon: Scissors,
+      to: { name: 'acciones-cirugia' as const },
+      show: canSurgery.value,
+    },
+    { label: 'Spa', icon: Sparkles, to: { name: 'acciones-spa' as const }, show: canSpa.value },
+  ].filter((item) => item.show),
+)
 
 const showAccionesSection = computed(() => accionesItems.value.length > 0)
 const showAdminSection = computed(
@@ -165,29 +195,79 @@ const tiendaSubRoutes = [
   'tienda-impuestos',
 ] as const
 
-const isTiendaActive = computed(() =>
-  tiendaSubRoutes.some((name) => route.name === name),
-)
+const isTiendaActive = computed(() => tiendaSubRoutes.some((name) => route.name === name))
 
-const tiendaItems = computed(() => [
-  { label: 'Punto de venta', icon: ShoppingBag, to: { name: 'tienda-pos' as const }, show: canInventory.value },
-  { label: 'Caja', icon: Banknote, to: { name: 'caja' as const }, show: canCash.value },
-  { label: 'Inventario', icon: Package, to: { name: 'tienda-inventario' as const }, show: canInventory.value },
-  { label: 'Servicios', icon: Stethoscope, to: { name: 'tienda-servicios' as const }, show: canServices.value },
-  { label: 'Promociones', icon: BadgePercent, to: { name: 'tienda-promociones' as const }, show: canPromotions.value },
-  { label: 'Impuestos', icon: BarChart3, to: { name: 'tienda-impuestos' as const }, show: canTaxes.value },
-].filter((item) => item.show))
+const tiendaItems = computed(() =>
+  [
+    {
+      label: 'Punto de venta',
+      icon: ShoppingBag,
+      to: { name: 'tienda-pos' as const },
+      show: canInventory.value,
+    },
+    { label: 'Caja', icon: Banknote, to: { name: 'caja' as const }, show: canCash.value },
+    {
+      label: 'Inventario',
+      icon: Package,
+      to: { name: 'tienda-inventario' as const },
+      show: canInventory.value,
+    },
+    {
+      label: 'Servicios',
+      icon: Stethoscope,
+      to: { name: 'tienda-servicios' as const },
+      show: canServices.value,
+    },
+    {
+      label: 'Promociones',
+      icon: BadgePercent,
+      to: { name: 'tienda-promociones' as const },
+      show: canPromotions.value,
+    },
+    {
+      label: 'Impuestos',
+      icon: BarChart3,
+      to: { name: 'tienda-impuestos' as const },
+      show: canTaxes.value,
+    },
+  ].filter((item) => item.show),
+)
 
 const showTiendaMenu = computed(() => tiendaItems.value.length > 0)
 
-const comprasSubRoutes = ['compras-proveedores', 'compras-ordenes', 'compras-facturas', 'compras-libro'] as const
+const comprasSubRoutes = [
+  'compras-proveedores',
+  'compras-ordenes',
+  'compras-facturas',
+  'compras-libro',
+] as const
 const isComprasActive = computed(() => comprasSubRoutes.some((name) => route.name === name))
 const comprasItems = computed(() =>
   [
-    { label: 'Proveedores', icon: Truck, to: { name: 'compras-proveedores' as const }, show: canSuppliers.value },
-    { label: 'Órdenes y recepción', icon: ClipboardList, to: { name: 'compras-ordenes' as const }, show: canPurchaseOrders.value },
-    { label: 'Facturas / CxP', icon: ReceiptText, to: { name: 'compras-facturas' as const }, show: canSupplierInvoices.value },
-    { label: 'Libro de compras', icon: BookText, to: { name: 'compras-libro' as const }, show: canPurchaseBook.value },
+    {
+      label: 'Proveedores',
+      icon: Truck,
+      to: { name: 'compras-proveedores' as const },
+      show: canSuppliers.value,
+    },
+    {
+      label: 'Órdenes y recepción',
+      icon: ClipboardList,
+      to: { name: 'compras-ordenes' as const },
+      show: canPurchaseOrders.value,
+    },
+    {
+      label: 'Facturas / CxP',
+      icon: ReceiptText,
+      to: { name: 'compras-facturas' as const },
+      show: canSupplierInvoices.value,
+    },
+    {
+      label: 'Libro de compras',
+      icon: BookText,
+      to: { name: 'compras-libro' as const },
+      show: canPurchaseBook.value,
+    },
   ].filter((item) => item.show),
 )
 const showComprasSection = computed(() => comprasItems.value.length > 0)
@@ -444,17 +524,18 @@ function onNotifications() {
   gap: 0;
   background: linear-gradient(
     180deg,
-    oklch(28% 0.10 var(--hue)) 0%,
+    oklch(28% 0.1 var(--hue)) 0%,
     oklch(22% 0.08 var(--hue)) 100%
   );
   color: oklch(94% 0.02 var(--hue));
   font-family: var(--font-sans);
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden auto;
 }
+
 .spacer {
   margin-top: auto;
 }
+
 .notif-item {
   display: flex;
   align-items: center;
@@ -464,39 +545,44 @@ function onNotifications() {
   border-radius: 8px;
   border: none;
   background: transparent;
-  color: oklch(88% 0.03 var(--hue) / 0.82);
+  color: oklch(88% 0.03 var(--hue) / 82%);
   font-family: inherit;
   font-size: 13px;
   cursor: pointer;
   text-align: left;
   transition: background 0.12s ease;
 }
+
 .notif-item:hover {
-  background: oklch(70% 0.04 var(--hue) / 0.1);
+  background: oklch(70% 0.04 var(--hue) / 10%);
 }
+
 .notif-label {
   flex: 1;
 }
+
 .notif-badge {
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
   border-radius: 999px;
-  background: oklch(58% 0.2 25);
+  background: oklch(58% 0.2 25deg);
   color: white;
   font-size: 11px;
   font-weight: 600;
   display: grid;
   place-items: center;
 }
+
 .section-label {
   font-size: 10.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: oklch(75% 0.04 var(--hue) / 0.55);
+  color: oklch(75% 0.04 var(--hue) / 55%);
   padding: 10px 10px 5px;
   font-weight: 500;
 }
+
 .sub-list {
   display: flex;
   flex-direction: column;
@@ -504,6 +590,7 @@ function onNotifications() {
   padding-left: 28px;
   margin-top: 2px;
 }
+
 .sub-item-btn {
   display: flex;
   align-items: center;
@@ -512,7 +599,7 @@ function onNotifications() {
   border-radius: 6px;
   font-family: inherit;
   font-size: 12.5px;
-  color: oklch(82% 0.04 var(--hue) / 0.72);
+  color: oklch(82% 0.04 var(--hue) / 72%);
   background: transparent;
   border: none;
   font-weight: 400;
@@ -520,16 +607,18 @@ function onNotifications() {
   text-align: left;
   transition: background 0.12s ease;
 }
+
 .sub-item-btn:hover:not(.active) {
-  background: oklch(70% 0.04 var(--hue) / 0.08);
+  background: oklch(70% 0.04 var(--hue) / 8%);
 }
+
 .sub-item-btn.active {
-  background: oklch(50% 0.10 var(--hue) / 0.25);
+  background: oklch(50% 0.1 var(--hue) / 25%);
   color: oklch(95% 0.02 var(--hue));
   font-weight: 500;
 }
 
-@media (max-width: 1024px) {
+@media (width <= 1024px) {
   .sidebar {
     width: 72px;
     padding: 18px 10px;
@@ -542,7 +631,7 @@ function onNotifications() {
     margin: 8px 0;
     padding: 0;
     overflow: hidden;
-    background: oklch(75% 0.04 var(--hue) / 0.18);
+    background: oklch(75% 0.04 var(--hue) / 18%);
     color: transparent;
     font-size: 0;
     letter-spacing: 0;

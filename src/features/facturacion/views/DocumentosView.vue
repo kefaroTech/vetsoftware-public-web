@@ -45,7 +45,9 @@ const filtered = computed(() =>
 )
 
 const selectedDoc = computed(() =>
-  selectedId.value != null ? (documents.value.find((d) => d.id === selectedId.value) ?? null) : null,
+  selectedId.value != null
+    ? (documents.value.find((d) => d.id === selectedId.value) ?? null)
+    : null,
 )
 
 function shortId(cufe: string | null, cude: string | null): string {
@@ -92,40 +94,44 @@ function shortId(cufe: string | null, cude: string | null): string {
     <p v-if="error" class="error-banner">{{ error }}</p>
 
     <div class="tbl-scroll">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Número</th>
-          <th>Tipo</th>
-          <th>Fecha</th>
-          <th>Cliente</th>
-          <th style="text-align: right">Total</th>
-          <th>Estado</th>
-          <th>CUFE/CUDE</th>
-          <th />
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="d in filtered" :key="d.id" class="row" @click="selectedId = d.id">
-          <td><span class="num">{{ d.prefix }}-{{ d.consecutive }}</span></td>
-          <td>{{ DOC_TYPE_LABEL[d.documentType] }}</td>
-          <td class="date">{{ d.issueDate }}</td>
-          <td class="cust">
-            {{ d.customer.legalName || d.customer.name }}
-            <span v-if="d.reversed" class="reversed">Anulada</span>
-          </td>
-          <td style="text-align: right; font-variant-numeric: tabular-nums">
-            {{ feMoney(d.payableAmount) }}
-          </td>
-          <td><FeStatusPill :status="d.dianStatus" /></td>
-          <td><span class="cufe">{{ shortId(d.cufe, d.cude) }}</span></td>
-          <td><ChevronRight :size="15" :stroke-width="1.6" class="chev" /></td>
-        </tr>
-        <tr v-if="!loading && filtered.length === 0">
-          <td colspan="8" class="empty">Sin documentos para los filtros aplicados.</td>
-        </tr>
-      </tbody>
-    </table>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Número</th>
+            <th>Tipo</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th style="text-align: right">Total</th>
+            <th>Estado</th>
+            <th>CUFE/CUDE</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="d in filtered" :key="d.id" class="row" @click="selectedId = d.id">
+            <td>
+              <span class="num">{{ d.prefix }}-{{ d.consecutive }}</span>
+            </td>
+            <td>{{ DOC_TYPE_LABEL[d.documentType] }}</td>
+            <td class="date">{{ d.issueDate }}</td>
+            <td class="cust">
+              {{ d.customer.legalName || d.customer.name }}
+              <span v-if="d.reversed" class="reversed">Anulada</span>
+            </td>
+            <td style="text-align: right; font-variant-numeric: tabular-nums">
+              {{ feMoney(d.payableAmount) }}
+            </td>
+            <td><FeStatusPill :status="d.dianStatus" /></td>
+            <td>
+              <span class="cufe">{{ shortId(d.cufe, d.cude) }}</span>
+            </td>
+            <td><ChevronRight :size="15" :stroke-width="1.6" class="chev" /></td>
+          </tr>
+          <tr v-if="!loading && filtered.length === 0">
+            <td colspan="8" class="empty">Sin documentos para los filtros aplicados.</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <FeEmitModal
@@ -147,12 +153,14 @@ function shortId(cufe: string | null, cude: string | null): string {
   flex-direction: column;
   gap: 18px;
 }
+
 .pagehead {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
 }
+
 .kicker {
   font-size: 11.5px;
   text-transform: uppercase;
@@ -160,6 +168,7 @@ function shortId(cufe: string | null, cude: string | null): string {
   color: var(--warm-500);
   font-weight: 500;
 }
+
 .title {
   margin: 6px 0 0;
   font-family: var(--font-serif);
@@ -169,6 +178,7 @@ function shortId(cufe: string | null, cude: string | null): string {
   color: var(--warm-900);
   line-height: 1.05;
 }
+
 .listhead {
   display: flex;
   align-items: center;
@@ -176,10 +186,12 @@ function shortId(cufe: string | null, cude: string | null): string {
   gap: 16px;
   flex-wrap: wrap;
 }
+
 .filters {
   display: flex;
   gap: 10px;
 }
+
 .filter-select {
   appearance: none;
   background: var(--warm-50);
@@ -191,6 +203,7 @@ function shortId(cufe: string | null, cude: string | null): string {
   font-family: inherit;
   cursor: pointer;
 }
+
 .ghost {
   display: inline-flex;
   align-items: center;
@@ -204,9 +217,11 @@ function shortId(cufe: string | null, cude: string | null): string {
   color: var(--warm-700);
   cursor: pointer;
 }
+
 .ghost:hover {
   background: var(--warm-100);
 }
+
 .autobanner {
   display: flex;
   align-items: center;
@@ -218,24 +233,28 @@ function shortId(cufe: string | null, cude: string | null): string {
   font-size: 12.5px;
   color: var(--warm-700);
 }
+
 .error-banner {
   margin: 0;
   padding: 12px 16px;
   border-radius: 10px;
-  background: oklch(95% 0.05 25);
-  border: 1px solid oklch(85% 0.08 25);
-  color: oklch(45% 0.16 25);
+  background: oklch(95% 0.05 25deg);
+  border: 1px solid oklch(85% 0.08 25deg);
+  color: oklch(45% 0.16 25deg);
   font-size: 13px;
 }
+
 .tbl-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+
 .table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 }
+
 .table th {
   text-align: left;
   font-weight: 500;
@@ -246,49 +265,59 @@ function shortId(cufe: string | null, cude: string | null): string {
   padding: 8px 12px;
   border-bottom: 1px solid var(--warm-200);
 }
+
 .row {
   cursor: pointer;
   transition: background 0.12s ease;
 }
+
 .row:hover {
   background: var(--amatista-50);
 }
+
 .table td {
   padding: 12px;
   border-bottom: 1px solid var(--warm-100);
   color: var(--warm-800);
 }
+
 .num {
   font-family: var(--font-mono);
   font-size: 12.5px;
   color: var(--amatista-700);
   font-weight: 600;
 }
+
 .date {
   color: var(--warm-500);
   font-variant-numeric: tabular-nums;
 }
+
 .cust {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
 .reversed {
   font-size: 10.5px;
   font-weight: 600;
-  color: oklch(50% 0.18 25);
-  background: oklch(95% 0.05 25);
+  color: oklch(50% 0.18 25deg);
+  background: oklch(95% 0.05 25deg);
   padding: 1px 7px;
   border-radius: 999px;
 }
+
 .cufe {
   font-family: var(--font-mono);
   font-size: 11.5px;
   color: var(--warm-500);
 }
+
 .chev {
   color: var(--warm-400);
 }
+
 .empty {
   text-align: center;
   color: var(--warm-500);

@@ -81,9 +81,15 @@ async function save() {
       <div class="example">
         <div class="example-title">Ejemplo sobre base {{ feMoney(example) }} (IVA 19%)</div>
         <div class="example-rows">
-          <div><span>ReteFuente</span><strong>−{{ feMoney(exFuente) }}</strong></div>
-          <div><span>ReteIVA</span><strong>−{{ feMoney(exIva) }}</strong></div>
-          <div><span>ReteICA</span><strong>−{{ feMoney(exIca) }}</strong></div>
+          <div>
+            <span>ReteFuente</span><strong>−{{ feMoney(exFuente) }}</strong>
+          </div>
+          <div>
+            <span>ReteIVA</span><strong>−{{ feMoney(exIva) }}</strong>
+          </div>
+          <div>
+            <span>ReteICA</span><strong>−{{ feMoney(exIca) }}</strong>
+          </div>
         </div>
       </div>
       <p class="help">
@@ -106,37 +112,44 @@ async function save() {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 16px;
 }
+
 .example {
   margin-top: 18px;
   padding: 14px 16px;
   border-radius: 12px;
   background: var(--warm-100);
 }
+
 .example-title {
   font-size: 12px;
   font-weight: 600;
   color: var(--warm-700);
   margin-bottom: 8px;
 }
+
 .example-rows {
   display: flex;
   gap: 22px;
   flex-wrap: wrap;
 }
+
 .example-rows > div {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
+
 .example-rows span {
   font-size: 11px;
   color: var(--warm-500);
 }
+
 .example-rows strong {
   font-size: 13.5px;
   color: var(--warm-900);
   font-variant-numeric: tabular-nums;
 }
+
 .help {
   margin: 14px 0 0;
   font-size: 12px;
@@ -145,6 +158,7 @@ async function save() {
   padding-left: 10px;
   line-height: 1.5;
 }
+
 .btn-ghost {
   padding: 9px 16px;
   border-radius: 9px;
@@ -155,16 +169,22 @@ async function save() {
   font-weight: 500;
   cursor: pointer;
 }
+
 .btn-primary {
   padding: 9px 18px;
   border-radius: 9px;
   border: none;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
   color: #fff;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
+
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;

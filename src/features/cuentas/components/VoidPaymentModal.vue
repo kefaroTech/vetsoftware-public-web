@@ -35,7 +35,9 @@ watch(
   },
 )
 
-const reasonError = computed(() => (reason.value.trim().length < 3 ? 'Indica el motivo de la anulación' : null))
+const reasonError = computed(() =>
+  reason.value.trim().length < 3 ? 'Indica el motivo de la anulación' : null,
+)
 
 const subtitle = computed(() => {
   const p = props.payment
@@ -84,7 +86,11 @@ async function submit() {
           El abono quedará registrado como <strong>anulado</strong> (visible, tachado) y dejará de
           contar en el saldo. Esta acción registra tu autoría y el motivo.
         </p>
-        <BaseField label="Motivo de la anulación" required :error="submitted ? reasonError ?? undefined : undefined">
+        <BaseField
+          label="Motivo de la anulación"
+          required
+          :error="submitted ? (reasonError ?? undefined) : undefined"
+        >
           <template #default="{ id }">
             <BaseTextarea
               :id="id"
@@ -107,18 +113,49 @@ async function submit() {
 </template>
 
 <style scoped>
-.form { display: flex; flex-direction: column; gap: 16px; }
-.warn { margin: 0; font-size: 13px; line-height: 1.5; color: var(--warm-600); }
-.warn strong { color: oklch(48% 0.18 25); }
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.warn {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--warm-600);
+}
+.warn strong {
+  color: oklch(48% 0.18 25deg);
+}
+
 .btn-danger {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  border: none; color: white;
-  background: linear-gradient(135deg, oklch(52% 0.18 25), oklch(45% 0.18 22));
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  border: none;
+  color: white;
+  background: linear-gradient(135deg, oklch(52% 0.18 25deg), oklch(45% 0.18 22deg));
 }
-.btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-ghost {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  background: transparent; border: 1px solid var(--warm-200); color: var(--warm-700);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  color: var(--warm-700);
 }
-.btn-ghost:hover { background: var(--warm-100); }
+.btn-ghost:hover {
+  background: var(--warm-100);
+}
 </style>

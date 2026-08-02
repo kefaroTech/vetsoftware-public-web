@@ -30,9 +30,7 @@ const box = ref<HTMLElement | null>(null)
 const selectedOwner = ref<Owner | null>(null)
 
 // Nombre a mostrar en la tarjeta seleccionada (Owner elegido o seed de edición).
-const selectedName = computed(
-  () => selectedOwner.value?.name ?? props.initialName ?? '',
-)
+const selectedName = computed(() => selectedOwner.value?.name ?? props.initialName ?? '')
 
 const hasSelection = computed(() => !!props.modelValue)
 
@@ -89,16 +87,8 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
       <div v-else-if="query && results.length === 0" class="combo-empty">
         Sin resultados para “{{ query }}”.
       </div>
-      <div v-else-if="!query" class="combo-empty">
-        Escribe para buscar un propietario.
-      </div>
-      <button
-        v-for="o in results"
-        :key="o.id"
-        type="button"
-        class="combo-item"
-        @click="choose(o)"
-      >
+      <div v-else-if="!query" class="combo-empty">Escribe para buscar un propietario.</div>
+      <button v-for="o in results" :key="o.id" type="button" class="combo-item" @click="choose(o)">
         <div class="owner-avatar sm">{{ apptInitials(o.name) }}</div>
         <div class="owner-info">
           <div class="owner-name">{{ o.name }}</div>
@@ -116,6 +106,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
 .combo {
   position: relative;
 }
+
 .combo-input {
   display: flex;
   align-items: center;
@@ -124,47 +115,59 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   border: 1px solid var(--warm-200);
   border-radius: 8px;
   padding: 9px 11px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
+
 .combo-input:focus-within {
   border-color: var(--amatista-500);
   box-shadow: 0 0 0 3px var(--amatista-50);
 }
+
 .combo-input.invalid {
-  border-color: oklch(60% 0.2 25);
-  background: oklch(98.5% 0.02 25);
+  border-color: oklch(60% 0.2 25deg);
+  background: oklch(98.5% 0.02 25deg);
   animation: shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
+
 .combo-input.invalid:focus-within {
-  border-color: oklch(55% 0.22 25);
-  box-shadow: 0 0 0 3px oklch(92% 0.06 25);
+  border-color: oklch(55% 0.22 25deg);
+  box-shadow: 0 0 0 3px oklch(92% 0.06 25deg);
 }
+
 .combo-input.invalid .combo-icon {
-  color: oklch(55% 0.22 25);
+  color: oklch(55% 0.22 25deg);
 }
+
 @keyframes shake {
   10%,
   90% {
     transform: translateX(-1px);
   }
+
   20%,
   80% {
     transform: translateX(2px);
   }
+
   30%,
   50%,
   70% {
     transform: translateX(-3px);
   }
+
   40%,
   60% {
     transform: translateX(3px);
   }
 }
+
 .combo-icon {
   color: var(--warm-500);
   flex-shrink: 0;
 }
+
 .combo-input input {
   flex: 1;
   border: none;
@@ -175,6 +178,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   color: var(--warm-900);
   min-width: 0;
 }
+
 .combo-list {
   position: absolute;
   top: calc(100% + 4px);
@@ -184,11 +188,12 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 10px;
-  box-shadow: 0 14px 34px -10px rgba(20, 15, 30, 0.28);
+  box-shadow: 0 14px 34px -10px rgb(20 15 30 / 28%);
   overflow: hidden auto;
   max-height: 260px;
   padding: 4px;
 }
+
 .combo-item {
   display: flex;
   align-items: center;
@@ -203,14 +208,17 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   border-radius: 8px;
   transition: background 0.1s;
 }
+
 .combo-item:hover {
   background: var(--amatista-50);
 }
+
 .combo-empty {
   padding: 12px 10px;
   font-size: 12.5px;
   color: var(--warm-500);
 }
+
 .owner-selected {
   display: flex;
   align-items: center;
@@ -220,27 +228,31 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   border-radius: 8px;
   padding: 8px 10px;
 }
+
 .owner-info {
   min-width: 0;
   flex: 1;
 }
+
 .owner-avatar {
   width: 34px;
   height: 34px;
   border-radius: 50%;
   flex-shrink: 0;
-  background: linear-gradient(135deg, oklch(78% 0.14 30), oklch(65% 0.16 350));
+  background: linear-gradient(135deg, oklch(78% 0.14 30deg), oklch(65% 0.16 350deg));
   color: white;
   display: grid;
   place-items: center;
   font-size: 12px;
   font-weight: 600;
 }
+
 .owner-avatar.sm {
   width: 30px;
   height: 30px;
   font-size: 11px;
 }
+
 .owner-name {
   font-size: 13.5px;
   font-weight: 500;
@@ -249,6 +261,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .owner-meta {
   font-size: 11.5px;
   color: var(--warm-500);
@@ -257,6 +270,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .owner-change {
   margin-left: auto;
   flex-shrink: 0;
@@ -270,6 +284,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   padding: 6px 11px;
   cursor: pointer;
 }
+
 .owner-change:hover {
   background: var(--amatista-100);
 }

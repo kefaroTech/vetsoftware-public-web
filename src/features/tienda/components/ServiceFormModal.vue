@@ -12,6 +12,16 @@ import { useTienda } from '../composables/useTienda'
 import type { ServicePayload, ServiceResponse, TaxScheme, TaxTreatment } from '../types/tienda'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
+const props = defineProps<{
+  open: boolean
+  initial: ServiceResponse | null
+}>()
+
+const emit = defineEmits<{
+  close: []
+  saved: [item: ServiceResponse]
+}>()
+
 const CONFLICT_MESSAGE =
   'El registro fue modificado por otra operación; se recargó la información. Revisa y reintenta.'
 
@@ -32,16 +42,6 @@ function schemeForTreatment(t: TaxTreatment): TaxScheme | null {
   return null
 }
 
-const props = defineProps<{
-  open: boolean
-  initial: ServiceResponse | null
-}>()
-
-const emit = defineEmits<{
-  close: []
-  saved: [item: ServiceResponse]
-}>()
-
 const store = useTienda()
 const toast = useToast()
 
@@ -57,7 +57,15 @@ interface Draft {
 }
 
 function emptyDraft(): Draft {
-  return { name: '', price: '', notes: '', serviceCategoryId: '', taxTreatment: 'GRAVADO', taxId: '', version: null }
+  return {
+    name: '',
+    price: '',
+    notes: '',
+    serviceCategoryId: '',
+    taxTreatment: 'GRAVADO',
+    taxId: '',
+    version: null,
+  }
 }
 
 /** Carga el draft desde un servicio existente (apertura en modo edición o re-hidratación tras 409). */
@@ -77,7 +85,10 @@ const draft = reactive<Draft>(emptyDraft())
 
 type FieldKey = 'name' | 'price' | 'serviceCategoryId' | 'taxId'
 const touched = reactive<Record<FieldKey, boolean>>({
-  name: false, price: false, serviceCategoryId: false, taxId: false,
+  name: false,
+  price: false,
+  serviceCategoryId: false,
+  taxId: false,
 })
 function resetTouched() {
   ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = false))
@@ -145,7 +156,7 @@ const errors = computed(() => ({
 }))
 
 function err(field: FieldKey): string | undefined {
-  return touched[field] ? errors.value[field] ?? undefined : undefined
+  return touched[field] ? (errors.value[field] ?? undefined) : undefined
 }
 
 const isValid = computed(() => Object.values(errors.value).every((e) => e === null))
@@ -175,6 +186,7 @@ async function submit() {
   }
   // En edición reenviamos la versión leída (@Version) para que el backend detecte conflictos.
   if (props.initial && draft.version != null) payload.version = draft.version
+  const initialId = props.initial?.id
   try {
     const saved = props.initial
       ? await store.updateService(props.initial.id, payload)
@@ -185,7 +197,8 @@ async function submit() {
     if (isConcurrencyConflict(e)) {
       // Recargamos el catálogo para obtener la versión fresca y re-hidratamos el form para reintentar.
       await store.refresh()
-      const fresh = props.initial ? store.services.value.find((s) => s.id === props.initial!.id) : null
+      const fresh =
+        initialId == null ? null : store.services.value.find((service) => service.id === initialId)
       if (fresh) hydrate(fresh)
       saveError.value = CONFLICT_MESSAGE
       toast.warn('Conflicto de concurrencia', CONFLICT_MESSAGE)
@@ -212,17 +225,37 @@ async function submit() {
       <div class="grid">
         <BaseField label="Nombre" required :error="err('name')" class="col-2">
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.name" :invalid="!!err('name')" placeholder="Consulta general" @blur="markTouched('name')" />
+            <BaseInput
+              :id="id"
+              v-model="draft.name"
+              :invalid="!!err('name')"
+              placeholder="Consulta general"
+              @blur="markTouched('name')"
+            />
           </template>
         </BaseField>
         <BaseField label="Categoría" required :error="err('serviceCategoryId')">
           <template #default="{ id }">
-            <BaseSelect :id="id" v-model="draft.serviceCategoryId" :options="categoryOptions" :invalid="!!err('serviceCategoryId')" placeholder="Selecciona…" @blur="markTouched('serviceCategoryId')" />
+            <BaseSelect
+              :id="id"
+              v-model="draft.serviceCategoryId"
+              :options="categoryOptions"
+              :invalid="!!err('serviceCategoryId')"
+              placeholder="Selecciona…"
+              @blur="markTouched('serviceCategoryId')"
+            />
           </template>
         </BaseField>
         <BaseField label="Precio (IVA incl.)" required :error="err('price')">
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.price" :invalid="!!err('price')" inputmode="decimal" placeholder="0" @blur="markTouched('price')" />
+            <BaseInput
+              :id="id"
+              v-model="draft.price"
+              :invalid="!!err('price')"
+              inputmode="decimal"
+              placeholder="0"
+              @blur="markTouched('price')"
+            />
           </template>
         </BaseField>
         <BaseField label="Tratamiento de IVA" required>
@@ -232,7 +265,14 @@ async function submit() {
         </BaseField>
         <BaseField v-if="showTaxRate" label="Tarifa de impuesto" required :error="err('taxId')">
           <template #default="{ id }">
-            <BaseSelect :id="id" v-model="draft.taxId" :options="taxOptions" :invalid="!!err('taxId')" placeholder="Selecciona tarifa…" @blur="markTouched('taxId')" />
+            <BaseSelect
+              :id="id"
+              v-model="draft.taxId"
+              :options="taxOptions"
+              :invalid="!!err('taxId')"
+              placeholder="Selecciona tarifa…"
+              @blur="markTouched('taxId')"
+            />
           </template>
         </BaseField>
         <BaseField label="Notas" class="col-2">
@@ -253,21 +293,77 @@ async function submit() {
 </template>
 
 <style scoped>
-.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; align-items: start; }
-.col-2 { grid-column: 1 / -1; }
-@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
-.check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--warm-800); cursor: pointer; padding-bottom: 10px; }
-.check input { width: 16px; height: 16px; accent-color: var(--amatista-600); }
-.banner.error { background: oklch(95% 0.06 25); border: 1px solid oklch(85% 0.12 25); color: oklch(40% 0.18 25); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+  align-items: start;
+}
+.col-2 {
+  grid-column: 1 / -1;
+}
+
+@media (width <= 760px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--warm-800);
+  cursor: pointer;
+  padding-bottom: 10px;
+}
+.check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--amatista-600);
+}
+.banner.error {
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
 .btn-primary {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  border: none; color: white;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 calc(var(--hue) - 5)));
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  border: none;
+  color: white;
+  background: linear-gradient(
+    135deg,
+    oklch(45% 0.18 var(--hue)),
+    oklch(38% 0.18 calc(var(--hue) - 5))
+  );
 }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-ghost {
-  font-family: inherit; font-size: 13.5px; font-weight: 500; padding: 10px 18px; border-radius: 9px; cursor: pointer;
-  background: transparent; border: 1px solid var(--warm-200); color: var(--warm-700);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--warm-200);
+  color: var(--warm-700);
 }
-.btn-ghost:hover { background: var(--warm-100); }
+.btn-ghost:hover {
+  background: var(--warm-100);
+}
 </style>

@@ -21,10 +21,7 @@ import QuickActionsCard from '../components/QuickActionsCard.vue'
 import { scrollToFirstError } from '@/composables/scrollToError'
 import { useConsultationTypes } from '../composables/useConsultationTypes'
 import { weightUnitLabel } from '../composables/format'
-import {
-  useNuevaConsultaDraft,
-  type ActionKind,
-} from '../composables/useNuevaConsultaDraft'
+import { useNuevaConsultaDraft, type ActionKind } from '../composables/useNuevaConsultaDraft'
 import RecetaModal from '../modals/RecetaModal.vue'
 import LabTestModal from '../modals/LabTestModal.vue'
 import ImagingModal from '../modals/ImagingModal.vue'
@@ -109,13 +106,7 @@ const {
 
 // ── Validación (tipo + fecha + anamnesis son obligatorios) ───────────────────
 // Las constantes vitales son OPCIONALES: solo se validan (rango) cuando traen valor.
-type FieldKey =
-  | 'date'
-  | 'typeId'
-  | 'anamnesis'
-  | 'temperature'
-  | 'heartRate'
-  | 'respiratoryRate'
+type FieldKey = 'date' | 'typeId' | 'anamnesis' | 'temperature' | 'heartRate' | 'respiratoryRate'
 const touched = reactive<Record<FieldKey, boolean>>({
   date: false,
   typeId: false,
@@ -152,11 +143,16 @@ const errors = computed(() => ({
   anamnesis: validateAnamnesis(c.value.anamnesis),
   temperature: validateRange(c.value.temperature, 0, 60, 'Debe estar entre 0 y 60 °C.'),
   heartRate: validateRange(c.value.heartRate, 0, 1000, 'Debe estar entre 0 y 1000 lpm.'),
-  respiratoryRate: validateRange(c.value.respiratoryRate, 0, 1000, 'Debe estar entre 0 y 1000 rpm.'),
+  respiratoryRate: validateRange(
+    c.value.respiratoryRate,
+    0,
+    1000,
+    'Debe estar entre 0 y 1000 rpm.',
+  ),
 }))
 
 function err(field: FieldKey): string | undefined {
-  return touched[field] && errors.value[field] ? errors.value[field]! : undefined
+  return touched[field] ? (errors.value[field] ?? undefined) : undefined
 }
 function markTouched(field: FieldKey) {
   touched[field] = true
@@ -448,8 +444,8 @@ watch(
           <strong>{{ draft.actionsCount.value }}</strong> acción{{
             draft.actionsCount.value === 1 ? '' : 'es'
           }}
-          generada{{ draft.actionsCount.value === 1 ? '' : 's' }} · se guardarán
-          al confirmar la consulta.
+          generada{{ draft.actionsCount.value === 1 ? '' : 's' }} · se guardarán al confirmar la
+          consulta.
         </span>
       </div>
     </div>
@@ -527,57 +523,68 @@ watch(
   gap: 8px;
   font-size: 12.5px;
   padding: 10px 14px;
-  background: oklch(94% 0.06 25);
-  border: 1px solid oklch(85% 0.10 25);
-  color: oklch(35% 0.15 25);
+  background: oklch(94% 0.06 25deg);
+  border: 1px solid oklch(85% 0.1 25deg);
+  color: oklch(35% 0.15 25deg);
   border-radius: 10px;
   margin-bottom: 14px;
 }
+
 .stack {
   display: flex;
   flex-direction: column;
   gap: clamp(12px, 0.8vw + 6px, 22px);
 }
+
 .grid-1-2 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
   gap: clamp(14px, 1.2vw + 4px, 28px);
 }
+
 .weight-row {
   margin-top: clamp(14px, 1.2vw + 4px, 28px);
   max-width: 320px;
 }
+
 .planes {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: clamp(12px, 1vw + 4px, 22px);
 }
+
 .vitals-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(12px, 1vw + 4px, 20px);
 }
+
 .findings-row {
   margin-top: clamp(12px, 1vw + 4px, 20px);
 }
+
 .prognosis-row {
   margin-top: clamp(12px, 1vw + 4px, 18px);
   max-width: 420px;
 }
-@media (max-width: 880px) {
+
+@media (width <= 880px) {
   .grid-1-2,
   .planes {
     grid-template-columns: 1fr;
   }
+
   .vitals-grid {
     grid-template-columns: 1fr 1fr;
   }
 }
-@media (max-width: 560px) {
+
+@media (width <= 560px) {
   .vitals-grid {
     grid-template-columns: 1fr;
   }
 }
+
 .actions-banner {
   display: flex;
   align-items: center;
@@ -590,13 +597,15 @@ watch(
   font-size: 12.5px;
   margin-top: 4px;
 }
+
 .actions-banner strong {
   font-weight: 600;
 }
+
 .field-error {
   margin: 8px 0 0;
   font-size: 11.5px;
-  color: oklch(55% 0.18 25);
+  color: oklch(55% 0.18 25deg);
   display: flex;
   align-items: center;
   gap: 4px;

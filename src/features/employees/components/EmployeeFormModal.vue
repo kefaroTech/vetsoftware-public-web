@@ -66,7 +66,8 @@ let availTimer: ReturnType<typeof setTimeout> | undefined
 const codeDisabled = computed(() => isEditing.value || !draft.value.name.trim())
 const codeHint = computed<string | undefined>(() => {
   if (isEditing.value) return 'El código no se puede modificar una vez creado el empleado.'
-  if (codeDisabled.value) return 'Escribe el nombre y se genera automáticamente. Luego puedes editarlo.'
+  if (codeDisabled.value)
+    return 'Escribe el nombre y se genera automáticamente. Luego puedes editarlo.'
   if (codeStatus.value === 'checking') return 'Verificando disponibilidad…'
   if (codeStatus.value === 'available') return '✓ Disponible'
   return 'Puedes editarlo.'
@@ -189,7 +190,8 @@ const errors = computed(() => {
   const code = draft.value.employeeCode.trim()
   if (!code) e.employeeCode = 'El código es requerido'
   else if (code.length > 50) e.employeeCode = 'Máximo 50 caracteres'
-  else if (!isEditing.value && codeStatus.value === 'taken') e.employeeCode = 'Ese código ya está en uso'
+  else if (!isEditing.value && codeStatus.value === 'taken')
+    e.employeeCode = 'Ese código ya está en uso'
 
   const name = draft.value.name.trim()
   if (!name) e.name = 'El nombre es requerido'
@@ -282,9 +284,11 @@ const subtitleText = computed(() =>
     <template #body>
       <div v-if="confirming" class="confirm">
         <p>
-          Se creará la cuenta de <strong>{{ draft.name || 'este empleado' }}</strong> y se enviará una
-          invitación a <strong>{{ draft.email }}</strong> con su usuario
-          (<strong>{{ draft.employeeCode }}</strong>) y la contraseña para el primer ingreso.
+          Se creará la cuenta de <strong>{{ draft.name || 'este empleado' }}</strong> y se enviará
+          una invitación a <strong>{{ draft.email }}</strong> con su usuario (<strong>{{
+            draft.employeeCode
+          }}</strong
+          >) y la contraseña para el primer ingreso.
         </p>
         <p class="confirm-note">
           Al iniciar sesión por primera vez, el sistema le pedirá crear una contraseña nueva.
@@ -294,102 +298,105 @@ const subtitleText = computed(() =>
       <template v-else>
         <div v-if="banner" class="banner">Revisa los campos marcados antes de continuar.</div>
         <div class="form">
-        <BaseField label="Nombre completo" required :error="err('name')">
-          <BaseInput
-            v-model="draft.name"
-            placeholder="Mariana Soto Quispe"
-            :invalid="!!err('name')"
-            autocomplete="name"
-            @blur="markTouched('name')"
-          />
-        </BaseField>
+          <BaseField label="Nombre completo" required :error="err('name')">
+            <BaseInput
+              v-model="draft.name"
+              placeholder="Mariana Soto Quispe"
+              :invalid="!!err('name')"
+              autocomplete="name"
+              @blur="markTouched('name')"
+            />
+          </BaseField>
 
-        <div class="grid-2">
+          <div class="grid-2">
+            <BaseField
+              label="Código de empleado"
+              required
+              :error="err('employeeCode')"
+              :hint="codeHint"
+            >
+              <BaseInput
+                v-model="draft.employeeCode"
+                placeholder="VET-001"
+                :disabled="codeDisabled"
+                :invalid="!!err('employeeCode')"
+                @blur="markTouched('employeeCode')"
+              />
+            </BaseField>
+
+            <BaseField label="Correo" required :error="err('email')">
+              <BaseInput
+                v-model="draft.email"
+                type="email"
+                placeholder="mariana.soto@vetrina.com"
+                :invalid="!!err('email')"
+                autocomplete="email"
+                @blur="markTouched('email')"
+              />
+            </BaseField>
+          </div>
+
           <BaseField
-            label="Código de empleado"
+            v-if="!isEditing"
+            label="Contraseña inicial"
             required
-            :error="err('employeeCode')"
-            :hint="codeHint"
+            hint="Mínimo 8 caracteres."
+            :error="err('password')"
           >
             <BaseInput
-              v-model="draft.employeeCode"
-              placeholder="VET-001"
-              :disabled="codeDisabled"
-              :invalid="!!err('employeeCode')"
-              @blur="markTouched('employeeCode')"
+              v-model="draft.password"
+              type="password"
+              placeholder="••••••••"
+              :invalid="!!err('password')"
+              autocomplete="new-password"
+              @blur="markTouched('password')"
             />
           </BaseField>
 
-          <BaseField label="Correo" required :error="err('email')">
-            <BaseInput
-              v-model="draft.email"
-              type="email"
-              placeholder="mariana.soto@vetrina.com"
-              :invalid="!!err('email')"
-              autocomplete="email"
-              @blur="markTouched('email')"
+          <BaseField
+            v-if="!isEditing"
+            label="Roles"
+            required
+            hint="Un empleado puede tener varios roles. Debe tener al menos uno."
+            :error="err('roles')"
+          >
+            <RoleSelectorGrid
+              :available-roles="roles"
+              :selected-ids="selectedRoleIds"
+              @update:selected-ids="onSelectedIdsUpdate"
             />
           </BaseField>
-        </div>
 
-        <BaseField
-          v-if="!isEditing"
-          label="Contraseña inicial"
-          required
-          hint="Mínimo 8 caracteres."
-          :error="err('password')"
-        >
-          <BaseInput
-            v-model="draft.password"
-            type="password"
-            placeholder="••••••••"
-            :invalid="!!err('password')"
-            autocomplete="new-password"
-            @blur="markTouched('password')"
-          />
-        </BaseField>
-
-        <BaseField
-          v-if="!isEditing"
-          label="Roles"
-          required
-          hint="Un empleado puede tener varios roles. Debe tener al menos uno."
-          :error="err('roles')"
-        >
-          <RoleSelectorGrid
-            :available-roles="roles"
-            :selected-ids="selectedRoleIds"
-            @update:selected-ids="onSelectedIdsUpdate"
-          />
-        </BaseField>
-
-        <BaseField
-          v-if="!isEditing"
-          label="Sedes"
-          required
-          hint="El empleado solo podrá operar en las sedes que asignes. Debe tener al menos una."
-          :error="err('branches')"
-        >
-          <BranchSelectorGrid
-            :available-branches="visibleBranches"
-            :selected-ids="selectedBranchIds"
-            @update:selected-ids="onSelectedBranchIdsUpdate"
-          />
-        </BaseField>
-
+          <BaseField
+            v-if="!isEditing"
+            label="Sedes"
+            required
+            hint="El empleado solo podrá operar en las sedes que asignes. Debe tener al menos una."
+            :error="err('branches')"
+          >
+            <BranchSelectorGrid
+              :available-branches="visibleBranches"
+              :selected-ids="selectedBranchIds"
+              @update:selected-ids="onSelectedBranchIdsUpdate"
+            />
+          </BaseField>
         </div>
       </template>
     </template>
 
     <template #footer-actions>
       <template v-if="confirming">
-        <button type="button" class="ghost" :disabled="busy" @click="confirming = false">Volver</button>
+        <button type="button" class="ghost" :disabled="busy" @click="confirming = false">
+          Volver
+        </button>
         <button type="button" class="primary" :disabled="busy" @click="doSubmit">
           Confirmar y crear
         </button>
       </template>
       <template v-else>
-        <button type="button" class="ghost" :disabled="busy" @click="emit('close')">Cancelar</button>
+        <button type="button" class="ghost" :disabled="busy" @click="emit('close')">
+          Cancelar
+        </button>
         <button type="button" class="primary" :disabled="busy" @click="submit">
           {{ isEditing ? 'Guardar cambios' : 'Crear empleado' }}
         </button>
@@ -400,40 +407,46 @@ const subtitleText = computed(() =>
 
 <style scoped>
 .banner {
-  background: oklch(95% 0.06 25);
-  border: 1px solid oklch(85% 0.12 25);
-  color: oklch(40% 0.18 25);
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
   padding: 9px 12px;
   border-radius: 8px;
   font-size: 12.5px;
   margin-bottom: 14px;
 }
+
 .form {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
+
 .confirm p {
   margin: 0;
   font-size: 13.5px;
   line-height: 1.55;
   color: var(--warm-700);
 }
+
 .confirm-note {
   margin-top: 10px !important;
   color: var(--warm-500) !important;
   font-size: 12.5px !important;
 }
+
 .grid-2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
-@media (max-width: 640px) {
+
+@media (width <= 640px) {
   .grid-2 {
     grid-template-columns: 1fr;
   }
 }
+
 .ghost,
 .primary {
   padding: 8px 14px;
@@ -444,21 +457,26 @@ const subtitleText = computed(() =>
   font-weight: 500;
   border: 1px solid transparent;
 }
+
 .ghost {
   background: var(--warm-50);
   color: var(--warm-700);
   border-color: var(--warm-200);
 }
+
 .ghost:hover:not(:disabled) {
   background: var(--warm-100);
 }
+
 .primary {
   background: var(--amatista-700);
   color: white;
 }
+
 .primary:hover:not(:disabled) {
   background: var(--amatista-800);
 }
+
 .ghost:disabled,
 .primary:disabled {
   cursor: not-allowed;

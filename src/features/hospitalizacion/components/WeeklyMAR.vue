@@ -123,21 +123,11 @@ function onDrop(dayIso: string, hour: number) {
 
 <template>
   <div class="wrap">
-    <div v-if="!hasEntries" class="empty">
-      No hay tomas programadas en esta semana.
-    </div>
+    <div v-if="!hasEntries" class="empty">No hay tomas programadas en esta semana.</div>
     <div v-else ref="scrollEl" class="scroll">
-      <div
-        class="grid"
-        :style="{ gridTemplateColumns: `64px repeat(7, minmax(96px, 1fr))` }"
-      >
+      <div class="grid" :style="{ gridTemplateColumns: `64px repeat(7, minmax(96px, 1fr))` }">
         <div class="corner" />
-        <div
-          v-for="(d, i) in days"
-          :key="`h${i}`"
-          class="dayhead"
-          :class="{ today: isToday(d) }"
-        >
+        <div v-for="(d, i) in days" :key="`h${i}`" class="dayhead" :class="{ today: isToday(d) }">
           <span class="dow">{{ WEEKDAYS_SHORT[i] }}</span>
           <span class="dnum">{{ d.getDate() }}</span>
         </div>
@@ -162,9 +152,11 @@ function onDrop(dayIso: string, hour: number) {
               class="chip"
               :class="[statusOf(e.slot), { proc: e.order.kind === 'proc' }]"
               :draggable="interactive(e.slot)"
-              :title="statusOf(e.slot) === 'aplicada'
-                ? `${e.order.name} · aplicada ${e.slot.givenAt ?? ''} · registro no editable`
-                : `${e.order.name}${e.order.kind === 'med' && e.order.dose ? ' · ' + e.order.dose : ''} · ${normalizeTime(e.slot.time)}`"
+              :title="
+                statusOf(e.slot) === 'aplicada'
+                  ? `${e.order.name} · aplicada ${e.slot.givenAt ?? ''} · registro no editable`
+                  : `${e.order.name}${e.order.kind === 'med' && e.order.dose ? ' · ' + e.order.dose : ''} · ${normalizeTime(e.slot.time)}`
+              "
               @click="interactive(e.slot) && emit('apply', e.order, e.slot.id)"
               @dragstart="onDragStart(e, $event)"
               @dragend="onDragEnd"
@@ -190,10 +182,12 @@ function onDrop(dayIso: string, hour: number) {
 .wrap {
   overflow: hidden;
 }
+
 .scroll {
   max-height: clamp(420px, 60vh, 680px);
   overflow: auto;
 }
+
 .grid {
   display: grid;
   gap: 1px;
@@ -203,9 +197,11 @@ function onDrop(dayIso: string, hour: number) {
   overflow: hidden;
   min-width: max-content;
 }
+
 .corner {
   background: var(--warm-100);
 }
+
 .dayhead {
   background: var(--warm-100);
   padding: 8px 6px;
@@ -214,20 +210,24 @@ function onDrop(dayIso: string, hour: number) {
   align-items: center;
   gap: 2px;
 }
+
 .dayhead.today {
   background: var(--amatista-100);
 }
+
 .dow {
   font-size: 11px;
   color: var(--warm-600);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
 .dnum {
   font-size: 14px;
   font-weight: 600;
   color: var(--warm-900);
 }
+
 .hourcell {
   background: var(--warm-100);
   padding: 8px 6px;
@@ -236,6 +236,7 @@ function onDrop(dayIso: string, hour: number) {
   color: var(--warm-600);
   text-align: right;
 }
+
 .cell {
   background: var(--warm-50);
   min-height: 36px;
@@ -244,14 +245,17 @@ function onDrop(dayIso: string, hour: number) {
   flex-direction: column;
   gap: 4px;
 }
+
 .cell.today {
   background: oklch(98% 0.02 var(--hue));
 }
+
 .cell.dropover {
   background: var(--amatista-100);
   outline: 2px dashed var(--amatista-500);
   outline-offset: -2px;
 }
+
 .chip {
   display: inline-flex;
   align-items: center;
@@ -263,37 +267,44 @@ function onDrop(dayIso: string, hour: number) {
   white-space: nowrap;
   overflow: hidden;
 }
+
 .chip-name {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .chip.aplicada {
-  background: oklch(94% 0.06 150);
-  color: oklch(40% 0.13 150);
+  background: oklch(94% 0.06 150deg);
+  color: oklch(40% 0.13 150deg);
   cursor: default;
 }
+
 .chip.pendiente {
   background: var(--warm-50);
   color: var(--warm-700);
   border: 1px solid var(--warm-300);
   cursor: pointer;
 }
+
 .chip.pendiente:hover {
   border-color: var(--amatista-500);
 }
+
 .chip.atrasada {
-  background: oklch(95% 0.05 25);
-  color: oklch(48% 0.18 25);
-  border: 1px solid oklch(85% 0.10 25);
+  background: oklch(95% 0.05 25deg);
+  color: oklch(48% 0.18 25deg);
+  border: 1px solid oklch(85% 0.1 25deg);
   cursor: pointer;
 }
+
 /* Procedimientos pendientes: tinte teal para distinguirlos de los medicamentos.
    Aplicada (verde) y atrasada (rojo) usan el color de estado, igual que los meds. */
 .chip.proc.pendiente {
-  background: oklch(94% 0.05 200);
-  color: oklch(42% 0.10 220);
-  border-color: oklch(85% 0.07 210);
+  background: oklch(94% 0.05 200deg);
+  color: oklch(42% 0.1 220deg);
+  border-color: oklch(85% 0.07 210deg);
 }
+
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -302,19 +313,30 @@ function onDrop(dayIso: string, hour: number) {
   font-size: 12px;
   color: var(--warm-600);
 }
+
 .legend span {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
+
 .sw {
   width: 12px;
   height: 12px;
   border-radius: 4px;
   display: inline-block;
 }
-.sw.aplicada { background: oklch(80% 0.10 150); }
-.sw.pendiente { background: var(--warm-50); border: 1px solid var(--warm-300); }
-.sw.atrasada { background: oklch(80% 0.12 25); }
-.sw.proc { background: oklch(80% 0.07 210); }
+.sw.aplicada {
+  background: oklch(80% 0.1 150deg);
+}
+.sw.pendiente {
+  background: var(--warm-50);
+  border: 1px solid var(--warm-300);
+}
+.sw.atrasada {
+  background: oklch(80% 0.12 25deg);
+}
+.sw.proc {
+  background: oklch(80% 0.07 210deg);
+}
 </style>

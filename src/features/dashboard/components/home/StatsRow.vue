@@ -54,12 +54,14 @@ const cards = [
   gap: 12px;
   margin-bottom: 24px;
 }
-@media (max-width: 1280px) {
+
+@media (width <= 1280px) {
   .stats-row {
     grid-template-columns: repeat(2, 1fr);
   }
 }
-@media (max-width: 440px) {
+
+@media (width <= 440px) {
   .stats-row {
     grid-template-columns: 1fr;
   }

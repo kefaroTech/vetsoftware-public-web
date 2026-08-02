@@ -29,9 +29,7 @@ export interface CreateWeightRecordRequest {
 // Serie temporal del peso del animal (recurso anidado: /animals/{animalId}/weight-records).
 export const weightRecordApi = {
   async listByAnimal(animalId: number): Promise<WeightRecordResponse[]> {
-    const { data } = await http.get<WeightRecordResponse[]>(
-      `/animals/${animalId}/weight-records`,
-    )
+    const { data } = await http.get<WeightRecordResponse[]>(`/animals/${animalId}/weight-records`)
     return data
   },
 

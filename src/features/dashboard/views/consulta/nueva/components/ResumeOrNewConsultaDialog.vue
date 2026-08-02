@@ -66,27 +66,17 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               para <strong>{{ ownerName }}</strong>
             </template>
             <template v-if="petName">
-              y su mascota <strong>{{ petName }}</strong>
-            </template>.
-            ¿Quieres retomarla donde la dejaste o empezar una nueva desde cero?
+              y su mascota <strong>{{ petName }}</strong> </template
+            >. ¿Quieres retomarla donde la dejaste o empezar una nueva desde cero?
           </p>
           <div class="step-chip">{{ stepLabel }}</div>
 
           <div class="actions">
-            <button
-              type="button"
-              class="btn ghost"
-              @click="emit('createNew')"
-            >
+            <button type="button" class="btn ghost" @click="emit('createNew')">
               <Sparkles :size="14" :stroke-width="1.8" />
               <span>Crear una nueva</span>
             </button>
-            <button
-              ref="continueBtn"
-              type="button"
-              class="btn primary"
-              @click="emit('continue')"
-            >
+            <button ref="continueBtn" type="button" class="btn primary" @click="emit('continue')">
               <span>Continuar consulta</span>
               <ArrowRight :size="14" :stroke-width="1.8" />
             </button>
@@ -104,30 +94,33 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(30, 20, 50, 0.45);
+  background: rgb(30 20 50 / 45%);
   backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
   display: grid;
   place-items: center;
   z-index: 1500;
 }
+
 .resume-fade-enter-active,
 .resume-fade-leave-active {
   transition: opacity 0.18s ease;
 }
+
 .resume-fade-enter-from,
 .resume-fade-leave-to {
   opacity: 0;
 }
+
 .card {
   width: 480px;
   max-width: calc(100vw - 32px);
   background: var(--warm-50);
   border-radius: 16px;
   padding: 28px;
-  box-shadow: 0 20px 60px rgba(40, 20, 80, 0.3);
+  box-shadow: 0 20px 60px rgb(40 20 80 / 30%);
   font-family: var(--font-sans);
 }
+
 .icon {
   width: 44px;
   height: 44px;
@@ -138,6 +131,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   place-items: center;
   margin-bottom: 14px;
 }
+
 .title {
   margin: 0 0 8px;
   font-family: var(--font-serif);
@@ -146,16 +140,19 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   letter-spacing: -0.01em;
   color: var(--warm-900);
 }
+
 .desc {
   margin: 0 0 14px;
   font-size: 13.5px;
   color: var(--warm-600);
   line-height: 1.55;
 }
+
 .desc strong {
   color: var(--warm-900);
   font-weight: 500;
 }
+
 .step-chip {
   display: inline-flex;
   align-items: center;
@@ -169,12 +166,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   color: var(--amatista-700);
   margin-bottom: 22px;
 }
+
 .actions {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
   flex-wrap: wrap;
 }
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -187,25 +186,31 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   cursor: pointer;
   border: 1px solid transparent;
 }
+
 .btn.ghost {
   background: transparent;
   border-color: var(--warm-200);
   color: var(--warm-900);
 }
+
 .btn.ghost:hover {
   background: var(--warm-100);
 }
+
 .btn.primary {
   background: var(--amatista-700);
   color: white;
 }
+
 .btn.primary:hover {
   filter: brightness(1.05);
 }
+
 .btn:focus-visible {
   outline: 2px solid var(--amatista-700);
   outline-offset: 2px;
 }
+
 .hint {
   margin: 14px 0 0;
   font-size: 12px;

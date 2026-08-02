@@ -16,13 +16,21 @@ export const productChargeApi = {
     return data
   },
   async create(payload: CreateProductChargePayload): Promise<ProductChargeResponse> {
-    const { data } = await http.post<ProductChargeResponse>('/product-charge-open-accounts', payload)
+    const { data } = await http.post<ProductChargeResponse>(
+      '/product-charge-open-accounts',
+      payload,
+    )
     return data
   },
   /** Anula un cargo con motivo obligatorio (queda visible tachado; permiso chargeOpenAccount.delete). */
-  async voidCharge(id: number, reason: string, expectedVersion?: number): Promise<ProductChargeResponse> {
+  async voidCharge(
+    id: number,
+    reason: string,
+    expectedVersion?: number,
+  ): Promise<ProductChargeResponse> {
     const { data } = await http.patch<ProductChargeResponse>(
-      `/product-charge-open-accounts/${id}/void`, { reason, expectedVersion },
+      `/product-charge-open-accounts/${id}/void`,
+      { reason, expectedVersion },
     )
     return data
   },
@@ -36,13 +44,21 @@ export const serviceChargeApi = {
     return data
   },
   async create(payload: CreateServiceChargePayload): Promise<ServiceChargeResponse> {
-    const { data } = await http.post<ServiceChargeResponse>('/service-charge-open-accounts', payload)
+    const { data } = await http.post<ServiceChargeResponse>(
+      '/service-charge-open-accounts',
+      payload,
+    )
     return data
   },
   /** Anula un cargo con motivo obligatorio (queda visible tachado; permiso chargeOpenAccount.delete). */
-  async voidCharge(id: number, reason: string, expectedVersion?: number): Promise<ServiceChargeResponse> {
+  async voidCharge(
+    id: number,
+    reason: string,
+    expectedVersion?: number,
+  ): Promise<ServiceChargeResponse> {
     const { data } = await http.patch<ServiceChargeResponse>(
-      `/service-charge-open-accounts/${id}/void`, { reason, expectedVersion },
+      `/service-charge-open-accounts/${id}/void`,
+      { reason, expectedVersion },
     )
     return data
   },
@@ -56,13 +72,21 @@ export const generalChargeApi = {
     return data
   },
   async create(payload: CreateGeneralChargePayload): Promise<GeneralChargeResponse> {
-    const { data } = await http.post<GeneralChargeResponse>('/general-charge-open-accounts', payload)
+    const { data } = await http.post<GeneralChargeResponse>(
+      '/general-charge-open-accounts',
+      payload,
+    )
     return data
   },
   /** Anula un cargo con motivo obligatorio (queda visible tachado; permiso chargeOpenAccount.delete). */
-  async voidCharge(id: number, reason: string, expectedVersion?: number): Promise<GeneralChargeResponse> {
+  async voidCharge(
+    id: number,
+    reason: string,
+    expectedVersion?: number,
+  ): Promise<GeneralChargeResponse> {
     const { data } = await http.patch<GeneralChargeResponse>(
-      `/general-charge-open-accounts/${id}/void`, { reason, expectedVersion },
+      `/general-charge-open-accounts/${id}/void`,
+      { reason, expectedVersion },
     )
     return data
   },

@@ -62,8 +62,8 @@ async function submit() {
       <div class="cp-eyebrow">Primer ingreso</div>
       <h1 class="cp-title">Crea tu contraseña</h1>
       <p class="cp-sub">
-        <template v-if="firstName">Hola {{ firstName }}. </template>Por seguridad, define una contraseña
-        nueva para tu cuenta. La necesitarás cada vez que inicies sesión.
+        <template v-if="firstName">Hola {{ firstName }}. </template>Por seguridad, define una
+        contraseña nueva para tu cuenta. La necesitarás cada vez que inicies sesión.
       </p>
 
       <form class="cp-form" novalidate @submit.prevent="submit">
@@ -117,6 +117,7 @@ async function submit() {
   box-shadow: var(--pub-card-shadow);
   padding: 40px 44px;
 }
+
 .cp-eyebrow {
   font-size: 11px;
   font-weight: 600;
@@ -125,6 +126,7 @@ async function submit() {
   text-transform: uppercase;
   margin-bottom: 8px;
 }
+
 .cp-title {
   font-family: 'Instrument Serif', serif;
   font-size: 34px;
@@ -133,32 +135,39 @@ async function submit() {
   letter-spacing: -0.02em;
   line-height: 1.05;
 }
+
 .cp-sub {
   font-size: 13px;
   color: var(--pub-ink-500);
   margin: 10px 0 28px;
   line-height: 1.5;
 }
+
 .cp-form {
-  font-family: 'Inter', sans-serif;
+  font-family: Inter, sans-serif;
 }
+
 .cp-banner {
   margin-bottom: 20px;
 }
+
 .cp-fields {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
+
 .logout-link {
   color: var(--pub-ink-700);
   font-weight: 600;
   text-decoration: none;
 }
+
 .logout-link:hover {
   text-decoration: underline;
 }
-@media (max-width: 520px) {
+
+@media (width <= 520px) {
   .cp-card {
     padding: 32px 24px;
   }

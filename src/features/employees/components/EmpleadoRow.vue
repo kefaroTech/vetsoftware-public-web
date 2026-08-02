@@ -83,51 +83,67 @@ const branchNames = computed(() => props.employee.branches.map((b) => b.name).jo
   font-family: inherit;
   border-top: none;
   border-right: none;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
 }
+
 .row:last-child {
   border-bottom: none;
 }
+
 .row.zebra {
-  background: oklch(98% 0.005 60);
+  background: oklch(98% 0.005 60deg);
 }
+
 .row:hover:not(.selected) {
   background: var(--warm-100);
 }
+
 .row.selected {
   background: var(--amatista-50);
   border-left-color: var(--amatista-600);
 }
+
 .row.inactive {
   opacity: 0.7;
 }
+
 .cell {
   min-width: 0;
 }
+
 .avatar-cell {
   flex: 0 0 36px;
 }
+
 .name-cell {
   flex: 1.8;
 }
+
 .role-cell {
   flex: 1.2;
 }
+
 .sedes-cell {
   flex: 1.4;
 }
+
 .contact-cell {
   flex: 1.4;
 }
+
 .status-cell {
   flex: 0 0 96px;
 }
+
 .chev-cell {
   flex: 0 0 28px;
   display: grid;
   place-items: center;
   color: var(--warm-400);
 }
+
 .name {
   font-size: 14px;
   font-weight: 500;
@@ -136,11 +152,13 @@ const branchNames = computed(() => props.employee.branches.map((b) => b.name).jo
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .sub {
   font-size: 12px;
   color: var(--warm-500);
   margin-top: 2px;
 }
+
 .email {
   font-size: 12.5px;
   color: var(--warm-600);
@@ -148,23 +166,27 @@ const branchNames = computed(() => props.employee.branches.map((b) => b.name).jo
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .pills {
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
 }
+
 .no-role,
 .no-sede {
   font-size: 12px;
   color: var(--warm-500);
   font-style: italic;
 }
+
 .sedes {
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
   align-items: center;
 }
+
 .sede-chip {
   max-width: 100%;
   padding: 2px 8px;
@@ -177,6 +199,7 @@ const branchNames = computed(() => props.employee.branches.map((b) => b.name).jo
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .sede-more {
   font-size: 11.5px;
   color: var(--warm-500);

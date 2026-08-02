@@ -44,7 +44,10 @@ export const useSuppliersStore = defineStore('suppliers', () => {
     return created
   }
 
-  async function update(id: number, payload: SupplierRequest & { version: number }): Promise<Supplier> {
+  async function update(
+    id: number,
+    payload: SupplierRequest & { version: number },
+  ): Promise<Supplier> {
     const updated = await suppliersApi.update(id, payload)
     allLoaded = false
     return updated

@@ -14,9 +14,7 @@ async function loadCountries(): Promise<GeoOption[]> {
   if (countriesPromise) return countriesPromise
   countriesPromise = countryApi
     .listAll()
-    .then((list) =>
-      list.map((c) => ({ value: String(c.id), label: c.name })),
-    )
+    .then((list) => list.map((c) => ({ value: String(c.id), label: c.name })))
     .then((opts) => {
       countriesPromise = null
       return opts
@@ -66,10 +64,7 @@ async function loadCities(stateId: string): Promise<GeoOption[]> {
   return promise
 }
 
-export function useGeoCascade(
-  countryId: Ref<string>,
-  stateId: Ref<string>,
-) {
+export function useGeoCascade(countryId: Ref<string>, stateId: Ref<string>) {
   const countryOptions = ref<GeoOption[]>([])
   const stateOptions = ref<GeoOption[]>([])
   const cityOptions = ref<GeoOption[]>([])

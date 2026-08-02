@@ -24,9 +24,7 @@ defineEmits<{ select: [] }>()
       <span>{{ owner.phone }}</span>
     </div>
     <div class="email">{{ owner.email }}</div>
-    <BaseChip variant="accent">
-      {{ petCount }} mascota{{ petCount === 1 ? '' : 's' }}
-    </BaseChip>
+    <BaseChip variant="accent"> {{ petCount }} mascota{{ petCount === 1 ? '' : 's' }} </BaseChip>
   </button>
 </template>
 
@@ -46,40 +44,48 @@ defineEmits<{ select: [] }>()
   cursor: pointer;
   transition: background 0.12s;
 }
+
 .row:hover {
   background: var(--warm-100);
 }
+
 .row:focus-visible {
   outline: 2px solid var(--amatista-700);
   outline-offset: -2px;
 }
+
 .row:last-child {
   border-bottom: none;
 }
+
 .avatar {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: linear-gradient(135deg, oklch(78% 0.14 30), oklch(65% 0.16 350));
+  background: linear-gradient(135deg, oklch(78% 0.14 30deg), oklch(65% 0.16 350deg));
   color: white;
   font-weight: 600;
   font-size: 13px;
   display: grid;
   place-items: center;
 }
+
 .ident {
   min-width: 0;
 }
+
 .name {
   font-size: 14px;
   font-weight: 500;
   color: var(--warm-900);
 }
+
 .doc {
   font-size: 12px;
   color: var(--warm-500);
   margin-top: 2px;
 }
+
 .phone {
   font-size: 12.5px;
   color: var(--warm-600);
@@ -88,11 +94,13 @@ defineEmits<{ select: [] }>()
   gap: 6px;
   min-width: 0;
 }
+
 .phone span {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .email {
   font-size: 12.5px;
   color: var(--warm-600);

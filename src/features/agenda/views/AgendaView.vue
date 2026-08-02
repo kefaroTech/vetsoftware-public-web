@@ -16,13 +16,7 @@ import { useAgendaEvents } from '../composables/useAgendaEvents'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useToast } from '@/composables/useToast'
 import { PERMISSIONS } from '@/constants/permissions'
-import {
-  addDays,
-  isoFromDate,
-  startOfMonth,
-  startOfWeek,
-  parseISO,
-} from '../composables/dateUtils'
+import { addDays, isoFromDate, startOfMonth, startOfWeek, parseISO } from '../composables/dateUtils'
 import {
   APPT_STATUS,
   apptDate,
@@ -34,10 +28,7 @@ import {
   type UpdateAppointmentRequest,
 } from '../types/appointment'
 import type { AgendaEvent, AgendaItem } from '../types/agenda'
-import {
-  getProblemDetailMessage,
-  isConcurrencyConflict,
-} from '@/services/http/http.client'
+import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 
 type ViewMode = 'month' | 'week' | 'day'
 
@@ -277,12 +268,7 @@ async function onRemove(appt: AppointmentResponse) {
 
     <AppointmentSummary v-if="view === 'day'" :appointments="dayAppointments" />
 
-    <button
-      v-if="view === 'day' && previousView"
-      type="button"
-      class="back-btn"
-      @click="goBack"
-    >
+    <button v-if="view === 'day' && previousView" type="button" class="back-btn" @click="goBack">
       <ArrowLeft :size="14" :stroke-width="1.8" />
       {{ backLabel }}
     </button>
@@ -350,6 +336,7 @@ async function onRemove(appt: AppointmentResponse) {
   font-family: var(--font-sans);
   color: var(--warm-900);
 }
+
 .cta {
   display: inline-flex;
   align-items: center;
@@ -367,18 +354,21 @@ async function onRemove(appt: AppointmentResponse) {
   border-radius: 9px;
   cursor: pointer;
   font-family: inherit;
-  box-shadow: 0 1px 2px rgba(50, 20, 80, 0.08),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 0.5);
+  box-shadow:
+    0 1px 2px rgb(50 20 80 / 8%),
+    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 50%);
   white-space: nowrap;
 }
+
 .banner.error {
-  background: oklch(95% 0.06 25);
-  border: 1px solid oklch(85% 0.12 25);
-  color: oklch(40% 0.18 25);
+  background: oklch(95% 0.06 25deg);
+  border: 1px solid oklch(85% 0.12 25deg);
+  color: oklch(40% 0.18 25deg);
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 13px;
 }
+
 .back-btn {
   align-self: flex-start;
   display: inline-flex;
@@ -393,16 +383,22 @@ async function onRemove(appt: AppointmentResponse) {
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 500;
-  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
 }
+
 .back-btn:hover {
   background: var(--amatista-50);
   border-color: var(--amatista-300);
   color: var(--amatista-700);
 }
+
 .body {
   min-height: 600px;
 }
+
 .loading {
   padding: 28px;
   text-align: center;

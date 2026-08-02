@@ -84,15 +84,21 @@ export const useFacturacionDocsStore = defineStore('facturacionDocs', () => {
     return invoice
   }
 
-  async function creditNote(id: number, reason: CreditNoteReason): Promise<ElectronicDocumentResponse> {
+  async function creditNote(
+    id: number,
+    reason: CreditNoteReason,
+  ): Promise<ElectronicDocumentResponse> {
     const note = await electronicDocumentApi.creditNote(id, reason)
     upsert(note)
     // El original puede quedar reversed=true tras validar la nota; refrescarlo.
-    void refresh(id).catch(() => {})
+    void refresh(id).catch(() => undefined)
     return note
   }
 
-  async function debitNote(id: number, reason: DebitNoteReason): Promise<ElectronicDocumentResponse> {
+  async function debitNote(
+    id: number,
+    reason: DebitNoteReason,
+  ): Promise<ElectronicDocumentResponse> {
     const note = await electronicDocumentApi.debitNote(id, reason)
     upsert(note)
     return note

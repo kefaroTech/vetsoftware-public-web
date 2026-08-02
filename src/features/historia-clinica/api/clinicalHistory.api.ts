@@ -1,8 +1,5 @@
 import { http } from '@/services/http/http.client'
-import type {
-  ClinicalEventResponse,
-  ClinicalEventType,
-} from '../types/historia'
+import type { ClinicalEventResponse, ClinicalEventType } from '../types/historia'
 
 export interface ClinicalHistoryParams {
   types?: ClinicalEventType[]
@@ -32,14 +29,11 @@ export const clinicalHistoryApi = {
     return data
   },
 
-  async exportPdf(
-    animalId: number,
-    params: ClinicalHistoryParams = {},
-  ): Promise<Blob> {
-    const { data } = await http.get<Blob>(
-      `/animals/${animalId}/clinical-history/export.pdf`,
-      { params: buildQuery(params), responseType: 'blob' },
-    )
+  async exportPdf(animalId: number, params: ClinicalHistoryParams = {}): Promise<Blob> {
+    const { data } = await http.get<Blob>(`/animals/${animalId}/clinical-history/export.pdf`, {
+      params: buildQuery(params),
+      responseType: 'blob',
+    })
     return data
   },
 }
