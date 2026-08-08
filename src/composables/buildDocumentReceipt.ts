@@ -94,7 +94,10 @@ export function buildDocumentReceiptTicket(
   }
 
   // Sello DIAN: solo cuando el documento ya fue validado (tiene CUFE/CUDE).
-  const seal = doc.cufe ?? doc.cude ?? null
+  // `||` y no `??`: el backend no normaliza el blanco a null —`MatiasInvoiceProvider.text()`
+  // devuelve tal cual lo que manda el proveedor—, así que un CUFE de cadena vacía
+  // satisface a `??` y dejaría el comprobante SIN sello, tapando un CUDE válido.
+  const seal = doc.cufe || doc.cude || null
   const dian = seal
     ? {
         sealLabel: doc.cufe ? 'CUFE' : 'CUDE',
