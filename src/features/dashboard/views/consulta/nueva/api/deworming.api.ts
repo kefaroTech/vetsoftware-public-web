@@ -1,4 +1,5 @@
 import { http } from '@/services/http/http.client'
+import { DEFAULT_PAGE_SIZE, type PageResponse } from '@/types/pagination'
 import type { DewormingType } from '@/types/domain'
 
 export interface CreateDewormingPayload {
@@ -57,8 +58,20 @@ export const dewormingApi = {
     return data
   },
 
-  async listByAnimal(animalId: number): Promise<DewormingResponse[]> {
-    const { data } = await http.get<DewormingResponse[]>(`/dewormings/by-animal/${animalId}`)
+  async listByAnimal(
+    animalId: number,
+    page = 0,
+    pageSize = DEFAULT_PAGE_SIZE,
+    signal?: AbortSignal,
+  ): Promise<PageResponse<DewormingResponse>> {
+    // BE-06: el historial por animal llega paginado; el consumidor acumula paginas.
+    const { data } = await http.get<PageResponse<DewormingResponse>>(
+      `/dewormings/by-animal/${animalId}`,
+      {
+        params: { page, pageSize },
+        signal,
+      },
+    )
     return data
   },
 

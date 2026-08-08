@@ -1,4 +1,6 @@
 <script setup lang="ts">
+/** Tope de pagina que acepta el backend para historiales por animal. */
+const MAX_HISTORY_PAGE_SIZE = 200
 import { ref } from 'vue'
 import { BedDouble, Pencil, Plus, Trash2 } from 'lucide-vue-next'
 import ListBody from '../components/ListBody.vue'
@@ -74,7 +76,12 @@ async function onSelect(info: { owner: Owner; animal: AnimalResponse } | null) {
   error.value = null
   items.value = []
   try {
-    items.value = await hospitalizationApi.listByAnimal(info.animal.id)
+    // BE-06: el endpoint ya esta paginado. Esta vista aun no acumula paginas, asi
+    // que pide el tope que admite el servidor para no ocultar historial en silencio.
+    // Pendiente: cablear el centinela de useInfiniteList (ver OwnerSearchList).
+    items.value = (
+      await hospitalizationApi.listByAnimal(info.animal.id, 0, MAX_HISTORY_PAGE_SIZE)
+    ).content
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'No se pudieron cargar las hospitalizaciones'
   } finally {

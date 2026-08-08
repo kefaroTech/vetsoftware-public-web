@@ -1,4 +1,5 @@
 import { http } from '@/services/http/http.client'
+import { DEFAULT_PAGE_SIZE, type PageResponse } from '@/types/pagination'
 
 export interface CreateSurgeryPayload {
   date: string
@@ -59,8 +60,20 @@ export const surgeryApi = {
     return data
   },
 
-  async listByAnimal(animalId: number): Promise<SurgeryResponse[]> {
-    const { data } = await http.get<SurgeryResponse[]>(`/surgeries/by-animal/${animalId}`)
+  async listByAnimal(
+    animalId: number,
+    page = 0,
+    pageSize = DEFAULT_PAGE_SIZE,
+    signal?: AbortSignal,
+  ): Promise<PageResponse<SurgeryResponse>> {
+    // BE-06: el historial por animal llega paginado; el consumidor acumula paginas.
+    const { data } = await http.get<PageResponse<SurgeryResponse>>(
+      `/surgeries/by-animal/${animalId}`,
+      {
+        params: { page, pageSize },
+        signal,
+      },
+    )
     return data
   },
 
