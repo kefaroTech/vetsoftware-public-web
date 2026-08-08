@@ -1,4 +1,4 @@
-import { http } from '@/services/http/http.client'
+import { http, TRANSFER_TIMEOUT_MS } from '@/services/http/http.client'
 
 export interface LaboratoryTestFileResponse {
   id: number
@@ -18,6 +18,7 @@ export const laboratoryTestFileApi = {
     form.append('file', file)
     const { data } = await http.post<LaboratoryTestFileResponse>('/laboratory-test-files', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: TRANSFER_TIMEOUT_MS,
     })
     return data
   },
@@ -32,6 +33,7 @@ export const laboratoryTestFileApi = {
   async download(id: number): Promise<Blob> {
     const { data } = await http.get<Blob>(`/laboratory-test-files/${id}/download`, {
       responseType: 'blob',
+      timeout: TRANSFER_TIMEOUT_MS,
     })
     return data
   },

@@ -1,4 +1,4 @@
-import { http } from '@/services/http/http.client'
+import { http, DIAN_TIMEOUT_MS } from '@/services/http/http.client'
 import { withBranchParam } from '@/features/branches/api/branchContext'
 import type {
   CreditNoteReason,
@@ -40,10 +40,18 @@ export const electronicDocumentApi = {
     }
   },
 
+  // Las cinco operaciones que siguen transmiten a la DIAN dentro de la propia
+  // petición: el backend habla con el proveedor con hasta 75 s de presupuesto
+  // (15 s de connect + 60 s de read en DianHttpConfig). Con el timeout por
+  // defecto el navegador abortaría a los 20 s mientras el servidor sigue
+  // emitiendo, y el usuario se quedaría sin el resultado de un documento que ya
+  // consumió consecutivo — sin saber si reintentar o no.
+
   async emit(payload: EmitElectronicDocumentRequest): Promise<ElectronicDocumentResponse> {
     const { data } = await http.post<ElectronicDocumentResponse>(
       '/electronic-documents/emit',
       payload,
+      { timeout: DIAN_TIMEOUT_MS },
     )
     return data
   },
@@ -51,6 +59,8 @@ export const electronicDocumentApi = {
   async transmit(id: number): Promise<ElectronicDocumentResponse> {
     const { data } = await http.post<ElectronicDocumentResponse>(
       `/electronic-documents/${id}/transmit`,
+      undefined,
+      { timeout: DIAN_TIMEOUT_MS },
     )
     return data
   },
@@ -58,6 +68,8 @@ export const electronicDocumentApi = {
   async convertToInvoice(id: number): Promise<ElectronicDocumentResponse> {
     const { data } = await http.post<ElectronicDocumentResponse>(
       `/electronic-documents/${id}/convert-to-invoice`,
+      undefined,
+      { timeout: DIAN_TIMEOUT_MS },
     )
     return data
   },
@@ -66,6 +78,7 @@ export const electronicDocumentApi = {
     const { data } = await http.post<ElectronicDocumentResponse>(
       `/electronic-documents/${id}/credit-note`,
       { reason },
+      { timeout: DIAN_TIMEOUT_MS },
     )
     return data
   },
@@ -74,6 +87,7 @@ export const electronicDocumentApi = {
     const { data } = await http.post<ElectronicDocumentResponse>(
       `/electronic-documents/${id}/debit-note`,
       { reason },
+      { timeout: DIAN_TIMEOUT_MS },
     )
     return data
   },
