@@ -1,7 +1,6 @@
 <script setup lang="ts">
-/** Tope de pagina que acepta el backend para historiales por animal. */
-const MAX_HISTORY_PAGE_SIZE = 200
-import { ref } from 'vue'
+import { ref, useTemplateRef } from 'vue'
+import { emptyPage } from '@/types/pagination'
 import { Pencil, Plus, Sparkles, Trash2 } from 'lucide-vue-next'
 import ListBody from '../components/ListBody.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
@@ -27,8 +26,7 @@ const canDelete = can(PERMISSIONS.SPA_DELETE)
 
 const selection = ref<{ owner: Owner; animal: AnimalResponse } | null>(null)
 const patientId = ref<number | null>(null)
-const items = ref<SpaResponse[]>([])
-const loading = ref(false)
+const listBody = useTemplateRef<{ reload: () => Promise<void> }>('listBody')
 const error = ref<string | null>(null)
 const modalOpen = ref(false)
 const editing = ref<SpaResponse | null>(null)
@@ -59,36 +57,33 @@ function editFromViewing() {
   }
 }
 
-async function onSelect(info: { owner: Owner; animal: AnimalResponse } | null) {
+/**
+ * BE-06: la tabla pide cada pagina al backend, busqueda incluida. `ListBody` es quien invoca
+ * esto —al montar, al cambiar de pagina y al escribir en el buscador—, asi que aqui ya no hay
+ * lista que mantener en memoria. El `:key` del paciente fuerza el remonte al cambiar de animal.
+ */
+function fetchPage(page: number, pageSize: number, query: string, signal: AbortSignal) {
+  const animalId = selection.value?.animal.id
+  if (!animalId) return Promise.resolve(emptyPage<SpaResponse>(pageSize))
+  return spaApi.listByAnimal(animalId, query, page, pageSize, signal)
+}
+
+function onSelect(info: { owner: Owner; animal: AnimalResponse } | null) {
   if (!info) return
   selection.value = info
-  loading.value = true
   error.value = null
-  items.value = []
-  try {
-    // BE-06: el endpoint ya esta paginado. Esta vista aun no acumula paginas, asi
-    // que pide el tope que admite el servidor para no ocultar historial en silencio.
-    // Pendiente: cablear el centinela de useInfiniteList (ver OwnerSearchList).
-    items.value = (await spaApi.listByAnimal(info.animal.id, '', 0, MAX_HISTORY_PAGE_SIZE)).content
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'No se pudieron cargar los servicios de spa'
-  } finally {
-    loading.value = false
-  }
 }
 
 function onReset() {
   selection.value = null
   patientId.value = null
-  items.value = []
   error.value = null
 }
 
-function onSaved(item: SpaResponse) {
-  const idx = items.value.findIndex((i) => i.id === item.id)
-  const wasEdit = idx >= 0
-  if (wasEdit) items.value.splice(idx, 1, item)
-  else items.value = [item, ...items.value]
+function onSaved() {
+  const wasEdit = Boolean(editing.value)
+  // La lista la sirve el backend: en vez de mutar un array local se recarga la pagina.
+  void listBody.value?.reload()
   toast.success(
     'Servicio guardado',
     wasEdit ? 'Los cambios se guardaron.' : 'Se añadió correctamente al paciente.',
@@ -116,7 +111,7 @@ async function onConfirmDelete() {
   error.value = null
   try {
     await spaApi.remove(target.id)
-    items.value = items.value.filter((i) => i.id !== target.id)
+    void listBody.value?.reload()
     deleting.value = null
     toast.info('Registro eliminado', 'El registro fue removido.')
   } catch (e) {
@@ -126,14 +121,6 @@ async function onConfirmDelete() {
   } finally {
     deletingBusy.value = false
   }
-}
-
-function searchFn(item: SpaResponse, q: string) {
-  return (
-    item.spaType.name.toLowerCase().includes(q) ||
-    (item.reason ?? '').toLowerCase().includes(q) ||
-    (item.details ?? '').toLowerCase().includes(q)
-  )
 }
 </script>
 
@@ -158,9 +145,9 @@ function searchFn(item: SpaResponse, q: string) {
     <template v-else>
       <OwnerAnimalBreadcrumb :owner="selection.owner" :animal="selection.animal" @reset="onReset" />
       <ListBody
-        :items="items"
-        :loading="loading"
-        :search-fn="searchFn"
+        ref="listBody"
+        :key="selection.animal.id"
+        :fetch-page="fetchPage"
         placeholder="Buscar servicio, motivo o detalles…"
         empty-text="Este paciente aún no tiene servicios de spa registrados."
       >
