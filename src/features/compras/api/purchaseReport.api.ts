@@ -1,4 +1,4 @@
-import { http } from '@/services/http/http.client'
+import { http, TRANSFER_TIMEOUT_MS } from '@/services/http/http.client'
 import { withBranchParam } from '@/features/branches/api/branchContext'
 import type { PurchaseBook } from '../types/compras'
 
@@ -17,6 +17,7 @@ export const purchaseReportApi = {
     const { data } = await http.get<Blob>('/purchase-reports/purchase-book/export', {
       params: withBranchParam({ from, to, format }),
       responseType: 'blob',
+      timeout: TRANSFER_TIMEOUT_MS,
     })
     const url = URL.createObjectURL(data)
     const a = document.createElement('a')

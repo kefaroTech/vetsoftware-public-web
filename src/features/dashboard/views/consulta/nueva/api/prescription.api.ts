@@ -1,4 +1,4 @@
-import { http } from '@/services/http/http.client'
+import { http, TRANSFER_TIMEOUT_MS } from '@/services/http/http.client'
 
 export interface CreatePrescriptionPayload {
   date: string
@@ -62,6 +62,7 @@ export const prescriptionApi = {
   async exportPdf(id: number): Promise<Blob> {
     const { data } = await http.get<Blob>(`/prescriptions/${id}/export.pdf`, {
       responseType: 'blob',
+      timeout: TRANSFER_TIMEOUT_MS,
     })
     return data
   },

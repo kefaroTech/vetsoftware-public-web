@@ -1,4 +1,4 @@
-import { http } from '@/services/http/http.client'
+import { http, TRANSFER_TIMEOUT_MS } from '@/services/http/http.client'
 import type { ClinicalEventResponse, ClinicalEventType } from '../types/historia'
 
 export interface ClinicalHistoryParams {
@@ -33,6 +33,7 @@ export const clinicalHistoryApi = {
     const { data } = await http.get<Blob>(`/animals/${animalId}/clinical-history/export.pdf`, {
       params: buildQuery(params),
       responseType: 'blob',
+      timeout: TRANSFER_TIMEOUT_MS,
     })
     return data
   },
