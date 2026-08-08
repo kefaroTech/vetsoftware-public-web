@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, useTemplateRef } from 'vue'
+import { emptyPage } from '@/types/pagination'
 import { Pencil, Plus, Syringe, Trash2 } from 'lucide-vue-next'
 import ListBody from '../components/ListBody.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
@@ -28,8 +29,7 @@ const canDelete = can(PERMISSIONS.VACCINATION_DELETE)
 
 const selection = ref<{ owner: Owner; animal: AnimalResponse } | null>(null)
 const patientId = ref<number | null>(null)
-const items = ref<VaccinationResponse[]>([])
-const loading = ref(false)
+const listBody = useTemplateRef<{ reload: () => Promise<void> }>('listBody')
 const error = ref<string | null>(null)
 const modalOpen = ref(false)
 const editing = ref<VaccinationResponse | null>(null)
@@ -63,33 +63,33 @@ function editFromViewing() {
   }
 }
 
-async function onSelect(info: { owner: Owner; animal: AnimalResponse } | null) {
+/**
+ * BE-06: la tabla pide cada página al backend, búsqueda incluida. `ListBody` es quien invoca
+ * esto —al montar, al cambiar de página y al escribir en el buscador—, así que aquí ya no hay
+ * lista que mantener en memoria. El `:key` del paciente fuerza el remonte al cambiar de animal.
+ */
+function fetchPage(page: number, pageSize: number, query: string, signal: AbortSignal) {
+  const animalId = selection.value?.animal.id
+  if (!animalId) return Promise.resolve(emptyPage<VaccinationResponse>(pageSize))
+  return vaccinationApi.listByAnimal(animalId, query, page, pageSize, signal)
+}
+
+function onSelect(info: { owner: Owner; animal: AnimalResponse } | null) {
   if (!info) return
   selection.value = info
-  loading.value = true
   error.value = null
-  items.value = []
-  try {
-    items.value = await vaccinationApi.listByAnimal(info.animal.id)
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'No se pudieron cargar las vacunaciones'
-  } finally {
-    loading.value = false
-  }
 }
 
 function onReset() {
   selection.value = null
   patientId.value = null
-  items.value = []
   error.value = null
 }
 
-function onSaved(item: VaccinationResponse) {
-  const idx = items.value.findIndex((i) => i.id === item.id)
-  const wasEdit = idx >= 0
-  if (wasEdit) items.value.splice(idx, 1, item)
-  else items.value = [item, ...items.value]
+function onSaved() {
+  const wasEdit = Boolean(editing.value)
+  // La lista la sirve el backend: en vez de mutar un array local se recarga la pagina.
+  void listBody.value?.reload()
   toast.success(
     'Vacuna guardada',
     wasEdit ? 'Los cambios se guardaron.' : 'Se añadió correctamente al paciente.',
@@ -117,7 +117,7 @@ async function onConfirmDelete() {
   error.value = null
   try {
     await vaccinationApi.remove(target.id)
-    items.value = items.value.filter((i) => i.id !== target.id)
+    void listBody.value?.reload()
     deleting.value = null
     toast.info('Registro eliminado', 'El registro fue removido.')
   } catch (e) {
@@ -127,13 +127,6 @@ async function onConfirmDelete() {
   } finally {
     deletingBusy.value = false
   }
-}
-
-function searchFn(item: VaccinationResponse, q: string) {
-  return (
-    item.vaccinationType.name.toLowerCase().includes(q) ||
-    (item.lot ?? '').toLowerCase().includes(q)
-  )
 }
 </script>
 
@@ -158,9 +151,9 @@ function searchFn(item: VaccinationResponse, q: string) {
     <template v-else>
       <OwnerAnimalBreadcrumb :owner="selection.owner" :animal="selection.animal" @reset="onReset" />
       <ListBody
-        :items="items"
-        :loading="loading"
-        :search-fn="searchFn"
+        ref="listBody"
+        :key="selection.animal.id"
+        :fetch-page="fetchPage"
         placeholder="Buscar vacuna o lote…"
         empty-text="Este paciente aún no tiene vacunaciones registradas."
       >
