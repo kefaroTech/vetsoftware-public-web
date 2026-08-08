@@ -230,8 +230,9 @@ componentes.
 - **Razas**: cargadas desde `GET /api/v1/species/{specieId}/breeds`
   (`useBreedsBySpecie`). Cascadeadas a la especie seleccionada — al cambiar
   especie se resetea `breedId` y se recarga el catálogo.
-- **Colores de animal**: cargados desde `GET /api/v1/animal-colors`
-  (`useAnimalColors`). Catálogo global, cache module-scoped.
+- **Colores de animal**: cargados desde `GET /api/v1/species/{specieId}/animal-colors`
+  (`useAnimalColorsBySpecie`). Cascadeados a la especie seleccionada igual que las
+  razas — al cambiar especie se resetea `colorId` y se recarga el catálogo.
 - **Tipos de consulta**: cargados desde `GET /api/v1/consultation-types`
   (`useConsultationTypes`). Catálogo global, cache module-scoped. Usado en
   el paso 3 del wizard (`PasoConsulta`) — al cambiar el `typeId` el watch
