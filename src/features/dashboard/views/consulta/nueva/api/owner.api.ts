@@ -1,4 +1,5 @@
 import { http } from '@/services/http/http.client'
+import { DEFAULT_PAGE_SIZE, type PageResponse } from '@/types/pagination'
 import type { PersonType, TaxRegime } from '@/features/facturacion/types/facturacion'
 import type { OwnerDocumentType } from '@/features/facturacion/composables/feFiscalChecklist'
 
@@ -60,15 +61,32 @@ export const ownerApi = {
     return data
   },
 
-  async listAll(): Promise<OwnerResponse[]> {
-    const { data } = await http.get<OwnerResponse[]>('/owners')
+  /**
+   * BE-06: `/owners` devolvía la tabla entera. Ahora es una página; el consumidor decide si la
+   * acumula (scroll infinito) o la muestra suelta (tabla con paginador).
+   */
+  async listPage(
+    page = 0,
+    pageSize = DEFAULT_PAGE_SIZE,
+    signal?: AbortSignal,
+  ): Promise<PageResponse<OwnerResponse>> {
+    const { data } = await http.get<PageResponse<OwnerResponse>>('/owners', {
+      params: { page, pageSize },
+      signal,
+    })
     return data
   },
 
-  async search(query: string): Promise<OwnerResponse[]> {
-    const { data } = await http.get<OwnerResponse[]>('/owners/search', {
-      params: { q: query },
+  async search(
+    query: string,
+    page = 0,
+    pageSize = DEFAULT_PAGE_SIZE,
+    signal?: AbortSignal,
+  ): Promise<PageResponse<OwnerResponse>> {
+    const { data } = await http.get<PageResponse<OwnerResponse>>('/owners/search', {
+      params: { q: query, page, pageSize },
       skipGlobalLoader: true,
+      signal,
     })
     return data
   },
