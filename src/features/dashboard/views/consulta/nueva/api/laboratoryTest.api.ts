@@ -78,6 +78,7 @@ export const laboratoryTestApi = {
 
   async listByAnimal(
     animalId: number,
+    query = '',
     page = 0,
     pageSize = DEFAULT_PAGE_SIZE,
     signal?: AbortSignal,
@@ -86,7 +87,7 @@ export const laboratoryTestApi = {
     const { data } = await http.get<PageResponse<LaboratoryTestResponse>>(
       `/laboratory-tests/by-animal/${animalId}`,
       {
-        params: { page, pageSize },
+        params: { q: query || undefined, page, pageSize },
         signal,
       },
     )

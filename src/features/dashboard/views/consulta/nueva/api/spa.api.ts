@@ -53,13 +53,14 @@ export const spaApi = {
 
   async listByAnimal(
     animalId: number,
+    query = '',
     page = 0,
     pageSize = DEFAULT_PAGE_SIZE,
     signal?: AbortSignal,
   ): Promise<PageResponse<SpaResponse>> {
     // BE-06: el historial por animal llega paginado; el consumidor acumula paginas.
     const { data } = await http.get<PageResponse<SpaResponse>>(`/spas/by-animal/${animalId}`, {
-      params: { page, pageSize },
+      params: { q: query || undefined, page, pageSize },
       signal,
     })
     return data

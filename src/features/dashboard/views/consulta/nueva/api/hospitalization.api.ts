@@ -64,6 +64,7 @@ export const hospitalizationApi = {
 
   async listByAnimal(
     animalId: number,
+    query = '',
     page = 0,
     pageSize = DEFAULT_PAGE_SIZE,
     signal?: AbortSignal,
@@ -72,7 +73,7 @@ export const hospitalizationApi = {
     const { data } = await http.get<PageResponse<HospitalizationResponse>>(
       `/hospitalizations/by-animal/${animalId}`,
       {
-        params: { page, pageSize },
+        params: { q: query || undefined, page, pageSize },
         signal,
       },
     )

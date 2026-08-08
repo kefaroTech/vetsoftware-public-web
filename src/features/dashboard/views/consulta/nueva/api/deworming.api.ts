@@ -60,6 +60,7 @@ export const dewormingApi = {
 
   async listByAnimal(
     animalId: number,
+    query = '',
     page = 0,
     pageSize = DEFAULT_PAGE_SIZE,
     signal?: AbortSignal,
@@ -68,7 +69,7 @@ export const dewormingApi = {
     const { data } = await http.get<PageResponse<DewormingResponse>>(
       `/dewormings/by-animal/${animalId}`,
       {
-        params: { page, pageSize },
+        params: { q: query || undefined, page, pageSize },
         signal,
       },
     )

@@ -74,7 +74,7 @@ async function onSelect(info: { owner: Owner; animal: AnimalResponse } | null) {
     // que pide el tope que admite el servidor para no ocultar historial en silencio.
     // Pendiente: cablear el centinela de useInfiniteList (ver OwnerSearchList).
     items.value = (
-      await diagnosticImagingApi.listByAnimal(info.animal.id, 0, MAX_HISTORY_PAGE_SIZE)
+      await diagnosticImagingApi.listByAnimal(info.animal.id, '', 0, MAX_HISTORY_PAGE_SIZE)
     ).content
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'No se pudieron cargar los estudios'

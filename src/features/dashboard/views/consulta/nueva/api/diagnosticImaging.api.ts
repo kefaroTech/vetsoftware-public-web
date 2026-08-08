@@ -62,6 +62,7 @@ export const diagnosticImagingApi = {
 
   async listByAnimal(
     animalId: number,
+    query = '',
     page = 0,
     pageSize = DEFAULT_PAGE_SIZE,
     signal?: AbortSignal,
@@ -70,7 +71,7 @@ export const diagnosticImagingApi = {
     const { data } = await http.get<PageResponse<DiagnosticImagingResponse>>(
       `/diagnostic-imagings/by-animal/${animalId}`,
       {
-        params: { page, pageSize },
+        params: { q: query || undefined, page, pageSize },
         signal,
       },
     )
