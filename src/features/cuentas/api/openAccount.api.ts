@@ -7,12 +7,18 @@ import type {
   PageResponse,
 } from '../types/cuentas'
 
+/** Tope de pagina que acepta el backend. */
+const MAX_ACCOUNTS_PAGE_SIZE = 200
+
 export const openAccountApi = {
   async listAll(): Promise<OpenAccountResponse[]> {
-    const { data } = await http.get<OpenAccountResponse[]>('/open-accounts', {
-      params: withBranchParam({}),
+    // BE-06: /open-accounts pasó a devolver PageResponse. Esta pantalla aún no acumula
+    // páginas, así que pide el tope que admite el servidor para no ocultar cuentas en
+    // silencio. Pendiente: pasar la tabla a paginación servida (ver PR del backend).
+    const { data } = await http.get<PageResponse<OpenAccountResponse>>('/open-accounts', {
+      params: withBranchParam({ pageSize: MAX_ACCOUNTS_PAGE_SIZE }),
     })
-    return data
+    return data.content
   },
 
   async search(criteria: OpenAccountSearchCriteria): Promise<PageResponse<OpenAccountResponse>> {
