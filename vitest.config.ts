@@ -47,6 +47,15 @@ export default defineConfig({
           functions: 100,
           lines: 100,
         },
+        // El núcleo monetario: puerto de `Money.java`. Si algo aquí deja de
+        // estar cubierto, deja de estar garantizado que el ticket coincida con
+        // el documento electrónico.
+        'src/features/tienda/composables/money.ts': {
+          statements: 100,
+          branches: 100,
+          functions: 100,
+          lines: 100,
+        },
         // La aritmética del POS: totales, base gravable, IVA y promociones.
         'src/features/tienda/composables/pricing.ts': {
           statements: 100,

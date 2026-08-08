@@ -5,9 +5,12 @@ import {
   computeTotals,
   effectiveTaxRate,
   formatMoney,
+  formatMoneyExact,
+  lineGross,
   promoStatus,
   splitGross,
   stockState,
+  taxByRate,
   taxTreatmentLabel,
 } from '@/features/tienda/composables/pricing'
 import type {
@@ -136,6 +139,78 @@ describe('formatMoney', () => {
     // Documenta el mecanismo de FE-09. Dos importes que difieren en 49 centavos
     // se muestran idénticos, así que ningún cajero puede detectar el descuadre.
     expect(formatMoney(10_000)).toBe(formatMoney(10_000.49))
+  })
+})
+
+describe('formatMoneyExact', () => {
+  it('muestra siempre los dos decimales', () => {
+    // En los desgloses fiscales el centavo es el dato: ocultarlo es lo que hacía
+    // invisible cualquier descuadre.
+    expect(formatMoneyExact(19_000).replace(/\s/g, ' ')).toMatch(/^\$\s?19\.000,00$/)
+    expect(formatMoneyExact(19_000.5).replace(/\s/g, ' ')).toMatch(/^\$\s?19\.000,50$/)
+  })
+
+  it('no imprime NaN sobre un desglose', () => {
+    expect(formatMoneyExact(Number.NaN).replace(/\s/g, ' ')).toMatch(/^\$\s?0,00$/)
+  })
+})
+
+describe('lineGross', () => {
+  it('es el producto a escala monetaria, como Money.multiply del backend', () => {
+    expect(lineGross(12_500, 3)).toBe(37_500)
+  })
+
+  it('una cantidad fraccionaria no arrastra decimales de más', () => {
+    expect(lineGross(12_500, 2.5)).toBe(31_250)
+  })
+})
+
+describe('taxByRate', () => {
+  it('agrupa el impuesto por tarifa', () => {
+    const filas = taxByRate([
+      { gross: 119_000, ratePct: 19 },
+      { gross: 238_000, ratePct: 19 },
+      { gross: 105_000, ratePct: 5 },
+    ])
+
+    expect(filas).toEqual([
+      { name: 'IVA 19%', amount: 57_000 },
+      { name: 'IVA 5%', amount: 5_000 },
+    ])
+  })
+
+  it('ignora las líneas sin tarifa', () => {
+    expect(taxByRate([{ gross: 50_000, ratePct: 0 }])).toEqual([])
+  })
+
+  it('respeta la etiqueta del catálogo cuando la hay', () => {
+    // El nombre del impuesto lo define la empresa; inventarlo aquí produciría
+    // dos nombres distintos para la misma tarifa en el mismo ticket.
+    const filas = taxByRate([{ gross: 119_000, ratePct: 19, label: 'IVA general' }])
+
+    expect(filas[0].name).toBe('IVA general')
+  })
+
+  it('acumula sin deriva sobre muchas líneas', () => {
+    // Veinte líneas idénticas: la suma tiene que ser exactamente veinte veces
+    // una, no veinte veces una más el error de coma flotante.
+    const unaLinea = { gross: 33_333, ratePct: 19 }
+    const filas = taxByRate(Array.from({ length: 20 }, () => unaLinea))
+
+    expect(filas[0].amount).toBe(splitGross(33_333, true, 19).tax * 20)
+  })
+
+  it('el mismo carrito da el mismo desglose en el POS y en el cierre de cuenta', () => {
+    // Antes cada pantalla tenía su propio bucle. Esta prueba fija que hay una
+    // sola regla: si alguien vuelve a duplicarla, dejará de cumplirse.
+    const carrito = [
+      { gross: 119_000, ratePct: 19 },
+      { gross: 47_600, ratePct: 19 },
+      { gross: 105_000, ratePct: 5 },
+      { gross: 30_000, ratePct: 0 },
+    ]
+
+    expect(taxByRate(carrito)).toEqual(taxByRate([...carrito].reverse()).reverse())
   })
 })
 

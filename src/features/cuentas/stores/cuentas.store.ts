@@ -6,7 +6,8 @@ import { generalChargeApi, productChargeApi, serviceChargeApi } from '../api/cha
 import { debtOpenAccountApi } from '../api/debtOpenAccount.api'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useTiendaStore } from '@/features/tienda/stores/tienda.store'
-import { appliesIva, splitGross } from '@/features/tienda/composables/pricing'
+import { appliesIva, splitGross, taxByRate } from '@/features/tienda/composables/pricing'
+import { sum as sumMoney } from '@/features/tienda/composables/money'
 import type {
   CreateGeneralChargePayload,
   DebtResponse,
@@ -39,19 +40,14 @@ export const useCuentasStore = defineStore('cuentas', () => {
    * calculado sobre los cargos NO anulados. El bruto ya incluye IVA (se extrae, no se suma).
    */
   const taxBreakdown = computed(() => {
-    let base = 0
-    let total = 0
-    const byRate = new Map<number, number>()
-    for (const l of taxLines.value) {
-      if (l.voided) continue
-      total += l.gross
-      const { base: b, tax } = splitGross(l.gross, l.ratePct > 0, l.ratePct)
-      base += b
-      if (tax > 0) byRate.set(l.ratePct, (byRate.get(l.ratePct) ?? 0) + tax)
-    }
-    const taxRows = Array.from(byRate, ([rate, tax]) => ({ name: `IVA ${rate}%`, tax })).sort(
-      (a, b) => b.tax - a.tax,
-    )
+    const vigentes = taxLines.value.filter((l) => !l.voided)
+    const total = sumMoney(vigentes.map((l) => l.gross))
+    const base = sumMoney(vigentes.map((l) => splitGross(l.gross, l.ratePct > 0, l.ratePct).base))
+    // El agrupado por tarifa lo hace `pricing`: el POS calculaba exactamente lo
+    // mismo con su propio bucle, y dos copias de una regla fiscal es una de más.
+    const taxRows = taxByRate(vigentes)
+      .map((r) => ({ name: r.name, tax: r.amount }))
+      .sort((a, b) => b.tax - a.tax)
     return { base, taxRows, total }
   })
 
