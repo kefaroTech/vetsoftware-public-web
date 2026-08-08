@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
-import { useToast } from '@/composables/useToast'
 import { popLoader, pushLoader } from '@/composables/useGlobalLoader'
 import { PERMISSIONS } from '@/constants/permissions'
 
@@ -315,17 +314,16 @@ router.beforeEach(async (to, from) => {
     return loc
   }
 
-  const { isAuthenticated, isExpired, session, clearSession, refreshMe, me } = useAuth()
+  const { isAuthenticated, refreshMe, me } = useAuth()
 
-  // Access token vencido y SIN refresh token → no se puede renovar: limpiamos y avisamos.
-  // Si hay refresh token, dejamos pasar: el `/auth/me` de refreshMe disparará el 401 →
-  // el interceptor lo refresca y reintenta de forma transparente.
-  if (isAuthenticated.value && isExpired.value && !session.value?.refreshToken) {
-    clearSession()
-    useToast().warn('Sesión expirada', 'Por seguridad, vuelve a iniciar sesión.')
-    return to.name === 'login' ? true : redirect({ name: 'login' })
-  }
-
+  // Con el access vencido se deja pasar igualmente. El refresh token vive en una
+  // cookie HttpOnly y este código no puede comprobar si existe: el `/auth/me` de
+  // refreshMe provoca el 401, el interceptor lo refresca y reintenta de forma
+  // transparente, y si no hay cookie el backend responde 401 otra vez y el
+  // interceptor manda a login.
+  //
+  // Antes esta decisión se tomaba leyendo el refresh token de localStorage. Ese
+  // era exactamente el valor que un XSS podía llevarse, y duraba 30 días.
   if (isAuthenticated.value) {
     await refreshMe()
   }

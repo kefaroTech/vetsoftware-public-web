@@ -12,8 +12,9 @@ export const authApi = {
     return data
   },
 
-  async refresh(refreshToken: string): Promise<TokenResponse> {
-    const { data } = await http.post<TokenResponse>('/auth/refresh', { refreshToken })
+  // Sin cuerpo: el refresh token va en la cookie HttpOnly que adjunta el navegador.
+  async refresh(): Promise<TokenResponse> {
+    const { data } = await http.post<TokenResponse>('/auth/refresh')
     return data
   },
 

@@ -7,18 +7,40 @@ import type {
   PageResponse,
 } from '../types/cuentas'
 
-/** Tope de pagina que acepta el backend. */
-const MAX_ACCOUNTS_PAGE_SIZE = 200
+/**
+ * Tope de página que acepta el backend (BE-06). Pedir más se recorta en servidor, así que este
+ * valor es el máximo real, no una preferencia.
+ */
+const MAX_PAGE_SIZE = 200
 
 export const openAccountApi = {
-  async listAll(): Promise<OpenAccountResponse[]> {
-    // BE-06: /open-accounts pasó a devolver PageResponse. Esta pantalla aún no acumula
-    // páginas, así que pide el tope que admite el servidor para no ocultar cuentas en
-    // silencio. Pendiente: pasar la tabla a paginación servida (ver PR del backend).
+  /**
+   * BE-06: `GET /open-accounts` devuelve `PageResponse`, igual que `/search`. Este es el contrato
+   * real del endpoint y el que debe usar cualquier pantalla nueva.
+   */
+  async listPage(
+    page = 0,
+    pageSize = 20,
+    signal?: AbortSignal,
+  ): Promise<PageResponse<OpenAccountResponse>> {
     const { data } = await http.get<PageResponse<OpenAccountResponse>>('/open-accounts', {
-      params: withBranchParam({ pageSize: MAX_ACCOUNTS_PAGE_SIZE }),
+      params: withBranchParam({ page, pageSize }),
+      signal,
     })
-    return data.content
+    return data
+  },
+
+  /**
+   * Atajo para las pantallas que aún trabajan sobre la lista completa: pide el tope del servidor
+   * y devuelve solo el contenido.
+   *
+   * <p>Se mantiene porque el store de cuentas y `FeEmitModal` filtran y agrupan sobre el array
+   * entero; dejarles la página por defecto de 20 ocultaría cuentas abiertas en silencio. Cuando
+   * esas pantallas pasen a paginación servida, esto desaparece y usan `listPage`.
+   */
+  async listAll(): Promise<OpenAccountResponse[]> {
+    const { content } = await this.listPage(0, MAX_PAGE_SIZE)
+    return content
   },
 
   async search(criteria: OpenAccountSearchCriteria): Promise<PageResponse<OpenAccountResponse>> {
