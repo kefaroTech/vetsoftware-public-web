@@ -1,10 +1,55 @@
 # Espejo de las cabeceras del nginx no-root (docker/nginx.conf) para Cloudflare Pages.
+# Los dos archivos DEBEN declarar lo mismo: tests/unit/security-headers.spec.ts lo verifica.
+#
+# La CSP está construida contra lo que esta aplicación carga de verdad. Cada
+# excepción de abajo corresponde a una funcionalidad concreta y verificada; si se
+# quita una, se rompe esa funcionalidad — no es relleno defensivo.
+#
+#   script-src google + gstatic → useRecaptcha.ts inyecta
+#                                 https://www.google.com/recaptcha/api.js, que a su
+#                                 vez carga su código desde www.gstatic.com. Sin
+#                                 estos dos, el formulario de registro queda sin
+#                                 captcha y no se puede enviar.
+#   frame-src  google           → el widget del checkbox y el reto de reCAPTCHA.
+#   frame-src  'self' blob:     → la impresión. useReceiptPrint.ts escribe el
+#                                 ticket en un <iframe> oculto y
+#                                 usePrescriptionExport.ts / los exportadores de
+#                                 historia clínica cargan el PDF con
+#                                 `iframe.src = blob:`. Sin blob: no se imprime
+#                                 ninguna receta ni historia.
+#   img-src    https:           → el QR de la DIAN es una imagen alojada por el
+#                                 proveedor de facturación, y su URL base es
+#                                 configuración POR EMPRESA guardada en base de
+#                                 datos (ProviderConfigSnapshot.baseUrl). Fijar
+#                                 aquí una lista de hosts dejaría el sello fiscal
+#                                 en blanco a la primera empresa con otro
+#                                 proveedor, en silencio y sobre un comprobante
+#                                 impreso. Se acepta el riesgo residual —una
+#                                 imagen no ejecuta código— porque script-src,
+#                                 connect-src, form-action y base-uri sí están
+#                                 cerrados. Lo correcto a futuro es que el backend
+#                                 sirva el QR desde su propio dominio, y entonces
+#                                 esto pasa a 'self'.
+#   style-src  fonts.googleapis → index.html carga la hoja de Google Fonts. El
+#                                 'unsafe-inline' es inevitable hoy porque Vuetify
+#                                 inyecta estilos en línea, y además el HTML del
+#                                 ticket lleva su propio <style>.
+#   connect-src                 → los DOS orígenes de API, porque el mismo archivo
+#                                 estático se despliega en dev y en prod. El test
+#                                 comprueba que coincidan con el VITE_API_URL de
+#                                 .env.dev y .env.prod.
+#
+# HSTS sin `preload`: entrar en la lista de precarga es una decisión de dominio,
+# no de repositorio, y salir de ella tarda meses.
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), geolocation=(), microphone=()
+  Permissions-Policy: camera=(), geolocation=(), microphone=(), payment=()
   Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://dev-api.kefaro.tech https://api.vetsoftware.co https://www.google.com; frame-src 'self' blob: https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
   Cache-Control: no-cache
 
 /assets/*
