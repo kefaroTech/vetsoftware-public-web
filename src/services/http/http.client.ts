@@ -17,6 +17,11 @@ export const SESSION_REPLACED_NOTICE_KEY = 'vetsoft.auth.session-replaced'
 export const http = axios.create({
   baseURL: createApiBaseUrl(import.meta.env.VITE_API_URL),
   headers: { 'Content-Type': 'application/json' },
+  // El refresh token viaja en una cookie HttpOnly que emite el backend. Sin
+  // credenciales, el navegador ni siquiera guarda el Set-Cookie de una respuesta
+  // cross-origin, y /auth/refresh se quedaria sin nada que enviar. El backend ya
+  // responde con Access-Control-Allow-Credentials y lista explicita de origenes.
+  withCredentials: true,
 })
 
 /** Limpia el token y fuerza el ir a login (hard redirect). Usado cuando el refresh no es posible. */

@@ -44,8 +44,9 @@ async function submit() {
       employeeCode: form.employeeCode.trim(),
       password: form.password,
     }
-    const { token, type, refreshToken } = await authApi.loginEmployee(payload)
-    await login({ token, type, refreshToken })
+    // El refresh token no viene en la respuesta: el backend lo deja en una cookie HttpOnly.
+    const { token, type } = await authApi.loginEmployee(payload)
+    await login({ token, type })
     router.push({ name: 'home' })
   } catch (e) {
     serverErrors.value = getProblemDetailFieldErrors(e)
