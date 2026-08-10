@@ -16,6 +16,7 @@ import type {
   StockState,
   TaxTreatment,
 } from '../types/tienda'
+import type { StockView } from '../types/inventory'
 
 /** El IVA solo se extrae cuando el ítem es GRAVADO. */
 export function appliesIva(taxTreatment: TaxTreatment): boolean {
@@ -266,4 +267,25 @@ export function stockState(quantity: number, minStock: number): StockState {
   if (quantity <= 0) return 'AGOTADO'
   if (quantity <= minStock) return 'BAJO'
   return 'OK'
+}
+
+/**
+ * Saldo de un producto en el mapa por sede, con ceros por defecto: un producto
+ * sin fila de stock en la sede activa no es un error, es que nunca entró allí.
+ */
+export function stockOf(
+  stockByProduct: Record<number, StockView>,
+  productId: number,
+): { quantity: number; minStock: number; lowStock: boolean } {
+  const row = stockByProduct[productId]
+  return {
+    quantity: row?.quantity ?? 0,
+    minStock: row?.minStock ?? 0,
+    lowStock: row?.lowStock ?? false,
+  }
+}
+
+export function stateOf(stockByProduct: Record<number, StockView>, productId: number): StockState {
+  const s = stockOf(stockByProduct, productId)
+  return stockState(s.quantity, s.minStock)
 }

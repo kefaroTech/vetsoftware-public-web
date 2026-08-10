@@ -133,6 +133,49 @@ copia de `.detail-grid`.
 está migrada: sus botones de creación inline eran coincidencia exacta con
 `--sm`.
 
+## Descomposición de las vistas grandes
+
+Migrar el CSS dejó a la vista un segundo problema: media docena de SFC de entre
+800 y 1.000 líneas que mezclaban tres o cuatro pantallas en un solo archivo. Se
+partieron por bloque visual, no por capa.
+
+Las cifras de abajo son **líneas no vacías** y parten del estado *ya migrado a
+`ds-*`*, para aislar lo que aporta la descomposición. Abrir el archivo da un
+número mayor porque cuenta también las líneas en blanco.
+
+| Antes | Después | Sale a |
+| --- | --- | --- |
+| `CajaView` 991 | 444 | `CajaOpenSessionsPanel`, `MyCashPanel`, `CashSessionDetailModal`, `CashMovementsTable` |
+| `InventarioView` 965 | 460 | `InventoryAlerts`, `InventoryProductsTable`, `InventoryPausedTable` |
+| `ConsultaBillingModal` 935 | 256 | `BillingDestinationPicker`, `BillingChargeColumns`, `useConsultaBilling` |
+| `CloseAccountModal` 856 | 391 | `CloseAccountFeBlock`, `CloseAccountReceipt`, `useCloseAccount` |
+| `POSView` 819 | 417 | `PosTicket`, `usePosSale` |
+
+Tres reglas que salieron de hacerlo:
+
+1. **Las funciones puras se importan, no se pasan por prop.** La primera versión
+   de `CajaHistoryPanel` recibía `branchLabel`, `employeeLabel`, `formatDateTime`
+   y `formatDuration` como props. Son funciones sin estado: viven en
+   `composables/useCaja.ts` junto a `formatMoney` y el componente las importa.
+   Igual con `stockOf`/`stateOf`, que están en `composables/pricing.ts` al lado
+   de `stockState`.
+2. **Cuidado con las reglas que servían a dos bloques.** `.price-old` era una
+   sola regla en `POSView` y la usaban el catálogo *y* el ticket; al extraer
+   `PosCatalog` se fue con él y el precio tachado del ticket se quedó sin estilo
+   hasta que `PosTicket` la recuperó. `.cash-gate` es el caso opuesto: quedó
+   huérfana en `POSView` después de que `PosCashGate` se llevara la suya.
+   Tras extraer un bloque, comprueba **las dos direcciones**.
+3. **No fuerces la reutilización entre componentes parecidos.** Es la misma regla
+   de "Cómo migrar un componente" aplicada al marcado. `BillingChargeColumns` no
+   reusa `AccountCatalogPanel`/`AccountCartPanel` de `OpenAccountModal` aunque se
+   parezcan: aquéllos llevan botón "Agregar" con texto donde éste lleva un `+`,
+   tienen cabecera fija y no tienen sección de cargos previos.
+
+Quedan SFC entre 570 y 780 líneas (`FeCustomerPicker`, `EditPermissionsModal`,
+`OpenAccountModal`, `RecetaModal`, `PatientCascadePicker`…). Son grandes pero
+coherentes: cada uno es una sola pantalla, no varias apiladas. Partirlos no es
+urgente.
+
 ### El tono de caja/compras y el Teleport
 
 Esas dos features usan `--amatista-600` en el botón primario, un punto más

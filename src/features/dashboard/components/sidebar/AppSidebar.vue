@@ -1,35 +1,22 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  FileText,
-  FilePlus,
-  History,
-  Syringe,
-  Calendar,
-  Package,
   BarChart3,
-  Bell,
-  Users,
-  ShieldCheck,
-  Stethoscope,
-  Beaker,
-  FlaskConical,
-  ScanLine,
   BedDouble,
-  Bug,
-  Scissors,
-  Sparkles,
-  BadgePercent,
-  ShoppingBag,
-  Wallet,
-  Banknote,
-  Pill,
+  Bell,
   Building2,
+  Calendar,
+  FilePlus,
+  FileText,
+  FlaskConical,
+  Pill,
+  ShieldCheck,
+  ShoppingBag,
+  Stethoscope,
   Truck,
-  ReceiptText,
-  BookText,
-  ClipboardList,
+  Users,
+  Wallet,
 } from 'lucide-vue-next'
 import SidebarBrand from './SidebarBrand.vue'
 import SidebarNavItem from './SidebarNavItem.vue'
@@ -39,26 +26,42 @@ import BranchSelector from '@/features/branches/components/BranchSelector.vue'
 import { mockUser } from '../../data/mock'
 import { useNuevaConsultaDraft } from '../../views/consulta/nueva/composables/useNuevaConsultaDraft'
 import { showResumeOrNewDialog } from '@/composables/useConsultaResumeGuard'
-import { useAuthorization } from '@/features/auth/composables/useAuthorization'
-import { useFacturacionAccess } from '@/features/facturacion/composables/useFacturacionAccess'
 import { useToast } from '@/composables/useToast'
-import { PERMISSIONS } from '@/constants/permissions'
+import { useSidebarNav } from './useSidebarNav'
 
 const route = useRoute()
 const router = useRouter()
 const draft = useNuevaConsultaDraft()
-const { can, canAny } = useAuthorization()
 
-const consultaSubRoutes = [
-  'consulta-nueva',
-  'consulta-historial',
-  'consulta-historial-pet',
-  'consulta-historial-detail',
-  'consulta-vacunacion',
-  'consulta-hospital',
-] as const
-
-const isConsultaActive = computed(() => consultaSubRoutes.some((name) => route.name === name))
+// Permisos, rutas activas y listas de entradas: ver useSidebarNav.ts
+const {
+  canCreateConsultation,
+  canEmployees,
+  canRoles,
+  canEmpresa,
+  canMedicaments,
+  canLabProcess,
+  canHospitalWard,
+  canAccounts,
+  canAgenda,
+  feCanDocuments,
+  feCanReports,
+  feCanConfig,
+  showFacturacionSection,
+  isConsultaActive,
+  isAccionesActive,
+  isTiendaActive,
+  isComprasActive,
+  subItems,
+  accionesItems,
+  tiendaItems,
+  comprasItems,
+  showAccionesSection,
+  showAdminSection,
+  showTiendaMenu,
+  showComprasSection,
+  showTiendaSection,
+} = useSidebarNav()
 
 // Acordeón del sidebar: solo un desplegable abierto a la vez.
 type SidebarSection = 'consulta' | 'acciones' | 'tienda' | 'compras'
@@ -66,212 +69,6 @@ const openSection = ref<SidebarSection | null>(null)
 function toggleSection(section: SidebarSection) {
   openSection.value = openSection.value === section ? null : section
 }
-
-const canCreateConsultation = can(PERMISSIONS.CONSULTATION_CREATE)
-const canVaccination = can(PERMISSIONS.VACCINATION_CREATE)
-const canHospital = can(PERMISSIONS.HOSPITALIZATION_CREATE)
-const canLabTest = can(PERMISSIONS.LABORATORY_TEST_CREATE)
-const canImaging = can(PERMISSIONS.DIAGNOSTIC_IMAGING_CREATE)
-const canDeworming = can(PERMISSIONS.DEWORMING_CREATE)
-const canSurgery = can(PERMISSIONS.SURGERY_CREATE)
-const canSpa = can(PERMISSIONS.SPA_CREATE)
-const canEmployees = can(PERMISSIONS.EMPLOYEE_READ)
-const canRoles = can(PERMISSIONS.ROLE_PERMISSIONS_READ)
-const canEmpresa = canAny(
-  PERMISSIONS.COMPANY_READ,
-  PERMISSIONS.BRANCH_CREATE,
-  PERMISSIONS.BRANCH_UPDATE,
-  PERMISSIONS.BRANCH_READ,
-)
-const canMedicaments = can(PERMISSIONS.PRESCRIPTION_CREATE)
-const canLabProcess = can(PERMISSIONS.LABORATORY_TEST_READ)
-const canHospitalWard = can(PERMISSIONS.HOSPITALIZATION_READ)
-const canInventory = can(PERMISSIONS.PRODUCT_READ)
-const canCash = can(PERMISSIONS.CASHREGISTER_READ)
-const canServices = can(PERMISSIONS.SERVICE_READ)
-const canPromotions = can(PERMISSIONS.PROMOTION_READ)
-const canTaxes = can(PERMISSIONS.TAX_READ)
-const canAccounts = can(PERMISSIONS.OPEN_ACCOUNT_READ)
-const canAgenda = can(PERMISSIONS.APPOINTMENT_READ)
-
-// Compras (punto 7): proveedores, órdenes/recepción, facturas/CxP, libro de compras.
-const canSuppliers = can(PERMISSIONS.SUPPLIER_READ)
-const canPurchaseOrders = canAny(PERMISSIONS.PURCHASE_ORDER_READ, PERMISSIONS.GOODS_RECEIPT_READ)
-const canSupplierInvoices = can(PERMISSIONS.SUPPLIER_INVOICE_READ)
-const canPurchaseBook = can(PERMISSIONS.PURCHASE_REPORT_READ)
-
-// Facturación electrónica (DIAN) — gateada por permisos FE.
-const {
-  hasModule: feHasModule,
-  canDocuments: feCanDocuments,
-  canReports: feCanReports,
-  canConfig: feCanConfig,
-} = useFacturacionAccess()
-const showFacturacionSection = computed(() => canAccounts.value || feHasModule.value)
-
-const historialActiveRoutes = [
-  'consulta-historial',
-  'consulta-historial-pet',
-  'consulta-historial-detail',
-]
-
-const subItems = computed(() =>
-  [
-    {
-      label: 'Historial clínico',
-      icon: History,
-      to: { name: 'consulta-historial' as const },
-      activeRoutes: historialActiveRoutes,
-      show: true,
-    },
-  ].filter((item) => item.show),
-)
-
-const accionesSubRoutes = [
-  'acciones-laboratorio',
-  'acciones-imagen',
-  'acciones-vacunacion',
-  'acciones-hospitalizacion',
-  'acciones-desparasitacion',
-  'acciones-cirugia',
-  'acciones-spa',
-] as const
-
-const isAccionesActive = computed(() => accionesSubRoutes.some((name) => route.name === name))
-
-const accionesItems = computed(() =>
-  [
-    {
-      label: 'Laboratorio',
-      icon: Beaker,
-      to: { name: 'acciones-laboratorio' as const },
-      show: canLabTest.value,
-    },
-    {
-      label: 'Imagen diagnóstica',
-      icon: ScanLine,
-      to: { name: 'acciones-imagen' as const },
-      show: canImaging.value,
-    },
-    {
-      label: 'Vacunación',
-      icon: Syringe,
-      to: { name: 'acciones-vacunacion' as const },
-      show: canVaccination.value,
-    },
-    {
-      label: 'Hospitalización',
-      icon: BedDouble,
-      to: { name: 'acciones-hospitalizacion' as const },
-      show: canHospital.value,
-    },
-    {
-      label: 'Desparasitación',
-      icon: Bug,
-      to: { name: 'acciones-desparasitacion' as const },
-      show: canDeworming.value,
-    },
-    {
-      label: 'Cirugía',
-      icon: Scissors,
-      to: { name: 'acciones-cirugia' as const },
-      show: canSurgery.value,
-    },
-    { label: 'Spa', icon: Sparkles, to: { name: 'acciones-spa' as const }, show: canSpa.value },
-  ].filter((item) => item.show),
-)
-
-const showAccionesSection = computed(() => accionesItems.value.length > 0)
-const showAdminSection = computed(
-  () => canEmpresa.value || canEmployees.value || canRoles.value || canMedicaments.value,
-)
-
-const tiendaSubRoutes = [
-  'tienda-pos',
-  'caja',
-  'tienda-inventario',
-  'tienda-servicios',
-  'tienda-promociones',
-  'tienda-impuestos',
-] as const
-
-const isTiendaActive = computed(() => tiendaSubRoutes.some((name) => route.name === name))
-
-const tiendaItems = computed(() =>
-  [
-    {
-      label: 'Punto de venta',
-      icon: ShoppingBag,
-      to: { name: 'tienda-pos' as const },
-      show: canInventory.value,
-    },
-    { label: 'Caja', icon: Banknote, to: { name: 'caja' as const }, show: canCash.value },
-    {
-      label: 'Inventario',
-      icon: Package,
-      to: { name: 'tienda-inventario' as const },
-      show: canInventory.value,
-    },
-    {
-      label: 'Servicios',
-      icon: Stethoscope,
-      to: { name: 'tienda-servicios' as const },
-      show: canServices.value,
-    },
-    {
-      label: 'Promociones',
-      icon: BadgePercent,
-      to: { name: 'tienda-promociones' as const },
-      show: canPromotions.value,
-    },
-    {
-      label: 'Impuestos',
-      icon: BarChart3,
-      to: { name: 'tienda-impuestos' as const },
-      show: canTaxes.value,
-    },
-  ].filter((item) => item.show),
-)
-
-const showTiendaMenu = computed(() => tiendaItems.value.length > 0)
-
-const comprasSubRoutes = [
-  'compras-proveedores',
-  'compras-ordenes',
-  'compras-facturas',
-  'compras-libro',
-] as const
-const isComprasActive = computed(() => comprasSubRoutes.some((name) => route.name === name))
-const comprasItems = computed(() =>
-  [
-    {
-      label: 'Proveedores',
-      icon: Truck,
-      to: { name: 'compras-proveedores' as const },
-      show: canSuppliers.value,
-    },
-    {
-      label: 'Órdenes y recepción',
-      icon: ClipboardList,
-      to: { name: 'compras-ordenes' as const },
-      show: canPurchaseOrders.value,
-    },
-    {
-      label: 'Facturas / CxP',
-      icon: ReceiptText,
-      to: { name: 'compras-facturas' as const },
-      show: canSupplierInvoices.value,
-    },
-    {
-      label: 'Libro de compras',
-      icon: BookText,
-      to: { name: 'compras-libro' as const },
-      show: canPurchaseBook.value,
-    },
-  ].filter((item) => item.show),
-)
-const showComprasSection = computed(() => comprasItems.value.length > 0)
-const showTiendaSection = computed(() => showTiendaMenu.value || showComprasSection.value)
 
 function goNuevaConsulta() {
   if (draft.state.owner) {
@@ -565,7 +362,7 @@ function onNotifications() {
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: oklch(58% 0.2 25deg);
   color: white;
   font-size: 11px;
