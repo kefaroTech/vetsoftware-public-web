@@ -1,4 +1,5 @@
 import { computed, onMounted, ref, watch, type Ref } from 'vue'
+import { useLatestOnly } from '@/composables/useLatestOnly'
 import { animalColorApi, type AnimalColorResponse } from '../api/animalColor.api'
 
 export interface AnimalColorOption {
@@ -36,21 +37,30 @@ export function useAnimalColorsBySpecie(specieId: Ref<string>) {
     list.value.map((c) => ({ value: String(c.id), label: c.name })),
   )
 
+  // Cambiar de especie rápido deja dos cargas en vuelo: sin esto, los colores de
+  // la especie anterior pueden pisar a los nuevos.
+  const { begin } = useLatestOnly()
+
   async function refresh(id: string) {
+    const vigente = begin()
     if (!id) {
       list.value = []
       error.value = null
+      loading.value = false
       return
     }
     loading.value = true
     error.value = null
     try {
-      list.value = await load(id)
+      const rows = await load(id)
+      if (!vigente()) return
+      list.value = rows
     } catch {
+      if (!vigente()) return
       list.value = []
       error.value = 'No se pudo cargar la lista de colores.'
     } finally {
-      loading.value = false
+      if (vigente()) loading.value = false
     }
   }
 

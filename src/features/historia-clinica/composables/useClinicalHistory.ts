@@ -1,4 +1,5 @@
 import { ref, watch, type Ref } from 'vue'
+import { useLatestOnly } from '@/composables/useLatestOnly'
 import { clinicalHistoryApi } from '../api/clinicalHistory.api'
 import type { ClinicalEvent } from '../types/historia'
 
@@ -40,23 +41,32 @@ export function useClinicalHistory(petId: Ref<string | null>) {
   const events = ref<ClinicalEvent[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  // Al saltar de una mascota a otra hay dos cargas en vuelo y no hay orden
+  // garantizado de llegada: sin esto, la respuesta de la anterior pisa la
+  // historia clínica de la que el usuario está viendo.
+  const { begin } = useLatestOnly()
 
   async function refresh(id: string | null, force = false) {
+    const vigente = begin()
     const numId = id ? Number(id) : NaN
     if (!Number.isFinite(numId)) {
       events.value = []
       error.value = null
+      loading.value = false
       return
     }
     loading.value = true
     error.value = null
     try {
-      events.value = await load(numId, force)
+      const rows = await load(numId, force)
+      if (!vigente()) return
+      events.value = rows
     } catch {
+      if (!vigente()) return
       events.value = []
       error.value = 'No se pudo cargar la historia clínica.'
     } finally {
-      loading.value = false
+      if (vigente()) loading.value = false
     }
   }
 

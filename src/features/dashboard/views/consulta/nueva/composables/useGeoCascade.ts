@@ -1,4 +1,5 @@
 import { onMounted, ref, watch, type Ref } from 'vue'
+import { useLatestOnly } from '@/composables/useLatestOnly'
 import { countryApi, stateApi, cityApi } from '../api/geo.api'
 
 export interface GeoOption {
@@ -88,35 +89,50 @@ export function useGeoCascade(countryId: Ref<string>, stateId: Ref<string>) {
     }
   })
 
+  // Dos secuencias distintas: cambiar de país no compite con cambiar de
+  // departamento, así que cada nivel de la cascada lleva su propio guardián.
+  const estados = useLatestOnly()
+  const municipios = useLatestOnly()
+
   async function refreshStates(id: string) {
+    const vigente = estados.begin()
     if (!id) {
       stateOptions.value = []
+      loadingStates.value = false
       return
     }
     loadingStates.value = true
     try {
-      stateOptions.value = await loadStates(id)
+      const rows = await loadStates(id)
+      if (!vigente()) return
+      stateOptions.value = rows
     } catch {
+      if (!vigente()) return
       stateOptions.value = []
       error.value = 'No se pudo cargar la lista de estados'
     } finally {
-      loadingStates.value = false
+      if (vigente()) loadingStates.value = false
     }
   }
 
   async function refreshCities(id: string) {
+    const vigente = municipios.begin()
     if (!id) {
       cityOptions.value = []
+      loadingCities.value = false
       return
     }
     loadingCities.value = true
     try {
-      cityOptions.value = await loadCities(id)
+      const rows = await loadCities(id)
+      if (!vigente()) return
+      cityOptions.value = rows
     } catch {
+      if (!vigente()) return
       cityOptions.value = []
       error.value = 'No se pudo cargar la lista de ciudades'
     } finally {
-      loadingCities.value = false
+      if (vigente()) loadingCities.value = false
     }
   }
 
