@@ -363,10 +363,26 @@ export const useNuevaConsultaDraftStore = defineStore('nuevaConsultaDraft', () =
   function updatePrescription(index: number, p: Prescription) {
     const prev = state.prescriptions[index]
     if (!prev) return
+    // Los marcadores de medicamento se emparejan por `medicamentId`, NO por
+    // posición. Emparejar por índice se rompe en cuanto el usuario borra o
+    // reordena: guardado el medicamento 0 y no el 1, al borrar el 0 el que
+    // queda heredaba el marcador del borrado, se daba por guardado y no
+    // llegaba nunca al backend — receta incompleta y sin ningún error a la
+    // vista.
+    //
+    // El mismo medicamento puede repetirse en una receta (distinta posología),
+    // así que cada marcador se consume una sola vez: dos líneas del mismo
+    // `medicamentId` reciben marcadores distintos, y si se borra una, solo se
+    // hereda uno.
+    const marcadores = prev.medicaments.filter((m) => m.savedId != null)
     state.prescriptions[index] = {
       ...p,
       savedId: prev.savedId,
-      medicaments: p.medicaments.map((m, j) => ({ ...m, savedId: prev.medicaments[j]?.savedId })),
+      medicaments: p.medicaments.map((m) => {
+        const j = marcadores.findIndex((q) => q.medicamentId === m.medicamentId)
+        const previo = j === -1 ? undefined : marcadores.splice(j, 1)[0]
+        return { ...m, savedId: previo?.savedId }
+      }),
     }
   }
   function updateLaboratoryTest(index: number, t: LaboratoryTest) {

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import { useNuevaConsultaDraftStore } from '@/features/dashboard/views/consulta/nueva/stores/nuevaConsultaDraft.store'
-import type { LaboratoryTest, Prescription } from '@/types/domain'
+import type { LaboratoryTest, MedicamentPrescription, Prescription } from '@/types/domain'
 
 /**
  * El borrador de "Nueva consulta" es la única defensa contra la duplicación
@@ -52,6 +52,28 @@ function receta(over: Partial<Prescription> = {}): Prescription {
         posology: 'c/8h',
       },
     ],
+    ...over,
+  }
+}
+
+function amoxicilina(over: Partial<MedicamentPrescription> = {}): MedicamentPrescription {
+  return {
+    medicamentId: 1,
+    name: 'Amoxicilina',
+    presentation: '500mg',
+    quantity: 1,
+    posology: 'c/8h',
+    ...over,
+  }
+}
+
+function meloxicam(over: Partial<MedicamentPrescription> = {}): MedicamentPrescription {
+  return {
+    medicamentId: 2,
+    name: 'Meloxicam',
+    presentation: '2mg',
+    quantity: 1,
+    posology: 'c/24h',
     ...over,
   }
 }
@@ -206,12 +228,12 @@ describe('editar un ítem no debe reenviarlo', () => {
   })
 
   /**
-   * Los savedId de los medicamentos se reasignan POR POSICIÓN
-   * (`prev.medicaments[j]?.savedId`). Mientras la lista solo crezca por el final
-   * eso es correcto; en cuanto se elimina o se reordena un medicamento, la
-   * posición deja de identificar al mismo medicamento.
+   * Los savedId de los medicamentos se emparejan por `medicamentId`, no por
+   * posición. Con emparejamiento por índice, borrar o reordenar un medicamento
+   * trasladaba el marcador a otro distinto: el que quedaba se daba por guardado
+   * y no llegaba nunca al backend.
    */
-  describe('los marcadores de medicamentos van por posición', () => {
+  describe('los marcadores de medicamentos van por medicamentId', () => {
     it('un medicamento añadido al final no hereda ningún marcador', () => {
       const s = store()
       s.addPrescription(receta())
@@ -243,12 +265,11 @@ describe('editar un ítem no debe reenviarlo', () => {
       expect(s.state.prescriptions[0].medicaments[1].savedId).toBeUndefined()
     })
 
-    it('DEFECTO: quitar el primer medicamento traslada su marcador al segundo', () => {
-      // Guardado el medicamento 0 y NO el 1, el usuario borra el 0. Tras la
-      // edición, el medicamento que queda —que nunca se guardó— hereda el
-      // savedId del que se borró: en el reintento se da por guardado y NUNCA
-      // llega al backend. La receta acaba con un medicamento de menos, sin
-      // ningún error a la vista.
+    it('quitar el primer medicamento no traslada su marcador al segundo', () => {
+      // Guardado el medicamento 0 y NO el 1, el usuario borra el 0. El que
+      // queda nunca se guardó, así que debe seguir sin marcador: si heredase el
+      // del borrado, el reintento lo daría por guardado y no llegaría nunca al
+      // backend — receta incompleta y sin ningún error a la vista.
       const s = store()
       s.addPrescription(
         receta({
@@ -289,10 +310,43 @@ describe('editar un ítem no debe reenviarlo', () => {
 
       const restante = s.state.prescriptions[0].medicaments[0]
       expect(restante.medicamentId).toBe(2)
-      // Lo correcto sería `undefined`. Se fija el comportamiento actual para que
-      // el día que se arregle —emparejando por `medicamentId` en vez de por
-      // posición— esta prueba avise de que el contrato cambió.
-      expect(restante.savedId).toBe(99)
+      expect(restante.savedId).toBeUndefined()
+    })
+
+    it('reordenar los medicamentos mantiene cada marcador con el suyo', () => {
+      const s = store()
+      s.addPrescription(receta({ medicaments: [amoxicilina(), meloxicam()] }))
+      s.markMedicamentSaved(0, 0, 99)
+      s.markMedicamentSaved(0, 1, 100)
+
+      // El usuario invierte el orden: cada marcador debe viajar con su
+      // medicamento, no quedarse en su antigua posición.
+      s.updatePrescription(0, receta({ medicaments: [meloxicam(), amoxicilina()] }))
+
+      const [primero, segundo] = s.state.prescriptions[0].medicaments
+      expect(primero.medicamentId).toBe(2)
+      expect(primero.savedId).toBe(100)
+      expect(segundo.medicamentId).toBe(1)
+      expect(segundo.savedId).toBe(99)
+    })
+
+    it('con el mismo medicamento repetido, cada marcador se consume una vez', () => {
+      // Misma molécula en dos líneas (distinta posología). Emparejar por
+      // `medicamentId` a secas le daría el mismo savedId a las dos.
+      const s = store()
+      s.addPrescription(
+        receta({ medicaments: [amoxicilina(), amoxicilina({ posology: 'c/12h' })] }),
+      )
+      s.markMedicamentSaved(0, 0, 99)
+
+      s.updatePrescription(
+        0,
+        receta({ medicaments: [amoxicilina(), amoxicilina({ posology: 'c/12h' })] }),
+      )
+
+      const [primero, segundo] = s.state.prescriptions[0].medicaments
+      expect(primero.savedId).toBe(99)
+      expect(segundo.savedId).toBeUndefined()
     })
   })
 })
