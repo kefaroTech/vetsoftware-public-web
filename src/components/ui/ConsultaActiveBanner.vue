@@ -50,7 +50,7 @@ function goBack() {
   padding: 10px 14px 10px 16px;
   background: oklch(28% 0.1 var(--hue));
   color: oklch(94% 0.02 var(--hue));
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   box-shadow: 0 12px 36px rgb(20 15 30 / 28%);
   font-family: var(--font-sans);
   max-width: calc(100vw - 32px);
@@ -84,7 +84,7 @@ function goBack() {
   align-items: center;
   gap: 6px;
   padding: 7px 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 500;

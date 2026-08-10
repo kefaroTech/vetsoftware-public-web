@@ -28,8 +28,8 @@ const { uvtThresholdQty, threshold, thresholdBreakdown } = useFeUvt()
   border-radius: 11px;
   font-size: 12.5px;
   line-height: 1.5;
-  background: oklch(95% 0.06 80deg);
-  border: 1px solid oklch(88% 0.09 80deg);
+  background: var(--warning-50);
+  border: 1px solid var(--warning-200);
   color: oklch(40% 0.11 70deg);
 }
 

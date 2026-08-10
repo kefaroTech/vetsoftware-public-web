@@ -296,22 +296,28 @@ async function onConfirmChangeBranches(data: ChangeBranchesConfirm) {
 </script>
 
 <template>
-  <div class="page">
+  <div class="ds-page">
     <PageHeader
       kicker="Administración · Equipo"
       title="Empleados"
       lead="Gestiona el equipo de la clínica, sus roles y accesos."
     >
       <template #action>
-        <button v-if="canCreate" type="button" class="cta" :disabled="busy" @click="openCreate">
+        <button
+          v-if="canCreate"
+          type="button"
+          class="ds-btn ds-btn--primary ds-btn--lg ds-btn--elevated"
+          :disabled="busy"
+          @click="openCreate"
+        >
           <Plus :size="16" :stroke-width="1.8" />
           Nuevo empleado
         </button>
       </template>
     </PageHeader>
 
-    <div v-if="error" class="banner error">{{ error }}</div>
-    <div v-if="submitError" class="banner error">{{ submitError }}</div>
+    <div v-if="error" class="ds-banner ds-banner--error">{{ error }}</div>
+    <div v-if="submitError" class="ds-banner ds-banner--error">{{ submitError }}</div>
 
     <EmpleadosTable
       :employees="employees"
@@ -383,51 +389,3 @@ async function onConfirmChangeBranches(data: ChangeBranchesConfirm) {
     />
   </div>
 </template>
-
-<style scoped>
-.page {
-  font-family: var(--font-sans);
-  color: var(--warm-900);
-}
-
-.cta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  font-size: 13.5px;
-  font-weight: 500;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-  color: white;
-  border: none;
-  border-radius: 9px;
-  cursor: pointer;
-  font-family: inherit;
-  box-shadow:
-    0 1px 2px rgb(50 20 80 / 8%),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 50%);
-  white-space: nowrap;
-}
-
-.cta:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.banner {
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  margin-bottom: 14px;
-}
-
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-}
-</style>

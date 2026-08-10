@@ -146,8 +146,13 @@ async function submit() {
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn-primary" :disabled="!canEmit" @click="submit">
+      <button type="button" class="ds-btn ds-btn--ghost" @click="emit('close')">Cancelar</button>
+      <button
+        type="button"
+        class="ds-btn ds-btn--primary ds-btn--strong"
+        :disabled="!canEmit"
+        @click="submit"
+      >
         {{ submitting ? 'Emitiendo…' : 'Emitir' }}
       </button>
     </template>
@@ -309,36 +314,5 @@ async function submit() {
   font-size: 12px;
   color: var(--warm-500);
   line-height: 1.45;
-}
-
-.btn-ghost {
-  padding: 9px 16px;
-  border-radius: 9px;
-  border: 1px solid var(--warm-200);
-  background: var(--warm-50);
-  color: var(--warm-700);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.btn-primary {
-  padding: 9px 18px;
-  border-radius: 9px;
-  border: none;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>

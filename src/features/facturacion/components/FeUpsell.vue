@@ -88,11 +88,7 @@ const benefits = [
   padding: 11px 24px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
+  background: var(--gradient-primary);
   color: #fff;
   font-size: 14px;
   font-weight: 600;

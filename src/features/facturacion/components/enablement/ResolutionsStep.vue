@@ -221,11 +221,11 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
   font-size: 11px;
   font-weight: 600;
   padding: 3px 9px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .badge.ok {
-  background: oklch(94% 0.06 150deg);
+  background: var(--success-50);
   color: oklch(40% 0.13 150deg);
 }
 
@@ -247,7 +247,7 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
   background: var(--amatista-50);
   border: 1px solid var(--amatista-200);
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .rescard-empty {
@@ -262,7 +262,7 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
 
 .bar {
   height: 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--warm-200);
   overflow: hidden;
 }
@@ -270,7 +270,7 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
 .bar span {
   display: block;
   height: 100%;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .barlbl {
@@ -280,7 +280,7 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
 }
 
 .warn {
-  color: oklch(55% 0.18 25deg);
+  color: var(--danger-500);
   font-weight: 600;
 }
 

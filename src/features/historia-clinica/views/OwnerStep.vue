@@ -26,7 +26,7 @@ function pick(owner: Owner) {
 <template>
   <div class="step">
     <div class="step-label">Paso 1 de 3</div>
-    <h1 class="title">¿De quién es la mascota?</h1>
+    <h1 class="ds-display ds-display--sm">¿De quién es la mascota?</h1>
     <p class="sub">Busca al propietario por nombre, documento o email.</p>
     <OwnerSearchList @select="pick" />
   </div>
@@ -49,16 +49,6 @@ function pick(owner: Owner) {
   text-transform: uppercase;
   font-weight: 500;
   margin-bottom: 6px;
-}
-
-.title {
-  font-family: var(--font-serif);
-  font-size: 32px;
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  color: var(--warm-900);
-  margin: 0;
-  line-height: 1.05;
 }
 
 .sub {

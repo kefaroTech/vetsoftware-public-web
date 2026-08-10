@@ -168,11 +168,11 @@ async function onCategoryRemove(id: number) {
 </script>
 
 <template>
-  <div class="inv">
-    <header class="head">
+  <div class="ds-page">
+    <header class="ds-head">
       <div>
         <div class="kicker">Tienda · Servicios</div>
-        <h1 class="title">Servicios ofrecidos</h1>
+        <h1 class="ds-display">Servicios ofrecidos</h1>
       </div>
       <div class="head-actions">
         <div class="seg" role="tablist">
@@ -186,18 +186,23 @@ async function onCategoryRemove(id: number) {
         <button
           v-if="canManageCategories"
           type="button"
-          class="ghost-cta"
+          class="ds-btn ds-btn--ghost ds-btn--nowrap"
           @click="categoriesOpen = true"
         >
           <Package :size="14" :stroke-width="1.8" /> Categorías
         </button>
-        <button v-if="canCreate && mode === 'active'" type="button" class="cta" @click="openNew">
+        <button
+          v-if="canCreate && mode === 'active'"
+          type="button"
+          class="ds-btn ds-btn--primary ds-btn--elevated ds-btn--nowrap"
+          @click="openNew"
+        >
           <Plus :size="16" :stroke-width="1.8" /> Nuevo servicio
         </button>
       </div>
     </header>
 
-    <div v-if="store.error.value" class="banner error">{{ store.error.value }}</div>
+    <div v-if="store.error.value" class="ds-banner ds-banner--error">{{ store.error.value }}</div>
 
     <!-- ─────────── Modo ACTIVOS ─────────── -->
     <template v-if="mode === 'active'">
@@ -321,17 +326,7 @@ async function onCategoryRemove(id: number) {
 </template>
 
 <style scoped>
-.inv {
-  font-family: var(--font-sans);
-  color: var(--warm-900);
-}
-.head {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-}
+/* El contenedor usa `.ds-page` y la cabecera `.ds-head` (primitives.css). */
 .kicker {
   font-size: 11.5px;
   text-transform: uppercase;
@@ -339,15 +334,6 @@ async function onCategoryRemove(id: number) {
   color: var(--warm-500);
   font-weight: 500;
   margin-bottom: 6px;
-}
-.title {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: 36px;
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  line-height: 1.05;
-  color: var(--warm-900);
 }
 .head-actions {
   display: flex;
@@ -378,57 +364,6 @@ async function onCategoryRemove(id: number) {
   color: var(--amatista-700);
   box-shadow: 0 1px 2px rgb(50 20 80 / 8%);
 }
-
-.cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 16px;
-  border-radius: 9px;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-  color: #fff;
-  border: none;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  box-shadow:
-    0 1px 2px rgb(50 20 80 / 8%),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 45%);
-}
-
-.ghost-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 14px;
-  border-radius: 9px;
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  color: var(--warm-700);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.ghost-cta:hover {
-  background: var(--warm-100);
-}
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  margin-bottom: 14px;
-}
 .paused-hint {
   margin: 0 0 14px;
   font-size: 12.5px;
@@ -453,7 +388,7 @@ async function onCategoryRemove(id: number) {
 }
 .search:focus-within {
   border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px var(--amatista-50);
+  box-shadow: var(--ring);
 }
 .s-icon {
   color: var(--warm-500);
@@ -487,7 +422,7 @@ async function onCategoryRemove(id: number) {
 .fsel:focus {
   outline: none;
   border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px var(--amatista-50);
+  box-shadow: var(--ring);
 }
 .state {
   padding: 48px;
@@ -511,7 +446,7 @@ async function onCategoryRemove(id: number) {
 .catpill {
   display: inline-flex;
   padding: 2px 9px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: 11px;
   font-weight: 500;
   white-space: nowrap;
@@ -608,7 +543,7 @@ async function onCategoryRemove(id: number) {
 }
 
 @media (width <= 760px) {
-  .head {
+  .ds-head {
     align-items: stretch;
     flex-direction: column;
   }
@@ -620,9 +555,10 @@ async function onCategoryRemove(id: number) {
     flex-direction: column;
   }
 
+  /* Los antiguos `.cta`/`.ghost-cta` son ahora `.ds-btn`; todos viven dentro
+     de `.head-actions`, así que el selector sigue acotado a ellos. */
   .seg,
-  .ghost-cta,
-  .cta,
+  .head-actions .ds-btn,
   .search,
   .fsel {
     width: 100%;
@@ -630,8 +566,7 @@ async function onCategoryRemove(id: number) {
   }
 
   .seg button,
-  .ghost-cta,
-  .cta {
+  .head-actions .ds-btn {
     justify-content: center;
   }
 

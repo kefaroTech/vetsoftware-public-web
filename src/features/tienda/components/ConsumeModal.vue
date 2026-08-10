@@ -84,8 +84,12 @@ function submit() {
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn-primary" @click="submit">Registrar consumo</button>
+      <button type="button" class="ds-btn ds-btn--ghost ds-btn--lg" @click="emit('close')">
+        Cancelar
+      </button>
+      <button type="button" class="ds-btn ds-btn--primary ds-btn--lg" @click="submit">
+        Registrar consumo
+      </button>
     </template>
   </ModalShell>
 </template>
@@ -95,36 +99,5 @@ function submit() {
   display: flex;
   flex-direction: column;
   gap: 14px;
-}
-
-.btn-primary {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 9px;
-  cursor: pointer;
-  border: none;
-  color: white;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-}
-
-.btn-ghost {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 9px;
-  cursor: pointer;
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  color: var(--warm-700);
-}
-.btn-ghost:hover {
-  background: var(--warm-100);
 }
 </style>

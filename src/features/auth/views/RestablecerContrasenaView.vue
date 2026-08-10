@@ -73,25 +73,25 @@ async function submit() {
       <RouterLink :to="{ name: 'login' }">Iniciar sesión</RouterLink>
     </template>
 
-    <div class="rp-card pub-reveal">
+    <div class="pub-card pub-reveal">
       <!-- Validando token -->
       <template v-if="state === 'loading'">
         <div class="rp-center">
           <span class="rp-spin" />
-          <p class="rp-sub">Validando el enlace…</p>
+          <p class="pub-sub">Validando el enlace…</p>
         </div>
       </template>
 
       <!-- Formulario de nueva contraseña -->
       <template v-else-if="state === 'form'">
-        <div class="rp-eyebrow">Restablecer contraseña</div>
-        <h1 class="rp-title">Crea una contraseña nueva</h1>
-        <p class="rp-sub">
+        <div class="pub-eyebrow">Restablecer contraseña</div>
+        <h1 class="pub-title">Crea una contraseña nueva</h1>
+        <p class="pub-sub">
           Elige una contraseña nueva para tu cuenta. La usarás cada vez que inicies sesión.
         </p>
 
-        <form class="rp-form" novalidate @submit.prevent="submit">
-          <div v-if="submitError" class="rp-error">{{ submitError }}</div>
+        <form class="pub-form" novalidate @submit.prevent="submit">
+          <div v-if="submitError" class="pub-error">{{ submitError }}</div>
 
           <AuthField label="Nueva contraseña" required :error="err('password')">
             <AuthInput
@@ -130,8 +130,8 @@ async function submit() {
         <div class="rp-icon rp-icon--ok">
           <v-icon size="38">mdi-check-circle-outline</v-icon>
         </div>
-        <h1 class="rp-title">Contraseña actualizada</h1>
-        <p class="rp-sub">Tu contraseña quedó cambiada. Ya puedes iniciar sesión con la nueva.</p>
+        <h1 class="pub-title">Contraseña actualizada</h1>
+        <p class="pub-sub">Tu contraseña quedó cambiada. Ya puedes iniciar sesión con la nueva.</p>
         <div class="rp-actions">
           <PrimaryButton @click="router.push({ name: 'login' })">Iniciar sesión</PrimaryButton>
         </div>
@@ -142,8 +142,8 @@ async function submit() {
         <div class="rp-icon rp-icon--err">
           <v-icon size="38">mdi-alert-circle-outline</v-icon>
         </div>
-        <h1 class="rp-title">Enlace no válido</h1>
-        <p class="rp-sub">
+        <h1 class="pub-title">Enlace no válido</h1>
+        <p class="pub-sub">
           El enlace de restablecimiento no es válido, expiró o ya se usó. Solicita uno nuevo.
         </p>
         <div class="rp-actions rp-actions--stack">
@@ -160,57 +160,6 @@ async function submit() {
 </template>
 
 <style scoped>
-.rp-card {
-  width: 100%;
-  max-width: 440px;
-  background: #fff;
-  border-radius: 16px;
-  border: 1px solid var(--pub-line);
-  box-shadow: var(--pub-card-shadow);
-  padding: 40px 44px;
-}
-
-.rp-eyebrow {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--pub-ame-700);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-.rp-title {
-  font-family: 'Instrument Serif', serif;
-  font-size: 32px;
-  font-weight: 400;
-  margin: 0;
-  letter-spacing: -0.02em;
-  line-height: 1.06;
-}
-
-.rp-sub {
-  font-size: 13px;
-  color: var(--pub-ink-500);
-  margin: 10px 0 26px;
-  line-height: 1.55;
-}
-
-.rp-form {
-  font-family: Inter, sans-serif;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.rp-error {
-  background: var(--pub-err-bg);
-  border: 1px solid var(--pub-err-bd);
-  color: var(--pub-err-tx);
-  padding: 9px 12px;
-  border-radius: 8px;
-  font-size: 12.5px;
-}
-
 .rp-center {
   display: flex;
   flex-direction: column;
@@ -272,11 +221,5 @@ async function submit() {
 
 .rp-textbtn:hover {
   color: var(--pub-ame-700);
-}
-
-@media (width <= 520px) {
-  .rp-card {
-    padding: 32px 24px;
-  }
 }
 </style>

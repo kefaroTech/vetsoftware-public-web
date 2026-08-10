@@ -205,7 +205,11 @@ async function submit() {
       <div class="lines">
         <div class="lines-head">
           <h3>Productos recibidos</h3>
-          <button type="button" class="btn ghost sm" @click="addLine">
+          <button
+            type="button"
+            class="ds-btn ds-btn--neutral ds-btn--strong ds-btn--sm"
+            @click="addLine"
+          >
             <Plus :size="14" /> Agregar
           </button>
         </div>
@@ -231,8 +235,15 @@ async function submit() {
       </BaseField>
     </template>
     <template #footer-actions>
-      <button type="button" class="btn ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn primary" :disabled="saving" @click="submit">
+      <button type="button" class="ds-btn ds-btn--neutral ds-btn--strong" @click="emit('close')">
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="ds-btn ds-btn--solid ds-btn--strong"
+        :disabled="saving"
+        @click="submit"
+      >
         {{ saving ? 'Guardando…' : 'Guardar borrador' }}
       </button>
     </template>
@@ -309,7 +320,7 @@ async function submit() {
 }
 
 .icon-btn.danger:hover {
-  background: oklch(92% 0.06 25deg);
+  background: var(--danger-200);
   color: oklch(50% 0.2 25deg);
 }
 
@@ -317,40 +328,13 @@ async function submit() {
   margin: 0 0 14px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: oklch(94% 0.06 25deg);
+  background: var(--danger-150);
   color: oklch(45% 0.18 25deg);
   font-size: 13px;
 }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  border: none;
-  border-radius: 9px;
-  padding: 9px 16px;
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn.sm {
-  padding: 6px 11px;
-  font-size: 12.5px;
-}
-
-.btn.ghost {
-  background: var(--warm-100);
-  color: var(--warm-700);
-}
-
-.btn.primary {
-  background: var(--amatista-600, #5c2d8c);
-  color: #fff;
-}
-
-.btn.primary:disabled {
-  opacity: 0.6;
-  cursor: default;
+/* caja/compras usan un amatista un punto más claro que el resto. */
+.ds-btn--solid {
+  --ds-btn-solid-bg: var(--amatista-600);
 }
 </style>

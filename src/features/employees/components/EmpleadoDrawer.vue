@@ -102,7 +102,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
             <button
               v-if="isInvited && canUpdate"
               type="button"
-              class="ghost accent"
+              class="ds-btn ds-btn--ghost ds-btn--snug accent"
               :disabled="busy"
               title="Enviar de nuevo la invitación con una nueva contraseña provisional"
               @click="emit('resend-invitation', employee)"
@@ -113,7 +113,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
             <button
               v-else
               type="button"
-              class="ghost"
+              class="ds-btn ds-btn--ghost ds-btn--snug"
               disabled
               title="Próximamente — endpoint pendiente"
             >
@@ -123,7 +123,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
             <button
               v-if="canUpdate"
               type="button"
-              class="ghost"
+              class="ds-btn ds-btn--ghost ds-btn--snug"
               :disabled="busy"
               @click="emit('edit', employee)"
             >
@@ -133,7 +133,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
             <button
               v-if="canUpdate"
               type="button"
-              class="ghost"
+              class="ds-btn ds-btn--ghost ds-btn--snug"
               :disabled="busy"
               @click="emit('change-roles', employee)"
             >
@@ -143,7 +143,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
             <button
               v-if="canUpdate"
               type="button"
-              class="ghost"
+              class="ds-btn ds-btn--ghost ds-btn--snug"
               :disabled="busy || isAdmin"
               :title="
                 isAdmin
@@ -177,7 +177,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
             <button
               v-else-if="canUpdate && !employee.enabled"
               type="button"
-              class="primary"
+              class="ds-btn ds-btn--solid ds-btn--snug"
               :disabled="busy"
               @click="emit('activate', employee)"
             >
@@ -325,9 +325,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   flex: 1;
 }
 
-.ghost,
-.danger,
-.primary {
+/* El fantasma y el primario usan `.ds-btn` (primitives.css); este destructivo
+   se queda local por su borde del mismo tono que el texto. */
+.danger {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -339,37 +339,22 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   border: 1px solid transparent;
 }
 
-.ghost {
-  background: var(--warm-50);
-  color: var(--warm-700);
-  border-color: var(--warm-200);
-}
-
-.ghost:hover:not(:disabled) {
-  background: var(--warm-100);
-}
-
-.ghost:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.ghost.accent {
+.accent {
   color: var(--amatista-700);
   border-color: var(--amatista-200, oklch(88% 0.05 300deg));
   background: var(--amatista-50);
   font-weight: 500;
 }
 
-.ghost.accent:hover:not(:disabled) {
+.accent:hover:not(:disabled) {
   background: var(--amatista-100, oklch(94% 0.04 300deg));
 }
 
 .danger {
   font-weight: 500;
   background: oklch(94% 0.05 25deg);
-  color: oklch(48% 0.18 25deg);
-  border-color: oklch(48% 0.18 25deg);
+  color: var(--danger-700);
+  border-color: var(--danger-700);
 }
 
 .danger:hover:not(:disabled) {
@@ -379,22 +364,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .danger:disabled {
   cursor: not-allowed;
   opacity: 0.6;
-}
-
-.primary {
-  font-weight: 500;
-  background: var(--amatista-700);
-  color: white;
-  border: none;
-}
-
-.primary:hover:not(:disabled) {
-  background: var(--amatista-800);
-}
-
-.primary:disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
 }
 
 .admin-lock {

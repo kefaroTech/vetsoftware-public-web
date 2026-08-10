@@ -23,7 +23,7 @@ const REASON_LEAVING_LABEL: Record<ReasonLeaving, string> = {
 </script>
 
 <template>
-  <div class="detail-grid">
+  <div class="ds-detail-grid">
     <DetailField label="Tipo" :value="TYPE_LABEL[data.type]" />
     <DetailField label="Fecha" :value="formatEventDate(data.date)" />
     <DetailField label="Inicio" :value="formatEventDate(data.startDate)" />
@@ -40,17 +40,3 @@ const REASON_LEAVING_LABEL: Record<ReasonLeaving, string> = {
     </DetailField>
   </div>
 </template>
-
-<style scoped>
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 24px;
-}
-
-@media (width <= 560px) {
-  .detail-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

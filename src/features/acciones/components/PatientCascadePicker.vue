@@ -244,8 +244,15 @@ watch(
         </div>
         <OwnerForm ref="ownerFormRef" v-model="ownerDraft" />
         <div class="form-actions">
-          <button type="button" class="btn-ghost" @click="cancelCreateOwner">Cancelar</button>
-          <button type="button" class="btn-primary" :disabled="savingOwner" @click="saveOwner">
+          <button type="button" class="ds-btn ds-btn--ghost" @click="cancelCreateOwner">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="ds-btn ds-btn--solid"
+            :disabled="savingOwner"
+            @click="saveOwner"
+          >
             {{ savingOwner ? 'Creando…' : 'Crear y seleccionar' }}
           </button>
         </div>
@@ -319,8 +326,10 @@ watch(
         </div>
         <PetForm ref="petFormRef" v-model="petDraft" />
         <div class="form-actions">
-          <button type="button" class="btn-ghost" @click="cancelCreatePet">Cancelar</button>
-          <button type="button" class="btn-primary" :disabled="savingPet" @click="savePet">
+          <button type="button" class="ds-btn ds-btn--ghost" @click="cancelCreatePet">
+            Cancelar
+          </button>
+          <button type="button" class="ds-btn ds-btn--solid" :disabled="savingPet" @click="savePet">
             {{ savingPet ? 'Guardando…' : 'Crear y seleccionar' }}
           </button>
         </div>
@@ -690,8 +699,8 @@ watch(
   padding: 10px 12px;
   border-radius: 9px;
   font-size: 12.5px;
-  background: oklch(94% 0.06 25deg);
-  border: 1px solid oklch(85% 0.1 25deg);
+  background: var(--danger-150);
+  border: 1px solid var(--danger-300);
   color: oklch(35% 0.15 25deg);
 }
 
@@ -699,42 +708,5 @@ watch(
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-}
-
-.btn-ghost {
-  padding: 9px 18px;
-  border-radius: 8px;
-  border: 1px solid var(--warm-200);
-  background: var(--warm-50);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-800);
-  cursor: pointer;
-}
-
-.btn-ghost:hover {
-  background: var(--warm-100);
-}
-
-.btn-primary {
-  padding: 9px 18px;
-  border-radius: 8px;
-  border: none;
-  background: var(--amatista-700);
-  color: #fff;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.btn-primary:hover:not(:disabled) {
-  filter: brightness(1.05);
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>

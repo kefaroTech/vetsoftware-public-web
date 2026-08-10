@@ -58,7 +58,7 @@ defineEmits<{
 .textarea:focus {
   outline: none;
   border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px var(--amatista-50);
+  box-shadow: var(--ring);
 }
 
 .textarea::placeholder {
@@ -79,7 +79,7 @@ defineEmits<{
 
 .textarea.invalid:focus {
   border-color: oklch(55% 0.22 25deg);
-  box-shadow: 0 0 0 3px oklch(92% 0.06 25deg);
+  box-shadow: 0 0 0 3px var(--danger-200);
 }
 
 @keyframes shake {

@@ -27,10 +27,20 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" :disabled="busy" @click="emit('close')">
+      <button
+        type="button"
+        class="ds-btn ds-btn--ghost ds-btn--snug"
+        :disabled="busy"
+        @click="emit('close')"
+      >
         Cancelar
       </button>
-      <button type="button" class="btn-primary" :disabled="busy" @click="emit('confirm')">
+      <button
+        type="button"
+        class="ds-btn ds-btn--solid ds-btn--snug"
+        :disabled="busy"
+        @click="emit('confirm')"
+      >
         Tomar muestra
       </button>
     </template>
@@ -48,41 +58,5 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
 .msg strong {
   color: var(--warm-800);
   font-weight: 600;
-}
-
-.btn-ghost,
-.btn-primary {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 14px;
-  border-radius: 9px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.btn-ghost {
-  background: transparent;
-  border-color: var(--warm-200);
-  color: var(--warm-700);
-}
-
-.btn-ghost:hover:not(:disabled) {
-  background: var(--warm-100);
-}
-
-.btn-primary {
-  background: var(--amatista-700);
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  filter: brightness(1.05);
-}
-
-.btn-ghost:disabled,
-.btn-primary:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
 }
 </style>

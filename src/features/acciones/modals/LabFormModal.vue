@@ -287,8 +287,10 @@ async function doSave() {
         </div>
       </div>
       <template v-else>
-        <div v-if="typesError" class="banner error">{{ typesError }}</div>
-        <div v-if="saveError" class="banner error">{{ saveError }}</div>
+        <div v-if="typesError" class="ds-banner ds-banner--sm ds-banner--error">
+          {{ typesError }}
+        </div>
+        <div v-if="saveError" class="ds-banner ds-banner--sm ds-banner--error">{{ saveError }}</div>
 
         <BaseField
           v-if="!preSelectedAnimal && !isEdit"
@@ -409,21 +411,36 @@ async function doSave() {
       <template v-if="confirmingBranch">
         <button
           type="button"
-          class="btn-ghost"
+          class="ds-btn ds-btn--ghost ds-btn--snug"
           :disabled="saving"
           @click="confirmingBranch = false"
         >
           Volver
         </button>
-        <button type="button" class="btn-primary" :disabled="saving" @click="doSave">
+        <button
+          type="button"
+          class="ds-btn ds-btn--solid ds-btn--snug"
+          :disabled="saving"
+          @click="doSave"
+        >
           Sí, usar esta sede
         </button>
       </template>
       <template v-else>
-        <button type="button" class="btn-ghost" :disabled="saving" @click="emit('close')">
+        <button
+          type="button"
+          class="ds-btn ds-btn--ghost ds-btn--snug"
+          :disabled="saving"
+          @click="emit('close')"
+        >
           Cancelar
         </button>
-        <button type="button" class="btn-primary" :disabled="saving" @click="save">
+        <button
+          type="button"
+          class="ds-btn ds-btn--solid ds-btn--snug"
+          :disabled="saving"
+          @click="save"
+        >
           {{ saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Guardar solicitud' }}
         </button>
       </template>
@@ -432,23 +449,13 @@ async function doSave() {
 </template>
 
 <style scoped>
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 12.5px;
-  margin-bottom: 12px;
-}
-
 .branch-confirm {
   display: flex;
   gap: 12px;
   padding: 16px 18px;
   border-radius: 11px;
   background: oklch(96% 0.05 80deg);
-  border: 1px solid oklch(88% 0.09 80deg);
+  border: 1px solid var(--warning-200);
 }
 
 .bc-ic {
@@ -549,9 +556,9 @@ async function doSave() {
 }
 
 .remove:hover {
-  background: oklch(95% 0.06 25deg);
+  background: var(--danger-100);
   color: oklch(45% 0.18 25deg);
-  border-color: oklch(85% 0.12 25deg);
+  border-color: var(--danger-400);
 }
 
 .row-grid {
@@ -590,42 +597,6 @@ async function doSave() {
   background: var(--amatista-50);
 }
 
-.btn-ghost,
-.btn-primary {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 14px;
-  border-radius: 9px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.btn-ghost {
-  background: transparent;
-  border-color: var(--warm-200);
-  color: var(--warm-700);
-}
-
-.btn-ghost:hover:not(:disabled) {
-  background: var(--warm-100);
-}
-
-.btn-primary {
-  background: var(--amatista-700);
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  filter: brightness(1.05);
-}
-
-.btn-primary:disabled,
-.btn-ghost:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
 .sample-collected {
   display: flex;
   align-items: flex-start;
@@ -647,7 +618,7 @@ async function doSave() {
 }
 
 .sample-collected.checked {
-  background: linear-gradient(135deg, oklch(95% 0.06 80deg), oklch(96% 0.02 var(--hue)));
+  background: linear-gradient(135deg, var(--warning-50), oklch(96% 0.02 var(--hue)));
   border-color: oklch(70% 0.13 75deg);
 }
 

@@ -72,7 +72,7 @@ function createAnother() {
             v-for="rx in prescriptions"
             :key="rx.id"
             type="button"
-            class="btn rx"
+            class="ds-btn rx"
             :disabled="printing"
             @click="exportPdf(rx.id)"
           >
@@ -86,11 +86,11 @@ function createAnother() {
       </div>
 
       <div class="actions">
-        <button type="button" class="btn primary" @click="goDetail">
+        <button type="button" class="ds-btn ds-btn--solid" @click="goDetail">
           <span>Ver detalle</span>
           <ArrowRight :size="13" :stroke-width="1.8" />
         </button>
-        <button type="button" class="btn ghost" @click="createAnother">
+        <button type="button" class="ds-btn ds-btn--ghost" @click="createAnother">
           <Plus :size="13" :stroke-width="1.8" />
           <span>Crear otra consulta</span>
         </button>
@@ -174,17 +174,17 @@ function createAnother() {
   flex-wrap: wrap;
 }
 
-.btn.rx {
+.rx {
   background: white;
   border-color: var(--amatista-300);
   color: var(--amatista-700);
 }
 
-.btn.rx:hover:not(:disabled) {
+.rx:hover:not(:disabled) {
   background: var(--amatista-50);
 }
 
-.btn.rx:disabled {
+.rx:disabled {
   opacity: 0.6;
   cursor: default;
 }
@@ -194,37 +194,5 @@ function createAnother() {
   gap: 10px;
   justify-content: center;
   flex-wrap: wrap;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 18px;
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.btn.primary {
-  background: var(--amatista-700);
-  color: white;
-}
-
-.btn.primary:hover {
-  filter: brightness(1.05);
-}
-
-.btn.ghost {
-  background: var(--warm-50);
-  border-color: var(--warm-200);
-  color: var(--warm-900);
-}
-
-.btn.ghost:hover {
-  background: var(--warm-100);
 }
 </style>

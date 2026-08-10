@@ -267,12 +267,17 @@ onBeforeUnmount(() => {
           />
           <div v-if="createError" class="form-error">{{ createError }}</div>
           <div class="form-actions">
-            <button type="button" class="btn-ghost" :disabled="submitting" @click="cancelCreate">
+            <button
+              type="button"
+              class="ds-btn ds-btn--sm ds-btn--ghost"
+              :disabled="submitting"
+              @click="cancelCreate"
+            >
               Cancelar
             </button>
             <button
               type="button"
-              class="btn-primary"
+              class="ds-btn ds-btn--sm ds-btn--solid"
               :disabled="!newName.trim() || submitting"
               @click="confirmCreate"
             >
@@ -329,7 +334,7 @@ onBeforeUnmount(() => {
 }
 
 .ss.invalid.open .trigger {
-  box-shadow: 0 0 0 3px oklch(92% 0.06 25deg);
+  box-shadow: 0 0 0 3px var(--danger-200);
 }
 
 @keyframes shake {
@@ -518,7 +523,7 @@ onBeforeUnmount(() => {
 
 .form-error {
   font-size: 12px;
-  color: oklch(50% 0.18 25deg);
+  color: var(--danger-600);
 }
 
 .form-actions {
@@ -528,39 +533,6 @@ onBeforeUnmount(() => {
   margin-top: 4px;
 }
 
-.btn-ghost,
-.btn-primary {
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  padding: 7px 12px;
-  border-radius: 7px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.btn-ghost {
-  background: transparent;
-  border-color: var(--warm-200);
-  color: var(--warm-700);
-}
-
-.btn-ghost:hover:not(:disabled) {
-  background: var(--warm-100);
-}
-
-.btn-primary {
-  background: var(--amatista-700);
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  filter: brightness(1.05);
-}
-
-.btn-primary:disabled,
-.btn-ghost:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* Los botones de creación inline usan `.ds-btn` (primitives.css); el estado
+   deshabilitado ya lo cubre `.ds-btn:disabled` con estos mismos valores. */
 </style>

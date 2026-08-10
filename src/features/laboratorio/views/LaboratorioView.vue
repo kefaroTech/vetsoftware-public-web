@@ -91,7 +91,7 @@ async function onResultsUploaded() {
 </script>
 
 <template>
-  <div class="page">
+  <div class="ds-page">
     <PageHeader
       kicker="Laboratorio"
       title="Bandeja de muestras"
@@ -107,7 +107,7 @@ async function onResultsUploaded() {
       </button>
     </div>
 
-    <div v-if="queue.error.value" class="banner error">{{ queue.error.value }}</div>
+    <div v-if="queue.error.value" class="ds-banner ds-banner--error">{{ queue.error.value }}</div>
 
     <LabBoard
       v-if="tab === 'board'"
@@ -143,11 +143,6 @@ async function onResultsUploaded() {
 </template>
 
 <style scoped>
-.page {
-  font-family: var(--font-sans);
-  color: var(--warm-900);
-}
-
 .tabs {
   display: flex;
   gap: 4px;
@@ -174,15 +169,5 @@ async function onResultsUploaded() {
 .tabs button.active {
   color: var(--amatista-700);
   border-bottom-color: var(--amatista-700);
-}
-
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  margin-bottom: 14px;
 }
 </style>

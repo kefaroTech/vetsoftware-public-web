@@ -382,13 +382,18 @@ async function save() {
             </div>
             <div class="foot-actions">
               <div v-if="submitError" class="error">{{ submitError }}</div>
-              <button type="button" class="btn ghost" :disabled="saving" @click="emit('close')">
+              <button
+                type="button"
+                class="ds-btn ds-btn--ghost ds-btn--snug"
+                :disabled="saving"
+                @click="emit('close')"
+              >
                 {{ readOnly ? 'Cerrar' : 'Cancelar' }}
               </button>
               <button
                 v-if="!readOnly"
                 type="button"
-                class="btn primary"
+                class="ds-btn ds-btn--primary ds-btn--snug ds-btn--elevated"
                 :disabled="saving"
                 @click="save"
               >
@@ -514,7 +519,7 @@ async function save() {
 }
 
 .kicker .req {
-  color: oklch(55% 0.18 25deg);
+  color: var(--danger-500);
   margin-left: 3px;
   font-weight: 600;
 }
@@ -525,7 +530,7 @@ async function save() {
 
 .name-input.invalid {
   border-bottom-style: solid;
-  border-bottom-color: oklch(55% 0.18 25deg);
+  border-bottom-color: var(--danger-500);
 }
 
 .name-input::placeholder {
@@ -647,7 +652,7 @@ async function save() {
   font-size: 12px;
   font-weight: 500;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--amatista-100);
   color: var(--amatista-700);
   white-space: nowrap;
@@ -729,51 +734,6 @@ async function save() {
   border: 1px solid oklch(85% 0.06 25deg);
   padding: 4px 10px;
   border-radius: 7px;
-}
-
-.btn {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  border-radius: 8px;
-  padding: 8px 14px;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition:
-    background 0.12s ease,
-    border-color 0.12s ease,
-    opacity 0.12s ease;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn.ghost {
-  background: transparent;
-  border-color: var(--warm-300);
-  color: var(--warm-700);
-}
-
-.btn.ghost:hover:not(:disabled) {
-  background: var(--warm-150);
-}
-
-.btn.primary {
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-  color: #fff;
-  box-shadow:
-    0 1px 2px rgb(50 20 80 / 8%),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 50%);
-}
-
-.btn.primary:hover:not(:disabled) {
-  filter: brightness(1.05);
 }
 
 /* RESPONSIVE */

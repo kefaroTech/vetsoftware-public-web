@@ -59,7 +59,7 @@ const currentId = computed(() => props.currentCode.trim().toLowerCase())
 .hint {
   font-size: 12px;
   color: var(--warm-500);
-  background: oklch(95% 0.06 80deg);
+  background: var(--warning-50);
   border: 1px solid oklch(85% 0.08 80deg);
   border-radius: 8px;
   padding: 8px 12px;

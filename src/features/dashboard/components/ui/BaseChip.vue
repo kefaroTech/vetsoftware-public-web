@@ -20,7 +20,7 @@ withDefaults(
   gap: 5px;
   font-size: 11px;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-weight: 500;
   letter-spacing: -0.005em;
   white-space: nowrap;

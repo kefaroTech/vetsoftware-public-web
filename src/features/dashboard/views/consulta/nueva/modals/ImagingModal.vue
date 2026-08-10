@@ -291,8 +291,8 @@ function save() {
       <span v-else>1 estudio · Se vinculará a la consulta</span>
     </template>
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn-primary" @click="save">
+      <button type="button" class="ds-btn ds-btn--ghost" @click="emit('close')">Cancelar</button>
+      <button type="button" class="ds-btn ds-btn--solid" @click="save">
         {{ editingIndex !== null ? 'Guardar cambios' : 'Guardar solicitud' }}
       </button>
     </template>
@@ -301,8 +301,8 @@ function save() {
 
 <style scoped>
 .catalog-error {
-  background: oklch(94% 0.06 25deg);
-  border: 1px solid oklch(85% 0.1 25deg);
+  background: var(--danger-150);
+  border: 1px solid var(--danger-300);
   color: oklch(35% 0.15 25deg);
   padding: 10px 14px;
   border-radius: 10px;
@@ -325,43 +325,6 @@ function save() {
 
 .field + .field {
   margin-top: 14px;
-}
-
-.btn-ghost,
-.btn-primary {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 9px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.btn-ghost {
-  background: transparent;
-  border-color: var(--warm-200);
-  color: var(--warm-900);
-}
-
-.btn-ghost:hover {
-  background: var(--warm-100);
-}
-
-.btn-primary {
-  background: var(--amatista-700);
-  color: white;
-  border: none;
-  padding: 9px 18px;
-}
-
-.btn-primary:hover:not(:disabled) {
-  filter: brightness(1.05);
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .existing-section {
@@ -427,8 +390,8 @@ function save() {
   font-size: 12px;
   font-weight: 500;
   padding: 5px 10px;
-  border-radius: 999px;
-  background: oklch(94% 0.06 150deg);
+  border-radius: var(--radius-pill);
+  background: var(--success-50);
   color: oklch(40% 0.15 150deg);
   border: 1px solid oklch(85% 0.1 150deg);
   white-space: nowrap;
@@ -448,8 +411,8 @@ function save() {
 }
 
 .remove-existing:hover:not(:disabled) {
-  background: oklch(94% 0.06 25deg);
-  border-color: oklch(85% 0.1 25deg);
+  background: var(--danger-150);
+  border-color: var(--danger-300);
   color: oklch(35% 0.15 25deg);
 }
 

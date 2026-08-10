@@ -148,13 +148,18 @@ async function onConfirmDelete() {
       lead="Descuentos y precios especiales sobre productos, servicios o categorías."
     >
       <template #action>
-        <button v-if="canCreate" type="button" class="cta" @click="openNew">
+        <button
+          v-if="canCreate"
+          type="button"
+          class="ds-btn ds-btn--primary ds-btn--lg ds-btn--elevated ds-btn--nowrap"
+          @click="openNew"
+        >
           <Plus :size="16" :stroke-width="1.8" /> Nueva promoción
         </button>
       </template>
     </PageHeader>
 
-    <div v-if="store.error.value" class="banner error">{{ store.error.value }}</div>
+    <div v-if="store.error.value" class="ds-banner ds-banner--error">{{ store.error.value }}</div>
 
     <div v-if="activeCount > 0" class="alert">
       <Bell :size="15" :stroke-width="1.8" />
@@ -195,7 +200,7 @@ async function onConfirmDelete() {
           <td>{{ valueLabel(item) }}</td>
           <td class="dates">{{ vigencia(item) }}</td>
           <td><PromoStatusPill :status="promoStatus(item, today)" /></td>
-          <td v-if="canUpdate || canDelete" class="actions">
+          <td v-if="canUpdate || canDelete" class="ds-actions">
             <button
               v-if="canUpdate"
               type="button"
@@ -256,40 +261,6 @@ async function onConfirmDelete() {
   font-family: var(--font-sans);
   color: var(--warm-900);
 }
-
-.cta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  font-size: 13.5px;
-  font-weight: 500;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-  color: white;
-  border: none;
-  border-radius: 9px;
-  cursor: pointer;
-  font-family: inherit;
-  white-space: nowrap;
-  box-shadow:
-    0 1px 2px rgb(50 20 80 / 8%),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 50%);
-}
-.banner {
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  margin-bottom: 14px;
-}
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-}
 .alert {
   display: flex;
   align-items: center;
@@ -308,7 +279,7 @@ async function onConfirmDelete() {
 .switch {
   width: 34px;
   height: 20px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: none;
   background: var(--warm-300);
   position: relative;
@@ -340,7 +311,7 @@ async function onConfirmDelete() {
 .typepill {
   display: inline-flex;
   padding: 2px 9px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: 11px;
   font-weight: 500;
   white-space: nowrap;
@@ -362,11 +333,6 @@ async function onConfirmDelete() {
   width: 88px;
   text-align: right;
 }
-.actions {
-  display: flex;
-  gap: 6px;
-  justify-content: flex-end;
-}
 
 .icon-btn {
   display: grid;
@@ -383,8 +349,8 @@ async function onConfirmDelete() {
   background: var(--warm-100);
 }
 .icon-btn.danger:hover {
-  background: oklch(95% 0.06 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-color: oklch(85% 0.12 25deg);
+  background: var(--danger-100);
+  color: var(--danger-900);
+  border-color: var(--danger-400);
 }
 </style>

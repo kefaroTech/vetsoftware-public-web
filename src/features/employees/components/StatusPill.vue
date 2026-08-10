@@ -43,7 +43,7 @@ const label = computed(() =>
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-weight: 500;
   white-space: nowrap;
   font-family: var(--font-sans);

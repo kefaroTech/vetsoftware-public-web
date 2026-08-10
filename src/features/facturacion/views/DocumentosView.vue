@@ -59,11 +59,11 @@ function shortId(cufe: string | null, cude: string | null): string {
 <template>
   <FeUpsell v-if="!hasModule" />
   <FeDocumentDetail v-else-if="selectedDoc" :doc="selectedDoc" @back="selectedId = null" />
-  <div v-else class="page">
+  <div v-else class="ds-page ds-page--stack">
     <header class="pagehead">
       <div>
         <div class="kicker">Facturación electrónica · DIAN</div>
-        <h1 class="title">Documentos electrónicos</h1>
+        <h1 class="ds-display fe-title">Documentos electrónicos</h1>
       </div>
     </header>
 
@@ -78,7 +78,12 @@ function shortId(cufe: string | null, cude: string | null): string {
           <option v-for="o in statusOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
         </select>
       </div>
-      <button v-if="canEmit" type="button" class="ghost" @click="emitOpen = true">
+      <button
+        v-if="canEmit"
+        type="button"
+        class="ds-btn ds-btn--ghost ds-btn--snug"
+        @click="emitOpen = true"
+      >
         <Plus :size="16" :stroke-width="2" /> Emisión manual
       </button>
     </div>
@@ -128,7 +133,7 @@ function shortId(cufe: string | null, cude: string | null): string {
             <td><ChevronRight :size="15" :stroke-width="1.6" class="chev" /></td>
           </tr>
           <tr v-if="!loading && filtered.length === 0">
-            <td colspan="8" class="empty">Sin documentos para los filtros aplicados.</td>
+            <td colspan="8" class="ds-empty">Sin documentos para los filtros aplicados.</td>
           </tr>
         </tbody>
       </table>
@@ -148,12 +153,6 @@ function shortId(cufe: string | null, cude: string | null): string {
 </template>
 
 <style scoped>
-.page {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
 .pagehead {
   display: flex;
   align-items: flex-end;
@@ -167,16 +166,6 @@ function shortId(cufe: string | null, cude: string | null): string {
   letter-spacing: 0.08em;
   color: var(--warm-500);
   font-weight: 500;
-}
-
-.title {
-  margin: 6px 0 0;
-  font-family: var(--font-serif);
-  font-size: 36px;
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  color: var(--warm-900);
-  line-height: 1.05;
 }
 
 .listhead {
@@ -204,24 +193,6 @@ function shortId(cufe: string | null, cude: string | null): string {
   cursor: pointer;
 }
 
-.ghost {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: 9px;
-  border: 1px solid var(--warm-200);
-  background: var(--warm-50);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-700);
-  cursor: pointer;
-}
-
-.ghost:hover {
-  background: var(--warm-100);
-}
-
 .autobanner {
   display: flex;
   align-items: center;
@@ -238,8 +209,8 @@ function shortId(cufe: string | null, cude: string | null): string {
   margin: 0;
   padding: 12px 16px;
   border-radius: 10px;
-  background: oklch(95% 0.05 25deg);
-  border: 1px solid oklch(85% 0.08 25deg);
+  background: var(--danger-50);
+  border: 1px solid var(--danger-250);
   color: oklch(45% 0.16 25deg);
   font-size: 13px;
 }
@@ -302,10 +273,10 @@ function shortId(cufe: string | null, cude: string | null): string {
 .reversed {
   font-size: 10.5px;
   font-weight: 600;
-  color: oklch(50% 0.18 25deg);
-  background: oklch(95% 0.05 25deg);
+  color: var(--danger-600);
+  background: var(--danger-50);
   padding: 1px 7px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .cufe {
@@ -318,9 +289,13 @@ function shortId(cufe: string | null, cude: string | null): string {
   color: var(--warm-400);
 }
 
-.empty {
-  text-align: center;
-  color: var(--warm-500);
+/* El titular usa `.ds-display`; sólo conserva su separación superior. */
+.fe-title {
+  margin-top: var(--space-6);
+}
+
+/* Override mínimo sobre `.ds-empty`. */
+.ds-empty {
   padding: 28px 12px;
 }
 </style>

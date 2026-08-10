@@ -138,3 +138,72 @@
     animation: none !important;
   }
 }
+
+/* ===========================================================================
+   PRIMITIVAS de la zona pública.
+
+   Mismo papel que `primitives.css` para la app, pero con ESTE lenguaje: Inter,
+   paleta `--pub-*` y sombras propias. No se usan las clases `ds-*` aquí a
+   propósito — mezclarlas traería Geist y la paleta warm a las pantallas de
+   acceso, que el handoff mantiene deliberadamente aparte.
+
+   Reemplazan las copias que estaban repetidas en los 6 SFC de `auth` con
+   prefijo por pantalla (`.login-`, `.cp-`, `.rc-`, `.rp-`).
+   =========================================================================== */
+
+.pub-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 40px 44px;
+  border: 1px solid var(--pub-line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--pub-card-shadow);
+}
+
+.pub-eyebrow {
+  margin-bottom: 8px;
+  color: var(--pub-ame-700);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.pub-title {
+  margin: 0;
+  font-family: 'Instrument Serif', serif;
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+}
+
+.pub-sub {
+  margin: 10px 0 26px;
+  color: var(--pub-ink-500);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.pub-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: Inter, sans-serif;
+}
+
+.pub-error {
+  padding: 9px 12px;
+  border: 1px solid var(--pub-err-bd);
+  border-radius: 8px;
+  background: var(--pub-err-bg);
+  color: var(--pub-err-tx);
+  font-size: 12.5px;
+}
+
+@media (width <= 520px) {
+  .pub-card {
+    padding: 32px 24px;
+  }
+}

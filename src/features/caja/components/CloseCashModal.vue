@@ -149,10 +149,18 @@ function diffClass(diff: number): string {
           >.
         </p>
         <div class="download-row">
-          <button type="button" class="btn ghost" @click="download('csv')">
+          <button
+            type="button"
+            class="ds-btn ds-btn--neutral ds-btn--strong"
+            @click="download('csv')"
+          >
             <FileDown :size="15" :stroke-width="1.7" /> Descargar CSV
           </button>
-          <button type="button" class="btn ghost" @click="download('pdf')">
+          <button
+            type="button"
+            class="ds-btn ds-btn--neutral ds-btn--strong"
+            @click="download('pdf')"
+          >
             <FileDown :size="15" :stroke-width="1.7" /> Descargar PDF
           </button>
         </div>
@@ -161,12 +169,26 @@ function diffClass(diff: number): string {
 
     <template #footer-actions>
       <template v-if="phase === 'count'">
-        <button type="button" class="btn ghost" @click="emit('close')">Cancelar</button>
-        <button type="button" class="btn primary" :disabled="saving" @click="confirmClose">
+        <button type="button" class="ds-btn ds-btn--neutral ds-btn--strong" @click="emit('close')">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="ds-btn ds-btn--solid ds-btn--strong"
+          :disabled="saving"
+          @click="confirmClose"
+        >
           {{ saving ? 'Cerrando…' : 'Cerrar caja' }}
         </button>
       </template>
-      <button v-else type="button" class="btn primary" @click="emit('close')">Listo</button>
+      <button
+        v-else
+        type="button"
+        class="ds-btn ds-btn--solid ds-btn--strong"
+        @click="emit('close')"
+      >
+        Listo
+      </button>
     </template>
   </ModalShell>
 </template>
@@ -226,7 +248,7 @@ function diffClass(diff: number): string {
   margin: 0 0 14px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: oklch(94% 0.06 25deg);
+  background: var(--danger-150);
   color: oklch(45% 0.18 25deg);
   font-size: 13px;
 }
@@ -242,30 +264,8 @@ function diffClass(diff: number): string {
   gap: 10px;
 }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: none;
-  border-radius: 9px;
-  padding: 9px 16px;
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn.ghost {
-  background: var(--warm-100);
-  color: var(--warm-700);
-}
-
-.btn.primary {
-  background: var(--amatista-600, #5c2d8c);
-  color: #fff;
-}
-
-.btn.primary:disabled {
-  opacity: 0.6;
-  cursor: default;
+/* caja/compras usan un amatista un punto más claro que el resto. */
+.ds-btn--solid {
+  --ds-btn-solid-bg: var(--amatista-600);
 }
 </style>

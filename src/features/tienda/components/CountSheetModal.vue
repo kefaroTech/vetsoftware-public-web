@@ -110,7 +110,7 @@ function submit() {
         </select>
       </div>
 
-      <div v-if="submitted && !canConfirm" class="banner error">
+      <div v-if="submitted && !canConfirm" class="ds-banner ds-banner--error">
         Cuenta al menos un producto antes de confirmar.
       </div>
 
@@ -127,7 +127,7 @@ function submit() {
           </thead>
           <tbody>
             <tr v-if="filtered.length === 0">
-              <td colspan="5" class="empty">Sin productos para el filtro.</td>
+              <td colspan="5" class="ds-empty">Sin productos para el filtro.</td>
             </tr>
             <tr v-for="p in filtered" v-else :key="p.id">
               <td class="tname">
@@ -181,8 +181,15 @@ function submit() {
       <span class="counter">{{ countedCount }} contado(s) · {{ diffCount }} con diferencia</span>
     </template>
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn-primary" :disabled="!canConfirm" @click="submit">
+      <button type="button" class="ds-btn ds-btn--ghost ds-btn--lg" @click="emit('close')">
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="ds-btn ds-btn--primary ds-btn--lg"
+        :disabled="!canConfirm"
+        @click="submit"
+      >
         Confirmar conteo
       </button>
     </template>
@@ -215,7 +222,7 @@ function submit() {
 }
 .search:focus-within {
   border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px var(--amatista-50);
+  box-shadow: var(--ring);
 }
 .s-icon {
   color: var(--warm-500);
@@ -249,16 +256,7 @@ function submit() {
 .fsel:focus {
   outline: none;
   border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px var(--amatista-50);
-}
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-radius: 8px;
-  padding: 9px 13px;
-  font-size: 12.5px;
-  margin-bottom: 10px;
+  box-shadow: var(--ring);
 }
 .scroll {
   max-height: 46vh;
@@ -293,11 +291,6 @@ function submit() {
 }
 .table tbody tr:last-child td {
   border-bottom: none;
-}
-.empty {
-  text-align: center;
-  padding: 28px;
-  color: var(--warm-500);
 }
 .num {
   text-align: right;
@@ -334,7 +327,7 @@ function submit() {
 .count-input:focus {
   outline: none;
   border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px var(--amatista-50);
+  box-shadow: var(--ring);
 }
 .diff {
   font-weight: 600;
@@ -371,7 +364,7 @@ function submit() {
 .note input:focus {
   outline: none;
   border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px var(--amatista-50);
+  box-shadow: var(--ring);
 }
 .link {
   display: inline-flex;
@@ -393,40 +386,5 @@ function submit() {
   font-size: 12px;
   color: var(--warm-500);
   margin-left: 12px;
-}
-
-.btn-primary {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 9px;
-  cursor: pointer;
-  border: none;
-  color: white;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-}
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-ghost {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 9px;
-  cursor: pointer;
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  color: var(--warm-700);
-}
-.btn-ghost:hover {
-  background: var(--warm-100);
 }
 </style>

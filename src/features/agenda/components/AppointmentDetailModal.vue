@@ -215,14 +215,14 @@ const notesCancellation = computed(() =>
                 <div class="cancel-actions">
                   <button
                     type="button"
-                    class="btn btn-ghost"
+                    class="ds-btn ds-btn--ghost"
                     @click="((cancelOpen = false), (reason = ''))"
                   >
                     Volver
                   </button>
                   <button
                     type="button"
-                    class="btn btn-danger grow"
+                    class="ds-btn ds-btn--danger grow"
                     @click="emit('cancel', appointment, reason.trim())"
                   >
                     <Ban :size="15" :stroke-width="1.7" /> Confirmar
@@ -237,10 +237,10 @@ const notesCancellation = computed(() =>
 
     <template v-if="appointment && !isTerminal && canUpdate" #footer-left>
       <div class="foot-left-actions">
-        <button type="button" class="btn btn-ghost" @click="emit('reschedule', appointment)">
+        <button type="button" class="ds-btn ds-btn--ghost" @click="emit('reschedule', appointment)">
           <Move :size="15" :stroke-width="1.7" /> Reprogramar
         </button>
-        <button type="button" class="btn btn-ghost" @click="emit('edit', appointment)">
+        <button type="button" class="ds-btn ds-btn--ghost" @click="emit('edit', appointment)">
           <Pencil :size="15" :stroke-width="1.7" /> Editar
         </button>
       </div>
@@ -250,15 +250,17 @@ const notesCancellation = computed(() =>
       <button
         v-if="!confirmDelete"
         type="button"
-        class="btn btn-danger"
+        class="ds-btn ds-btn--danger"
         @click="confirmDelete = true"
       >
         <Trash2 :size="15" :stroke-width="1.7" /> Eliminar
       </button>
       <div v-else class="confirm-delete">
         <span class="confirm-label">¿Eliminar?</span>
-        <button type="button" class="btn btn-ghost" @click="confirmDelete = false">No</button>
-        <button type="button" class="btn btn-danger" @click="emit('remove', appointment)">
+        <button type="button" class="ds-btn ds-btn--ghost" @click="confirmDelete = false">
+          No
+        </button>
+        <button type="button" class="ds-btn ds-btn--danger" @click="emit('remove', appointment)">
           Sí, eliminar
         </button>
       </div>
@@ -404,7 +406,7 @@ const notesCancellation = computed(() =>
 .trans-btn.danger:hover {
   border-color: oklch(75% 0.12 25deg);
   background: oklch(96% 0.04 25deg);
-  color: oklch(48% 0.18 25deg);
+  color: var(--danger-700);
 }
 
 .cancel-box {
@@ -439,7 +441,7 @@ const notesCancellation = computed(() =>
 .banner.warn {
   background: oklch(95% 0.07 80deg);
   color: oklch(42% 0.13 60deg);
-  border: 1px solid oklch(88% 0.09 80deg);
+  border: 1px solid var(--warning-200);
 }
 
 .banner.neutral {
@@ -468,46 +470,8 @@ const notesCancellation = computed(() =>
   color: var(--warm-600);
 }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 500;
-  padding: 9px 14px;
-  border-radius: 9px;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition:
-    filter 0.12s,
-    background 0.12s;
-  white-space: nowrap;
-}
-
-.btn.grow {
+.grow {
   flex: 1;
-}
-
-.btn-ghost {
-  background: var(--warm-50);
-  border-color: var(--warm-200);
-  color: var(--warm-700);
-}
-
-.btn-ghost:hover {
-  background: var(--warm-100);
-}
-
-.btn-danger {
-  background: oklch(95% 0.05 25deg);
-  border-color: oklch(85% 0.08 25deg);
-  color: oklch(48% 0.18 25deg);
-}
-
-.btn-danger:hover {
-  background: oklch(92% 0.07 25deg);
 }
 
 @media (width <= 720px) {

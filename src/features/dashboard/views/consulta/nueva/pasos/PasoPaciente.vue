@@ -375,7 +375,11 @@ function clearBanner() {
                   Registra la primera mascota de
                   {{ selectedOwner.name?.split(' ')[0] }} para poder iniciar la consulta.
                 </p>
-                <button type="button" class="btn primary" @click="startCreatePet">
+                <button
+                  type="button"
+                  class="ds-btn ds-btn--solid ds-btn--lg"
+                  @click="startCreatePet"
+                >
                   <Plus :size="14" :stroke-width="1.6" />
                   <span>Registrar primera mascota</span>
                 </button>
@@ -431,8 +435,8 @@ function clearBanner() {
 }
 
 .banner.danger {
-  background: oklch(94% 0.06 25deg);
-  border: 1px solid oklch(85% 0.1 25deg);
+  background: var(--danger-150);
+  border: 1px solid var(--danger-300);
   color: oklch(35% 0.15 25deg);
 }
 
@@ -672,28 +676,6 @@ function clearBanner() {
   text-align: center;
   max-width: 160px;
   line-height: 1.4;
-}
-
-.btn {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  border: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.btn.primary {
-  background: var(--amatista-700);
-  color: white;
-}
-
-.btn.primary:hover {
-  filter: brightness(1.05);
 }
 
 .create-head {

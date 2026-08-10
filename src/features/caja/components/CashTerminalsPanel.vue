@@ -140,7 +140,7 @@ async function toggle(terminal: CashTerminal) {
         <button
           v-if="canManage"
           type="button"
-          class="cta"
+          class="ds-btn ds-btn--solid ds-btn--snug"
           :disabled="!selectedBranchId"
           @click="openCreate"
         >
@@ -224,8 +224,19 @@ async function toggle(terminal: CashTerminal) {
         </div>
       </template>
       <template #footer-actions>
-        <button type="button" class="secondary" @click="modalOpen = false">Cancelar</button>
-        <button type="button" class="primary" :disabled="saving" @click="save">
+        <button
+          type="button"
+          class="ds-btn ds-btn--neutral ds-btn--snug"
+          @click="modalOpen = false"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="ds-btn ds-btn--solid ds-btn--snug"
+          :disabled="saving"
+          @click="save"
+        >
           {{ saving ? 'Guardando…' : 'Guardar' }}
         </button>
       </template>
@@ -270,28 +281,8 @@ async function toggle(terminal: CashTerminal) {
 .actions :deep(.base-select) {
   flex: 1;
 }
-.cta,
-.primary,
-.secondary {
-  border: 0;
-  border-radius: 9px;
-  padding: 9px 14px;
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-}
-.cta,
-.primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--amatista-700);
-  color: white;
-}
-.secondary {
-  background: var(--warm-100);
-  color: var(--warm-700);
-}
+
+/* Los botones usan `.ds-btn` (primitives.css). */
 button:disabled {
   opacity: 0.55;
   cursor: default;
@@ -341,7 +332,7 @@ button:disabled {
   font-size: 10.5px;
   font-weight: 600;
   padding: 3px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 .status.active {
   background: var(--success-bg);

@@ -144,7 +144,7 @@ onMounted(() => {
 
     <!-- Info cards -->
     <div class="cards">
-      <section class="card">
+      <section class="ds-card">
         <header class="cardhead">
           <span class="cardic"><ShieldCheck :size="16" :stroke-width="1.7" /></span>
           <h3>Identidad fiscal</h3>
@@ -180,7 +180,7 @@ onMounted(() => {
         </div>
       </section>
 
-      <section class="card">
+      <section class="ds-card">
         <header class="cardhead">
           <span class="cardic"><MapPin :size="16" :stroke-width="1.7" /></span>
           <h3>Contacto y ubicación</h3>
@@ -216,7 +216,12 @@ onMounted(() => {
             {{ activeCount === 1 ? 'activa' : 'activas' }}
           </span>
         </div>
-        <button v-if="canManageSedes" type="button" class="cta" @click="openAdd">
+        <button
+          v-if="canManageSedes"
+          type="button"
+          class="ds-btn ds-btn--primary ds-btn--strong ds-btn--elevated"
+          @click="openAdd"
+        >
           <Plus :size="16" :stroke-width="1.8" /> Nueva sede
         </button>
       </div>
@@ -364,7 +369,7 @@ onMounted(() => {
 .tag {
   font-size: 12px;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--warm-150);
   color: var(--warm-700);
   font-weight: 500;
@@ -381,7 +386,7 @@ onMounted(() => {
 }
 
 .tag.warn {
-  background: oklch(95% 0.06 80deg);
+  background: var(--warning-50);
   color: oklch(45% 0.13 80deg);
 }
 
@@ -414,13 +419,6 @@ onMounted(() => {
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-bottom: 28px;
-}
-
-.card {
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 14px;
-  padding: 20px 22px;
 }
 
 .cardhead {
@@ -538,29 +536,6 @@ onMounted(() => {
   color: var(--warm-500);
   margin-top: 2px;
   display: block;
-}
-
-.cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 15px;
-  border-radius: 9px;
-  border: none;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-  color: #fff;
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  box-shadow:
-    0 1px 2px rgb(50 20 80 / 8%),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 45%);
 }
 
 .sedesgrid {

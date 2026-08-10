@@ -21,7 +21,7 @@ const meta = computed(() => APPT_STATUS[props.status])
   font-size: 11px;
   font-weight: 500;
   padding: 3px 9px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   white-space: nowrap;
 }
 

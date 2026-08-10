@@ -38,7 +38,14 @@ const emit = defineEmits<{
     </template>
 
     <template #footer-actions>
-      <button type="button" class="ghost" :disabled="busy" @click="emit('cancel')">Cancelar</button>
+      <button
+        type="button"
+        class="ds-btn ds-btn--ghost ds-btn--snug"
+        :disabled="busy"
+        @click="emit('cancel')"
+      >
+        Cancelar
+      </button>
       <button type="button" class="danger" :disabled="busy" @click="emit('confirm')">
         <Trash2 :size="14" :stroke-width="1.7" />
         {{ actionLabel }}
@@ -55,7 +62,8 @@ const emit = defineEmits<{
   line-height: 1.55;
 }
 
-.ghost,
+/* El botón de cancelar usa `.ds-btn`; este destructivo se queda local por su
+   borde del mismo tono que el texto, más marcado que el `--danger` del sistema. */
 .danger {
   display: inline-flex;
   align-items: center;
@@ -66,30 +74,15 @@ const emit = defineEmits<{
   cursor: pointer;
   font-family: inherit;
   font-weight: 500;
-  border: 1px solid transparent;
-}
-
-.ghost {
-  background: var(--warm-50);
-  color: var(--warm-700);
-  border-color: var(--warm-200);
-}
-
-.ghost:hover:not(:disabled) {
-  background: var(--warm-100);
-}
-
-.danger {
   background: oklch(94% 0.05 25deg);
-  color: oklch(48% 0.18 25deg);
-  border-color: oklch(48% 0.18 25deg);
+  color: var(--danger-700);
+  border: 1px solid var(--danger-700);
 }
 
 .danger:hover:not(:disabled) {
   background: oklch(91% 0.07 25deg);
 }
 
-.ghost:disabled,
 .danger:disabled {
   cursor: not-allowed;
   opacity: 0.6;

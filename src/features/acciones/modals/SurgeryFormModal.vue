@@ -155,8 +155,8 @@ async function save() {
     @close="emit('close')"
   >
     <template #body>
-      <div v-if="typesError" class="banner error">{{ typesError }}</div>
-      <div v-if="saveError" class="banner error">{{ saveError }}</div>
+      <div v-if="typesError" class="ds-banner ds-banner--sm ds-banner--error">{{ typesError }}</div>
+      <div v-if="saveError" class="ds-banner ds-banner--sm ds-banner--error">{{ saveError }}</div>
 
       <BaseField
         v-if="!preSelectedAnimal && !isEdit"
@@ -220,10 +220,20 @@ async function save() {
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" :disabled="saving" @click="emit('close')">
+      <button
+        type="button"
+        class="ds-btn ds-btn--ghost ds-btn--snug"
+        :disabled="saving"
+        @click="emit('close')"
+      >
         Cancelar
       </button>
-      <button type="button" class="btn-primary" :disabled="saving" @click="save">
+      <button
+        type="button"
+        class="ds-btn ds-btn--solid ds-btn--snug"
+        :disabled="saving"
+        @click="save"
+      >
         {{ saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Guardar cirugía' }}
       </button>
     </template>
@@ -231,16 +241,6 @@ async function save() {
 </template>
 
 <style scoped>
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 12.5px;
-  margin-bottom: 12px;
-}
-
 .patient-fixed {
   display: flex;
   align-items: center;
@@ -286,36 +286,5 @@ async function save() {
   .grid {
     grid-template-columns: 1fr;
   }
-}
-
-.btn-ghost,
-.btn-primary {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 14px;
-  border-radius: 9px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-.btn-ghost {
-  background: transparent;
-  border-color: var(--warm-200);
-  color: var(--warm-700);
-}
-.btn-ghost:hover:not(:disabled) {
-  background: var(--warm-100);
-}
-.btn-primary {
-  background: var(--amatista-700);
-  color: white;
-}
-.btn-primary:hover:not(:disabled) {
-  filter: brightness(1.05);
-}
-.btn-primary:disabled,
-.btn-ghost:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
 }
 </style>

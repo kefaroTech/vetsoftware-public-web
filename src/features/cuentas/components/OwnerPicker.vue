@@ -98,7 +98,7 @@ watch(query, (q) => {
 }
 .input:focus {
   border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px var(--amatista-50);
+  box-shadow: var(--ring);
 }
 .results {
   list-style: none;

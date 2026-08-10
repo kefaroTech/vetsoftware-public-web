@@ -72,7 +72,7 @@ async function submit() {
     @close="emit('close')"
   >
     <template #body>
-      <div v-if="error" class="banner error">{{ error }}</div>
+      <div v-if="error" class="ds-banner ds-banner--sm ds-banner--error">{{ error }}</div>
 
       <label class="label">Archivos de resultado</label>
       <div class="dropzone" @click="pick" @dragover.prevent @drop.prevent="onDrop">
@@ -105,12 +105,17 @@ async function submit() {
       <span class="count">{{ files.length }} archivo(s) adjunto(s)</span>
     </template>
     <template #footer-actions>
-      <button type="button" class="btn-ghost" :disabled="busy" @click="emit('close')">
+      <button
+        type="button"
+        class="ds-btn ds-btn--ghost ds-btn--snug"
+        :disabled="busy"
+        @click="emit('close')"
+      >
         Cancelar
       </button>
       <button
         type="button"
-        class="btn-primary"
+        class="ds-btn ds-btn--solid ds-btn--snug"
         :disabled="files.length === 0 || busy"
         @click="submit"
       >
@@ -121,16 +126,6 @@ async function submit() {
 </template>
 
 <style scoped>
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 12.5px;
-  margin-bottom: 12px;
-}
-
 .label {
   display: block;
   font-size: 11.5px;
@@ -214,7 +209,7 @@ async function submit() {
 }
 
 .rm:hover {
-  background: oklch(95% 0.06 25deg);
+  background: var(--danger-100);
   color: oklch(45% 0.18 25deg);
 }
 
@@ -223,41 +218,7 @@ async function submit() {
   color: var(--warm-500);
 }
 
-.btn-ghost,
-.btn-primary {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 14px;
-  border-radius: 9px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.btn-ghost {
-  background: transparent;
-  border-color: var(--warm-200);
-  color: var(--warm-700);
-}
-
-.btn-ghost:hover:not(:disabled) {
-  background: var(--warm-100);
-}
-
-.btn-primary {
-  background: var(--amatista-700);
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  filter: brightness(1.05);
-}
-
-.btn-primary:disabled,
-.btn-ghost:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
+/* El estado deshabilitado lo cubre `.ds-btn:disabled` (primitives.css). */
 
 .sr-only {
   position: absolute;

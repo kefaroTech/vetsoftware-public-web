@@ -100,7 +100,7 @@ const iconFor = computed(() => (kind: ToastKind) => {
   background: oklch(65% 0.16 75deg);
 }
 .toast-error .toast-icon {
-  background: oklch(55% 0.18 25deg);
+  background: var(--danger-500);
 }
 
 .toast-success {
@@ -113,7 +113,7 @@ const iconFor = computed(() => (kind: ToastKind) => {
   border-left: 3px solid oklch(65% 0.16 75deg);
 }
 .toast-error {
-  border-left: 3px solid oklch(55% 0.18 25deg);
+  border-left: 3px solid var(--danger-500);
 }
 
 .toast-body {

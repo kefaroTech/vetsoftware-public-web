@@ -46,7 +46,7 @@ const id = useId()
 }
 
 .required {
-  color: oklch(55% 0.18 25deg);
+  color: var(--danger-500);
 }
 
 .hint {
@@ -58,7 +58,7 @@ const id = useId()
 .error {
   margin: 0;
   font-size: 11.5px;
-  color: oklch(55% 0.18 25deg);
+  color: var(--danger-500);
   display: flex;
   align-items: center;
   gap: 4px;

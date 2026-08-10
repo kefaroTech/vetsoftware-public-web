@@ -22,7 +22,7 @@ const tokens = computed(() => apptTypeTokens(props.type))
   font-size: 11px;
   font-weight: 500;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   white-space: nowrap;
 }
 </style>

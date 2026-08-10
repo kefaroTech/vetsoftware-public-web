@@ -38,21 +38,26 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
         <div class="icon">
           <Stethoscope :size="22" :stroke-width="1.8" />
         </div>
-        <h2 class="title">¿Guardar la consulta?</h2>
+        <h2 class="ds-title">¿Guardar la consulta?</h2>
         <p class="desc">
           Se registrará la consulta<span v-if="petName">
             de <strong>{{ petName }}</strong></span
           >
           y los procedimientos que hayas agregado. A continuación podrás facturarla.
         </p>
-        <div class="actions">
-          <button type="button" class="btn ghost" :disabled="saving" @click="$emit('cancel')">
+        <div class="ds-actions">
+          <button
+            type="button"
+            class="ds-btn ds-btn--ghost"
+            :disabled="saving"
+            @click="$emit('cancel')"
+          >
             Seguir editando
           </button>
           <button
             ref="confirmBtn"
             type="button"
-            class="btn primary"
+            class="ds-btn ds-btn--solid"
             :disabled="saving"
             @click="$emit('confirm')"
           >
@@ -103,66 +108,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   margin-bottom: 14px;
 }
 
-.title {
-  margin: 0 0 6px;
-  font-size: 18px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  color: var(--warm-900);
-}
-
 .desc {
   margin: 0 0 22px;
   font-size: 13.5px;
   color: var(--warm-600);
   line-height: 1.55;
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 9px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn.ghost {
-  background: transparent;
-  border-color: var(--warm-200);
-  color: var(--warm-900);
-}
-
-.btn.ghost:hover:not(:disabled) {
-  background: var(--warm-100);
-}
-
-.btn.primary {
-  background: var(--amatista-700);
-  color: white;
-}
-
-.btn.primary:hover:not(:disabled) {
-  filter: brightness(1.05);
-}
-
-.btn:focus-visible {
-  outline: 2px solid var(--amatista-700);
-  outline-offset: 2px;
 }
 </style>

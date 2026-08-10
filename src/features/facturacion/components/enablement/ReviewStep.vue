@@ -58,7 +58,7 @@ const missing = computed(() => {
       sub="Verifica que la configuración esté completa. La emisión real se habilita por permisos del plan Premium."
     />
 
-    <div v-for="s in sections" :key="s.step" class="card reviewcard">
+    <div v-for="s in sections" :key="s.step" class="ds-card reviewcard">
       <div class="review-head">
         <div class="review-title">
           <span class="review-badge" :class="s.ok ? 'ok' : 'pend'">
@@ -89,7 +89,7 @@ const missing = computed(() => {
           electrónicos automáticamente.
         </div>
       </div>
-      <button type="button" class="cta" @click="emit('exit')">
+      <button type="button" class="ds-btn ds-btn--primary ds-btn--strong" @click="emit('exit')">
         Ir al estado <ArrowRight :size="15" :stroke-width="1.9" />
       </button>
     </div>
@@ -107,13 +107,6 @@ const missing = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-}
-
-.card {
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 14px;
-  padding: 20px 22px;
 }
 
 .review-head {
@@ -231,25 +224,6 @@ const missing = computed(() => {
   color: var(--warm-600);
   line-height: 1.45;
   margin-top: 2px;
-}
-
-.cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 18px;
-  border-radius: 9px;
-  border: none;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  flex-shrink: 0;
 }
 
 .blockbox {

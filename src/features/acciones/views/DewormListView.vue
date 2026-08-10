@@ -150,20 +150,25 @@ function typeLabel(t: DewormingResponse['type']): string {
 </script>
 
 <template>
-  <div class="page">
+  <div class="ds-page">
     <PageHeader
       kicker="Acciones clínicas"
       title="Desparasitaciones"
       lead="Tratamientos antiparasitarios independientes de una consulta."
     >
       <template #action>
-        <button v-if="canCreate && selection" type="button" class="cta" @click="modalOpen = true">
+        <button
+          v-if="canCreate && selection"
+          type="button"
+          class="ds-btn ds-btn--primary ds-btn--lg ds-btn--elevated"
+          @click="modalOpen = true"
+        >
           <Plus :size="16" :stroke-width="1.8" /> Nueva desparasitación
         </button>
       </template>
     </PageHeader>
 
-    <div v-if="error" class="banner error">{{ error }}</div>
+    <div v-if="error" class="ds-banner ds-banner--error">{{ error }}</div>
 
     <PatientCascadePicker v-if="!selection" v-model="patientId" @update:selection="onSelect" />
 
@@ -193,7 +198,7 @@ function typeLabel(t: DewormingResponse['type']): string {
             <td>{{ item.product }}</td>
             <td>{{ item.dosage }}</td>
             <td>{{ item.nextControl ? formatDateShort(item.nextControl) : '—' }}</td>
-            <td v-if="canUpdate || canDelete" class="actions">
+            <td v-if="canUpdate || canDelete" class="ds-actions">
               <button
                 v-if="canUpdate"
                 type="button"
@@ -252,50 +257,9 @@ function typeLabel(t: DewormingResponse['type']): string {
 </template>
 
 <style scoped>
-.page {
-  font-family: var(--font-sans);
-  color: var(--warm-900);
-}
-
-.cta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  font-size: 13.5px;
-  font-weight: 500;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-  color: white;
-  border: none;
-  border-radius: 9px;
-  cursor: pointer;
-  font-family: inherit;
-  box-shadow:
-    0 1px 2px rgb(50 20 80 / 8%),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 50%);
-  white-space: nowrap;
-}
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  margin-bottom: 14px;
-}
 .actions-col {
   width: 88px;
   text-align: right;
-}
-.actions {
-  display: flex;
-  gap: 6px;
-  justify-content: flex-end;
 }
 
 .icon-btn {
@@ -313,9 +277,9 @@ function typeLabel(t: DewormingResponse['type']): string {
   background: var(--warm-100);
 }
 .icon-btn.danger:hover {
-  background: oklch(95% 0.06 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-color: oklch(85% 0.12 25deg);
+  background: var(--danger-100);
+  color: var(--danger-900);
+  border-color: var(--danger-400);
 }
 .clickable-row {
   cursor: pointer;

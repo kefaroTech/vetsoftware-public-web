@@ -155,7 +155,9 @@ function onPrint() {
       <button type="button" class="btn-ghost" @click="onPrint">
         <Printer :size="15" :stroke-width="2" /> Imprimir
       </button>
-      <button type="button" class="btn-primary" @click="$emit('close')">Cerrar</button>
+      <button type="button" class="ds-btn ds-btn--primary ds-btn--lg" @click="$emit('close')">
+        Cerrar
+      </button>
     </template>
   </ModalShell>
 </template>
@@ -237,22 +239,6 @@ function onPrint() {
   color: var(--warm-900);
   padding-top: 8px;
   border-top: 1px solid var(--warm-200);
-}
-
-.btn-primary {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 9px;
-  cursor: pointer;
-  border: none;
-  color: white;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
 }
 
 .btn-ghost {

@@ -34,7 +34,7 @@ function toggle() {
 .switch {
   width: 32px;
   height: 18px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: none;
   background: var(--warm-300);
   padding: 2px;

@@ -7,7 +7,7 @@ defineProps<{ kicker: string; title: string; lead?: string }>()
     <div class="kicker">{{ kicker }}</div>
     <div class="title-row">
       <div>
-        <h1 class="title">{{ title }}</h1>
+        <h1 class="ds-display">{{ title }}</h1>
         <p v-if="lead" class="lead">{{ lead }}</p>
       </div>
       <div class="action">
@@ -37,15 +37,6 @@ defineProps<{ kicker: string; title: string; lead?: string }>()
   justify-content: space-between;
   gap: 24px;
   flex-wrap: wrap;
-}
-.title {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: 36px;
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  color: var(--warm-900);
-  line-height: 1.05;
 }
 .lead {
   margin: 6px 0 0;

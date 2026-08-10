@@ -253,7 +253,7 @@ onBeforeUnmount(() => observer?.disconnect())
 }
 
 .status.error {
-  color: oklch(48% 0.18 25deg);
+  color: var(--danger-700);
   background: oklch(97% 0.02 25deg);
   border-color: oklch(85% 0.06 25deg);
 }

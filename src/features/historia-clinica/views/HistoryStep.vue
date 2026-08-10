@@ -261,7 +261,7 @@ function goNuevaConsulta() {
         <div class="actions">
           <button
             type="button"
-            class="btn-ghost"
+            class="ds-btn ds-btn--ghost ds-btn--snug"
             :disabled="exporting || !state.pet"
             @click="onExport"
           >
@@ -271,7 +271,7 @@ function goNuevaConsulta() {
           <button
             v-if="canCreateConsultation"
             type="button"
-            class="btn-primary"
+            class="ds-btn ds-btn--solid ds-btn--snug"
             @click="goNuevaConsulta"
           >
             <Plus :size="14" :stroke-width="1.8" />
@@ -455,7 +455,7 @@ function goNuevaConsulta() {
 
 .pill {
   padding: 3px 9px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--warm-200);
   color: var(--warm-700);
   font-size: 11.5px;
@@ -476,44 +476,6 @@ function goNuevaConsulta() {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
-}
-
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  font-size: 13px;
-  font-weight: 500;
-  background: var(--amatista-700);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.btn-primary:hover {
-  background: var(--amatista-600);
-}
-
-.btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  font-size: 13px;
-  background: var(--warm-50);
-  color: var(--warm-700);
-  border: 1px solid var(--warm-200);
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.btn-ghost:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .weight-section {
@@ -575,7 +537,7 @@ function goNuevaConsulta() {
   align-items: center;
   gap: 6px;
   padding: 5px 11px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--warm-50);
   color: var(--warm-700);
   border: 1px solid var(--warm-200);
@@ -649,7 +611,7 @@ function goNuevaConsulta() {
   font-size: 13px;
   border-radius: 10px;
   background: oklch(97% 0.02 25deg);
-  color: oklch(48% 0.18 25deg);
+  color: var(--danger-700);
   border: 1px solid oklch(85% 0.06 25deg);
 }
 

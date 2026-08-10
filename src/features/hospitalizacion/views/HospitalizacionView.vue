@@ -147,8 +147,8 @@ async function onDischarge(reason: ReasonLeaving) {
 </script>
 
 <template>
-  <div class="page">
-    <div v-if="boardError" class="banner error">{{ boardError }}</div>
+  <div class="ds-page">
+    <div v-if="boardError" class="ds-banner ds-banner--error">{{ boardError }}</div>
 
     <template v-if="mode === 'board'">
       <PageHeader
@@ -186,20 +186,3 @@ async function onDischarge(reason: ReasonLeaving) {
     />
   </div>
 </template>
-
-<style scoped>
-.page {
-  font-family: var(--font-sans);
-  color: var(--warm-900);
-}
-
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  margin-bottom: 14px;
-}
-</style>

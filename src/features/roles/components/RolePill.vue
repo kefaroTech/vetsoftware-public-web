@@ -27,7 +27,7 @@ const tokens = computed(() => ROLE_COLORS[props.color])
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-weight: 500;
   white-space: nowrap;
   line-height: 1;

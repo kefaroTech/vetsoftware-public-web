@@ -78,7 +78,7 @@ watch(
     @close="emit('close')"
   >
     <template #body>
-      <div v-if="error" class="banner error">{{ error }}</div>
+      <div v-if="error" class="ds-banner ds-banner--error">{{ error }}</div>
       <div class="exportbar">
         <span class="exp-lbl">Descargar</span>
         <button
@@ -110,10 +110,10 @@ watch(
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="5" class="empty">Cargando…</td>
+            <td colspan="5" class="ds-empty">Cargando…</td>
           </tr>
           <tr v-else-if="rows.length === 0">
-            <td colspan="5" class="empty">Sin compras registradas.</td>
+            <td colspan="5" class="ds-empty">Sin compras registradas.</td>
           </tr>
           <tr v-for="r in rows" v-else :key="r.id">
             <td class="date">{{ fmtDateTime(r.createdDate) }}</td>
@@ -140,21 +140,14 @@ watch(
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Cerrar</button>
+      <button type="button" class="ds-btn ds-btn--ghost ds-btn--lg" @click="emit('close')">
+        Cerrar
+      </button>
     </template>
   </ModalShell>
 </template>
 
 <style scoped>
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  margin-bottom: 12px;
-}
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -182,11 +175,6 @@ watch(
 }
 .table tbody tr:last-child td {
   border-bottom: none;
-}
-.empty {
-  text-align: center;
-  padding: 32px;
-  color: var(--warm-500);
 }
 .num {
   text-align: right;
@@ -263,20 +251,5 @@ watch(
 .pag-ctrl button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-.btn-ghost {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 9px;
-  cursor: pointer;
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  color: var(--warm-700);
-}
-.btn-ghost:hover {
-  background: var(--warm-100);
 }
 </style>

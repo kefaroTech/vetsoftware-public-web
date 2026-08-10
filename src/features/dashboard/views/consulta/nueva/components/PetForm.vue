@@ -369,8 +369,8 @@ defineExpose({ validate })
   gap: 8px;
   font-size: 12.5px;
   padding: 10px 14px;
-  background: oklch(94% 0.06 25deg);
-  border: 1px solid oklch(85% 0.1 25deg);
+  background: var(--danger-150);
+  border: 1px solid var(--danger-300);
   color: oklch(35% 0.15 25deg);
   border-radius: 10px;
 }

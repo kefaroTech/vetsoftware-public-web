@@ -183,12 +183,19 @@ function finish() {
 
     <template #footer-actions>
       <template v-if="!done">
-        <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
-        <button type="button" class="btn-primary" :disabled="busy" @click="submit">
+        <button type="button" class="ds-btn ds-btn--ghost ds-btn--lg" @click="emit('close')">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="ds-btn ds-btn--primary ds-btn--lg"
+          :disabled="busy"
+          @click="submit"
+        >
           {{ busy ? 'Registrando…' : 'Registrar abono' }}
         </button>
       </template>
-      <button v-else type="button" class="btn-primary" @click="finish">
+      <button v-else type="button" class="ds-btn ds-btn--primary ds-btn--lg" @click="finish">
         <Check :size="15" :stroke-width="2" /> Listo
       </button>
     </template>
@@ -280,43 +287,5 @@ function finish() {
   font-size: 12.5px;
   color: var(--amatista-700);
   margin: 12px 0 0;
-}
-
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 9px;
-  cursor: pointer;
-  border: none;
-  color: white;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-ghost {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 9px;
-  cursor: pointer;
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  color: var(--warm-700);
-}
-.btn-ghost:hover {
-  background: var(--warm-100);
 }
 </style>

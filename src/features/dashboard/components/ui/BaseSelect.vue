@@ -272,7 +272,7 @@ onBeforeUnmount(() => {
 .trigger:focus-visible {
   outline: none;
   border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px var(--amatista-50);
+  box-shadow: var(--ring);
 }
 
 .select.disabled .trigger {
@@ -290,7 +290,7 @@ onBeforeUnmount(() => {
 .select.invalid.open .trigger,
 .select.invalid .trigger:focus-visible {
   border-color: oklch(55% 0.22 25deg);
-  box-shadow: 0 0 0 3px oklch(92% 0.06 25deg);
+  box-shadow: 0 0 0 3px var(--danger-200);
 }
 
 .select.invalid .chev {

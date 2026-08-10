@@ -90,17 +90,17 @@ async function resend() {
       ¿Ya lo recordaste? <RouterLink :to="{ name: 'login' }">Inicia sesión</RouterLink>
     </template>
 
-    <div class="rc-card pub-reveal">
+    <div class="pub-card pub-reveal">
       <template v-if="!sent">
-        <div class="rc-eyebrow">Recuperar código</div>
-        <h1 class="rc-title">¿Olvidaste tu código?</h1>
-        <p class="rc-sub">
+        <div class="pub-eyebrow">Recuperar código</div>
+        <h1 class="pub-title">¿Olvidaste tu código?</h1>
+        <p class="pub-sub">
           Escribe tu <strong>correo</strong> y te enviaremos tu código de usuario (y el de cada
           veterinaria si tienes más de una cuenta).
         </p>
 
-        <form class="rc-form" novalidate @submit.prevent="submit">
-          <div v-if="submitError" class="rc-error">{{ submitError }}</div>
+        <form class="pub-form" novalidate @submit.prevent="submit">
+          <div v-if="submitError" class="pub-error">{{ submitError }}</div>
 
           <AuthField label="Correo" required :error="err()">
             <AuthInput
@@ -125,13 +125,13 @@ async function resend() {
         <div class="rc-icon">
           <v-icon size="38">mdi-email-check-outline</v-icon>
         </div>
-        <h1 class="rc-title">Revisa tu correo</h1>
-        <p class="rc-sub">
+        <h1 class="pub-title">Revisa tu correo</h1>
+        <p class="pub-sub">
           Si <strong>{{ form.email.trim() }}</strong> tiene cuentas en Vetrina, te enviamos tu(s)
           código(s) de usuario.
         </p>
 
-        <div v-if="submitError" class="rc-error rc-error--sent">{{ submitError }}</div>
+        <div v-if="submitError" class="pub-error rc-error--sent">{{ submitError }}</div>
 
         <div class="rc-resend">
           <span>¿No lo recibiste?</span>
@@ -152,58 +152,6 @@ async function resend() {
 </template>
 
 <style scoped>
-.rc-card {
-  width: 100%;
-  max-width: 440px;
-  background: #fff;
-  border-radius: 16px;
-  border: 1px solid var(--pub-line);
-  box-shadow: var(--pub-card-shadow);
-  padding: 40px 44px;
-  text-align: left;
-}
-
-.rc-eyebrow {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--pub-ame-700);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-.rc-title {
-  font-family: 'Instrument Serif', serif;
-  font-size: 32px;
-  font-weight: 400;
-  margin: 0;
-  letter-spacing: -0.02em;
-  line-height: 1.06;
-}
-
-.rc-sub {
-  font-size: 13px;
-  color: var(--pub-ink-500);
-  margin: 10px 0 26px;
-  line-height: 1.55;
-}
-
-.rc-form {
-  font-family: Inter, sans-serif;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.rc-error {
-  background: var(--pub-err-bg);
-  border: 1px solid var(--pub-err-bd);
-  color: var(--pub-err-tx);
-  padding: 9px 12px;
-  border-radius: 8px;
-  font-size: 12.5px;
-}
-
 .rc-error--sent {
   margin: 0 0 16px;
 }
@@ -269,9 +217,8 @@ async function resend() {
   text-decoration: underline;
 }
 
-@media (width <= 520px) {
-  .rc-card {
-    padding: 32px 24px;
-  }
+/* Override mínimo sobre `.pub-card` de public-auth.css. */
+.pub-card {
+  text-align: left;
 }
 </style>

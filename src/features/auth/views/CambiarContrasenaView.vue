@@ -58,10 +58,10 @@ async function submit() {
       <a href="#" class="logout-link" @click.prevent="logout">Cerrar sesión</a>
     </template>
 
-    <div class="cp-card pub-reveal">
-      <div class="cp-eyebrow">Primer ingreso</div>
-      <h1 class="cp-title">Crea tu contraseña</h1>
-      <p class="cp-sub">
+    <div class="pub-card pub-reveal">
+      <div class="pub-eyebrow">Primer ingreso</div>
+      <h1 class="pub-title">Crea tu contraseña</h1>
+      <p class="pub-sub">
         <template v-if="firstName">Hola {{ firstName }}. </template>Por seguridad, define una
         contraseña nueva para tu cuenta. La necesitarás cada vez que inicies sesión.
       </p>
@@ -108,45 +108,6 @@ async function submit() {
 </template>
 
 <style scoped>
-.cp-card {
-  width: 100%;
-  max-width: 440px;
-  background: #fff;
-  border-radius: 16px;
-  border: 1px solid var(--pub-line);
-  box-shadow: var(--pub-card-shadow);
-  padding: 40px 44px;
-}
-
-.cp-eyebrow {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--pub-ame-700);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-.cp-title {
-  font-family: 'Instrument Serif', serif;
-  font-size: 34px;
-  font-weight: 400;
-  margin: 0;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
-}
-
-.cp-sub {
-  font-size: 13px;
-  color: var(--pub-ink-500);
-  margin: 10px 0 28px;
-  line-height: 1.5;
-}
-
-.cp-form {
-  font-family: Inter, sans-serif;
-}
-
 .cp-banner {
   margin-bottom: 20px;
 }
@@ -167,9 +128,18 @@ async function submit() {
   text-decoration: underline;
 }
 
-@media (width <= 520px) {
-  .cp-card {
-    padding: 32px 24px;
-  }
+.cp-form {
+  font-family: Inter, sans-serif;
+}
+
+/* Estas dos pantallas llevan el titular un punto más grande. */
+.pub-title {
+  font-size: 34px;
+  line-height: 1.05;
+}
+
+.pub-sub {
+  margin: 10px 0 28px;
+  line-height: 1.5;
 }
 </style>

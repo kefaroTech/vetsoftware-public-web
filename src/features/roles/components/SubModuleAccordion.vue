@@ -153,7 +153,7 @@ function isHighlighted(text: string): boolean {
   font-size: 11px;
   font-weight: 500;
   padding: 3px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   white-space: nowrap;
   flex-shrink: 0;
 }
