@@ -4,6 +4,7 @@ import { openAccountApi } from '../api/openAccount.api'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
 import { generalChargeApi, productChargeApi, serviceChargeApi } from '../api/charges.api'
 import { debtOpenAccountApi } from '../api/debtOpenAccount.api'
+import { useCancellableLatest, useLatestOnly } from '@/composables/useLatestOnly'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useTiendaStore } from '@/features/tienda/stores/tienda.store'
 import { appliesIva, splitGross, taxByRate } from '@/features/tienda/composables/pricing'
@@ -23,6 +24,8 @@ import type {
 export const useCuentasStore = defineStore('cuentas', () => {
   const accounts = ref<OpenAccountResponse[]>([])
   const loading = ref(false)
+  // La lista se recarga al cambiar de sede: solo la ultima escribe.
+  const listTurn = useLatestOnly()
   const error = ref<string | null>(null)
   let loadedOnce = false
 
@@ -30,6 +33,8 @@ export const useCuentasStore = defineStore('cuentas', () => {
   const charges = ref<UnifiedCharge[]>([])
   const payments = ref<DebtResponse[]>([])
   const detailLoading = ref(false)
+  // El detalle se recarga por id de cuenta: solo la ultima seleccion escribe.
+  const detailTurn = useCancellableLatest()
 
   // Insumos del desglose fiscal de la cuenta (bruto por línea + su tasa de IVA), para el cierre.
   // product/service resuelven su tasa contra el catálogo de tienda; general trae la suya.
@@ -52,15 +57,19 @@ export const useCuentasStore = defineStore('cuentas', () => {
   })
 
   async function loadAccounts(): Promise<void> {
+    const turno = listTurn.begin()
     loading.value = true
     error.value = null
     try {
-      accounts.value = (await openAccountApi.listAll()).filter((a) => a.enabled)
+      const rows = (await openAccountApi.listAll()).filter((a) => a.enabled)
+      if (!turno()) return
+      accounts.value = rows
       loadedOnce = true
     } catch (e) {
+      if (!turno()) return
       error.value = getProblemDetailMessage(e, 'No se pudieron cargar las cuentas')
     } finally {
-      loading.value = false
+      if (turno()) loading.value = false
     }
   }
 
@@ -84,6 +93,13 @@ export const useCuentasStore = defineStore('cuentas', () => {
   }
 
   async function loadDetail(accountId: number): Promise<void> {
+    // Saltar de una cuenta a otra deja dos detalles en vuelo: sin esto, los
+    // cargos de la cuenta anterior pueden pisar los de la que se está viendo.
+    //
+    // Aquí el turno solo descarta, no cancela: el `Promise.all` incluye
+    // `tienda.ensureLoaded()`, que es una promesa compartida del catálogo.
+    // Abortarla dejaría sin catálogo a todo el que la estuviera esperando.
+    const turno = detailTurn.begin()
     detailLoading.value = true
     try {
       const tienda = useTiendaStore()
@@ -156,14 +172,16 @@ export const useCuentasStore = defineStore('cuentas', () => {
         const rate = c.hasTax ? (c.taxPercentage ?? c.tax?.percentage ?? 0) : 0
         lines.push({ gross: c.unitAmount * c.quantity, ratePct: rate, voided: c.voided })
       }
+      if (!turno.isCurrent()) return
       charges.value = unified
       taxLines.value = lines
       // Los abonos anulados siguen enabled=true (voided=true) y deben verse tachados.
       payments.value = debts.filter((d) => d.enabled)
     } catch (e) {
+      if (!turno.isCurrent()) return
       error.value = getProblemDetailMessage(e, 'No se pudo cargar el detalle de la cuenta')
     } finally {
-      detailLoading.value = false
+      if (turno.isCurrent()) detailLoading.value = false
     }
   }
 

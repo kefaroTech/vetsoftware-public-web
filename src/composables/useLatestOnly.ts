@@ -61,3 +61,45 @@ export function useLatestOnly() {
 
   return { begin }
 }
+
+export interface RequestTurn {
+  /** Pásalo al cliente de API para que la anterior se cancele de verdad. */
+  signal: AbortSignal
+  /** ¿Esta carga sigue siendo la última? Compruébalo tras cada `await`. */
+  isCurrent: () => boolean
+}
+
+/**
+ * Igual que `useLatestOnly`, pero además **cancela** la petición anterior.
+ *
+ * Es la variante correcta cuando la petición tiene un único dueño: la lectura
+ * de un store con clave (sede, cuenta, filtros). Ahí no hay promesa compartida
+ * que romper, así que abortar además de descartar ahorra el viaje — y en
+ * `loadStock`, que recorre las páginas en bucle, ahorra todas las que queden.
+ *
+ * `isCurrent()` mira el turno **y** el aborto: una carga puede haber sido
+ * cancelada sin que haya empezado otra (por ejemplo al desmontar).
+ */
+export function useCancellableLatest() {
+  let inflight: AbortController | null = null
+  let ticket = 0
+
+  function begin(): RequestTurn {
+    inflight?.abort()
+    const ctrl = new AbortController()
+    inflight = ctrl
+    const mine = ++ticket
+    return {
+      signal: ctrl.signal,
+      isCurrent: () => mine === ticket && !ctrl.signal.aborted,
+    }
+  }
+
+  /** Corta lo que haya en vuelo sin abrir un turno nuevo (desmontaje, logout). */
+  function cancel() {
+    inflight?.abort()
+    inflight = null
+  }
+
+  return { begin, cancel }
+}

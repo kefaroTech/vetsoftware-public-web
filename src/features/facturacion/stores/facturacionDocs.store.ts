@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { electronicDocumentApi } from '../api/electronicDocument.api'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
+import { useLatestOnly } from '@/composables/useLatestOnly'
 import type {
   CreditNoteReason,
   DebitNoteReason,
@@ -18,6 +19,8 @@ import type {
 export const useFacturacionDocsStore = defineStore('facturacionDocs', () => {
   const documents = ref<ElectronicDocumentResponse[]>([])
   const loading = ref(false)
+  // Recarga al cambiar de sede: solo la ultima escribe.
+  const listTurn = useLatestOnly()
   const error = ref<string | null>(null)
   let loadedOnce = false
 
@@ -28,15 +31,19 @@ export const useFacturacionDocsStore = defineStore('facturacionDocs', () => {
   }
 
   async function loadAll(): Promise<void> {
+    const turno = listTurn.begin()
     loading.value = true
     error.value = null
     try {
-      documents.value = await electronicDocumentApi.listAll()
+      const rows = await electronicDocumentApi.listAll()
+      if (!turno()) return
+      documents.value = rows
       loadedOnce = true
     } catch (e) {
+      if (!turno()) return
       error.value = getProblemDetailMessage(e, 'No se pudieron cargar los documentos')
     } finally {
-      loading.value = false
+      if (turno()) loading.value = false
     }
   }
 

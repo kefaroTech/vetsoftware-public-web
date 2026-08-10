@@ -18,7 +18,10 @@ import type {
 
 /** Cliente del inventario por sede (backend feature `inventory`, F3). */
 export const inventoryApi = {
-  async searchStock(criteria: StockSearchCriteria): Promise<PageResponse<StockView>> {
+  async searchStock(
+    criteria: StockSearchCriteria,
+    signal?: AbortSignal,
+  ): Promise<PageResponse<StockView>> {
     const params: Record<string, string | number | boolean> = {
       page: criteria.page ?? 0,
       pageSize: criteria.pageSize ?? 20,
@@ -26,7 +29,10 @@ export const inventoryApi = {
     if (criteria.branchId != null) params.branchId = criteria.branchId
     if (criteria.q) params.q = criteria.q
     if (criteria.lowStock) params.lowStock = true
-    const { data } = await http.get<PageResponse<StockView>>('/inventory/stock', { params })
+    const { data } = await http.get<PageResponse<StockView>>('/inventory/stock', {
+      params,
+      signal,
+    })
     return data
   },
 
@@ -84,17 +90,24 @@ export const inventoryApi = {
   },
 
   // ── F5 ──
-  async alerts(branchId?: number | null, expiringInDays = 30): Promise<InventoryAlertsView> {
+  async alerts(
+    branchId?: number | null,
+    expiringInDays = 30,
+    signal?: AbortSignal,
+  ): Promise<InventoryAlertsView> {
     const params: Record<string, number> = { expiringInDays }
     if (branchId != null) params.branchId = branchId
-    const { data } = await http.get<InventoryAlertsView>('/inventory/alerts', { params })
+    const { data } = await http.get<InventoryAlertsView>('/inventory/alerts', { params, signal })
     return data
   },
 
-  async valuation(branchId?: number | null): Promise<InventoryValuationView> {
+  async valuation(branchId?: number | null, signal?: AbortSignal): Promise<InventoryValuationView> {
     const params: Record<string, number> = {}
     if (branchId != null) params.branchId = branchId
-    const { data } = await http.get<InventoryValuationView>('/inventory/valuation', { params })
+    const { data } = await http.get<InventoryValuationView>('/inventory/valuation', {
+      params,
+      signal,
+    })
     return data
   },
 

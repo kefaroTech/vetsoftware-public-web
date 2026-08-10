@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { supplierInvoicesApi, type SupplierInvoiceSearchParams } from '../api/supplierInvoices.api'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { useLatestOnly } from '@/composables/useLatestOnly'
 import type {
   AccountsPayableAging,
   RegisterSupplierPaymentRequest,
@@ -18,6 +19,8 @@ export const useSupplierInvoicesStore = defineStore('supplierInvoices', () => {
   const items = ref<SupplierInvoice[]>([])
   const total = ref(0)
   const loading = ref(false)
+  // Filtrar rapido encadena varias busquedas: solo la ultima escribe.
+  const searchTurn = useLatestOnly()
   const error = ref<string | null>(null)
 
   const aging = ref<AccountsPayableAging | null>(null)
@@ -27,16 +30,19 @@ export const useSupplierInvoicesStore = defineStore('supplierInvoices', () => {
 
   async function search(params: SupplierInvoiceSearchParams = {}): Promise<void> {
     lastParams = params
+    const turno = searchTurn.begin()
     loading.value = true
     error.value = null
     try {
       const page = await supplierInvoicesApi.search(params)
+      if (!turno()) return
       items.value = page.content
       total.value = page.totalElements
     } catch (e) {
+      if (!turno()) return
       error.value = getProblemDetailMessage(e, 'No se pudieron cargar las facturas')
     } finally {
-      loading.value = false
+      if (turno()) loading.value = false
     }
   }
 

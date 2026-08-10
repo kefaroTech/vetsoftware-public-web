@@ -11,6 +11,7 @@ import type {
 } from '../types/appointment'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
+import { useLatestOnly } from '@/composables/useLatestOnly'
 
 export type OriginFilter = 'ALL' | 'APPOINTMENTS' | 'CLINICAL'
 
@@ -22,6 +23,8 @@ export type OriginFilter = 'ALL' | 'APPOINTMENTS' | 'CLINICAL'
 export const useAppointmentsStore = defineStore('appointments', () => {
   const appointments = ref<AppointmentResponse[]>([])
   const loading = ref(false)
+  // Se recarga al cambiar de sede o de filtros: solo la ultima escribe.
+  const listTurn = useLatestOnly()
   const error = ref<string | null>(null)
 
   // Rango activo (lo fija la vista según el cursor del calendario).
@@ -40,6 +43,9 @@ export const useAppointmentsStore = defineStore('appointments', () => {
 
   async function load(): Promise<void> {
     if (!from.value || !to.value) return
+    // Cambiar de rango, de sede o de filtro encadena varias cargas: si la
+    // anterior llega tarde, repinta la agenda con el rango que ya no se ve.
+    const turno = listTurn.begin()
     loading.value = true
     error.value = null
     try {
@@ -49,12 +55,14 @@ export const useAppointmentsStore = defineStore('appointments', () => {
         employeeId: vetFilter.value === 'ALL' ? undefined : vetFilter.value,
         status: statusFilter.value === 'ALL' ? undefined : statusFilter.value,
       })
+      if (!turno()) return
       appointments.value = data.filter((a) => a.enabled !== false)
     } catch (e) {
+      if (!turno()) return
       error.value = getProblemDetailMessage(e, 'No se pudieron cargar las citas')
       appointments.value = []
     } finally {
-      loading.value = false
+      if (turno()) loading.value = false
     }
   }
 

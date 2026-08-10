@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ref, nextTick } from 'vue'
-import { useLatestOnly } from '@/composables/useLatestOnly'
+import { useCancellableLatest, useLatestOnly } from '@/composables/useLatestOnly'
 
 /**
  * FE-13. Al navegar rápido entre pacientes quedan dos cargas en vuelo y el
@@ -47,6 +47,44 @@ describe('useLatestOnly', () => {
 
     expect(dep()).toBe(false)
     expect(mun()).toBe(true)
+  })
+})
+
+describe('useCancellableLatest', () => {
+  it('abrir un turno nuevo aborta la señal del anterior', () => {
+    const { begin } = useCancellableLatest()
+
+    const primero = begin()
+    expect(primero.signal.aborted).toBe(false)
+
+    const segundo = begin()
+    expect(primero.signal.aborted).toBe(true)
+    expect(primero.isCurrent()).toBe(false)
+    expect(segundo.signal.aborted).toBe(false)
+    expect(segundo.isCurrent()).toBe(true)
+  })
+
+  it('cancel() corta lo que haya en vuelo sin abrir turno nuevo', () => {
+    // Es lo que hace falta al desmontar o al cerrar sesión: no viene otra carga
+    // detrás, simplemente ya no interesa la que está en curso.
+    const { begin, cancel } = useCancellableLatest()
+
+    const turno = begin()
+    cancel()
+
+    expect(turno.signal.aborted).toBe(true)
+    expect(turno.isCurrent()).toBe(false)
+  })
+
+  it('un turno abortado deja de ser vigente aunque siga siendo el último', () => {
+    // `isCurrent` mira el turno Y el aborto: si solo mirara el turno, una carga
+    // cancelada por `cancel()` seguiría escribiendo al resolverse.
+    const { begin, cancel } = useCancellableLatest()
+    const turno = begin()
+
+    expect(turno.isCurrent()).toBe(true)
+    cancel()
+    expect(turno.isCurrent()).toBe(false)
   })
 })
 
