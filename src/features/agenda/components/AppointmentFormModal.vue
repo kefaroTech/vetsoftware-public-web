@@ -10,18 +10,13 @@ import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
 import TimeInput from './TimeInput.vue'
 import OwnerSearchAutocomplete from './OwnerSearchAutocomplete.vue'
 import { useVets } from '../composables/useVets'
+import { useAppointmentForm } from '../composables/useAppointmentForm'
 import { useBranches } from '@/features/branches/composables/useBranches'
 import { useAnimalsByOwnerStore } from '@/features/dashboard/views/consulta/nueva/stores/animalsByOwner.store'
 import {
   APPT_TYPES,
   APPT_NOTES_MAX,
-  APPT_CLIENT_NAME_MAX,
-  APPT_CLIENT_PHONE_MAX,
-  APPT_CLIENT_EMAIL_MAX,
   apptClashes,
-  apptDate,
-  apptTime,
-  toIsoLocalDateTime,
   type AppointmentResponse,
   type AppointmentType,
   type CreateAppointmentRequest,
@@ -61,66 +56,53 @@ const typeEntries = Object.entries(APPT_TYPES) as [
 ][]
 
 // ── Draft ────────────────────────────────────────────────────────────
-const date = ref('')
-const time = ref('09:00')
-const type = ref<AppointmentType>('CONSULTATION')
-const employeeId = ref<number | null>(null)
-const subjectMode = ref<'registered' | 'free'>('registered')
-const ownerId = ref<string | null>(null)
-const ownerName = ref<string | null>(null)
-const animalId = ref<string>('') // '' = por confirmar
-const clientName = ref('')
-const clientPhone = ref('')
-const clientEmail = ref('')
-const notes = ref('')
+// Estado, validación y payload del formulario: ver useAppointmentForm.ts
+const form = useAppointmentForm({
+  mode: computed(() => props.mode),
+  appointment: computed(() => props.appointment),
+  focusDate: computed(() => props.focusDate),
+})
+const {
+  date,
+  time,
+  type,
+  employeeId,
+  subjectMode,
+  ownerId,
+  ownerName,
+  animalId,
+  notes,
+  submitted,
+  isReschedule,
+  isEdit,
+  notesModel,
+  clientNameModel,
+  clientPhoneModel,
+  clientEmailModel,
+  missingSubject,
+  clientEmailInvalid,
+  valid,
+  startAtIso,
+  title,
+  subtitle,
+  submitLabel,
+} = form
+
 const branchId = ref<number | null>(null)
 const defaultBranchId = ref<number | null>(null)
 const confirmingBranch = ref(false)
-const submitted = ref(false)
 
 const pets = ref<Animal[]>([])
 const petsLoading = ref(false)
 
-const isReschedule = computed(() => props.mode === 'reschedule')
-const isEdit = computed(() => props.mode === 'edit')
-
 function resetFromProps() {
-  submitted.value = false
   confirmingBranch.value = false
   // Sede por defecto: la del menú si está entre las asignadas del usuario; si no, su primera sede asignada.
   defaultBranchId.value = resolveDefaultBranch()
   branchId.value = defaultBranchId.value
-  const appt = props.appointment
-  if (appt) {
-    date.value = apptDate(appt.startAt)
-    time.value = apptTime(appt.startAt)
-    type.value = appt.type
-    employeeId.value = appt.employee.id
-    const free = !appt.owner && !!appt.clientName
-    subjectMode.value = free ? 'free' : 'registered'
-    ownerId.value = appt.owner ? String(appt.owner.id) : null
-    ownerName.value = appt.owner?.name ?? null
-    animalId.value = appt.animal ? String(appt.animal.id) : ''
-    clientName.value = appt.clientName ?? ''
-    clientPhone.value = appt.clientPhone ?? ''
-    clientEmail.value = appt.clientEmail ?? ''
-    notes.value = appt.notes ?? ''
-    if (ownerId.value) void loadPets(ownerId.value)
-  } else {
-    date.value = props.focusDate
-    time.value = '09:00'
-    type.value = 'CONSULTATION'
-    employeeId.value = availableVets.value[0]?.id ?? null
-    subjectMode.value = 'registered'
-    ownerId.value = null
-    ownerName.value = null
-    animalId.value = ''
-    clientName.value = ''
-    clientPhone.value = ''
-    clientEmail.value = ''
-    notes.value = ''
-    pets.value = []
-  }
+  form.resetFrom(props.appointment, availableVets.value[0]?.id ?? null)
+  if (props.appointment?.owner) void loadPets(String(props.appointment.owner.id))
+  else pets.value = []
 }
 
 watch(
@@ -221,52 +203,7 @@ const petOptions = computed(() => [
   })),
 ])
 
-// ── Char counters con límite ─────────────────────────────────────────
-const notesModel = computed({
-  get: () => notes.value,
-  set: (v: string) => (notes.value = v.slice(0, APPT_NOTES_MAX)),
-})
-const clientNameModel = computed({
-  get: () => clientName.value,
-  set: (v: string) => (clientName.value = v.slice(0, APPT_CLIENT_NAME_MAX)),
-})
-const clientPhoneModel = computed({
-  get: () => clientPhone.value,
-  set: (v: string) => (clientPhone.value = v.slice(0, APPT_CLIENT_PHONE_MAX)),
-})
-const clientEmailModel = computed({
-  get: () => clientEmail.value,
-  set: (v: string) => (clientEmail.value = v.slice(0, APPT_CLIENT_EMAIL_MAX)),
-})
-
-// ── Validación ───────────────────────────────────────────────────────
-const hasSubject = computed(() =>
-  subjectMode.value === 'registered'
-    ? !!ownerId.value || !!animalId.value
-    : clientName.value.trim().length > 0,
-)
-const missingSubject = computed(() => !isReschedule.value && !hasSubject.value)
-// Correo del contacto libre: opcional, pero si se escribe debe tener formato válido.
-const clientEmailInvalid = computed(
-  () =>
-    subjectMode.value === 'free' &&
-    clientEmail.value.trim().length > 0 &&
-    !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(clientEmail.value.trim()),
-)
-const valid = computed(
-  () =>
-    !!date.value &&
-    !!time.value &&
-    !!type.value &&
-    employeeId.value != null &&
-    (isReschedule.value || hasSubject.value) &&
-    !clientEmailInvalid.value,
-)
-
 // ── Clash preview ────────────────────────────────────────────────────
-const startAtIso = computed(() =>
-  date.value && time.value ? toIsoLocalDateTime(date.value, time.value) : '',
-)
 const clashing = computed(() => {
   if (employeeId.value == null || !startAtIso.value) return []
   return apptClashes(props.existing, {
@@ -279,23 +216,6 @@ const clashing = computed(() => {
 const clashVetName = computed(
   () => vets.value.find((v) => v.id === employeeId.value)?.name ?? 'El veterinario/a',
 )
-
-// ── Submit ───────────────────────────────────────────────────────────
-const title = computed(() => {
-  if (isReschedule.value) return `Reprogramar cita #${props.appointment?.id ?? ''}`
-  if (isEdit.value) return `Editar cita #${props.appointment?.id ?? ''}`
-  return 'Agendar cita'
-})
-const subtitle = computed(() => {
-  if (isReschedule.value) return 'Elige nueva fecha, hora y veterinario/a.'
-  if (isEdit.value) return 'Modifica los datos de la cita.'
-  return 'Registra una nueva cita en la agenda.'
-})
-const submitLabel = computed(() => {
-  if (isReschedule.value) return 'Reprogramar'
-  if (isEdit.value) return 'Guardar cambios'
-  return 'Agendar cita'
-})
 
 function submit() {
   submitted.value = true
@@ -315,32 +235,17 @@ function submit() {
 function doEmit() {
   confirmingBranch.value = false
   if (employeeId.value == null) return
-  const startAt = toIsoLocalDateTime(date.value, time.value)
 
   if (isReschedule.value && props.appointment) {
     emit('submit', {
       mode: 'reschedule',
       id: props.appointment.id,
-      payload: { startAt, employeeId: employeeId.value },
+      payload: { startAt: startAtIso.value, employeeId: employeeId.value },
     })
     return
   }
 
-  const registered = subjectMode.value === 'registered'
-  const payload: CreateAppointmentRequest = {
-    startAt,
-    type: type.value,
-    employeeId: employeeId.value,
-    ownerId: registered && ownerId.value ? Number(ownerId.value) : null,
-    animalId: registered && animalId.value ? Number(animalId.value) : null,
-    clientName: !registered ? clientName.value.trim() || null : null,
-    clientPhone: !registered ? clientPhone.value.trim() || null : null,
-    clientEmail: !registered ? clientEmail.value.trim() || null : null,
-    notes: notes.value.trim() || null,
-    // La sede solo se envía al crear (el update no cambia de sede).
-    ...(props.mode === 'create' ? { branchId: branchId.value } : {}),
-  }
-
+  const payload = form.buildPayload(branchId.value)
   if (isEdit.value && props.appointment) {
     emit('submit', { mode: 'edit', id: props.appointment.id, payload })
   } else {
@@ -553,16 +458,16 @@ function doEmit() {
     </template>
     <template #footer-actions>
       <template v-if="confirmingBranch">
-        <button type="button" class="btn btn-ghost" @click="confirmingBranch = false">
+        <button type="button" class="ds-btn ds-btn--ghost" @click="confirmingBranch = false">
           Volver
         </button>
-        <button type="button" class="btn btn-primary" @click="doEmit">
+        <button type="button" class="ds-btn ds-btn--solid" @click="doEmit">
           <Check :size="16" :stroke-width="1.8" /> Sí, agendar en esta sede
         </button>
       </template>
       <template v-else>
-        <button type="button" class="btn btn-ghost" @click="emit('close')">Cancelar</button>
-        <button type="button" class="btn btn-primary" @click="submit">
+        <button type="button" class="ds-btn ds-btn--ghost" @click="emit('close')">Cancelar</button>
+        <button type="button" class="ds-btn ds-btn--solid" @click="submit">
           <Check :size="16" :stroke-width="1.8" /> {{ submitLabel }}
         </button>
       </template>
@@ -583,7 +488,7 @@ function doEmit() {
   padding: 16px 18px;
   border-radius: 11px;
   background: oklch(96% 0.05 80deg);
-  border: 1px solid oklch(88% 0.09 80deg);
+  border: 1px solid var(--warning-200);
 }
 
 .bc-ic {
@@ -759,53 +664,17 @@ function doEmit() {
 .banner.warn {
   background: oklch(95% 0.07 80deg);
   color: oklch(42% 0.13 60deg);
-  border: 1px solid oklch(88% 0.09 80deg);
+  border: 1px solid var(--warning-200);
 }
 
 .banner.err {
-  background: oklch(95% 0.05 25deg);
-  color: oklch(48% 0.18 25deg);
+  background: var(--danger-50);
+  color: var(--danger-700);
   border: 1px solid oklch(88% 0.07 25deg);
 }
 
 .banner b {
   font-weight: 600;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 500;
-  padding: 10px 16px;
-  border-radius: 9px;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition:
-    filter 0.12s,
-    background 0.12s;
-}
-
-.btn-primary {
-  background: var(--amatista-700);
-  color: white;
-}
-
-.btn-primary:hover {
-  filter: brightness(1.07);
-}
-
-.btn-ghost {
-  background: var(--warm-50);
-  border-color: var(--warm-200);
-  color: var(--warm-700);
-}
-
-.btn-ghost:hover {
-  background: var(--warm-100);
 }
 
 @media (width <= 720px) {

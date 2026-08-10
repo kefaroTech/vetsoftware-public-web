@@ -1,27 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import {
-  ArrowLeft,
-  Ban,
-  Check,
-  CreditCard,
-  FileText,
-  Lock,
-  MapPin,
-  Package,
-  Plus,
-  Receipt,
-  Search,
-  Stethoscope,
-  Wallet,
-} from 'lucide-vue-next'
+import { Check, MapPin, Plus, Receipt, Search } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import OpenAccountModal from '../components/OpenAccountModal.vue'
-import AddChargeModal from '../components/AddChargeModal.vue'
-import PaymentModal from '../components/PaymentModal.vue'
-import CloseAccountModal from '../components/CloseAccountModal.vue'
-import VoidPaymentModal from '../components/VoidPaymentModal.vue'
-import VoidChargeModal from '../components/VoidChargeModal.vue'
+import AccountDetail from '../components/AccountDetail.vue'
 import { useCuentas } from '../composables/useCuentas'
 import { formatMoney } from '@/features/tienda/composables/pricing'
 import {
@@ -34,12 +16,8 @@ import { PERMISSIONS } from '@/constants/permissions'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
 import {
   OPEN_ACCOUNT_STATUS_LABEL,
-  PAYMENT_METHOD_LABEL,
-  type ChargeKind,
-  type DebtResponse,
   type OpenAccountResponse,
   type OpenAccountStatus,
-  type UnifiedCharge,
 } from '../types/cuentas'
 
 const store = useCuentas()
@@ -55,13 +33,6 @@ const selected = ref<OpenAccountResponse | null>(null)
 const ownerPets = ref<{ id: number; name: string }[]>([])
 
 const openAccountOpen = ref(false)
-const addChargeOpen = ref(false)
-const paymentOpen = ref(false)
-const closeOpen = ref(false)
-const voidOpen = ref(false)
-const paymentToVoid = ref<DebtResponse | null>(null)
-const voidChargeOpen = ref(false)
-const chargeToVoid = ref<UnifiedCharge | null>(null)
 
 /** Clase de tono para el pill de estado según el estado de la cuenta. */
 const STATUS_TONE: Record<OpenAccountStatus, string> = {
@@ -74,11 +45,10 @@ onMounted(() => store.reload())
 watch(
   () => branchStore.selectedBranchId,
   () => {
+    // Al soltar la selección se desmonta `AccountDetail`, y con él sus modales:
+    // no hace falta cerrarlos uno a uno como antes.
     selected.value = null
     openAccountOpen.value = false
-    addChargeOpen.value = false
-    paymentOpen.value = false
-    closeOpen.value = false
   },
 )
 
@@ -129,31 +99,6 @@ function saldoValue(acc: OpenAccountResponse): number {
   return acc.status === 'CLOSE' ? acc.totalAmount : acc.outstandingAmount
 }
 
-/** Solo se administra una cuenta OPEN desde la sede a la que pertenece. */
-const isReadOnly = computed(
-  () =>
-    !!selected.value &&
-    (selected.value.status !== 'OPEN' || branchStore.selectedBranchId !== selected.value.branch.id),
-)
-
-/** Línea de meta del detalle: "cuenta abierta {fecha}" o "cerrada/cancelada el X por Y · motivo". */
-const detailMeta = computed(() => {
-  const a = selected.value
-  if (!a) return ''
-  if (a.status === 'OPEN') return `cuenta abierta ${formatDateShort(a.createdDate)}`
-  const verbo = a.status === 'CANCEL' ? 'cancelada' : 'cerrada'
-  const fecha = formatDateShort((a.closedAt ?? a.createdDate).slice(0, 10))
-  const quien = a.closedBy?.name ? ` por ${a.closedBy.name}` : ''
-  const motivo = a.closeReason ? ` · ${a.closeReason}` : ''
-  return `${verbo} el ${fecha}${quien}${motivo}`
-})
-
-const CHARGE_ICON: Record<ChargeKind, typeof Package> = {
-  product: Package,
-  service: Stethoscope,
-  general: Receipt,
-}
-
 async function selectAccount(acc: OpenAccountResponse) {
   selected.value = acc
   ownerPets.value = []
@@ -170,13 +115,6 @@ function backToList() {
   selected.value = null
 }
 
-async function refreshSelected() {
-  const current = selected.value
-  if (!current) return
-  await store.refreshAccount(current.id)
-  selected.value = store.accounts.value.find((a) => a.id === current.id) ?? current
-}
-
 // ── Abrir cuenta ─────────────────────────────────────────────────────────────
 function openCreateModal() {
   openAccountOpen.value = true
@@ -186,44 +124,10 @@ async function onAccountCreated(account: OpenAccountResponse) {
   openAccountOpen.value = false
   await selectAccount(account)
 }
-
-// ── Cerrar cuenta ────────────────────────────────────────────────────────────
-async function onAccountClosed(account: OpenAccountResponse) {
-  closeOpen.value = false
-  // Reflejar el nuevo estado en el detalle y la lista (pill + acciones read-only).
-  selected.value = account
-  await store.loadDetail(account.id)
-}
-
-// ── Anular abono ─────────────────────────────────────────────────────────────
-function onVoidPayment(p: DebtResponse) {
-  if (isReadOnly.value || !canVoidPayment) return
-  paymentToVoid.value = p
-  voidOpen.value = true
-}
-
-async function onPaymentVoided() {
-  voidOpen.value = false
-  paymentToVoid.value = null
-  await refreshSelected()
-}
-
-// ── Anular cargo ─────────────────────────────────────────────────────────────
-function onVoidCharge(c: UnifiedCharge) {
-  if (isReadOnly.value || !canVoidCharge || c.voided) return
-  chargeToVoid.value = c
-  voidChargeOpen.value = true
-}
-
-async function onChargeVoided() {
-  voidChargeOpen.value = false
-  chargeToVoid.value = null
-  await refreshSelected()
-}
 </script>
 
 <template>
-  <div class="page">
+  <div class="ds-page">
     <PageHeader
       kicker="Facturación"
       title="Cuentas"
@@ -233,7 +137,7 @@ async function onChargeVoided() {
         <button
           v-if="canCreate && !selected && branchStore.selectedBranchId != null"
           type="button"
-          class="cta"
+          class="ds-btn ds-btn--primary ds-btn--lg ds-btn--elevated ds-btn--nowrap"
           @click="openCreateModal"
         >
           <Plus :size="16" :stroke-width="1.8" /> Abrir cuenta
@@ -241,7 +145,7 @@ async function onChargeVoided() {
       </template>
     </PageHeader>
 
-    <div v-if="store.error.value" class="banner error">{{ store.error.value }}</div>
+    <div v-if="store.error.value" class="ds-banner ds-banner--error">{{ store.error.value }}</div>
     <div
       v-if="canCreate && !selected && branchStore.selectedBranchId == null"
       class="banner branch-warning"
@@ -360,223 +264,15 @@ async function onChargeVoided() {
     </template>
 
     <!-- DETALLE -->
-    <template v-else>
-      <button type="button" class="back" @click="backToList">
-        <ArrowLeft :size="14" :stroke-width="1.8" /> Volver a cuentas
-      </button>
-
-      <div class="detail-head">
-        <div class="who">
-          <span class="avatar lg">{{ initials(selected.owner.name) }}</span>
-          <div>
-            <div class="name-row">
-              <h1 class="name lg">{{ selected.owner.name }}</h1>
-              <span class="status-pill" :class="STATUS_TONE[selected.status]">{{
-                OPEN_ACCOUNT_STATUS_LABEL[selected.status]
-              }}</span>
-            </div>
-            <div class="detail-meta">
-              {{ selected.owner.document }} · {{ selected.branch.name }} · {{ detailMeta }}
-            </div>
-          </div>
-        </div>
-        <div v-if="!isReadOnly" class="detail-actions">
-          <button type="button" class="cta" @click="addChargeOpen = true">
-            <Plus :size="15" :stroke-width="1.8" /> Agregar cargo
-          </button>
-          <button
-            type="button"
-            class="ghost-cta"
-            :disabled="selected.outstandingAmount <= 0"
-            @click="paymentOpen = true"
-          >
-            <CreditCard :size="15" :stroke-width="1.8" /> Registrar abono
-          </button>
-          <button type="button" class="ghost-cta" @click="closeOpen = true">
-            <Lock :size="15" :stroke-width="1.8" /> Cerrar cuenta
-          </button>
-        </div>
-      </div>
-
-      <div v-if="isReadOnly" class="readonly-note">
-        <Lock :size="15" :stroke-width="1.8" />
-        <span v-if="selected.status === 'OPEN'">
-          Esta cuenta pertenece a {{ selected.branch.name }}. Selecciona esa sede para
-          administrarla.
-        </span>
-        <span v-else>
-          Cuenta {{ selected.status === 'CANCEL' ? 'cancelada' : 'cerrada' }} · solo lectura. No
-          admite nuevos cargos ni abonos.
-        </span>
-      </div>
-
-      <div class="summary">
-        <div class="sum-box">
-          <span class="sum-lab">Acumulado</span>
-          <span class="sum-val">{{ formatMoney(selected.totalAmount) }}</span>
-        </div>
-        <div class="sum-box">
-          <span class="sum-lab">Abonado</span>
-          <span class="sum-val">{{ formatMoney(selected.paidAmount) }}</span>
-        </div>
-        <div class="sum-box alert">
-          <span class="sum-lab">Saldo pendiente</span>
-          <span class="sum-val">{{ formatMoney(selected.outstandingAmount) }}</span>
-        </div>
-      </div>
-
-      <div v-if="store.detailLoading.value" class="state">Cargando cargos…</div>
-      <div v-else class="cols">
-        <!-- Cargos por mascota -->
-        <section class="col">
-          <div class="section-head">
-            <span class="sh-title"
-              ><FileText :size="16" :stroke-width="1.7" /> Cargos por mascota</span
-            >
-          </div>
-
-          <div v-if="store.charges.value.length === 0" class="mini-empty">Sin cargos todavía.</div>
-          <div v-for="group in store.chargesByPet.value" v-else :key="group.key" class="group">
-            <div class="group-head">
-              <span class="group-id">
-                <span class="pet-avatar" :class="{ general: group.key === 'general' }">
-                  <Package v-if="group.key === 'general'" :size="13" :stroke-width="1.8" />
-                  <template v-else>{{ group.name.slice(0, 2).toUpperCase() }}</template>
-                </span>
-                <span class="group-name">{{ group.name }}</span>
-              </span>
-              <span class="group-sub">{{ formatMoney(group.subtotal) }}</span>
-            </div>
-            <ul class="charge-list">
-              <li
-                v-for="c in group.charges"
-                :key="`${c.kind}-${c.id}`"
-                class="charge"
-                :class="{ voided: c.voided }"
-              >
-                <component
-                  :is="CHARGE_ICON[c.kind]"
-                  :size="14"
-                  :stroke-width="1.7"
-                  class="c-icon"
-                  :class="c.kind"
-                />
-                <span class="c-concept">
-                  {{ c.concept }}<span v-if="c.quantity > 1" class="c-qty">x{{ c.quantity }}</span>
-                  <span
-                    v-if="c.voided"
-                    class="c-void"
-                    :title="c.voidReason ? `Motivo: ${c.voidReason}` : ''"
-                  >
-                    Anulado{{ c.voidedByName ? ` por ${c.voidedByName}` : '' }}
-                  </span>
-                </span>
-                <span
-                  v-if="c.createdByName"
-                  class="c-by"
-                  :title="`Registrado por ${c.createdByName}`"
-                  >{{ c.createdByName }}</span
-                >
-                <span class="c-date">{{ c.date.slice(5, 10) }}</span>
-                <span class="c-amount">{{ formatMoney(c.amount) }}</span>
-                <button
-                  v-if="!isReadOnly && !c.voided && canVoidCharge"
-                  type="button"
-                  class="c-void-btn"
-                  title="Anular cargo"
-                  @click="onVoidCharge(c)"
-                >
-                  <Ban :size="13" :stroke-width="1.9" />
-                </button>
-                <Ban v-else-if="c.voided" :size="14" :stroke-width="1.9" class="c-banned" />
-              </li>
-            </ul>
-          </div>
-        </section>
-
-        <!-- Abonos -->
-        <section class="col">
-          <div class="section-head">
-            <span class="sh-title"><Wallet :size="16" :stroke-width="1.7" /> Abonos</span>
-          </div>
-          <div v-if="store.payments.value.length === 0" class="mini-empty">
-            Sin abonos registrados.
-          </div>
-          <ul v-else class="pago-list">
-            <li
-              v-for="p in store.payments.value"
-              :key="p.id"
-              class="pago"
-              :class="{ voided: p.voided }"
-            >
-              <div class="pago-info">
-                <span class="pago-amt">{{ formatMoney(p.amount) }}</span>
-                <span class="pago-meta">
-                  {{ p.createdDate.slice(0, 10) }} · {{ PAYMENT_METHOD_LABEL[p.paymentMethod] }}
-                  <template v-if="p.createdBy?.name"> · {{ p.createdBy.name }}</template>
-                </span>
-                <span v-if="p.voided" class="pago-void">
-                  Anulado{{ p.voidedBy?.name ? ` por ${p.voidedBy.name}` : ''
-                  }}{{ p.voidReason ? ` · ${p.voidReason}` : '' }}
-                </span>
-              </div>
-              <button
-                v-if="!p.voided && !isReadOnly && canVoidPayment"
-                type="button"
-                class="pago-void-btn"
-                title="Anular abono"
-                @click="onVoidPayment(p)"
-              >
-                <Ban :size="13" :stroke-width="1.9" /> Anular
-              </button>
-              <Ban v-else-if="p.voided" :size="15" :stroke-width="1.9" class="pago-banned" />
-              <Check v-else :size="15" :stroke-width="1.9" class="pago-check" />
-            </li>
-          </ul>
-        </section>
-      </div>
-
-      <AddChargeModal
-        :open="addChargeOpen"
-        :account-id="selected.id"
-        :pets="ownerPets"
-        @close="addChargeOpen = false"
-        @added="refreshSelected"
-        @refresh="refreshSelected"
-      />
-      <PaymentModal
-        :open="paymentOpen"
-        :account-id="selected.id"
-        :outstanding="selected.outstandingAmount"
-        @close="paymentOpen = false"
-        @paid="refreshSelected"
-        @refresh="refreshSelected"
-      />
-      <CloseAccountModal
-        :open="closeOpen"
-        :account="selected"
-        @close="closeOpen = false"
-        @closed="onAccountClosed"
-        @refresh="refreshSelected"
-      />
-      <VoidPaymentModal
-        :open="voidOpen"
-        :account-id="selected.id"
-        :payment="paymentToVoid"
-        @close="voidOpen = false"
-        @voided="onPaymentVoided"
-        @refresh="refreshSelected"
-      />
-      <VoidChargeModal
-        :open="voidChargeOpen"
-        :account-id="selected.id"
-        :charge="chargeToVoid"
-        :outstanding="selected.outstandingAmount"
-        @close="voidChargeOpen = false"
-        @voided="onChargeVoided"
-        @refresh="refreshSelected"
-      />
-    </template>
+    <AccountDetail
+      v-else
+      :account="selected"
+      :can-void-charge="canVoidCharge"
+      :can-void-payment="canVoidPayment"
+      :owner-pets="ownerPets"
+      @back="backToList"
+      @updated="selected = $event"
+    />
 
     <!-- ABRIR CUENTA -->
     <OpenAccountModal
@@ -588,65 +284,10 @@ async function onChargeVoided() {
 </template>
 
 <style scoped>
-.page {
-  font-family: var(--font-sans);
-  color: var(--warm-900);
-}
+/* El contenedor y los botones usan `.ds-page` / `.ds-btn` (primitives.css). */
 
-.cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  font-size: 13.5px;
-  font-weight: 500;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-  color: white;
-  border: none;
-  border-radius: 9px;
-  cursor: pointer;
-  font-family: inherit;
-  white-space: nowrap;
-  box-shadow:
-    0 1px 2px rgb(50 20 80 / 8%),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 50%);
-}
-
-.ghost-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  font-size: 13.5px;
-  font-weight: 500;
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  color: var(--warm-700);
-  border-radius: 9px;
-  cursor: pointer;
-  font-family: inherit;
-  white-space: nowrap;
-}
-.ghost-cta:hover:not(:disabled) {
-  background: var(--warm-100);
-}
-.ghost-cta:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  margin-bottom: 14px;
-}
+/* El banner de error usa `.ds-banner--error` (primitives.css). Este otro tiene
+   tonos propios (hue 70/80 distintos a los del sistema) y se deja como está. */
 .banner.branch-warning {
   display: flex;
   align-items: center;
@@ -746,30 +387,14 @@ async function onChargeVoided() {
   gap: 9px;
   padding: 11px 14px;
   margin-bottom: 16px;
-  background: oklch(95% 0.06 80deg);
-  border: 1px solid oklch(88% 0.09 80deg);
+  background: var(--warning-50);
+  border: 1px solid var(--warning-200);
   border-radius: 10px;
   font-size: 13px;
   color: oklch(40% 0.1 70deg);
 }
 .alert strong {
   color: oklch(35% 0.13 70deg);
-}
-.readonly-note {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 11px 14px;
-  margin-bottom: 18px;
-  background: var(--warm-100);
-  border: 1px solid var(--warm-200);
-  border-radius: 10px;
-  font-size: 13px;
-  color: var(--warm-600);
-}
-.readonly-note svg {
-  color: var(--warm-500);
-  flex-shrink: 0;
 }
 
 .search {
@@ -787,7 +412,7 @@ async function onChargeVoided() {
 }
 .search:focus {
   border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px var(--amatista-50);
+  box-shadow: var(--ring);
 }
 .state {
   padding: 32px 16px;
@@ -797,28 +422,6 @@ async function onChargeVoided() {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 12px;
-}
-
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-.status-pill.open {
-  background: var(--success-bg);
-  color: var(--success-fg);
-}
-.status-pill.closed {
-  background: var(--warm-150);
-  color: var(--warm-600);
-}
-.status-pill.cancelled {
-  background: oklch(95% 0.06 25deg);
-  color: oklch(48% 0.18 25deg);
 }
 
 /* Tarjetas de lista */
@@ -853,52 +456,8 @@ async function onChargeVoided() {
   justify-content: space-between;
   gap: 10px;
 }
-.who {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  min-width: 0;
-}
-
-.avatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 11px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
-  display: grid;
-  place-items: center;
-  font-family: var(--font-serif);
-  font-size: 16px;
-  font-weight: 500;
-  flex-shrink: 0;
-}
-.avatar.lg {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  font-size: 18px;
-}
 .who-text {
   min-width: 0;
-}
-.name {
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--warm-900);
-}
-.name.lg {
-  margin: 0;
-  font-size: 22px;
-  font-family: var(--font-serif);
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  line-height: 1.05;
-}
-.doc {
-  font-size: 12px;
-  color: var(--warm-500);
-  margin-top: 1px;
 }
 .acct-meta {
   display: flex;
@@ -954,340 +513,14 @@ async function onChargeVoided() {
   padding: 4px 0;
   margin-bottom: 14px;
 }
-.detail-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
-}
-.detail-head .who {
-  align-items: center;
-  gap: 14px;
-}
-.name-row {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-}
-.detail-meta {
-  font-size: 13.5px;
-  color: var(--warm-600);
-  margin-top: 3px;
-}
-.detail-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.summary {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 18px;
-}
-.sum-box {
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 12px;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.sum-box.alert {
-  background: oklch(95% 0.06 80deg);
-  border-color: oklch(88% 0.09 80deg);
-}
-.sum-lab {
-  font-size: 11.5px;
-  color: var(--warm-500);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.sum-val {
-  font-family: var(--font-serif);
-  font-size: 24px;
-  color: var(--warm-900);
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-}
-.sum-box.alert .sum-val {
-  color: oklch(45% 0.13 70deg);
-}
-
-.cols {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr;
-  gap: 16px;
-  align-items: start;
-}
-
-@media (width <= 1000px) {
-  .cols {
-    grid-template-columns: 1fr;
-  }
-  .summary {
-    grid-template-columns: 1fr;
-  }
-}
-.col {
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 14px;
-  overflow: hidden;
-}
-.section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--warm-200);
-}
-.sh-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--warm-900);
-}
-.sh-title svg {
-  color: var(--amatista-600);
-}
-.mini-empty {
-  padding: 28px 18px;
-  text-align: center;
-  font-size: 13px;
-  color: var(--warm-400);
-}
-
-.group {
-  padding: 8px 18px;
-}
-.group:not(:last-child) {
-  border-bottom: 1px solid var(--warm-100);
-}
-.group-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 7px 0 8px;
-  border-bottom: 1.5px solid var(--warm-200);
-  margin-bottom: 4px;
-}
-.group-id {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-.pet-avatar {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
-  font-size: 10.5px;
-  font-weight: 700;
-}
-.pet-avatar.general {
-  background: var(--warm-200);
-  color: var(--warm-600);
-}
-.group-name {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--warm-900);
-}
-.group-sub {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--amatista-700);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-.charge-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.charge {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--warm-100);
-}
-.charge:last-child {
-  border-bottom: none;
-}
-.c-icon.product {
-  color: var(--warm-500);
-}
-.c-icon.service {
-  color: oklch(45% 0.15 240deg);
-}
-.c-icon.general {
-  color: var(--amatista-600);
-}
-.c-concept {
-  flex: 1;
-  min-width: 0;
-  font-size: 13px;
-  color: var(--warm-800);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.c-by {
-  font-size: 11px;
-  color: var(--warm-400);
-  white-space: nowrap;
-  max-width: 90px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 0;
-}
-.c-date {
-  font-size: 11px;
-  color: var(--warm-400);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-.c-amount {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-900);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
 
 /* Cargo anulado: queda visible, atenuado y tachado en concepto + monto. */
 .charge.voided .c-concept {
   color: var(--warm-500);
 }
-.charge.voided .c-amount {
-  text-decoration: line-through;
-  color: var(--warm-500);
-}
-.c-qty {
-  display: inline-block;
-  margin-left: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--amatista-700);
-  font-variant-numeric: tabular-nums;
-}
-.c-void {
-  display: inline-block;
-  margin-left: 6px;
-  font-size: 11px;
-  font-weight: 500;
-  color: oklch(48% 0.16 25deg);
-}
-.c-banned {
-  color: oklch(55% 0.16 25deg);
-  flex-shrink: 0;
-}
-.c-void-btn {
-  width: 24px;
-  height: 24px;
-  border: 1px solid var(--warm-200);
-  background: transparent;
-  color: var(--warm-500);
-  cursor: pointer;
-  border-radius: 6px;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-.c-void-btn:hover {
-  background: oklch(95% 0.05 25deg);
-  border-color: oklch(85% 0.1 25deg);
-  color: oklch(48% 0.18 25deg);
-}
-
-.pago-list {
-  list-style: none;
-  margin: 0;
-  padding: 12px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.pago {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px;
-  background: var(--warm-100);
-  border-radius: 9px;
-}
-.pago-info {
-  min-width: 0;
-}
-.pago-amt {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--warm-900);
-  font-variant-numeric: tabular-nums;
-}
-.pago-meta {
-  font-size: 11.5px;
-  color: var(--warm-500);
-  margin-top: 1px;
-  display: block;
-}
-.pago-check {
-  color: var(--success-dot);
-  flex-shrink: 0;
-}
 
 /* Abono anulado: queda visible, atenuado y tachado en el monto. */
 .pago.voided {
   background: oklch(96% 0.02 25deg);
-}
-.pago.voided .pago-amt {
-  text-decoration: line-through;
-  color: var(--warm-500);
-}
-.pago-void {
-  display: block;
-  margin-top: 3px;
-  font-size: 11.5px;
-  color: oklch(48% 0.16 25deg);
-}
-.pago-banned {
-  color: oklch(55% 0.16 25deg);
-  flex-shrink: 0;
-}
-
-.pago-void-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  color: var(--warm-600);
-  border-radius: 7px;
-  padding: 5px 9px;
-  cursor: pointer;
-}
-.pago-void-btn:hover {
-  background: oklch(95% 0.05 25deg);
-  border-color: oklch(85% 0.1 25deg);
-  color: oklch(48% 0.18 25deg);
 }
 </style>
