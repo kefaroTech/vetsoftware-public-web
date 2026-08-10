@@ -26,6 +26,7 @@
     "format:check": "prettier --check .",
     "quality": "npm run lint:strict && npm run stylelint:strict && npm run format:check",
     "quality:staged": "lint-staged",
+    "ds:audit": "node scripts/ds-audit.mjs",
     "e2e": "playwright test",
     "e2e:historial": "npx playwright test historia.spec.ts",
     "e2e:registro": "npx playwright test registro.spec.ts",
