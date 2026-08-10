@@ -1,4 +1,4 @@
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch, type Ref } from 'vue'
 import { animalColorApi, type AnimalColorResponse } from '../api/animalColor.api'
 
 export interface AnimalColorOption {
@@ -6,24 +6,28 @@ export interface AnimalColorOption {
   label: string
 }
 
-let inFlight: Promise<AnimalColorResponse[]> | null = null
+const inFlight = new Map<string, Promise<AnimalColorResponse[]>>()
 
-async function load(): Promise<AnimalColorResponse[]> {
-  if (inFlight) return inFlight
-  inFlight = animalColorApi
-    .listAll()
+async function load(specieId: string): Promise<AnimalColorResponse[]> {
+  const pending = inFlight.get(specieId)
+  if (pending) return pending
+  const id = Number(specieId)
+  if (!Number.isFinite(id)) return []
+  const promise = animalColorApi
+    .listBySpecie(id)
     .then((list) => {
-      inFlight = null
+      inFlight.delete(specieId)
       return list
     })
     .catch((e) => {
-      inFlight = null
+      inFlight.delete(specieId)
       throw e
     })
-  return inFlight
+  inFlight.set(specieId, promise)
+  return promise
 }
 
-export function useAnimalColors() {
+export function useAnimalColorsBySpecie(specieId: Ref<string>) {
   const list = ref<AnimalColorResponse[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -32,12 +36,18 @@ export function useAnimalColors() {
     list.value.map((c) => ({ value: String(c.id), label: c.name })),
   )
 
-  async function refresh() {
+  async function refresh(id: string) {
+    if (!id) {
+      list.value = []
+      error.value = null
+      return
+    }
     loading.value = true
     error.value = null
     try {
-      list.value = await load()
+      list.value = await load(id)
     } catch {
+      list.value = []
       error.value = 'No se pudo cargar la lista de colores.'
     } finally {
       loading.value = false
@@ -49,7 +59,11 @@ export function useAnimalColors() {
   }
 
   onMounted(() => {
-    refresh()
+    if (specieId.value) refresh(specieId.value)
+  })
+
+  watch(specieId, (id) => {
+    refresh(id)
   })
 
   return { list, options, loading, error, findById, refresh }

@@ -82,7 +82,9 @@ function submit() {
     @close="emit('close')"
   >
     <template #body>
-      <div v-if="banner" class="banner">Revisa los campos marcados antes de continuar.</div>
+      <div v-if="banner" class="ds-banner ds-banner--sm ds-banner--error">
+        Revisa los campos marcados antes de continuar.
+      </div>
       <p class="intro">
         La contraseña anterior de
         <strong>{{ employee?.name ?? 'este empleado' }}</strong>
@@ -122,8 +124,20 @@ function submit() {
     </template>
 
     <template #footer-actions>
-      <button type="button" class="ghost" :disabled="busy" @click="emit('close')">Cancelar</button>
-      <button type="button" class="primary" :disabled="busy" @click="submit">
+      <button
+        type="button"
+        class="ds-btn ds-btn--ghost ds-btn--snug"
+        :disabled="busy"
+        @click="emit('close')"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="ds-btn ds-btn--solid ds-btn--snug"
+        :disabled="busy"
+        @click="submit"
+      >
         Reenviar invitación
       </button>
     </template>
@@ -131,16 +145,6 @@ function submit() {
 </template>
 
 <style scoped>
-.banner {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-  padding: 9px 12px;
-  border-radius: 8px;
-  font-size: 12.5px;
-  margin-bottom: 14px;
-}
-
 .intro {
   margin: 0 0 16px;
   font-size: 13px;
@@ -152,41 +156,5 @@ function submit() {
   display: flex;
   flex-direction: column;
   gap: 14px;
-}
-
-.ghost,
-.primary {
-  padding: 8px 14px;
-  font-size: 13px;
-  border-radius: 7px;
-  cursor: pointer;
-  font-family: inherit;
-  font-weight: 500;
-  border: 1px solid transparent;
-}
-
-.ghost {
-  background: var(--warm-50);
-  color: var(--warm-700);
-  border-color: var(--warm-200);
-}
-
-.ghost:hover:not(:disabled) {
-  background: var(--warm-100);
-}
-
-.primary {
-  background: var(--amatista-700);
-  color: white;
-}
-
-.primary:hover:not(:disabled) {
-  background: var(--amatista-800);
-}
-
-.ghost:disabled,
-.primary:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
 }
 </style>

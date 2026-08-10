@@ -23,7 +23,7 @@ defineEmits<{ back: []; next: [] }>()
 
 <template>
   <footer class="footer">
-    <button v-if="showBack" type="button" class="btn ghost" @click="$emit('back')">
+    <button v-if="showBack" type="button" class="ds-btn ds-btn--ghost" @click="$emit('back')">
       <ArrowLeft :size="13" :stroke-width="1.8" />
       <span>Atrás</span>
     </button>
@@ -35,7 +35,7 @@ defineEmits<{ back: []; next: [] }>()
       <button
         v-if="showNext"
         type="button"
-        class="btn next"
+        class="ds-btn ds-btn--solid next"
         :class="{ success: nextVariant === 'success' }"
         :disabled="nextDisabled || nextLoading"
         @click="$emit('next')"
@@ -78,52 +78,14 @@ defineEmits<{ back: []; next: [] }>()
   gap: 8px;
 }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition:
-    filter 0.12s,
-    background 0.12s;
-}
-
-.btn:focus-visible {
-  outline: 2px solid var(--amatista-700);
-  outline-offset: 2px;
-}
-
-.btn.ghost {
-  background: transparent;
-  border-color: var(--warm-200);
-  color: var(--warm-900);
-  padding: 9px 16px;
-}
-
-.btn.ghost:hover {
-  background: var(--warm-100);
-}
-
-.btn.next {
-  background: var(--amatista-700);
-  color: white;
-  padding: 9px 18px;
-}
-
-.btn.next:hover:not(:disabled) {
-  filter: brightness(1.05);
-}
-
-.btn.next.success {
+.next.success {
   background: oklch(50% 0.15 145deg);
 }
 
-.btn.next:disabled {
+.next:disabled {
+  /* Este botón ya comunica el estado con su propio gris, así que anula la
+     opacidad que `.ds-btn:disabled` aplica por defecto. */
+  opacity: 1;
   background: var(--warm-150);
   color: var(--warm-500);
   cursor: not-allowed;

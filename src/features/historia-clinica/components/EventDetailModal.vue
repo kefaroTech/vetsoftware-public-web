@@ -211,7 +211,9 @@ function printReceta() {
         <Printer :size="14" :stroke-width="1.8" />
         <span>{{ printing ? 'Generando…' : 'Imprimir receta' }}</span>
       </button>
-      <button type="button" class="btn-close" @click="emit('close')">Cerrar</button>
+      <button type="button" class="ds-btn ds-btn--solid ds-btn--snug" @click="emit('close')">
+        Cerrar
+      </button>
     </template>
   </ModalShell>
 </template>
@@ -228,7 +230,7 @@ function printReceta() {
   font-size: 13px;
   border-radius: 10px;
   background: oklch(97% 0.02 25deg);
-  color: oklch(48% 0.18 25deg);
+  color: var(--danger-700);
   border: 1px solid oklch(85% 0.06 25deg);
 }
 
@@ -254,21 +256,5 @@ function printReceta() {
 .btn-print:disabled {
   opacity: 0.6;
   cursor: default;
-}
-
-.btn-close {
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 500;
-  background: var(--amatista-700);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.btn-close:hover {
-  background: var(--amatista-600);
 }
 </style>

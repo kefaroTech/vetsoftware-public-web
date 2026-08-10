@@ -201,8 +201,15 @@ function confirm() {
       </div>
     </template>
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn-primary" :disabled="!canConfirm" @click="confirm">
+      <button type="button" class="ds-btn ds-btn--ghost ds-btn--lg" @click="emit('close')">
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="ds-btn ds-btn--primary ds-btn--lg"
+        :disabled="!canConfirm"
+        @click="confirm"
+      >
         {{ confirmLabel }}
       </button>
     </template>
@@ -227,8 +234,8 @@ function confirm() {
   border-radius: 10px;
   font-size: 12.5px;
   line-height: 1.4;
-  background: oklch(95% 0.06 80deg);
-  border: 1px solid oklch(88% 0.09 80deg);
+  background: var(--warning-50);
+  border: 1px solid var(--warning-200);
   color: oklch(40% 0.1 70deg);
 }
 .change {
@@ -280,40 +287,5 @@ function confirm() {
   color: var(--warm-500);
   display: grid;
   place-items: center;
-}
-
-.btn-primary {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 9px;
-  cursor: pointer;
-  border: none;
-  color: white;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-ghost {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 9px;
-  cursor: pointer;
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  color: var(--warm-700);
-}
-.btn-ghost:hover {
-  background: var(--warm-100);
 }
 </style>

@@ -46,7 +46,8 @@ watch(query, (q) => {
   searching.value = true
   timer = setTimeout(async () => {
     try {
-      results.value = await ownerApi.search(term)
+      // BE-06: la busqueda llega paginada; este picker muestra solo la primera pagina.
+      results.value = (await ownerApi.search(term)).content
     } catch {
       results.value = []
     } finally {
@@ -228,7 +229,7 @@ async function submit() {
       <div class="empty-ic"><Search :size="20" :stroke-width="1.7" /></div>
       <div class="empty-t">Sin resultados para “{{ query.trim() }}”</div>
       <div class="empty-s">No encontramos un cliente con ese nombre o documento.</div>
-      <button type="button" class="btn-primary" @click="goCreate">
+      <button type="button" class="ds-btn ds-btn--primary ds-btn--strong" @click="goCreate">
         <Plus :size="14" :stroke-width="2.2" /> Crear cliente nuevo
       </button>
     </div>
@@ -414,8 +415,13 @@ async function submit() {
     </div>
 
     <div class="createfoot">
-      <button type="button" class="btn-ghost" @click="view = 'search'">Cancelar</button>
-      <button type="button" class="btn-primary" :disabled="!isValid || submitting" @click="submit">
+      <button type="button" class="ds-btn ds-btn--ghost" @click="view = 'search'">Cancelar</button>
+      <button
+        type="button"
+        class="ds-btn ds-btn--primary ds-btn--strong"
+        :disabled="!isValid || submitting"
+        @click="submit"
+      >
         {{ submitting ? 'Creando…' : 'Crear y seleccionar' }}
       </button>
     </div>
@@ -463,7 +469,7 @@ async function submit() {
 }
 .search input:focus {
   border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px var(--amatista-50);
+  box-shadow: var(--ring);
 }
 
 .newbtn {
@@ -607,8 +613,8 @@ async function submit() {
   gap: 8px;
   padding: 10px 12px;
   border-radius: 9px;
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.1 25deg);
+  background: var(--danger-100);
+  border: 1px solid var(--danger-300);
   color: oklch(48% 0.16 25deg);
   font-size: 12.5px;
   margin-bottom: 12px;
@@ -634,8 +640,8 @@ async function submit() {
   letter-spacing: 0;
   text-transform: none;
   padding: 2px 8px;
-  border-radius: 999px;
-  background: oklch(95% 0.06 80deg);
+  border-radius: var(--radius-pill);
+  background: var(--warning-50);
   color: oklch(45% 0.11 70deg);
 }
 .opttag {
@@ -644,7 +650,7 @@ async function submit() {
   letter-spacing: 0;
   text-transform: none;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--warm-150, var(--warm-100));
   color: var(--warm-500);
 }
@@ -736,7 +742,7 @@ async function submit() {
   margin-bottom: 6px;
 }
 .req {
-  color: oklch(55% 0.18 25deg);
+  color: var(--danger-500);
 }
 .segmented {
   display: inline-flex;
@@ -814,43 +820,5 @@ async function submit() {
   margin-top: 18px;
   padding-top: 14px;
   border-top: 1px solid var(--warm-200);
-}
-
-.btn-ghost {
-  padding: 9px 16px;
-  border-radius: 9px;
-  border: 1px solid var(--warm-200);
-  background: var(--warm-50);
-  color: var(--warm-700);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-}
-.btn-ghost:hover {
-  background: var(--warm-100);
-}
-
-.btn-primary {
-  padding: 9px 18px;
-  border-radius: 9px;
-  border: none;
-  cursor: pointer;
-  color: #fff;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-}
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>

@@ -251,7 +251,9 @@ async function addGeneral() {
               <Plus :size="14" :stroke-width="1.9" /> Agregar
             </button>
           </li>
-          <li v-if="catalog.length === 0" class="empty">No hay ítems en este catálogo.</li>
+          <li v-if="catalog.length === 0" class="ds-empty ds-empty--tight">
+            No hay ítems en este catálogo.
+          </li>
         </ul>
       </template>
 
@@ -300,7 +302,9 @@ async function addGeneral() {
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Listo</button>
+      <button type="button" class="ds-btn ds-btn--ghost ds-btn--lg" @click="emit('close')">
+        Listo
+      </button>
     </template>
   </ModalShell>
 </template>
@@ -325,7 +329,7 @@ async function addGeneral() {
 
 .chip {
   padding: 7px 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: 13px;
   font-family: inherit;
   cursor: pointer;
@@ -387,7 +391,7 @@ async function addGeneral() {
 }
 .s-input:focus {
   border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px var(--amatista-50);
+  box-shadow: var(--ring);
 }
 .catalog {
   list-style: none;
@@ -448,11 +452,11 @@ async function addGeneral() {
 }
 .qty-input:focus {
   border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px var(--amatista-50);
+  box-shadow: var(--ring);
 }
 .qty-input.invalid {
   border-color: oklch(60% 0.18 25deg);
-  box-shadow: 0 0 0 3px oklch(95% 0.06 25deg);
+  box-shadow: 0 0 0 3px var(--danger-100);
 }
 
 .add-btn {
@@ -478,11 +482,7 @@ async function addGeneral() {
 }
 
 .add-btn.solid {
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
+  background: var(--gradient-primary);
   color: white;
   border: none;
   padding: 9px 16px;
@@ -511,26 +511,5 @@ async function addGeneral() {
   width: 16px;
   height: 16px;
   accent-color: var(--amatista-600);
-}
-.empty {
-  font-size: 13px;
-  color: var(--warm-500);
-  text-align: center;
-  padding: 16px;
-}
-
-.btn-ghost {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 9px;
-  cursor: pointer;
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  color: var(--warm-700);
-}
-.btn-ghost:hover {
-  background: var(--warm-100);
 }
 </style>

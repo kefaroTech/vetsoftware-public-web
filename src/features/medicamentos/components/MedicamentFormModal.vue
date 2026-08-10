@@ -109,7 +109,7 @@ async function submit() {
     @close="emit('close')"
   >
     <template #body>
-      <div v-if="saveError" class="banner error">{{ saveError }}</div>
+      <div v-if="saveError" class="ds-banner ds-banner--error">{{ saveError }}</div>
       <div class="form">
         <BaseField label="Nombre" required :error="err('name')">
           <template #default="{ id }">
@@ -145,8 +145,15 @@ async function submit() {
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn-primary" :disabled="busy" @click="submit">
+      <button type="button" class="ds-btn ds-btn--ghost ds-btn--lg" @click="emit('close')">
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="ds-btn ds-btn--primary ds-btn--lg"
+        :disabled="busy"
+        @click="submit"
+      >
         {{ busy ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Crear medicamento' }}
       </button>
     </template>
@@ -164,49 +171,5 @@ async function submit() {
   font-size: 12.5px;
   color: var(--warm-500);
   line-height: 1.55;
-}
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  margin-bottom: 14px;
-}
-
-.btn-primary {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 9px;
-  cursor: pointer;
-  border: none;
-  color: white;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-ghost {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 9px;
-  cursor: pointer;
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  color: var(--warm-700);
-}
-.btn-ghost:hover {
-  background: var(--warm-100);
 }
 </style>

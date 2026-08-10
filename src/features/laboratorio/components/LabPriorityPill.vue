@@ -24,7 +24,7 @@ const TONE: Record<LaboratoryTestPriority, { bg: string; fg: string }> = {
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.02em;

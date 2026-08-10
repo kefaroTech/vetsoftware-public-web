@@ -152,7 +152,7 @@ watch(
         </button>
       </div>
 
-      <div v-if="error" class="banner error">{{ error }}</div>
+      <div v-if="error" class="ds-banner ds-banner--error">{{ error }}</div>
 
       <!-- ── Lotes ── -->
       <table v-if="tab === 'lots'" class="table">
@@ -166,10 +166,10 @@ watch(
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="4" class="empty">Cargando…</td>
+            <td colspan="4" class="ds-empty">Cargando…</td>
           </tr>
           <tr v-else-if="lots.length === 0">
-            <td colspan="4" class="empty">Sin lotes con existencia.</td>
+            <td colspan="4" class="ds-empty">Sin lotes con existencia.</td>
           </tr>
           <tr v-for="l in lots" v-else :key="l.lotId">
             <td>{{ l.lotNumber || '—' }}</td>
@@ -204,10 +204,10 @@ watch(
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td colspan="6" class="empty">Cargando…</td>
+              <td colspan="6" class="ds-empty">Cargando…</td>
             </tr>
             <tr v-else-if="movements.length === 0">
-              <td colspan="6" class="empty">Sin movimientos.</td>
+              <td colspan="6" class="ds-empty">Sin movimientos.</td>
             </tr>
             <tr v-for="m in movements" v-else :key="m.id">
               <td class="date">{{ fmtDateTime(m.createdDate) }}</td>
@@ -236,7 +236,9 @@ watch(
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Cerrar</button>
+      <button type="button" class="ds-btn ds-btn--ghost ds-btn--lg" @click="emit('close')">
+        Cerrar
+      </button>
     </template>
   </ModalShell>
 </template>
@@ -265,15 +267,6 @@ watch(
   background: var(--warm-50);
   color: var(--amatista-700);
   box-shadow: 0 1px 2px rgb(50 20 80 / 8%);
-}
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  margin-bottom: 12px;
 }
 .table {
   width: 100%;
@@ -305,11 +298,6 @@ watch(
 }
 .table tbody tr:last-child td {
   border-bottom: none;
-}
-.empty {
-  text-align: center;
-  padding: 32px;
-  color: var(--warm-500);
 }
 .num {
   text-align: right;
@@ -392,20 +380,5 @@ watch(
 .pag-ctrl button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-.btn-ghost {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 9px;
-  cursor: pointer;
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  color: var(--warm-700);
-}
-.btn-ghost:hover {
-  background: var(--warm-100);
 }
 </style>

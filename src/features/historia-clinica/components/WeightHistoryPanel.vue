@@ -379,7 +379,7 @@ async function remove(id: number) {
   font-weight: 600;
   color: var(--amatista-700);
   background: var(--amatista-100);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 1px 8px;
 }
 
@@ -413,7 +413,7 @@ async function remove(id: number) {
   font-size: 12.5px;
   border-radius: 9px;
   background: oklch(97% 0.02 25deg);
-  color: oklch(48% 0.18 25deg);
+  color: var(--danger-700);
   border: 1px solid oklch(85% 0.06 25deg);
   margin-bottom: 12px;
 }
@@ -499,7 +499,7 @@ async function remove(id: number) {
 }
 
 .wp-trend.down {
-  color: oklch(55% 0.18 25deg);
+  color: var(--danger-500);
 }
 
 .wp-trend-pct {
@@ -577,7 +577,7 @@ async function remove(id: number) {
   font-size: 11px;
   font-weight: 500;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--warm-200);
   color: var(--warm-700);
 }
@@ -611,7 +611,7 @@ async function remove(id: number) {
 }
 
 .wp-del:hover {
-  color: oklch(55% 0.18 25deg);
+  color: var(--danger-500);
   background: oklch(96% 0.02 25deg);
 }
 

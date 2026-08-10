@@ -23,6 +23,35 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(import.meta.dirname, './src'),
       },
     },
+    build: {
+      // Pinado: el objetivo por defecto de Vite cambia entre versiones mayores, y
+      // un salto silencioso mueve el tamaño del bundle sin que nadie lo pida.
+      target: 'es2022',
+
+      // Nunca se publican mapas de código, tampoco en dev: el entorno de dev es
+      // accesible desde internet y un mapa entrega el fuente completo a quien
+      // abra las herramientas del navegador. Para depurar, se construye en local.
+      sourcemap: false,
+
+      // Por defecto son 500 kB. El chunk más grande hoy ronda los 90 kB, así que
+      // 200 avisa cuando algo empieza a engordar, no cuando ya es tarde.
+      chunkSizeWarningLimit: 200,
+
+      // Sin `manualChunks`, y es una decisión medida, no un olvido. Se probó la
+      // configuración por familias (vuetify / vue / axios / iconos) sobre este
+      // mismo proyecto y empeora lo que más importa:
+      //
+      //   automático de Vite (esto)   ruta crítica 102,9 KB gzip
+      //   vendor por familias         ruta crítica 128,8 KB gzip   (+25 %)
+      //
+      // El argumento a favor era la caché, y tampoco la arregla: el porcentaje de
+      // JS invalidado por un cambio de una línea baja del 85 % al 71 %, que sigue
+      // siendo casi todo. Pagar 26 KB de ruta crítica —lo que el usuario espera
+      // antes de ver nada— por eso no sale a cuenta.
+      //
+      // La cascada de invalidación es un problema real de este repositorio y está
+      // documentada en scripts/check-bundle-budget.mjs. Su causa no es el vendor.
+    },
     server: {
       port: 5174,
       // Puerto fijo: si 5174 está ocupado, falla en vez de saltar a 5175/5176. Así el enlace de

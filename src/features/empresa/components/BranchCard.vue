@@ -134,7 +134,7 @@ defineEmits<{
   font-size: 10.5px;
   font-weight: 600;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
@@ -217,6 +217,6 @@ defineEmits<{
 .act.toggle.danger:hover {
   background: oklch(95% 0.04 25deg);
   border-color: oklch(75% 0.12 25deg);
-  color: oklch(50% 0.18 25deg);
+  color: var(--danger-600);
 }
 </style>

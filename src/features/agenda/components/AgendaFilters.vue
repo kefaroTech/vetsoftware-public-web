@@ -84,7 +84,7 @@ function select(value: ClinicalEventType | 'ALL') {
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-family: inherit;
   font-size: 12px;
   font-weight: 500;
@@ -122,7 +122,7 @@ function select(value: ClinicalEventType | 'ALL') {
 .count {
   font-size: 11px;
   padding: 0 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--warm-100);
   color: var(--warm-700);
   min-width: 18px;

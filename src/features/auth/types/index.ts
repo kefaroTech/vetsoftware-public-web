@@ -5,16 +5,19 @@ export interface LoginEmployeeRequest {
 
 export type AuthSubjectType = 'EMPLOYEE' | 'SYSTEM_USER'
 
+/**
+ * El backend ya no entrega el refresh token en el cuerpo: lo emite en una cookie
+ * HttpOnly. El campo sigue en el JSON con valor null y se omite aqui a proposito,
+ * para que ningun codigo nuevo intente leerlo.
+ */
 export interface TokenResponse {
   token: string
   type: AuthSubjectType
-  refreshToken: string
 }
 
 export interface AuthSession {
   token: string
   type: AuthSubjectType
-  refreshToken?: string
 }
 
 export interface MeResponse {

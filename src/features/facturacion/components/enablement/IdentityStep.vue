@@ -140,7 +140,7 @@ async function save() {
       title="Identidad fiscal de la empresa"
       sub="Datos del emisor tal como están registrados en el RUT. Aparecen en cada documento."
     />
-    <div class="card">
+    <div class="ds-card">
       <div class="grid">
         <BaseField label="Tipo de documento" required>
           <template #default="{ id }">
@@ -277,13 +277,6 @@ async function save() {
   gap: 18px;
 }
 
-.card {
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 14px;
-  padding: clamp(20px, 2vw, 28px);
-}
-
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -392,7 +385,7 @@ async function save() {
 }
 
 .req {
-  color: oklch(55% 0.18 25deg);
+  color: var(--danger-500);
 }
 
 .resplist {
@@ -446,6 +439,11 @@ async function save() {
 .resp-err {
   margin: 8px 0 0;
   font-size: 11.5px;
-  color: oklch(55% 0.18 25deg);
+  color: var(--danger-500);
+}
+
+/* Override mínimo sobre `.ds-card`. */
+.ds-card {
+  padding: clamp(20px, 2vw, 28px);
 }
 </style>

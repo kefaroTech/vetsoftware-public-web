@@ -12,14 +12,18 @@ defineEmits<{ confirm: []; cancel: [] }>()
         <div class="icon">
           <TriangleAlert :size="22" :stroke-width="1.8" />
         </div>
-        <h2 class="title">¿Crear consulta para una mascota fallecida?</h2>
+        <h2 class="ds-title">¿Crear consulta para una mascota fallecida?</h2>
         <p class="desc">
           {{ petName }} aparece marcada como fallecida. Esta consulta quedará registrada como
           necropsia o registro post-mortem.
         </p>
-        <div class="actions">
-          <button type="button" class="btn ghost" @click="$emit('cancel')">Cancelar</button>
-          <button type="button" class="btn primary" @click="$emit('confirm')">Continuar</button>
+        <div class="ds-actions">
+          <button type="button" class="ds-btn ds-btn--ghost" @click="$emit('cancel')">
+            Cancelar
+          </button>
+          <button type="button" class="ds-btn ds-btn--solid" @click="$emit('confirm')">
+            Continuar
+          </button>
         </div>
       </div>
     </div>
@@ -58,53 +62,10 @@ defineEmits<{ confirm: []; cancel: [] }>()
   margin-bottom: 14px;
 }
 
-.title {
-  margin: 0 0 6px;
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--warm-900);
-  letter-spacing: -0.01em;
-}
-
 .desc {
   margin: 0 0 22px;
   font-size: 13.5px;
   color: var(--warm-600);
   line-height: 1.55;
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.btn {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 9px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.btn.ghost {
-  background: transparent;
-  border-color: var(--warm-200);
-  color: var(--warm-900);
-}
-
-.btn.ghost:hover {
-  background: var(--warm-100);
-}
-
-.btn.primary {
-  background: var(--amatista-700);
-  color: white;
-}
-
-.btn.primary:hover {
-  filter: brightness(1.05);
 }
 </style>

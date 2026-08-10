@@ -253,8 +253,15 @@ async function submit() {
       </div>
     </template>
     <template #footer-actions>
-      <button type="button" class="btn ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn primary" :disabled="saving" @click="submit">
+      <button type="button" class="ds-btn ds-btn--neutral ds-btn--strong" @click="emit('close')">
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="ds-btn ds-btn--solid ds-btn--strong"
+        :disabled="saving"
+        @click="submit"
+      >
         {{ saving ? 'Abriendo…' : 'Abrir caja' }}
       </button>
     </template>
@@ -272,7 +279,7 @@ async function submit() {
   margin: 0 0 14px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: oklch(94% 0.06 25deg);
+  background: var(--danger-150);
   color: oklch(45% 0.18 25deg);
   font-size: 13px;
 }
@@ -288,27 +295,8 @@ async function submit() {
   line-height: 1.45;
 }
 
-.btn {
-  border: none;
-  border-radius: 9px;
-  padding: 9px 16px;
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn.ghost {
-  background: var(--warm-100);
-  color: var(--warm-700);
-}
-
-.btn.primary {
-  background: var(--amatista-600, #5c2d8c);
-  color: #fff;
-}
-
-.btn.primary:disabled {
-  opacity: 0.6;
-  cursor: default;
+/* caja/compras usan un amatista un punto más claro que el resto. */
+.ds-btn--solid {
+  --ds-btn-solid-bg: var(--amatista-600);
 }
 </style>

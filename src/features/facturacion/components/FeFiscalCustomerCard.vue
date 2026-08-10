@@ -34,7 +34,9 @@ const docLabel = computed(() => {
         La factura electrónica debe ir a nombre de un cliente identificado.
       </div>
     </div>
-    <button type="button" class="btn-primary" @click="emit('select')">Seleccionar cliente</button>
+    <button type="button" class="ds-btn ds-btn--primary ds-btn--strong" @click="emit('select')">
+      Seleccionar cliente
+    </button>
   </div>
 
   <!-- Cliente seleccionado: tarjeta + checklist -->
@@ -208,21 +210,5 @@ const docLabel = computed(() => {
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
-}
-
-.btn-primary {
-  padding: 9px 16px;
-  border-radius: 9px;
-  border: none;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  flex-shrink: 0;
 }
 </style>

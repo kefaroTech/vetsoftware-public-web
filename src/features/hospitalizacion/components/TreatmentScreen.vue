@@ -429,13 +429,13 @@ function onSuspendConfirm() {
   display: inline-block;
   margin-left: 8px;
   padding: 1px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: 11px;
   font-weight: 600;
   vertical-align: middle;
   background: oklch(94% 0.05 25deg);
-  color: oklch(48% 0.18 25deg);
-  border: 1px solid oklch(85% 0.08 25deg);
+  color: var(--danger-700);
+  border: 1px solid var(--danger-250);
 }
 .row-main {
   flex: 1;

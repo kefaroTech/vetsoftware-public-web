@@ -25,7 +25,8 @@ watch(query, (q) => {
   loading.value = true
   timer = setTimeout(async () => {
     try {
-      results.value = await ownerApi.search(term)
+      // BE-06: la busqueda llega paginada; este picker muestra solo la primera pagina.
+      results.value = (await ownerApi.search(term)).content
     } catch {
       results.value = []
     } finally {
@@ -97,7 +98,7 @@ watch(query, (q) => {
 }
 .input:focus {
   border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px var(--amatista-50);
+  box-shadow: var(--ring);
 }
 .results {
   list-style: none;

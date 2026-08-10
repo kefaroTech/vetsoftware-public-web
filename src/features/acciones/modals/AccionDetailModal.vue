@@ -45,8 +45,17 @@ const emit = defineEmits<{ close: []; edit: [] }>()
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Cerrar</button>
-      <button v-if="canEdit" type="button" class="btn-primary" @click="emit('edit')">Editar</button>
+      <button type="button" class="ds-btn ds-btn--ghost ds-btn--snug" @click="emit('close')">
+        Cerrar
+      </button>
+      <button
+        v-if="canEdit"
+        type="button"
+        class="ds-btn ds-btn--solid ds-btn--snug"
+        @click="emit('edit')"
+      >
+        Editar
+      </button>
     </template>
   </ModalShell>
 </template>
@@ -62,31 +71,5 @@ const emit = defineEmits<{ close: []; edit: [] }>()
   .detail-grid {
     grid-template-columns: 1fr;
   }
-}
-
-.btn-ghost,
-.btn-primary {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 14px;
-  border-radius: 9px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-.btn-ghost {
-  background: transparent;
-  border-color: var(--warm-200);
-  color: var(--warm-700);
-}
-.btn-ghost:hover {
-  background: var(--warm-100);
-}
-.btn-primary {
-  background: var(--amatista-700);
-  color: white;
-}
-.btn-primary:hover {
-  filter: brightness(1.05);
 }
 </style>

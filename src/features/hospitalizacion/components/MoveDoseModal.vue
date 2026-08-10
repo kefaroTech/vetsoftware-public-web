@@ -47,16 +47,16 @@ const emit = defineEmits<{
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
+      <button type="button" class="ds-btn ds-btn--ghost" @click="emit('close')">Cancelar</button>
       <template v-if="guideline === 'INTERVAL'">
-        <button type="button" class="btn-secondary" @click="emit('confirm', 'one')">
+        <button type="button" class="ds-btn btn-secondary" @click="emit('confirm', 'one')">
           Solo esta toma
         </button>
-        <button type="button" class="btn-primary" @click="emit('confirm', 'cascade')">
+        <button type="button" class="ds-btn ds-btn--solid" @click="emit('confirm', 'cascade')">
           Esta y las siguientes
         </button>
       </template>
-      <button v-else type="button" class="btn-primary" @click="emit('confirm', 'one')">
+      <button v-else type="button" class="ds-btn ds-btn--solid" @click="emit('confirm', 'one')">
         Mover esta toma
       </button>
     </template>
@@ -86,27 +86,6 @@ const emit = defineEmits<{
   color: var(--warm-900);
 }
 
-.btn-ghost,
-.btn-secondary,
-.btn-primary {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 9px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.btn-ghost {
-  background: transparent;
-  border-color: var(--warm-200);
-  color: var(--warm-900);
-}
-.btn-ghost:hover {
-  background: var(--warm-100);
-}
-
 .btn-secondary {
   background: var(--warm-100);
   border-color: var(--warm-200);
@@ -114,15 +93,5 @@ const emit = defineEmits<{
 }
 .btn-secondary:hover {
   background: var(--warm-200);
-}
-
-.btn-primary {
-  background: var(--amatista-700);
-  color: white;
-  border: none;
-  padding: 9px 18px;
-}
-.btn-primary:hover {
-  filter: brightness(1.05);
 }
 </style>

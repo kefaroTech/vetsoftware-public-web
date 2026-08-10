@@ -77,11 +77,11 @@ onMounted(() => {
 
 <template>
   <FeUpsell v-if="!hasModule" />
-  <div v-else class="page">
+  <div v-else class="ds-page ds-page--stack">
     <header class="pagehead">
       <div>
         <div class="kicker">Facturación electrónica · DIAN</div>
-        <h1 class="title">Reportes</h1>
+        <h1 class="ds-display fe-title">Reportes</h1>
       </div>
     </header>
 
@@ -134,7 +134,7 @@ onMounted(() => {
       </div>
 
       <div class="cols">
-        <div class="card">
+        <div class="ds-card">
           <div class="card-title">Impuestos por tarifa</div>
           <div class="tbl-scroll">
             <table class="minitable">
@@ -154,13 +154,13 @@ onMounted(() => {
                   <td style="text-align: right">{{ feMoney(r.taxAmount) }}</td>
                 </tr>
                 <tr v-if="book.taxByRate.length === 0">
-                  <td colspan="4" class="empty">Sin datos</td>
+                  <td colspan="4" class="ds-empty">Sin datos</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
-        <div class="card">
+        <div class="ds-card">
           <div class="card-title">Recaudo por medio de pago</div>
           <div class="tbl-scroll">
             <table class="minitable">
@@ -176,7 +176,7 @@ onMounted(() => {
                   <td style="text-align: right">{{ feMoney(r.amount) }}</td>
                 </tr>
                 <tr v-if="book.recaudoByMeans.length === 0">
-                  <td colspan="2" class="empty">Sin datos</td>
+                  <td colspan="2" class="ds-empty">Sin datos</td>
                 </tr>
               </tbody>
             </table>
@@ -184,7 +184,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="card">
+      <div class="ds-card">
         <div class="card-title">Documentos del periodo</div>
         <div class="tbl-scroll">
           <table class="minitable">
@@ -214,7 +214,7 @@ onMounted(() => {
                 <td><FeStatusPill :status="e.dianStatus" /></td>
               </tr>
               <tr v-if="book.entries.length === 0">
-                <td colspan="8" class="empty">Sin documentos en el rango.</td>
+                <td colspan="8" class="ds-empty">Sin documentos en el rango.</td>
               </tr>
             </tbody>
           </table>
@@ -243,9 +243,9 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="card">
+      <div class="ds-card">
         <div class="card-title">Requieren atención ({{ recon.needsAttention.length }})</div>
-        <div v-if="recon.needsAttention.length === 0" class="empty pad">
+        <div v-if="recon.needsAttention.length === 0" class="ds-empty pad">
           Todos los documentos del periodo están validados.
         </div>
         <div v-else class="tbl-scroll">
@@ -276,12 +276,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.page {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
 .pagehead {
   display: flex;
   align-items: flex-end;
@@ -295,16 +289,6 @@ onMounted(() => {
   letter-spacing: 0.08em;
   color: var(--warm-500);
   font-weight: 500;
-}
-
-.title {
-  margin: 6px 0 0;
-  font-family: var(--font-serif);
-  font-size: 36px;
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  color: var(--warm-900);
-  line-height: 1.05;
 }
 
 .repfilters {
@@ -357,8 +341,8 @@ onMounted(() => {
   margin: 0;
   padding: 12px 16px;
   border-radius: 10px;
-  background: oklch(95% 0.05 25deg);
-  border: 1px solid oklch(85% 0.08 25deg);
+  background: var(--danger-50);
+  border: 1px solid var(--danger-250);
   color: oklch(45% 0.16 25deg);
   font-size: 13px;
 }
@@ -423,13 +407,6 @@ onMounted(() => {
   gap: 16px;
 }
 
-.card {
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 14px;
-  padding: 18px 20px;
-}
-
 .card-title {
   font-size: 11.5px;
   text-transform: uppercase;
@@ -476,12 +453,23 @@ onMounted(() => {
   font-variant-numeric: tabular-nums;
 }
 
-.empty {
-  text-align: center;
-  color: var(--warm-500);
+.pad {
+  padding: 24px 12px;
 }
 
-.empty.pad {
-  padding: 24px 12px;
+/* El titular usa `.ds-display`; sólo conserva su separación superior. */
+.fe-title {
+  margin-top: var(--space-6);
+}
+
+/* Override mínimo sobre `.ds-card`. */
+.ds-card {
+  padding: 18px 20px;
+}
+
+/* Los estados vacíos de esta vista no llevan padding de base; `.pad` lo añade
+   donde hace falta. */
+.ds-empty {
+  padding: 0;
 }
 </style>

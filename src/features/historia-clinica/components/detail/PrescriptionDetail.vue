@@ -7,7 +7,7 @@ defineProps<{ data: PrescriptionResponse }>()
 </script>
 
 <template>
-  <div class="detail-grid">
+  <div class="ds-detail-grid">
     <DetailField label="Fecha" :value="formatEventDate(data.date)" />
     <DetailField label="Diagnóstico" :value="data.diagnosis" span="full" />
     <DetailField label="Observaciones" :value="data.observations" span="full" />
@@ -20,7 +20,9 @@ defineProps<{ data: PrescriptionResponse }>()
         </span>
       </div>
 
-      <div v-if="data.medicaments.length === 0" class="empty">Sin medicamentos registrados.</div>
+      <div v-if="data.medicaments.length === 0" class="ds-empty ds-empty--boxed">
+        Sin medicamentos registrados.
+      </div>
 
       <ul v-else class="medicaments">
         <li v-for="med in data.medicaments" :key="med.id" class="med">
@@ -47,18 +49,6 @@ defineProps<{ data: PrescriptionResponse }>()
 </template>
 
 <style scoped>
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 24px;
-}
-
-@media (width <= 560px) {
-  .detail-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 .medicaments-section {
   grid-column: 1 / -1;
   display: flex;
@@ -83,15 +73,6 @@ defineProps<{ data: PrescriptionResponse }>()
 .medicaments-count {
   font-size: 11.5px;
   color: var(--warm-400);
-}
-
-.empty {
-  padding: 14px 16px;
-  font-size: 13px;
-  color: var(--warm-500);
-  background: var(--warm-50);
-  border: 1px dashed var(--warm-200);
-  border-radius: 10px;
 }
 
 .medicaments {

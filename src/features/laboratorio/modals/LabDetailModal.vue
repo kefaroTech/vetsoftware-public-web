@@ -110,12 +110,14 @@ const showAttachments = computed(
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Cerrar</button>
+      <button type="button" class="ds-btn ds-btn--ghost ds-btn--snug" @click="emit('close')">
+        Cerrar
+      </button>
       <template v-if="test">
         <button
           v-if="test.status === 'PENDING_COLLECTION'"
           type="button"
-          class="btn-primary"
+          class="ds-btn ds-btn--solid ds-btn--snug"
           @click="emit('action', 'collect')"
         >
           Tomar muestra
@@ -123,7 +125,7 @@ const showAttachments = computed(
         <button
           v-else-if="test.status === 'PENDING_PROCESSING'"
           type="button"
-          class="btn-primary"
+          class="ds-btn ds-btn--solid ds-btn--snug"
           @click="emit('action', 'take')"
         >
           Procesar muestra
@@ -131,16 +133,24 @@ const showAttachments = computed(
         <button
           v-else-if="test.status === 'IN_PROGRESS'"
           type="button"
-          class="btn-primary"
+          class="ds-btn ds-btn--solid ds-btn--snug"
           @click="emit('action', 'load')"
         >
           Cargar resultados
         </button>
         <template v-else-if="test.status === 'PENDING_VALIDATION'">
-          <button type="button" class="btn-ghost" @click="emit('action', 'return')">
+          <button
+            type="button"
+            class="ds-btn ds-btn--ghost ds-btn--snug"
+            @click="emit('action', 'return')"
+          >
             Devolver
           </button>
-          <button type="button" class="btn-primary" @click="emit('action', 'validate')">
+          <button
+            type="button"
+            class="ds-btn ds-btn--solid ds-btn--snug"
+            @click="emit('action', 'validate')"
+          >
             Validar y firmar
           </button>
         </template>
@@ -259,35 +269,5 @@ const showAttachments = computed(
   background: var(--amatista-50);
   border-color: var(--amatista-300);
   color: var(--amatista-700);
-}
-
-.btn-ghost,
-.btn-primary {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 14px;
-  border-radius: 9px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.btn-ghost {
-  background: transparent;
-  border-color: var(--warm-200);
-  color: var(--warm-700);
-}
-
-.btn-ghost:hover {
-  background: var(--warm-100);
-}
-
-.btn-primary {
-  background: var(--amatista-700);
-  color: white;
-}
-
-.btn-primary:hover {
-  filter: brightness(1.05);
 }
 </style>

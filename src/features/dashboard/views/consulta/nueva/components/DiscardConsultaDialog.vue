@@ -39,17 +39,17 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
         <div class="icon">
           <TriangleAlert :size="22" :stroke-width="1.8" />
         </div>
-        <h2 class="title">¿Descartar esta consulta?</h2>
+        <h2 class="ds-title">¿Descartar esta consulta?</h2>
         <p class="desc">
           Perderás todos los datos ingresados<span v-if="petName">
             de <strong>{{ petName }}</strong></span
           >. Esta acción no se puede deshacer.
         </p>
-        <div class="actions">
-          <button ref="keepBtn" type="button" class="btn ghost" @click="$emit('cancel')">
+        <div class="ds-actions">
+          <button ref="keepBtn" type="button" class="ds-btn ds-btn--ghost" @click="$emit('cancel')">
             Seguir editando
           </button>
-          <button type="button" class="btn danger" @click="$emit('confirm')">
+          <button type="button" class="ds-btn danger" @click="$emit('confirm')">
             <Trash2 :size="13" :stroke-width="1.8" />
             <span>Descartar</span>
           </button>
@@ -91,19 +91,11 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: oklch(94% 0.06 25deg);
-  color: oklch(50% 0.18 25deg);
+  background: var(--danger-150);
+  color: var(--danger-600);
   display: grid;
   place-items: center;
   margin-bottom: 14px;
-}
-
-.title {
-  margin: 0 0 6px;
-  font-size: 18px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  color: var(--warm-900);
 }
 
 .desc {
@@ -113,46 +105,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   line-height: 1.55;
 }
 
-.actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 9px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.btn.ghost {
-  background: transparent;
-  border-color: var(--warm-200);
-  color: var(--warm-900);
-}
-
-.btn.ghost:hover {
-  background: var(--warm-100);
-}
-
-.btn.danger {
-  background: oklch(50% 0.18 25deg);
+.danger {
+  background: var(--danger-600);
   color: white;
 }
 
-.btn.danger:hover {
+.danger:hover {
   filter: brightness(1.05);
-}
-
-.btn:focus-visible {
-  outline: 2px solid var(--amatista-700);
-  outline-offset: 2px;
 }
 </style>

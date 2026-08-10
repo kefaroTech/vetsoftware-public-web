@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { ChevronRight, Search } from 'lucide-vue-next'
 import PawLoader from '@/components/ui/PawLoader.vue'
 import { useOwnerSearch } from '@/features/dashboard/views/consulta/nueva/composables/useOwnerSearch'
@@ -9,13 +9,37 @@ import type { Owner } from '@/types/domain'
 const emit = defineEmits<(e: 'select', owner: Owner) => void>()
 
 const query = ref('')
-const { results, loading, error, reset } = useOwnerSearch(query)
+const { results, loading, error, hasMore, totalElements, loadMore, reset } = useOwnerSearch(query)
 
 const hasQuery = computed(() => query.value.trim().length > 0)
 
 watch(query, (q) => {
   if (!q.trim()) reset()
 })
+
+/*
+ * BE-06: la búsqueda llega paginada y esta lista es scrolleable, así que al llegar al final se
+ * pide la página siguiente y se concatena. Se usa IntersectionObserver sobre un centinela al pie
+ * en lugar de escuchar `scroll`: no dispara en cada píxel ni fuerza lecturas de layout, que es lo
+ * que mantiene el scroll fluido cuando ya hay cientos de filas cargadas.
+ */
+const sentinel = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+
+watch(sentinel, (el) => {
+  observer?.disconnect()
+  observer = null
+  if (!el) return
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) void loadMore()
+    },
+    { rootMargin: '200px' },
+  )
+  observer.observe(el)
+})
+
+onBeforeUnmount(() => observer?.disconnect())
 </script>
 
 <template>
@@ -67,6 +91,14 @@ watch(query, (q) => {
         </div>
         <ChevronRight :size="16" :stroke-width="1.6" class="chev" />
       </button>
+
+      <!-- Centinela: al entrar en viewport dispara la página siguiente. -->
+      <div v-if="hasMore" ref="sentinel" class="sentinel">
+        <PawLoader :size="22" :glow="false" :speed="900" />
+      </div>
+      <div v-else-if="results.length > 0" class="results-end">
+        {{ totalElements }} resultado{{ totalElements === 1 ? '' : 's' }}
+      </div>
     </div>
 
     <div v-else class="hint">Empieza a escribir para buscar al propietario.</div>
@@ -194,6 +226,22 @@ watch(query, (q) => {
   flex-shrink: 0;
 }
 
+/* Alto fijo: el centinela debe ocupar sitio para poder entrar en viewport, y no
+   debe cambiar de tamaño al cargar o el scroll daría un salto. */
+.sentinel {
+  display: grid;
+  place-items: center;
+  height: 56px;
+}
+
+.results-end {
+  text-align: center;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--warm-500);
+  border-top: 1px solid var(--warm-150);
+}
+
 .status {
   text-align: center;
   padding: 40px 20px;
@@ -205,7 +253,7 @@ watch(query, (q) => {
 }
 
 .status.error {
-  color: oklch(48% 0.18 25deg);
+  color: var(--danger-700);
   background: oklch(97% 0.02 25deg);
   border-color: oklch(85% 0.06 25deg);
 }

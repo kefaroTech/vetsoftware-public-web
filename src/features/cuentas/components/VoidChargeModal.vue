@@ -121,13 +121,13 @@ async function submit() {
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">
+      <button type="button" class="ds-btn ds-btn--ghost ds-btn--lg" @click="emit('close')">
         {{ wouldGoNegative ? 'Entendido' : 'Cancelar' }}
       </button>
       <button
         v-if="!wouldGoNegative"
         type="button"
-        class="btn-danger"
+        class="ds-btn ds-btn--danger-solid ds-btn--lg"
         :disabled="busy"
         @click="submit"
       >
@@ -150,7 +150,7 @@ async function submit() {
   color: var(--warm-600);
 }
 .warn strong {
-  color: oklch(48% 0.18 25deg);
+  color: var(--danger-700);
 }
 .blocked {
   padding: 14px 16px;
@@ -172,36 +172,5 @@ async function submit() {
 }
 .blocked-desc strong {
   color: oklch(45% 0.18 25deg);
-}
-
-.btn-danger {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 9px;
-  cursor: pointer;
-  border: none;
-  color: white;
-  background: linear-gradient(135deg, oklch(52% 0.18 25deg), oklch(45% 0.18 22deg));
-}
-.btn-danger:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-ghost {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 9px;
-  cursor: pointer;
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  color: var(--warm-700);
-}
-.btn-ghost:hover {
-  background: var(--warm-100);
 }
 </style>

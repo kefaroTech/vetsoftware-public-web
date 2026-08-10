@@ -173,7 +173,7 @@ function copyId() {
         <button
           v-if="doc.dianStatus === 'PENDIENTE'"
           type="button"
-          class="ghost"
+          class="ds-btn ds-btn--ghost ds-btn--snug"
           :disabled="busy"
           @click="doRefresh"
         >
@@ -182,7 +182,7 @@ function copyId() {
         <button
           v-if="doc.dianStatus === 'CONTINGENCIA' && canTransmit"
           type="button"
-          class="ghost"
+          class="ds-btn ds-btn--ghost ds-btn--snug"
           :disabled="busy"
           @click="doTransmit"
         >
@@ -191,7 +191,7 @@ function copyId() {
         <button
           v-if="validated && doc.documentType === 'DOC_EQUIV_POS' && canEmit"
           type="button"
-          class="ghost"
+          class="ds-btn ds-btn--ghost ds-btn--snug"
           :disabled="busy"
           @click="doConvert"
         >
@@ -216,7 +216,7 @@ function copyId() {
     </div>
 
     <div class="grid">
-      <div class="card">
+      <div class="ds-card">
         <div class="card-title">Emisor</div>
         <div class="party">
           <div class="party-name">{{ issuerParty.name }}</div>
@@ -237,7 +237,7 @@ function copyId() {
           </div>
         </div>
       </div>
-      <div class="card">
+      <div class="ds-card">
         <div class="card-title">Adquiriente</div>
         <div class="party">
           <div class="party-name">{{ customerParty.name }}</div>
@@ -261,7 +261,7 @@ function copyId() {
       </div>
     </div>
 
-    <div v-if="validated && idValue" class="card cufebox">
+    <div v-if="validated && idValue" class="ds-card cufebox">
       <div class="qr">
         <img v-if="doc.qrUrl" :src="doc.qrUrl" alt="Código QR DIAN" class="qr-img" />
         <ScanLine v-else :size="48" :stroke-width="1.2" />
@@ -280,7 +280,7 @@ function copyId() {
       </div>
     </div>
 
-    <div v-if="doc.lines.length" class="card">
+    <div v-if="doc.lines.length" class="ds-card">
       <div class="card-title">Detalle</div>
       <div class="tbl-scroll">
         <table class="lines">
@@ -309,7 +309,7 @@ function copyId() {
       </div>
     </div>
 
-    <div class="card totals">
+    <div class="ds-card totals">
       <div class="tot-row">
         <span>Subtotal (base)</span><span>{{ feMoney(doc.lineExtensionAmount) }}</span>
       </div>
@@ -343,10 +343,10 @@ function copyId() {
     </div>
 
     <div v-if="isInvoice && validated && !doc.reversed && canEmit" class="noteactions">
-      <button type="button" class="ghost" @click="noteModal = 'credit'">
+      <button type="button" class="ds-btn ds-btn--ghost ds-btn--snug" @click="noteModal = 'credit'">
         <FileText :size="14" :stroke-width="1.8" /> Emitir nota crédito
       </button>
-      <button type="button" class="ghost" @click="noteModal = 'debit'">
+      <button type="button" class="ds-btn ds-btn--ghost ds-btn--snug" @click="noteModal = 'debit'">
         <FilePlus :size="14" :stroke-width="1.8" /> Emitir nota débito
       </button>
     </div>
@@ -427,10 +427,10 @@ function copyId() {
 .reversed {
   font-size: 11.5px;
   font-weight: 600;
-  color: oklch(50% 0.18 25deg);
-  background: oklch(95% 0.05 25deg);
+  color: var(--danger-600);
+  background: var(--danger-50);
   padding: 3px 9px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .statusbar {
@@ -497,37 +497,14 @@ function copyId() {
   flex-wrap: wrap;
 }
 
-.ghost {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: 9px;
-  border: 1px solid var(--warm-200);
-  background: var(--warm-50);
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--warm-700);
-  cursor: pointer;
-}
-
-.ghost:hover {
-  background: var(--warm-100);
-}
-
-.ghost:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .rejectbox {
   display: flex;
   align-items: flex-start;
   gap: 10px;
   padding: 14px 16px;
   border-radius: 12px;
-  background: oklch(95% 0.05 25deg);
-  border: 1px solid oklch(85% 0.08 25deg);
+  background: var(--danger-50);
+  border: 1px solid var(--danger-250);
   color: oklch(45% 0.16 25deg);
   font-size: 13px;
   line-height: 1.45;
@@ -553,13 +530,6 @@ function copyId() {
 .tbl-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-}
-
-.card {
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 14px;
-  padding: 18px 20px;
 }
 
 .card-title {
@@ -737,5 +707,10 @@ function copyId() {
 .noteactions {
   display: flex;
   gap: 10px;
+}
+
+/* Override mínimo sobre `.ds-card`. */
+.ds-card {
+  padding: 18px 20px;
 }
 </style>

@@ -23,7 +23,15 @@ import { useFeUvt } from '@/features/facturacion/composables/useFeUvt'
 import ReceiptModal from '../components/ReceiptModal.vue'
 import { useTienda } from '../composables/useTienda'
 import { useBranches } from '@/features/branches/composables/useBranches'
-import { appliesIva, applyPromo, formatMoney, splitGross, stockState } from '../composables/pricing'
+import {
+  appliesIva,
+  applyPromo,
+  formatMoney,
+  lineGross,
+  stockState,
+  taxByRate,
+} from '../composables/pricing'
+import { scaled as scaledMoney, sum as sumMoney } from '../composables/money'
 import { productCategoryTone, serviceCategoryTone } from '../composables/categoryTone'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import { useToast } from '@/composables/useToast'
@@ -317,36 +325,34 @@ function removeLine(line: SaleLine) {
 
 // Subtotal BRUTO (IVA incluido), tras promo. No hay descuento manual: el servidor valida cada unitPrice
 // contra el catálogo (precio de lista + promoción activa), así que solo las promociones reducen el precio.
-const grossSubtotal = computed(() => lines.value.reduce((a, l) => a + l.unitPrice * l.qty, 0))
+const grossSubtotal = computed(() =>
+  sumMoney(lines.value.map((l) => lineGross(l.unitPrice, l.qty))),
+)
 const promoSavings = computed(() =>
-  lines.value.reduce(
-    (a, l) =>
-      a +
-      (l.originalUnitPrice != null && l.originalUnitPrice > l.unitPrice
-        ? (l.originalUnitPrice - l.unitPrice) * l.qty
-        : 0),
-    0,
+  sumMoney(
+    lines.value.map((l) =>
+      l.originalUnitPrice != null && l.originalUnitPrice > l.unitPrice
+        ? lineGross(l.originalUnitPrice - l.unitPrice, l.qty)
+        : 0,
+    ),
   ),
 )
 
-// IVA contenido por tasa, EXTRAÍDO del bruto.
-const taxByRate = computed(() => {
-  const groups = new Map<string, { name: string; amount: number }>()
-  for (const l of lines.value) {
-    const aplicaIva = appliesIva(l.taxTreatment)
-    if (!aplicaIva || l.taxPercentage <= 0) continue
-    const key = l.taxName ?? `IVA ${l.taxPercentage}%`
-    const lineGross = l.unitPrice * l.qty
-    const amount = splitGross(lineGross, aplicaIva, l.taxPercentage).tax
-    const g = groups.get(key) ?? { name: key, amount: 0 }
-    g.amount += amount
-    groups.set(key, g)
-  }
-  return Array.from(groups.values()).filter((g) => g.amount > 0)
-})
-const taxTotal = computed(() => taxByRate.value.reduce((a, g) => a + g.amount, 0))
+// IVA contenido por tasa, EXTRAÍDO del bruto. El agrupado vive en `pricing`
+// porque el cierre de cuenta calcula exactamente lo mismo: dos copias de una
+// regla fiscal es una de más.
+const taxRows = computed(() =>
+  taxByRate(
+    lines.value.map((l) => ({
+      gross: lineGross(l.unitPrice, l.qty),
+      ratePct: appliesIva(l.taxTreatment) ? l.taxPercentage : 0,
+      label: l.taxName,
+    })),
+  ),
+)
+const taxTotal = computed(() => sumMoney(taxRows.value.map((g) => g.amount)))
 const total = computed(() => grossSubtotal.value)
-const baseTotal = computed(() => grossSubtotal.value - taxTotal.value)
+const baseTotal = computed(() => scaledMoney(grossSubtotal.value - taxTotal.value))
 const isEmpty = computed(() => lines.value.length === 0)
 
 async function onConfirmPay(method: string, received: number | null) {
@@ -665,7 +671,7 @@ function openFiscalPicker() {
             <div class="srow">
               <span>Base gravable</span><span>{{ formatMoney(baseTotal) }}</span>
             </div>
-            <div v-for="r in taxByRate" :key="r.name" class="srow">
+            <div v-for="r in taxRows" :key="r.name" class="srow">
               <span>{{ r.name }} (incluido)</span><span>{{ formatMoney(r.amount) }}</span>
             </div>
             <div class="srow grand">

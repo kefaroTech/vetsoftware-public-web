@@ -194,7 +194,7 @@ const branchNames = computed(() => props.employee.branches.map((b) => b.name).jo
   color: var(--warm-700);
   background: var(--warm-100);
   border: 1px solid var(--warm-200);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

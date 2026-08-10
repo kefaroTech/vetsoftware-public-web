@@ -17,7 +17,7 @@ defineProps<{ status: HospStatus }>()
   align-items: center;
   gap: 6px;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: 11.5px;
   font-weight: 500;
   white-space: nowrap;

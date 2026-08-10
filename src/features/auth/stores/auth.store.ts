@@ -36,7 +36,7 @@ function loadInitial(): AuthSession | null {
   try {
     const parsed = JSON.parse(raw) as Partial<AuthSession>
     if (parsed?.token && parsed?.type) {
-      return { token: parsed.token, type: parsed.type, refreshToken: parsed.refreshToken }
+      return { token: parsed.token, type: parsed.type }
     }
     return null
   } catch {
@@ -122,18 +122,23 @@ export const useAuthStore = defineStore('auth', () => {
   // Single-flight: si varias requests 401 llegan a la vez, comparten un único /auth/refresh.
   let refreshInFlight: Promise<string | null> | null = null
 
-  /** Rota el refresh token y actualiza la sesión; devuelve el nuevo access token o null si falla. */
+  /**
+   * Rota el refresh token y actualiza la sesión; devuelve el nuevo access token
+   * o null si falla.
+   *
+   * Ya no comprueba antes si hay refresh token: vive en una cookie HttpOnly y
+   * este código no puede verla. La ausencia la resuelve el servidor con un 401,
+   * que aquí acaba en clearSession(). Un viaje de red de más en el único caso en
+   * que la sesión ya estaba perdida.
+   */
   async function refreshSession(): Promise<string | null> {
     if (refreshInFlight) return refreshInFlight
-    const currentRefresh = session.value?.refreshToken
-    if (!currentRefresh) return null
     refreshInFlight = authApi
-      .refresh(currentRefresh)
+      .refresh()
       .then((res) => {
         const next: AuthSession = {
           token: res.token,
           type: res.type,
-          refreshToken: res.refreshToken,
         }
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(next))
         session.value = next

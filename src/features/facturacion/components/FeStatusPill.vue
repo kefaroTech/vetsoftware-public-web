@@ -26,7 +26,7 @@ const meta = computed(() => STATUS_META[props.status] ?? STATUS_META.PENDIENTE)
   align-items: center;
   gap: 6px;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;

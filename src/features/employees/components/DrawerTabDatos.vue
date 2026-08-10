@@ -128,7 +128,7 @@ function formatDate(iso: string): string {
   color: var(--warm-700);
   background: var(--warm-100);
   border: 1px solid var(--warm-200);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   white-space: nowrap;
 }
 </style>

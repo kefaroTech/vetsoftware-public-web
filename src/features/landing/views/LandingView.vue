@@ -238,7 +238,7 @@ const trust = [
   align-items: center;
   gap: 8px;
   padding: 6px 13px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgb(255 255 255 / 70%);
   border: 1px solid #ecd9fb;
   font-size: 12px;

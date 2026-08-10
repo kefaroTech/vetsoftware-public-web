@@ -247,14 +247,19 @@ async function onRemove(appt: AppointmentResponse) {
       lead="Reserva, confirma, atiende, reprograma y cancela citas. El choque de horario avisa, pero nunca bloquea."
     >
       <template #action>
-        <button v-if="canCreate" type="button" class="cta" @click="openCreate">
+        <button
+          v-if="canCreate"
+          type="button"
+          class="ds-btn ds-btn--primary ds-btn--lg ds-btn--elevated"
+          @click="openCreate"
+        >
           <Plus :size="16" :stroke-width="1.8" />
           Nueva cita
         </button>
       </template>
     </PageHeader>
 
-    <div v-if="error" class="banner error">{{ error }}</div>
+    <div v-if="error" class="ds-banner ds-banner--error ds-banner--flush">{{ error }}</div>
 
     <AgendaToolbar
       :view="view"
@@ -335,38 +340,6 @@ async function onRemove(appt: AppointmentResponse) {
   margin: 0 auto;
   font-family: var(--font-sans);
   color: var(--warm-900);
-}
-
-.cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  font-size: 13.5px;
-  font-weight: 500;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-  color: white;
-  border: none;
-  border-radius: 9px;
-  cursor: pointer;
-  font-family: inherit;
-  box-shadow:
-    0 1px 2px rgb(50 20 80 / 8%),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 50%);
-  white-space: nowrap;
-}
-
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
 }
 
 .back-btn {

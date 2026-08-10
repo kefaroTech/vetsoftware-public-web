@@ -79,7 +79,7 @@ defineEmits<{ select: [] }>()
 
 .pet-card.selected {
   border: 1.5px solid var(--amatista-700);
-  box-shadow: 0 0 0 3px var(--amatista-50);
+  box-shadow: var(--ring);
   padding: 15.5px;
 }
 

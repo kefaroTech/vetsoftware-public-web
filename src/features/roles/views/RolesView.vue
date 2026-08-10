@@ -190,11 +190,7 @@ const hasError = computed(() => roles.error.value ?? permissionsCatalog.error.va
   align-items: center;
   gap: 6px;
   padding: 9px 16px;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
+  background: var(--gradient-primary);
   color: #fff;
   border: none;
   border-radius: 9px;

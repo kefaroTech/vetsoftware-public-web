@@ -48,7 +48,12 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
     <div v-if="isEmpty" class="day-empty">
       <div class="empty-emoji" aria-hidden="true">📭</div>
       <div class="empty-text">No hay citas para este día.</div>
-      <button v-if="canCreate" type="button" class="btn-primary" @click="emit('new')">
+      <button
+        v-if="canCreate"
+        type="button"
+        class="ds-btn ds-btn--solid new-appt"
+        @click="emit('new')"
+      >
         <Plus :size="15" :stroke-width="1.8" /> Agendar una cita
       </button>
     </div>
@@ -116,26 +121,6 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
 
 .empty-text {
   font-size: 14px;
-}
-
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: 16px;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 500;
-  padding: 10px 16px;
-  border-radius: 9px;
-  cursor: pointer;
-  border: none;
-  background: var(--amatista-700);
-  color: white;
-}
-
-.btn-primary:hover {
-  filter: brightness(1.07);
 }
 
 .timeline {
@@ -254,5 +239,10 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
 .subtitle {
   font-size: 12px;
   color: var(--warm-600);
+}
+
+/* El botón usa `.ds-btn`; sólo conserva su separación superior. */
+.new-appt {
+  margin-top: var(--space-16);
 }
 </style>

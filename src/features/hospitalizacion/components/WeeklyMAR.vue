@@ -274,7 +274,7 @@ function onDrop(dayIso: string, hour: number) {
 }
 
 .chip.aplicada {
-  background: oklch(94% 0.06 150deg);
+  background: var(--success-50);
   color: oklch(40% 0.13 150deg);
   cursor: default;
 }
@@ -291,9 +291,9 @@ function onDrop(dayIso: string, hour: number) {
 }
 
 .chip.atrasada {
-  background: oklch(95% 0.05 25deg);
-  color: oklch(48% 0.18 25deg);
-  border: 1px solid oklch(85% 0.1 25deg);
+  background: var(--danger-50);
+  color: var(--danger-700);
+  border: 1px solid var(--danger-300);
   cursor: pointer;
 }
 

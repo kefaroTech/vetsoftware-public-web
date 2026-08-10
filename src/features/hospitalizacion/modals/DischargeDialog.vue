@@ -51,8 +51,8 @@ watch(
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn-primary" @click="emit('confirm', reason)">
+      <button type="button" class="ds-btn ds-btn--ghost" @click="emit('close')">Cancelar</button>
+      <button type="button" class="ds-btn ds-btn--solid" @click="emit('confirm', reason)">
         Confirmar alta
       </button>
     </template>
@@ -67,33 +67,8 @@ watch(
   line-height: 1.5;
 }
 
-.btn-ghost,
-.btn-primary {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 9px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.btn-ghost {
-  background: transparent;
-  border-color: var(--warm-200);
-  color: var(--warm-900);
-}
-.btn-ghost:hover {
-  background: var(--warm-100);
-}
-
-.btn-primary {
-  background: oklch(55% 0.16 80deg);
-  color: white;
-  border: none;
-  padding: 9px 18px;
-}
-.btn-primary:hover {
-  filter: brightness(1.05);
+/* Acción de aviso: ámbar en lugar del amatista por defecto. */
+.ds-btn--solid {
+  --ds-btn-solid-bg: oklch(55% 0.16 80deg);
 }
 </style>

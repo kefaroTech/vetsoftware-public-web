@@ -69,7 +69,7 @@ function back() {
       Paso 2 de 3
       <template v-if="state.owner">· {{ state.owner.name }}</template>
     </div>
-    <h1 class="title">¿Qué mascota quieres consultar?</h1>
+    <h1 class="ds-display ds-display--sm">¿Qué mascota quieres consultar?</h1>
     <p v-if="state.owner" class="sub">
       {{ countLabel }}<template v-if="firstName"> a nombre de {{ firstName }}</template
       >.
@@ -129,16 +129,6 @@ function back() {
   margin-bottom: 6px;
 }
 
-.title {
-  font-family: var(--font-serif);
-  font-size: 32px;
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  color: var(--warm-900);
-  margin: 0;
-  line-height: 1.05;
-}
-
 .sub {
   font-size: 13.5px;
   color: var(--warm-600);
@@ -157,7 +147,7 @@ function back() {
   font-size: 13px;
   border-radius: 10px;
   background: oklch(97% 0.02 25deg);
-  color: oklch(48% 0.18 25deg);
+  color: var(--danger-700);
   border: 1px solid oklch(85% 0.06 25deg);
 }
 

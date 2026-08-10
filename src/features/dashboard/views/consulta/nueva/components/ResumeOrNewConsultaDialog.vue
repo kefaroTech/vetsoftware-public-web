@@ -72,11 +72,16 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
           <div class="step-chip">{{ stepLabel }}</div>
 
           <div class="actions">
-            <button type="button" class="btn ghost" @click="emit('createNew')">
+            <button type="button" class="ds-btn ds-btn--ghost" @click="emit('createNew')">
               <Sparkles :size="14" :stroke-width="1.8" />
               <span>Crear una nueva</span>
             </button>
-            <button ref="continueBtn" type="button" class="btn primary" @click="emit('continue')">
+            <button
+              ref="continueBtn"
+              type="button"
+              class="ds-btn ds-btn--solid"
+              @click="emit('continue')"
+            >
               <span>Continuar consulta</span>
               <ArrowRight :size="14" :stroke-width="1.8" />
             </button>
@@ -161,7 +166,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   text-transform: uppercase;
   font-weight: 500;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--amatista-100);
   color: var(--amatista-700);
   margin-bottom: 22px;
@@ -172,43 +177,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   gap: 10px;
   justify-content: flex-end;
   flex-wrap: wrap;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 10px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.btn.ghost {
-  background: transparent;
-  border-color: var(--warm-200);
-  color: var(--warm-900);
-}
-
-.btn.ghost:hover {
-  background: var(--warm-100);
-}
-
-.btn.primary {
-  background: var(--amatista-700);
-  color: white;
-}
-
-.btn.primary:hover {
-  filter: brightness(1.05);
-}
-
-.btn:focus-visible {
-  outline: 2px solid var(--amatista-700);
-  outline-offset: 2px;
 }
 
 .hint {

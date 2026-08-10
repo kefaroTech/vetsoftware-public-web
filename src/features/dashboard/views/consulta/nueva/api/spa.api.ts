@@ -1,4 +1,5 @@
 import { http } from '@/services/http/http.client'
+import { DEFAULT_PAGE_SIZE, type PageResponse } from '@/types/pagination'
 
 export interface CreateSpaPayload {
   date: string
@@ -50,8 +51,18 @@ export const spaApi = {
     return data
   },
 
-  async listByAnimal(animalId: number): Promise<SpaResponse[]> {
-    const { data } = await http.get<SpaResponse[]>(`/spas/by-animal/${animalId}`)
+  async listByAnimal(
+    animalId: number,
+    query = '',
+    page = 0,
+    pageSize = DEFAULT_PAGE_SIZE,
+    signal?: AbortSignal,
+  ): Promise<PageResponse<SpaResponse>> {
+    // BE-06: el historial por animal llega paginado; el consumidor acumula paginas.
+    const { data } = await http.get<PageResponse<SpaResponse>>(`/spas/by-animal/${animalId}`, {
+      params: { q: query || undefined, page, pageSize },
+      signal,
+    })
     return data
   },
 

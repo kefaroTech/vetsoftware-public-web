@@ -117,11 +117,11 @@ function ivaContenido(percentage: number): string {
 </script>
 
 <template>
-  <div class="inv">
-    <header class="head">
+  <div class="ds-page">
+    <header class="ds-head">
       <div>
         <div class="kicker">Tienda · Impuestos</div>
-        <h1 class="title">Administración de impuestos</h1>
+        <h1 class="ds-display">Administración de impuestos</h1>
       </div>
       <div class="head-actions">
         <div class="seg" role="tablist">
@@ -132,13 +132,18 @@ function ivaContenido(percentage: number): string {
             Pausados
           </button>
         </div>
-        <button v-if="canCreate && mode === 'active'" type="button" class="cta" @click="openNew">
+        <button
+          v-if="canCreate && mode === 'active'"
+          type="button"
+          class="ds-btn ds-btn--primary ds-btn--elevated ds-btn--nowrap"
+          @click="openNew"
+        >
           <Plus :size="16" :stroke-width="1.8" /> Nuevo impuesto
         </button>
       </div>
     </header>
 
-    <div v-if="store.error.value" class="banner error">{{ store.error.value }}</div>
+    <div v-if="store.error.value" class="ds-banner ds-banner--error">{{ store.error.value }}</div>
 
     <!-- ─────────── Modo ACTIVOS ─────────── -->
     <div v-if="mode === 'active'" class="tbl-scroll">
@@ -155,10 +160,10 @@ function ivaContenido(percentage: number): string {
         </thead>
         <tbody>
           <tr v-if="store.loading.value">
-            <td colspan="6" class="empty">Cargando…</td>
+            <td colspan="6" class="ds-empty ds-empty--lg">Cargando…</td>
           </tr>
           <tr v-else-if="store.taxes.value.length === 0">
-            <td colspan="6" class="empty">Sin impuestos. Crea el primero.</td>
+            <td colspan="6" class="ds-empty ds-empty--lg">Sin impuestos. Crea el primero.</td>
           </tr>
           <tr v-for="t in store.taxes.value" v-else :key="t.id" class="trow" @click="onRowClick(t)">
             <td class="tname">{{ t.name }}</td>
@@ -207,10 +212,10 @@ function ivaContenido(percentage: number): string {
         </thead>
         <tbody>
           <tr v-if="pausedLoading">
-            <td colspan="4" class="empty">Cargando…</td>
+            <td colspan="4" class="ds-empty ds-empty--lg">Cargando…</td>
           </tr>
           <tr v-else-if="store.pausedTaxes.value.length === 0">
-            <td colspan="4" class="empty">No hay impuestos pausados.</td>
+            <td colspan="4" class="ds-empty ds-empty--lg">No hay impuestos pausados.</td>
           </tr>
           <tr v-for="t in store.pausedTaxes.value" v-else :key="t.id">
             <td class="tname">{{ t.name }}</td>
@@ -255,16 +260,9 @@ function ivaContenido(percentage: number): string {
 </template>
 
 <style scoped>
-.inv {
-  font-family: var(--font-sans);
-  color: var(--warm-900);
-}
-.head {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
+/* El contenedor usa `.ds-page` y la cabecera `.ds-head` (primitives.css).
+   Esta vista es la única de las tres que deja envolver la cabecera. */
+.ds-head {
   flex-wrap: wrap;
 }
 .kicker {
@@ -274,15 +272,6 @@ function ivaContenido(percentage: number): string {
   color: var(--warm-500);
   font-weight: 500;
   margin-bottom: 6px;
-}
-.title {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: 36px;
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  line-height: 1.05;
-  color: var(--warm-900);
 }
 .head-actions {
   display: flex;
@@ -313,38 +302,6 @@ function ivaContenido(percentage: number): string {
   background: var(--warm-50);
   color: var(--amatista-700);
   box-shadow: 0 1px 2px rgb(50 20 80 / 8%);
-}
-
-.cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 16px;
-  border-radius: 9px;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-  color: #fff;
-  border: none;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  box-shadow:
-    0 1px 2px rgb(50 20 80 / 8%),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 45%);
-}
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  margin-bottom: 14px;
 }
 .tbl-scroll {
   overflow-x: auto;
@@ -384,11 +341,6 @@ function ivaContenido(percentage: number): string {
 }
 .trow:hover {
   background: var(--warm-100);
-}
-.empty {
-  text-align: center;
-  padding: 40px;
-  color: var(--warm-500);
 }
 .tname {
   font-weight: 500;

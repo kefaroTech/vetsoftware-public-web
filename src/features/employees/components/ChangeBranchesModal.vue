@@ -194,8 +194,20 @@ function onSave() {
     </template>
 
     <template #footer-actions>
-      <button type="button" class="ghost" :disabled="busy" @click="emit('close')">Cancelar</button>
-      <button type="button" class="primary" :disabled="!canSave" @click="onSave">
+      <button
+        type="button"
+        class="ds-btn ds-btn--ghost ds-btn--snug"
+        :disabled="busy"
+        @click="emit('close')"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="ds-btn ds-btn--solid ds-btn--snug"
+        :disabled="!canSave"
+        @click="onSave"
+      >
         {{ busy ? 'Guardando…' : 'Guardar cambios' }}
       </button>
     </template>
@@ -282,7 +294,7 @@ function onSave() {
 .counter {
   font-size: 11.5px;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--warm-100);
   color: var(--warm-600);
   font-weight: 500;
@@ -298,7 +310,7 @@ function onSave() {
   font-size: 12px;
   font-weight: 500;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--amatista-50);
   color: var(--amatista-800, oklch(35% 0.12 300deg));
   border: 1px solid var(--amatista-200, oklch(88% 0.05 300deg));
@@ -328,9 +340,9 @@ function onSave() {
 .banner.error {
   flex-direction: row;
   align-items: center;
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
+  background: var(--danger-100);
+  border: 1px solid var(--danger-400);
+  color: var(--danger-900);
 }
 
 .banner.warn {
@@ -367,42 +379,6 @@ function onSave() {
 }
 
 .diff-remove {
-  color: oklch(48% 0.18 25deg);
-}
-
-.ghost,
-.primary {
-  padding: 8px 14px;
-  font-size: 13px;
-  border-radius: 7px;
-  cursor: pointer;
-  font-family: inherit;
-  font-weight: 500;
-  border: 1px solid transparent;
-}
-
-.ghost {
-  background: var(--warm-50);
-  color: var(--warm-700);
-  border-color: var(--warm-200);
-}
-
-.ghost:hover:not(:disabled) {
-  background: var(--warm-100);
-}
-
-.primary {
-  background: var(--amatista-700);
-  color: white;
-}
-
-.primary:hover:not(:disabled) {
-  background: var(--amatista-800);
-}
-
-.ghost:disabled,
-.primary:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
+  color: var(--danger-700);
 }
 </style>

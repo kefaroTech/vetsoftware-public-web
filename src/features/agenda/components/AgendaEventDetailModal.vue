@@ -62,7 +62,9 @@ const rangeLabel = computed(() => {
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="$emit('close')">Cerrar</button>
+      <button type="button" class="ds-btn ds-btn--ghost ds-btn--snug" @click="$emit('close')">
+        Cerrar
+      </button>
     </template>
   </ModalShell>
 </template>
@@ -85,7 +87,7 @@ const rangeLabel = computed(() => {
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: 12.5px;
   font-weight: 500;
 }
@@ -119,21 +121,5 @@ const rangeLabel = computed(() => {
   margin: 0;
   font-size: 13.5px;
   color: var(--warm-900);
-}
-
-.btn-ghost {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 14px;
-  border-radius: 9px;
-  cursor: pointer;
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  color: var(--warm-700);
-}
-
-.btn-ghost:hover {
-  background: var(--warm-100);
 }
 </style>

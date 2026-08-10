@@ -106,7 +106,9 @@ onMounted(() => history.fetch())
       <button type="button" class="clear" @click="clearAll">Limpiar</button>
     </div>
 
-    <div v-if="history.error.value" class="banner error">{{ history.error.value }}</div>
+    <div v-if="history.error.value" class="ds-banner ds-banner--error">
+      {{ history.error.value }}
+    </div>
 
     <div class="table-wrap">
       <table class="table">
@@ -217,7 +219,7 @@ onMounted(() => history.fetch())
   color: var(--amatista-700);
   background: var(--amatista-50);
   border: 1px solid var(--amatista-200);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 6px 8px 6px 12px;
 }
 
@@ -249,17 +251,7 @@ onMounted(() => history.fetch())
 .select:focus {
   outline: none;
   border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px var(--amatista-50);
-}
-
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  margin-bottom: 14px;
+  box-shadow: var(--ring);
 }
 
 .table-wrap {

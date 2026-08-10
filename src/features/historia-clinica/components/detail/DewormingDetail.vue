@@ -15,7 +15,7 @@ const DEWORMING_TYPE_LABEL: Record<DewormingType, string> = {
 </script>
 
 <template>
-  <div class="detail-grid">
+  <div class="ds-detail-grid">
     <DetailField label="Tipo" :value="DEWORMING_TYPE_LABEL[data.type]" />
     <DetailField label="Fecha" :value="formatEventDate(data.date)" />
     <DetailField
@@ -34,17 +34,3 @@ const DEWORMING_TYPE_LABEL: Record<DewormingType, string> = {
     </DetailField>
   </div>
 </template>
-
-<style scoped>
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 24px;
-}
-
-@media (width <= 560px) {
-  .detail-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

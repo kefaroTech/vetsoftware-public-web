@@ -215,12 +215,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 }
 
 .accent-danger .icon-box {
-  background: oklch(94% 0.06 25deg);
-  color: oklch(50% 0.18 25deg);
+  background: var(--danger-150);
+  color: var(--danger-600);
 }
 
 .accent-warn .icon-box {
-  background: oklch(95% 0.06 80deg);
+  background: var(--warning-50);
   color: oklch(45% 0.13 80deg);
 }
 

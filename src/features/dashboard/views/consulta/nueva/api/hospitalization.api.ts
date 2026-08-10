@@ -1,4 +1,5 @@
 import { http } from '@/services/http/http.client'
+import { DEFAULT_PAGE_SIZE, type PageResponse } from '@/types/pagination'
 import type { HospitalizationType, ReasonLeaving } from '@/types/domain'
 
 export interface CreateHospitalizationPayload {
@@ -61,9 +62,20 @@ export const hospitalizationApi = {
     return data
   },
 
-  async listByAnimal(animalId: number): Promise<HospitalizationResponse[]> {
-    const { data } = await http.get<HospitalizationResponse[]>(
+  async listByAnimal(
+    animalId: number,
+    query = '',
+    page = 0,
+    pageSize = DEFAULT_PAGE_SIZE,
+    signal?: AbortSignal,
+  ): Promise<PageResponse<HospitalizationResponse>> {
+    // BE-06: el historial por animal llega paginado; el consumidor acumula paginas.
+    const { data } = await http.get<PageResponse<HospitalizationResponse>>(
       `/hospitalizations/by-animal/${animalId}`,
+      {
+        params: { q: query || undefined, page, pageSize },
+        signal,
+      },
     )
     return data
   },

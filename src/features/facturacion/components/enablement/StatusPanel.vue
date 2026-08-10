@@ -86,7 +86,11 @@ function alertText(
           }}
         </div>
       </div>
-      <button type="button" class="cta" @click="emit('openWizard', ready ? 1 : firstIncomplete)">
+      <button
+        type="button"
+        class="ds-btn ds-btn--primary ds-btn--strong ds-btn--elevated"
+        @click="emit('openWizard', ready ? 1 : firstIncomplete)"
+      >
         {{ ready ? 'Revisar configuración' : 'Continuar habilitación' }}
         <ArrowRight :size="15" :stroke-width="1.9" />
       </button>
@@ -210,28 +214,6 @@ function alertText(
   margin-top: 2px;
 }
 
-.cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 10px 18px;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  flex-shrink: 0;
-  box-shadow:
-    0 1px 2px rgb(50 20 80 / 8%),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 45%);
-}
-
 .alertrow {
   display: flex;
   align-items: center;
@@ -330,11 +312,11 @@ function alertText(
   font-size: 10.5px;
   font-weight: 600;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .reqbadge.ok {
-  background: oklch(94% 0.06 150deg);
+  background: var(--success-50);
   color: oklch(40% 0.13 150deg);
 }
 
@@ -352,7 +334,7 @@ function alertText(
   font-size: 10.5px;
   font-weight: 500;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--warm-150, var(--warm-100));
   color: var(--warm-500);
 }

@@ -33,7 +33,7 @@ const meta = computed(() => {
   gap: 6px;
   font-size: 11.5px;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-weight: 500;
 }
 

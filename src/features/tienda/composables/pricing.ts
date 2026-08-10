@@ -5,6 +5,7 @@
  * (no hay constante global de IVA), y las promociones solo soportan DISCOUNT y
  * SPECIAL_PRICE (no PAQUETE).
  */
+import * as money from './money'
 import type {
   DerivedPromoStatus,
   ProductResponse,
@@ -39,8 +40,34 @@ const moneyFmt = new Intl.NumberFormat('es-CO', {
   maximumFractionDigits: 0,
 })
 
+/**
+ * Importe a pesos enteros. Es lo correcto para el ticket y para el carrito: en
+ * Colombia no circulan centavos y un recibo con decimales confunde al cliente.
+ *
+ * Ojo: redondear aquí es lo que hacía INVISIBLE el descuadre que describe
+ * FE-09. Ya no hay descuadre que ocultar —el cálculo replica al backend al
+ * centavo—, pero para las pantallas de desglose fiscal está `formatMoneyExact`,
+ * que sí muestra los centavos cuando existen.
+ */
 export function formatMoney(n: number): string {
   return moneyFmt.format(Number.isFinite(n) ? n : 0)
+}
+
+const moneyExactFmt = new Intl.NumberFormat('es-CO', {
+  style: 'currency',
+  currency: 'COP',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})
+
+/**
+ * Importe con centavos, para desgloses fiscales: base gravable e IVA por
+ * tarifa, que es lo que tiene que cuadrar con el documento electrónico. Aquí
+ * esconder los centavos sería esconder precisamente lo que se está
+ * comprobando.
+ */
+export function formatMoneyExact(n: number): string {
+  return moneyExactFmt.format(Number.isFinite(n) ? n : 0)
 }
 
 /** Porcentaje (0–100) de impuesto efectivo de un ítem; 0 si no aplica. */
@@ -62,10 +89,57 @@ export function splitGross(
   taxPercentage: number | null | undefined,
 ): { base: number; tax: number } {
   const rate = effectiveTaxRate(aplicaIva, taxPercentage)
-  if (rate <= 0) return { base: gross, tax: 0 }
-  // Redondeo por línea a 2 decimales (HALF_UP), igual que el backend, para que la preview coincida.
-  const base = Math.round((gross / (1 + rate / 100)) * 100) / 100
-  return { base, tax: gross - base }
+  if (rate <= 0) return { base: money.scaled(gross), tax: 0 }
+  // Réplica de `Money.extractBase` + `gross.subtract(base)` del backend, en
+  // centavos enteros.
+  //
+  // Medido: para los importes que este sistema produce —precios enteros por
+  // cantidades enteras— la versión anterior en coma flotante daba EL MISMO
+  // resultado en las 800.574 combinaciones probadas. El cambio no arregla un
+  // desacuerdo existente; convierte en garantía lo que hoy es una coincidencia,
+  // y deja de depender de que nadie introduzca nunca un precio con centavos o
+  // una tarifa con decimales.
+  return {
+    base: money.extractBase(gross, rate),
+    tax: money.extractTax(gross, rate),
+  }
+}
+
+/**
+ * Bruto de una línea: `unitPrice × qty` a escala monetaria, igual que
+ * `Money.multiply` en `PosSaleDocumentBuilder`.
+ */
+export function lineGross(unitPrice: number, qty: number): number {
+  return money.multiply(unitPrice, qty)
+}
+
+export interface TaxRateRow {
+  /** Etiqueta de la tarifa, tal como se muestra al cajero. */
+  name: string
+  /** Impuesto acumulado de todas las líneas con esa tarifa. */
+  amount: number
+}
+
+/**
+ * Impuesto por tarifa de un conjunto de líneas. Vive aquí y no en cada pantalla
+ * porque el POS y el cierre de cuenta lo calculaban por separado, cada uno
+ * acumulando en coma flotante: dos implementaciones de la misma regla fiscal
+ * que podían dar números distintos para el mismo carrito.
+ */
+export function taxByRate(
+  lines: readonly { gross: number; ratePct: number; label?: string }[],
+): TaxRateRow[] {
+  const groups = new Map<string, { name: string; parts: number[] }>()
+  for (const l of lines) {
+    if (l.ratePct <= 0) continue
+    const name = l.label ?? `IVA ${l.ratePct}%`
+    const group = groups.get(name) ?? { name, parts: [] }
+    group.parts.push(money.extractTax(l.gross, l.ratePct))
+    groups.set(name, group)
+  }
+  return Array.from(groups.values())
+    .map((g) => ({ name: g.name, amount: money.sum(g.parts) }))
+    .filter((g) => g.amount > 0)
 }
 
 export interface TotalsBreakdown {
@@ -86,27 +160,31 @@ export interface TotalsBreakdown {
  * precios y el IVA se EXTRAE (no se suma encima).
  */
 export function computeTotals(lines: SaleLine[], manualDiscount = 0): TotalsBreakdown {
-  let gross = 0
-  let promoSavings = 0
-  for (const l of lines) {
-    gross += l.unitPrice * l.qty
-    if (l.originalUnitPrice != null && l.originalUnitPrice > l.unitPrice) {
-      promoSavings += (l.originalUnitPrice - l.unitPrice) * l.qty
-    }
-  }
-  const discountedGross = Math.max(0, gross - manualDiscount)
-  // El descuento manual reduce el bruto proporcionalmente antes de extraer el IVA.
-  const factor = gross > 0 ? discountedGross / gross : 0
-  let tax = 0
-  for (const l of lines) {
-    const lineGross = l.unitPrice * l.qty * factor
-    tax += splitGross(lineGross, appliesIva(l.taxTreatment), l.taxPercentage).tax
-  }
+  const grosses = lines.map((l) => lineGross(l.unitPrice, l.qty))
+  const gross = money.sum(grosses)
+  const promoSavings = money.sum(
+    lines.map((l) =>
+      l.originalUnitPrice != null && l.originalUnitPrice > l.unitPrice
+        ? money.multiply(l.originalUnitPrice - l.unitPrice, l.qty)
+        : 0,
+    ),
+  )
+  const discountedGross = Math.max(0, money.scaled(gross - manualDiscount))
+  // El descuento manual reduce el bruto proporcionalmente antes de extraer el
+  // IVA: cobrar impuesto sobre dinero que nadie cobró es un problema fiscal, no
+  // de presentación. El reparto se hace sobre el bruto ya escalado de cada
+  // línea, y el impuesto de cada una se extrae con la misma regla del backend.
+  const tax = money.sum(
+    lines.map((l, i) => {
+      const share = gross > 0 ? money.scaled((grosses[i] * discountedGross) / gross) : 0
+      return splitGross(share, appliesIva(l.taxTreatment), l.taxPercentage).tax
+    }),
+  )
   return {
-    net: discountedGross - tax,
+    net: money.scaled(discountedGross - tax),
     tax,
     total: discountedGross,
-    promoSavings: promoSavings + manualDiscount,
+    promoSavings: money.scaled(promoSavings + manualDiscount),
   }
 }
 
@@ -152,14 +230,17 @@ export function applyPromo(
       (p.applicationType === 'CATEGORY' && p.applicationItem === categoryId)
     if (!matchesTarget) continue
 
-    let candidate = basePrice
+    // Cada candidato se redondea a peso YA, y se comparan enteros. Es
+    // equivalente a comparar sin redondear y redondear el ganador —redondear es
+    // monótono— y evita arrastrar decimales por la comparación.
+    let candidate = money.roundToUnit(basePrice)
     if (p.promotionType === 'SPECIAL_PRICE') {
-      candidate = p.value
+      candidate = money.roundToUnit(p.value)
     } else if (p.promotionType === 'DISCOUNT') {
       candidate =
         p.valueType === 'PERCENTAGE'
-          ? basePrice * (1 - p.value / 100)
-          : Math.max(0, basePrice - p.value)
+          ? money.discountedUnitPrice(basePrice, p.value)
+          : Math.max(0, money.roundToUnit(basePrice - p.value))
     }
     if (candidate < best) {
       best = candidate
@@ -167,7 +248,12 @@ export function applyPromo(
     }
   }
 
-  return { unitPrice: Math.round(best), original: basePrice, promo: bestPromo }
+  // El servidor recalcula este mismo precio y rechaza la línea si se desvía más
+  // de un peso. En el 0,2 % de las combinaciones (base, descuento) la cuenta en
+  // coma flotante caía justo por debajo del medio y redondeaba a la baja,
+  // dejando al cajero cobrando un peso menos de lo que declara el documento
+  // fiscal — y al servidor absorbiéndolo en silencio con su tolerancia.
+  return { unitPrice: money.roundToUnit(best), original: basePrice, promo: bestPromo }
 }
 
 // ── Inventario ───────────────────────────────────────────────────────────────

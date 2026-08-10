@@ -116,8 +116,15 @@ function confirmRemove(id: number) {
             @keyup.enter="saveNew"
           />
           <div class="ed-actions">
-            <button type="button" class="btn-ghost" @click="cancelAdd">Cancelar</button>
-            <button type="button" class="btn-primary" :disabled="!canSaveNew" @click="saveNew">
+            <button type="button" class="ds-btn ds-btn--ghost ds-btn--snug" @click="cancelAdd">
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="ds-btn ds-btn--primary ds-btn--snug"
+              :disabled="!canSaveNew"
+              @click="saveNew"
+            >
               Guardar
             </button>
           </div>
@@ -141,10 +148,16 @@ function confirmRemove(id: number) {
                   @keyup.enter="saveEdit(cat.id)"
                 />
                 <div class="ed-actions">
-                  <button type="button" class="btn-ghost" @click="cancelEdit">Cancelar</button>
                   <button
                     type="button"
-                    class="btn-primary"
+                    class="ds-btn ds-btn--ghost ds-btn--snug"
+                    @click="cancelEdit"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    class="ds-btn ds-btn--primary ds-btn--snug"
                     :disabled="!canSaveEdit"
                     @click="saveEdit(cat.id)"
                   >
@@ -195,13 +208,17 @@ function confirmRemove(id: number) {
               </div>
             </template>
           </li>
-          <li v-if="categories.length === 0" class="empty">Aún no hay categorías.</li>
+          <li v-if="categories.length === 0" class="ds-empty ds-empty--tight">
+            Aún no hay categorías.
+          </li>
         </ul>
       </div>
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Cerrar</button>
+      <button type="button" class="ds-btn ds-btn--ghost ds-btn--snug" @click="emit('close')">
+        Cerrar
+      </button>
     </template>
   </ModalShell>
 </template>
@@ -257,7 +274,7 @@ function confirmRemove(id: number) {
 }
 .ed-input:focus {
   border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px var(--amatista-50);
+  box-shadow: var(--ring);
 }
 .ed-actions {
   display: flex;
@@ -322,9 +339,9 @@ function confirmRemove(id: number) {
   cursor: not-allowed;
 }
 .icon-btn.danger:hover:not(:disabled) {
-  background: oklch(95% 0.06 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-color: oklch(85% 0.12 25deg);
+  background: var(--danger-100);
+  color: var(--danger-900);
+  border-color: var(--danger-400);
 }
 .confirm {
   display: flex;
@@ -332,47 +349,6 @@ function confirmRemove(id: number) {
   gap: 8px;
   font-size: 12.5px;
   color: var(--warm-700);
-}
-.empty {
-  font-size: 13px;
-  color: var(--warm-500);
-  text-align: center;
-  padding: 16px;
-}
-
-.btn-primary {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 14px;
-  border-radius: 9px;
-  cursor: pointer;
-  border: none;
-  color: white;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-}
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-ghost {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 14px;
-  border-radius: 9px;
-  cursor: pointer;
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  color: var(--warm-700);
-}
-.btn-ghost:hover {
-  background: var(--warm-100);
 }
 
 .btn-danger-sm {
@@ -383,7 +359,7 @@ function confirmRemove(id: number) {
   border-radius: 7px;
   cursor: pointer;
   border: none;
-  background: oklch(55% 0.18 25deg);
+  background: var(--danger-500);
   color: white;
 }
 

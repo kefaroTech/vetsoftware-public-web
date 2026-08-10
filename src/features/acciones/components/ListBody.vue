@@ -1,12 +1,21 @@
 <script setup lang="ts" generic="T">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { Search } from 'lucide-vue-next'
 import { usePaged } from '../composables/usePaged'
+import { useServerPaged, type ServerPageLoader } from '@/composables/useServerPaged'
+import { emptyPage } from '@/types/pagination'
 import Pagination from './Pagination.vue'
 
 const props = withDefaults(
   defineProps<{
-    items: T[]
+    /** Modo cliente: el array completo ya cargado. Ignorado si se pasa `fetchPage`. */
+    items?: T[]
+    /**
+     * Modo servido (BE-06): la tabla pide cada página al backend en vez de recibir el listado
+     * entero. Es el modo por defecto para todo listado que crece; el modo cliente queda solo
+     * para catálogos acotados, que caben de una vez.
+     */
+    fetchPage?: ServerPageLoader<T>
     searchFn?: (item: T, q: string) => boolean
     placeholder?: string
     pageSize?: number
@@ -14,6 +23,7 @@ const props = withDefaults(
     loading?: boolean
   }>(),
   {
+    items: () => [],
     placeholder: 'Buscar…',
     pageSize: 8,
     emptyText: 'No hay registros aún',
@@ -21,15 +31,46 @@ const props = withDefaults(
 )
 
 const query = ref('')
+const isServer = computed(() => typeof props.fetchPage === 'function')
 
+// Modo servido. El loader se resuelve en cada llamada para no capturar una prop obsoleta;
+// si no hay fetchPage devuelve una pagina vacia y manda el modo cliente.
+const server = useServerPaged<T>(
+  (page, size, q, signal) =>
+    props.fetchPage
+      ? props.fetchPage(page, size, q, signal)
+      : Promise.resolve(emptyPage<T>(props.pageSize)),
+  { pageSize: props.pageSize, query },
+)
+
+// Modo cliente (el de siempre): filtra y pagina sobre lo ya cargado.
 const filtered = computed(() => {
   const q = query.value.trim().toLowerCase()
   const searchFn = props.searchFn
   if (!q || !searchFn) return props.items
   return props.items.filter((it) => searchFn(it, q))
 })
+const client = usePaged(filtered, props.pageSize)
 
-const { slice, page, pageCount, total, pageSize } = usePaged(filtered, props.pageSize)
+const slice = computed(() => (isServer.value ? server.items.value : client.slice.value))
+const page = computed({
+  get: () => (isServer.value ? server.page.value : client.page.value),
+  set: (v: number) => {
+    if (isServer.value) void server.goTo(v)
+    else client.page.value = v
+  },
+})
+const pageCount = computed(() => (isServer.value ? server.pageCount.value : client.pageCount.value))
+const total = computed(() => (isServer.value ? server.total.value : client.total.value))
+const currentPageSize = computed(() => (isServer.value ? server.pageSize : client.pageSize))
+const busy = computed(() => (isServer.value ? server.loading.value : props.loading))
+
+onMounted(() => {
+  if (isServer.value) void server.reload()
+})
+
+/** Recarga desde fuera (p. ej. al cambiar de paciente o tras guardar). */
+defineExpose({ reload: () => (isServer.value ? server.reload() : Promise.resolve()) })
 </script>
 
 <template>
@@ -42,7 +83,7 @@ const { slice, page, pageCount, total, pageSize } = usePaged(filtered, props.pag
       <slot name="actions" />
     </div>
 
-    <div v-if="loading" class="state">Cargando…</div>
+    <div v-if="busy" class="state">Cargando…</div>
     <div v-else-if="total === 0" class="state empty">{{ emptyText }}</div>
     <div v-else class="tbl-scroll">
       <table class="table">
@@ -59,7 +100,7 @@ const { slice, page, pageCount, total, pageSize } = usePaged(filtered, props.pag
       :page="page"
       :page-count="pageCount"
       :total="total"
-      :page-size="pageSize"
+      :page-size="currentPageSize"
       @update:page="page = $event"
     />
   </div>

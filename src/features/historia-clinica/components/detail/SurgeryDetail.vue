@@ -7,7 +7,7 @@ defineProps<{ data: SurgeryResponse }>()
 </script>
 
 <template>
-  <div class="detail-grid">
+  <div class="ds-detail-grid">
     <DetailField label="Tipo de cirugía" :value="data.surgeryType.name" />
     <DetailField label="Fecha" :value="formatEventDate(data.date)" />
     <DetailField label="Descripción" :value="data.description" span="full" />
@@ -19,17 +19,3 @@ defineProps<{ data: SurgeryResponse }>()
     </DetailField>
   </div>
 </template>
-
-<style scoped>
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 24px;
-}
-
-@media (width <= 560px) {
-  .detail-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

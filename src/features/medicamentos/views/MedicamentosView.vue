@@ -101,10 +101,10 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
 
 <template>
   <div class="inv">
-    <header class="head">
+    <header class="ds-head">
       <div>
         <div class="kicker">Administración · Medicamentos</div>
-        <h1 class="title">Catálogo de medicamentos</h1>
+        <h1 class="ds-display">Catálogo de medicamentos</h1>
       </div>
       <div class="head-actions">
         <div class="seg" role="tablist">
@@ -115,13 +115,18 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
             Pausados
           </button>
         </div>
-        <button v-if="canCreate && mode === 'active'" type="button" class="cta" @click="openNew">
+        <button
+          v-if="canCreate && mode === 'active'"
+          type="button"
+          class="ds-btn ds-btn--primary ds-btn--lg ds-btn--elevated"
+          @click="openNew"
+        >
           <Plus :size="16" :stroke-width="1.8" /> Nuevo medicamento
         </button>
       </div>
     </header>
 
-    <div v-if="store.error.value" class="banner error">{{ store.error.value }}</div>
+    <div v-if="store.error.value" class="ds-banner ds-banner--error">{{ store.error.value }}</div>
 
     <!-- ─────────── Modo DISPONIBLES ─────────── -->
     <div v-if="mode === 'active'" class="tbl-scroll">
@@ -136,10 +141,10 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
         </thead>
         <tbody>
           <tr v-if="store.loading.value">
-            <td colspan="4" class="empty">Cargando…</td>
+            <td colspan="4" class="ds-empty ds-empty--lg">Cargando…</td>
           </tr>
           <tr v-else-if="sorted.length === 0">
-            <td colspan="4" class="empty">Sin medicamentos. Crea el primero.</td>
+            <td colspan="4" class="ds-empty ds-empty--lg">Sin medicamentos. Crea el primero.</td>
           </tr>
           <tr v-for="m in sorted" v-else :key="m.id" class="trow">
             <td class="tname">{{ m.name }}</td>
@@ -190,10 +195,10 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
         </thead>
         <tbody>
           <tr v-if="pausedLoading">
-            <td colspan="3" class="empty">Cargando…</td>
+            <td colspan="3" class="ds-empty ds-empty--lg">Cargando…</td>
           </tr>
           <tr v-else-if="store.disabled.value.length === 0">
-            <td colspan="3" class="empty">No hay medicamentos pausados.</td>
+            <td colspan="3" class="ds-empty ds-empty--lg">No hay medicamentos pausados.</td>
           </tr>
           <tr v-for="m in store.disabled.value" v-else :key="m.id">
             <td class="tname">{{ m.name }}</td>
@@ -242,13 +247,6 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
   font-family: var(--font-sans);
   color: var(--warm-900);
 }
-.head {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-}
 .kicker {
   font-size: 11.5px;
   text-transform: uppercase;
@@ -256,15 +254,6 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
   color: var(--warm-500);
   font-weight: 500;
   margin-bottom: 6px;
-}
-.title {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: 36px;
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  line-height: 1.05;
-  color: var(--warm-900);
 }
 .head-actions {
   display: flex;
@@ -294,38 +283,6 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
   background: var(--warm-50);
   color: var(--amatista-700);
   box-shadow: 0 1px 2px rgb(50 20 80 / 8%);
-}
-
-.cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 16px;
-  border-radius: 9px;
-  background: linear-gradient(
-    135deg,
-    oklch(45% 0.18 var(--hue)),
-    oklch(38% 0.18 calc(var(--hue) - 5))
-  );
-  color: #fff;
-  border: none;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  box-shadow:
-    0 1px 2px rgb(50 20 80 / 8%),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 45%);
-}
-.banner.error {
-  background: oklch(95% 0.06 25deg);
-  border: 1px solid oklch(85% 0.12 25deg);
-  color: oklch(40% 0.18 25deg);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  margin-bottom: 14px;
 }
 .tbl-scroll {
   overflow-x: auto;
@@ -364,11 +321,6 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
 .trow:hover {
   background: var(--warm-100);
 }
-.empty {
-  text-align: center;
-  padding: 40px;
-  color: var(--warm-500);
-}
 .tname {
   font-weight: 500;
   color: var(--warm-900);
@@ -385,7 +337,7 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
   font-size: 11.5px;
   font-weight: 500;
   padding: 3px 9px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 .scope.global {
   background: var(--amatista-50);

@@ -119,7 +119,7 @@ onMounted(refresh)
 </script>
 
 <template>
-  <div class="page">
+  <div class="ds-page ds-page--contained">
     <header class="page-head">
       <div class="title-wrap">
         <ClipboardList :size="22" :stroke-width="1.7" />
@@ -131,7 +131,7 @@ onMounted(refresh)
       <button
         v-if="tab === 'ordenes' && canPoCreate"
         type="button"
-        class="btn primary"
+        class="ds-btn ds-btn--solid ds-btn--strong"
         @click="openCreatePo"
       >
         <Plus :size="16" :stroke-width="1.9" /> Nueva orden
@@ -139,7 +139,7 @@ onMounted(refresh)
       <button
         v-else-if="tab === 'recepciones' && canGrCreate"
         type="button"
-        class="btn primary"
+        class="ds-btn ds-btn--solid ds-btn--strong"
         @click="grModal = true"
       >
         <Plus :size="16" :stroke-width="1.9" /> Nueva recepción
@@ -185,7 +185,7 @@ onMounted(refresh)
               {{ PO_STATUS[po.status] }}
             </span>
           </td>
-          <td class="actions">
+          <td class="ds-actions">
             <button
               v-if="canPoUpdate && po.status === 'DRAFT'"
               type="button"
@@ -255,7 +255,7 @@ onMounted(refresh)
           <td>
             <span class="pill" :class="gr.status.toLowerCase()">{{ GR_STATUS[gr.status] }}</span>
           </td>
-          <td class="actions">
+          <td class="ds-actions">
             <button
               v-if="canGrCreate && gr.status === 'DRAFT'"
               type="button"
@@ -299,13 +299,6 @@ onMounted(refresh)
 </template>
 
 <style scoped>
-.page {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 24px 28px;
-  font-family: var(--font-sans);
-}
-
 .page-head {
   display: flex;
   align-items: center;
@@ -317,7 +310,7 @@ onMounted(refresh)
   display: flex;
   gap: 12px;
   align-items: center;
-  color: var(--amatista-700, #5c2d8c);
+  color: var(--amatista-700);
 }
 
 .title-wrap h1 {
@@ -355,8 +348,8 @@ onMounted(refresh)
 }
 
 .tabs button.active {
-  color: var(--amatista-700, #5c2d8c);
-  border-bottom-color: var(--amatista-600, #5c2d8c);
+  color: var(--amatista-700);
+  border-bottom-color: var(--amatista-600);
 }
 
 .grid-table {
@@ -395,12 +388,6 @@ onMounted(refresh)
   width: 150px;
 }
 
-.actions {
-  display: flex;
-  gap: 5px;
-  justify-content: flex-end;
-}
-
 .icon-btn {
   border: none;
   background: var(--warm-100);
@@ -421,14 +408,14 @@ onMounted(refresh)
 }
 
 .icon-btn.danger:hover {
-  background: oklch(92% 0.06 25deg);
+  background: var(--danger-200);
   color: oklch(50% 0.2 25deg);
 }
 
 .pill {
   display: inline-block;
   padding: 2px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: 11.5px;
   font-weight: 600;
   background: var(--warm-100);
@@ -471,25 +458,13 @@ onMounted(refresh)
   margin: 0 0 14px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: oklch(94% 0.06 25deg);
+  background: var(--danger-150);
   color: oklch(45% 0.18 25deg);
   font-size: 13px;
 }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: none;
-  border-radius: 9px;
-  padding: 9px 15px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn.primary {
-  background: var(--amatista-600, #5c2d8c);
-  color: #fff;
+/* caja/compras usan un amatista un punto más claro que el resto. */
+.ds-btn--solid {
+  --ds-btn-solid-bg: var(--amatista-600);
 }
 </style>

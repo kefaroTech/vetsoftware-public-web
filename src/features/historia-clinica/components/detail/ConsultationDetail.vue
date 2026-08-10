@@ -67,7 +67,7 @@ const childrenCountLabel = computed(() =>
 </script>
 
 <template>
-  <div class="detail-grid">
+  <div class="ds-detail-grid">
     <DetailField label="Tipo de consulta" :value="data.consultationType.name" />
     <DetailField label="Fecha" :value="formatEventDate(data.date)" />
     <DetailField
@@ -135,7 +135,7 @@ const childrenCountLabel = computed(() =>
         <span class="children-label">Procedimientos asociados</span>
         <span class="children-count">{{ childrenCountLabel }}</span>
       </div>
-      <div v-if="children.length === 0" class="empty">
+      <div v-if="children.length === 0" class="ds-empty ds-empty--boxed">
         Esta consulta no tiene procedimientos asociados.
       </div>
       <ul v-else class="children-list">
@@ -169,18 +169,6 @@ const childrenCountLabel = computed(() =>
 </template>
 
 <style scoped>
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 24px;
-}
-
-@media (width <= 560px) {
-  .detail-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 .children-section {
   grid-column: 1 / -1;
   display: flex;
@@ -205,15 +193,6 @@ const childrenCountLabel = computed(() =>
 .children-count {
   font-size: 11.5px;
   color: var(--warm-400);
-}
-
-.empty {
-  padding: 14px 16px;
-  font-size: 13px;
-  color: var(--warm-500);
-  background: var(--warm-50);
-  border: 1px dashed var(--warm-200);
-  border-radius: 10px;
 }
 
 .children-list {

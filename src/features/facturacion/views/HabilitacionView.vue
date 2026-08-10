@@ -33,7 +33,7 @@ function openWizard(step: number) {
         <div class="kicker">
           Facturación electrónica · DIAN <span class="premium">Premium</span>
         </div>
-        <h1 class="title">Facturación electrónica</h1>
+        <h1 class="ds-display fe-title">Facturación electrónica</h1>
       </div>
     </header>
 
@@ -77,28 +77,23 @@ function openWizard(step: number) {
   font-size: 10.5px;
   font-weight: 600;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   color: var(--amatista-700);
   background: var(--amatista-100);
-}
-
-.title {
-  margin: 6px 0 0;
-  font-family: var(--font-serif);
-  font-size: 36px;
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  color: var(--warm-900);
-  line-height: 1.05;
 }
 
 .error-banner {
   margin: 0;
   padding: 12px 16px;
   border-radius: 10px;
-  background: oklch(95% 0.05 25deg);
-  border: 1px solid oklch(85% 0.08 25deg);
+  background: var(--danger-50);
+  border: 1px solid var(--danger-250);
   color: oklch(45% 0.16 25deg);
   font-size: 13px;
+}
+
+/* El titular usa `.ds-display`; sólo conserva su separación superior. */
+.fe-title {
+  margin-top: var(--space-6);
 }
 </style>

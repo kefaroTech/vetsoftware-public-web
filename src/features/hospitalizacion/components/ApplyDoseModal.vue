@@ -48,8 +48,8 @@ const dose = computed(() => (props.order?.kind === 'med' ? (props.order.dose ?? 
     </template>
 
     <template #footer-actions>
-      <button type="button" class="btn-ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="btn-primary" @click="emit('confirm')">
+      <button type="button" class="ds-btn ds-btn--ghost" @click="emit('close')">Cancelar</button>
+      <button type="button" class="ds-btn ds-btn--solid" @click="emit('confirm')">
         {{ isMed ? 'Registrar dosis' : 'Registrar' }}
       </button>
     </template>
@@ -92,33 +92,8 @@ const dose = computed(() => (props.order?.kind === 'med' ? (props.order.dose ?? 
   text-align: right;
 }
 
-.btn-ghost,
-.btn-primary {
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 9px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.btn-ghost {
-  background: transparent;
-  border-color: var(--warm-200);
-  color: var(--warm-900);
-}
-.btn-ghost:hover {
-  background: var(--warm-100);
-}
-
-.btn-primary {
-  background: oklch(48% 0.16 150deg);
-  color: white;
-  border: none;
-  padding: 9px 18px;
-}
-.btn-primary:hover {
-  filter: brightness(1.05);
+/* Acción de confirmación: verde en lugar del amatista por defecto. */
+.ds-btn--solid {
+  --ds-btn-solid-bg: oklch(48% 0.16 150deg);
 }
 </style>

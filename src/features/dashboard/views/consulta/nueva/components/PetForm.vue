@@ -9,7 +9,7 @@ import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
 import SegmentedRadio from '@/features/dashboard/components/ui/SegmentedRadio.vue'
 import { useSpecies } from '../composables/useSpecies'
 import { useBreedsBySpecie } from '../composables/useBreedsBySpecie'
-import { useAnimalColors } from '../composables/useAnimalColors'
+import { useAnimalColorsBySpecie } from '../composables/useAnimalColorsBySpecie'
 import { weightUnitLabel } from '../composables/format'
 import type { PetDraft } from '../composables/useNuevaConsultaDraft'
 
@@ -26,10 +26,17 @@ const {
   error: breedsError,
 } = useBreedsBySpecie(specieIdRef)
 
-const { options: colorOptions, loading: loadingColors, error: colorsError } = useAnimalColors()
+const {
+  options: colorOptions,
+  loading: loadingColors,
+  error: colorsError,
+} = useAnimalColorsBySpecie(specieIdRef)
 
 watch(specieIdRef, (val, prev) => {
-  if (val !== prev) draft.value.breedId = ''
+  if (val !== prev) {
+    draft.value.breedId = ''
+    draft.value.colorId = ''
+  }
 })
 
 const genderOptions = [
@@ -265,8 +272,14 @@ defineExpose({ validate })
               :id="id"
               v-model="draft.colorId"
               :options="colorOptions"
-              :placeholder="loadingColors ? 'Cargando…' : 'Selecciona color'"
-              :disabled="loadingColors"
+              :placeholder="
+                loadingColors
+                  ? 'Cargando…'
+                  : draft.specieId
+                    ? 'Selecciona color'
+                    : 'Primero elige una especie'
+              "
+              :disabled="!draft.specieId || loadingColors"
               :invalid="!!err('colorId')"
               @blur="markTouched('colorId')"
             />
@@ -356,8 +369,8 @@ defineExpose({ validate })
   gap: 8px;
   font-size: 12.5px;
   padding: 10px 14px;
-  background: oklch(94% 0.06 25deg);
-  border: 1px solid oklch(85% 0.1 25deg);
+  background: var(--danger-150);
+  border: 1px solid var(--danger-300);
   color: oklch(35% 0.15 25deg);
   border-radius: 10px;
 }
