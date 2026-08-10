@@ -1,4 +1,4 @@
-import { http } from '@/services/http/http.client'
+import { http, TRANSFER_TIMEOUT_MS } from '@/services/http/http.client'
 import { withBranchBody, withBranchParam } from '@/features/branches/api/branchContext'
 import type {
   CashSessionView,
@@ -77,6 +77,7 @@ export const cashSessionApi = {
     const { data } = await http.get<Blob>(`/cash-sessions/${id}/arqueo/export`, {
       params: { format },
       responseType: 'blob',
+      timeout: TRANSFER_TIMEOUT_MS,
     })
     const url = URL.createObjectURL(data)
     const a = document.createElement('a')

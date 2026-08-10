@@ -1,4 +1,4 @@
-import { http } from '@/services/http/http.client'
+import { http, TRANSFER_TIMEOUT_MS } from '@/services/http/http.client'
 import type { PageResponse } from '../types/tienda'
 import type {
   AdjustStockPayload,
@@ -165,6 +165,7 @@ export const inventoryApi = {
     const res = await http.get(`/inventory/products/${productId}/kardex/export`, {
       params,
       responseType: 'blob',
+      timeout: TRANSFER_TIMEOUT_MS,
     })
     saveFile(
       res.data as Blob,
@@ -183,7 +184,11 @@ export const inventoryApi = {
     if (opts.branchId != null) params.branchId = opts.branchId
     if (opts.from) params.from = opts.from
     if (opts.to) params.to = opts.to
-    const res = await http.get('/inventory/purchases/export', { params, responseType: 'blob' })
+    const res = await http.get('/inventory/purchases/export', {
+      params,
+      responseType: 'blob',
+      timeout: TRANSFER_TIMEOUT_MS,
+    })
     saveFile(res.data as Blob, res.headers['content-disposition'], `compras.${opts.format}`)
   },
 }
