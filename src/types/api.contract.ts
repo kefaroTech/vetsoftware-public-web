@@ -12,7 +12,7 @@
  * necesita `?.`. Eso es perder información, no ganarla. Afirmar conserva los tipos escritos a
  * mano —con su documentación de negocio— y detecta lo que de verdad rompe la pantalla.
  *
- * <p><b>Qué comprueba.</b> Dos cosas, y solo dos, porque son las que el contrato sabe expresar:
+ * <p><b>Qué comprueba.</b> Tres cosas, y solo tres, porque son las que el contrato sabe expresar:
  *
  * <ol>
  *   <li><b>Campos que no existen.</b> Si este repositorio declara un campo que el contrato no
@@ -21,13 +21,19 @@
  *   <li><b>Tipos primitivos incompatibles</b>, incluidos los enums: un campo que el backend
  *       declara como una unión cerrada y aquí se escribió como `string` acepta valores que el
  *       servidor rechazará.</li>
+ *   <li><b>Campos obligatorios declarados opcionales.</b> springdoc deriva `required` de las
+ *       anotaciones de validación de los DTO de entrada, así que en 187 esquemas de petición sí
+ *       sabe qué exige el servidor. Declararlo opcional aquí deja construir una petición
+ *       incompleta que compila y se rechaza con un 400.</li>
  * </ol>
  *
- * <p><b>Qué NO comprueba, a propósito.</b> La nulabilidad, porque el contrato no la expresa; y la
- * forma de los campos anidados, porque cada tipo anidado tiene su propia atadura en la lista de
- * abajo y se comprueba ahí. Comparar aquí la nulabilidad de lo anidado solo produciría falsos
- * positivos: el generador emite `campo?: string` donde este repositorio escribe `string | null`,
- * y esa diferencia no dice nada sobre el backend.
+ * <p><b>Qué NO comprueba, a propósito.</b> La nulabilidad de las <em>respuestas</em>: los DTO de
+ * salida son `record` sin anotaciones, así que el contrato no dice qué garantiza devolver el
+ * servidor y ninguno de sus 400 esquemas de respuesta trae `required`. Tampoco la forma de los
+ * campos anidados, porque cada tipo anidado tiene su propia atadura en la lista de abajo y se
+ * comprueba ahí; compararla aquí solo produciría falsos positivos, ya que el generador emite
+ * `campo?: string` donde este repositorio escribe `string | null` y esa diferencia no dice nada
+ * sobre el backend.
  */
 import type { components } from './api.generated'
 import type {
@@ -201,16 +207,34 @@ type MismatchedFields<Local, Name extends keyof Schemas> = {
     : never
 }[Extract<keyof Local, keyof Schemas[Name]>]
 
+/** Claves que un tipo declara sin `?`. */
+type RequiredKeys<T> = { [K in keyof T]-?: object extends Pick<T, K> ? never : K }[keyof T]
+
+/**
+ * Campos que el contrato exige y este repositorio declara opcionales.
+ *
+ * <p>Solo aplica a las peticiones: springdoc deriva `required` de las anotaciones de validación
+ * (`@NotNull`, `@NotBlank`) de los DTO de entrada, y hoy lo hace en 187 esquemas. Declarar
+ * opcional aquí un campo que el servidor exige deja construir una petición incompleta que
+ * compila y se rechaza con un 400 en producción. Los DTO de salida no traen esta información
+ * —un `record` de Java no dice qué garantiza devolver—, así que ahí este conjunto siempre está
+ * vacío y no afirma nada de más.
+ */
+type MissingRequiredFields<Local, Name extends keyof Schemas> = Exclude<
+  RequiredKeys<Schemas[Name]> & keyof Local,
+  RequiredKeys<Local>
+>
+
 /**
  * `true` si el tipo local encaja con el esquema; si no, **los nombres de los campos que fallan**.
  * Es a propósito: el error de compilación los nombra uno a uno en vez de decir «no asignable»,
  * que obligaría a comparar cuarenta campos a ojo.
  */
 export type MatchesContract<Local, Name extends keyof Schemas> = [
-  UnknownFields<Local, Name> | MismatchedFields<Local, Name>,
+  UnknownFields<Local, Name> | MismatchedFields<Local, Name> | MissingRequiredFields<Local, Name>,
 ] extends [never]
   ? true
-  : UnknownFields<Local, Name> | MismatchedFields<Local, Name>
+  : UnknownFields<Local, Name> | MismatchedFields<Local, Name> | MissingRequiredFields<Local, Name>
 
 /** Rompe la compilación si el tipo no encaja; el error nombra los campos culpables. */
 type Expect<T extends true> = T

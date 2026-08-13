@@ -75,6 +75,17 @@ function toFiscalCustomer(o: OwnerResponse): FiscalCustomer {
 async function onSaveFiscal(data: Partial<FiscalCustomer>) {
   const o = localOwner.value
   if (!o) return
+  // TR-01: el backend exige ambos (@NotNull). Se coaccionaban a `undefined`, así que el PUT
+  // salía incompleto y volvía como un 400 sin decir qué faltaba.
+  const documentType = data.documentType ?? o.documentType
+  const personType = data.personType ?? o.personType
+  if (!documentType || !personType) {
+    toast.error(
+      'Faltan datos fiscales',
+      'Indica el tipo de documento y el tipo de persona del cliente.',
+    )
+    return
+  }
   const payload: UpdateOwnerRequest = {
     name: o.name,
     email: data.email ?? o.email,
@@ -82,8 +93,8 @@ async function onSaveFiscal(data: Partial<FiscalCustomer>) {
     address: o.address,
     phone: o.phone,
     cityId: o.city.id,
-    documentType: data.documentType ?? o.documentType ?? undefined,
-    personType: data.personType ?? o.personType ?? undefined,
+    documentType,
+    personType,
     verificationDigit: data.verificationDigit ?? null,
     legalName: data.legalName ?? null,
     withholdingAgent: data.withholdingAgent ?? false,

@@ -46,10 +46,12 @@ export interface CreateOwnerRequest {
   address: string
   phone: string
   cityId: number
-  // Campos fiscales (opcionales en el tipo del front; el backend exige
-  // documentType/personType al crear — la captura fiscal vive en FE > 5 UVT y en OwnerForm).
-  documentType?: OwnerDocumentType
-  personType?: PersonType
+  // TR-01: `documentType` y `personType` son `@NotNull` en el backend. Estaban declarados
+  // opcionales «porque la captura fiscal vive en FE > 5 UVT», con la advertencia escrita en un
+  // comentario en vez de en el tipo — así que el compilador dejaba construir una petición que
+  // el servidor rechaza con un 400. Ahora son obligatorios, que es lo que el contrato dice.
+  documentType: OwnerDocumentType
+  personType: PersonType
   verificationDigit?: string | null
   legalName?: string | null
   withholdingAgent?: boolean
