@@ -2,7 +2,7 @@
 import { Search } from 'lucide-vue-next'
 import type { Employee } from '@/types/domain'
 import EmpleadoRow from './EmpleadoRow.vue'
-import Pagination from '@/features/acciones/components/Pagination.vue'
+import Pagination from '@/components/ui/Pagination.vue'
 
 // La búsqueda es server-side: no filtramos localmente, renderizamos la página que llega del backend.
 defineProps<{

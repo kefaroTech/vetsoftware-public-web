@@ -4,7 +4,7 @@ import { Search } from 'lucide-vue-next'
 import { usePaged } from '../composables/usePaged'
 import { useServerPaged, type ServerPageLoader } from '@/composables/useServerPaged'
 import { emptyPage } from '@/types/pagination'
-import Pagination from './Pagination.vue'
+import Pagination from '@/components/ui/Pagination.vue'
 
 const props = withDefaults(
   defineProps<{

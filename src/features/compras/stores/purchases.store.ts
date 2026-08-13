@@ -12,8 +12,15 @@ import { useLatestOnly } from '@/composables/useLatestOnly'
  * sede seleccionada. Recarga al cambiar de sede. Las vistas fuerzan `loadOrders`/`loadReceipts` en su montaje.
  */
 export const usePurchasesStore = defineStore('purchases', () => {
+  const PAGE_SIZE = 20
+
   const orders = ref<PurchaseOrder[]>([])
   const receipts = ref<GoodsReceipt[]>([])
+  // Paginacion servida (BE-06): antes ambos listados pedian la coleccion entera.
+  const ordersPage = ref(0)
+  const ordersTotal = ref(0)
+  const receiptsPage = ref(0)
+  const receiptsTotal = ref(0)
   const ordersLoading = ref(false)
   // Recarga al cambiar de sede: solo la ultima escribe.
   const ordersTurn = useLatestOnly()
@@ -21,14 +28,16 @@ export const usePurchasesStore = defineStore('purchases', () => {
   const receiptsLoading = ref(false)
   const error = ref<string | null>(null)
 
-  async function loadOrders(): Promise<void> {
+  async function loadOrders(page = 0): Promise<void> {
     const turno = ordersTurn.begin()
     ordersLoading.value = true
     error.value = null
     try {
-      const rows = await purchaseOrdersApi.listByCompany()
+      const result = await purchaseOrdersApi.search({ page, pageSize: PAGE_SIZE })
       if (!turno()) return
-      orders.value = rows
+      orders.value = result.content
+      ordersPage.value = result.page
+      ordersTotal.value = result.totalElements
     } catch (e) {
       if (!turno()) return
       error.value = getProblemDetailMessage(e, 'No se pudieron cargar las órdenes de compra')
@@ -37,14 +46,16 @@ export const usePurchasesStore = defineStore('purchases', () => {
     }
   }
 
-  async function loadReceipts(): Promise<void> {
+  async function loadReceipts(page = 0): Promise<void> {
     const turno = receiptsTurn.begin()
     receiptsLoading.value = true
     error.value = null
     try {
-      const rows = await goodsReceiptsApi.listByCompany()
+      const result = await goodsReceiptsApi.search({ page, pageSize: PAGE_SIZE })
       if (!turno()) return
-      receipts.value = rows
+      receipts.value = result.content
+      receiptsPage.value = result.page
+      receiptsTotal.value = result.totalElements
     } catch (e) {
       if (!turno()) return
       error.value = getProblemDetailMessage(e, 'No se pudieron cargar las recepciones')
@@ -61,5 +72,18 @@ export const usePurchasesStore = defineStore('purchases', () => {
     },
   )
 
-  return { orders, receipts, ordersLoading, receiptsLoading, error, loadOrders, loadReceipts }
+  return {
+    orders,
+    receipts,
+    ordersPage,
+    ordersTotal,
+    receiptsPage,
+    receiptsTotal,
+    pageSize: PAGE_SIZE,
+    ordersLoading,
+    receiptsLoading,
+    error,
+    loadOrders,
+    loadReceipts,
+  }
 })
