@@ -99,6 +99,54 @@ Dos trampas que este harness ya tiene resueltas y conviene no re-introducir:
   `button { font-family: inherit }` y las medidas salen con métricas de Arial en
   vez de Geist, inventando diferencias de ancho que no existen.
 
+## Regresión visual (`npm run visual:docker`)
+
+`ds:audit` y esta suite responden a preguntas distintas y **no se sustituyen**:
+
+| | `ds:audit` | Regresión visual |
+| --- | --- | --- |
+| Pregunta | ¿migrar este patrón cambia su aspecto? | ¿ha cambiado algo sin querer? |
+| Compara | scoped original ↔ primitiva, en la misma página | hoy ↔ línea base guardada en git |
+| Cuándo | mientras migras un patrón | en cada PR, automáticamente |
+| Puede romper el build | no | **sí** |
+
+La suite vive en `visual/` y se apoya en `visual/Gallery.vue`, una página que
+monta los componentes y las hojas **reales**. Se fotografía **bloque a bloque**
+—cada `data-shot`— y no la página entera: si el primer bloque cambia de alto,
+una captura global desplazaría todo lo de abajo y una sola regresión saldría
+como quince, sin decir cuál es la de verdad.
+
+```bash
+npm run visual:docker           # comparar contra la línea base
+npm run visual:docker:update    # regenerar la base tras un cambio QUERIDO
+```
+
+**Las líneas base son de Linux y se generan en contenedor.** Una captura hecha
+en Windows o macOS no coincide con la del runner: cambian el antialiasing y las
+métricas de fuente, y la diferencia supera cualquier tolerancia razonable. Por
+eso `visual:docker` usa la misma imagen que el job de CI, y las capturas se
+guardan sin sufijo de plataforma: hay **una** base, no una por sistema. Existe
+`npm run visual` sin contenedor para iterar rápido, pero sus capturas no valen
+como base.
+
+**Si no quieres bajarte la imagen (≈2 GB), deja que las genere el CI.** Cuando
+`visual/__screenshots__` está vacío, el job las genera, las sube como artefacto
+`visual-baseline` y **falla a propósito**: descarga el artefacto, commitea las
+capturas y a partir de ahí el job compara. Lo mismo sirve al añadir un bloque
+nuevo a la galería.
+
+Dos decisiones que conviene no revertir:
+
+- **Las fuentes de Google se bloquean en la prueba.** Si se dejaran pasar, la
+  captura dependería de la red y de la caché del runner. Se fija una pila local
+  y se compara la misma fuente en ambos lados, que es lo único que hace falta
+  para detectar un cambio de CSS.
+- **Cero reintentos.** Una captura no es *flaky*: o coincide o no. Reintentar
+  solo escondería una diferencia real detrás de una segunda tirada.
+
+Al añadir una primitiva a `primitives.css`, **añádela también a la galería**: lo
+que no está en ella no tiene red.
+
 ## Estado de la migración
 
 **Migrados y verificados: `cuentas`, `tienda`, `caja`, `compras`,
