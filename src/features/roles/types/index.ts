@@ -34,7 +34,8 @@ export interface ModuleResponse {
   id: number
   name: string
   code: string
-  createdDate?: string
+  /** TR-01: el backend siempre lo devuelve (columna NOT NULL); no era opcional. */
+  createdDate: string
 }
 
 export interface SubModuleResponse {
@@ -42,7 +43,8 @@ export interface SubModuleResponse {
   name: string
   code: string
   module: ModuleRef
-  createdDate?: string
+  /** TR-01: el backend siempre lo devuelve (columna NOT NULL); no era opcional. */
+  createdDate: string
 }
 
 export interface PermissionResponse {

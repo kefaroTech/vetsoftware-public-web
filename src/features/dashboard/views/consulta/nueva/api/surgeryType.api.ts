@@ -3,7 +3,8 @@ import { http } from '@/services/http/http.client'
 export interface SurgeryTypeResponse {
   id: number
   name: string
-  description: string | null
+  /** TR-01: el backend lo garantiza (columna NOT NULL); no era nulable. */
+  description: string
   createdDate: string
 }
 
