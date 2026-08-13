@@ -24,7 +24,9 @@ const SERVICE_TONES: Record<string, CategoryTone> = {
   hospital: { bg: 'oklch(94% 0.07 80)', fg: 'oklch(45% 0.13 70)' },
 }
 
-const FALLBACK: CategoryTone[] = [
+// Tupla no-vacía, no `CategoryTone[]`: el reparto por módulo depende de que haya
+// al menos un tono, y así esa condición la sostiene el tipo y no un comentario.
+const FALLBACK: [CategoryTone, ...CategoryTone[]] = [
   { bg: 'oklch(94% 0.06 80)', fg: 'oklch(45% 0.13 70)' },
   { bg: 'oklch(94% 0.04 240)', fg: 'oklch(40% 0.15 240)' },
   { bg: 'oklch(94% 0.05 200)', fg: 'oklch(42% 0.12 200)' },
@@ -41,16 +43,24 @@ function normalize(name: string): string {
 
 function matchTone(name: string, map: Record<string, CategoryTone>): CategoryTone | null {
   const n = normalize(name)
-  for (const key of Object.keys(map)) {
-    if (n.includes(key)) return map[key]
+  // `entries` en vez de `keys` + indexado: la clave y su valor vienen juntos, así
+  // que no hay que volver a buscar algo que ya se tenía.
+  for (const [key, tone] of Object.entries(map)) {
+    if (n.includes(key)) return tone
   }
   return null
 }
 
+/** El módulo siempre cae dentro del array, así que `FALLBACK[0]` es inalcanzable
+ *  y está solo para que el tipo lo refleje — ver el tipo no-vacío de `FALLBACK`. */
+function fallbackTone(id: number): CategoryTone {
+  return FALLBACK[Math.abs(id) % FALLBACK.length] ?? FALLBACK[0]
+}
+
 export function productCategoryTone(cat: { id: number; name: string }): CategoryTone {
-  return matchTone(cat.name, PRODUCT_TONES) ?? FALLBACK[Math.abs(cat.id) % FALLBACK.length]
+  return matchTone(cat.name, PRODUCT_TONES) ?? fallbackTone(cat.id)
 }
 
 export function serviceCategoryTone(cat: { id: number; name: string }): CategoryTone {
-  return matchTone(cat.name, SERVICE_TONES) ?? FALLBACK[Math.abs(cat.id) % FALLBACK.length]
+  return matchTone(cat.name, SERVICE_TONES) ?? fallbackTone(cat.id)
 }

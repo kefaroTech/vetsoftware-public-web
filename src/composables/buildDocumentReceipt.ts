@@ -82,8 +82,9 @@ export function buildDocumentReceiptTicket(
     { label: 'TOTAL', value: formatMoney(total), kind: 'grand' as const },
   ]
 
-  const meansLabel = doc.payments.length
-    ? cleanLabel(PAYMENT_MEANS_LABEL[doc.payments[0].paymentMeans] ?? doc.payments[0].paymentMeans)
+  const firstPayment = doc.payments[0]
+  const meansLabel = firstPayment
+    ? cleanLabel(PAYMENT_MEANS_LABEL[firstPayment.paymentMeans] ?? firstPayment.paymentMeans)
     : 'Pago'
   const formLabel = PAYMENT_FORM_LABEL[doc.paymentForm] ?? doc.paymentForm
 

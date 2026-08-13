@@ -161,8 +161,11 @@ export interface TotalsBreakdown {
  * precios y el IVA se EXTRAE (no se suma encima).
  */
 export function computeTotals(lines: SaleLine[], manualDiscount = 0): TotalsBreakdown {
-  const grosses = lines.map((l) => lineGross(l.unitPrice, l.qty))
-  const gross = money.sum(grosses)
+  // Cada línea viaja junto a su bruto en vez de en dos arrays paralelos que hay
+  // que reindexar más abajo: el emparejamiento deja de depender de que los dos
+  // recorridos coincidan y no hay ningún índice que pueda salirse.
+  const perLine = lines.map((l) => ({ line: l, lineGrossAmount: lineGross(l.unitPrice, l.qty) }))
+  const gross = money.sum(perLine.map((p) => p.lineGrossAmount))
   const promoSavings = money.sum(
     lines.map((l) =>
       l.originalUnitPrice != null && l.originalUnitPrice > l.unitPrice
@@ -176,9 +179,9 @@ export function computeTotals(lines: SaleLine[], manualDiscount = 0): TotalsBrea
   // de presentación. El reparto se hace sobre el bruto ya escalado de cada
   // línea, y el impuesto de cada una se extrae con la misma regla del backend.
   const tax = money.sum(
-    lines.map((l, i) => {
-      const share = gross > 0 ? money.scaled((grosses[i] * discountedGross) / gross) : 0
-      return splitGross(share, appliesIva(l.taxTreatment), l.taxPercentage).tax
+    perLine.map(({ line, lineGrossAmount }) => {
+      const share = gross > 0 ? money.scaled((lineGrossAmount * discountedGross) / gross) : 0
+      return splitGross(share, appliesIva(line.taxTreatment), line.taxPercentage).tax
     }),
   )
   return {

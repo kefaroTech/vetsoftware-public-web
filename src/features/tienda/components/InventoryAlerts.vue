@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { AlertTriangle, Bell } from 'lucide-vue-next'
 import { formatMoney } from '../composables/pricing'
 import type { ExpiringLotView } from '../types/inventory'
@@ -11,7 +12,7 @@ import type { ExpiringLotView } from '../types/inventory'
  * franja visual y las mismas condiciones de sede/permiso. El único que es
  * accionable es el de stock bajo, que emite `showLowStock`.
  */
-defineProps<{
+const props = defineProps<{
   hasBranch: boolean
   canReadStock: boolean
   showStock: boolean
@@ -22,6 +23,13 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{ showLowStock: [] }>()
+
+/**
+ * El lote más próximo a vencer. Nombrarlo aquí evita repetir `expiringLots[0]`
+ * tres veces en la plantilla y hace que su existencia sea la condición que
+ * pinta el aviso, en vez de un `length > 0` que el tipo no relaciona con nada.
+ */
+const nextExpiring = computed(() => props.expiringLots[0] ?? null)
 </script>
 
 <template>
@@ -47,14 +55,12 @@ const emit = defineEmits<{ showLowStock: [] }>()
     >
   </div>
 
-  <div v-if="showStock && expiringLots.length > 0" class="alert expire">
+  <div v-if="showStock && nextExpiring" class="alert expire">
     <AlertTriangle :size="15" :stroke-width="1.8" />
     <span
       ><strong>{{ expiringLots.length }}</strong> lote(s) por vencer o vencidos en
-      {{ branchName }} (más próximo: {{ expiringLots[0].productName }},
-      {{
-        expiringLots[0].daysToExpire < 0 ? 'vencido' : `${expiringLots[0].daysToExpire} día(s)`
-      }})</span
+      {{ branchName }} (más próximo: {{ nextExpiring.productName }},
+      {{ nextExpiring.daysToExpire < 0 ? 'vencido' : `${nextExpiring.daysToExpire} día(s)` }})</span
     >
   </div>
 

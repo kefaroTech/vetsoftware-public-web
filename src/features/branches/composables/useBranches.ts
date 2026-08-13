@@ -54,9 +54,10 @@ export function useBranches() {
     visibleBranches,
     () => {
       const ids = visibleBranches.value.map((b) => b.id)
-      if (ids.length === 0) return
+      const firstId = ids[0]
+      if (firstId == null) return
       if (selectedBranchId.value == null || !ids.includes(selectedBranchId.value)) {
-        store.setSelectedBranch(ids[0])
+        store.setSelectedBranch(firstId)
       }
     },
     { immediate: true },

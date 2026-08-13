@@ -53,8 +53,12 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
     const s = draft.state
 
     // Recetas: cabecera + medicamentos en cascada. Items con savedId se saltan.
-    for (let i = 0; i < s.prescriptions.length; i++) {
-      const p = s.prescriptions[i]
+    //
+    // Los bucles recorren con `entries()` en vez de indexar por contador: el
+    // índice sigue haciendo falta para los `mark*Saved`, pero el iterador ya
+    // garantiza el elemento, así que no hay un `T | undefined` que comprobar ni
+    // una guarda muerta que escribir para callar al compilador.
+    for (const [i, p] of s.prescriptions.entries()) {
       let prescriptionId = p.savedId
       if (!prescriptionId) {
         const created = await prescriptionApi.create({
@@ -69,8 +73,7 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
         prescriptionId = created.id
         draft.markPrescriptionSaved(i, prescriptionId)
       }
-      for (let j = 0; j < p.medicaments.length; j++) {
-        const m = p.medicaments[j]
+      for (const [j, m] of p.medicaments.entries()) {
         if (m.savedId) continue
         const createdMed = await medicamentPrescriptionApi.create({
           medicamentId: m.medicamentId,
@@ -84,8 +87,7 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
       }
     }
 
-    for (let i = 0; i < s.laboratoryTests.length; i++) {
-      const t = s.laboratoryTests[i]
+    for (const [i, t] of s.laboratoryTests.entries()) {
       if (t.savedId) continue
       const created = await laboratoryTestApi.create({
         date: t.date,
@@ -101,8 +103,7 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
       draft.markLaboratoryTestSaved(i, created.id)
     }
 
-    for (let i = 0; i < s.diagnosticImagings.length; i++) {
-      const img = s.diagnosticImagings[i]
+    for (const [i, img] of s.diagnosticImagings.entries()) {
       if (img.savedId) continue
       const created = await diagnosticImagingApi.create({
         date: img.date,
@@ -118,8 +119,7 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
       draft.markDiagnosticImagingSaved(i, created.id)
     }
 
-    for (let i = 0; i < s.vaccinations.length; i++) {
-      const v = s.vaccinations[i]
+    for (const [i, v] of s.vaccinations.entries()) {
       if (v.savedId) continue
       const created = await vaccinationApi.create({
         date: v.date,
@@ -134,8 +134,7 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
       draft.markVaccinationSaved(i, created.id)
     }
 
-    for (let i = 0; i < s.hospitalizations.length; i++) {
-      const h = s.hospitalizations[i]
+    for (const [i, h] of s.hospitalizations.entries()) {
       if (h.savedId) continue
       const created = await hospitalizationApi.create({
         date: h.date,
@@ -154,8 +153,7 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
       draft.markHospitalizationSaved(i, created.id)
     }
 
-    for (let i = 0; i < s.dewormings.length; i++) {
-      const d = s.dewormings[i]
+    for (const [i, d] of s.dewormings.entries()) {
       if (d.savedId) continue
       const created = await dewormingApi.create({
         date: d.date,
@@ -172,8 +170,7 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
       draft.markDewormingSaved(i, created.id)
     }
 
-    for (let i = 0; i < s.surgeries.length; i++) {
-      const sg = s.surgeries[i]
+    for (const [i, sg] of s.surgeries.entries()) {
       if (sg.savedId) continue
       const created = await surgeryApi.create({
         date: sg.date,

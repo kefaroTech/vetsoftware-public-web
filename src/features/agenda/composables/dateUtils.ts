@@ -66,11 +66,24 @@ export function formatMonthLong(d: Date): string {
   return `${MONTHS_LONG[d.getMonth()]} ${d.getFullYear()}`
 }
 
+/**
+ * `getMonth` devuelve 0-11 y `getDay` 0-6 por especificación, así que el índice
+ * nunca se sale de estas tablas. El `??` es inalcanzable: existe para que el tipo
+ * diga lo que el runtime ya garantiza, sin sembrar `!` por el fichero.
+ */
+export function monthName(d: Date): string {
+  return MONTHS_LONG[d.getMonth()] ?? MONTHS_LONG[0]
+}
+
+export function weekdayName(d: Date): string {
+  return WEEKDAYS_FULL[(d.getDay() + 6) % 7] ?? WEEKDAYS_FULL[0]
+}
+
 export function formatWeekRange(start: Date): string {
   const end = addDays(start, 6)
   const sameMonth = start.getMonth() === end.getMonth()
-  const startMonth = MONTHS_LONG[start.getMonth()].slice(0, 3).toLowerCase()
-  const endMonth = MONTHS_LONG[end.getMonth()].slice(0, 3).toLowerCase()
+  const startMonth = monthName(start).slice(0, 3).toLowerCase()
+  const endMonth = monthName(end).slice(0, 3).toLowerCase()
   if (sameMonth) {
     return `${start.getDate()} – ${end.getDate()} ${startMonth} ${end.getFullYear()}`
   }
@@ -78,6 +91,5 @@ export function formatWeekRange(start: Date): string {
 }
 
 export function formatDayLong(d: Date): string {
-  const wd = WEEKDAYS_FULL[(d.getDay() + 6) % 7]
-  return `${wd}, ${d.getDate()} ${MONTHS_LONG[d.getMonth()].toLowerCase()} ${d.getFullYear()}`
+  return `${weekdayName(d)}, ${d.getDate()} ${monthName(d).toLowerCase()} ${d.getFullYear()}`
 }

@@ -187,12 +187,13 @@ const vetOptions = computed(() =>
 // atiende esa sede, caer al primero disponible.
 watch(availableVets, (list) => {
   if (!props.open || props.mode !== 'create') return
-  if (list.length === 0) {
+  const firstVet = list[0]
+  if (!firstVet) {
     employeeId.value = null
     return
   }
   if (employeeId.value == null || !list.some((v) => v.id === employeeId.value)) {
-    employeeId.value = list[0].id
+    employeeId.value = firstVet.id
   }
 })
 const petOptions = computed(() => [

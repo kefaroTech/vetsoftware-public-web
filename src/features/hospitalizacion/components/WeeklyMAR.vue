@@ -35,6 +35,13 @@ const HOURS = Array.from({ length: 24 }, (_, h) => h)
 const days = computed(() => Array.from({ length: 7 }, (_, i) => addDays(props.weekStart, i)))
 const dayIsos = computed(() => days.value.map(isoFromDate))
 
+/**
+ * La rejilla itera esto y no `days` + `dayIsos` por separado: la fecha y su ISO
+ * viajan juntas, así que la celda deja de cruzar dos arrays por índice para
+ * saber a qué día pertenece.
+ */
+const dayCells = computed(() => days.value.map((date) => ({ date, iso: isoFromDate(date) })))
+
 const entries = computed<Entry[]>(() => {
   const set = new Set(dayIsos.value)
   const out: Entry[] = []
@@ -135,19 +142,19 @@ function onDrop(dayIso: string, hour: number) {
         <template v-for="hour in HOURS" :key="`r${hour}`">
           <div class="hourcell" :data-hour="hour">{{ String(hour).padStart(2, '0') }}:00</div>
           <div
-            v-for="(d, i) in days"
-            :key="`c${hour}-${i}`"
+            v-for="cell in dayCells"
+            :key="`c${hour}-${cell.iso}`"
             class="cell"
             :class="{
-              today: isToday(d),
-              dropover: dragOver === `${dayIsos[i]}-${hour}`,
+              today: isToday(cell.date),
+              dropover: dragOver === `${cell.iso}-${hour}`,
             }"
-            @dragover.prevent="dragOver = `${dayIsos[i]}-${hour}`"
+            @dragover.prevent="dragOver = `${cell.iso}-${hour}`"
             @dragleave="dragOver = null"
-            @drop.prevent="onDrop(dayIsos[i], hour)"
+            @drop.prevent="onDrop(cell.iso, hour)"
           >
             <span
-              v-for="e in chipsAt(dayIsos[i], hour)"
+              v-for="e in chipsAt(cell.iso, hour)"
               :key="e.slot.id"
               class="chip"
               :class="[statusOf(e.slot), { proc: e.order.kind === 'proc' }]"

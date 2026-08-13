@@ -210,7 +210,7 @@ export const inventoryApi = {
 function saveFile(blob: Blob, contentDisposition: string | undefined, fallback: string) {
   let filename = fallback
   const match = contentDisposition?.match(/filename="([^"]+)"/)
-  if (match) filename = match[1]
+  if (match?.[1]) filename = match[1]
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
