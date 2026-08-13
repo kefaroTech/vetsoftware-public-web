@@ -9,6 +9,8 @@ import {
   lineGross,
   promoStatus,
   splitGross,
+  stateOf,
+  stockOf,
   stockState,
   taxByRate,
   taxTreatmentLabel,
@@ -19,6 +21,7 @@ import type {
   SaleLine,
   TaxTreatment,
 } from '@/features/tienda/types/tienda'
+import type { StockView } from '@/features/tienda/types/inventory'
 
 /**
  * La aritmética del POS. Es la pantalla que más dinero mueve y la única del
@@ -628,5 +631,78 @@ describe('stockState', () => {
 
   it('agotado gana a bajo cuando el mínimo es 0 y no hay stock', () => {
     expect(stockState(0, 0)).toBe('AGOTADO')
+  })
+})
+
+/**
+ * El mapa de saldos que llega de `/inventory/stock` está indexado por producto
+ * y acotado a la sede activa: solo trae filas de los productos que ALGUNA VEZ
+ * entraron allí. El catálogo, en cambio, es de toda la empresa.
+ *
+ * Esa asimetría es la razón de ser de estas dos funciones: la tabla de
+ * inventario pinta el catálogo entero y para la mayoría de las filas no hay
+ * saldo que mostrar. Un producto que nunca entró a la sede debe leerse como
+ * cero, no como `undefined` —que en la vista se vería como celda vacía o
+ * `NaN`— ni como un error.
+ */
+function stockRow(over: Partial<StockView> = {}): StockView {
+  return {
+    productId: 1,
+    productName: 'Alimento medicado 2 kg',
+    productCode: 'ALM-002',
+    branchId: 7,
+    branchName: 'Sede Norte',
+    quantity: 12,
+    minStock: 5,
+    lowStock: false,
+    ...over,
+  }
+}
+
+describe('stockOf', () => {
+  it('devuelve el saldo de la fila cuando el producto sí tiene stock en la sede', () => {
+    const mapa = { 1: stockRow({ quantity: 12, minStock: 5, lowStock: false }) }
+
+    expect(stockOf(mapa, 1)).toEqual({ quantity: 12, minStock: 5, lowStock: false })
+  })
+
+  it('respeta el `lowStock` que calculó el backend en vez de recalcularlo', () => {
+    const mapa = { 1: stockRow({ quantity: 3, minStock: 5, lowStock: true }) }
+
+    expect(stockOf(mapa, 1).lowStock).toBe(true)
+  })
+
+  it('devuelve ceros —no `undefined`— para un producto sin fila en la sede', () => {
+    const mapa = { 1: stockRow() }
+
+    expect(stockOf(mapa, 99)).toEqual({ quantity: 0, minStock: 0, lowStock: false })
+  })
+
+  it('devuelve ceros con el mapa vacío, que es el estado antes de la primera carga', () => {
+    expect(stockOf({}, 1)).toEqual({ quantity: 0, minStock: 0, lowStock: false })
+  })
+
+  it('conserva un saldo negativo en vez de normalizarlo a cero', () => {
+    // Un saldo negativo es un descuadre real del kardex. Taparlo aquí lo
+    // volvería invisible justo en la pantalla que existe para detectarlo.
+    const mapa = { 1: stockRow({ quantity: -2 }) }
+
+    expect(stockOf(mapa, 1).quantity).toBe(-2)
+  })
+})
+
+describe('stateOf', () => {
+  it.each([
+    ['ok por encima del mínimo', 12, 5, 'OK'],
+    ['bajo en el mínimo exacto', 5, 5, 'BAJO'],
+    ['agotado sin saldo', 0, 5, 'AGOTADO'],
+  ])('%s', (_caso, quantity, minStock, esperado) => {
+    expect(stateOf({ 1: stockRow({ quantity, minStock }) }, 1)).toBe(esperado)
+  })
+
+  it('marca AGOTADO al producto que no tiene fila en la sede', () => {
+    // Consecuencia directa de los ceros de `stockOf`: no hay entrada en esta
+    // sede, luego no hay nada que vender. Es lo que debe ver el cajero.
+    expect(stateOf({ 1: stockRow() }, 99)).toBe('AGOTADO')
   })
 })
