@@ -22,7 +22,8 @@ export interface PageResponse<T> {
 export interface OwnerSummary {
   id: number
   name: string
-  document?: string
+  /** TR-01: la columna es NOT NULL; el resumen siempre lo trae. */
+  document: string
 }
 
 export interface AnimalSummary {

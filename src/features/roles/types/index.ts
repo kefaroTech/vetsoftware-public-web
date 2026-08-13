@@ -53,7 +53,8 @@ export interface PermissionResponse {
   code: string
   company: CompanyRef
   subModule: SubModuleRef
-  createdDate?: string
+  /** TR-01: columna NOT NULL; el backend siempre lo devuelve. */
+  createdDate: string
 }
 
 export interface RolePermissionSummary {
@@ -70,14 +71,16 @@ export interface RoleResponse {
   company: CompanyRef
   permissions: RolePermissionSummary[]
   enabled: boolean
-  createdDate?: string
+  /** TR-01: columna NOT NULL; el backend siempre lo devuelve. */
+  createdDate: string
 }
 
 export interface RolePermissionResponse {
   id: number
   role: RoleRef
   permission: PermissionRef
-  createdDate?: string
+  /** TR-01: columna NOT NULL; el backend siempre lo devuelve. */
+  createdDate: string
 }
 
 export interface CreateRoleRequest {
