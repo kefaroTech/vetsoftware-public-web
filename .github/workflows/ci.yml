@@ -86,6 +86,20 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
+      # Playwright levanta `npm run dev`, que es `vite --mode localdev`, y
+      # `vite.config.ts` aborta si no encuentra un fichero de entorno cuyo
+      # `VETSOFTWARE_PROFILE` case con el modo. Ese fichero es `.env.local`, que
+      # esta en `.gitignore` --lleva la URL del backend de cada quien-- asi que
+      # el runner nunca lo tuvo y el servidor moria antes de servir nada.
+      #
+      # El ejemplo versionado es exactamente lo que un desarrollador copia en su
+      # primer arranque, y aqui basta: los dos casos de este smoke no llaman al
+      # backend --uno comprueba el guard del router y el otro un mensaje que se
+      # inyecta en `sessionStorage`--. Los que si necesitan login ya se saltan
+      # solos cuando falta `E2E_PASSWORD`.
+      - name: Provide the localdev environment file
+        run: cp .env.local.example .env.local
+
       - name: Run authentication smoke tests
         run: >-
           npx playwright test e2e/auth.spec.ts --project=chromium
