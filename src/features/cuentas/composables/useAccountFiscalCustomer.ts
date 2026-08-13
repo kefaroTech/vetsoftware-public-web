@@ -107,6 +107,18 @@ export function useAccountFiscalCustomer(ownerId: Ref<number | null | undefined>
         return
       }
     }
+    // TR-01: el backend exige `documentType` y `personType` (@NotNull). Aquí se coaccionaban a
+    // `undefined` cuando faltaban, así que el PUT salía incompleto y volvía como un 400 que el
+    // usuario veía como «no se pudo guardar», sin decirle qué faltaba. Se corta antes.
+    const documentType = data.documentType ?? o.documentType
+    const personType = data.personType ?? o.personType
+    if (!documentType || !personType) {
+      toast.error(
+        'Faltan datos fiscales',
+        'Indica el tipo de documento y el tipo de persona del cliente.',
+      )
+      return
+    }
     const payload: UpdateOwnerRequest = {
       name: o.name,
       email: data.email ?? o.email,
@@ -114,8 +126,8 @@ export function useAccountFiscalCustomer(ownerId: Ref<number | null | undefined>
       address: o.address,
       phone: o.phone,
       cityId: o.city.id,
-      documentType: data.documentType ?? o.documentType ?? undefined,
-      personType: data.personType ?? o.personType ?? undefined,
+      documentType,
+      personType,
       verificationDigit: data.verificationDigit ?? null,
       legalName: data.legalName ?? null,
       withholdingAgent: data.withholdingAgent ?? false,

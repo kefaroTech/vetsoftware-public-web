@@ -57,11 +57,16 @@ export interface CreateEmployeeRequest {
   branchIds: number[]
 }
 
+/**
+ * TR-01: llevaba un `status` que el backend **no acepta**. `PUT /employees/{id}` recibe solo
+ * estos tres campos, así que el estado viajaba y se descartaba en silencio; activar o desactivar
+ * un empleado se hace con `DELETE /employees/{id}` y `PATCH /employees/{id}/enable`, que es lo
+ * que la pantalla ya usaba de verdad. Lo destapó la atadura al contrato.
+ */
 export interface UpdateEmployeeRequest {
   employeeCode: string
   name: string
   email: string
-  status: 'ACTIVE' | 'INACTIVE'
 }
 
 export const employeeApi = {

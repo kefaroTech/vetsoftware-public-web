@@ -16,6 +16,9 @@
     "test:unit": "vitest run",
     "test:coverage": "vitest run --coverage",
     "budget": "node scripts/check-bundle-budget.mjs",
+    "api:sync": "node scripts/api-types.mjs --sync",
+    "api:types": "node scripts/api-types.mjs",
+    "api:check": "node scripts/api-types.mjs --check",
     "lint": "eslint src",
     "lint:strict": "eslint src --max-warnings=0",
     "lint:fix": "eslint src --fix",
@@ -24,7 +27,7 @@
     "stylelint:fix": "stylelint \"src/**/*.{css,scss,sass,vue}\" --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "quality": "npm run lint:strict && npm run stylelint:strict && npm run format:check",
+    "quality": "npm run lint:strict && npm run stylelint:strict && npm run format:check && npm run api:check",
     "quality:staged": "lint-staged",
     "ds:audit": "node scripts/ds-audit.mjs",
     "e2e": "playwright test",
@@ -65,6 +68,7 @@
     "husky": "^9.1.7",
     "jiti": "^2.7.0",
     "lint-staged": "^17.3.0",
+    "openapi-typescript": "^7.13.0",
     "postcss-html": "^2.0.0",
     "prettier": "^3.9.6",
     "stylelint": "^17.14.1",
@@ -79,5 +83,10 @@
     "vite-plugin-vuetify": "^2.0.4",
     "vitest": "^4.1.5",
     "vue-tsc": "^3.2.7"
+  },
+  "overrides": {
+    "openapi-typescript": {
+      "typescript": "$typescript"
+    }
   }
 }

@@ -31,10 +31,14 @@ export interface AnimalSummary {
   code?: string
 }
 
+/**
+ * TR-01: declaraba un `employeeCode` que el resumen del backend no trae —solo `id` y `name`—,
+ * así que valía `undefined` siempre. Nadie lo leía; si alguien lo hubiera pintado, habría salido
+ * un hueco en la tarjeta de la cuenta sin ningún error que lo delatara.
+ */
 export interface EmployeeSummary {
   id: number
   name: string
-  employeeCode?: string
 }
 
 export interface CompanySummary {

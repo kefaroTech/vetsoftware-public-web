@@ -1,6 +1,10 @@
 import { http } from '@/services/http/http.client'
 import { DEFAULT_PAGE_SIZE, type PageResponse } from '@/types/pagination'
-import type { PersonType, TaxRegime } from '@/features/facturacion/types/facturacion'
+import type {
+  FiscalResponsibility,
+  PersonType,
+  TaxRegime,
+} from '@/features/facturacion/types/facturacion'
 import type { OwnerDocumentType } from '@/features/facturacion/composables/feFiscalChecklist'
 
 export interface CitySummary {
@@ -31,8 +35,8 @@ export interface OwnerResponse {
   legalName?: string | null
   withholdingAgent?: boolean
   taxRegime?: TaxRegime | null
-  /** Código de responsabilidad RUT (p. ej. "R-99-PN"); opcional, backend default. */
-  fiscalResponsibility?: string | null
+  /** Nombre del enum del backend, no el código RUT. Ver FiscalResponsibility. */
+  fiscalResponsibility?: FiscalResponsibility | null
 }
 
 export interface CreateOwnerRequest {
@@ -42,15 +46,17 @@ export interface CreateOwnerRequest {
   address: string
   phone: string
   cityId: number
-  // Campos fiscales (opcionales en el tipo del front; el backend exige
-  // documentType/personType al crear — la captura fiscal vive en FE > 5 UVT y en OwnerForm).
-  documentType?: OwnerDocumentType
-  personType?: PersonType
+  // TR-01: `documentType` y `personType` son `@NotNull` en el backend. Estaban declarados
+  // opcionales «porque la captura fiscal vive en FE > 5 UVT», con la advertencia escrita en un
+  // comentario en vez de en el tipo — así que el compilador dejaba construir una petición que
+  // el servidor rechaza con un 400. Ahora son obligatorios, que es lo que el contrato dice.
+  documentType: OwnerDocumentType
+  personType: PersonType
   verificationDigit?: string | null
   legalName?: string | null
   withholdingAgent?: boolean
   taxRegime?: TaxRegime | null
-  fiscalResponsibility?: string | null
+  fiscalResponsibility?: FiscalResponsibility | null
 }
 
 export interface UpdateOwnerRequest extends CreateOwnerRequest {}

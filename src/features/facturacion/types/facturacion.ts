@@ -27,6 +27,19 @@ export type TaxRegime = 'RESPONSABLE_IVA' | 'NO_RESPONSABLE_IVA'
 export type ProviderType = 'MATIAS'
 export type PersonType = 'NATURAL' | 'JURIDICA'
 
+/**
+ * Responsabilidad fiscal del adquiriente. Se envía **el nombre del enum**, no el código DIAN:
+ * el `R-99-PN` / `O-13` / `O-15` que aparece en el RUT lo deriva el adaptador del proveedor a
+ * partir de este valor.
+ *
+ * <p>TR-01: aquí estaba declarado como `string` y documentado como «código de responsabilidad
+ * RUT (p. ej. "R-99-PN")». Quien siguiera ese comentario mandaba un código que el backend no
+ * reconoce y que su parser tolerante convierte en `null` sin quejarse: el dato fiscal se perdía
+ * camino a la factura. Lo destapó la atadura al contrato.
+ */
+export type FiscalResponsibility =
+  'NO_APLICA' | 'GRAN_CONTRIBUYENTE' | 'AUTORRETENEDOR' | 'AGENTE_RETENCION_IVA' | 'REGIMEN_SIMPLE'
+
 // ── Etiquetas legibles + tonos (de data-facturacion.jsx) ─────────────────────
 
 export const DOC_TYPE_LABEL: Record<ElectronicDocumentType, string> = {
