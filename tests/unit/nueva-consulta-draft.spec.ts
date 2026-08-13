@@ -82,6 +82,18 @@ function laboratorio(over: Partial<LaboratoryTest> = {}): LaboratoryTest {
   return { date: '2026-08-08', ...over } as LaboratoryTest
 }
 
+/**
+ * La persistencia va con retardo (FE-17), así que un `nextTick` ya no basta:
+ * espera al watcher Y al temporizador. El margen sobre los 400 ms del store es
+ * a propósito, para que la prueba no dependa de coincidir al milisegundo.
+ */
+const PERSIST_DELAY_MS = 400
+async function flushPersist() {
+  await nextTick()
+  await new Promise((resolve) => setTimeout(resolve, PERSIST_DELAY_MS + 50))
+  await nextTick()
+}
+
 beforeEach(() => {
   storage = memoryStorage()
   vi.stubGlobal('localStorage', storage)
@@ -385,15 +397,34 @@ describe('reset', () => {
     expect(s.hasPartialSave).toBe(false)
   })
 
-  it('borra también el borrador persistido', async () => {
+  it('borra también el borrador persistido, y NO reaparece después', async () => {
     const s = store()
     s.markConsultationCreated(77)
-    await nextTick()
+    await flushPersist()
     expect(storage.getItem(STORAGE_KEY)).not.toBeNull()
 
     s.reset()
-
     expect(storage.getItem(STORAGE_KEY)).toBeNull()
+
+    // Lo que de verdad protege esta prueba: `reset()` muta el estado, y esa
+    // mutación despierta al watcher que persiste. Sin suspenderlo, el borrador
+    // volvía a escribirse un tick después de haberse borrado.
+    await flushPersist()
+    expect(storage.getItem(STORAGE_KEY)).toBeNull()
+  })
+
+  it('tras un reset, lo que se escriba después sí vuelve a guardarse', async () => {
+    // El contrapeso del caso anterior: suspender la persistencia durante el
+    // reinicio no puede dejarla apagada para siempre.
+    const s = store()
+    s.reset()
+    await flushPersist()
+
+    s.state.consultation.anamnesis = 'Consulta nueva'
+    await flushPersist()
+
+    const guardado = JSON.parse(storage.getItem(STORAGE_KEY) ?? 'null')
+    expect(guardado?.consultation.anamnesis).toBe('Consulta nueva')
   })
 
   it('resetKeepingOwner conserva el propietario pero NO los marcadores', () => {
@@ -465,7 +496,27 @@ describe('persistencia y borradores viejos', () => {
     const s = store()
 
     s.state.consultation.anamnesis = 'Vómito'
-    await nextTick()
+    await flushPersist()
+
+    const guardado = JSON.parse(storage.getItem(STORAGE_KEY) ?? 'null')
+    expect(guardado.consultation.anamnesis).toBe('Vómito')
+  })
+
+  it('no serializa en cada pulsación: agrupa las escrituras', async () => {
+    // El motivo del retardo (FE-17). Antes cada tecla disparaba un
+    // `JSON.stringify` del borrador entero en el hilo principal, y la anamnesis
+    // es el texto más largo del asistente.
+    const s = store()
+    const escrituras = vi.spyOn(storage, 'setItem')
+
+    for (const texto of ['V', 'Vó', 'Vóm', 'Vómi', 'Vómit', 'Vómito']) {
+      s.state.consultation.anamnesis = texto
+      await nextTick()
+    }
+    expect(escrituras).not.toHaveBeenCalled()
+
+    await flushPersist()
+    expect(escrituras).toHaveBeenCalledTimes(1)
 
     const guardado = JSON.parse(storage.getItem(STORAGE_KEY) ?? 'null')
     expect(guardado.consultation.anamnesis).toBe('Vómito')

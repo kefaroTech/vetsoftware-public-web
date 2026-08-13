@@ -19,8 +19,22 @@ interface CatalogConfig<T extends CatalogItem> {
 }
 
 /**
- * Factory que produce un composable cacheado para un catálogo creable.
- * Cada catálogo tiene su propia cache module-scoped (no compartida entre instancias).
+ * Factory que produce un composable para un catálogo creable.
+ *
+ * `inFlight` NO es una caché, aunque este comentario lo dijera antes: se anula
+ * en cuanto la petición resuelve, así que cada `refresh()` vuelve a preguntar al
+ * servidor. Lo que hace es **deduplicar las llamadas concurrentes** — si tres
+ * componentes que usan el mismo catálogo se montan a la vez, sale una sola
+ * petición y las tres comparten su promesa.
+ *
+ * Que no cachee es deliberado: la convención del proyecto es recargar al abrir
+ * cada pantalla, así que un catálogo servido de memoria mostraría el tipo de
+ * examen que se acaba de crear en otra pestaña como si no existiera.
+ *
+ * Tampoco es el «estado module-scoped» que prohíbe el CLAUDE.md: esa regla
+ * habla de `ref()`/`reactive()` singleton, es decir, de ESTADO reactivo
+ * compartido que debería vivir en Pinia. Esto es un cerrojo de concurrencia
+ * sobre una promesa, sin reactividad y sin nada que la interfaz pueda leer.
  */
 export function createCatalog<T extends CatalogItem>(config: CatalogConfig<T>) {
   let inFlight: Promise<T[]> | null = null

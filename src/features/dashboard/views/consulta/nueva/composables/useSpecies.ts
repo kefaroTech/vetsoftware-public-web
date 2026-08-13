@@ -6,6 +6,12 @@ export interface SpecieOption {
   label: string
 }
 
+/**
+ * Deduplica las llamadas concurrentes, no cachea: se anula al resolver, así que
+ * cada carga vuelve a preguntar al servidor. Sirve para que montar a la vez el
+ * paso de mascota y un modal que también pide especies no dispare dos
+ * peticiones. Mismo criterio que `useCatalog`, donde está razonado en detalle.
+ */
 let inFlight: Promise<SpecieResponse[]> | null = null
 
 async function load(): Promise<SpecieResponse[]> {

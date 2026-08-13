@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { computed, reactive, watch } from 'vue'
+import { computed, nextTick, reactive, watch } from 'vue'
 import type {
   Animal,
   Consultation,
@@ -182,18 +182,66 @@ function load(): NuevaConsultaDraft {
 export const useNuevaConsultaDraftStore = defineStore('nuevaConsultaDraft', () => {
   const state = reactive<NuevaConsultaDraft>(load())
 
+  /**
+   * Persistencia del borrador. Antes serializaba en CADA pulsación: un
+   * `JSON.stringify` del borrador entero, en el hilo principal, mientras el
+   * veterinario escribe la anamnesis, que es el texto más largo del asistente.
+   *
+   * Ahora se agrupa con un retardo. Eso abre dos huecos que hay que tapar, y
+   * ambos son peores que el problema original si se dejan abiertos:
+   *
+   *  1. Entre la última tecla y la escritura hay una ventana en la que lo
+   *     tecleado no está en disco. Si la pestaña se cierra ahí, se pierde
+   *     justo lo último — lo contrario de para qué existe este borrador. Por
+   *     eso se vuelca al salir y al ocultarse la pestaña.
+   *  2. `reset()` borra el borrador, pero la propia mutación despierta al
+   *     watcher, así que una escritura posterior lo resucitaría. Se suspende
+   *     durante el reinicio.
+   */
+  const PERSIST_DELAY_MS = 400
+  let persistTimer: ReturnType<typeof setTimeout> | null = null
+  let persistSuspended = false
+
+  function cancelPendingPersist() {
+    if (persistTimer !== null) {
+      clearTimeout(persistTimer)
+      persistTimer = null
+    }
+  }
+
+  function persistNow() {
+    cancelPendingPersist()
+    if (typeof window === 'undefined') return
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    } catch {
+      // ignore quota errors
+    }
+  }
+
   if (typeof window !== 'undefined') {
     watch(
       state,
-      (s) => {
-        try {
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(s))
-        } catch {
-          // ignore quota errors
-        }
+      () => {
+        if (persistSuspended) return
+        cancelPendingPersist()
+        persistTimer = setTimeout(persistNow, PERSIST_DELAY_MS)
       },
       { deep: true },
     )
+
+    // `pagehide` y no solo `beforeunload`: en móvil e iOS el navegador puede
+    // congelar la pestaña sin disparar nunca el segundo. `visibilitychange`
+    // cubre el cambio de app o de pestaña, que es lo más frecuente de los tres.
+    if (typeof window.addEventListener === 'function') {
+      window.addEventListener('pagehide', persistNow)
+      window.addEventListener('beforeunload', persistNow)
+    }
+    if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') persistNow()
+      })
+    }
   }
 
   function setStep(step: WizardStep) {
@@ -261,7 +309,14 @@ export const useNuevaConsultaDraftStore = defineStore('nuevaConsultaDraft', () =
   }
 
   function reset() {
+    // El watcher es asíncrono: sin suspenderlo, el `Object.assign` de aquí
+    // abajo lo despierta y, un tick después de haber borrado, vuelve a escribir
+    // un borrador. Esto ya pasaba antes del retardo —el borrador «vacío»
+    // reaparecía en `localStorage` en el siguiente tick— solo que era invisible
+    // porque su contenido era el de por defecto.
+    persistSuspended = true
     Object.assign(state, defaultDraft())
+    cancelPendingPersist()
     if (typeof window !== 'undefined') {
       try {
         window.localStorage.removeItem(STORAGE_KEY)
@@ -269,6 +324,11 @@ export const useNuevaConsultaDraftStore = defineStore('nuevaConsultaDraft', () =
         // ignore
       }
     }
+    // Se reanuda tras el flush del watcher, no antes: la siguiente edición del
+    // usuario vuelve a persistir con normalidad.
+    void nextTick(() => {
+      persistSuspended = false
+    })
   }
 
   function resetKeepingOwner() {
