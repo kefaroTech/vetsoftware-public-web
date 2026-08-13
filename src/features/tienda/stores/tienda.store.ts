@@ -7,6 +7,7 @@ import { productCategoryApi } from '../api/productCategory.api'
 import { serviceCategoryApi } from '../api/serviceCategory.api'
 import { taxApi, type TaxPayload } from '../api/tax.api'
 import { inventoryApi } from '../api/inventory.api'
+import { useCancellableLatest } from '@/composables/useLatestOnly'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import type {
   CategoryResponse,
@@ -66,6 +67,11 @@ export const useTiendaStore = defineStore('tienda', () => {
   const valuation = ref<InventoryValuationView | null>(null)
   const alerts = ref<InventoryAlertsView | null>(null)
 
+  // Dos lecturas con clave (la sede) que se recargan al cambiarla: cada una
+  // cancela la suya y descarta la respuesta que dejó de ser la última.
+  const stockTurn = useCancellableLatest()
+  const insightsTurn = useCancellableLatest()
+
   const loading = ref(false)
   const error = ref<string | null>(null)
   let loadedOnce = false
@@ -77,9 +83,14 @@ export const useTiendaStore = defineStore('tienda', () => {
    * branchId null (admin "Todas") deja el mapa vacío: el stock es por sede, no agregable en esta vista.
    */
   async function loadStock(branchId: number | null): Promise<void> {
+    // Cambiar de sede mientras el bucle de páginas está en curso dejaba que el
+    // mapa de la sede anterior pisara al nuevo. Abortar además corta las páginas
+    // que queden por pedir, que pueden ser muchas.
+    const turno = stockTurn.begin()
     stockBranchId.value = branchId
     if (branchId == null) {
       stockByProduct.value = {}
+      stockLoading.value = false
       return
     }
     stockLoading.value = true
@@ -89,18 +100,20 @@ export const useTiendaStore = defineStore('tienda', () => {
       let page = 0
       let totalPages = 1
       do {
-        const res = await inventoryApi.searchStock({ branchId, page, pageSize })
+        const res = await inventoryApi.searchStock({ branchId, page, pageSize }, turno.signal)
+        if (!turno.isCurrent()) return
         for (const row of res.content) map[row.productId] = row
         totalPages = res.totalPages
         page += 1
       } while (page < totalPages)
       stockByProduct.value = map
     } catch {
+      if (!turno.isCurrent()) return
       // Sin permiso (inventory.read) u otro fallo: dejamos el mapa vacío sin romper POS/cuentas. La vista de
       // Inventario ya gatea su UI de stock en el permiso, así que no muestra ceros engañosos.
       stockByProduct.value = {}
     } finally {
-      stockLoading.value = false
+      if (turno.isCurrent()) stockLoading.value = false
     }
   }
 
@@ -130,20 +143,23 @@ export const useTiendaStore = defineStore('tienda', () => {
 
   /** F5: valuación + alertas de la sede (tragan errores/403 para no romper la vista). */
   async function loadInventoryInsights(branchId: number | null): Promise<void> {
+    const turno = insightsTurn.begin()
     if (branchId == null) {
       valuation.value = null
       alerts.value = null
       return
     }
     try {
-      valuation.value = await inventoryApi.valuation(branchId)
+      const v = await inventoryApi.valuation(branchId, turno.signal)
+      if (turno.isCurrent()) valuation.value = v
     } catch {
-      valuation.value = null
+      if (turno.isCurrent()) valuation.value = null
     }
     try {
-      alerts.value = await inventoryApi.alerts(branchId, 30)
+      const a = await inventoryApi.alerts(branchId, 30, turno.signal)
+      if (turno.isCurrent()) alerts.value = a
     } catch {
-      alerts.value = null
+      if (turno.isCurrent()) alerts.value = null
     }
   }
 

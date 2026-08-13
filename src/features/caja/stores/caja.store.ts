@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { cashSessionApi, type CashHistoryParams } from '../api/cashSession.api'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
+import { useCancellableLatest } from '@/composables/useLatestOnly'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import type {
   CashPaymentMethod,
@@ -33,6 +34,12 @@ export const useCajaStore = defineStore('caja', () => {
   const openSessionsLoading = ref(false)
   const openSessionsLoaded = ref(false)
 
+  // Tres lecturas que se recargan al cambiar de sede o de filtros. Cada una
+  // lleva su turno: cancela la anterior y descarta la que llegue tarde.
+  const currentTurn = useCancellableLatest()
+  const openSessionsTurn = useCancellableLatest()
+  const historyTurn = useCancellableLatest()
+
   const isOpen = computed(() => current.value?.status === 'OPEN')
 
   /** Total esperado por método de la sesión OPEN (efectivo incluye la base). */
@@ -44,15 +51,21 @@ export const useCajaStore = defineStore('caja', () => {
 
   async function loadCurrent(force = false): Promise<void> {
     if (loadedOnce && !force) return
+    // Se recarga al cambiar de sede: sin guardián, la respuesta de la sede
+    // anterior puede pisar la caja de la nueva.
+    const turno = currentTurn.begin()
     loading.value = true
     error.value = null
     try {
-      current.value = await cashSessionApi.current()
+      const session = await cashSessionApi.current(turno.signal)
+      if (!turno.isCurrent()) return
+      current.value = session
       loadedOnce = true
     } catch (e) {
+      if (!turno.isCurrent()) return
       error.value = getProblemDetailMessage(e, 'No se pudo cargar la caja')
     } finally {
-      loading.value = false
+      if (turno.isCurrent()) loading.value = false
     }
   }
 
@@ -78,6 +91,8 @@ export const useCajaStore = defineStore('caja', () => {
   }
 
   async function loadHistory(params: CashHistoryParams = {}): Promise<void> {
+    // Filtrar y paginar rápido encadena varias: solo la última debe escribir.
+    const turno = historyTurn.begin()
     historyLoading.value = true
     try {
       const filterKeys = ['branchId', 'employeeId', 'from', 'to'] as const
@@ -88,33 +103,42 @@ export const useCajaStore = defineStore('caja', () => {
         }
       }
       historyFilters.value = nextFilters
-      const page = await cashSessionApi.history({
-        ...historyFilters.value,
-        page: params.page ?? historyPage.value - 1,
-        pageSize: params.pageSize ?? historyPageSize.value,
-      })
+      const page = await cashSessionApi.history(
+        {
+          ...historyFilters.value,
+          page: params.page ?? historyPage.value - 1,
+          pageSize: params.pageSize ?? historyPageSize.value,
+        },
+        turno.signal,
+      )
+      if (!turno.isCurrent()) return
       history.value = page.content
       historyTotal.value = page.totalElements
       historyPage.value = page.page + 1
       historyPageSize.value = page.pageSize
       historyTotalPages.value = page.totalPages
     } catch (e) {
+      if (!turno.isCurrent()) return
       error.value = getProblemDetailMessage(e, 'No se pudo cargar el historial de cajas')
     } finally {
-      historyLoading.value = false
+      if (turno.isCurrent()) historyLoading.value = false
     }
   }
 
   async function loadOpenSessions(): Promise<void> {
+    const turno = openSessionsTurn.begin()
     openSessionsLoading.value = true
     openSessionsLoaded.value = false
     try {
-      openSessions.value = await cashSessionApi.listOpen()
+      const rows = await cashSessionApi.listOpen(turno.signal)
+      if (!turno.isCurrent()) return
+      openSessions.value = rows
       openSessionsLoaded.value = true
     } catch (e) {
+      if (!turno.isCurrent()) return
       error.value = getProblemDetailMessage(e, 'No se pudieron cargar las cajas abiertas')
     } finally {
-      openSessionsLoading.value = false
+      if (turno.isCurrent()) openSessionsLoading.value = false
     }
   }
 

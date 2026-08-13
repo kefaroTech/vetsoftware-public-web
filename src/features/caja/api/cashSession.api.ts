@@ -46,8 +46,8 @@ export const cashSessionApi = {
   },
 
   /** Sesión OPEN de la sede seleccionada, o null si no hay caja abierta. */
-  async current(): Promise<CashSessionView | null> {
-    const { data } = await http.get<CashSessionView | ''>('/cash-sessions/current')
+  async current(signal?: AbortSignal): Promise<CashSessionView | null> {
+    const { data } = await http.get<CashSessionView | ''>('/cash-sessions/current', { signal })
     return data ? (data as CashSessionView) : null
   },
 
@@ -57,17 +57,21 @@ export const cashSessionApi = {
   },
 
   /** Cajas OPEN visibles según la compañía y las sedes autorizadas del usuario. */
-  async listOpen(): Promise<CashSessionView[]> {
-    const { data } = await http.get<CashSessionView[]>('/cash-sessions/open')
+  async listOpen(signal?: AbortSignal): Promise<CashSessionView[]> {
+    const { data } = await http.get<CashSessionView[]>('/cash-sessions/open', { signal })
     return data
   },
 
-  async history(params: CashHistoryParams = {}): Promise<PageResponse<CashSessionView>> {
+  async history(
+    params: CashHistoryParams = {},
+    signal?: AbortSignal,
+  ): Promise<PageResponse<CashSessionView>> {
     const requestParams = Object.prototype.hasOwnProperty.call(params, 'branchId')
       ? params
       : withBranchParam({ ...params })
     const { data } = await http.get<PageResponse<CashSessionView>>('/cash-sessions', {
       params: requestParams,
+      signal,
     })
     return data
   },
