@@ -8,6 +8,7 @@ import {
   getProblemDetailCode,
   getProblemDetailFieldErrors,
   getProblemDetailMessage,
+  getTraceId,
 } from '@/services/http/http.client'
 import PrimaryButton from '@/components/public/PrimaryButton.vue'
 import AuthBanner from '@/components/public/AuthBanner.vue'
@@ -23,6 +24,9 @@ const serverErrors = ref<Record<string, string>>({})
 
 const submitting = ref(false)
 const submitError = ref<string | null>(null)
+// TR-05: el login tiene banner propio, no toast, asi que aqui el identificador de la traza se
+// perdia. Y es la pantalla donde mas duele: un usuario que no entra no puede hacer nada mas.
+const submitTraceId = ref<string | undefined>()
 const emailNotVerified = ref(false)
 
 function err(key: 'employeeCode' | 'password'): string | undefined {
@@ -34,6 +38,7 @@ async function submit() {
   submitError.value = null
   emailNotVerified.value = false
   serverErrors.value = {}
+  submitTraceId.value = undefined
   touched.employeeCode = true
   touched.password = true
   if (!form.employeeCode.trim() || !form.password.trim()) return
@@ -50,6 +55,7 @@ async function submit() {
     router.push({ name: 'home' })
   } catch (e) {
     serverErrors.value = getProblemDetailFieldErrors(e)
+    submitTraceId.value = getTraceId(e)
     const code = getProblemDetailCode(e)
     // Auto-registro Opción B: cuenta sin verificar → 403 EMAIL_NOT_VERIFIED (banner específico).
     if (code === 'EMAIL_NOT_VERIFIED') {
@@ -74,7 +80,10 @@ async function submit() {
       </AuthBanner>
     </div>
     <div v-else-if="submitError" class="login-banner">
-      <AuthBanner tone="error" @close="submitError = null">{{ submitError }}</AuthBanner>
+      <AuthBanner tone="error" @close="submitError = null"
+        >{{ submitError }}
+        <span v-if="submitTraceId" class="toast-trace-id login-trace">{{ submitTraceId }}</span>
+      </AuthBanner>
     </div>
 
     <div class="login-fields">
@@ -210,5 +219,14 @@ async function submit() {
 
 .login-secondary :deep(.v-icon) {
   color: var(--pub-ame-700);
+}
+
+/* TR-05: el identificador de la traza dentro del banner de error del login. */
+.login-trace {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  opacity: 0.75;
+  font-family: ui-monospace, Menlo, monospace;
 }
 </style>
