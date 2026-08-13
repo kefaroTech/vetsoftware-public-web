@@ -5,20 +5,28 @@ export const EMPLOYEE_CODE = 'O'
 export const PASSWORD = 'Orlando1997*'
 
 /**
- * Rellena el formulario de login y envía. Los selectores usan el rol/label
- * accesibles del LoginForm (Vuetify v-text-field + v-btn), no clases CSS,
- * para que sobrevivan cambios de estilo.
+ * Rellena el formulario de login y envía.
+ *
+ * <p>Los selectores apuntan al atributo `autocomplete` de cada campo, no a su etiqueta ni a su
+ * texto. Es a propósito: `autocomplete` declara *para qué sirve* el campo —es lo que usa el
+ * gestor de contraseñas del navegador—, así que no cambia cuando se reescribe la interfaz. Los
+ * selectores anteriores buscaban «Código de empleado *» y «Contraseña *», etiquetas de una
+ * versión anterior del formulario; llevaban rotos desde que se rehízo, sin que nadie lo notara
+ * porque los casos que dependen de ellos necesitan un backend con credenciales.
+ *
+ * <p>`getByLabel` no es una opción hoy: `AuthField` pinta un `<label>` sin `for`, así que no hay
+ * asociación entre etiqueta y campo. Eso además es un defecto de accesibilidad —un lector de
+ * pantalla no anuncia la etiqueta y hacer clic en ella no enfoca el campo— y pertenece a FE-14.
+ * Cuando se arregle allí, estos selectores podrán volver a la etiqueta.
  */
 export async function login(
   page: Page,
   code: string = EMPLOYEE_CODE,
   password: string = PASSWORD,
 ): Promise<void> {
-  await page.goto('/')
-  // Labels exactos: el toggle de ver/ocultar contraseña también expone un
-  // aria-label "Contraseña * appended action", así que un match parcial
-  // resolvería a 2 elementos (strict mode). exact:true apunta solo al input.
-  await page.getByLabel('Código de empleado *', { exact: true }).fill(code)
-  await page.getByLabel('Contraseña *', { exact: true }).fill(password)
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click()
+  // Ruta explícita: no depende de a dónde redirija la raíz según haya sesión o no.
+  await page.goto('/login')
+  await page.locator('input[autocomplete="username"]').fill(code)
+  await page.locator('input[autocomplete="current-password"]').fill(password)
+  await page.getByRole('button', { name: /iniciar sesi/i }).click()
 }
