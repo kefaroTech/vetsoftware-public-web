@@ -1,4 +1,5 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import { nextTraceparent } from '@/services/telemetry/trace'
 import type { ProblemDetail } from '@/types/api.types'
 import { popLoader, pushLoader } from '@/composables/useGlobalLoader'
 import { createApiBaseUrl } from './api-base-url'
@@ -12,6 +13,11 @@ declare module 'axios' {
     _loaderPushed?: boolean
     /** Marca interna: reintentos por fallo de red o 5xx ya consumidos. */
     _networkRetries?: number
+    /**
+     * Identificador de la traza que este cliente genero para la peticion (TR-05). Existe
+     * aunque el servidor no conteste nunca, que es cuando mas falta hace.
+     */
+    _traceId?: string
   }
 }
 
@@ -96,6 +102,12 @@ http.interceptors.request.use((config) => {
       localStorage.removeItem(AUTH_STORAGE_KEY)
     }
   }
+  // TR-05: el backend adopta este trace-id, asi que el navegador y el servidor comparten uno.
+  // El reintento pasa otra vez por aqui y genera uno nuevo, que es lo correcto: es otra peticion.
+  const { traceId, traceparent } = nextTraceparent()
+  config.headers.set('traceparent', traceparent)
+  config._traceId = traceId
+
   if (!config.skipGlobalLoader) {
     pushLoader()
     config._loaderPushed = true
@@ -194,6 +206,8 @@ http.interceptors.response.use(
  */
 export function getTraceId(error: unknown): string | undefined {
   if (!(error instanceof AxiosError)) return undefined
+  // El que genero este cliente: existe aunque la peticion muriera sin respuesta.
+  if (error.config?._traceId) return error.config._traceId
   const header = error.response?.headers?.['x-trace-id']
   if (typeof header === 'string' && header.trim()) return header.trim()
   const pd = error.response?.data as ProblemDetail | undefined
