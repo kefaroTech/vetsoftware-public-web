@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import { nextRowUid } from '@/composables/rowUid'
 import { computed, reactive, ref, watch } from 'vue'
 import { ClipboardList, Plus, Trash2 } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
@@ -23,6 +25,9 @@ const tienda = useTienda()
 const isEdit = computed(() => props.order != null)
 
 interface LineRow {
+  /** Clave estable de la fila. Estas lineas nacen vacias, asi que no hay
+   *  ningun dato del que derivarla. Ver `rowUid`. */
+  uid: number
   productId: string
   quantity: string
   unitCost: string
@@ -34,6 +39,16 @@ const form = reactive({
   notes: '',
 })
 const lines = ref<LineRow[]>([])
+
+// Sucia solo si el modal esta abierto Y hay algo que perder de verdad: una
+// linea recien anadida esta vacia y no cuenta, o el aviso saltaria siempre.
+useUnsavedChangesGuard(
+  () =>
+    props.open &&
+    (form.supplierId !== '' ||
+      form.notes.trim() !== '' ||
+      lines.value.some((l) => l.productId !== '' || l.unitCost !== '')),
+)
 const submitted = ref(false)
 const saving = ref(false)
 const serverError = ref<string | null>(null)
@@ -65,10 +80,10 @@ function err(k: keyof typeof errors.value) {
 }
 
 function addLine() {
-  lines.value.push({ productId: '', quantity: '1', unitCost: '' })
+  lines.value.push({ uid: nextRowUid(), productId: '', quantity: '1', unitCost: '' })
 }
-function removeLine(i: number) {
-  lines.value.splice(i, 1)
+function removeLine(uid: number) {
+  lines.value = lines.value.filter((l) => l.uid !== uid)
 }
 
 watch(
@@ -85,11 +100,12 @@ watch(
     form.notes = po?.notes ?? ''
     lines.value = po
       ? po.lines.map((l) => ({
+          uid: nextRowUid(),
           productId: String(l.product.id),
           quantity: String(l.quantityOrdered),
           unitCost: String(l.unitCost),
         }))
-      : [{ productId: '', quantity: '1', unitCost: '' }]
+      : [{ uid: nextRowUid(), productId: '', quantity: '1', unitCost: '' }]
   },
 )
 
@@ -165,14 +181,14 @@ async function submit() {
           </button>
         </div>
         <p v-if="err('lines')" class="line-error">{{ err('lines') }}</p>
-        <div v-for="(l, i) in lines" :key="i" class="line-row">
+        <div v-for="l in lines" :key="l.uid" class="line-row">
           <BaseSelect v-model="l.productId" :options="productOptions" placeholder="Producto" />
           <BaseInput v-model="l.quantity" placeholder="Cant." inputmode="numeric" />
           <BaseInput v-model="l.unitCost" placeholder="Costo unit." inputmode="decimal" />
           <span class="line-sub">{{
             formatMoney((Number(l.quantity) || 0) * (Number(l.unitCost) || 0))
           }}</span>
-          <button type="button" class="icon-btn danger" @click="removeLine(i)">
+          <button type="button" class="icon-btn danger" @click="removeLine(l.uid)">
             <Trash2 :size="14" />
           </button>
         </div>

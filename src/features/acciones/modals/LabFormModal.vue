@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import { nextRowUid } from '@/composables/rowUid'
 import { computed, reactive, ref, watch } from 'vue'
 import { Beaker, Check, PawPrint, Plus, X, AlertTriangle } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
@@ -41,13 +43,15 @@ const {
 } = useTestTypes()
 
 interface TestRow {
+  /** Clave estable de la fila; la fila nace vacia. Ver `rowUid`. */
+  uid: number
   testTypeId: string
   quantity: string
   diagnosis: string
 }
 
 function emptyRow(): TestRow {
-  return { testTypeId: '', quantity: '1', diagnosis: '' }
+  return { uid: nextRowUid(), testTypeId: '', quantity: '1', diagnosis: '' }
 }
 
 const isEdit = computed(() => props.initial != null)
@@ -61,6 +65,15 @@ const draft = reactive({
   sampleCollected: false,
   rows: [emptyRow()] as TestRow[],
 })
+// En edicion el formulario nace lleno: solo avisa si hay captura nueva.
+useUnsavedChangesGuard(
+  () =>
+    props.open &&
+    !isEdit.value &&
+    (patientId.value !== null ||
+      draft.rows.some((r) => r.testTypeId !== '' || r.diagnosis.trim() !== '')),
+)
+
 const submitted = ref(false)
 const saving = ref(false)
 const saveError = ref<string | null>(null)
@@ -108,6 +121,7 @@ function reset() {
     draft.sampleCollected = props.initial.status === 'PENDING_PROCESSING'
     draft.rows = [
       {
+        uid: nextRowUid(),
         testTypeId: String(props.initial.testType.id),
         quantity: String(props.initial.quantity),
         diagnosis: props.initial.diagnosis,
@@ -160,15 +174,15 @@ const valid = computed(
 function addRow() {
   draft.rows.push(emptyRow())
 }
-function removeRow(i: number) {
+function removeRow(uid: number) {
   if (draft.rows.length === 1) return
-  draft.rows.splice(i, 1)
+  draft.rows = draft.rows.filter((r) => r.uid !== uid)
 }
 
 function err(field: 'patient'): string | undefined {
   return submitted.value ? (errors.value[field] ?? undefined) : undefined
 }
-function rowErr(i: number, k: keyof TestRow): string | undefined {
+function rowErr(i: number, k: Exclude<keyof TestRow, 'uid'>): string | undefined {
   if (!submitted.value) return undefined
   return errors.value.rows[i]?.[k] ?? undefined
 }
@@ -337,7 +351,7 @@ async function doSave() {
         </BaseField>
 
         <div class="rows">
-          <div v-for="(row, i) in draft.rows" :key="i" class="row-card">
+          <div v-for="(row, i) in draft.rows" :key="row.uid" class="row-card">
             <div class="row-head">
               <span class="row-num">Examen #{{ i + 1 }}</span>
               <button
@@ -345,7 +359,7 @@ async function doSave() {
                 type="button"
                 class="remove"
                 aria-label="Quitar"
-                @click="removeRow(i)"
+                @click="removeRow(row.uid)"
               >
                 <X :size="14" :stroke-width="1.8" />
               </button>

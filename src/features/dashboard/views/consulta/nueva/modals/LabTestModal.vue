@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { nextRowUid } from '@/composables/rowUid'
 import { computed, reactive, ref, watch } from 'vue'
 import { Beaker, Plus, Trash2, AlertTriangle } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
@@ -29,6 +30,8 @@ const emit = defineEmits<{
 }>()
 
 interface TestDraft {
+  /** Clave estable de la fila; nace vacia, no hay dato del que derivarla. */
+  uid: number
   testTypeId: string
   quantity: string
   diagnosis: string
@@ -42,7 +45,7 @@ const {
 } = useTestTypes()
 
 function emptyTest(): TestDraft {
-  return { testTypeId: '', quantity: '1', diagnosis: '' }
+  return { uid: nextRowUid(), testTypeId: '', quantity: '1', diagnosis: '' }
 }
 
 // Desplegable de sede: solo las sedes ASIGNADAS al usuario (aunque sea admin).
@@ -109,6 +112,7 @@ function startEditing(idx: number) {
   draft.date = item.date
   draft.tests = [
     {
+      uid: nextRowUid(),
       testTypeId: item.testTypeId,
       quantity: String(item.quantity),
       diagnosis: item.diagnosis,
@@ -164,7 +168,7 @@ async function onCreateTestType(data: { name: string; description: string }) {
   }
 }
 
-function testErr(i: number, k: keyof TestDraft): string | undefined {
+function testErr(i: number, k: Exclude<keyof TestDraft, 'uid'>): string | undefined {
   if (!submitted.value) return undefined
   return errors.value.tests[i]?.[k] ?? undefined
 }
@@ -270,7 +274,7 @@ function doSave() {
         </ExistingItemsSection>
 
         <div class="tests-list">
-          <div v-for="(t, i) in draft.tests" :key="i" class="test-card">
+          <div v-for="(t, i) in draft.tests" :key="t.uid" class="test-card">
             <div class="test-head">
               <div class="test-num">{{ i + 1 }}</div>
               <div class="test-title">Examen {{ i + 1 }}</div>

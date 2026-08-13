@@ -21,7 +21,7 @@ const emit = defineEmits<{
   <div class="cart">
     <div class="cart-head">Cargos a registrar</div>
     <ul v-if="lines.length" class="cart-list">
-      <li v-for="(line, i) in lines" :key="i" class="cart-row">
+      <li v-for="line in lines" :key="line.uid" class="cart-row">
         <span class="cl-info">
           <span class="cl-name">{{ line.name }}</span>
           <span class="cl-tag">{{ lineLabel(line) }} · {{ formatMoney(line.unitPrice) }}</span>
