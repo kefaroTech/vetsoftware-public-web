@@ -252,12 +252,12 @@ async function onConfirmChangeRoles(data: ChangeRolesConfirm) {
     ])
     await refresh()
     selectedId.value = target.id
-    const label =
-      data.selectedRoles.length === 1
-        ? `${target.name} ahora es ${data.selectedRoles[0].name}.`
-        : `${target.name} ahora tiene ${data.selectedRoles.length} roles: ${data.selectedRoles
-            .map((r) => r.name)
-            .join(', ')}.`
+    const onlyRole = data.selectedRoles.length === 1 ? data.selectedRoles[0] : null
+    const label = onlyRole
+      ? `${target.name} ahora es ${onlyRole.name}.`
+      : `${target.name} ahora tiene ${data.selectedRoles.length} roles: ${data.selectedRoles
+          .map((r) => r.name)
+          .join(', ')}.`
     toast.success('Roles actualizados', label)
     changingRolesTarget.value = null
   } catch (e) {

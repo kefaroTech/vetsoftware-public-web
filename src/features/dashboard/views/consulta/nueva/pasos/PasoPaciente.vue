@@ -45,7 +45,8 @@ const ownerFormRef = ref<{ validate: () => boolean } | null>(null)
 const selectedOwner = computed<Owner | null>(() => draft.state.owner)
 
 function handleEnter() {
-  if (results.value.length === 1) selectOwner(results.value[0])
+  const onlyMatch = results.value.length === 1 ? results.value[0] : null
+  if (onlyMatch) selectOwner(onlyMatch)
 }
 function selectOwner(owner: Owner) {
   draft.setOwner(owner)

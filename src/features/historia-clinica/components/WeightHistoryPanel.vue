@@ -102,19 +102,27 @@ const chart = computed(() => {
   const line = coords
     .map((c, i) => `${i === 0 ? 'M' : 'L'}${c.x.toFixed(1)},${c.y.toFixed(1)}`)
     .join(' ')
+  // `pts` ya se comprobó no vacío arriba y `coords` sale de mapearlo, así que
+  // los extremos existen; se nombran para que el compilador lo vea igual que
+  // lo ve quien lee, en vez de repetir el indexado dentro de la plantilla.
+  const first = coords[0]
+  const last = coords[coords.length - 1]
+  if (!first || !last) return null
   const area =
-    `M${coords[0].x.toFixed(1)},${(CHART_H - PAD_Y).toFixed(1)} ` +
+    `M${first.x.toFixed(1)},${(CHART_H - PAD_Y).toFixed(1)} ` +
     coords.map((c) => `L${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ') +
-    ` L${coords[coords.length - 1].x.toFixed(1)},${(CHART_H - PAD_Y).toFixed(1)} Z`
+    ` L${last.x.toFixed(1)},${(CHART_H - PAD_Y).toFixed(1)} Z`
   return { coords, line, area, min, max }
 })
 
 // Variación respecto al registro anterior (en kg normalizado), para el resumen superior.
 const trend = computed(() => {
   const asc = ascending.value
-  if (asc.length < 2) return null
-  const last = toKg(asc[asc.length - 1].value, asc[asc.length - 1].unit)
-  const prev = toKg(asc[asc.length - 2].value, asc[asc.length - 2].unit)
+  const lastRec = asc[asc.length - 1]
+  const prevRec = asc[asc.length - 2]
+  if (!lastRec || !prevRec) return null
+  const last = toKg(lastRec.value, lastRec.unit)
+  const prev = toKg(prevRec.value, prevRec.unit)
   const diff = last - prev
   const pct = prev !== 0 ? (diff / prev) * 100 : 0
   return { diff, pct }

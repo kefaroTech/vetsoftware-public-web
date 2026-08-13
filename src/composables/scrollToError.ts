@@ -30,7 +30,8 @@ export async function scrollToFirstError(root?: ParentNode): Promise<boolean> {
     scope = root
   } else {
     const overlays = document.querySelectorAll<HTMLElement>('.overlay')
-    if (overlays.length > 0) scope = overlays[overlays.length - 1]
+    const topOverlay = overlays[overlays.length - 1]
+    if (topOverlay) scope = topOverlay
   }
 
   const candidates = Array.from(scope.querySelectorAll<HTMLElement>(ERROR_SELECTOR))

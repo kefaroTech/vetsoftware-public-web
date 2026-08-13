@@ -11,7 +11,17 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    // Todo `arr[i]` y `record[k]` se tipa `T | undefined`. El equipo ya escribía
+    // esas guardas a mano; ahora el compilador las exige en vez de confiar en que
+    // alguien se acuerde. Los ~109 sitios que destapó al activarlo estan corregidos
+    // con guardas reales, no con `!`: el objetivo es que el tipo diga la verdad.
+    "noUncheckedIndexedAccess": true,
+
+    // Una funcion que retorna valor en una rama debe retornarlo en todas. Salio a
+    // cero en los dos repos: es un trinquete gratis, puesto para que siga en cero.
+    "noImplicitReturns": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
 }

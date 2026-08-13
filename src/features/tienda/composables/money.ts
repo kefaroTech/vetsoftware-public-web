@@ -63,13 +63,18 @@ const WORK_UNIT = 10n ** BigInt(WORK_SCALE)
 function toScaled(value: number, decimals: number): bigint {
   if (!Number.isFinite(value)) return 0n
   const negative = value < 0
-  const [whole, fraction = ''] = Math.abs(value)
+  // Los dos valores por defecto son inalcanzables --`split` siempre devuelve al
+  // menos un elemento y `toFixed(decimals + 1)` siempre pone un punto-- y estan
+  // para que el tipo lo diga. `'0'` y `''` reproducen exactamente el valor que
+  // ya se calculaba, asi que no cambian ningun resultado.
+  const [whole = '0', fraction = ''] = Math.abs(value)
     .toFixed(decimals + 1)
     .split('.')
-  // `toFixed(decimals + 1)` garantiza que hay exactamente ese número de
-  // decimales, así que el dígito de decisión siempre existe.
   const truncated = BigInt(whole) * 10n ** BigInt(decimals) + BigInt(fraction.slice(0, decimals))
-  const carry = Number(fraction[decimals]) >= 5 ? 1n : 0n
+  // `charAt` en vez de indexar: devuelve `string` (cadena vacía si se saliera),
+  // así que no introduce una rama inalcanzable que la cobertura al 100 % de este
+  // fichero no podría cubrir. `Number('')` es 0, el mismo «no acarrea» de antes.
+  const carry = Number(fraction.charAt(decimals)) >= 5 ? 1n : 0n
   const scaled = truncated + carry
   return negative ? -scaled : scaled
 }

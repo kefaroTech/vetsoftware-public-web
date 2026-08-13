@@ -6,7 +6,7 @@ import MoveDoseModal from './MoveDoseModal.vue'
 import ApplyDoseModal from './ApplyDoseModal.vue'
 import SuspendOrderModal from '../modals/SuspendOrderModal.vue'
 import OrderFormModal from '../modals/OrderFormModal.vue'
-import { startOfWeek, addDays, MONTHS_LONG } from '../composables/mar'
+import { startOfWeek, addDays, monthName } from '../composables/mar'
 import {
   frequencyLabel,
   guidelineLabel,
@@ -42,8 +42,8 @@ const allOrders = computed<OrderVM[]>(() => [...props.meds, ...props.procs])
 
 const weekLabel = computed(() => {
   const end = addDays(weekStart.value, 6)
-  const a = `${weekStart.value.getDate()} ${MONTHS_LONG[weekStart.value.getMonth()].slice(0, 3)}`
-  const b = `${end.getDate()} ${MONTHS_LONG[end.getMonth()].slice(0, 3)}`
+  const a = `${weekStart.value.getDate()} ${monthName(weekStart.value).slice(0, 3)}`
+  const b = `${end.getDate()} ${monthName(end).slice(0, 3)}`
   return `${a} – ${b}`
 })
 

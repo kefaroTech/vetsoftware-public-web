@@ -30,7 +30,16 @@ export const MONTHS_LONG = [
   'octubre',
   'noviembre',
   'diciembre',
-]
+] as const
+
+/**
+ * Nombre del mes de una fecha. `getMonth` devuelve 0-11 por especificación, así
+ * que el `??` es inalcanzable y solo sirve para que el tipo lo diga: la tabla es
+ * una tupla de 12, de modo que el índice literal 0 sí está garantizado.
+ */
+export function monthName(d: Date): string {
+  return MONTHS_LONG[d.getMonth()] ?? MONTHS_LONG[0]
+}
 
 const INDEFINITE_HORIZON_DAYS = 14
 const MAX_SLOTS = 80
@@ -43,7 +52,13 @@ export function isoFromDate(d: Date): string {
 
 export function parseISO(iso: string): Date | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso)
-  return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null
+  if (!m) return null
+  const [, year, month, day] = m
+  // Los tres grupos existen siempre que el patrón case, pero el tipo de `exec`
+  // no lo sabe. Devolver null aquí no inventa un contrato nuevo: es el mismo
+  // «no se pudo parsear» que ya devuelve arriba.
+  if (!year || !month || !day) return null
+  return new Date(+year, +month - 1, +day)
 }
 
 /** Normaliza 'HH:mm:ss' o 'HH:mm' a 'HH:mm'. */
@@ -173,7 +188,9 @@ const APPLIED_STATUS_MAP: Record<AppliedStatus, DoseStatus> = {
 
 /** Convierte una toma/ejecución persistida del backend a DoseSlot (med o proc). */
 export function scheduleToDoseSlot(s: ScheduleSlotSource): DoseSlot {
-  const [date, rawTime] = s.currentDateTime.split('T')
+  // `split` nunca devuelve un array vacío, así que el índice 0 existe siempre;
+  // el valor por defecto es inalcanzable y está solo para que el tipo lo diga.
+  const [date = '', rawTime] = s.currentDateTime.split('T')
   const realTime = s.realDateTime ? s.realDateTime.split('T')[1] : null
   return {
     id: String(s.id),
@@ -210,9 +227,10 @@ export function recalcInterval(
 
   let cursor = combine(baseDate, baseTime)
   for (let i = idx + 1; i < ordered.length; i++) {
-    if (ordered[i].status !== 'PENDIENTE') continue
+    const slot = ordered[i]
+    if (!slot || slot.status !== 'PENDIENTE') continue
     const next = addHours(cursor, intervalH)
-    ordered[i] = { ...ordered[i], date: next.date, time: next.time }
+    ordered[i] = { ...slot, date: next.date, time: next.time }
     cursor = combine(next.date, next.time)
   }
   return ordered
