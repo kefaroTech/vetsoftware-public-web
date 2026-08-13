@@ -260,7 +260,7 @@ export function useCloseAccount(
         toast.warn('Conflicto de concurrencia', getProblemDetailMessage(e))
         emit.refresh()
       } else {
-        toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo cerrar la cuenta'))
+        toast.errorFrom('Ocurrió un error', e, 'No se pudo cerrar la cuenta')
       }
     } finally {
       busy.value = false

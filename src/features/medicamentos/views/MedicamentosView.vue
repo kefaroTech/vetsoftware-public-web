@@ -81,7 +81,7 @@ async function onConfirmPause() {
     toast.info('Medicamento pausado', `${target.name} dejó de estar disponible.`)
     pausing.value = null
   } catch (e) {
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo pausar'))
+    toast.errorFrom('Ocurrió un error', e, 'No se pudo pausar')
   } finally {
     pausingBusy.value = false
   }
@@ -92,7 +92,7 @@ async function onReactivate(m: MedicamentResponse) {
     await store.enable(m.id)
     toast.success('Medicamento reactivado', `${m.name} volvió a estar disponible.`)
   } catch (e) {
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo reactivar'))
+    toast.errorFrom('Ocurrió un error', e, 'No se pudo reactivar')
   }
 }
 

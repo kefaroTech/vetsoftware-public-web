@@ -80,7 +80,7 @@ async function onSaveSede(payload: { id: number | null; body: SaveBranchRequest 
     }
     sedeModalOpen.value = false
   } catch (e) {
-    toast.error('No se pudo guardar', getProblemDetailMessage(e, 'Revisa los datos de la sede.'))
+    toast.errorFrom('No se pudo guardar', e, 'Revisa los datos de la sede.')
   }
 }
 

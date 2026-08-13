@@ -37,7 +37,7 @@ async function download(format: 'csv' | 'pdf') {
   try {
     await purchaseReportApi.export(from.value, to.value, format)
   } catch (e) {
-    toast.error('No se pudo exportar', getProblemDetailMessage(e, 'Error al exportar'))
+    toast.errorFrom('No se pudo exportar', e, 'Error al exportar')
   }
 }
 

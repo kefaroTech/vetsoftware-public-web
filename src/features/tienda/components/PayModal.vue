@@ -7,7 +7,6 @@ import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import { formatMoney } from '../composables/pricing'
 import { useToast } from '@/composables/useToast'
-import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useFeUvt } from '@/features/facturacion/composables/useFeUvt'
 import {
   feFiscalChecklist,
@@ -107,7 +106,7 @@ async function onSaveFiscal(data: Partial<FiscalCustomer>) {
     fiscalModalOpen.value = false
     toast.success('Datos fiscales guardados', 'El cliente quedó listo para facturar.')
   } catch (e) {
-    toast.error('No se pudieron guardar', getProblemDetailMessage(e))
+    toast.errorFrom('No se pudieron guardar', e)
   }
 }
 

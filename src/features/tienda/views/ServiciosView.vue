@@ -123,7 +123,7 @@ async function onConfirmPause() {
     toast.info('Servicio pausado', `${target.name} dejó de aparecer en el punto de venta.`)
     pausing.value = null
   } catch (e) {
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo pausar'))
+    toast.errorFrom('Ocurrió un error', e, 'No se pudo pausar')
   } finally {
     pausingBusy.value = false
   }
@@ -134,7 +134,7 @@ async function onReactivate(s: ServiceResponse) {
     await store.enableService(s.id)
     toast.success('Servicio reactivado', `${s.name} volvió al catálogo activo.`)
   } catch (e) {
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo reactivar'))
+    toast.errorFrom('Ocurrió un error', e, 'No se pudo reactivar')
   }
 }
 
@@ -153,7 +153,7 @@ async function onCategoryUpsert(p: {
       await store.refresh()
       toast.warn('Conflicto de concurrencia', CONFLICT_MESSAGE)
     } else {
-      toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo guardar la categoría'))
+      toast.errorFrom('Ocurrió un error', e, 'No se pudo guardar la categoría')
     }
   }
 }
@@ -162,7 +162,7 @@ async function onCategoryRemove(id: number) {
     await store.removeServiceCategory(id)
     toast.info('Categoría eliminada')
   } catch (e) {
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo eliminar la categoría'))
+    toast.errorFrom('Ocurrió un error', e, 'No se pudo eliminar la categoría')
   }
 }
 </script>

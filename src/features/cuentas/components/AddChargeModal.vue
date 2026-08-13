@@ -107,7 +107,7 @@ async function addCatalogItem(itemId: number) {
       toast.warn('Conflicto de concurrencia', getProblemDetailMessage(e))
       emit('refresh')
     } else {
-      toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo agregar el cargo'))
+      toast.errorFrom('Ocurrió un error', e, 'No se pudo agregar el cargo')
     }
   } finally {
     busy.value = false
@@ -158,7 +158,7 @@ async function addGeneral() {
       toast.warn('Conflicto de concurrencia', getProblemDetailMessage(e))
       emit('refresh')
     } else {
-      toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo agregar el cargo'))
+      toast.errorFrom('Ocurrió un error', e, 'No se pudo agregar el cargo')
     }
   } finally {
     busy.value = false

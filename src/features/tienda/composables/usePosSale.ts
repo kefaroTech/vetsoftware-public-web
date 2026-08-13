@@ -1,6 +1,5 @@
 import { computed, ref, watch } from 'vue'
 import { useToast } from '@/composables/useToast'
-import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useFeUvt } from '@/features/facturacion/composables/useFeUvt'
 import { posSaleApi, type PosSaleLineKind } from '../api/posSale.api'
 import { appliesIva, lineGross, taxByRate, type TotalsBreakdown } from './pricing'
@@ -171,7 +170,7 @@ export function usePosSale() {
       }
     } catch (e) {
       // Se mantiene el ticket y el modal de cobro abiertos para reintentar.
-      toast.error('No se pudo registrar la venta', getProblemDetailMessage(e))
+      toast.errorFrom('No se pudo registrar la venta', e)
     } finally {
       paying.value = false
     }

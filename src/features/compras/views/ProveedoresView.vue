@@ -4,7 +4,6 @@ import { Truck, Plus, Pencil, Trash2, Search } from 'lucide-vue-next'
 import { useSuppliers } from '../composables/useSuppliers'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useToast } from '@/composables/useToast'
-import { getProblemDetailMessage } from '@/services/http/http.client'
 import { PERMISSIONS } from '@/constants/permissions'
 import SupplierModal from '../components/SupplierModal.vue'
 import type { Supplier } from '../types/compras'
@@ -50,7 +49,7 @@ async function onDelete(s: Supplier) {
     toast.success('Proveedor eliminado')
     refresh()
   } catch (e) {
-    toast.error('No se pudo eliminar', getProblemDetailMessage(e, 'Error al eliminar el proveedor'))
+    toast.errorFrom('No se pudo eliminar', e, 'Error al eliminar el proveedor')
   }
 }
 

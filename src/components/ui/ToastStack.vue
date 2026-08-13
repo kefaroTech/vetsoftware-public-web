@@ -1,9 +1,25 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { AlertTriangle, CheckCircle2, Info, X, XCircle } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
+import { AlertTriangle, Check, CheckCircle2, Copy, Info, X, XCircle } from 'lucide-vue-next'
 import { useToast, type ToastKind } from '@/composables/useToast'
 
 const { toasts, dismiss } = useToast()
+
+/** Id del aviso cuya traza se acaba de copiar, para confirmar el clic sin sacar otro aviso. */
+const copiado = ref<number | null>(null)
+
+async function copiar(id: number, traceId: string) {
+  try {
+    await navigator.clipboard.writeText(traceId)
+    copiado.value = id
+    window.setTimeout(() => {
+      if (copiado.value === id) copiado.value = null
+    }, 2000)
+  } catch {
+    // Sin permiso de portapapeles (o contexto no seguro) el identificador sigue visible y
+    // seleccionable a mano, que es lo que de verdad hace falta.
+  }
+}
 
 const iconFor = computed(() => (kind: ToastKind) => {
   switch (kind) {
@@ -28,6 +44,18 @@ const iconFor = computed(() => (kind: ToastKind) => {
       <div class="toast-body">
         <div class="toast-title">{{ t.title }}</div>
         <div v-if="t.message" class="toast-message">{{ t.message }}</div>
+        <!-- TR-05: el identificador de la traza. Es lo único que permite a soporte encontrar
+             en el servidor qué pasó detrás de un «se quedó cargando». -->
+        <button
+          v-if="t.traceId"
+          type="button"
+          class="toast-trace"
+          :title="copiado === t.id ? 'Copiado' : 'Copiar identificador de la traza'"
+          @click="copiar(t.id, t.traceId)"
+        >
+          <component :is="copiado === t.id ? Check : Copy" :size="12" :stroke-width="2" />
+          <span class="toast-trace-id">{{ t.traceId }}</span>
+        </button>
       </div>
       <button
         type="button"
@@ -133,6 +161,35 @@ const iconFor = computed(() => (kind: ToastKind) => {
   color: var(--warm-600);
   margin-top: 2px;
   line-height: 1.4;
+}
+
+/* Identificador de la traza (TR-05): discreto, monoespaciado y copiable de un clic. */
+.toast-trace {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
+  padding: 3px 7px;
+  border: 1px solid var(--warm-200);
+  border-radius: 6px;
+  background: var(--warm-50);
+  color: var(--warm-500);
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  max-width: 100%;
+}
+.toast-trace:hover {
+  border-color: var(--warm-300);
+  color: var(--warm-700);
+}
+
+.toast-trace-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: -0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .toast-close {

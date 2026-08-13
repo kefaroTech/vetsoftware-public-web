@@ -1,7 +1,6 @@
 import { computed, ref } from 'vue'
 import { nextRowUid } from '@/composables/rowUid'
 import { useToast } from '@/composables/useToast'
-import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useCuentas } from './useCuentas'
 import type { CreateGeneralChargePayload, OpenAccountResponse } from '../types/cuentas'
 
@@ -183,7 +182,7 @@ export function useOpenAccountCart() {
       return fresh
     } catch (e) {
       // Los marcadores (createdAccount + ops.done) persisten → el reintento salta lo ya guardado.
-      toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo abrir la cuenta'))
+      toast.errorFrom('Ocurrió un error', e, 'No se pudo abrir la cuenta')
       return null
     } finally {
       busy.value = false

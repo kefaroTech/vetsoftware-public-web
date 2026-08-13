@@ -12,7 +12,6 @@ import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/
 import { useToast } from '@/composables/useToast'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
-import { getProblemDetailMessage } from '@/services/http/http.client'
 import type {
   ApplicationType,
   PromotionPayload,
@@ -60,7 +59,7 @@ async function togglePromo(p: PromotionResponse) {
     await store.updatePromotion(p.id, toPayload(p, next))
     toast.success(next ? 'Promoción activada' : 'Promoción desactivada')
   } catch (e) {
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo cambiar el estado'))
+    toast.errorFrom('Ocurrió un error', e, 'No se pudo cambiar el estado')
   }
 }
 
@@ -133,7 +132,7 @@ async function onConfirmDelete() {
     toast.info('Promoción eliminada', 'La promoción fue removida.')
     deleting.value = null
   } catch (e) {
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo eliminar'))
+    toast.errorFrom('Ocurrió un error', e, 'No se pudo eliminar')
   } finally {
     deletingBusy.value = false
   }

@@ -5,7 +5,6 @@ import { useSupplierInvoices } from '../composables/useSupplierInvoices'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
 import { useToast } from '@/composables/useToast'
-import { getProblemDetailMessage } from '@/services/http/http.client'
 import { PERMISSIONS } from '@/constants/permissions'
 import { formatMoney, formatDate, invoiceStatusLabel } from '../composables/format'
 import SupplierInvoiceModal from '../components/SupplierInvoiceModal.vue'
@@ -84,7 +83,7 @@ async function onCancel(inv: SupplierInvoice) {
     toast.success('Factura anulada')
     refresh()
   } catch (e) {
-    toast.error('No se pudo anular', getProblemDetailMessage(e, 'Error al anular'))
+    toast.errorFrom('No se pudo anular', e, 'Error al anular')
   }
 }
 async function onDelete(inv: SupplierInvoice) {
@@ -94,7 +93,7 @@ async function onDelete(inv: SupplierInvoice) {
     toast.success('Factura eliminada')
     refresh()
   } catch (e) {
-    toast.error('No se pudo eliminar', getProblemDetailMessage(e, 'Error al eliminar'))
+    toast.errorFrom('No se pudo eliminar', e, 'Error al eliminar')
   }
 }
 
