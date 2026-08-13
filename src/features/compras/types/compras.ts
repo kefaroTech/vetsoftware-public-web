@@ -50,7 +50,8 @@ export interface BranchSummary {
 }
 
 export interface SupplierInvoicePayment {
-  id: number | null
+  /** TR-01: es la clave de la fila; el backend nunca la devuelve nula. */
+  id: number
   amount: number
   paymentDate: string
   method: SupplierPaymentMethod
@@ -138,7 +139,8 @@ export interface ProductSummary {
 }
 
 export interface PurchaseOrderLine {
-  id: number | null
+  /** TR-01: es la clave de la fila; el backend nunca la devuelve nula. */
+  id: number
   product: ProductSummary
   quantityOrdered: number
   unitCost: number
@@ -179,7 +181,8 @@ export interface PurchaseOrderRequest {
 export type GoodsReceiptStatus = 'DRAFT' | 'CONFIRMED' | 'CANCELLED'
 
 export interface GoodsReceiptLine {
-  id: number | null
+  /** TR-01: es la clave de la fila; el backend nunca la devuelve nula. */
+  id: number
   product: ProductSummary
   purchaseOrderLineId: number | null
   lotNumber: string | null

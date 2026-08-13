@@ -29,14 +29,17 @@ export interface OwnerResponse {
   company: CompanySummary
   createdDate: string
   // ── Datos fiscales (espejo del Owner del backend; usados por FE > 5 UVT) ──
-  documentType?: OwnerDocumentType | null
-  personType?: PersonType | null
+  // TR-01: se declaraban opcionales «porque la captura fiscal vive en FE > 5 UVT», pero eso
+  // describe cuándo los edita la pantalla, no qué devuelve el servidor: las cuatro columnas son
+  // NOT NULL, así que la respuesta siempre los trae.
+  documentType: OwnerDocumentType
+  personType: PersonType
   verificationDigit?: string | null
   legalName?: string | null
-  withholdingAgent?: boolean
-  taxRegime?: TaxRegime | null
+  withholdingAgent: boolean
+  taxRegime: TaxRegime
   /** Nombre del enum del backend, no el código RUT. Ver FiscalResponsibility. */
-  fiscalResponsibility?: FiscalResponsibility | null
+  fiscalResponsibility: FiscalResponsibility
 }
 
 export interface CreateOwnerRequest {

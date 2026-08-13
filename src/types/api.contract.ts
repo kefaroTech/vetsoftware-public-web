@@ -36,6 +36,7 @@
  * sobre el backend.
  */
 import type { components } from './api.generated'
+import type { CashTerminal } from '../features/caja/api/cashTerminal.api'
 import type {
   AppointmentResponse,
   CancelAppointmentRequest,
@@ -44,7 +45,7 @@ import type {
   UpdateAppointmentRequest,
 } from '../features/agenda/types/appointment'
 import type { LoginEmployeeRequest, MeResponse, TokenResponse } from '../features/auth/types/index'
-import type { BranchResponse } from '../features/branches/api/branch.api'
+import type { BranchResponse, SaveBranchRequest } from '../features/branches/api/branch.api'
 import type {
   CashMovementView,
   CashSessionCountView,
@@ -54,11 +55,21 @@ import type {
   RegisterCashMovementRequest,
 } from '../features/caja/types/caja'
 import type {
+  AccountsPayableAging,
   BranchSummary,
+  GoodsReceipt,
+  GoodsReceiptLine,
   GoodsReceiptLineRequest,
   ProductSummary,
+  PurchaseBook,
+  PurchaseOrder,
+  PurchaseOrderLine,
   PurchaseOrderLineRequest,
   RegisterSupplierPaymentRequest,
+  Supplier,
+  SupplierInvoice,
+  SupplierInvoicePayment,
+  SupplierRequest,
   SupplierSummary,
 } from '../features/compras/types/compras'
 import type {
@@ -80,6 +91,7 @@ import type { BreedResponse } from '../features/dashboard/views/consulta/nueva/a
 import type {
   ConsultationResponse,
   ConsultationTypeSummary,
+  CreateConsultationPayload,
 } from '../features/dashboard/views/consulta/nueva/api/consultation.api'
 import type { ConsultationTypeResponse } from '../features/dashboard/views/consulta/nueva/api/consultationType.api'
 import type { DewormingResponse } from '../features/dashboard/views/consulta/nueva/api/deworming.api'
@@ -101,7 +113,10 @@ import type {
   LaboratoryTestTypeSummary,
 } from '../features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
 import type { MedicamentResponse } from '../features/dashboard/views/consulta/nueva/api/medicament.api'
-import type { MedicamentPrescriptionResponse } from '../features/dashboard/views/consulta/nueva/api/medicamentPrescription.api'
+import type {
+  CreateMedicamentPrescriptionPayload,
+  MedicamentPrescriptionResponse,
+} from '../features/dashboard/views/consulta/nueva/api/medicamentPrescription.api'
 import type {
   CitySummary,
   CreateOwnerRequest,
@@ -143,22 +158,48 @@ import type {
   EmployeeRoleResponse,
 } from '../features/employees/api/employeeRoles.api'
 import type { CompanyResponse } from '../features/empresa/api/company.api'
-import type { SetSystemConfigurationRequest } from '../features/facturacion/api/systemConfig.api'
+import type {
+  SetSystemConfigurationRequest,
+  SystemConfigurationResponse,
+} from '../features/facturacion/api/systemConfig.api'
 import type {
   CompanyTaxProfileResponse,
+  CustomerSnapshot,
+  DianProviderConfigResponse,
+  EconomicActivity,
+  ElectronicDocumentResponse,
+  IssuerSnapshot,
   NumberingResolutionResponse,
+  ReconciliationResponse,
+  SalesBookResponse,
+  SaveCompanyTaxProfileRequest,
+  SaveDianProviderConfigRequest,
+  SaveNumberingResolutionRequest,
+  SaveWithholdingConfigRequest,
+  WithholdingConfigResponse,
 } from '../features/facturacion/types/facturacion'
-import type { ClinicalEventResponse } from '../features/historia-clinica/types/historia'
-import type { HospitalizationMedicationResponse } from '../features/hospitalizacion/api/hospitalizationMedication.api'
+import type {
+  ClinicalEvent,
+  ClinicalEventResponse,
+} from '../features/historia-clinica/types/historia'
+import type {
+  CreateHospitalizationMedicationPayload,
+  HospitalizationMedicationResponse,
+} from '../features/hospitalizacion/api/hospitalizationMedication.api'
 import type { HospitalizationObservationResponse } from '../features/hospitalizacion/api/hospitalizationObservation.api'
-import type { HospitalizationProcedureResponse } from '../features/hospitalizacion/api/hospitalizationProcedure.api'
+import type {
+  CreateHospitalizationProcedurePayload,
+  HospitalizationProcedureResponse,
+} from '../features/hospitalizacion/api/hospitalizationProcedure.api'
 import type { HospitalizationProgressNoteResponse } from '../features/hospitalizacion/api/hospitalizationProgressNote.api'
 import type { MedicationScheduleResponse } from '../features/hospitalizacion/api/medicationSchedule.api'
 import type { ProcedureScheduleResponse } from '../features/hospitalizacion/api/procedureSchedule.api'
 import type { LaboratoryTestFileResponse } from '../features/laboratorio/api/laboratoryTestFile.api'
 import type {
+  City,
   RegisterUserRequest,
   RegistrationResponse,
+  State,
 } from '../features/registration/types/index'
 import type {
   CreateRolePermissionRequest,
@@ -173,6 +214,8 @@ import type {
 } from '../features/roles/types/index'
 import type { RegisterPosSaleRequest } from '../features/tienda/api/posSale.api'
 import type {
+  AdjustStockPayload,
+  ConsumeStockPayload,
   ExpiringLotView,
   InventoryAlertsView,
   InventoryCountLineView,
@@ -180,12 +223,16 @@ import type {
   InventoryValuationView,
   ProductValuationView,
   PurchaseView,
+  ReceiveStockPayload,
+  RecordCountPayload,
   StockLotView,
   StockMovementView,
   StockView,
+  TransferStockPayload,
 } from '../features/tienda/types/inventory'
 import type {
   ProductResponse,
+  PromotionPayload,
   PromotionResponse,
   ServiceResponse,
   TaxResponse,
@@ -226,15 +273,33 @@ type MissingRequiredFields<Local, Name extends keyof Schemas> = Exclude<
 >
 
 /**
+ * Campos que el contrato garantiza y este repositorio declara nulables.
+ *
+ * <p>Desde que los DTO de salida llevan requiredMode, el contrato sí dice qué garantiza devolver
+ * el servidor. Declarar nulable aquí un campo garantizado obliga a comprobaciones
+ * que nunca se cumplen y, peor, esconde que los dos fronts describían el mismo endpoint de forma
+ * distinta.
+ */
+type NullableWhereRequired<Local, Name extends keyof Schemas> = {
+  [K in RequiredKeys<Schemas[Name]> & keyof Local]: null extends Local[K] ? K : never
+}[RequiredKeys<Schemas[Name]> & keyof Local]
+
+/**
  * `true` si el tipo local encaja con el esquema; si no, **los nombres de los campos que fallan**.
  * Es a propósito: el error de compilación los nombra uno a uno en vez de decir «no asignable»,
  * que obligaría a comparar cuarenta campos a ojo.
  */
 export type MatchesContract<Local, Name extends keyof Schemas> = [
-  UnknownFields<Local, Name> | MismatchedFields<Local, Name> | MissingRequiredFields<Local, Name>,
+  | UnknownFields<Local, Name>
+  | MismatchedFields<Local, Name>
+  | MissingRequiredFields<Local, Name>
+  | NullableWhereRequired<Local, Name>,
 ] extends [never]
   ? true
-  : UnknownFields<Local, Name> | MismatchedFields<Local, Name> | MissingRequiredFields<Local, Name>
+  : | UnknownFields<Local, Name>
+    | MismatchedFields<Local, Name>
+    | MissingRequiredFields<Local, Name>
+    | NullableWhereRequired<Local, Name>
 
 /** Rompe la compilación si el tipo no encaja; el error nombra los campos culpables. */
 type Expect<T extends true> = T
@@ -244,7 +309,63 @@ type Expect<T extends true> = T
  * `api-contract.spec.ts` falla si aparece un tipo nuevo y nadie lo ata aquí, que es lo que evita
  * que esta lista envejezca en silencio.
  */
+// No se atan, y el motivo importa:
+//
+//   · SupplierInvoiceRequest, ProductPayload, PurchaseOrderRequest, ServicePayload y TaxPayload
+//     son UN tipo para dos esquemas: el alta no admite `version` y la edición la exige (bloqueo
+//     optimista). Ninguna de las dos aserciones seria cierta; atarlos pide antes partir el tipo
+//     en dos, que es un cambio con sus propios sitios de llamada.
+//   · GoodsReceiptRequest declara `branchId` opcional y el servidor lo exige, pero no es un
+//     defecto: la sede la inyecta `withBranchBody` en la capa de API, asi que el tipo que se
+//     afirmaria aqui no es el que viaja.
 export type ContractAssertions = [
+  Expect<MatchesContract<ElectronicDocumentResponse, 'ElectronicDocumentDto'>>,
+  Expect<MatchesContract<SupplierInvoice, 'SupplierInvoiceResponse'>>,
+  Expect<MatchesContract<CreateConsultationPayload, 'CreateConsultationRequest'>>,
+  Expect<MatchesContract<DianProviderConfigResponse, 'DianProviderConfigDto'>>,
+  Expect<MatchesContract<Supplier, 'SupplierResponse'>>,
+  Expect<MatchesContract<GoodsReceipt, 'GoodsReceiptResponse'>>,
+  Expect<MatchesContract<PurchaseOrder, 'PurchaseOrderResponse'>>,
+  Expect<MatchesContract<SaveNumberingResolutionRequest, 'UpdateNumberingResolutionRequest'>>,
+  Expect<
+    MatchesContract<
+      CreateHospitalizationMedicationPayload,
+      'CreateHospitalizationMedicationRequest'
+    >
+  >,
+  Expect<
+    MatchesContract<CreateHospitalizationProcedurePayload, 'CreateHospitalizationProcedureRequest'>
+  >,
+  Expect<MatchesContract<SaveDianProviderConfigRequest, 'UpdateDianProviderConfigRequest'>>,
+  Expect<MatchesContract<SaveCompanyTaxProfileRequest, 'UpdateCompanyTaxProfileRequest'>>,
+  Expect<MatchesContract<PromotionPayload, 'UpdatePromotionRequest'>>,
+  Expect<MatchesContract<SupplierRequest, 'CreateSupplierRequest'>>,
+  Expect<MatchesContract<SupplierInvoicePayment, 'SupplierInvoicePaymentResponse'>>,
+  Expect<MatchesContract<ReconciliationResponse, 'ReconciliationDto'>>,
+  Expect<MatchesContract<PurchaseOrderLine, 'PurchaseOrderLineResponse'>>,
+  Expect<MatchesContract<GoodsReceiptLine, 'GoodsReceiptLineResponse'>>,
+  Expect<MatchesContract<CustomerSnapshot, 'CustomerDto'>>,
+  Expect<MatchesContract<WithholdingConfigResponse, 'WithholdingConfigDto'>>,
+  Expect<MatchesContract<ClinicalEvent, 'ClinicalEventResponse'>>,
+  Expect<MatchesContract<CashTerminal, 'CashTerminalDto'>>,
+  Expect<
+    MatchesContract<CreateMedicamentPrescriptionPayload, 'UpdateMedicamentPrescriptionRequest'>
+  >,
+  Expect<MatchesContract<IssuerSnapshot, 'IssuerDto'>>,
+  Expect<MatchesContract<SalesBookResponse, 'SalesBookDto'>>,
+  Expect<MatchesContract<ReceiveStockPayload, 'ReceiveStockRequest'>>,
+  Expect<MatchesContract<SaveBranchRequest, 'UpdateBranchRequest'>>,
+  Expect<MatchesContract<SystemConfigurationResponse, 'SystemConfigurationDto'>>,
+  Expect<MatchesContract<AdjustStockPayload, 'AdjustStockRequest'>>,
+  Expect<MatchesContract<TransferStockPayload, 'TransferStockRequest'>>,
+  Expect<MatchesContract<PurchaseBook, 'PurchaseBookDto'>>,
+  Expect<MatchesContract<ConsumeStockPayload, 'ConsumeStockRequest'>>,
+  Expect<MatchesContract<AccountsPayableAging, 'AccountsPayableAgingResponse'>>,
+  Expect<MatchesContract<SaveWithholdingConfigRequest, 'SetWithholdingConfigRequest'>>,
+  Expect<MatchesContract<EconomicActivity, 'EconomicActivitySummary'>>,
+  Expect<MatchesContract<State, 'StateResponse'>>,
+  Expect<MatchesContract<City, 'CityResponse'>>,
+  Expect<MatchesContract<RecordCountPayload, 'RecordCountRequest'>>,
   Expect<MatchesContract<AnimalColorResponse, 'AnimalColorResponse'>>,
   Expect<MatchesContract<AnimalColorSummary, 'AnimalColorSummary'>>,
   Expect<MatchesContract<AnimalResponse, 'AnimalResponse'>>,
