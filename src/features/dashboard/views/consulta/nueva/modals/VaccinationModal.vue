@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { nextRowUid } from '@/composables/rowUid'
 import { computed, reactive, ref, watch } from 'vue'
 import { Shield, Plus, Trash2 } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
@@ -28,6 +29,8 @@ const emit = defineEmits<{
 }>()
 
 interface VacDraft {
+  /** Clave estable de la fila; nace vacia, no hay dato del que derivarla. */
+  uid: number
   vaccinationTypeId: string
   lot: string
   notes: string
@@ -53,6 +56,7 @@ function plusOneYearISO(iso: string): string {
 
 function emptyVac(): VacDraft {
   return {
+    uid: nextRowUid(),
     vaccinationTypeId: '',
     lot: '',
     notes: '',
@@ -89,6 +93,7 @@ function startEditing(idx: number) {
   draft.date = item.date
   draft.vaccinations = [
     {
+      uid: nextRowUid(),
       vaccinationTypeId: item.vaccinationTypeId,
       lot: item.lot,
       notes: item.notes,
@@ -230,7 +235,7 @@ function save() {
       </div>
 
       <div class="vacs-list">
-        <div v-for="(v, i) in draft.vaccinations" :key="i" class="vac-card">
+        <div v-for="(v, i) in draft.vaccinations" :key="v.uid" class="vac-card">
           <div class="vac-head">
             <div class="vac-num">{{ i + 1 }}</div>
             <div class="vac-title">Vacuna {{ i + 1 }}</div>

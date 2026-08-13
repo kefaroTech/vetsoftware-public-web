@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import { nextRowUid } from '@/composables/rowUid'
 import { computed, reactive, ref, watch } from 'vue'
 import { PackageCheck, Plus, Trash2 } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
@@ -22,6 +24,9 @@ const tienda = useTienda()
 const purchases = usePurchasesStore()
 
 interface LineRow {
+  /** Clave estable de la fila. Estas lineas nacen vacias, asi que no hay
+   *  ningun dato del que derivarla. Ver `rowUid`. */
+  uid: number
   productId: string
   purchaseOrderLineId: number | null
   lotNumber: string
@@ -37,6 +42,15 @@ const form = reactive({
   notes: '',
 })
 const lines = ref<LineRow[]>([])
+
+useUnsavedChangesGuard(
+  () =>
+    props.open &&
+    (form.supplierId !== '' ||
+      form.supplierInvoiceNumber.trim() !== '' ||
+      form.notes.trim() !== '' ||
+      lines.value.some((l) => l.productId !== '' || l.lotNumber !== '' || l.unitCost !== '')),
+)
 const submitted = ref(false)
 const saving = ref(false)
 const serverError = ref<string | null>(null)
@@ -77,6 +91,7 @@ function err(k: keyof typeof errors.value) {
 
 function addLine() {
   lines.value.push({
+    uid: nextRowUid(),
     productId: '',
     purchaseOrderLineId: null,
     lotNumber: '',
@@ -85,8 +100,8 @@ function addLine() {
     unitCost: '',
   })
 }
-function removeLine(i: number) {
-  lines.value.splice(i, 1)
+function removeLine(uid: number) {
+  lines.value = lines.value.filter((l) => l.uid !== uid)
 }
 
 // Al elegir una OC, prellena las líneas con lo pendiente por recibir.
@@ -100,6 +115,7 @@ watch(
     lines.value = po.lines
       .filter((l) => l.pendingQuantity > 0)
       .map((l) => ({
+        uid: nextRowUid(),
         productId: String(l.product.id),
         purchaseOrderLineId: l.id,
         lotNumber: '',
@@ -125,6 +141,7 @@ watch(
     form.notes = ''
     lines.value = [
       {
+        uid: nextRowUid(),
         productId: '',
         purchaseOrderLineId: null,
         lotNumber: '',
@@ -218,13 +235,13 @@ async function submit() {
           <span>Producto</span><span>Lote</span><span>Vence</span><span>Cant.</span
           ><span>Costo</span><span></span>
         </div>
-        <div v-for="(l, i) in lines" :key="i" class="line-row">
+        <div v-for="l in lines" :key="l.uid" class="line-row">
           <BaseSelect v-model="l.productId" :options="productOptions" placeholder="Producto" />
           <BaseInput v-model="l.lotNumber" placeholder="Lote" />
           <DateInput v-model="l.expireDate" placeholder="—" />
           <BaseInput v-model="l.quantity" placeholder="0" inputmode="numeric" />
           <BaseInput v-model="l.unitCost" placeholder="0" inputmode="decimal" />
-          <button type="button" class="icon-btn danger" @click="removeLine(i)">
+          <button type="button" class="icon-btn danger" @click="removeLine(l.uid)">
             <Trash2 :size="14" />
           </button>
         </div>

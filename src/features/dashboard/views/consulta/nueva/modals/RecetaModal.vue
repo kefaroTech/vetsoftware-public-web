@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { nextRowUid } from '@/composables/rowUid'
 import { computed, reactive, ref, watch } from 'vue'
 import { Pill, Plus, Trash2 } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
@@ -27,6 +28,8 @@ const emit = defineEmits<{
 }>()
 
 interface MedDraft {
+  /** Clave estable de la fila; nace vacia, no hay dato del que derivarla. */
+  uid: number
   // Id del medicamento en el catálogo (valor del SearchableSelect).
   medicamentId: string
   presentation: string
@@ -56,7 +59,14 @@ async function onCreateMedicament(data: { name: string; description: string }) {
 }
 
 function emptyMed(): MedDraft {
-  return { medicamentId: '', presentation: '', quantity: '', posology: '', observation: '' }
+  return {
+    uid: nextRowUid(),
+    medicamentId: '',
+    presentation: '',
+    quantity: '',
+    posology: '',
+    observation: '',
+  }
 }
 
 const draft = reactive({
@@ -94,6 +104,7 @@ function startEditing(idx: number) {
     date: item.date,
     observations: item.observations,
     medicaments: item.medicaments.map<MedDraft>((m) => ({
+      uid: nextRowUid(),
       medicamentId: String(m.medicamentId),
       presentation: m.presentation,
       quantity: String(m.quantity),
@@ -253,7 +264,7 @@ function medErr(
       </div>
 
       <div class="meds-list">
-        <div v-for="(m, i) in draft.medicaments" :key="i" class="med-card">
+        <div v-for="(m, i) in draft.medicaments" :key="m.uid" class="med-card">
           <div class="med-head">
             <div class="med-num">{{ i + 1 }}</div>
             <div class="med-name-preview">

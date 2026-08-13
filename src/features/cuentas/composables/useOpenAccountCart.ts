@@ -1,4 +1,5 @@
 import { computed, ref } from 'vue'
+import { nextRowUid } from '@/composables/rowUid'
 import { useToast } from '@/composables/useToast'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useCuentas } from './useCuentas'
@@ -7,6 +8,10 @@ import type { CreateGeneralChargePayload, OpenAccountResponse } from '../types/c
 export type CartKind = 'service' | 'product' | 'general'
 
 export interface CartLine {
+  /** Clave estable de la fila mientras el carrito esta abierto. Ver `rowUid`.
+   *  No puede derivarse del contenido: dos cargos generales del mismo importe
+   *  son dos cargos distintos y colisionarian. */
+  uid: number
   kind: CartKind
   /** id del catálogo (service/product); null para general. */
   refId: number | null
@@ -70,6 +75,7 @@ export function useOpenAccountCart() {
     if (line) line.qty += 1
     else
       cart.value.push({
+        uid: nextRowUid(),
         kind,
         refId: item.id,
         name: item.name,
@@ -80,8 +86,15 @@ export function useOpenAccountCart() {
       })
   }
 
-  function addGeneral(line: Omit<CartLine, 'kind' | 'refId' | 'animalId' | 'animalName'>) {
-    cart.value.push({ ...line, kind: 'general', refId: null, animalId: null, animalName: null })
+  function addGeneral(line: Omit<CartLine, 'uid' | 'kind' | 'refId' | 'animalId' | 'animalName'>) {
+    cart.value.push({
+      ...line,
+      uid: nextRowUid(),
+      kind: 'general',
+      refId: null,
+      animalId: null,
+      animalName: null,
+    })
   }
 
   function lineLabel(line: CartLine): string {
