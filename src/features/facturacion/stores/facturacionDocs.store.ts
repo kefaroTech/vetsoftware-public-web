@@ -1,13 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import { electronicDocumentApi } from '../api/electronicDocument.api'
-import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
-import { useLatestOnly } from '@/composables/useLatestOnly'
+import type { PageResponse } from '@/types/pagination'
 import type {
   CreditNoteReason,
   DebitNoteReason,
+  DianStatus,
   ElectronicDocumentResponse,
+  ElectronicDocumentType,
   EmitElectronicDocumentRequest,
 } from '../types/facturacion'
 
@@ -17,12 +18,14 @@ import type {
  * manual (re-emitir / casos especiales) y las correcciones (notas, re-transmisión).
  */
 export const useFacturacionDocsStore = defineStore('facturacionDocs', () => {
+  /**
+   * Documentos que el usuario ya tocó (emitidos, transmitidos, refrescados). BE-06: dejó de ser
+   * "la lista" —de eso se encarga la paginación servida de la pantalla— y quedó como caché de
+   * la versión más fresca de cada documento, que es lo que lee el detalle abierto.
+   */
   const documents = ref<ElectronicDocumentResponse[]>([])
   const loading = ref(false)
-  // Recarga al cambiar de sede: solo la ultima escribe.
-  const listTurn = useLatestOnly()
   const error = ref<string | null>(null)
-  let loadedOnce = false
 
   function upsert(doc: ElectronicDocumentResponse): void {
     const idx = documents.value.findIndex((d) => d.id === doc.id)
@@ -30,39 +33,25 @@ export const useFacturacionDocsStore = defineStore('facturacionDocs', () => {
     else documents.value = [doc, ...documents.value]
   }
 
-  async function loadAll(): Promise<void> {
-    const turno = listTurn.begin()
-    loading.value = true
-    error.value = null
-    try {
-      const rows = await electronicDocumentApi.listAll()
-      if (!turno()) return
-      documents.value = rows
-      loadedOnce = true
-    } catch (e) {
-      if (!turno()) return
-      error.value = getProblemDetailMessage(e, 'No se pudieron cargar los documentos')
-    } finally {
-      if (turno()) loading.value = false
-    }
+  /**
+   * Una página de documentos con los filtros de la pantalla (tipo y estado DIAN) resueltos en
+   * el servidor. Filtrarlos en cliente sobre una lista paginada ocultaría documentos fiscales.
+   */
+  function searchPage(
+    filters: { documentType?: ElectronicDocumentType | ''; dianStatus?: DianStatus | '' },
+    page: number,
+    pageSize: number,
+    signal?: AbortSignal,
+  ): Promise<PageResponse<ElectronicDocumentResponse>> {
+    return electronicDocumentApi.listPage(filters, page, pageSize, signal)
   }
 
-  function ensureLoaded(): Promise<void> {
-    return loadedOnce ? Promise.resolve() : loadAll()
-  }
-
-  /** Recarga forzada desde el backend, para el montaje de la pantalla de documentos. */
-  function reload(): Promise<void> {
-    loadedOnce = false
-    return loadAll()
-  }
-
-  // Multi-sucursal: al cambiar la sede seleccionada, recargar la lista si ya se había cargado alguna vez
-  // (evita fetches en background si la pantalla nunca se abrió).
+  // Multi-sucursal: al cambiar de sede la caché deja de valer. La lista la recarga la pantalla,
+  // que es quien tiene el estado de la paginación.
   watch(
     () => useBranchStore().selectedBranchId,
     () => {
-      if (loadedOnce) void reload()
+      documents.value = []
     },
   )
 
@@ -115,9 +104,7 @@ export const useFacturacionDocsStore = defineStore('facturacionDocs', () => {
     documents,
     loading,
     error,
-    ensureLoaded,
-    reload,
-    loadAll,
+    searchPage,
     refresh,
     emit,
     transmit,

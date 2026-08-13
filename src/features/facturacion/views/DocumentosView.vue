@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { Plus, History, ChevronRight } from 'lucide-vue-next'
+import { useInfiniteList } from '@/composables/useInfiniteList'
 import { useFacturacionAccess } from '../composables/useFacturacionAccess'
 import { useFacturacionDocs } from '../composables/useFacturacionDocs'
 import { feMoney } from '../composables/feFormat'
@@ -8,6 +9,7 @@ import {
   DOC_TYPE_LABEL,
   STATUS_META,
   type DianStatus,
+  type ElectronicDocumentResponse,
   type ElectronicDocumentType,
 } from '../types/facturacion'
 import FeStatusPill from '../components/FeStatusPill.vue'
@@ -16,16 +18,40 @@ import FeDocumentDetail from '../components/FeDocumentDetail.vue'
 import FeUpsell from '../components/FeUpsell.vue'
 
 const { hasModule, canEmit } = useFacturacionAccess()
-const { documents, loading, error, reload } = useFacturacionDocs()
+const { documents, searchPage } = useFacturacionDocs()
 
 const filterType = ref<ElectronicDocumentType | ''>('')
 const filterStatus = ref<DianStatus | ''>('')
 const selectedId = ref<number | null>(null)
 const emitOpen = ref(false)
 
-onMounted(() => {
-  void reload()
-})
+/**
+ * BE-06: los dos selectores viajan al servidor. Filtrarlos en cliente sobre una lista paginada
+ * mostraría solo los documentos de las páginas ya cargadas — y ocultar documentos fiscales en
+ * silencio es exactamente lo que no puede pasar aquí.
+ */
+const {
+  items: rows,
+  loading,
+  error,
+  isEmpty,
+  reload,
+  observe,
+} = useInfiniteList<ElectronicDocumentResponse>((page, pageSize, signal) =>
+  searchPage(
+    { documentType: filterType.value, dianStatus: filterStatus.value },
+    page,
+    pageSize,
+    signal,
+  ),
+)
+
+const sentinel = ref<HTMLElement | null>(null)
+
+onMounted(() => void reload())
+watch(sentinel, (el) => observe(el))
+// Cambiar de filtro descarta lo acumulado: es otra consulta, no un subconjunto de esta.
+watch([filterType, filterStatus], () => void reload())
 
 const typeOptions = (Object.keys(DOC_TYPE_LABEL) as ElectronicDocumentType[]).map((k) => ({
   value: k,
@@ -36,19 +62,15 @@ const statusOptions = (Object.keys(STATUS_META) as DianStatus[]).map((k) => ({
   label: STATUS_META[k].label,
 }))
 
-const filtered = computed(() =>
-  documents.value.filter(
-    (d) =>
-      (!filterType.value || d.documentType === filterType.value) &&
-      (!filterStatus.value || d.dianStatus === filterStatus.value),
-  ),
-)
-
-const selectedDoc = computed(() =>
-  selectedId.value != null
-    ? (documents.value.find((d) => d.id === selectedId.value) ?? null)
-    : null,
-)
+/**
+ * El detalle lee primero la caché del store: ahí queda la versión más fresca tras transmitir o
+ * emitir una nota. Si el documento no se ha tocado aún, sirve el de la página cargada.
+ */
+const selectedDoc = computed(() => {
+  const id = selectedId.value
+  if (id == null) return null
+  return documents.value.find((d) => d.id === id) ?? rows.value.find((d) => d.id === id) ?? null
+})
 
 function shortId(cufe: string | null, cude: string | null): string {
   const v = cufe || cude
@@ -113,7 +135,7 @@ function shortId(cufe: string | null, cude: string | null): string {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="d in filtered" :key="d.id" class="row" @click="selectedId = d.id">
+          <tr v-for="d in rows" :key="d.id" class="row" @click="selectedId = d.id">
             <td>
               <span class="num">{{ d.prefix }}-{{ d.consecutive }}</span>
             </td>
@@ -132,11 +154,16 @@ function shortId(cufe: string | null, cude: string | null): string {
             </td>
             <td><ChevronRight :size="15" :stroke-width="1.6" class="chev" /></td>
           </tr>
-          <tr v-if="!loading && filtered.length === 0">
+          <tr v-if="isEmpty">
             <td colspan="8" class="ds-empty">Sin documentos para los filtros aplicados.</td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Centinela del scroll infinito: al entrar en viewport pide la página siguiente. -->
+    <div v-if="!isEmpty" ref="sentinel" class="sentinel" aria-hidden="true">
+      <span v-if="loading && rows.length > 0">Cargando más…</span>
     </div>
 
     <FeEmitModal
@@ -224,6 +251,15 @@ function shortId(cufe: string | null, cude: string | null): string {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
+}
+
+/* Centinela del scroll infinito. Con alto propio el observer lo ve antes del borde. */
+.sentinel {
+  min-height: 40px;
+  display: grid;
+  place-items: center;
+  font-size: 12.5px;
+  color: var(--warm-500);
 }
 
 .table th {

@@ -13,6 +13,9 @@ import type {
   CreateGeneralChargePayload,
   DebtResponse,
   OpenAccountResponse,
+  OpenAccountSearchCriteria,
+  OpenAccountsSummary,
+  PageResponse,
   PaymentMethod,
   UnifiedCharge,
 } from '../types/cuentas'
@@ -22,12 +25,20 @@ import type {
  * backend; los cargos se agrupan por mascota en la UI.
  */
 export const useCuentasStore = defineStore('cuentas', () => {
+  /**
+   * Cuentas que el usuario ya tocó en esta sesión (creadas, refrescadas tras un cargo o un
+   * cierre). BE-06: dejó de ser "la lista" — de eso se encarga la paginación servida de la
+   * pantalla — y quedó como caché para resolver la versión optimista y el get-or-create sin
+   * volver a preguntar al backend.
+   */
   const accounts = ref<OpenAccountResponse[]>([])
   const loading = ref(false)
-  // La lista se recarga al cambiar de sede: solo la ultima escribe.
-  const listTurn = useLatestOnly()
   const error = ref<string | null>(null)
-  let loadedOnce = false
+
+  /** Contadores de pestaña y saldo pendiente: el servidor los calcula sobre TODAS las cuentas. */
+  const summary = ref<OpenAccountsSummary>({ openCount: 0, closedCount: 0, totalOutstanding: 0 })
+  // El resumen se recarga al cambiar de sede: solo la ultima respuesta escribe.
+  const summaryTurn = useLatestOnly()
 
   // Detalle de la cuenta seleccionada
   const charges = ref<UnifiedCharge[]>([])
@@ -56,41 +67,40 @@ export const useCuentasStore = defineStore('cuentas', () => {
     return { base, taxRows, total }
   })
 
-  async function loadAccounts(): Promise<void> {
-    const turno = listTurn.begin()
-    loading.value = true
-    error.value = null
+  /**
+   * Una página de cuentas según los criterios de la pantalla. La pestaña y el buscador son
+   * `statuses` y `q`: se resuelven en el servidor porque con la lista paginada un filtro de
+   * cliente solo vería lo ya cargado (BE-06).
+   */
+  function searchPage(
+    criteria: OpenAccountSearchCriteria,
+    signal?: AbortSignal,
+  ): Promise<PageResponse<OpenAccountResponse>> {
+    return openAccountApi.search({ enabled: true, ...criteria }, signal)
+  }
+
+  /** Contadores de las pestañas y saldo pendiente acumulado, calculados en el servidor. */
+  async function loadSummary(): Promise<void> {
+    const turno = summaryTurn.begin()
     try {
-      const rows = (await openAccountApi.listAll()).filter((a) => a.enabled)
+      const fresh = await openAccountApi.summary()
       if (!turno()) return
-      accounts.value = rows
-      loadedOnce = true
+      summary.value = fresh
     } catch (e) {
       if (!turno()) return
-      error.value = getProblemDetailMessage(e, 'No se pudieron cargar las cuentas')
-    } finally {
-      if (turno()) loading.value = false
+      error.value = getProblemDetailMessage(e, 'No se pudieron cargar los totales de cuentas')
     }
   }
 
-  function ensureLoaded(): Promise<void> {
-    return loadedOnce ? Promise.resolve() : loadAccounts()
-  }
-
-  // Multi-sucursal: al cambiar la sede seleccionada, recargar la lista si ya se había cargado
-  // (evita fetches en background si la pantalla de cuentas nunca se abrió).
+  // Multi-sucursal: los totales son por sede, así que cambiarla los invalida. La lista la
+  // recarga la propia pantalla (tiene el estado de la paginación).
   watch(
     () => useBranchStore().selectedBranchId,
     () => {
-      if (loadedOnce) void loadAccounts()
+      accounts.value = []
+      void loadSummary()
     },
   )
-
-  /** Recarga forzada desde el backend, para el montaje de la pantalla de cuentas. */
-  function reload(): Promise<void> {
-    loadedOnce = false
-    return loadAccounts()
-  }
 
   async function loadDetail(accountId: number): Promise<void> {
     // Saltar de una cuenta a otra deja dos detalles en vuelo: sin esto, los
@@ -242,8 +252,15 @@ export const useCuentasStore = defineStore('cuentas', () => {
       (a) => a.owner.id === ownerId && a.enabled && a.status === 'OPEN',
     )
     if (local) return local
-    const res = await openAccountApi.search({ ownerId, enabled: true, page: 0, pageSize: 20 })
-    return res.content.find((a) => a.status === 'OPEN') ?? null
+    // El estado ya lo filtra el servidor (BE-06): se pide la abierta, no las 20 primeras.
+    const res = await openAccountApi.search({
+      ownerId,
+      enabled: true,
+      statuses: ['OPEN'],
+      page: 0,
+      pageSize: 1,
+    })
+    return res.content[0] ?? null
   }
 
   /**
@@ -470,15 +487,15 @@ export const useCuentasStore = defineStore('cuentas', () => {
     accounts,
     loading,
     error,
+    summary,
     charges,
     payments,
     detailLoading,
     taxBreakdown,
     petsInCharges,
     chargesByPet,
-    ensureLoaded,
-    reload,
-    loadAccounts,
+    searchPage,
+    loadSummary,
     loadDetail,
     refreshAccount,
     findOpenAccountByOwner,

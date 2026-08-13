@@ -7,7 +7,7 @@ import MonthTimelineGroup from '../components/MonthTimelineGroup.vue'
 import EventDetailModal from '../components/EventDetailModal.vue'
 import WeightHistoryPanel from '../components/WeightHistoryPanel.vue'
 import { useHistoriaSelection } from '../composables/useHistoriaSelection'
-import { useClinicalHistory } from '../composables/useClinicalHistory'
+import { fetchConsultationChildren, useClinicalHistory } from '../composables/useClinicalHistory'
 import { useClinicalHistoryExport } from '../composables/useClinicalHistoryExport'
 import { EVENT_TYPES, EVENT_TYPE_DETAILABLE, TYPE_COLORS } from '../constants/eventTypes'
 import { ownerApi } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
@@ -81,41 +81,24 @@ async function refreshPet() {
   }
 }
 
-const { events, loading, error } = useClinicalHistory(petIdParam)
-
 const filter = ref<ClinicalEventType | 'ALL'>('ALL')
 const search = ref('')
 
-const eventsSorted = computed(() =>
-  [...events.value].sort((a, b) => b.eventDate.localeCompare(a.eventDate)),
+// BE-06: el chip de tipo, el buscador y la paginación los resuelve el servidor. Filtrar en
+// cliente sobre una lista paginada mostraría solo lo ya scrolleado — en una historia clínica,
+// esconder eventos sin avisar.
+const { events, loading, error, isEmpty, observe, typeCounts, totalEvents } = useClinicalHistory(
+  petIdParam,
+  { type: filter, search },
 )
 
-const typeCounts = computed(() => {
-  const counts: Partial<Record<ClinicalEventType, number>> = {}
-  for (const ev of eventsSorted.value) {
-    counts[ev.eventType] = (counts[ev.eventType] ?? 0) + 1
-  }
-  return Object.entries(counts).map(([type, count]) => ({
-    type: type as ClinicalEventType,
-    count: count ?? 0,
-  }))
-})
+const sentinel = ref<HTMLElement | null>(null)
+watch(sentinel, (el) => observe(el))
 
-const filtered = computed(() =>
-  eventsSorted.value.filter((ev) => {
-    if (filter.value !== 'ALL' && ev.eventType !== filter.value) return false
-    const q = search.value.trim().toLowerCase()
-    if (!q) return true
-    return (
-      ev.summary.toLowerCase().includes(q) ||
-      EVENT_TYPES[ev.eventType].label.toLowerCase().includes(q)
-    )
-  }),
-)
-
+// El backend ya devuelve la historia de más reciente a más antigua; aquí solo se agrupa por mes.
 const grouped = computed(() => {
   const map = new Map<string, ClinicalEvent[]>()
-  for (const ev of filtered.value) {
+  for (const ev of events.value) {
     const key = ev.eventDate.slice(0, 7)
     const arr = map.get(key)
     if (arr) arr.push(ev)
@@ -176,12 +159,20 @@ function closeEventDetail() {
   detailModalOpen.value = false
 }
 
-const selectedEventChildren = computed<ClinicalEvent[]>(() => {
-  const ev = selectedEvent.value
-  if (!ev || ev.eventType !== 'CONSULTATION') return []
-  return eventsSorted.value.filter(
-    (e) => e.eventType !== 'CONSULTATION' && e.consultationId === ev.sourceId,
-  )
+// Los procedimientos derivados de una consulta se piden al servidor: con la historia paginada
+// pueden estar en una página que el usuario no ha scrolleado.
+const selectedEventChildren = ref<ClinicalEvent[]>([])
+watch(selectedEvent, async (ev) => {
+  const animalNum = Number(petIdParam.value ?? '')
+  if (!ev || ev.eventType !== 'CONSULTATION' || !Number.isFinite(animalNum)) {
+    selectedEventChildren.value = []
+    return
+  }
+  try {
+    selectedEventChildren.value = await fetchConsultationChildren(animalNum, ev.sourceId)
+  } catch {
+    selectedEventChildren.value = []
+  }
 })
 
 const { exporting, error: exportError, exportPdf } = useClinicalHistoryExport()
@@ -315,27 +306,27 @@ function goNuevaConsulta() {
           :class="{ active: filter === 'ALL' }"
           @click="filter = 'ALL'"
         >
-          Todos · {{ eventsSorted.length }}
+          Todos · {{ totalEvents }}
         </button>
         <button
           v-for="row in typeCounts"
-          :key="row.type"
+          :key="row.eventType"
           type="button"
           class="chip"
-          :class="{ active: filter === row.type }"
+          :class="{ active: filter === row.eventType }"
           :style="
-            filter === row.type
+            filter === row.eventType
               ? {
-                  background: tokensFor(row.type).bg,
-                  color: tokensFor(row.type).fg,
-                  borderColor: tokensFor(row.type).dot,
+                  background: tokensFor(row.eventType).bg,
+                  color: tokensFor(row.eventType).fg,
+                  borderColor: tokensFor(row.eventType).dot,
                 }
               : {}
           "
-          @click="filter = row.type"
+          @click="filter = row.eventType"
         >
-          <span class="chip-icon">{{ EVENT_TYPES[row.type].icon }}</span>
-          {{ EVENT_TYPES[row.type].label }} · {{ row.count }}
+          <span class="chip-icon">{{ EVENT_TYPES[row.eventType].icon }}</span>
+          {{ EVENT_TYPES[row.eventType].label }} · {{ row.count }}
         </button>
       </div>
 
@@ -346,15 +337,15 @@ function goNuevaConsulta() {
     </div>
 
     <div class="timeline-wrap">
-      <div v-if="loading" class="loading-row">
+      <div v-if="loading && events.length === 0" class="loading-row">
         <PawLoader :size="42" :glow="false" :speed="900" />
       </div>
 
       <div v-else-if="error" class="banner error">{{ error }}</div>
 
-      <div v-else-if="filtered.length === 0" class="empty-card">
+      <div v-else-if="isEmpty" class="empty-card">
         {{
-          eventsSorted.length === 0
+          totalEvents === 0
             ? 'Sin historia clínica registrada todavía.'
             : 'Ningún evento coincide con los filtros.'
         }}
@@ -367,6 +358,11 @@ function goNuevaConsulta() {
         :events="items"
         @select="openEvent"
       />
+
+      <!-- Centinela del scroll infinito: al entrar en viewport pide la página siguiente. -->
+      <div v-if="!isEmpty" ref="sentinel" class="sentinel" aria-hidden="true">
+        <PawLoader v-if="loading && events.length > 0" :size="28" :glow="false" :speed="900" />
+      </div>
     </div>
 
     <EventDetailModal
@@ -603,6 +599,13 @@ function goNuevaConsulta() {
   display: grid;
   place-items: center;
   padding: 60px 0;
+}
+
+/* Centinela del scroll infinito. Con alto propio el observer lo ve antes del borde. */
+.sentinel {
+  min-height: 40px;
+  display: grid;
+  place-items: center;
 }
 
 .banner.error {

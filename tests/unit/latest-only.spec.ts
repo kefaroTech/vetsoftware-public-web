@@ -157,11 +157,16 @@ describe('useClinicalHistory descarta la respuesta del paciente anterior', () =>
   })
 
   it('cambiar de mascota antes de que responda la primera no contamina la vista', async () => {
-    const resolvers = new Map<number, (v: unknown[]) => void>()
+    // BE-06: la historia pasó a paginarse en servidor, así que el cargador devuelve una
+    // `PageResponse` y el descarte de la respuesta vieja lo hace el `AbortSignal` de
+    // `useInfiniteList`. La invariante que se protege es la misma: la respuesta de la mascota
+    // anterior nunca puede pisar la que el usuario está viendo.
+    const resolvers = new Map<number, (v: unknown) => void>()
     vi.doMock('@/features/historia-clinica/api/clinicalHistory.api', () => ({
       clinicalHistoryApi: {
         findByAnimal: (animalId: number) =>
-          new Promise((resolve) => resolvers.set(animalId, resolve as (v: unknown[]) => void)),
+          new Promise((resolve) => resolvers.set(animalId, resolve as (v: unknown) => void)),
+        summary: () => Promise.resolve([]),
       },
     }))
 
@@ -169,25 +174,36 @@ describe('useClinicalHistory descarta la respuesta del paciente anterior', () =>
       await import('@/features/historia-clinica/composables/useClinicalHistory')
 
     const petId = ref<string | null>('1')
-    const { events, loading } = useClinicalHistory(petId)
+    const { events, loading } = useClinicalHistory(petId, {
+      type: ref<'ALL'>('ALL'),
+      search: ref(''),
+    })
 
     // El watch es `immediate`: la carga de la mascota 1 ya está en vuelo.
     petId.value = '2'
     await nextTick()
 
-    const evento = (animalId: number, summary: string) => ({
-      sourceId: animalId,
-      animalId,
-      eventType: 'CONSULTATION',
-      eventDate: '2026-08-01',
-      endDate: null,
-      consultationId: animalId,
-      summary,
+    const pagina = (animalId: number, summary: string) => ({
+      content: [
+        {
+          sourceId: animalId,
+          animalId,
+          eventType: 'CONSULTATION',
+          eventDate: '2026-08-01',
+          endDate: null,
+          consultationId: animalId,
+          summary,
+        },
+      ],
+      page: 0,
+      pageSize: 20,
+      totalElements: 1,
+      totalPages: 1,
     })
 
     // La 2 responde antes; la 1 llega tarde.
-    resolvers.get(2)?.([evento(2, 'consulta de la mascota 2')])
-    resolvers.get(1)?.([evento(1, 'consulta de la mascota 1')])
+    resolvers.get(2)?.(pagina(2, 'consulta de la mascota 2'))
+    resolvers.get(1)?.(pagina(1, 'consulta de la mascota 1'))
 
     // El cargador encadena varios `.then`, así que hay que dejar drenar la cola
     // de microtareas en vez de contar ticks a ojo.

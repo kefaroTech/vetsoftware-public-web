@@ -93,8 +93,27 @@ export interface OpenAccountResponse {
 export interface OpenAccountSearchCriteria {
   ownerId?: number | null
   enabled?: boolean | null
+  /**
+   * Estados admitidos; vacío = todos. Es una lista porque la pestaña "Cerradas" son dos estados
+   * a la vez (`CLOSE` y `CANCEL`). Viaja como `status` repetido en la query.
+   */
+  statuses?: OpenAccountStatus[]
+  /** Texto libre sobre nombre o documento del propietario. */
+  q?: string
   page?: number
   pageSize?: number
+}
+
+/**
+ * Totales de la pantalla de cuentas, calculados en el servidor (BE-06).
+ *
+ * <p>Se sumaban en el cliente recorriendo el array completo. Con la lista paginada eso dejaría
+ * de ser cierto: el banner mostraría el saldo de las cuentas cargadas, no el de la empresa.
+ */
+export interface OpenAccountsSummary {
+  openCount: number
+  closedCount: number
+  totalOutstanding: number
 }
 
 // ── Cargos ───────────────────────────────────────────────────────────────────
