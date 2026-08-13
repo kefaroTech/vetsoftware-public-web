@@ -4,7 +4,9 @@ import { withBranchParam } from '@/features/branches/api/branchContext'
 import type {
   CreditNoteReason,
   DebitNoteReason,
+  DianStatus,
   ElectronicDocumentResponse,
+  ElectronicDocumentType,
   EmitElectronicDocumentRequest,
 } from '../types/facturacion'
 
@@ -12,15 +14,28 @@ import type {
 const MAX_DOCUMENTS_PAGE_SIZE = 200
 
 export const electronicDocumentApi = {
-  async listAll(): Promise<ElectronicDocumentResponse[]> {
-    // BE-06: /electronic-documents pasó a devolver PageResponse. Esta pantalla aún no
-    // acumula páginas, así que pide el tope que admite el servidor para no ocultar
-    // documentos fiscales en silencio. Pendiente: pasarla a paginación servida.
+  /**
+   * Página de documentos con los filtros de la pantalla resueltos en el servidor (BE-06):
+   * `documentType` y `dianStatus` se aplicaban en cliente sobre la lista completa, cosa que
+   * con paginación solo vería lo ya cargado.
+   */
+  async listPage(
+    filters: { documentType?: ElectronicDocumentType | ''; dianStatus?: DianStatus | '' },
+    page = 0,
+    pageSize = 20,
+    signal?: AbortSignal,
+  ): Promise<PageResponse<ElectronicDocumentResponse>> {
+    const params: Record<string, string | number> = {
+      page,
+      pageSize: Math.min(pageSize, MAX_DOCUMENTS_PAGE_SIZE),
+    }
+    if (filters.documentType) params.documentType = filters.documentType
+    if (filters.dianStatus) params.dianStatus = filters.dianStatus
     const { data } = await http.get<PageResponse<ElectronicDocumentResponse>>(
       '/electronic-documents',
-      { params: withBranchParam({ pageSize: MAX_DOCUMENTS_PAGE_SIZE }) },
+      { params: withBranchParam(params), signal },
     )
-    return data.content
+    return data
   },
 
   async findById(id: number): Promise<ElectronicDocumentResponse> {

@@ -38,9 +38,16 @@ watch(
     finalConsumer.value = false
     loadingAccounts.value = true
     try {
-      const all = await openAccountApi.listAll()
-      // Facturables: cuentas cerradas con saldo 0. (No hay endpoint dedicado; ver gaps.)
-      accounts.value = all.filter((a) => a.status === 'CLOSE' && a.outstandingAmount === 0)
+      // Facturables: cuentas cerradas con saldo 0. El estado ya lo filtra el servidor (BE-06);
+      // el saldo se comprueba aquí porque no hay filtro para él. Sigue acotado a una página:
+      // es un selector de un modal, no un listado.
+      const { content } = await openAccountApi.search({
+        statuses: ['CLOSE'],
+        enabled: true,
+        page: 0,
+        pageSize: 200,
+      })
+      accounts.value = content.filter((a) => a.outstandingAmount === 0)
     } catch {
       accounts.value = []
       toast.error('No se pudieron cargar las cuentas', 'Intenta de nuevo más tarde.')

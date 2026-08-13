@@ -4,6 +4,7 @@ import type {
   OpenAccountResponse,
   OpenAccountSearchCriteria,
   OpenAccountStatus,
+  OpenAccountsSummary,
   PageResponse,
 } from '../types/cuentas'
 
@@ -31,27 +32,35 @@ export const openAccountApi = {
   },
 
   /**
-   * Atajo para las pantallas que aún trabajan sobre la lista completa: pide el tope del servidor
-   * y devuelve solo el contenido.
+   * Búsqueda servida: pestaña (`statuses`), buscador (`q`) y paginación viajan al backend.
    *
-   * <p>Se mantiene porque el store de cuentas y `FeEmitModal` filtran y agrupan sobre el array
-   * entero; dejarles la página por defecto de 20 ocultaría cuentas abiertas en silencio. Cuando
-   * esas pantallas pasen a paginación servida, esto desaparece y usan `listPage`.
+   * <p>BE-06: antes la pantalla pedía el tope de 200 filas y filtraba en cliente. Con la lista
+   * paginada ese filtro solo vería lo ya cargado, así que los criterios se resuelven en SQL.
+   * `status` va repetido (`status=CLOSE&status=CANCEL`), que es como Spring lo mapea a lista.
    */
-  async listAll(): Promise<OpenAccountResponse[]> {
-    const { content } = await this.listPage(0, MAX_PAGE_SIZE)
-    return content
-  },
-
-  async search(criteria: OpenAccountSearchCriteria): Promise<PageResponse<OpenAccountResponse>> {
-    const params: Record<string, string | number | boolean> = {
+  async search(
+    criteria: OpenAccountSearchCriteria,
+    signal?: AbortSignal,
+  ): Promise<PageResponse<OpenAccountResponse>> {
+    const params: Record<string, string | number | boolean | string[]> = {
       page: criteria.page ?? 0,
-      pageSize: criteria.pageSize ?? 20,
+      pageSize: Math.min(criteria.pageSize ?? 20, MAX_PAGE_SIZE),
     }
     if (criteria.ownerId != null) params.ownerId = criteria.ownerId
     if (criteria.enabled != null) params.enabled = criteria.enabled
+    if (criteria.statuses && criteria.statuses.length > 0) params.status = criteria.statuses
+    if (criteria.q && criteria.q.trim()) params.q = criteria.q.trim()
     const { data } = await http.get<PageResponse<OpenAccountResponse>>('/open-accounts/search', {
       params: withBranchParam(params),
+      signal,
+    })
+    return data
+  },
+
+  /** Contadores de las pestañas y saldo pendiente acumulado de la empresa/sede (BE-06). */
+  async summary(): Promise<OpenAccountsSummary> {
+    const { data } = await http.get<OpenAccountsSummary>('/open-accounts/summary', {
+      params: withBranchParam({}),
     })
     return data
   },

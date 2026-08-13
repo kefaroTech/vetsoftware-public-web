@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Check, MapPin, Plus, Receipt, Search } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
+import { useInfiniteList } from '@/composables/useInfiniteList'
 import OpenAccountModal from '../components/OpenAccountModal.vue'
 import AccountDetail from '../components/AccountDetail.vue'
 import { useCuentas } from '../composables/useCuentas'
@@ -41,7 +42,49 @@ const STATUS_TONE: Record<OpenAccountStatus, string> = {
   CANCEL: 'cancelled',
 }
 
-onMounted(() => store.reload())
+// Activas = cuentas abiertas (OPEN); Cerradas = cobradas (CLOSE) o canceladas (CANCEL).
+// La pestaña es un filtro del servidor, no un `filter` sobre el array: con la lista paginada
+// filtrar en cliente solo vería las páginas ya cargadas (BE-06).
+const STATUSES_BY_TAB: Record<'activas' | 'cerradas', OpenAccountStatus[]> = {
+  activas: ['OPEN'],
+  cerradas: ['CLOSE', 'CANCEL'],
+}
+
+const {
+  items: accounts,
+  loading,
+  error: listError,
+  isEmpty,
+  reload: reloadList,
+  observe,
+} = useInfiniteList<OpenAccountResponse>((page, pageSize, signal) =>
+  store.searchPage(
+    { statuses: STATUSES_BY_TAB[tab.value], q: query.value, page, pageSize },
+    signal,
+  ),
+)
+
+const sentinel = ref<HTMLElement | null>(null)
+onMounted(() => {
+  void reloadList()
+  void store.loadSummary()
+})
+// El centinela se monta con la lista, así que se (re)observa cuando aparece.
+watch(sentinel, (el) => observe(el))
+
+// Cambiar de pestaña descarta lo acumulado: son dos listados distintos del servidor.
+watch(tab, () => void reloadList())
+
+// El buscador va al servidor con debounce; sin él se dispararía una consulta por tecla.
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+watch(query, () => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => void reloadList(), 300)
+})
+onUnmounted(() => {
+  if (searchTimer) clearTimeout(searchTimer)
+})
+
 watch(
   () => branchStore.selectedBranchId,
   () => {
@@ -49,38 +92,16 @@ watch(
     // no hace falta cerrarlos uno a uno como antes.
     selected.value = null
     openAccountOpen.value = false
+    void reloadList()
   },
-)
-
-// Activas = cuentas abiertas (OPEN); Cerradas = cobradas (CLOSE) o canceladas (CANCEL).
-const activeAccounts = computed(() => store.accounts.value.filter((a) => a.status === 'OPEN'))
-const closedAccounts = computed(() =>
-  store.accounts.value
-    .filter((a) => a.status !== 'OPEN')
-    .slice()
-    .sort((a, b) => (b.closedAt ?? b.createdDate).localeCompare(a.closedAt ?? a.createdDate)),
-)
-const visibleAccounts = computed(() =>
-  tab.value === 'activas' ? activeAccounts.value : closedAccounts.value,
 )
 
 const isSearching = computed(() => query.value.trim().length > 0)
 
-const filteredAccounts = computed(() => {
-  const q = query.value.trim().toLowerCase()
-  if (!q) return visibleAccounts.value
-  return visibleAccounts.value.filter(
-    (a) =>
-      a.owner.name.toLowerCase().includes(q) || (a.owner.document ?? '').toLowerCase().includes(q),
-  )
-})
-
-// "Por cobrar" = saldo de cuentas OPEN únicamente. El outstandingAmount de una cuenta
-// CANCEL es el monto dado de baja (pérdida), no algo cobrable; sumarlo aquí lo contaría
-// mal. Cualquier total/reporte de cuentas por cobrar debe filtrar status === 'OPEN'.
-const totalPending = computed(() =>
-  activeAccounts.value.reduce((sum, a) => sum + a.outstandingAmount, 0),
-)
+// Contadores y saldo pendiente vienen del servidor: sumarlos sobre la página cargada daría
+// el total de lo que se ha scrolleado, no el de la empresa.
+const summary = store.summary
+const totalPending = computed(() => summary.value.totalOutstanding)
 
 /** Etiqueta del pill de estado en la tarjeta (CLOSE se muestra como "Pagada"). */
 function cardStatusLabel(acc: OpenAccountResponse): string {
@@ -113,6 +134,10 @@ async function selectAccount(acc: OpenAccountResponse) {
 
 function backToList() {
   selected.value = null
+  // La cuenta pudo cerrarse o cambiar de saldo mientras se veía el detalle: la lista y los
+  // totales se releen en vez de parchear la página acumulada a mano.
+  void reloadList()
+  void store.loadSummary()
 }
 
 // ── Abrir cuenta ─────────────────────────────────────────────────────────────
@@ -122,6 +147,7 @@ function openCreateModal() {
 
 async function onAccountCreated(account: OpenAccountResponse) {
   openAccountOpen.value = false
+  void store.loadSummary()
   await selectAccount(account)
 }
 </script>
@@ -145,7 +171,9 @@ async function onAccountCreated(account: OpenAccountResponse) {
       </template>
     </PageHeader>
 
-    <div v-if="store.error.value" class="ds-banner ds-banner--error">{{ store.error.value }}</div>
+    <div v-if="store.error.value || listError" class="ds-banner ds-banner--error">
+      {{ store.error.value ?? listError }}
+    </div>
     <div
       v-if="canCreate && !selected && branchStore.selectedBranchId == null"
       class="banner branch-warning"
@@ -165,9 +193,7 @@ async function onAccountCreated(account: OpenAccountResponse) {
           @click="tab = 'activas'"
         >
           <Receipt :size="15" :stroke-width="1.7" /> <span>Activas</span>
-          <span v-if="activeAccounts.length > 0" class="tab-badge">{{
-            activeAccounts.length
-          }}</span>
+          <span v-if="summary.openCount > 0" class="tab-badge">{{ summary.openCount }}</span>
         </button>
         <button
           type="button"
@@ -177,15 +203,15 @@ async function onAccountCreated(account: OpenAccountResponse) {
           @click="tab = 'cerradas'"
         >
           <Check :size="15" :stroke-width="1.7" /> <span>Cerradas</span>
-          <span class="tab-badge muted">{{ closedAccounts.length }}</span>
+          <span class="tab-badge muted">{{ summary.closedCount }}</span>
         </button>
       </div>
 
-      <div v-if="tab === 'activas' && activeAccounts.length > 0" class="alert">
+      <div v-if="tab === 'activas' && summary.openCount > 0" class="alert">
         <Receipt :size="15" :stroke-width="1.8" />
         <span>
-          <strong>{{ activeAccounts.length }}</strong>
-          {{ activeAccounts.length === 1 ? 'cuenta abierta' : 'cuentas abiertas' }}
+          <strong>{{ summary.openCount }}</strong>
+          {{ summary.openCount === 1 ? 'cuenta abierta' : 'cuentas abiertas' }}
           · saldo acumulado pendiente <strong>{{ formatMoney(totalPending) }}</strong>
         </span>
       </div>
@@ -197,18 +223,15 @@ async function onAccountCreated(account: OpenAccountResponse) {
         placeholder="Buscar por propietario o documento…"
       />
 
-      <div v-if="store.loading.value" class="state">Cargando…</div>
-      <div
-        v-else-if="filteredAccounts.length === 0 && isSearching && visibleAccounts.length > 0"
-        class="empty-state"
-      >
+      <div v-if="loading && accounts.length === 0" class="state">Cargando…</div>
+      <div v-else-if="isEmpty && isSearching" class="empty-state">
         <div class="empty-ic"><Search :size="28" :stroke-width="1.5" /></div>
         <div class="empty-title">Sin resultados</div>
         <p class="empty-desc">
           Ninguna cuenta {{ tab === 'activas' ? 'activa' : 'cerrada' }} coincide con tu búsqueda.
         </p>
       </div>
-      <div v-else-if="filteredAccounts.length === 0" class="empty-state">
+      <div v-else-if="isEmpty" class="empty-state">
         <div class="empty-ic"><Receipt :size="28" :stroke-width="1.5" /></div>
         <div class="empty-title">
           {{ tab === 'activas' ? 'Sin cuentas activas' : 'Sin cuentas cerradas' }}
@@ -223,7 +246,7 @@ async function onAccountCreated(account: OpenAccountResponse) {
       </div>
       <div v-else class="cards">
         <button
-          v-for="acc in filteredAccounts"
+          v-for="acc in accounts"
           :key="acc.id"
           type="button"
           class="acct-card"
@@ -260,6 +283,11 @@ async function onAccountCreated(account: OpenAccountResponse) {
             </div>
           </div>
         </button>
+      </div>
+
+      <!-- Centinela del scroll infinito: al entrar en viewport pide la página siguiente. -->
+      <div v-if="!isEmpty" ref="sentinel" class="sentinel" aria-hidden="true">
+        <span v-if="loading && accounts.length > 0">Cargando más…</span>
       </div>
     </template>
 
@@ -414,6 +442,16 @@ async function onAccountCreated(account: OpenAccountResponse) {
   border-color: var(--amatista-500);
   box-shadow: var(--ring);
 }
+
+/* Centinela del scroll infinito. Ocupa alto para que el observer lo detecte antes del borde. */
+.sentinel {
+  min-height: 40px;
+  display: grid;
+  place-items: center;
+  font-size: 12.5px;
+  color: var(--warm-500);
+}
+
 .state {
   padding: 32px 16px;
   text-align: center;
