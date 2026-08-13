@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { Beaker, Plus, Trash2, X, Pencil, AlertTriangle } from 'lucide-vue-next'
+import { Beaker, Plus, Trash2, AlertTriangle } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import ExistingItemsSection from '../components/ExistingItemsSection.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
@@ -119,11 +120,6 @@ function startEditing(idx: number) {
   editingIndex.value = idx
   submitted.value = false
   confirmingBranch.value = false
-}
-
-function cancelEditing() {
-  editingIndex.value = null
-  resetDraft()
 }
 
 const subtitle = computed(() => {
@@ -256,44 +252,22 @@ function doSave() {
           />
         </BaseField>
 
-        <section v-if="props.existing.length > 0 && editingIndex === null" class="existing-section">
-          <h4 class="existing-title">Ya solicitados ({{ props.existing.length }})</h4>
-          <ul class="existing-list">
-            <li v-for="(item, idx) in props.existing" :key="idx" class="existing-card">
-              <div class="existing-summary">
-                <div class="existing-main">
-                  {{ formatDateShort(item.date) }} · {{ typeLabel(item.testTypeId) }}
-                </div>
-                <div class="existing-sub">
-                  {{ item.quantity }} unidad{{ item.quantity === 1 ? '' : 'es' }} ·
-                  {{ item.diagnosis || 'sin observaciones' }}
-                </div>
-              </div>
-              <span v-if="item.savedId" class="saved-chip">✓ Guardado</span>
-              <template v-else>
-                <button
-                  type="button"
-                  class="edit-existing"
-                  :class="{ active: editingIndex === idx }"
-                  aria-label="Editar examen"
-                  :disabled="editingIndex !== null && editingIndex !== idx"
-                  @click="editingIndex === idx ? cancelEditing() : startEditing(idx)"
-                >
-                  <Pencil :size="14" :stroke-width="1.7" />
-                </button>
-                <button
-                  type="button"
-                  class="remove-existing"
-                  aria-label="Eliminar examen"
-                  :disabled="editingIndex !== null"
-                  @click="emit('remove-existing', idx)"
-                >
-                  <X :size="14" :stroke-width="1.7" />
-                </button>
-              </template>
-            </li>
-          </ul>
-        </section>
+        <ExistingItemsSection
+          :items="props.existing"
+          title="Ya solicitados"
+          noun="examen"
+          :editing-index="editingIndex"
+          @edit="startEditing"
+          @remove="emit('remove-existing', $event)"
+        >
+          <template #main="{ item }"
+            >{{ formatDateShort(item.date) }} · {{ typeLabel(item.testTypeId) }}</template
+          >
+          <template #sub="{ item }">
+            {{ item.quantity }} unidad{{ item.quantity === 1 ? '' : 'es' }} ·
+            {{ item.diagnosis || 'sin observaciones' }}
+          </template>
+        </ExistingItemsSection>
 
         <div class="tests-list">
           <div v-for="(t, i) in draft.tests" :key="i" class="test-card">
@@ -519,162 +493,5 @@ function doSave() {
   background: var(--warm-100);
   border-color: var(--amatista-500);
   color: var(--amatista-700);
-}
-
-.existing-section {
-  margin-bottom: 22px;
-  padding: 14px 16px;
-  background: var(--amatista-50);
-  border: 1px solid var(--amatista-200);
-  border-radius: 12px;
-}
-
-.existing-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--amatista-700);
-  margin: 0 0 10px;
-}
-
-.existing-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.existing-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 10px;
-}
-
-.existing-summary {
-  min-width: 0;
-  flex: 1;
-}
-
-.existing-main {
-  font-size: 14.5px;
-  font-weight: 500;
-  color: var(--warm-900);
-  line-height: 1.4;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.existing-sub {
-  font-size: 13px;
-  color: var(--warm-600);
-  margin-top: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.saved-chip {
-  font-size: 12px;
-  font-weight: 500;
-  padding: 5px 10px;
-  border-radius: var(--radius-pill);
-  background: var(--success-50);
-  color: oklch(40% 0.15 150deg);
-  border: 1px solid oklch(85% 0.1 150deg);
-  white-space: nowrap;
-}
-
-.remove-existing {
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  color: var(--warm-600);
-  flex-shrink: 0;
-}
-
-.remove-existing:hover:not(:disabled) {
-  background: var(--danger-150);
-  border-color: var(--danger-300);
-  color: oklch(35% 0.15 25deg);
-}
-
-.remove-existing:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.edit-existing {
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  color: var(--warm-600);
-  flex-shrink: 0;
-}
-
-.edit-existing:hover:not(:disabled) {
-  background: var(--amatista-50);
-  border-color: var(--amatista-500);
-  color: var(--amatista-700);
-}
-
-.edit-existing.active {
-  background: var(--amatista-700);
-  border-color: var(--amatista-700);
-  color: white;
-}
-
-.edit-existing:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.editing-banner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  margin-bottom: 16px;
-  background: var(--amatista-700);
-  color: white;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.editing-banner span {
-  flex: 1;
-}
-
-.editing-cancel {
-  background: rgb(255 255 255 / 18%);
-  border: none;
-  padding: 5px 12px;
-  border-radius: 6px;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  color: white;
-  cursor: pointer;
-}
-
-.editing-cancel:hover {
-  background: rgb(255 255 255 / 28%);
 }
 </style>

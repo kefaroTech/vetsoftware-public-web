@@ -92,7 +92,7 @@ function diffClass(diff: number): string {
     @close="emit('close')"
   >
     <template #body>
-      <p v-if="serverError" class="server-error">{{ serverError }}</p>
+      <p v-if="serverError" class="ds-server-error">{{ serverError }}</p>
 
       <div v-if="phase === 'count'">
         <table class="arqueo">
@@ -242,15 +242,6 @@ function diffClass(diff: number): string {
 
 .note-field {
   margin-top: 18px;
-}
-
-.server-error {
-  margin: 0 0 14px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: var(--danger-150);
-  color: oklch(45% 0.18 25deg);
-  font-size: 13px;
 }
 
 .done-msg {

@@ -103,7 +103,7 @@ async function submit() {
     @close="emit('close')"
   >
     <template #body>
-      <p v-if="serverError" class="server-error">{{ serverError }}</p>
+      <p v-if="serverError" class="ds-server-error">{{ serverError }}</p>
       <div class="grid">
         <BaseField
           class="col-2"
@@ -184,15 +184,6 @@ async function submit() {
   .grid {
     grid-template-columns: 1fr;
   }
-}
-
-.server-error {
-  margin: 0 0 14px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: var(--danger-150);
-  color: oklch(45% 0.18 25deg);
-  font-size: 13px;
 }
 
 /* caja/compras usan un amatista un punto más claro que el resto. */

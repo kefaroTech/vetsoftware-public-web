@@ -185,7 +185,7 @@ function confirmRemove(id: number) {
                 <button
                   v-if="canUpdate"
                   type="button"
-                  class="icon-btn"
+                  class="ds-icon-btn"
                   title="Editar"
                   @click="startEdit(cat)"
                 >
@@ -194,7 +194,7 @@ function confirmRemove(id: number) {
                 <button
                   v-if="canDelete"
                   type="button"
-                  class="icon-btn danger"
+                  class="ds-icon-btn ds-icon-btn--danger"
                   :disabled="(counts[cat.id] ?? 0) > 0"
                   :title="
                     (counts[cat.id] ?? 0) > 0
@@ -320,29 +320,6 @@ function confirmRemove(id: number) {
   gap: 6px;
 }
 
-.icon-btn {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  border: 1px solid var(--warm-200);
-  background: transparent;
-  color: var(--warm-700);
-  cursor: pointer;
-}
-.icon-btn:hover:not(:disabled) {
-  background: var(--warm-100);
-}
-.icon-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-.icon-btn.danger:hover:not(:disabled) {
-  background: var(--danger-100);
-  color: var(--danger-900);
-  border-color: var(--danger-400);
-}
 .confirm {
   display: flex;
   align-items: center;

@@ -202,7 +202,7 @@ function typeLabel(t: DewormingResponse['type']): string {
               <button
                 v-if="canUpdate"
                 type="button"
-                class="icon-btn"
+                class="ds-icon-btn"
                 title="Editar"
                 @click.stop="editing = item"
               >
@@ -211,7 +211,7 @@ function typeLabel(t: DewormingResponse['type']): string {
               <button
                 v-if="canDelete"
                 type="button"
-                class="icon-btn danger"
+                class="ds-icon-btn ds-icon-btn--danger"
                 title="Eliminar"
                 @click.stop="deleting = item"
               >
@@ -262,25 +262,6 @@ function typeLabel(t: DewormingResponse['type']): string {
   text-align: right;
 }
 
-.icon-btn {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  border: 1px solid var(--warm-200);
-  background: transparent;
-  color: var(--warm-700);
-  cursor: pointer;
-}
-.icon-btn:hover {
-  background: var(--warm-100);
-}
-.icon-btn.danger:hover {
-  background: var(--danger-100);
-  color: var(--danger-900);
-  border-color: var(--danger-400);
-}
 .clickable-row {
   cursor: pointer;
   transition: background 0.12s ease;

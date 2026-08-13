@@ -427,3 +427,59 @@
   flex: 1;
   min-width: 0;
 }
+
+/* ========================================================================== *
+ * BOTÓN DE ICONO — la acción por fila de tabla
+ * ========================================================================== */
+
+/* Copiado en 17 SFC, en dos familias visuales que NO se unifican aquí porque
+ * no son la misma pieza: ésta es la de contorno (12 copias, cuadrada de 28px)
+ * y la de compras es rellena y se dimensiona por padding. Unificarlas habría
+ * cambiado el aspecto de cinco pantallas, que es justo lo que esta capa evita.
+ *
+ * El estado deshabilitado se declara aquí aunque sólo dos de las copias lo
+ * tuvieran: el `:hover` va con `:not(:disabled)` porque un botón apagado que
+ * reacciona al ratón es un defecto en todas ellas, no una variante. */
+.ds-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--warm-200);
+  background: transparent;
+  color: var(--warm-700);
+  cursor: pointer;
+}
+
+.ds-icon-btn:hover:not(:disabled) {
+  background: var(--warm-100);
+}
+
+.ds-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Acción destructiva: sólo se tiñe al pasar por encima, para que una fila con
+ * varias acciones no grite en rojo en reposo. */
+.ds-icon-btn--danger:hover:not(:disabled) {
+  background: var(--danger-100);
+  color: var(--danger-900);
+  border-color: var(--danger-400);
+}
+
+/* ========================================================================== *
+ * ERROR DEL SERVIDOR — el aviso al pie de un formulario
+ * ========================================================================== */
+
+/* 12 copias, y las 12 byte a byte idénticas: no hubo ninguna variante que
+ * conciliar. Es el mensaje que devuelve el backend cuando el envío falla. */
+.ds-server-error {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--danger-150);
+  color: oklch(45% 0.18 25deg);
+  font-size: 13px;
+}

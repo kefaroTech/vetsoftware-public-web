@@ -245,7 +245,7 @@ async function onCategoryRemove(id: number) {
               <button
                 v-if="canUpdate"
                 type="button"
-                class="icon-btn"
+                class="ds-icon-btn"
                 title="Editar"
                 @click="editing = s"
               >
@@ -254,7 +254,7 @@ async function onCategoryRemove(id: number) {
               <button
                 v-if="canDelete"
                 type="button"
-                class="icon-btn"
+                class="ds-icon-btn"
                 title="Pausar"
                 @click="pausing = s"
               >
@@ -509,20 +509,7 @@ async function onCategoryRemove(id: number) {
   flex-shrink: 0;
   align-items: center;
 }
-.icon-btn {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  border: 1px solid var(--warm-200);
-  background: transparent;
-  color: var(--warm-700);
-  cursor: pointer;
-}
-.icon-btn:hover {
-  background: var(--warm-100);
-}
+
 .reactivate {
   display: inline-flex;
   align-items: center;

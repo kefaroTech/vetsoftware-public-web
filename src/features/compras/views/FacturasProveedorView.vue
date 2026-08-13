@@ -132,7 +132,7 @@ onMounted(refresh)
       </button>
     </div>
 
-    <p v-if="error" class="server-error">{{ error }}</p>
+    <p v-if="error" class="ds-server-error">{{ error }}</p>
 
     <!-- Facturas -->
     <template v-if="tab === 'facturas'">
@@ -468,15 +468,6 @@ onMounted(refresh)
   font-size: 13px;
   color: var(--warm-500);
   margin: 0 0 12px;
-}
-
-.server-error {
-  margin: 0 0 14px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: var(--danger-150);
-  color: oklch(45% 0.18 25deg);
-  font-size: 13px;
 }
 
 /* caja/compras usan un amatista un punto más claro que el resto. */
