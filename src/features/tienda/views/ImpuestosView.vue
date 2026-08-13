@@ -176,7 +176,7 @@ function ivaContenido(percentage: number): string {
                 <button
                   v-if="canUpdate"
                   type="button"
-                  class="icon-btn"
+                  class="ds-icon-btn"
                   title="Editar"
                   @click="editing = t"
                 >
@@ -185,7 +185,7 @@ function ivaContenido(percentage: number): string {
                 <button
                   v-if="canDelete"
                   type="button"
-                  class="icon-btn"
+                  class="ds-icon-btn"
                   :disabled="usageOf(t.id) > 0"
                   :title="usageOf(t.id) > 0 ? 'No se puede pausar: impuesto en uso' : 'Pausar'"
                   @click="requestPause(t)"
@@ -358,24 +358,7 @@ function ivaContenido(percentage: number): string {
   gap: 4px;
   align-items: center;
 }
-.icon-btn {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  border: 1px solid var(--warm-200);
-  background: transparent;
-  color: var(--warm-700);
-  cursor: pointer;
-}
-.icon-btn:hover:not(:disabled) {
-  background: var(--warm-100);
-}
-.icon-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+
 .reactivate {
   display: inline-flex;
   align-items: center;

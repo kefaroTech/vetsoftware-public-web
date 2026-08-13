@@ -85,7 +85,7 @@ onMounted(load)
       </button>
     </div>
 
-    <p v-if="error" class="server-error">{{ error }}</p>
+    <p v-if="error" class="ds-server-error">{{ error }}</p>
 
     <div class="table-wrap">
       <table class="grid-table">
@@ -239,15 +239,6 @@ onMounted(load)
   text-align: center;
   color: var(--warm-400);
   padding: 26px;
-}
-
-.server-error {
-  margin: 0 0 14px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: var(--danger-150);
-  color: oklch(45% 0.18 25deg);
-  font-size: 13px;
 }
 
 /* caja/compras usan un amatista un punto más claro que el resto. */

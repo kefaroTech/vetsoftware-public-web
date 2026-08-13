@@ -135,7 +135,7 @@ async function submit() {
     @close="emit('close')"
   >
     <template #body>
-      <p v-if="serverError" class="server-error">{{ serverError }}</p>
+      <p v-if="serverError" class="ds-server-error">{{ serverError }}</p>
       <div class="head-grid">
         <BaseField label="Proveedor" required :error="err('supplierId')">
           <BaseSelect
@@ -281,15 +281,6 @@ async function submit() {
 .icon-btn.danger:hover {
   background: var(--danger-200);
   color: oklch(50% 0.2 25deg);
-}
-
-.server-error {
-  margin: 0 0 14px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: var(--danger-150);
-  color: oklch(45% 0.18 25deg);
-  font-size: 13px;
 }
 
 /* caja/compras usan un amatista un punto más claro que el resto. */

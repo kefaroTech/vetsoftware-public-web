@@ -160,7 +160,7 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
                 <button
                   v-if="canUpdate && isOwn(m)"
                   type="button"
-                  class="icon-btn"
+                  class="ds-icon-btn"
                   title="Editar"
                   @click="editing = m"
                 >
@@ -169,7 +169,7 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
                 <button
                   v-if="canDelete && isOwn(m)"
                   type="button"
-                  class="icon-btn"
+                  class="ds-icon-btn"
                   title="Pausar"
                   @click="requestPause(m)"
                 >
@@ -354,20 +354,7 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
   gap: 4px;
   align-items: center;
 }
-.icon-btn {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  border: 1px solid var(--warm-200);
-  background: transparent;
-  color: var(--warm-700);
-  cursor: pointer;
-}
-.icon-btn:hover:not(:disabled) {
-  background: var(--warm-100);
-}
+
 .readonly-hint {
   font-size: 11.5px;
   color: var(--warm-400);

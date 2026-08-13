@@ -31,7 +31,11 @@
     "e2e:historial": "npx playwright test historia.spec.ts",
     "e2e:registro": "npx playwright test registro.spec.ts",
     "e2e:ui": "playwright test --ui",
-    "prepare": "husky"
+    "prepare": "husky",
+    "visual": "playwright test --config=playwright.visual.config.ts",
+    "visual:update": "playwright test --config=playwright.visual.config.ts --update-snapshots",
+    "visual:docker": "node scripts/visual-docker.mjs",
+    "visual:docker:update": "node scripts/visual-docker.mjs --update-snapshots"
   },
   "engines": {
     "node": ">=24.0.0",

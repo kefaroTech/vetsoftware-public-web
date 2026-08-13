@@ -87,7 +87,7 @@ onMounted(refresh)
       />
     </div>
 
-    <p v-if="error" class="server-error">{{ error }}</p>
+    <p v-if="error" class="ds-server-error">{{ error }}</p>
 
     <table class="grid-table">
       <thead>
@@ -262,15 +262,6 @@ onMounted(refresh)
   margin-top: 10px;
   font-size: 12px;
   color: var(--warm-500);
-}
-
-.server-error {
-  margin: 0 0 14px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: var(--danger-150);
-  color: oklch(45% 0.18 25deg);
-  font-size: 13px;
 }
 
 /* caja/compras usan un amatista un punto más claro que el resto. */

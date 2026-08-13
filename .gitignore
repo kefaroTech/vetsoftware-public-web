@@ -31,6 +31,7 @@ testsprite_tests/tmp/config.json
 # Playwright E2E artifacts
 /test-results/
 /playwright-report/
+/playwright-report-visual/
 /blob-report/
 /playwright/.cache/
 
