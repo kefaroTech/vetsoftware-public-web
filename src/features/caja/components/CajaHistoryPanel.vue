@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { FileDown, Filter, History, RotateCcw } from 'lucide-vue-next'
 import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
-import Pagination from '@/features/acciones/components/Pagination.vue'
+import Pagination from '@/components/ui/Pagination.vue'
 import {
   branchLabel,
   employeeLabel,

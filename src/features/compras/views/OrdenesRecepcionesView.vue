@@ -12,10 +12,12 @@ import { PERMISSIONS } from '@/constants/permissions'
 import { formatMoney, formatDate } from '../composables/format'
 import PurchaseOrderModal from '../components/PurchaseOrderModal.vue'
 import GoodsReceiptModal from '../components/GoodsReceiptModal.vue'
+import Pagination from '@/components/ui/Pagination.vue'
 import type { GoodsReceiptStatus, PurchaseOrder, PurchaseOrderStatus } from '../types/compras'
 
 const purchases = usePurchasesStore()
-const { orders, receipts, error } = storeToRefs(purchases)
+const { orders, receipts, ordersPage, ordersTotal, receiptsPage, receiptsTotal, error } =
+  storeToRefs(purchases)
 const { can } = useAuthorization()
 const toast = useToast()
 
@@ -114,6 +116,12 @@ async function cancelGr(id: number) {
 
 const orderRows = computed(() => orders.value)
 const receiptRows = computed(() => receipts.value)
+
+// El backend numera desde 0 y el componente desde 1: la conversion se hace aqui,
+// en el unico punto donde ambos se tocan.
+const PAGE_SIZE = purchases.pageSize
+const ordersPageCount = computed(() => Math.max(1, Math.ceil(ordersTotal.value / PAGE_SIZE)))
+const receiptsPageCount = computed(() => Math.max(1, Math.ceil(receiptsTotal.value / PAGE_SIZE)))
 
 onMounted(refresh)
 </script>
@@ -278,6 +286,23 @@ onMounted(refresh)
         </tr>
       </tbody>
     </table>
+
+    <Pagination
+      v-if="tab === 'ordenes'"
+      :page="ordersPage + 1"
+      :page-count="ordersPageCount"
+      :total="ordersTotal"
+      :page-size="PAGE_SIZE"
+      @update:page="(p) => purchases.loadOrders(p - 1)"
+    />
+    <Pagination
+      v-else
+      :page="receiptsPage + 1"
+      :page-count="receiptsPageCount"
+      :total="receiptsTotal"
+      :page-size="PAGE_SIZE"
+      @update:page="(p) => purchases.loadReceipts(p - 1)"
+    />
 
     <PurchaseOrderModal
       :open="poModal"

@@ -32,11 +32,6 @@ export const medicamentApi = {
     const { data } = await http.get<MedicamentResponse[]>('/medicaments/available')
     return data
   },
-  /** Todos los medicamentos (para la pantalla de administración). */
-  async listAll(): Promise<MedicamentResponse[]> {
-    const { data } = await http.get<MedicamentResponse[]>('/medicaments')
-    return data
-  },
   /** Medicamentos pausados (enabled=false) propios de la empresa, para reactivar. */
   async listDisabled(): Promise<MedicamentResponse[]> {
     const { data } = await http.get<MedicamentResponse[]>('/medicaments/disabled')

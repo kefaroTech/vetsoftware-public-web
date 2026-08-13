@@ -1,12 +1,23 @@
 import { http } from '@/services/http/http.client'
 import { withBranchBody } from '@/features/branches/api/branchContext'
-import type { GoodsReceipt, GoodsReceiptRequest } from '../types/compras'
+import type { PageResponse, GoodsReceipt, GoodsReceiptRequest } from '../types/compras'
 
 // Recepciones de mercancía (backend: /goods-receipts). CONFIRMAR alimenta inventario; ANULAR lo revierte.
 
+export interface GoodsReceiptSearchParams {
+  page?: number
+  pageSize?: number
+}
+
 export const goodsReceiptsApi = {
-  async listByCompany(): Promise<GoodsReceipt[]> {
-    const { data } = await http.get<GoodsReceipt[]>('/goods-receipts')
+  /**
+   * Listado paginado. Apunta a `/search`, que ya existia y si pagina, en vez de
+   * a `GET /goods-receipts`, que devuelve la coleccion entera (BE-06).
+   */
+  async search(params: GoodsReceiptSearchParams = {}): Promise<PageResponse<GoodsReceipt>> {
+    const { data } = await http.get<PageResponse<GoodsReceipt>>('/goods-receipts/search', {
+      params,
+    })
     return data
   },
   async findById(id: number): Promise<GoodsReceipt> {

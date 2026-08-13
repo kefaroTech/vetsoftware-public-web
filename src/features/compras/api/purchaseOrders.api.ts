@@ -1,12 +1,23 @@
 import { http } from '@/services/http/http.client'
 import { withBranchBody } from '@/features/branches/api/branchContext'
-import type { PurchaseOrder, PurchaseOrderRequest } from '../types/compras'
+import type { PageResponse, PurchaseOrder, PurchaseOrderRequest } from '../types/compras'
 
 // Órdenes de compra (backend: /purchase-orders). Ciclo DRAFT → PLACED → PARTIALLY_RECEIVED/RECEIVED.
 
+export interface PurchaseOrderSearchParams {
+  page?: number
+  pageSize?: number
+}
+
 export const purchaseOrdersApi = {
-  async listByCompany(): Promise<PurchaseOrder[]> {
-    const { data } = await http.get<PurchaseOrder[]>('/purchase-orders')
+  /**
+   * Listado paginado. Apunta a `/search`, que ya existia y si pagina, en vez de
+   * a `GET /purchase-orders`, que devuelve la coleccion entera (BE-06).
+   */
+  async search(params: PurchaseOrderSearchParams = {}): Promise<PageResponse<PurchaseOrder>> {
+    const { data } = await http.get<PageResponse<PurchaseOrder>>('/purchase-orders/search', {
+      params,
+    })
     return data
   },
   async findById(id: number): Promise<PurchaseOrder> {
