@@ -1,6 +1,10 @@
 import { http } from '@/services/http/http.client'
 import { DEFAULT_PAGE_SIZE, type PageResponse } from '@/types/pagination'
-import type { PersonType, TaxRegime } from '@/features/facturacion/types/facturacion'
+import type {
+  FiscalResponsibility,
+  PersonType,
+  TaxRegime,
+} from '@/features/facturacion/types/facturacion'
 import type { OwnerDocumentType } from '@/features/facturacion/composables/feFiscalChecklist'
 
 export interface CitySummary {
@@ -31,8 +35,8 @@ export interface OwnerResponse {
   legalName?: string | null
   withholdingAgent?: boolean
   taxRegime?: TaxRegime | null
-  /** Código de responsabilidad RUT (p. ej. "R-99-PN"); opcional, backend default. */
-  fiscalResponsibility?: string | null
+  /** Nombre del enum del backend, no el código RUT. Ver FiscalResponsibility. */
+  fiscalResponsibility?: FiscalResponsibility | null
 }
 
 export interface CreateOwnerRequest {
@@ -50,7 +54,7 @@ export interface CreateOwnerRequest {
   legalName?: string | null
   withholdingAgent?: boolean
   taxRegime?: TaxRegime | null
-  fiscalResponsibility?: string | null
+  fiscalResponsibility?: FiscalResponsibility | null
 }
 
 export interface UpdateOwnerRequest extends CreateOwnerRequest {}

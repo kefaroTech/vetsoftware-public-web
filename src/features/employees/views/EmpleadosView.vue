@@ -133,11 +133,12 @@ async function handleSubmit(data: EmployeeFormData) {
   submitError.value = null
   try {
     if (formInitial.value) {
+      // `status` no viaja: PUT /employees/{id} no lo acepta. El activar/desactivar tiene sus
+      // propios endpoints y su propio botón en la fila.
       const updated = await update(formInitial.value.id, {
         employeeCode: data.employeeCode.trim(),
         name: data.name.trim(),
         email: data.email.trim(),
-        status: data.status,
       })
       selectedId.value = updated.id
       toast.success('Empleado actualizado', updated.name)

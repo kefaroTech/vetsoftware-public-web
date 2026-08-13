@@ -7,3 +7,7 @@ playwright-report
 test-results
 *.tsbuildinfo
 playwright-report-visual
+
+# Generado desde el contrato del backend (npm run api:types)
+src/types/api.generated.d.ts
+api/openapi.json

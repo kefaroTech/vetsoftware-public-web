@@ -70,7 +70,12 @@ export interface CreateAppointmentRequest {
   branchId?: number | null
 }
 
-export type UpdateAppointmentRequest = CreateAppointmentRequest
+/**
+ * TR-01: era un alias de `CreateAppointmentRequest`, así que dejaba mandar `branchId` en la
+ * edición. `PUT /appointments/{id}` no lo acepta —la cita no cambia de sede, como ya decía el
+ * comentario de arriba— y lo descartaba en silencio. Ahora el tipo lo impide.
+ */
+export type UpdateAppointmentRequest = Omit<CreateAppointmentRequest, 'branchId'>
 
 export interface RescheduleAppointmentRequest {
   startAt: string
