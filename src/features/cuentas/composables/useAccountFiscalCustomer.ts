@@ -140,7 +140,7 @@ export function useAccountFiscalCustomer(ownerId: Ref<number | null | undefined>
       modalOpen.value = false
       toast.success('Datos fiscales guardados', 'El cliente quedó listo para facturar.')
     } catch (e) {
-      toast.error('No se pudieron guardar', getProblemDetailMessage(e))
+      toast.errorFrom('No se pudieron guardar', e)
     }
   }
 

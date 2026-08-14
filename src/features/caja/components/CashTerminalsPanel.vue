@@ -56,7 +56,7 @@ async function load() {
   try {
     terminals.value = await cashTerminalApi.list(Number(selectedBranchId.value))
   } catch (e) {
-    toast.error('No se pudieron cargar', getProblemDetailMessage(e, 'Error cargando terminales.'))
+    toast.errorFrom('No se pudieron cargar', e, 'Error cargando terminales.')
   } finally {
     loading.value = false
   }
@@ -103,7 +103,7 @@ async function save() {
     modalOpen.value = false
     await load()
   } catch (e) {
-    toast.error('No se pudo guardar', getProblemDetailMessage(e, 'Revisa los datos del terminal.'))
+    toast.errorFrom('No se pudo guardar', e, 'Revisa los datos del terminal.')
   } finally {
     saving.value = false
   }

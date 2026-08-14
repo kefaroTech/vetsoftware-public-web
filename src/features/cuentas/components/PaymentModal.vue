@@ -101,7 +101,7 @@ async function submit() {
       toast.warn('Conflicto de concurrencia', getProblemDetailMessage(e))
       emit('refresh')
     } else {
-      toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo registrar el abono'))
+      toast.errorFrom('Ocurrió un error', e, 'No se pudo registrar el abono')
     }
   } finally {
     busy.value = false

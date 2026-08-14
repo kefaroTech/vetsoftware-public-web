@@ -1,7 +1,6 @@
 import { ref, type Ref } from 'vue'
 import { useTienda } from './useTienda'
 import { useToast } from '@/composables/useToast'
-import { getProblemDetailMessage } from '@/services/http/http.client'
 import type { ProductResponse } from '../types/tienda'
 import type { ReceiveDraft } from '../components/RestockModal.vue'
 import type { AdjustDraft } from '../components/AdjustModal.vue'
@@ -38,8 +37,7 @@ export function useInventoryActions(ctx: {
   const pausing = ref<ProductResponse | null>(null)
   const pausingBusy = ref(false)
 
-  const fail = (e: unknown, msg: string) =>
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, msg))
+  const fail = (e: unknown, msg: string) => toast.errorFrom('Ocurrió un error', e, msg)
 
   async function onReceive(draft: ReceiveDraft) {
     const p = restockFor.value

@@ -96,7 +96,7 @@ async function onConfirmPause() {
     toast.info('Impuesto pausado', `${target.name} dejó de estar disponible.`)
     pausing.value = null
   } catch (e) {
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo pausar'))
+    toast.errorFrom('Ocurrió un error', e, 'No se pudo pausar')
   } finally {
     pausingBusy.value = false
   }
@@ -107,7 +107,7 @@ async function onReactivate(t: TaxResponse) {
     await store.enableTax(t.id)
     toast.success('Impuesto reactivado', `${t.name} volvió a estar disponible.`)
   } catch (e) {
-    toast.error('Ocurrió un error', getProblemDetailMessage(e, 'No se pudo reactivar'))
+    toast.errorFrom('Ocurrió un error', e, 'No se pudo reactivar')
   }
 }
 

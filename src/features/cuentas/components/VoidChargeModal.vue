@@ -68,7 +68,7 @@ async function submit() {
       toast.warn('Conflicto de concurrencia', getProblemDetailMessage(e))
       emit('refresh')
     } else {
-      toast.error('No se pudo anular', getProblemDetailMessage(e, 'No se pudo anular el cargo'))
+      toast.errorFrom('No se pudo anular', e, 'No se pudo anular el cargo')
     }
   } finally {
     busy.value = false

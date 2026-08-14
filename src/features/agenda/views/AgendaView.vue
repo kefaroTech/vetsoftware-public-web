@@ -28,7 +28,7 @@ import {
   type UpdateAppointmentRequest,
 } from '../types/appointment'
 import type { AgendaEvent, AgendaItem } from '../types/agenda'
-import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
+import { isConcurrencyConflict } from '@/services/http/http.client'
 
 type ViewMode = 'month' | 'week' | 'day'
 
@@ -170,7 +170,7 @@ function notifyClash(appt: AppointmentResponse) {
 }
 
 function handleError(e: unknown, title: string) {
-  toast.error(title, getProblemDetailMessage(e, 'Inténtalo de nuevo.'))
+  toast.errorFrom(title, e, 'Inténtalo de nuevo.')
   if (isConcurrencyConflict(e)) {
     void load()
   }

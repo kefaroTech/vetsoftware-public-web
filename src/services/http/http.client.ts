@@ -1,4 +1,5 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import { nextTraceparent } from '@/services/telemetry/trace'
 import type { ProblemDetail } from '@/types/api.types'
 import { popLoader, pushLoader } from '@/composables/useGlobalLoader'
 import { createApiBaseUrl } from './api-base-url'
@@ -12,6 +13,11 @@ declare module 'axios' {
     _loaderPushed?: boolean
     /** Marca interna: reintentos por fallo de red o 5xx ya consumidos. */
     _networkRetries?: number
+    /**
+     * Identificador de la traza que este cliente genero para la peticion (TR-05). Existe
+     * aunque el servidor no conteste nunca, que es cuando mas falta hace.
+     */
+    _traceId?: string
   }
 }
 
@@ -96,6 +102,12 @@ http.interceptors.request.use((config) => {
       localStorage.removeItem(AUTH_STORAGE_KEY)
     }
   }
+  // TR-05: el backend adopta este trace-id, asi que el navegador y el servidor comparten uno.
+  // El reintento pasa otra vez por aqui y genera uno nuevo, que es lo correcto: es otra peticion.
+  const { traceId, traceparent } = nextTraceparent()
+  config.headers.set('traceparent', traceparent)
+  config._traceId = traceId
+
   if (!config.skipGlobalLoader) {
     pushLoader()
     config._loaderPushed = true
@@ -179,6 +191,28 @@ http.interceptors.response.use(
     return Promise.reject(error)
   },
 )
+
+/**
+ * Identificador de la traza distribuida que corresponde a esta petición fallida (TR-05).
+ *
+ * <p>El backend ya hacía todo el trabajo: emite la cabecera `X-Trace-Id` en cada respuesta y la
+ * declara en `exposedHeaders` del CORS **precisamente** para que este código pueda leerla. Nadie
+ * la leía, así que cuando un veterinario reportaba «se quedó cargando», soporte no tenía forma de
+ * encontrar la traza: el dato estaba a un acceso de distancia.
+ *
+ * <p>Se prefiere la cabecera al `traceId` del cuerpo porque existe también en las respuestas que
+ * no traen `ProblemDetail` —un 502 del proxy, un timeout— que son justo las que peor se
+ * diagnostican.
+ */
+export function getTraceId(error: unknown): string | undefined {
+  if (!(error instanceof AxiosError)) return undefined
+  // El que genero este cliente: existe aunque la peticion muriera sin respuesta.
+  if (error.config?._traceId) return error.config._traceId
+  const header = error.response?.headers?.['x-trace-id']
+  if (typeof header === 'string' && header.trim()) return header.trim()
+  const pd = error.response?.data as ProblemDetail | undefined
+  return pd?.traceId?.trim() || undefined
+}
 
 export function getProblemDetailMessage(error: unknown, fallback = 'Error inesperado'): string {
   if (error instanceof AxiosError) {

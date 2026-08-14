@@ -7,7 +7,6 @@ import { purchaseOrdersApi } from '../api/purchaseOrders.api'
 import { goodsReceiptsApi } from '../api/goodsReceipts.api'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useToast } from '@/composables/useToast'
-import { getProblemDetailMessage } from '@/services/http/http.client'
 import { PERMISSIONS } from '@/constants/permissions'
 import { formatMoney, formatDate } from '../composables/format'
 import PurchaseOrderModal from '../components/PurchaseOrderModal.vue'
@@ -69,7 +68,7 @@ async function placePo(po: PurchaseOrder) {
     toast.success('Orden emitida')
     refresh()
   } catch (e) {
-    toast.error('No se pudo emitir', getProblemDetailMessage(e, 'Error al emitir'))
+    toast.errorFrom('No se pudo emitir', e, 'Error al emitir')
   }
 }
 async function cancelPo(po: PurchaseOrder) {
@@ -79,7 +78,7 @@ async function cancelPo(po: PurchaseOrder) {
     toast.success('Orden anulada')
     refresh()
   } catch (e) {
-    toast.error('No se pudo anular', getProblemDetailMessage(e, 'Error al anular'))
+    toast.errorFrom('No se pudo anular', e, 'Error al anular')
   }
 }
 async function deletePo(po: PurchaseOrder) {
@@ -89,7 +88,7 @@ async function deletePo(po: PurchaseOrder) {
     toast.success('Orden eliminada')
     refresh()
   } catch (e) {
-    toast.error('No se pudo eliminar', getProblemDetailMessage(e, 'Error al eliminar'))
+    toast.errorFrom('No se pudo eliminar', e, 'Error al eliminar')
   }
 }
 
@@ -100,7 +99,7 @@ async function confirmGr(id: number) {
     toast.success('Recepción confirmada · inventario actualizado')
     refresh()
   } catch (e) {
-    toast.error('No se pudo confirmar', getProblemDetailMessage(e, 'Error al confirmar'))
+    toast.errorFrom('No se pudo confirmar', e, 'Error al confirmar')
   }
 }
 async function cancelGr(id: number) {
@@ -110,7 +109,7 @@ async function cancelGr(id: number) {
     toast.success('Recepción anulada')
     refresh()
   } catch (e) {
-    toast.error('No se pudo anular', getProblemDetailMessage(e, 'Error al anular'))
+    toast.errorFrom('No se pudo anular', e, 'Error al anular')
   }
 }
 
