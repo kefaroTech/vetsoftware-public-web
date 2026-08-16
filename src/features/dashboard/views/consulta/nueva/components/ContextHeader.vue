@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { PawPrint } from 'lucide-vue-next'
 import type { Animal, Owner } from '@/types/domain'
-import BaseChip from '@/features/dashboard/components/ui/BaseChip.vue'
+import BaseChip from '@/components/ui/BaseChip.vue'
 import { calcAge } from '../composables/format'
 
 defineProps<{

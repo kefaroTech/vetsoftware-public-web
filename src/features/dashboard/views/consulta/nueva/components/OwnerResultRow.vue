@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Phone } from 'lucide-vue-next'
 import type { Owner } from '@/types/domain'
-import BaseChip from '@/features/dashboard/components/ui/BaseChip.vue'
+import BaseChip from '@/components/ui/BaseChip.vue'
 import { initials } from '../composables/format'
 
 defineProps<{

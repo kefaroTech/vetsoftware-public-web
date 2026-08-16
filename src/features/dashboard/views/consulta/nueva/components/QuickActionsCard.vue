@@ -10,7 +10,7 @@ import {
   Scissors,
   Plus,
 } from 'lucide-vue-next'
-import SectionCard from '@/features/dashboard/components/ui/SectionCard.vue'
+import SectionCard from '@/components/ui/SectionCard.vue'
 import type { ActionKind } from '../composables/useNuevaConsultaDraft'
 
 defineProps<{
