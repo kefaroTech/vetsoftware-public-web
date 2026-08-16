@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
 import { Package } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import DateInput from '@/components/ui/DateInput.vue'
 import type { ProductResponse } from '../types/tienda'
 
 /** Entrada de mercancía (recepción). La sede la decide la vista (sede activa); aquí solo cantidad, costo y lote. */
