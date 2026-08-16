@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { TriangleAlert, Power } from 'lucide-vue-next'
 import type { RoleResponse } from '../types'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
 
 defineProps<{
   open: boolean

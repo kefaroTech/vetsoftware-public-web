@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ShieldAlert } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
 
 defineProps<{
   open: boolean

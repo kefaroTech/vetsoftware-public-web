@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { Syringe } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import type { ProductResponse } from '../types/tienda'
 
 /** Consumo clínico manual: salida de una cantidad para aplicar a un paciente. */

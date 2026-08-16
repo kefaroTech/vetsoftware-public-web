@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { Beaker, Download, FileText } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
 import DetailField from '@/features/historia-clinica/components/DetailField.vue'
 import LabStatusPill from '@/features/acciones/components/LabStatusPill.vue'
 import LabPriorityPill from '../components/LabPriorityPill.vue'

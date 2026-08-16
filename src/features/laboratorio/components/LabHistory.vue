@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { Filter, X } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import SearchableSelect from '@/features/dashboard/components/ui/SearchableSelect.vue'
-import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
+import SearchableSelect from '@/components/ui/SearchableSelect.vue'
+import DateInput from '@/components/ui/DateInput.vue'
 import PatientCascadePicker from '@/features/acciones/components/PatientCascadePicker.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import LabPriorityPill from './LabPriorityPill.vue'

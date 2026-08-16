@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { ClipboardList, History, Search } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
 import type { ProductResponse, CategoryResponse } from '../types/tienda'
 import type { StockView } from '../types/inventory'
 
