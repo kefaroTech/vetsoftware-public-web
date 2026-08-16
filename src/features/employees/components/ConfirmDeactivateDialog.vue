@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { TriangleAlert, Power } from 'lucide-vue-next'
 import type { Employee } from '@/types/domain'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
 
 const props = defineProps<{
   open: boolean

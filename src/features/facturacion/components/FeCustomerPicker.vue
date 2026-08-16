@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { Search, User, Plus, ChevronRight, ArrowLeft, X, Check } from 'lucide-vue-next'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import PawLoader from '@/components/feedback/PawLoader.vue'
 import { useToast } from '@/composables/useToast'
 import { useAuth } from '@/features/auth/composables/useAuth'

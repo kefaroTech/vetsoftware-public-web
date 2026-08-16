@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { User, Check } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import { calcVerificationDigit } from '../composables/feFormat'
 import {
   OWNER_DOCTYPE_LABEL,

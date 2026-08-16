@@ -2,10 +2,10 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { Plus, Trash2, TrendingUp, X } from 'lucide-vue-next'
 import PawLoader from '@/components/feedback/PawLoader.vue'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
-import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
+import DateInput from '@/components/ui/DateInput.vue'
 import { weightRecordApi } from '@/features/dashboard/views/consulta/nueva/api/weightRecord.api'
 import type {
   WeightRecordResponse,

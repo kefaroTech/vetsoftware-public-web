@@ -2,9 +2,9 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { Mail } from 'lucide-vue-next'
 import type { Employee } from '@/types/domain'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
 
 const props = defineProps<{
   open: boolean
