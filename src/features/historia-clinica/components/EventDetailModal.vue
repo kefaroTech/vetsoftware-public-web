@@ -8,39 +8,24 @@ import { EVENT_TYPES } from '../constants/eventTypes'
 import { formatEventDate } from '../composables/format'
 import type { ClinicalEvent } from '../types/historia'
 
-import {
-  vaccinationApi,
-  type VaccinationResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/vaccination.api'
-import {
-  laboratoryTestApi,
-  type LaboratoryTestResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
-import {
-  surgeryApi,
-  type SurgeryResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/surgery.api'
-import {
-  dewormingApi,
-  type DewormingResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/deworming.api'
-import {
-  hospitalizationApi,
-  type HospitalizationResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
-import {
-  diagnosticImagingApi,
-  type DiagnosticImagingResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/diagnosticImaging.api'
-import {
-  prescriptionApi,
-  type PrescriptionResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/prescription.api'
-import {
-  consultationApi,
-  type ConsultationResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/consultation.api'
-import { spaApi, type SpaResponse } from '@/features/dashboard/views/consulta/nueva/api/spa.api'
+import { vaccinationApi } from '@/features/dashboard/views/consulta/nueva/api/vaccination.api'
+import type { VaccinationResponse } from '@/features/dashboard/views/consulta/nueva/types/vaccination.types'
+import { laboratoryTestApi } from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
+import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
+import { surgeryApi } from '@/features/dashboard/views/consulta/nueva/api/surgery.api'
+import type { SurgeryResponse } from '@/features/dashboard/views/consulta/nueva/types/surgery.types'
+import { dewormingApi } from '@/features/dashboard/views/consulta/nueva/api/deworming.api'
+import type { DewormingResponse } from '@/features/dashboard/views/consulta/nueva/types/deworming.types'
+import { hospitalizationApi } from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
+import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/types/hospitalization.types'
+import { diagnosticImagingApi } from '@/features/dashboard/views/consulta/nueva/api/diagnosticImaging.api'
+import type { DiagnosticImagingResponse } from '@/features/dashboard/views/consulta/nueva/types/diagnosticImaging.types'
+import { prescriptionApi } from '@/features/dashboard/views/consulta/nueva/api/prescription.api'
+import type { PrescriptionResponse } from '@/features/dashboard/views/consulta/nueva/types/prescription.types'
+import { consultationApi } from '@/features/dashboard/views/consulta/nueva/api/consultation.api'
+import type { ConsultationResponse } from '@/features/dashboard/views/consulta/nueva/types/consultation.types'
+import { spaApi } from '@/features/dashboard/views/consulta/nueva/api/spa.api'
+import type { SpaResponse } from '@/features/dashboard/views/consulta/nueva/types/spa.types'
 
 import VaccinationDetail from './detail/VaccinationDetail.vue'
 import LaboratoryTestDetail from './detail/LaboratoryTestDetail.vue'

@@ -2,10 +2,8 @@
 import { ref, watch } from 'vue'
 import { Search, User, PawPrint, X, Plus, ArrowLeft, TriangleAlert } from 'lucide-vue-next'
 import { useOwnerSearch } from '@/features/dashboard/views/consulta/nueva/composables/useOwnerSearch'
-import {
-  animalApi,
-  type AnimalResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import { animalApi } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import { ownerApi } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
 import { mapOwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.mapper'
 import { buildCreateAnimalRequest } from '@/features/dashboard/views/consulta/nueva/api/animal.mapper'

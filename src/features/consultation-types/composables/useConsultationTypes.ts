@@ -1,5 +1,6 @@
 import { computed, onMounted, ref } from 'vue'
-import { consultationTypeApi, type ConsultationTypeResponse } from '../api/consultation-types.api'
+import { consultationTypeApi } from '../api/consultation-types.api'
+import type { ConsultationTypeResponse } from '../types/consultation-types.types'
 
 export interface ConsultationTypeOption {
   value: string

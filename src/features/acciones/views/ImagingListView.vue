@@ -13,11 +13,9 @@ import { useToast } from '@/composables/useToast'
 import { openBilling } from '@/features/cuentas/composables/useBillingPrompt'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
-import {
-  diagnosticImagingApi,
-  type DiagnosticImagingResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/diagnosticImaging.api'
-import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import { diagnosticImagingApi } from '@/features/dashboard/views/consulta/nueva/api/diagnosticImaging.api'
+import type { DiagnosticImagingResponse } from '@/features/dashboard/views/consulta/nueva/types/diagnosticImaging.types'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import type { Owner } from '@/types/domain'
 import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
 

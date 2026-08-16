@@ -11,11 +11,9 @@ import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { useDiagnosticImagingTypes } from '@/features/diagnostic-imaging-types/composables/useDiagnosticImagingTypes'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
-import {
-  diagnosticImagingApi,
-  type DiagnosticImagingResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/diagnosticImaging.api'
-import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import { diagnosticImagingApi } from '@/features/dashboard/views/consulta/nueva/api/diagnosticImaging.api'
+import type { DiagnosticImagingResponse } from '@/features/dashboard/views/consulta/nueva/types/diagnosticImaging.types'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{

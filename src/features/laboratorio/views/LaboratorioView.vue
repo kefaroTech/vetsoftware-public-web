@@ -10,7 +10,7 @@ import LabCollectConfirmDialog from '../modals/LabCollectConfirmDialog.vue'
 import { useLabQueue } from '../composables/useLabQueue'
 import { useToast } from '@/composables/useToast'
 import type { LabActionKind } from '../components/LabSampleCard.vue'
-import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
+import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 
 const toast = useToast()
 const queue = useLabQueue()

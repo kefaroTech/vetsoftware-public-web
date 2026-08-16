@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { laboratorioInternoApi } from '../api/laboratorioInterno.api'
-import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
+import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 import type { LaboratoryTestPriority } from '@/types/domain'
 
 const PAGE_SIZE = 12

@@ -1,5 +1,5 @@
 import type { Employee } from '@/types/domain'
-import type { EmployeeResponse } from './employee.api'
+import type { EmployeeResponse } from '../types/employee.types'
 
 function deriveInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean)

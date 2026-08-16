@@ -9,12 +9,9 @@ import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useToast } from '@/composables/useToast'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { PERMISSIONS } from '@/constants/permissions'
-import type { BranchResponse } from '@/features/branches/api/branch.api'
-import {
-  cashTerminalApi,
-  type CashTerminal,
-  type SaveCashTerminalRequest,
-} from '../api/cashTerminal.api'
+import type { BranchResponse } from '@/features/branches/types/branch.types'
+import { cashTerminalApi } from '../api/cashTerminal.api'
+import type { CashTerminal, SaveCashTerminalRequest } from '../types/cashTerminal.types'
 
 const props = defineProps<{ branches: BranchResponse[] }>()
 const { can } = useAuthorization()

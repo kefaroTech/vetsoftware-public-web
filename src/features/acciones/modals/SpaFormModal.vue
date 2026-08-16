@@ -11,8 +11,9 @@ import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { useSpaTypes } from '@/features/spa-types/composables/useSpaTypes'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
-import { spaApi, type SpaResponse } from '@/features/dashboard/views/consulta/nueva/api/spa.api'
-import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import { spaApi } from '@/features/dashboard/views/consulta/nueva/api/spa.api'
+import type { SpaResponse } from '@/features/dashboard/views/consulta/nueva/types/spa.types'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{

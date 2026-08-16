@@ -1,12 +1,5 @@
+import type { ConsultationTypeResponse } from '../types/consultation-types.types'
 import { http } from '@/services/http/http.client'
-
-export interface ConsultationTypeResponse {
-  id: number
-  name: string
-  /** TR-01: el backend lo garantiza (columna NOT NULL); no era nulable. */
-  description: string
-  createdDate: string
-}
 
 export const consultationTypeApi = {
   async listAll(): Promise<ConsultationTypeResponse[]> {

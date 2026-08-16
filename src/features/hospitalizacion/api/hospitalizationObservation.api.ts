@@ -1,24 +1,8 @@
+import type {
+  CreateHospitalizationObservationPayload,
+  HospitalizationObservationResponse,
+} from '../types/hospitalizationObservation.types'
 import { http } from '@/services/http/http.client'
-
-export interface CreateHospitalizationObservationPayload {
-  description: string
-  hospitalizationId: number
-}
-
-export interface ObservationEmployeeSummary {
-  id: number
-  employeeCode: string
-  name: string
-}
-
-export interface HospitalizationObservationResponse {
-  id: number
-  description: string
-  hospitalization: { id: number; date: string }
-  createdBy: ObservationEmployeeSummary
-  createdDate: string // ISO LocalDateTime
-  enabled: boolean
-}
 
 const BASE = '/hospitalization-observations'
 

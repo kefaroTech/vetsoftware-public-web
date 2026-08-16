@@ -7,7 +7,7 @@ import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import { useGeoCascade } from '@/features/dashboard/views/consulta/nueva/composables/useGeoCascade'
 import { scrollToFirstError } from '@/composables/scrollToError'
-import type { BranchResponse, SaveBranchRequest } from '@/features/branches/api/branch.api'
+import type { BranchResponse, SaveBranchRequest } from '@/features/branches/types/branch.types'
 
 const props = defineProps<{
   open: boolean

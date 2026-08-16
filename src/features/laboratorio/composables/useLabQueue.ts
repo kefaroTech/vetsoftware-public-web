@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { laboratorioInternoApi } from '../api/laboratorioInterno.api'
 import { BOARD_STATUSES } from '../types/lab'
-import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
+import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 import type { LaboratoryTestStatus } from '@/types/domain'
 
 /** Estado del tablero activo (Bandeja de muestras) + transiciones de estado. */

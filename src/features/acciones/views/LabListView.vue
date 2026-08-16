@@ -15,11 +15,9 @@ import { useToast } from '@/composables/useToast'
 import { openBilling } from '@/features/cuentas/composables/useBillingPrompt'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
-import {
-  laboratoryTestApi,
-  type LaboratoryTestResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
-import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import { laboratoryTestApi } from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
+import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import type { Owner } from '@/types/domain'
 import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
 

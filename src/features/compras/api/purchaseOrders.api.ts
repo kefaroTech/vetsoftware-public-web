@@ -1,13 +1,9 @@
+import type { PurchaseOrderSearchParams } from '../types/purchaseOrders.types'
 import { http } from '@/services/http/http.client'
 import { withBranchBody } from '@/features/branches/api/branchContext'
 import type { PageResponse, PurchaseOrder, PurchaseOrderRequest } from '../types/compras'
 
 // Órdenes de compra (backend: /purchase-orders). Ciclo DRAFT → PLACED → PARTIALLY_RECEIVED/RECEIVED.
-
-export interface PurchaseOrderSearchParams {
-  page?: number
-  pageSize?: number
-}
 
 export const purchaseOrdersApi = {
   /**

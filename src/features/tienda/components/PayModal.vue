@@ -15,11 +15,11 @@ import {
 import FeThresholdBanner from '@/features/facturacion/components/FeThresholdBanner.vue'
 import FeFiscalCustomerCard from '@/features/facturacion/components/FeFiscalCustomerCard.vue'
 import FeCustomerFiscalModal from '@/features/facturacion/components/FeCustomerFiscalModal.vue'
-import {
-  ownerApi,
-  type OwnerResponse,
-  type UpdateOwnerRequest,
-} from '@/features/dashboard/views/consulta/nueva/api/owner.api'
+import { ownerApi } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
+import type {
+  OwnerResponse,
+  UpdateOwnerRequest,
+} from '@/features/dashboard/views/consulta/nueva/types/owner.types'
 
 const props = defineProps<{ open: boolean; total: number; customer: OwnerResponse | null }>()
 const emit = defineEmits<{

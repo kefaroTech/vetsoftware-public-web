@@ -4,7 +4,7 @@ import { UploadCloud, FileText, X } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import { laboratoryTestFileApi } from '../api/laboratoryTestFile.api'
 import { labCode } from '../types/lab'
-import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
+import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 
 const props = defineProps<{ open: boolean; test: LaboratoryTestResponse | null }>()
 const emit = defineEmits<{ close: []; uploaded: [] }>()

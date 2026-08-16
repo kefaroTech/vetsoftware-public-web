@@ -13,11 +13,9 @@ import { useToast } from '@/composables/useToast'
 import { openBilling } from '@/features/cuentas/composables/useBillingPrompt'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
-import {
-  dewormingApi,
-  type DewormingResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/deworming.api'
-import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import { dewormingApi } from '@/features/dashboard/views/consulta/nueva/api/deworming.api'
+import type { DewormingResponse } from '@/features/dashboard/views/consulta/nueva/types/deworming.types'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import type { Owner } from '@/types/domain'
 import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
 

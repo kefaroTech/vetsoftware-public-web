@@ -1,14 +1,6 @@
+import type { AgendaListParams } from '../types/agenda.types'
 import { http } from '@/services/http/http.client'
-import type {
-  ClinicalEventResponse,
-  ClinicalEventType,
-} from '@/features/historia-clinica/types/historia'
-
-export interface AgendaListParams {
-  from?: string // ISO yyyy-MM-dd
-  to?: string // ISO yyyy-MM-dd
-  types?: ClinicalEventType[]
-}
+import type { ClinicalEventResponse } from '@/features/historia-clinica/types/historia'
 
 function buildQuery(params: AgendaListParams): Record<string, string> {
   const q: Record<string, string> = {}

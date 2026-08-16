@@ -15,11 +15,9 @@ import { useAuth } from '@/features/auth/composables/useAuth'
 import { useBranches } from '@/features/branches/composables/useBranches'
 import { useTestTypes } from '@/features/laboratory-test-types/composables/useLaboratoryTestTypes'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
-import {
-  laboratoryTestApi,
-  type LaboratoryTestResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
-import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import { laboratoryTestApi } from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
+import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{

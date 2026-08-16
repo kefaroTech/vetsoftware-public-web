@@ -21,7 +21,7 @@ import { useFacturacionAccess } from '@/features/facturacion/composables/useFact
 import { useCaja } from '@/features/caja/composables/useCaja'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { PERMISSIONS } from '@/constants/permissions'
-import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
+import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/types/owner.types'
 
 const store = useTienda()
 const router = useRouter()

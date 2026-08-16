@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { suppliersApi, type SupplierSearchParams } from '../api/suppliers.api'
+import { suppliersApi } from '../api/suppliers.api'
+import type { SupplierSearchParams } from '../types/suppliers.types'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import type { Supplier, SupplierRequest } from '../types/compras'
 

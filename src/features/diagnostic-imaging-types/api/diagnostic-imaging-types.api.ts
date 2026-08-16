@@ -1,17 +1,8 @@
+import type {
+  DiagnosticImagingTypeResponse,
+  CreateDiagnosticImagingTypePayload,
+} from '../types/diagnostic-imaging-types.types'
 import { http } from '@/services/http/http.client'
-
-export interface DiagnosticImagingTypeResponse {
-  id: number
-  name: string
-  /** TR-01: el backend lo garantiza (columna NOT NULL); no era nulable. */
-  description: string
-  createdDate: string
-}
-
-export interface CreateDiagnosticImagingTypePayload {
-  name: string
-  description: string
-}
 
 export const diagnosticImagingTypeApi = {
   async listAll(): Promise<DiagnosticImagingTypeResponse[]> {

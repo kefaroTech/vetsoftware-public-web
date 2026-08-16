@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { branchApi, type BranchResponse, type SaveBranchRequest } from '../api/branch.api'
+import { branchApi } from '../api/branch.api'
+import type { BranchResponse, SaveBranchRequest } from '../types/branch.types'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 
 /** Sede operativa seleccionada (contexto multi-sucursal). null = "Todas las sedes". */

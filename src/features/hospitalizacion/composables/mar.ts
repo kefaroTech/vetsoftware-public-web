@@ -1,6 +1,6 @@
 import type { MedicationFrequency, DurationMeasure } from '@/types/domain'
 import type { DoseSlot, DoseStatus } from '../types/hospital'
-import type { AppliedStatus } from '../api/medicationSchedule.api'
+import type { AppliedStatus } from '../types/medicationSchedule.types'
 
 /** Forma mínima común de una toma/ejecución persistida (med o proc). */
 export interface ScheduleSlotSource {

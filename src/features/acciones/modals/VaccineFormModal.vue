@@ -11,11 +11,9 @@ import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { useVaccinationTypes } from '@/features/vaccination-types/composables/useVaccinationTypes'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
-import {
-  vaccinationApi,
-  type VaccinationResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/vaccination.api'
-import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import { vaccinationApi } from '@/features/dashboard/views/consulta/nueva/api/vaccination.api'
+import type { VaccinationResponse } from '@/features/dashboard/views/consulta/nueva/types/vaccination.types'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{

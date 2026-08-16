@@ -1,31 +1,27 @@
 import { ref } from 'vue'
-import {
-  hospitalizationApi,
-  type HospitalizationResponse,
-  type CreateHospitalizationPayload,
-} from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
-import {
-  hospitalizationMedicationApi,
-  type HospitalizationMedicationResponse,
-  type CreateHospitalizationMedicationPayload,
-  type UpdateHospitalizationMedicationPayload,
-} from '../api/hospitalizationMedication.api'
+import { hospitalizationApi } from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
+import type {
+  HospitalizationResponse,
+  CreateHospitalizationPayload,
+} from '@/features/dashboard/views/consulta/nueva/types/hospitalization.types'
+import { hospitalizationMedicationApi } from '../api/hospitalizationMedication.api'
+import type {
+  HospitalizationMedicationResponse,
+  CreateHospitalizationMedicationPayload,
+  UpdateHospitalizationMedicationPayload,
+} from '../types/hospitalizationMedication.types'
 import { medicationScheduleApi } from '../api/medicationSchedule.api'
-import {
-  hospitalizationProcedureApi,
-  type HospitalizationProcedureResponse,
-  type CreateHospitalizationProcedurePayload,
-  type UpdateHospitalizationProcedurePayload,
-} from '../api/hospitalizationProcedure.api'
+import { hospitalizationProcedureApi } from '../api/hospitalizationProcedure.api'
+import type {
+  HospitalizationProcedureResponse,
+  CreateHospitalizationProcedurePayload,
+  UpdateHospitalizationProcedurePayload,
+} from '../types/hospitalizationProcedure.types'
 import { procedureScheduleApi } from '../api/procedureSchedule.api'
-import {
-  hospitalizationObservationApi,
-  type HospitalizationObservationResponse,
-} from '../api/hospitalizationObservation.api'
-import {
-  hospitalizationProgressNoteApi,
-  type HospitalizationProgressNoteResponse,
-} from '../api/hospitalizationProgressNote.api'
+import { hospitalizationObservationApi } from '../api/hospitalizationObservation.api'
+import type { HospitalizationObservationResponse } from '../types/hospitalizationObservation.types'
+import { hospitalizationProgressNoteApi } from '../api/hospitalizationProgressNote.api'
+import type { HospitalizationProgressNoteResponse } from '../types/hospitalizationProgressNote.types'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import { scheduleToDoseSlot } from './mar'

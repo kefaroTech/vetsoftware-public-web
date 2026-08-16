@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import DetailField from '../DetailField.vue'
 import { formatEventDate } from '../../composables/format'
-import type { SpaResponse } from '@/features/dashboard/views/consulta/nueva/api/spa.api'
+import type { SpaResponse } from '@/features/dashboard/views/consulta/nueva/types/spa.types'
 
 defineProps<{ data: SpaResponse }>()
 </script>

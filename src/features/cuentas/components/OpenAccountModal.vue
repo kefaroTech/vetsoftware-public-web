@@ -21,7 +21,7 @@ import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
 import type { OpenAccountResponse } from '../types/cuentas'
-import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
+import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/types/owner.types'
 import type { PetDraft } from '@/features/dashboard/views/consulta/nueva/stores/nuevaConsultaDraft.store'
 
 const props = defineProps<{ open: boolean }>()

@@ -18,7 +18,7 @@ import {
   type OrderVM,
 } from '../types/hospital'
 import type { MedicationFrequency, GuidelineType, DurationMeasure } from '@/types/domain'
-import type { CreateHospitalizationMedicationPayload } from '../api/hospitalizationMedication.api'
+import type { CreateHospitalizationMedicationPayload } from '../types/hospitalizationMedication.types'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 type OrderPayload = Omit<CreateHospitalizationMedicationPayload, 'hospitalizationId'>

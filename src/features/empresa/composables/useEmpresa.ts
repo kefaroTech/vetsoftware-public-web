@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue'
-import { companyApi, type CompanyResponse } from '../api/company.api'
+import { companyApi } from '../api/company.api'
+import type { CompanyResponse } from '../types/company.types'
 import { companyTaxProfileApi } from '@/features/facturacion/api/companyTaxProfile.api'
 import type { CompanyTaxProfileResponse } from '@/features/facturacion/types/facturacion'
 import { useAuth } from '@/features/auth/composables/useAuth'

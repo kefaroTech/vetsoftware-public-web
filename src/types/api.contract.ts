@@ -36,7 +36,7 @@
  * sobre el backend.
  */
 import type { components } from './api.generated'
-import type { CashTerminal } from '../features/caja/api/cashTerminal.api'
+import type { CashTerminal } from '../features/caja/types/cashTerminal.types'
 import type {
   AppointmentResponse,
   CancelAppointmentRequest,
@@ -45,7 +45,7 @@ import type {
   UpdateAppointmentRequest,
 } from '../features/agenda/types/appointment'
 import type { LoginEmployeeRequest, MeResponse, TokenResponse } from '../features/auth/types/index'
-import type { BranchResponse, SaveBranchRequest } from '../features/branches/api/branch.api'
+import type { BranchResponse, SaveBranchRequest } from '../features/branches/types/branch.types'
 import type {
   CashMovementView,
   CashSessionCountView,
@@ -85,83 +85,83 @@ import type {
   AnimalResponse,
   CreateAnimalRequest,
   UpdateAnimalRequest,
-} from '../features/dashboard/views/consulta/nueva/api/animal.api'
-import type { AnimalColorResponse } from '../features/animal-colors/api/animal-colors.api'
-import type { BreedResponse } from '../features/breeds/api/breeds.api'
+} from '../features/dashboard/views/consulta/nueva/types/animal.types'
+import type { AnimalColorResponse } from '../features/animal-colors/types/animal-colors.types'
+import type { BreedResponse } from '../features/breeds/types/breeds.types'
 import type {
   ConsultationResponse,
   ConsultationTypeSummary,
   CreateConsultationPayload,
-} from '../features/dashboard/views/consulta/nueva/api/consultation.api'
-import type { ConsultationTypeResponse } from '../features/consultation-types/api/consultation-types.api'
-import type { DewormingResponse } from '../features/dashboard/views/consulta/nueva/api/deworming.api'
+} from '../features/dashboard/views/consulta/nueva/types/consultation.types'
+import type { ConsultationTypeResponse } from '../features/consultation-types/types/consultation-types.types'
+import type { DewormingResponse } from '../features/dashboard/views/consulta/nueva/types/deworming.types'
 import type {
   DiagnosticImagingResponse,
   DiagnosticImagingTypeSummary,
-} from '../features/dashboard/views/consulta/nueva/api/diagnosticImaging.api'
-import type { DiagnosticImagingTypeResponse } from '../features/diagnostic-imaging-types/api/diagnostic-imaging-types.api'
+} from '../features/dashboard/views/consulta/nueva/types/diagnosticImaging.types'
+import type { DiagnosticImagingTypeResponse } from '../features/diagnostic-imaging-types/types/diagnostic-imaging-types.types'
 import type {
   CityResponse,
   CountryResponse,
   CountrySummary,
   StateResponse,
   StateSummary,
-} from '../features/dashboard/views/consulta/nueva/api/geo.api'
-import type { HospitalizationResponse } from '../features/dashboard/views/consulta/nueva/api/hospitalization.api'
+} from '../features/dashboard/views/consulta/nueva/types/geo.types'
+import type { HospitalizationResponse } from '../features/dashboard/views/consulta/nueva/types/hospitalization.types'
 import type {
   LaboratoryTestResponse,
   LaboratoryTestTypeSummary,
-} from '../features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
-import type { MedicamentResponse } from '../features/dashboard/views/consulta/nueva/api/medicament.api'
+} from '../features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
+import type { MedicamentResponse } from '../features/dashboard/views/consulta/nueva/types/medicament.types'
 import type {
   CreateMedicamentPrescriptionPayload,
   MedicamentPrescriptionResponse,
-} from '../features/dashboard/views/consulta/nueva/api/medicamentPrescription.api'
+} from '../features/dashboard/views/consulta/nueva/types/medicamentPrescription.types'
 import type {
   CitySummary,
   CreateOwnerRequest,
   OwnerResponse,
   UpdateOwnerRequest,
-} from '../features/dashboard/views/consulta/nueva/api/owner.api'
-import type { PrescriptionResponse } from '../features/dashboard/views/consulta/nueva/api/prescription.api'
+} from '../features/dashboard/views/consulta/nueva/types/owner.types'
+import type { PrescriptionResponse } from '../features/dashboard/views/consulta/nueva/types/prescription.types'
 import type {
   SpaResponse,
   SpaTypeSummary,
-} from '../features/dashboard/views/consulta/nueva/api/spa.api'
-import type { SpaTypeResponse } from '../features/spa-types/api/spa-types.api'
-import type { SpecieResponse } from '../features/species/api/species.api'
+} from '../features/dashboard/views/consulta/nueva/types/spa.types'
+import type { SpaTypeResponse } from '../features/spa-types/types/spa-types.types'
+import type { SpecieResponse } from '../features/species/types/species.types'
 import type {
   SurgeryResponse,
   SurgeryTypeSummary,
-} from '../features/dashboard/views/consulta/nueva/api/surgery.api'
-import type { SurgeryTypeResponse } from '../features/surgery-types/api/surgery-types.api'
+} from '../features/dashboard/views/consulta/nueva/types/surgery.types'
+import type { SurgeryTypeResponse } from '../features/surgery-types/types/surgery-types.types'
 import type {
   VaccinationResponse,
   VaccinationTypeSummary,
-} from '../features/dashboard/views/consulta/nueva/api/vaccination.api'
-import type { VaccinationTypeResponse } from '../features/vaccination-types/api/vaccination-types.api'
+} from '../features/dashboard/views/consulta/nueva/types/vaccination.types'
+import type { VaccinationTypeResponse } from '../features/vaccination-types/types/vaccination-types.types'
 import type {
   CreateWeightRecordRequest,
   WeightRecordResponse,
-} from '../features/dashboard/views/consulta/nueva/api/weightRecord.api'
+} from '../features/dashboard/views/consulta/nueva/types/weightRecord.types'
 import type {
   CreateEmployeeRequest,
   EmployeeResponse,
   UpdateEmployeeRequest,
-} from '../features/employees/api/employee.api'
+} from '../features/employees/types/employee.types'
 import type {
   EmployeeBranchesResponse,
   SetEmployeeBranchesRequest,
-} from '../features/employees/api/employeeBranches.api'
+} from '../features/employees/types/employeeBranches.types'
 import type {
   CreateEmployeeRoleRequest,
   EmployeeRoleResponse,
-} from '../features/employees/api/employeeRoles.api'
-import type { CompanyResponse } from '../features/empresa/api/company.api'
+} from '../features/employees/types/employeeRoles.types'
+import type { CompanyResponse } from '../features/empresa/types/company.types'
 import type {
   SetSystemConfigurationRequest,
   SystemConfigurationResponse,
-} from '../features/facturacion/api/systemConfig.api'
+} from '../features/facturacion/types/systemConfig.types'
 import type {
   CompanyTaxProfileResponse,
   CustomerSnapshot,
@@ -185,16 +185,16 @@ import type {
 import type {
   CreateHospitalizationMedicationPayload,
   HospitalizationMedicationResponse,
-} from '../features/hospitalizacion/api/hospitalizationMedication.api'
-import type { HospitalizationObservationResponse } from '../features/hospitalizacion/api/hospitalizationObservation.api'
+} from '../features/hospitalizacion/types/hospitalizationMedication.types'
+import type { HospitalizationObservationResponse } from '../features/hospitalizacion/types/hospitalizationObservation.types'
 import type {
   CreateHospitalizationProcedurePayload,
   HospitalizationProcedureResponse,
-} from '../features/hospitalizacion/api/hospitalizationProcedure.api'
-import type { HospitalizationProgressNoteResponse } from '../features/hospitalizacion/api/hospitalizationProgressNote.api'
-import type { MedicationScheduleResponse } from '../features/hospitalizacion/api/medicationSchedule.api'
-import type { ProcedureScheduleResponse } from '../features/hospitalizacion/api/procedureSchedule.api'
-import type { LaboratoryTestFileResponse } from '../features/laboratorio/api/laboratoryTestFile.api'
+} from '../features/hospitalizacion/types/hospitalizationProcedure.types'
+import type { HospitalizationProgressNoteResponse } from '../features/hospitalizacion/types/hospitalizationProgressNote.types'
+import type { MedicationScheduleResponse } from '../features/hospitalizacion/types/medicationSchedule.types'
+import type { ProcedureScheduleResponse } from '../features/hospitalizacion/types/procedureSchedule.types'
+import type { LaboratoryTestFileResponse } from '../features/laboratorio/types/laboratoryTestFile.types'
 import type {
   City,
   RegisterUserRequest,
@@ -212,7 +212,7 @@ import type {
   SyncRolePermissionsRequest,
   UpdateRoleRequest,
 } from '../features/roles/types/index'
-import type { RegisterPosSaleRequest } from '../features/tienda/api/posSale.api'
+import type { RegisterPosSaleRequest } from '../features/tienda/types/posSale.types'
 import type {
   AdjustStockPayload,
   ConsumeStockPayload,

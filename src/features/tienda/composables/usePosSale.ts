@@ -1,12 +1,13 @@
 import { computed, ref, watch } from 'vue'
 import { useToast } from '@/composables/useToast'
 import { useFeUvt } from '@/features/facturacion/composables/useFeUvt'
-import { posSaleApi, type PosSaleLineKind } from '../api/posSale.api'
+import { posSaleApi } from '../api/posSale.api'
+import type { PosSaleLineKind } from '../types/posSale.types'
 import { appliesIva, lineGross, taxByRate, type TotalsBreakdown } from './pricing'
 import { scaled as scaledMoney, sum as sumMoney } from './money'
 import type { CatalogCard } from '../components/PosCatalog.vue'
 import type { SaleLine } from '../types/tienda'
-import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
+import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/types/owner.types'
 import type {
   ElectronicDocumentResponse,
   PaymentMeans,

@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import {
-  medicamentApi,
-  type CreateMedicamentPayload,
-  type MedicamentResponse,
-  type UpdateMedicamentPayload,
-} from '@/features/dashboard/views/consulta/nueva/api/medicament.api'
+import { medicamentApi } from '@/features/dashboard/views/consulta/nueva/api/medicament.api'
+import type {
+  CreateMedicamentPayload,
+  MedicamentResponse,
+  UpdateMedicamentPayload,
+} from '@/features/dashboard/views/consulta/nueva/types/medicament.types'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 
 /**

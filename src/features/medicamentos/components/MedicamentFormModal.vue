@@ -7,7 +7,7 @@ import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useMedicamentCatalog } from '../composables/useMedicamentCatalog'
-import type { MedicamentResponse } from '@/features/dashboard/views/consulta/nueva/api/medicament.api'
+import type { MedicamentResponse } from '@/features/dashboard/views/consulta/nueva/types/medicament.types'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{

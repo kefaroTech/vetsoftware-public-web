@@ -8,7 +8,7 @@ import { useToast } from '@/composables/useToast'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import { getProblemDetailMessage } from '@/services/http/http.client'
-import type { MedicamentResponse } from '@/features/dashboard/views/consulta/nueva/api/medicament.api'
+import type { MedicamentResponse } from '@/features/dashboard/views/consulta/nueva/types/medicament.types'
 
 const store = useMedicamentCatalog()
 const toast = useToast()

@@ -1,6 +1,7 @@
 import { ref, watch, type Ref } from 'vue'
 import axios from 'axios'
-import { ownerApi, type OwnerResponse } from '../api/owner.api'
+import { ownerApi } from '../api/owner.api'
+import type { OwnerResponse } from '../types/owner.types'
 import { mapOwnerResponse } from '../api/owner.mapper'
 import type { Owner } from '@/types/domain'
 

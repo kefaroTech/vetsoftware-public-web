@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { Building2, AlertCircle, Bell, Plus, Minus } from 'lucide-vue-next'
 import type { Employee } from '@/types/domain'
-import type { BranchResponse } from '@/features/branches/api/branch.api'
+import type { BranchResponse } from '@/features/branches/types/branch.types'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
 import EmployeeAvatar from './EmployeeAvatar.vue'
 import BranchSelectorGrid from './BranchSelectorGrid.vue'

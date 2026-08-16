@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { User, PawPrint, ChevronRight, X } from 'lucide-vue-next'
 import type { Owner } from '@/types/domain'
-import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 
 defineProps<{
   owner: Owner

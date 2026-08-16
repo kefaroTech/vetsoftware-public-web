@@ -1,6 +1,6 @@
 import type { MedicationFrequency, GuidelineType, DurationMeasure } from '@/types/domain'
-import type { HospitalizationMedicationResponse } from '../api/hospitalizationMedication.api'
-import type { HospitalizationProcedureResponse } from '../api/hospitalizationProcedure.api'
+import type { HospitalizationMedicationResponse } from './hospitalizationMedication.types'
+import type { HospitalizationProcedureResponse } from './hospitalizationProcedure.types'
 
 // ─── MAR (client-side, volátil) ───────────────────────────────────────
 // El backend aún no persiste el calendario de dosis; estos tipos viven solo

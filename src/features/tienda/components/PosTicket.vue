@@ -2,7 +2,7 @@
 import { Minus, Plus, Receipt, Trash2, User, X } from 'lucide-vue-next'
 import { formatMoney } from '../composables/pricing'
 import type { SaleLine } from '../types/tienda'
-import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
+import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/types/owner.types'
 
 /**
  * Columna derecha del POS: cliente asociado, líneas del ticket y el resumen con

@@ -1,17 +1,5 @@
+import type { SpaTypeResponse, CreateSpaTypePayload } from '../types/spa-types.types'
 import { http } from '@/services/http/http.client'
-
-export interface SpaTypeResponse {
-  id: number
-  name: string
-  /** TR-01: el backend lo garantiza (columna NOT NULL); no era nulable. */
-  description: string
-  createdDate: string
-}
-
-export interface CreateSpaTypePayload {
-  name: string
-  description: string
-}
 
 export const spaTypeApi = {
   async listAll(): Promise<SpaTypeResponse[]> {

@@ -1,6 +1,7 @@
 import { computed, onMounted, ref, watch, type Ref } from 'vue'
 import { useLatestOnly } from '@/composables/useLatestOnly'
-import { breedApi, type BreedResponse } from '../api/breeds.api'
+import { breedApi } from '../api/breeds.api'
+import type { BreedResponse } from '../types/breeds.types'
 
 export interface BreedOption {
   value: string

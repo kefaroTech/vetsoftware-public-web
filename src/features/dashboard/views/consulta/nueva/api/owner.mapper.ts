@@ -1,5 +1,5 @@
 import type { Owner } from '@/types/domain'
-import type { OwnerResponse } from './owner.api'
+import type { OwnerResponse } from '../types/owner.types'
 
 export function mapOwnerResponse(r: OwnerResponse): Owner {
   return {

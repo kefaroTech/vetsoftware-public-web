@@ -6,7 +6,7 @@ import EventTypeChip from '../EventTypeChip.vue'
 import { formatEventDate } from '../../composables/format'
 import { EVENT_TYPES, EVENT_TYPE_DETAILABLE } from '../../constants/eventTypes'
 import type { ClinicalEvent } from '../../types/historia'
-import type { ConsultationResponse } from '@/features/dashboard/views/consulta/nueva/api/consultation.api'
+import type { ConsultationResponse } from '@/features/dashboard/views/consulta/nueva/types/consultation.types'
 
 const props = withDefaults(
   defineProps<{

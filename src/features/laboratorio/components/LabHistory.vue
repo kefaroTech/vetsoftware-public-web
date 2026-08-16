@@ -11,9 +11,9 @@ import { useLabHistory } from '../composables/useLabHistory'
 import { labCode } from '../types/lab'
 import { useTestTypes } from '@/features/laboratory-test-types/composables/useLaboratoryTestTypes'
 import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
-import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import type { Owner } from '@/types/domain'
-import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
+import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 import type { LaboratoryTestPriority } from '@/types/domain'
 
 const emit = defineEmits<{ open: [item: LaboratoryTestResponse] }>()

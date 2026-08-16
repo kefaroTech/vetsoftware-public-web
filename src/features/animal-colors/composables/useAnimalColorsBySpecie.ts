@@ -1,6 +1,7 @@
 import { computed, onMounted, ref, watch, type Ref } from 'vue'
 import { useLatestOnly } from '@/composables/useLatestOnly'
-import { animalColorApi, type AnimalColorResponse } from '../api/animal-colors.api'
+import { animalColorApi } from '../api/animal-colors.api'
+import type { AnimalColorResponse } from '../types/animal-colors.types'
 
 export interface AnimalColorOption {
   value: string

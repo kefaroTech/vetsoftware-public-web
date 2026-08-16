@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
-import { cashSessionApi, type CashHistoryParams } from '../api/cashSession.api'
+import { cashSessionApi } from '../api/cashSession.api'
+import type { CashHistoryParams } from '../types/cashSession.types'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
 import { useCancellableLatest } from '@/composables/useLatestOnly'
 import { getProblemDetailMessage } from '@/services/http/http.client'

@@ -1,11 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { Employee } from '@/types/domain'
-import {
-  employeeApi,
-  type CreateEmployeeRequest,
-  type UpdateEmployeeRequest,
-} from '../api/employee.api'
+import { employeeApi } from '../api/employee.api'
+import type { CreateEmployeeRequest, UpdateEmployeeRequest } from '../types/employee.types'
 import { mapEmployeeResponse } from '../api/employee.mapper'
 
 const DEFAULT_PAGE_SIZE = 15

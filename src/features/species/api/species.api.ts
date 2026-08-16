@@ -1,10 +1,5 @@
+import type { SpecieResponse } from '../types/species.types'
 import { http } from '@/services/http/http.client'
-
-export interface SpecieResponse {
-  id: number
-  name: string
-  createdDate: string
-}
 
 export const speciesApi = {
   async listAll(): Promise<SpecieResponse[]> {

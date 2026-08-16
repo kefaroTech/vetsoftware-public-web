@@ -10,11 +10,9 @@ import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { useSurgeryTypes } from '@/features/surgery-types/composables/useSurgeryTypes'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
-import {
-  surgeryApi,
-  type SurgeryResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/surgery.api'
-import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import { surgeryApi } from '@/features/dashboard/views/consulta/nueva/api/surgery.api'
+import type { SurgeryResponse } from '@/features/dashboard/views/consulta/nueva/types/surgery.types'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{

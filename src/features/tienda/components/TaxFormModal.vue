@@ -8,7 +8,7 @@ import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
 import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
 import { useTienda } from '../composables/useTienda'
-import type { TaxPayload } from '../api/tax.api'
+import type { TaxPayload } from '../types/tax.types'
 import type { TaxResponse, TaxScheme } from '../types/tienda'
 import { scrollToFirstError } from '@/composables/scrollToError'
 

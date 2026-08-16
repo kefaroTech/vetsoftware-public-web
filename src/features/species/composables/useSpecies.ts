@@ -1,5 +1,6 @@
 import { computed, onMounted, ref } from 'vue'
-import { speciesApi, type SpecieResponse } from '../api/species.api'
+import { speciesApi } from '../api/species.api'
+import type { SpecieResponse } from '../types/species.types'
 
 export interface SpecieOption {
   value: string

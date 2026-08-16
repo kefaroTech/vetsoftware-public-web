@@ -9,7 +9,8 @@ import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
 import { useBranches } from '@/features/branches/composables/useBranches'
 import { useCaja } from '../composables/useCaja'
 import { getProblemDetailMessage } from '@/services/http/http.client'
-import { cashTerminalApi, type CashTerminal } from '../api/cashTerminal.api'
+import { cashTerminalApi } from '../api/cashTerminal.api'
+import type { CashTerminal } from '../types/cashTerminal.types'
 import type { CashSessionView } from '../types/caja'
 
 const props = defineProps<{ open: boolean }>()

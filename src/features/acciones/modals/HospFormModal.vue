@@ -10,11 +10,9 @@ import SegmentedRadio from '@/features/dashboard/components/ui/SegmentedRadio.vu
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
-import {
-  hospitalizationApi,
-  type HospitalizationResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
-import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import { hospitalizationApi } from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
+import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/types/hospitalization.types'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import type { HospitalizationType, ReasonLeaving } from '@/types/domain'
 import { scrollToFirstError } from '@/composables/scrollToError'
 

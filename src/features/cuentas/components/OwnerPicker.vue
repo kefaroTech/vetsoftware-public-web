@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { Search, User } from 'lucide-vue-next'
-import {
-  ownerApi,
-  type OwnerResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/owner.api'
+import { ownerApi } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
+import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/types/owner.types'
 import PawLoader from '@/components/feedback/PawLoader.vue'
 
 const emit = defineEmits<{ select: [owner: OwnerResponse] }>()
