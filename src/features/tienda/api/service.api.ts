@@ -1,10 +1,6 @@
+import type { PageResponse } from '@/types/pagination'
 import { http } from '@/services/http/http.client'
-import type {
-  PageResponse,
-  ServicePayload,
-  ServiceResponse,
-  ServiceSearchCriteria,
-} from '../types/tienda'
+import type { ServicePayload, ServiceResponse, ServiceSearchCriteria } from '../types/tienda'
 
 export const serviceApi = {
   async listAll(): Promise<ServiceResponse[]> {

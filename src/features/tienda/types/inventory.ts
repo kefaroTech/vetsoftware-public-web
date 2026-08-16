@@ -2,9 +2,6 @@
  * Tipos del inventario por sede (feature backend `inventory`, F3). El stock ya NO vive en el producto:
  * saldo/mínimo por sede (StockView), lotes (StockLotView) y kardex (StockMovementView).
  */
-import type { PageResponse } from './tienda'
-
-export type { PageResponse }
 
 /** Espejo de com.vetsoftware.app.inventory.application.dto.StockView (saldo por producto+sede). */
 export interface StockView {

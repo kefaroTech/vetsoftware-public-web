@@ -1,3 +1,4 @@
+import type { PageResponse } from '@/types/pagination'
 import { http } from '@/services/http/http.client'
 import { withBranchBody, withBranchParam } from '@/features/branches/api/branchContext'
 import type {
@@ -5,7 +6,6 @@ import type {
   OpenAccountSearchCriteria,
   OpenAccountStatus,
   OpenAccountsSummary,
-  PageResponse,
 } from '../types/cuentas'
 
 /**

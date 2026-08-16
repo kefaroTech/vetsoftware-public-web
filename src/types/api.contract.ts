@@ -36,6 +36,7 @@
  * sobre el backend.
  */
 import type { components } from './api.generated'
+import type { PageResponse } from './pagination'
 import type { CashTerminal } from '../features/caja/types/cashTerminal.types'
 import type {
   AppointmentResponse,
@@ -319,6 +320,14 @@ type Expect<T extends true> = T
 //     defecto: la sede la inyecta `withBranchBody` en la capa de API, asi que el tipo que se
 //     afirmaria aqui no es el que viaja.
 export type ContractAssertions = [
+  // La envoltura de página, atada por una de sus 38 instanciaciones (BE-21). El generador emite
+  // un esquema por tipo de contenido —`PageResponseOwnerResponse`, `PageResponseStockView`…— y
+  // ninguno se llama `PageResponse` a secas, así que la regla de los homónimos no la alcanzaba y
+  // los cinco campos de `PageResponse<T>` eran los únicos del repositorio sin nada que los atara
+  // al servidor. Renombrar `content` o `totalElements` en el backend no rompía nada: devolvía
+  // `undefined` en los ~26 sitios que los leen. Una instanciación basta, porque los cinco campos
+  // los declara la envoltura y no el contenido.
+  Expect<MatchesContract<PageResponse<OwnerResponse>, 'PageResponseOwnerResponse'>>,
   Expect<MatchesContract<ElectronicDocumentResponse, 'ElectronicDocumentDto'>>,
   Expect<MatchesContract<SupplierInvoice, 'SupplierInvoiceResponse'>>,
   Expect<MatchesContract<CreateConsultationPayload, 'CreateConsultationRequest'>>,

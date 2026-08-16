@@ -1,6 +1,7 @@
 import type { SupplierSearchParams } from '../types/suppliers.types'
 import { http } from '@/services/http/http.client'
-import type { PageResponse, Supplier, SupplierRequest } from '../types/compras'
+import type { PageResponse } from '@/types/pagination'
+import type { Supplier, SupplierRequest } from '../types/compras'
 
 // Proveedores (backend: /suppliers). CRUD company-scoped, búsqueda paginada server-side.
 

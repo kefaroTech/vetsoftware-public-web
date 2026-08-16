@@ -474,6 +474,22 @@ dentro del cliente, y **se llaman como el esquema del contrato**:
 igual en los dos repositorios y una deriva del contrato falla con el nombre a la
 vista.
 
+**Paginación.** `PageResponse<T>` se declara **una sola vez**, en
+`src/types/pagination.ts`, junto a `PageQuery`, `DEFAULT_PAGE_SIZE` y
+`emptyPage()`. Ninguna feature declara la suya: llegaron a existir siete copias
+del mismo interface —caja, compras, cuentas, employees, laboratorio, tienda y la
+canónica— y ninguna estaba atada al contrato, así que renombrar un campo en el
+backend no rompía la compilación, devolvía `undefined` en la pantalla. Hoy la
+envoltura tiene su centinela en `api.contract.ts`
+(`MatchesContract<PageResponse<OwnerResponse>, 'PageResponseOwnerResponse'>`);
+basta una instanciación porque los cinco campos los declara la envoltura, no el
+contenido.
+
+El vocabulario del servidor es `page` (base 0) + `pageSize`, y el tope de filas
+por página es **200** — pedir más se recorta en el servidor. Un bucle que drene
+todas las páginas debe releer `totalPages` de cada respuesta, nunca calcularlo a
+partir del tamaño que pidió.
+
 **Estructura de un feature.** `src/features/<recurso-en-kebab>/` con `api/`,
 `types/`, `stores/`, `composables/`, `components/`, `views/`. Lo transversal va
 en `src/components/{feedback,layout,ui}/`, `src/composables/`, `src/stores/`.

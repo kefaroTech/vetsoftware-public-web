@@ -31,14 +31,6 @@ export interface EmployeeResponse {
 }
 
 /** Envoltura genérica de respuesta paginada del backend (GET /employees/search). */
-export interface PageResponse<T> {
-  content: T[]
-  page: number
-  pageSize: number
-  totalElements: number
-  totalPages: number
-}
-
 export interface SearchEmployeesParams {
   q?: string
   page: number // 0-based (backend)

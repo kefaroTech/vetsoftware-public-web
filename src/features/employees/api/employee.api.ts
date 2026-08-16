@@ -1,6 +1,6 @@
+import type { PageResponse } from '@/types/pagination'
 import type {
   EmployeeResponse,
-  PageResponse,
   SearchEmployeesParams,
   CreateEmployeeRequest,
   UpdateEmployeeRequest,

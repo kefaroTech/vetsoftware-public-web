@@ -1,9 +1,9 @@
+import type { PageResponse } from '@/types/pagination'
 import type { SupplierInvoiceSearchParams } from '../types/supplierInvoices.types'
 import { http } from '@/services/http/http.client'
 import { withBranchBody, withBranchParam } from '@/features/branches/api/branchContext'
 import type {
   AccountsPayableAging,
-  PageResponse,
   RegisterSupplierPaymentRequest,
   SupplierInvoice,
   SupplierInvoiceRequest,

@@ -1,5 +1,6 @@
 import { computed, ref, watch, type Ref } from 'vue'
 import { useInfiniteList } from '@/composables/useInfiniteList'
+import { emptyPage } from '@/types/pagination'
 import { clinicalHistoryApi } from '../api/clinicalHistory.api'
 import type { ClinicalEventTypeCount } from '../types/clinicalHistory.types'
 import type { ClinicalEvent, ClinicalEventResponse, ClinicalEventType } from '../types/historia'
@@ -38,7 +39,7 @@ export function useClinicalHistory(
 
   const list = useInfiniteList<ClinicalEvent>(async (page, pageSize, signal) => {
     const id = animalId.value
-    if (id == null) return { content: [], page: 0, pageSize, totalElements: 0, totalPages: 0 }
+    if (id == null) return emptyPage<ClinicalEvent>(pageSize)
     const result = await clinicalHistoryApi.findByAnimal(
       id,
       {
