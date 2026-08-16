@@ -57,8 +57,11 @@ export const hospitalizationApi = {
     return data
   },
 
-  async listAll(): Promise<HospitalizationResponse[]> {
-    const { data } = await http.get<HospitalizationResponse[]>('/hospitalizations')
+  // BE-29: `/hospitalizations` es el listado global de la plataforma y hoy solo lo
+  // alcanza ROLE_SYSTEM. El tablero pide el de su empresa; antes traia el de todas
+  // y descartaba las ajenas en el navegador.
+  async listByCompany(): Promise<HospitalizationResponse[]> {
+    const { data } = await http.get<HospitalizationResponse[]>('/hospitalizations/by-company')
     return data
   },
 

@@ -58,7 +58,7 @@ export function useHospitalizacion() {
     boardLoading.value = true
     boardError.value = null
     try {
-      const all = await hospitalizationApi.listAll()
+      const all = await hospitalizationApi.listByCompany()
       board.value = all.filter((h) => h.enabled && h.type === 'HOSPITALIZATION' && !h.endDate)
     } catch (e) {
       boardError.value = e instanceof Error ? e.message : 'No se pudo cargar el tablero'
