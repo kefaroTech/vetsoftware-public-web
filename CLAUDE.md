@@ -239,7 +239,7 @@ componentes.
   hidrata `state.consultationType` con `{id, name}` resolviendo contra la
   lista cargada (también re-resuelve cuando la lista llega tarde).
 - **Catálogos creables del paso 3** (consumidos por modales de acciones
-  rápidas): `useTestTypes` (`/laboratory-test-types`), `useDiagnosticImagingTypes`
+  rápidas): `useLaboratoryTestTypes` (`/laboratory-test-types`), `useDiagnosticImagingTypes`
   (`/diagnostic-imaging-types/available`), `useVaccinationTypes` (`/vaccination-types/available`),
   `useSurgeryTypes` (`/surgery-types/available`). Todos generados por el factory
   `createCatalog<T>` en `composables/useCatalog.ts` — cada uno cachea
@@ -409,3 +409,82 @@ los valores del enum (ej. `'KILOGRAMS'` → `'kg'`, `'FEMALE'` → `'Hembra'`).
 Al alinear un enum: actualizar el tipo en `src/types/domain.ts`, los
 `*Options` del componente, los defaults de `*Draft`, los mocks en `data/`,
 los formatters/labels en `format.ts`, y cualquier mapper de API.
+
+## Los dos fronts son independientes, pero se escriben igual (TR-02)
+
+No hay `@vetsoftware/core` ni workspace npm, y **no se va a añadir**: es una
+decisión de plataforma, no una tarea pendiente. Cada repositorio se despliega,
+versiona y evoluciona por su cuenta.
+
+A cambio, la práctica es la misma en los dos. **Estos archivos se mantienen byte
+a byte idénticos**; si tocas uno, tocas el otro en el mismo PR:
+
+| Archivo                                                                                                       | Qué es                                                              |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `src/services/http/http.client.ts`                                                                            | cliente axios, refresh _single-flight_, lectores de `ProblemDetail` |
+| `src/services/http/api-base-url.ts`                                                                           | resolución de la URL base                                           |
+| `src/services/storage/storage.service.ts`                                                                     | único acceso a `localStorage`/`sessionStorage`                      |
+| `src/services/telemetry/trace.ts`                                                                             | generador de `traceparent` (W3C)                                    |
+| `src/stores/loader.store.ts`                                                                                  | debounce anti-parpadeo del velo                                     |
+| `src/stores/toast.store.ts`                                                                                   | avisos                                                              |
+| `src/composables/useGlobalLoader.ts` · `useToast.ts`                                                          | sus fachadas                                                        |
+| `src/features/auth/utils/jwt.ts`                                                                              | decodificación del JWT                                              |
+| `src/types/api.types.ts`                                                                                      | `ProblemDetail`                                                     |
+| `src/plugins/vuetify.ts` · `vuetify-icon-aliases.ts`                                                          | tema e iconos de Vuetify                                            |
+| `src/assets/styles/tokens.css` · `primitives.css`                                                             | capas 1 y 2 del sistema de diseño                                   |
+| `src/components/feedback/{PawLoader,PageLoader,ToastStack}.vue`                                               | primitivas de feedback                                              |
+| `scripts/check-bundle-budget.mjs` · `ds-audit.mjs`                                                            | verificadores                                                       |
+| `tests/unit/{setup,storage-service,ui-stores}.spec.ts`                                                        | sus pruebas                                                         |
+| `eslint.config.ts` · `stylelint.config.mjs` · `lint-staged.config.mjs` · `commitlint.config.js` · `AGENTS.md` | tooling                                                             |
+
+**Divergencias permitidas, y solo estas.** Van siempre con un comentario que
+diga por qué:
+
+- `telemetry.ts`: el nombre de la aplicación.
+- `http.client.ts`: un bloque delimitado con los presupuestos por llamada
+  propios de cada app (el operativo declara `DIAN_TIMEOUT_MS` y
+  `TRANSFER_TIMEOUT_MS`; la consola, ninguno).
+- `check-bundle-budget.mjs`: las cifras del presupuesto.
+
+Cualquier otra diferencia entre esos archivos es deriva, no diseño. Fue
+exactamente así como el velo de carga acabó durando 300 ms en un front y 420 en
+el otro durante semanas.
+
+## Convenciones que valen en los dos
+
+**Clientes de API.** `src/features/<recurso>/api/<recurso>.api.ts` exporta un
+objeto `<recurso>Api` con métodos `async` que devuelven **el cuerpo, no el
+`AxiosResponse`**:
+
+```ts
+export const speciesApi = {
+  async listAll(): Promise<SpecieResponse[]> {
+    const { data } = await http.get<SpecieResponse[]>('/species')
+    return data
+  },
+}
+```
+
+Vocabulario fijo: `listAll`, `findById`, `create`, `update`, `remove`,
+`listBy<X>`, `search`. Ningún consumidor desestructura `{ data }`.
+
+**Tipos.** Viven en `src/features/<recurso>/types/<recurso>.types.ts`, nunca
+dentro del cliente, y **se llaman como el esquema del contrato**:
+`SpecieResponse`, `CreateSpecieRequest`. Así `MatchesContract<X, 'X'>` se lee
+igual en los dos repositorios y una deriva del contrato falla con el nombre a la
+vista.
+
+**Estructura de un feature.** `src/features/<recurso-en-kebab>/` con `api/`,
+`types/`, `stores/`, `composables/`, `components/`, `views/`. Lo transversal va
+en `src/components/{feedback,layout,ui}/`, `src/composables/`, `src/stores/`.
+
+**Iconos.** Una sola librería: Lucide, en componentes — también para los que
+Vuetify pide para sí (`vuetify-icon-aliases.ts`). Ni webfont ni colección que
+registrar en tiempo de ejecución. Un nombre que no exista no compila.
+
+**Avisos.** `useToast()` con `success/info/warn/error` y `errorFrom(titulo,
+error)`, que extrae el mensaje del `ProblemDetail` y el identificador de traza
+de `X-Trace-Id`. Nunca escribas el texto del error a mano en un `catch`: eso
+tira la traza.
+
+**Sesión.** Solo `storageService` toca el almacenamiento del navegador.
