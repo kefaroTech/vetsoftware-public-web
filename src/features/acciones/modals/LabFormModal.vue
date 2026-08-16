@@ -13,7 +13,7 @@ import SearchableSelect from '@/features/dashboard/components/ui/SearchableSelec
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { useBranches } from '@/features/branches/composables/useBranches'
-import { useTestTypes } from '@/features/dashboard/views/consulta/nueva/composables/useTestTypes'
+import { useTestTypes } from '@/features/laboratory-test-types/composables/useLaboratoryTestTypes'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import {
   laboratoryTestApi,

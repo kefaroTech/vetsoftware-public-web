@@ -5,7 +5,7 @@ import {
   ownerApi,
   type OwnerResponse,
 } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
-import PawLoader from '@/components/ui/PawLoader.vue'
+import PawLoader from '@/components/feedback/PawLoader.vue'
 
 const emit = defineEmits<{ select: [owner: OwnerResponse] }>()
 

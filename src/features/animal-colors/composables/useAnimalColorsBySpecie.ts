@@ -1,20 +1,20 @@
 import { computed, onMounted, ref, watch, type Ref } from 'vue'
 import { useLatestOnly } from '@/composables/useLatestOnly'
-import { breedApi, type BreedResponse } from '../api/breed.api'
+import { animalColorApi, type AnimalColorResponse } from '../api/animal-colors.api'
 
-export interface BreedOption {
+export interface AnimalColorOption {
   value: string
   label: string
 }
 
-const inFlight = new Map<string, Promise<BreedResponse[]>>()
+const inFlight = new Map<string, Promise<AnimalColorResponse[]>>()
 
-async function load(specieId: string): Promise<BreedResponse[]> {
+async function load(specieId: string): Promise<AnimalColorResponse[]> {
   const pending = inFlight.get(specieId)
   if (pending) return pending
   const id = Number(specieId)
   if (!Number.isFinite(id)) return []
-  const promise = breedApi
+  const promise = animalColorApi
     .listBySpecie(id)
     .then((list) => {
       inFlight.delete(specieId)
@@ -28,17 +28,17 @@ async function load(specieId: string): Promise<BreedResponse[]> {
   return promise
 }
 
-export function useBreedsBySpecie(specieId: Ref<string>) {
-  const list = ref<BreedResponse[]>([])
+export function useAnimalColorsBySpecie(specieId: Ref<string>) {
+  const list = ref<AnimalColorResponse[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  const options = computed<BreedOption[]>(() =>
-    list.value.map((b) => ({ value: String(b.id), label: b.name })),
+  const options = computed<AnimalColorOption[]>(() =>
+    list.value.map((c) => ({ value: String(c.id), label: c.name })),
   )
 
-  // Cambiar de especie rápido deja dos cargas en vuelo: sin esto, la lista de
-  // razas de la especie anterior puede pisar a la nueva.
+  // Cambiar de especie rápido deja dos cargas en vuelo: sin esto, los colores de
+  // la especie anterior pueden pisar a los nuevos.
   const { begin } = useLatestOnly()
 
   async function refresh(id: string) {
@@ -58,14 +58,14 @@ export function useBreedsBySpecie(specieId: Ref<string>) {
     } catch {
       if (!vigente()) return
       list.value = []
-      error.value = 'No se pudo cargar la lista de razas.'
+      error.value = 'No se pudo cargar la lista de colores.'
     } finally {
       if (vigente()) loading.value = false
     }
   }
 
-  function findById(id: string): BreedResponse | undefined {
-    return list.value.find((b) => String(b.id) === id)
+  function findById(id: string): AnimalColorResponse | undefined {
+    return list.value.find((c) => String(c.id) === id)
   }
 
   onMounted(() => {

@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { Printer } from 'lucide-vue-next'
 import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import PawLoader from '@/components/ui/PawLoader.vue'
+import PawLoader from '@/components/feedback/PawLoader.vue'
 import { usePrescriptionExport } from '@/features/dashboard/views/consulta/nueva/composables/usePrescriptionExport'
 import { EVENT_TYPES } from '../constants/eventTypes'
 import { formatEventDate } from '../composables/format'

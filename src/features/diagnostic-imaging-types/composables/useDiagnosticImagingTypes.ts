@@ -1,5 +1,5 @@
-import { diagnosticImagingTypeApi } from '../api/diagnosticImagingType.api'
-import { createCatalog } from './useCatalog'
+import { diagnosticImagingTypeApi } from '../api/diagnostic-imaging-types.api'
+import { createCatalog } from '@/composables/useCatalog'
 
 export const useDiagnosticImagingTypes = createCatalog({
   fetcher: () => diagnosticImagingTypeApi.listAll(),

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { Plus, Trash2, TrendingUp, X } from 'lucide-vue-next'
-import PawLoader from '@/components/ui/PawLoader.vue'
+import PawLoader from '@/components/feedback/PawLoader.vue'
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'

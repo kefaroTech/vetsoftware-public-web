@@ -12,7 +12,7 @@ import SearchableSelect from '@/features/dashboard/components/ui/SearchableSelec
 import type { Animal, LaboratoryTest } from '@/types/domain'
 import type { LaboratoryTestDraftItem } from '../composables/useNuevaConsultaDraft'
 import { todayISO, formatDateLong, formatDateShort } from '../composables/format'
-import { useTestTypes } from '../composables/useTestTypes'
+import { useTestTypes } from '@/features/laboratory-test-types/composables/useLaboratoryTestTypes'
 import { useBranches } from '@/features/branches/composables/useBranches'
 import { scrollToFirstError } from '@/composables/scrollToError'
 

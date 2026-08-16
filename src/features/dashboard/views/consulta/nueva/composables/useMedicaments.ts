@@ -1,5 +1,5 @@
 import { medicamentApi } from '../api/medicament.api'
-import { createCatalog } from './useCatalog'
+import { createCatalog } from '@/composables/useCatalog'
 
 /**
  * Catálogo creable de medicamentos para el picker de la receta (plan terapéutico).

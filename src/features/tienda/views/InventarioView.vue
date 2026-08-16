@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { BookText, ClipboardList, Package, Plus } from 'lucide-vue-next'
-import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
+import ConfirmDeleteDialog from '@/components/feedback/ConfirmDeleteDialog.vue'
 import ProductFormModal from '../components/ProductFormModal.vue'
 import RestockModal from '../components/RestockModal.vue'
 import AdjustModal from '../components/AdjustModal.vue'

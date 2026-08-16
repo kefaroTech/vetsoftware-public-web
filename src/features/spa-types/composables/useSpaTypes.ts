@@ -1,5 +1,5 @@
-import { spaTypeApi } from '../api/spaType.api'
-import { createCatalog } from './useCatalog'
+import { spaTypeApi } from '../api/spa-types.api'
+import { createCatalog } from '@/composables/useCatalog'
 
 export const useSpaTypes = createCatalog({
   fetcher: () => spaTypeApi.listAll(),

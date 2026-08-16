@@ -23,11 +23,11 @@ import SidebarNavItem from './SidebarNavItem.vue'
 import SidebarSubItem from './SidebarSubItem.vue'
 import SidebarUserCard from './SidebarUserCard.vue'
 import BranchSelector from '@/features/branches/components/BranchSelector.vue'
-import { mockUser } from '../../data/mock'
-import { useNuevaConsultaDraft } from '../../views/consulta/nueva/composables/useNuevaConsultaDraft'
+import { mockUser } from '@/features/dashboard/data/mock'
+import { useNuevaConsultaDraft } from '@/features/dashboard/views/consulta/nueva/composables/useNuevaConsultaDraft'
 import { showResumeOrNewDialog } from '@/composables/useConsultaResumeGuard'
 import { useToast } from '@/composables/useToast'
-import { useSidebarNav } from './useSidebarNav'
+import { useSidebarNav } from '@/composables/useSidebarNav'
 
 const route = useRoute()
 const router = useRouter()

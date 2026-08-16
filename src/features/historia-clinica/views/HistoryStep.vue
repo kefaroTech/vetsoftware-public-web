@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, ChevronDown, Download, Plus, Search, TrendingUp } from 'lucide-vue-next'
-import PawLoader from '@/components/ui/PawLoader.vue'
+import PawLoader from '@/components/feedback/PawLoader.vue'
 import MonthTimelineGroup from '../components/MonthTimelineGroup.vue'
 import EventDetailModal from '../components/EventDetailModal.vue'
 import WeightHistoryPanel from '../components/WeightHistoryPanel.vue'

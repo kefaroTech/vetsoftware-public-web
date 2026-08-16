@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import AppSidebar from '../components/sidebar/AppSidebar.vue'
+import AppSidebar from './AppSidebar.vue'
 
 const route = useRoute()
 const fullBleed = computed(() => Boolean(route.meta.fullBleed))

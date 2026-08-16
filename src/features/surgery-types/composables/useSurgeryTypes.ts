@@ -1,5 +1,5 @@
-import { surgeryTypeApi } from '../api/surgeryType.api'
-import { createCatalog } from './useCatalog'
+import { surgeryTypeApi } from '../api/surgery-types.api'
+import { createCatalog } from '@/composables/useCatalog'
 
 export const useSurgeryTypes = createCatalog({
   fetcher: () => surgeryTypeApi.listAll(),

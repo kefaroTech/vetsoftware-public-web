@@ -8,7 +8,7 @@ import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
 import SearchableSelect from '@/features/dashboard/components/ui/SearchableSelect.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
-import { useSurgeryTypes } from '@/features/dashboard/views/consulta/nueva/composables/useSurgeryTypes'
+import { useSurgeryTypes } from '@/features/surgery-types/composables/useSurgeryTypes'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import {
   surgeryApi,

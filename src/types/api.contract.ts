@@ -86,20 +86,20 @@ import type {
   CreateAnimalRequest,
   UpdateAnimalRequest,
 } from '../features/dashboard/views/consulta/nueva/api/animal.api'
-import type { AnimalColorResponse } from '../features/dashboard/views/consulta/nueva/api/animalColor.api'
-import type { BreedResponse } from '../features/dashboard/views/consulta/nueva/api/breed.api'
+import type { AnimalColorResponse } from '../features/animal-colors/api/animal-colors.api'
+import type { BreedResponse } from '../features/breeds/api/breeds.api'
 import type {
   ConsultationResponse,
   ConsultationTypeSummary,
   CreateConsultationPayload,
 } from '../features/dashboard/views/consulta/nueva/api/consultation.api'
-import type { ConsultationTypeResponse } from '../features/dashboard/views/consulta/nueva/api/consultationType.api'
+import type { ConsultationTypeResponse } from '../features/consultation-types/api/consultation-types.api'
 import type { DewormingResponse } from '../features/dashboard/views/consulta/nueva/api/deworming.api'
 import type {
   DiagnosticImagingResponse,
   DiagnosticImagingTypeSummary,
 } from '../features/dashboard/views/consulta/nueva/api/diagnosticImaging.api'
-import type { DiagnosticImagingTypeResponse } from '../features/dashboard/views/consulta/nueva/api/diagnosticImagingType.api'
+import type { DiagnosticImagingTypeResponse } from '../features/diagnostic-imaging-types/api/diagnostic-imaging-types.api'
 import type {
   CityResponse,
   CountryResponse,
@@ -128,18 +128,18 @@ import type {
   SpaResponse,
   SpaTypeSummary,
 } from '../features/dashboard/views/consulta/nueva/api/spa.api'
-import type { SpaTypeResponse } from '../features/dashboard/views/consulta/nueva/api/spaType.api'
-import type { SpecieResponse } from '../features/dashboard/views/consulta/nueva/api/species.api'
+import type { SpaTypeResponse } from '../features/spa-types/api/spa-types.api'
+import type { SpecieResponse } from '../features/species/api/species.api'
 import type {
   SurgeryResponse,
   SurgeryTypeSummary,
 } from '../features/dashboard/views/consulta/nueva/api/surgery.api'
-import type { SurgeryTypeResponse } from '../features/dashboard/views/consulta/nueva/api/surgeryType.api'
+import type { SurgeryTypeResponse } from '../features/surgery-types/api/surgery-types.api'
 import type {
   VaccinationResponse,
   VaccinationTypeSummary,
 } from '../features/dashboard/views/consulta/nueva/api/vaccination.api'
-import type { VaccinationTypeResponse } from '../features/dashboard/views/consulta/nueva/api/vaccinationType.api'
+import type { VaccinationTypeResponse } from '../features/vaccination-types/api/vaccination-types.api'
 import type {
   CreateWeightRecordRequest,
   WeightRecordResponse,

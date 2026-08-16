@@ -1,31 +1,33 @@
 import { defineConfig } from 'vitest/config'
+import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
 export default defineConfig({
+  plugins: [vue()],
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),
     },
   },
   test: {
-    environment: 'node',
+    environment: 'jsdom',
     globals: true,
     passWithNoTests: false,
     include: ['tests/unit/**/*.spec.ts'],
+    setupFiles: ['./tests/unit/setup.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
 
-      // Se mide toda la lógica TypeScript de la aplicación. Antes `include`
-      // apuntaba a un único archivo de cuatro líneas y los umbrales exigían
-      // 100 % sobre él, de modo que el CI certificaba "cobertura 100 %" midiendo
-      // dos sentencias. Eso es peor que no medir: es un número que miente.
+      // Se mide TODO el código de la aplicación. Antes `include` apuntaba a un
+      // único archivo de cuatro líneas y los umbrales exigían 100 % sobre él, de
+      // modo que el CI certificaba "cobertura 100 %" midiendo dos sentencias.
+      // Eso es peor que no medir: es un número que miente.
       //
-      // Los `.vue` quedan fuera porque este proyecto ejecuta las pruebas en
-      // entorno `node`, sin jsdom ni plugin de Vue: instrumentarlos rompería el
-      // parseo. Es una limitación conocida, no una exclusión de conveniencia —
-      // el porcentaje global de abajo mide menos código del que existe.
-      include: ['src/**/*.ts'],
+      // Los `.vue` estuvieron fuera mientras las pruebas corrían en entorno
+      // `node`, sin jsdom ni plugin de Vue. Ya no: TR-02 alineó este arranque con
+      // el del admin, así que la medida vuelve a cubrir el código que existe.
+      include: ['src/**/*.{ts,vue}'],
       exclude: [
         'src/**/types/**', // solo tipos, se borran al compilar
         'src/**/*.d.ts',

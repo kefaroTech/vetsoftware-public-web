@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { Package, PauseCircle, Pencil, Plus, RotateCcw, Search } from 'lucide-vue-next'
-import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
+import ConfirmDeleteDialog from '@/components/feedback/ConfirmDeleteDialog.vue'
 import ServiceFormModal from '../components/ServiceFormModal.vue'
 import CategoryManagerModal from '../components/CategoryManagerModal.vue'
 import { useTienda } from '../composables/useTienda'

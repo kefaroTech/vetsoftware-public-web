@@ -4,7 +4,7 @@ import { Search, User, Plus, ChevronRight, ArrowLeft, X, Check } from 'lucide-vu
 import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
 import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
 import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
-import PawLoader from '@/components/ui/PawLoader.vue'
+import PawLoader from '@/components/feedback/PawLoader.vue'
 import { useToast } from '@/composables/useToast'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { getProblemDetailMessage } from '@/services/http/http.client'

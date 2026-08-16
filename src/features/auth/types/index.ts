@@ -3,7 +3,10 @@ export interface LoginEmployeeRequest {
   password: string
 }
 
-export type AuthSubjectType = 'EMPLOYEE' | 'SYSTEM_USER'
+// La forma de la sesión persistida la define quien la persiste. Se reexporta aquí
+// para que el resto del feature siga importando sus tipos de un solo sitio.
+export type { AuthSession, AuthSubjectType } from '@/services/storage/storage.service'
+import type { AuthSubjectType } from '@/services/storage/storage.service'
 
 /**
  * El backend ya no entrega el refresh token en el cuerpo: lo emite en una cookie
@@ -11,11 +14,6 @@ export type AuthSubjectType = 'EMPLOYEE' | 'SYSTEM_USER'
  * para que ningun codigo nuevo intente leerlo.
  */
 export interface TokenResponse {
-  token: string
-  type: AuthSubjectType
-}
-
-export interface AuthSession {
   token: string
   type: AuthSubjectType
 }

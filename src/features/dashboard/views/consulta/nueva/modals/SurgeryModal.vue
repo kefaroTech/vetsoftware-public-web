@@ -11,7 +11,7 @@ import SearchableSelect from '@/features/dashboard/components/ui/SearchableSelec
 import type { Animal, Surgery } from '@/types/domain'
 import type { SurgeryDraftItem } from '../composables/useNuevaConsultaDraft'
 import { todayISO, formatDateLong, formatDateShort } from '../composables/format'
-import { useSurgeryTypes } from '../composables/useSurgeryTypes'
+import { useSurgeryTypes } from '@/features/surgery-types/composables/useSurgeryTypes'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{

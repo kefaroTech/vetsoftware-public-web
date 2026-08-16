@@ -4,7 +4,7 @@ import { Plus, User, ArrowRight, PawPrint, TriangleAlert } from 'lucide-vue-next
 import ContentWrap from '../components/ContentWrap.vue'
 import PageHeading from '../components/PageHeading.vue'
 import SectionCard from '@/features/dashboard/components/ui/SectionCard.vue'
-import PawLoader from '@/components/ui/PawLoader.vue'
+import PawLoader from '@/components/feedback/PawLoader.vue'
 import OwnerSearchInput from '../components/OwnerSearchInput.vue'
 import OwnerResultRow from '../components/OwnerResultRow.vue'
 import OwnerSummaryCard from '../components/OwnerSummaryCard.vue'

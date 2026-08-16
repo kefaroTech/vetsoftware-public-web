@@ -1,58 +1,18 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { AUTH_STORAGE_KEY, setRefreshHandler } from '@/services/http/http.client'
+import { setRefreshHandler } from '@/services/http/http.client'
+import { storageService } from '@/services/storage/storage.service'
 import { authApi } from '../api/auth.api'
+import { decodeJwt } from '../utils/jwt'
 import type { AuthSession, MeResponse } from '../types'
 
-interface JwtClaims {
-  sub?: string
-  companyId?: number
-  exp?: number
-  iat?: number
-  type?: string
-}
-
-function decodeJwt(token: string): JwtClaims | null {
-  try {
-    const payload = token.split('.')[1]
-    if (!payload) return null
-    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/')
-    const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=')
-    const json = decodeURIComponent(
-      atob(padded)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join(''),
-    )
-    return JSON.parse(json) as JwtClaims
-  } catch {
-    return null
-  }
-}
-
-function loadInitial(): AuthSession | null {
-  const raw = localStorage.getItem(AUTH_STORAGE_KEY)
-  if (!raw) return null
-  try {
-    const parsed = JSON.parse(raw) as Partial<AuthSession>
-    if (parsed?.token && parsed?.type) {
-      return { token: parsed.token, type: parsed.type }
-    }
-    return null
-  } catch {
-    return null
-  }
-}
-
 export const useAuthStore = defineStore('auth', () => {
-  const session = ref<AuthSession | null>(loadInitial())
+  const session = ref<AuthSession | null>(storageService.getSession())
   const me = ref<MeResponse | null>(null)
   const bootLoading = ref(false)
   let bootInFlight: Promise<void> | null = null
 
-  const claims = computed<JwtClaims | null>(() =>
-    session.value ? decodeJwt(session.value.token) : null,
-  )
+  const claims = computed(() => (session.value ? decodeJwt(session.value.token) : null))
 
   const isAuthenticated = computed(() => session.value !== null)
   const companyId = computed<number | null>(
@@ -85,7 +45,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function login(next: AuthSession) {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(next))
+    storageService.setSession(next)
     session.value = next
     try {
       await fetchMe()
@@ -98,11 +58,7 @@ export const useAuthStore = defineStore('auth', () => {
   /** Limpia sesión y storage sin redirigir (útil para expiración proactiva vía router). */
   function clearSession() {
     // Conserva preferencias y el aviso SESSION_REPLACED; solo elimina credenciales de auth.
-    try {
-      localStorage.removeItem(AUTH_STORAGE_KEY)
-    } catch {
-      /* ignore */
-    }
+    storageService.clearSession()
     session.value = null
     me.value = null
   }
@@ -140,7 +96,7 @@ export const useAuthStore = defineStore('auth', () => {
           token: res.token,
           type: res.type,
         }
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(next))
+        storageService.setSession(next)
         session.value = next
         return res.token
       })

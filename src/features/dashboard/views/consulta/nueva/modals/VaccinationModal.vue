@@ -12,7 +12,7 @@ import SearchableSelect from '@/features/dashboard/components/ui/SearchableSelec
 import type { Animal, Vaccination } from '@/types/domain'
 import type { VaccinationDraftItem } from '../composables/useNuevaConsultaDraft'
 import { todayISO, formatDateLong, formatDateShort } from '../composables/format'
-import { useVaccinationTypes } from '../composables/useVaccinationTypes'
+import { useVaccinationTypes } from '@/features/vaccination-types/composables/useVaccinationTypes'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{

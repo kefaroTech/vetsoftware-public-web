@@ -11,7 +11,12 @@ import {
   DEFAULT_TIMEOUT_MS,
   DIAN_TIMEOUT_MS,
   TRANSFER_TIMEOUT_MS,
+  getProblemDetailCode,
+  getProblemDetailFieldErrors,
+  isConcurrencyConflict,
+  setRefreshHandler,
 } from '@/services/http/http.client'
+import { storageService } from '@/services/storage/storage.service'
 import { useLoaderStore } from '@/stores/loader.store'
 import { electronicDocumentApi } from '@/features/facturacion/api/electronicDocument.api'
 import { posSaleApi } from '@/features/tienda/api/posSale.api'
@@ -49,8 +54,12 @@ function timeoutError(config: InternalAxiosRequestConfig): AxiosError {
 }
 
 /** Error con respuesta del servidor. */
-function httpError(config: InternalAxiosRequestConfig, status: number): AxiosError {
-  const response = { data: {}, status, statusText: '', headers: {}, config } as AxiosResponse
+function httpError(
+  config: InternalAxiosRequestConfig,
+  status: number,
+  data: unknown = {},
+): AxiosError {
+  const response = { data, status, statusText: '', headers: {}, config } as AxiosResponse
   return new AxiosError(
     `Request failed with status code ${status}`,
     String(status),
@@ -67,27 +76,13 @@ function useAdapter(adapter: (config: InternalAxiosRequestConfig) => Promise<Axi
   return spy
 }
 
-/** localStorage en memoria: el entorno de estas pruebas es node, sin DOM. */
-function memoryStorage(): Storage {
-  const map = new Map<string, string>()
-  return {
-    getItem: (k: string) => map.get(k) ?? null,
-    setItem: (k: string, v: string) => void map.set(k, String(v)),
-    removeItem: (k: string) => void map.delete(k),
-    clear: () => map.clear(),
-    key: () => null,
-    length: 0,
-  } as unknown as Storage
-}
-
 let loader: ReturnType<typeof useLoaderStore>
 
 beforeEach(() => {
   setActivePinia(createPinia())
   loader = useLoaderStore()
-  vi.stubGlobal('localStorage', memoryStorage())
-  vi.stubGlobal('sessionStorage', memoryStorage())
-  vi.stubGlobal('window', { location: { pathname: '/tienda', href: '' } })
+  localStorage.clear()
+  sessionStorage.clear()
 })
 
 afterEach(() => {
@@ -266,5 +261,194 @@ describe('reintentos', () => {
 
     expect(data).toEqual({ ok: true })
     expect(loader.pending).toBe(0)
+  })
+})
+
+/**
+ * El otro camino que atraviesa el mismo interceptor: el 401. Comparte con el
+ * loader la propiedad de fallar en silencio — si el reintento tras refrescar se
+ * rompiera, el usuario vería sesiones que caen sin motivo aparente.
+ *
+ * Este bloque se mantiene idéntico en los dos fronts (TR-02).
+ */
+describe('401 y renovación de sesión', () => {
+  beforeEach(() => {
+    // El redirect es una navegación dura; jsdom no la implementa, así que se
+    // observa sobre un doble en vez de dejar que reviente.
+    vi.stubGlobal('location', { pathname: '/tienda', href: '' })
+    storageService.setSession({ token: 'access-viejo', type: 'EMPLOYEE' })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    setRefreshHandler(async () => null)
+    localStorage.clear()
+    sessionStorage.clear()
+  })
+
+  it('refresca una vez y reintenta la petición con el token nuevo', async () => {
+    // El handler real (auth.store) persiste la sesión antes de resolver, y de eso
+    // depende el reintento: al reenviar la petición, el interceptor de request
+    // relee el token del storage. Un doble que no persistiera reintentaría con el
+    // token viejo — y la prueba pasaría por el motivo equivocado.
+    const refresh = vi.fn(async () => {
+      storageService.setSession({ token: 'access-nuevo', type: 'EMPLOYEE' })
+      return 'access-nuevo'
+    })
+    setRefreshHandler(refresh)
+    let intentos = 0
+    useAdapter(async (config) => {
+      intentos += 1
+      if (intentos === 1) throw httpError(config, 401, { code: 'TOKEN_EXPIRED' })
+      expect(config.headers.Authorization).toBe('Bearer access-nuevo')
+      return ok(config, { items: [] })
+    })
+
+    const { data } = await http.get('/medicaments')
+
+    expect(refresh).toHaveBeenCalledTimes(1)
+    expect(data).toEqual({ items: [] })
+    expect(loader.pending).toBe(0)
+  })
+
+  it('no reintenta dos veces la misma petición aunque el reintento vuelva a dar 401', async () => {
+    // Sin la marca `_retry` esto sería un bucle infinito de refrescos.
+    const refresh = vi.fn(async () => 'access-nuevo')
+    setRefreshHandler(refresh)
+    useAdapter(async (config) => {
+      throw httpError(config, 401, { code: 'TOKEN_EXPIRED' })
+    })
+
+    await expect(http.get('/medicaments')).rejects.toThrow()
+
+    expect(refresh).toHaveBeenCalledTimes(1)
+    expect(location.href).toBe('/login')
+    expect(loader.pending).toBe(0)
+  })
+
+  it('manda al login sin intentar refrescar cuando el token es inválido, no expirado', async () => {
+    const refresh = vi.fn(async () => 'access-nuevo')
+    setRefreshHandler(refresh)
+    useAdapter(async (config) => {
+      throw httpError(config, 401, { code: 'TOKEN_INVALID' })
+    })
+
+    await expect(http.get('/medicaments')).rejects.toThrow()
+
+    expect(refresh).not.toHaveBeenCalled()
+    expect(storageService.getToken()).toBeNull()
+    expect(location.href).toBe('/login')
+  })
+
+  it('no recarga si el 401 llega estando ya en el login', async () => {
+    vi.stubGlobal('location', { pathname: '/login', href: '' })
+    useAdapter(async (config) => {
+      throw httpError(config, 401, { code: 'TOKEN_INVALID' })
+    })
+
+    await expect(http.get('/medicaments')).rejects.toThrow()
+
+    expect(location.href).toBe('')
+  })
+
+  it('deja dicho por qué se cerró la sesión cuando la desplazó otro dispositivo', async () => {
+    // Sin este aviso el usuario aparece en el login sin explicación y lo lee como
+    // un fallo de la aplicación. El texto va a sessionStorage porque lo que sigue
+    // es una navegación dura que destruye el store.
+    useAdapter(async (config) => {
+      throw httpError(config, 401, { code: 'SESSION_REPLACED' })
+    })
+
+    await expect(http.get('/medicaments')).rejects.toThrow()
+
+    expect(storageService.takeSessionReplacedNotice()).toBe(
+      'Tu cuenta se inició en otro dispositivo.',
+    )
+    expect(location.href).toBe('/login')
+  })
+
+  it('deja pasar el 401 de las llamadas de auth sin tocar la sesión', async () => {
+    // Un login con credenciales malas responde 401: refrescar o redirigir ahí
+    // sería recursión y pérdida del mensaje de error del formulario.
+    const refresh = vi.fn(async () => 'access-nuevo')
+    setRefreshHandler(refresh)
+    useAdapter(async (config) => {
+      throw httpError(config, 401, { code: 'BAD_CREDENTIALS' })
+    })
+
+    await expect(http.post('/auth/login/employee', {})).rejects.toThrow()
+
+    expect(refresh).not.toHaveBeenCalled()
+    expect(storageService.getToken()).toBe('access-viejo')
+    expect(location.href).toBe('')
+  })
+})
+
+/**
+ * Los tres lectores del `ProblemDetail` que el backend ya emitía y que nadie
+ * leía. Existían solo en el front operativo, así que el admin trataba un 409 de
+ * bloqueo optimista igual que un 500 y descartaba los errores por campo.
+ *
+ * Este bloque se mantiene idéntico en los dos fronts (TR-02).
+ */
+describe('lectores del ProblemDetail', () => {
+  const config = { headers: {} } as InternalAxiosRequestConfig
+
+  describe('getProblemDetailCode', () => {
+    it('devuelve el código de negocio', () => {
+      const error = httpError(config, 409, { code: 'CONCURRENT_MODIFICATION' })
+
+      expect(getProblemDetailCode(error)).toBe('CONCURRENT_MODIFICATION')
+    })
+
+    it('devuelve null cuando el cuerpo no trae código', () => {
+      expect(getProblemDetailCode(httpError(config, 500, {}))).toBeNull()
+    })
+
+    it('devuelve null ante algo que no es un error de axios', () => {
+      expect(getProblemDetailCode(new Error('vaya'))).toBeNull()
+      expect(getProblemDetailCode(null)).toBeNull()
+    })
+  })
+
+  describe('isConcurrencyConflict', () => {
+    it('reconoce el 409 de bloqueo optimista', () => {
+      // Es la señal de "recarga y vuelve a intentarlo", no la de "algo se rompió".
+      // Confundirla hace que el usuario reintente sobre datos ya obsoletos.
+      const error = httpError(config, 409, { code: 'CONCURRENT_MODIFICATION' })
+
+      expect(isConcurrencyConflict(error)).toBe(true)
+    })
+
+    it('no confunde otro 409 con un conflicto de versión', () => {
+      const error = httpError(config, 409, { code: 'DUPLICATED_CODE' })
+
+      expect(isConcurrencyConflict(error)).toBe(false)
+    })
+  })
+
+  describe('getProblemDetailFieldErrors', () => {
+    it('indexa por campo los errores de validación', () => {
+      const error = httpError(config, 400, {
+        code: 'VALIDATION_ERROR',
+        errors: [
+          { field: 'name', message: 'no puede estar vacío' },
+          { field: 'email', message: 'formato inválido' },
+        ],
+      })
+
+      expect(getProblemDetailFieldErrors(error)).toEqual({
+        name: 'no puede estar vacío',
+        email: 'formato inválido',
+      })
+    })
+
+    it('devuelve un objeto vacío cuando no hay errores por campo', () => {
+      expect(getProblemDetailFieldErrors(httpError(config, 400, {}))).toEqual({})
+    })
+
+    it('devuelve un objeto vacío ante algo que no es un error de axios', () => {
+      expect(getProblemDetailFieldErrors(new Error('vaya'))).toEqual({})
+    })
   })
 })
