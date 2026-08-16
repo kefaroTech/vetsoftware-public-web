@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Trash2, TriangleAlert } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
 
 withDefaults(
   defineProps<{

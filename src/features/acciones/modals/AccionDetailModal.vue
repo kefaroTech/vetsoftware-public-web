@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { FunctionalComponent } from 'vue'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
 import DetailField from '@/features/historia-clinica/components/DetailField.vue'
 
 export interface DetailFieldDef {

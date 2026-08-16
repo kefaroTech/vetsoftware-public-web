@@ -10,8 +10,8 @@ import {
   Trash2,
   User,
 } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
+import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import AppointmentStatusPill from './AppointmentStatusPill.vue'
 import AppointmentVetBadge from './AppointmentVetBadge.vue'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
