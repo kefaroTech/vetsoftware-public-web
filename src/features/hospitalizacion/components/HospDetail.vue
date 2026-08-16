@@ -17,9 +17,9 @@ import {
   formatDateLong,
 } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import { daysSince } from '../composables/mar'
-import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
-import type { HospitalizationObservationResponse } from '../api/hospitalizationObservation.api'
-import type { HospitalizationProgressNoteResponse } from '../api/hospitalizationProgressNote.api'
+import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/types/hospitalization.types'
+import type { HospitalizationObservationResponse } from '../types/hospitalizationObservation.types'
+import type { HospitalizationProgressNoteResponse } from '../types/hospitalizationProgressNote.types'
 import type { ReasonLeaving } from '@/types/domain'
 
 defineProps<{

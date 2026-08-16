@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { LogOut } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import type { ReasonLeaving } from '@/types/domain'
 
 const props = defineProps<{ open: boolean; patientName: string }>()

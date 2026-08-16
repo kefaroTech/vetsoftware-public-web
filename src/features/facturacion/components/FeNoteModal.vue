@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { FileText } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import { CREDIT_REASON_LABEL, DEBIT_REASON_LABEL } from '../types/facturacion'
 
 const props = defineProps<{ open: boolean; kind: 'credit' | 'debit' | null }>()

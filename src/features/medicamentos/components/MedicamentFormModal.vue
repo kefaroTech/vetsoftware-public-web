@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { Pill } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useMedicamentCatalog } from '../composables/useMedicamentCatalog'
-import type { MedicamentResponse } from '@/features/dashboard/views/consulta/nueva/api/medicament.api'
+import type { MedicamentResponse } from '@/features/dashboard/views/consulta/nueva/types/medicament.types'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{

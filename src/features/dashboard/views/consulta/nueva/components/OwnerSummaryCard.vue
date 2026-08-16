@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Phone, Mail, MapPin, Sparkles } from 'lucide-vue-next'
 import type { Owner } from '@/types/domain'
-import SectionCard from '@/features/dashboard/components/ui/SectionCard.vue'
+import SectionCard from '@/components/ui/SectionCard.vue'
 import { User } from 'lucide-vue-next'
 
 defineProps<{

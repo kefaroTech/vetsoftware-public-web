@@ -7,17 +7,15 @@ import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import OwnerAnimalBreadcrumb from '../components/OwnerAnimalBreadcrumb.vue'
 import ImagingFormModal from '../modals/ImagingFormModal.vue'
 import AccionDetailModal, { type DetailFieldDef } from '../modals/AccionDetailModal.vue'
-import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
+import ConfirmDeleteDialog from '@/components/feedback/ConfirmDeleteDialog.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { useToast } from '@/composables/useToast'
 import { openBilling } from '@/features/cuentas/composables/useBillingPrompt'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
-import {
-  diagnosticImagingApi,
-  type DiagnosticImagingResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/diagnosticImaging.api'
-import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import { diagnosticImagingApi } from '@/features/dashboard/views/consulta/nueva/api/diagnosticImaging.api'
+import type { DiagnosticImagingResponse } from '@/features/dashboard/views/consulta/nueva/types/diagnosticImaging.types'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import type { Owner } from '@/types/domain'
 import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
 

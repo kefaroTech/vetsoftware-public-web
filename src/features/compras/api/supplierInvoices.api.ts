@@ -1,3 +1,4 @@
+import type { SupplierInvoiceSearchParams } from '../types/supplierInvoices.types'
 import { http } from '@/services/http/http.client'
 import { withBranchBody, withBranchParam } from '@/features/branches/api/branchContext'
 import type {
@@ -6,20 +7,10 @@ import type {
   RegisterSupplierPaymentRequest,
   SupplierInvoice,
   SupplierInvoiceRequest,
-  SupplierInvoiceStatus,
 } from '../types/compras'
 
 // Facturas de proveedor / cuentas por pagar (backend: /supplier-invoices). La sede va como contexto
 // multi-sucursal (body en escrituras, query en lecturas). El backend la acota por el alcance del empleado.
-
-export interface SupplierInvoiceSearchParams {
-  supplierId?: number
-  status?: SupplierInvoiceStatus
-  from?: string
-  to?: string
-  page?: number
-  pageSize?: number
-}
 
 export const supplierInvoicesApi = {
   async search(params: SupplierInvoiceSearchParams = {}): Promise<PageResponse<SupplierInvoice>> {

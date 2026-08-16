@@ -1,18 +1,16 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { Beaker, Download, FileText } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
 import DetailField from '@/features/historia-clinica/components/DetailField.vue'
 import LabStatusPill from '@/features/acciones/components/LabStatusPill.vue'
 import LabPriorityPill from '../components/LabPriorityPill.vue'
 import type { LabActionKind } from '../components/LabSampleCard.vue'
-import {
-  laboratoryTestFileApi,
-  type LaboratoryTestFileResponse,
-} from '../api/laboratoryTestFile.api'
+import { laboratoryTestFileApi } from '../api/laboratoryTestFile.api'
+import type { LaboratoryTestFileResponse } from '../types/laboratoryTestFile.types'
 import { labCode } from '../types/lab'
 import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
-import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
+import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 
 const props = defineProps<{ open: boolean; test: LaboratoryTestResponse | null }>()
 const emit = defineEmits<{ close: []; action: [kind: LabActionKind] }>()

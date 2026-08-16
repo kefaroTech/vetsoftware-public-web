@@ -1,21 +1,14 @@
+import type { AppointmentListParams } from '../types/appointment.types'
 import { http } from '@/services/http/http.client'
 import { withBranchBody, withBranchParam } from '@/features/branches/api/branchContext'
 import type {
   AppointmentResponse,
-  AppointmentStatus,
   CancelAppointmentRequest,
   ChangeStatusRequest,
   CreateAppointmentRequest,
   RescheduleAppointmentRequest,
   UpdateAppointmentRequest,
 } from '../types/appointment'
-
-export interface AppointmentListParams {
-  from?: string // yyyy-MM-dd (inclusive)
-  to?: string // yyyy-MM-dd (inclusive)
-  employeeId?: number
-  status?: AppointmentStatus
-}
 
 function buildQuery(params: AppointmentListParams): Record<string, string> {
   const q: Record<string, string> = {}

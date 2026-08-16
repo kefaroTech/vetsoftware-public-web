@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { BookText, FileDown, RefreshCw } from 'lucide-vue-next'
-import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
+import DateInput from '@/components/ui/DateInput.vue'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
 import { useToast } from '@/composables/useToast'
 import { getProblemDetailMessage } from '@/services/http/http.client'

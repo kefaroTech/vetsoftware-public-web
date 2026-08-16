@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Check, FileText, ShieldCheck, User, X } from 'lucide-vue-next'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import FeThresholdBanner from '@/features/facturacion/components/FeThresholdBanner.vue'
 import FeFiscalCustomerCard from '@/features/facturacion/components/FeFiscalCustomerCard.vue'
 import { CLOSE_DOC_TYPE_OPTIONS, type FeDocType } from '../composables/useCloseAccount'

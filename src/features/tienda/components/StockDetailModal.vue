@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { Boxes, ChevronLeft, ChevronRight } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
 import { inventoryApi } from '../api/inventory.api'
 import { formatMoney } from '../composables/pricing'
 import { getProblemDetailMessage } from '@/services/http/http.client'

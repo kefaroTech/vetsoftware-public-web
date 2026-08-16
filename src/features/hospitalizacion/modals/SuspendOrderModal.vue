@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Ban } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
 import type { OrderKind } from '../types/hospital'
 
 defineProps<{

@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import PublicLayout from '@/components/public/PublicLayout.vue'
-import { SESSION_REPLACED_NOTICE_KEY } from '@/services/http/http.client'
+import { storageService } from '@/services/storage/storage.service'
 import LoginForm from '../components/LoginForm.vue'
 
 const sessionNotice = ref('')
 
+// Se consume de una vez: leerlo lo borra, para que no reaparezca en el siguiente login.
 onMounted(() => {
-  sessionNotice.value = sessionStorage.getItem(SESSION_REPLACED_NOTICE_KEY) ?? ''
-  sessionStorage.removeItem(SESSION_REPLACED_NOTICE_KEY)
+  sessionNotice.value = storageService.takeSessionReplacedNotice() ?? ''
 })
 </script>
 

@@ -1,43 +1,52 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import { popLoader, pushLoader } from '@/composables/useGlobalLoader'
+import { storageService } from '@/services/storage/storage.service'
 import { nextTraceparent } from '@/services/telemetry/trace'
 import type { ProblemDetail } from '@/types/api.types'
-import { popLoader, pushLoader } from '@/composables/useGlobalLoader'
 import { createApiBaseUrl } from './api-base-url'
 
 declare module 'axios' {
   export interface AxiosRequestConfig {
+    /**
+     * Deja pasar la petición sin velo de carga. Solo para lo que sería invasivo
+     * bloquear: búsqueda con debounce, polling, validación en vivo. Por omisión
+     * el loader está activo.
+     */
     skipGlobalLoader?: boolean
     /** Marca interna: la request ya se reintentó tras un refresh (evita bucles). */
     _retry?: boolean
     /** Marca interna: esta request incrementó el loader y debe decrementarlo una sola vez. */
     _loaderPushed?: boolean
-    /** Marca interna: reintentos por fallo de red o 5xx ya consumidos. */
+    /** Marca interna: reintentos ya consumidos ante fallo de red o 5xx. */
     _networkRetries?: number
-    /**
-     * Identificador de la traza que este cliente genero para la peticion (TR-05). Existe
-     * aunque el servidor no conteste nunca, que es cuando mas falta hace.
-     */
+    /** Marca interna: trace-id que este cliente generó para la petición (TR-05). */
+    _traceId?: string
+  }
+  export interface InternalAxiosRequestConfig {
+    _retry?: boolean
+    _loaderPushed?: boolean
+    _networkRetries?: number
     _traceId?: string
   }
 }
 
-export const AUTH_STORAGE_KEY = 'vetsoft.auth'
-export const SESSION_REPLACED_NOTICE_KEY = 'vetsoft.auth.session-replaced'
-
 /**
  * Sin timeout, una petición que nunca resuelve deja el contador del loader
- * incrementado para siempre: la Huella se queda latiendo sobre el overlay y la
- * única salida es recargar la página. Con wifi compartido —el escenario normal
- * de una clínica— eso no es un caso de borde.
+ * incrementado para siempre: el velo se queda puesto y la única salida es
+ * recargar la página. Con wifi compartido —el escenario normal de una clínica—
+ * eso no es un caso de borde.
  *
  * 20 s es holgado para el CRUD de la aplicación, pero NO para todo: hay
- * operaciones cuyo presupuesto en el servidor es legítimamente mayor, y para
- * esas se usan las constantes de abajo por llamada. Un timeout global corto
- * sobre ellas no protegería al usuario: abortaría la petición en el navegador
- * mientras el backend sigue trabajando, dejando al operario sin el resultado de
- * algo que sí ocurrió.
+ * operaciones cuyo presupuesto en el servidor es legítimamente mayor, y esas
+ * pasan su propio `timeout` por llamada. Un timeout global corto sobre ellas no
+ * protegería al usuario: abortaría la petición en el navegador mientras el
+ * backend sigue trabajando, dejándolo sin el resultado de algo que sí ocurrió.
  */
 export const DEFAULT_TIMEOUT_MS = 20_000
+
+// --- Presupuestos por llamada propios de esta aplicación ---------------------
+// El resto de este archivo se mantiene idéntico en los dos fronts. Este bloque
+// no: son operaciones que solo existen aquí.
 
 /**
  * Emisión y transmisión de documentos electrónicos. El backend habla con el
@@ -54,6 +63,8 @@ export const DIAN_TIMEOUT_MS = 90_000
  */
 export const TRANSFER_TIMEOUT_MS = 120_000
 
+// -----------------------------------------------------------------------------
+
 /** Reintentos ante fallo de red o 5xx, solo para GET. */
 const MAX_NETWORK_RETRIES = 2
 const RETRY_BACKOFF_MS = 300
@@ -64,14 +75,14 @@ export const http = axios.create({
   timeout: DEFAULT_TIMEOUT_MS,
   // El refresh token viaja en una cookie HttpOnly que emite el backend. Sin
   // credenciales, el navegador ni siquiera guarda el Set-Cookie de una respuesta
-  // cross-origin, y /auth/refresh se quedaria sin nada que enviar. El backend ya
-  // responde con Access-Control-Allow-Credentials y lista explicita de origenes.
+  // cross-origin, y /auth/refresh se quedaría sin nada que enviar. El backend ya
+  // responde con Access-Control-Allow-Credentials y lista explícita de orígenes.
   withCredentials: true,
 })
 
-/** Limpia el token y fuerza el ir a login (hard redirect). Usado cuando el refresh no es posible. */
+/** Limpia la sesión y fuerza el ir a login (hard redirect). Usado cuando el refresh no es posible. */
 function redirectToLogin() {
-  localStorage.removeItem(AUTH_STORAGE_KEY)
+  storageService.clearSession()
   if (window.location.pathname !== '/login') {
     window.location.href = '/login'
   }
@@ -91,19 +102,11 @@ export function setRefreshHandler(handler: RefreshHandler) {
 }
 
 http.interceptors.request.use((config) => {
-  const raw = localStorage.getItem(AUTH_STORAGE_KEY)
-  if (raw) {
-    try {
-      const session = JSON.parse(raw) as { token?: string }
-      if (session.token) {
-        config.headers.set('Authorization', `Bearer ${session.token}`)
-      }
-    } catch {
-      localStorage.removeItem(AUTH_STORAGE_KEY)
-    }
-  }
-  // TR-05: el backend adopta este trace-id, asi que el navegador y el servidor comparten uno.
-  // El reintento pasa otra vez por aqui y genera uno nuevo, que es lo correcto: es otra peticion.
+  const token = storageService.getToken()
+  if (token) config.headers.set('Authorization', `Bearer ${token}`)
+
+  // TR-05: el backend adopta este trace-id, así que el navegador y el servidor comparten uno.
+  // El reintento pasa otra vez por aquí y genera uno nuevo, que es lo correcto: es otra petición.
   const { traceId, traceparent } = nextTraceparent()
   config.headers.set('traceparent', traceparent)
   config._traceId = traceId
@@ -128,18 +131,14 @@ function releaseLoader(config: InternalAxiosRequestConfig | undefined): void {
   popLoader()
 }
 
-/**
- * Un GET es idempotente, así que reintentarlo es seguro y tapa el corte de red
- * momentáneo. Lo que NO se reintenta es el timeout: hacerlo multiplicaría por
- * tres el tiempo que la interfaz pasa bloqueada, que es justo lo que este
- * cambio viene a evitar.
- */
-function shouldRetry(error: AxiosError, config: InternalAxiosRequestConfig): boolean {
-  if (config.method?.toLowerCase() !== 'get') return false
-  if ((config._networkRetries ?? 0) >= MAX_NETWORK_RETRIES) return false
-  if (error.code === AxiosError.ECONNABORTED || error.code === AxiosError.ETIMEDOUT) return false
+function isRetriableNetworkFailure(error: AxiosError): boolean {
   const status = error.response?.status
-  return status === undefined || status >= 500
+  if (status === undefined) return error.code !== 'ECONNABORTED'
+  return status >= 500
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 http.interceptors.response.use(
@@ -151,14 +150,13 @@ http.interceptors.response.use(
     const original = error.config
     releaseLoader(original)
 
-    // Cancelación deliberada del llamador: no es un fallo de la aplicación.
-    if (axios.isCancel(error)) return Promise.reject(error)
-
-    if (original && shouldRetry(error, original)) {
-      const attempt = (original._networkRetries ?? 0) + 1
-      original._networkRetries = attempt
-      await new Promise((resolve) => setTimeout(resolve, RETRY_BACKOFF_MS * 2 ** (attempt - 1)))
-      return http(original)
+    if (original && original.method?.toLowerCase() === 'get' && isRetriableNetworkFailure(error)) {
+      const attempts = original._networkRetries ?? 0
+      if (attempts < MAX_NETWORK_RETRIES) {
+        original._networkRetries = attempts + 1
+        await delay(RETRY_BACKOFF_MS * (attempts + 1))
+        return http(original)
+      }
     }
 
     const status = error.response?.status
@@ -166,10 +164,7 @@ http.interceptors.response.use(
     const code = getProblemDetailCode(error)
 
     if (status === 401 && code === 'SESSION_REPLACED') {
-      sessionStorage.setItem(
-        SESSION_REPLACED_NOTICE_KEY,
-        'Tu cuenta se inició en otro dispositivo.',
-      )
+      storageService.setSessionReplacedNotice('Tu cuenta se inició en otro dispositivo.')
     }
 
     // Las llamadas de auth no entran al flujo de refresh (evita recursión).
@@ -200,13 +195,14 @@ http.interceptors.response.use(
  * la leía, así que cuando un veterinario reportaba «se quedó cargando», soporte no tenía forma de
  * encontrar la traza: el dato estaba a un acceso de distancia.
  *
- * <p>Se prefiere la cabecera al `traceId` del cuerpo porque existe también en las respuestas que
- * no traen `ProblemDetail` —un 502 del proxy, un timeout— que son justo las que peor se
- * diagnostican.
+ * <p>El orden importa. Se prefiere el id que generó este cliente porque desde TR-05 el backend
+ * **adopta** el `traceparent` entrante: es el mismo identificador, y además existe cuando la
+ * petición murió sin respuesta —un timeout, la red caída— que es justo el caso que peor se
+ * diagnostica y el que dio nombre al hallazgo. Después la cabecera, y solo al final el `traceId`
+ * del cuerpo, que falta en las respuestas sin `ProblemDetail`.
  */
 export function getTraceId(error: unknown): string | undefined {
   if (!(error instanceof AxiosError)) return undefined
-  // El que genero este cliente: existe aunque la peticion muriera sin respuesta.
   if (error.config?._traceId) return error.config._traceId
   const header = error.response?.headers?.['x-trace-id']
   if (typeof header === 'string' && header.trim()) return header.trim()
@@ -214,6 +210,11 @@ export function getTraceId(error: unknown): string | undefined {
   return pd?.traceId?.trim() || undefined
 }
 
+/**
+ * Mensaje redactado por el backend en el `ProblemDetail`, o `fallback` si no hay
+ * ninguno. Se prefiere siempre lo que dice el servidor: el texto fijo del
+ * llamador describe la pantalla, no lo que falló.
+ */
 export function getProblemDetailMessage(error: unknown, fallback = 'Error inesperado'): string {
   if (error instanceof AxiosError) {
     const pd = error.response?.data as ProblemDetail | undefined
@@ -242,6 +243,7 @@ export function isConcurrencyConflict(error: unknown): boolean {
   return getProblemDetailCode(error) === 'CONCURRENT_MODIFICATION'
 }
 
+/** Errores de validación por campo del `ProblemDetail`, indexados por nombre de campo. */
 export function getProblemDetailFieldErrors(error: unknown): Record<string, string> {
   if (!(error instanceof AxiosError)) return {}
   const pd = error.response?.data as ProblemDetail | undefined

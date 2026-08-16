@@ -1,22 +1,7 @@
+import type { ClinicalHistoryParams, ClinicalEventTypeCount } from '../types/clinicalHistory.types'
 import { http, TRANSFER_TIMEOUT_MS } from '@/services/http/http.client'
 import type { PageResponse } from '@/types/pagination'
-import type { ClinicalEventResponse, ClinicalEventType } from '../types/historia'
-
-export interface ClinicalHistoryParams {
-  types?: ClinicalEventType[]
-  from?: string
-  to?: string
-  /** Texto libre sobre el resumen del evento; lo resuelve el servidor (BE-06). */
-  q?: string
-  /** Solo los procedimientos derivados de esta consulta. */
-  consultationId?: number
-}
-
-/** Cuántos eventos de cada tipo tiene el animal en toda su historia. */
-export interface ClinicalEventTypeCount {
-  eventType: ClinicalEventType
-  count: number
-}
+import type { ClinicalEventResponse } from '../types/historia'
 
 function buildQuery(params: ClinicalHistoryParams): Record<string, string | number> {
   const query: Record<string, string | number> = {}

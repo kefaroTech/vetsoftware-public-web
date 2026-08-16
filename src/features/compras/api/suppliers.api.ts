@@ -1,13 +1,8 @@
+import type { SupplierSearchParams } from '../types/suppliers.types'
 import { http } from '@/services/http/http.client'
 import type { PageResponse, Supplier, SupplierRequest } from '../types/compras'
 
 // Proveedores (backend: /suppliers). CRUD company-scoped, búsqueda paginada server-side.
-
-export interface SupplierSearchParams {
-  q?: string
-  page?: number
-  pageSize?: number
-}
 
 export const suppliersApi = {
   async search(params: SupplierSearchParams = {}): Promise<PageResponse<Supplier>> {

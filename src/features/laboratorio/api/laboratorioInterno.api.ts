@@ -1,9 +1,7 @@
 import { http } from '@/services/http/http.client'
 import { withBranchParam } from '@/features/branches/api/branchContext'
-import {
-  laboratoryTestApi,
-  type LaboratoryTestResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
+import { laboratoryTestApi } from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
+import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 import type { LabSearchCriteria, PageResponse } from '../types/lab'
 
 /**

@@ -29,33 +29,38 @@ const DIST = path.resolve(import.meta.dirname, '../dist')
  *
  * Medida al establecerlos (8 de agosto de 2026, build de producción):
  *   ruta crítica JS   102,9 KB gzip   → presupuesto 130 KB   (+26 %)
- *   CSS crítico        84,6 KB gzip   → presupuesto  95 KB   (+12 %)
+ *   CSS crítico        37,1 KB gzip   → presupuesto  45 KB   (+21 %)
  *   JS total          431,4 KB gzip   → presupuesto 520 KB   (+21 %)
  *
  * Subir un presupuesto es una decisión consciente que queda en el historial.
  * Eso es justo lo que faltaba: nada impedía que el peso creciera sin que nadie
  * se enterara hasta que un usuario se quejara de la carga.
  *
- * ── Dos cosas que estos números NO deben leerse como aprobadas ──────────────
+ * ── El CSS crítico bajó de 84,6 KB a 37,1 KB (TR-02) ───────────────────────
  *
- * 1. Los 84,6 KB de CSS crítico son casi enteramente `@mdi/font`. La hoja son
- *    197 KB sin comprimir con 7.479 apariciones de `mdi-` frente a 130 clases
- *    de Vuetify, y el proyecto usa exactamente 24 iconos distintos. Además
- *    arrastra la fuente: 403 KB de .woff2 que el navegador descarga para
- *    dibujar esos 24. Es el mismo problema que el panel admin resolvió con un
- *    subset de iconos. El presupuesto se fija aquí para que no empeore, no
- *    porque esté bien.
+ * Aquella nota decía que los 84,6 KB eran casi enteramente `@mdi/font` —197 KB
+ * de hoja y 403 KB de `.woff2` para dibujar 24 iconos— y que el presupuesto se
+ * fijaba para que no empeorara, no porque estuviera bien. Ya no hace falta: al
+ * unificar los dos fronts, Vuetify pasó a dibujar sus iconos con Lucide, la
+ * misma librería que ya usaba la aplicación. Sin webfont y sin hoja de 197 KB,
+ * el CSS crítico cae a 37,1 KB y el navegador deja de descargar la fuente.
  *
- * 2. La caché se invalida casi entera en cada despliegue. Medido: un cambio de
- *    una línea en UNA vista hoja cambia el hash de 118 de los 168 chunks,
- *    367,7 KB gzip de 431,4 (85 %). En el panel admin, el mismo experimento
- *    invalida 1 chunk de 72 (19,7 KB, 10 %). No lo causa el vendor —agrupar por
- *    familias solo lo baja al 71 % y encarece la ruta crítica un 25 %—, así que
- *    es una investigación aparte, no un `manualChunks`.
+ * El presupuesto baja de 95 a 45 KB, el mismo que la consola: los dos fronts
+ * cargan ahora exactamente la misma pila de CSS, así que compartirlo es lo
+ * correcto — y un techo de 95 KB sobre una medida de 37 ya no vigilaba nada.
+ *
+ * ── Lo que sigue sin estar aprobado ─────────────────────────────────────────
+ *
+ * La caché se invalida casi entera en cada despliegue. Medido: un cambio de
+ * una línea en UNA vista hoja cambia el hash de 118 de los 168 chunks,
+ * 367,7 KB gzip de 431,4 (85 %). En el panel admin, el mismo experimento invalida
+ * 1 chunk de 72 (19,7 KB, 10 %). No lo causa el vendor —agrupar por familias solo
+ * lo baja al 71 % y encarece la ruta crítica un 25 %—, así que es una
+ * investigación aparte, no un `manualChunks`.
  */
 const BUDGET_GZIP = {
   criticalJs: 130 * 1024,
-  criticalCss: 95 * 1024,
+  criticalCss: 45 * 1024,
   totalJs: 520 * 1024,
 }
 

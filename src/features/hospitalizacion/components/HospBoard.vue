@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { BedDouble } from 'lucide-vue-next'
 import HospCard from './HospCard.vue'
-import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
+import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/types/hospitalization.types'
 
 defineProps<{ items: HospitalizationResponse[]; loading: boolean }>()
 defineEmits<{ open: [patient: HospitalizationResponse] }>()

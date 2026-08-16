@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { Image as ImageIcon } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
 import ExistingItemsSection from '../components/ExistingItemsSection.vue'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
-import SearchableSelect from '@/features/dashboard/components/ui/SearchableSelect.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseTextarea from '@/components/ui/BaseTextarea.vue'
+import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 import type { Animal, DiagnosticImaging } from '@/types/domain'
 import type { DiagnosticImagingDraftItem } from '../composables/useNuevaConsultaDraft'
 import { todayISO, formatDateLong, formatDateShort } from '../composables/format'
-import { useDiagnosticImagingTypes } from '../composables/useDiagnosticImagingTypes'
+import { useDiagnosticImagingTypes } from '@/features/diagnostic-imaging-types/composables/useDiagnosticImagingTypes'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{

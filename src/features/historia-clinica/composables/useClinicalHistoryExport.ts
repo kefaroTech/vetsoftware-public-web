@@ -1,5 +1,6 @@
 import { ref } from 'vue'
-import { clinicalHistoryApi, type ClinicalHistoryParams } from '../api/clinicalHistory.api'
+import { clinicalHistoryApi } from '../api/clinicalHistory.api'
+import type { ClinicalHistoryParams } from '../types/clinicalHistory.types'
 
 export function useClinicalHistoryExport() {
   const exporting = ref(false)

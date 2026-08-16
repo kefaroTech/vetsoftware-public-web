@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, watch, type Component } from 'vue'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{

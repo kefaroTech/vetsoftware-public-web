@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { CreditCard, FileText, ShieldCheck, X } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import { formatMoney } from '../composables/pricing'
 import { useToast } from '@/composables/useToast'
 import { useFeUvt } from '@/features/facturacion/composables/useFeUvt'
@@ -15,11 +15,11 @@ import {
 import FeThresholdBanner from '@/features/facturacion/components/FeThresholdBanner.vue'
 import FeFiscalCustomerCard from '@/features/facturacion/components/FeFiscalCustomerCard.vue'
 import FeCustomerFiscalModal from '@/features/facturacion/components/FeCustomerFiscalModal.vue'
-import {
-  ownerApi,
-  type OwnerResponse,
-  type UpdateOwnerRequest,
-} from '@/features/dashboard/views/consulta/nueva/api/owner.api'
+import { ownerApi } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
+import type {
+  OwnerResponse,
+  UpdateOwnerRequest,
+} from '@/features/dashboard/views/consulta/nueva/types/owner.types'
 
 const props = defineProps<{ open: boolean; total: number; customer: OwnerResponse | null }>()
 const emit = defineEmits<{

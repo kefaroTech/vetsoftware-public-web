@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toRef, watch } from 'vue'
 import { MapPin, Receipt } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
 import BillingDestinationPicker from './BillingDestinationPicker.vue'
 import BillingChargeColumns from './BillingChargeColumns.vue'
 import { formatMoney } from '@/features/tienda/composables/pricing'

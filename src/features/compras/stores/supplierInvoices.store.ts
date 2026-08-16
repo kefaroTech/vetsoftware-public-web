@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
-import { supplierInvoicesApi, type SupplierInvoiceSearchParams } from '../api/supplierInvoices.api'
+import { supplierInvoicesApi } from '../api/supplierInvoices.api'
+import type { SupplierInvoiceSearchParams } from '../types/supplierInvoices.types'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useLatestOnly } from '@/composables/useLatestOnly'

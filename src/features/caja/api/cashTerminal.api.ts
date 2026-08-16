@@ -1,19 +1,5 @@
+import type { CashTerminal, SaveCashTerminalRequest } from '../types/cashTerminal.types'
 import { http } from '@/services/http/http.client'
-
-export interface CashTerminal {
-  id: number
-  branchId: number
-  name: string
-  code: string
-  active: boolean
-  createdAt: string
-}
-
-export interface SaveCashTerminalRequest {
-  branchId: number
-  name: string
-  code: string
-}
 
 export const cashTerminalApi = {
   async list(branchId: number, activeOnly = false): Promise<CashTerminal[]> {

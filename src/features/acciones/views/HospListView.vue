@@ -8,17 +8,15 @@ import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import OwnerAnimalBreadcrumb from '../components/OwnerAnimalBreadcrumb.vue'
 import HospFormModal from '../modals/HospFormModal.vue'
 import AccionDetailModal, { type DetailFieldDef } from '../modals/AccionDetailModal.vue'
-import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
+import ConfirmDeleteDialog from '@/components/feedback/ConfirmDeleteDialog.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { useToast } from '@/composables/useToast'
 import { openBilling } from '@/features/cuentas/composables/useBillingPrompt'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
-import {
-  hospitalizationApi,
-  type HospitalizationResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
-import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import { hospitalizationApi } from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
+import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/types/hospitalization.types'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import type { Owner } from '@/types/domain'
 import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { MapPin, Phone, Pencil, Power, PowerOff } from 'lucide-vue-next'
-import type { BranchResponse } from '@/features/branches/api/branch.api'
+import type { BranchResponse } from '@/features/branches/types/branch.types'
 
 defineProps<{
   branch: BranchResponse

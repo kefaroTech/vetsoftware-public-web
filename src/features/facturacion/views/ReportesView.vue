@@ -16,7 +16,7 @@ import {
 } from '../types/facturacion'
 import FeStatusPill from '../components/FeStatusPill.vue'
 import FeUpsell from '../components/FeUpsell.vue'
-import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
+import DateInput from '@/components/ui/DateInput.vue'
 
 const { hasModule } = useFacturacionAccess()
 const { selectedBranchId } = useBranches()

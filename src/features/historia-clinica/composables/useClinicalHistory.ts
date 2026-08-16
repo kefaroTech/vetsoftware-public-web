@@ -1,6 +1,7 @@
 import { computed, ref, watch, type Ref } from 'vue'
 import { useInfiniteList } from '@/composables/useInfiniteList'
-import { clinicalHistoryApi, type ClinicalEventTypeCount } from '../api/clinicalHistory.api'
+import { clinicalHistoryApi } from '../api/clinicalHistory.api'
+import type { ClinicalEventTypeCount } from '../types/clinicalHistory.types'
 import type { ClinicalEvent, ClinicalEventResponse, ClinicalEventType } from '../types/historia'
 
 function toEvent(r: ClinicalEventResponse): ClinicalEvent {

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-import PageLoader from '@/components/ui/PageLoader.vue'
-import ConsultaActiveBanner from '@/components/ui/ConsultaActiveBanner.vue'
-import ToastStack from '@/components/ui/ToastStack.vue'
+import PageLoader from '@/components/feedback/PageLoader.vue'
+import ConsultaActiveBanner from '@/components/feedback/ConsultaActiveBanner.vue'
+import ToastStack from '@/components/feedback/ToastStack.vue'
 import ResumeOrNewConsultaDialog from '@/features/dashboard/views/consulta/nueva/components/ResumeOrNewConsultaDialog.vue'
 import BillingPromptHost from '@/features/cuentas/components/BillingPromptHost.vue'
 import { useConsultaResumeGuard } from '@/composables/useConsultaResumeGuard'

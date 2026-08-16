@@ -1,7 +1,16 @@
 import 'vuetify/styles'
-import '@mdi/font/css/materialdesignicons.css'
-import { createVuetify } from 'vuetify'
-import { aliases, mdi } from 'vuetify/iconsets/mdi'
+import { h, type Component } from 'vue'
+import { createVuetify, type IconProps, type IconSet } from 'vuetify'
+import { lucideAliases } from './vuetify-icon-aliases'
+
+/**
+ * Vuetify dibuja sus iconos con la misma librería que la aplicación: Lucide, en
+ * componentes. Ni webfont ni colección registrada en tiempo de ejecución — ver
+ * `vuetify-icon-aliases.ts` para el porqué.
+ */
+const lucide: IconSet = {
+  component: (props: IconProps) => h(props.icon as Component, { size: 20 }),
+}
 
 // Amatista (hue 300) — alineado con el sistema de tokens en src/assets/styles/tokens.css.
 // Aproximación sRGB de oklch(50% 0.18 300) ≈ #7C3AED (--amatista-600).
@@ -25,9 +34,9 @@ export default createVuetify({
     themes: { customTheme },
   },
   icons: {
-    defaultSet: 'mdi',
-    aliases,
-    sets: { mdi },
+    defaultSet: 'lucide',
+    aliases: lucideAliases,
+    sets: { lucide },
   },
   defaults: {
     VBtn: { variant: 'elevated', density: 'default' },

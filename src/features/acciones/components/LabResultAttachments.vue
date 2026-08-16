@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { Download, Eye, FileText } from 'lucide-vue-next'
-import {
-  laboratoryTestFileApi,
-  type LaboratoryTestFileResponse,
-} from '@/features/laboratorio/api/laboratoryTestFile.api'
+import { laboratoryTestFileApi } from '@/features/laboratorio/api/laboratoryTestFile.api'
+import type { LaboratoryTestFileResponse } from '@/features/laboratorio/types/laboratoryTestFile.types'
 
 /**
  * Adjuntos de resultado de una solicitud de laboratorio. Se usa dentro del

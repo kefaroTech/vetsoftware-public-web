@@ -5,7 +5,7 @@ import {
   formatDateShort,
 } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import { daysSince } from '../composables/mar'
-import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
+import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/types/hospitalization.types'
 
 defineProps<{ patient: HospitalizationResponse }>()
 defineEmits<{ open: [] }>()

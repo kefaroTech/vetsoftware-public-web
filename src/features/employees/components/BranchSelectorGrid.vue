@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Check, Building2 } from 'lucide-vue-next'
-import type { BranchResponse } from '@/features/branches/api/branch.api'
+import type { BranchResponse } from '@/features/branches/types/branch.types'
 
 const props = withDefaults(
   defineProps<{

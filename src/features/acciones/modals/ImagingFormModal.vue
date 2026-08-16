@@ -1,21 +1,19 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { PawPrint, ScanLine } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
-import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
-import SearchableSelect from '@/features/dashboard/components/ui/SearchableSelect.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseTextarea from '@/components/ui/BaseTextarea.vue'
+import DateInput from '@/components/ui/DateInput.vue'
+import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
-import { useDiagnosticImagingTypes } from '@/features/dashboard/views/consulta/nueva/composables/useDiagnosticImagingTypes'
+import { useDiagnosticImagingTypes } from '@/features/diagnostic-imaging-types/composables/useDiagnosticImagingTypes'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
-import {
-  diagnosticImagingApi,
-  type DiagnosticImagingResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/diagnosticImaging.api'
-import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import { diagnosticImagingApi } from '@/features/dashboard/views/consulta/nueva/api/diagnosticImaging.api'
+import type { DiagnosticImagingResponse } from '@/features/dashboard/views/consulta/nueva/types/diagnosticImaging.types'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{

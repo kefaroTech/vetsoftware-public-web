@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import { useBranches } from '../composables/useBranches'
 
 // Selector global de sede (contexto multi-sucursal). Se muestra si la empresa tiene al menos una sede activa;

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Syringe } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
 import { labCode } from '../types/lab'
-import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
+import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 
 defineProps<{ open: boolean; test: LaboratoryTestResponse | null; busy?: boolean }>()
 const emit = defineEmits<{ confirm: []; close: [] }>()

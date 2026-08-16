@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import DetailField from '../DetailField.vue'
 import { formatEventDate } from '../../composables/format'
-import type { SurgeryResponse } from '@/features/dashboard/views/consulta/nueva/api/surgery.api'
+import type { SurgeryResponse } from '@/features/dashboard/views/consulta/nueva/types/surgery.types'
 
 defineProps<{ data: SurgeryResponse }>()
 </script>

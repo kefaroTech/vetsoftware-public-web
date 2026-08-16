@@ -1,13 +1,9 @@
+import type { GoodsReceiptSearchParams } from '../types/goodsReceipts.types'
 import { http } from '@/services/http/http.client'
 import { withBranchBody } from '@/features/branches/api/branchContext'
 import type { PageResponse, GoodsReceipt, GoodsReceiptRequest } from '../types/compras'
 
 // Recepciones de mercancía (backend: /goods-receipts). CONFIRMAR alimenta inventario; ANULAR lo revierte.
-
-export interface GoodsReceiptSearchParams {
-  page?: number
-  pageSize?: number
-}
 
 export const goodsReceiptsApi = {
   /**

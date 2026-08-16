@@ -58,7 +58,7 @@ const router = createRouter({
     },
     {
       path: '/dashboard',
-      component: () => import('@/features/dashboard/layouts/AppLayout.vue'),
+      component: () => import('@/components/layout/AppLayout.vue'),
       meta: { requiresAuth: true },
       children: [
         {

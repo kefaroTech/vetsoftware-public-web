@@ -6,7 +6,7 @@ import PageHeader from '@/components/ui/PageHeader.vue'
 import PosCashGate from '../components/PosCashGate.vue'
 import PosCatalog, { type CatalogCard } from '../components/PosCatalog.vue'
 import PosTicket from '../components/PosTicket.vue'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
 import FeCustomerPicker from '@/features/facturacion/components/FeCustomerPicker.vue'
 import PayModal from '../components/PayModal.vue'
 import ReceiptModal from '../components/ReceiptModal.vue'
@@ -21,7 +21,7 @@ import { useFacturacionAccess } from '@/features/facturacion/composables/useFact
 import { useCaja } from '@/features/caja/composables/useCaja'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { PERMISSIONS } from '@/constants/permissions'
-import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
+import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/types/owner.types'
 
 const store = useTienda()
 const router = useRouter()

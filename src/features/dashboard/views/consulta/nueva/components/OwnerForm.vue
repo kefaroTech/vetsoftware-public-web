@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, reactive, toRef, watch } from 'vue'
 import { User, MapPin, IdCard, Phone, Mail, TriangleAlert } from 'lucide-vue-next'
-import SectionCard from '@/features/dashboard/components/ui/SectionCard.vue'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
-import SegmentedRadio from '@/features/dashboard/components/ui/SegmentedRadio.vue'
+import SectionCard from '@/components/ui/SectionCard.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
+import SegmentedRadio from '@/components/ui/SegmentedRadio.vue'
 import { useGeoCascade } from '../composables/useGeoCascade'
 import {
   OWNER_DOCTYPE_LABEL,

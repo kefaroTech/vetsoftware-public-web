@@ -1,51 +1,6 @@
+import type { CreateDewormingPayload, DewormingResponse } from '../types/deworming.types'
 import { http } from '@/services/http/http.client'
 import { DEFAULT_PAGE_SIZE, type PageResponse } from '@/types/pagination'
-import type { DewormingType } from '@/types/domain'
-
-export interface CreateDewormingPayload {
-  date: string
-  lastDeworming: string | null
-  type: DewormingType
-  product: string
-  dosage: string
-  nextControl: string | null
-  observations: string
-  animalId: number
-  consultationId: number | null
-  companyId: number
-}
-
-export interface DewormingAnimalSummary {
-  id: number
-  name: string
-  code: string
-}
-
-export interface DewormingConsultationSummary {
-  id: number
-  date: string
-}
-
-export interface DewormingCompanySummary {
-  id: number
-  name: string
-  identifier: string
-}
-
-export interface DewormingResponse {
-  id: number
-  date: string
-  lastDeworming: string | null
-  type: DewormingType
-  product: string
-  dosage: string
-  nextControl: string | null
-  observations: string
-  animal: DewormingAnimalSummary
-  consultation: DewormingConsultationSummary | null
-  company: DewormingCompanySummary
-  createdDate: string
-}
 
 export const dewormingApi = {
   async create(payload: CreateDewormingPayload): Promise<DewormingResponse> {

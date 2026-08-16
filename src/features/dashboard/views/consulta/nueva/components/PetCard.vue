@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Check } from 'lucide-vue-next'
 import type { Animal } from '@/types/domain'
-import BaseChip from '@/features/dashboard/components/ui/BaseChip.vue'
+import BaseChip from '@/components/ui/BaseChip.vue'
 import { calcAge, genderLabel, initials, weightUnitLabel } from '../composables/format'
 
 defineProps<{

@@ -4,7 +4,7 @@ import { Syringe, Inbox, Microscope, ClipboardCheck } from 'lucide-vue-next'
 import type { Component } from 'vue'
 import LabSampleCard, { type LabActionKind } from './LabSampleCard.vue'
 import { BOARD_COLUMNS } from '../types/lab'
-import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
+import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 
 const props = defineProps<{ items: LaboratoryTestResponse[]; loading: boolean }>()
 const emit = defineEmits<{

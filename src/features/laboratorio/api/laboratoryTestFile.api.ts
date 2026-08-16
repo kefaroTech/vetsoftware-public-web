@@ -1,15 +1,5 @@
+import type { LaboratoryTestFileResponse } from '../types/laboratoryTestFile.types'
 import { http, TRANSFER_TIMEOUT_MS } from '@/services/http/http.client'
-
-export interface LaboratoryTestFileResponse {
-  id: number
-  originalFileName: string
-  contentType: string
-  sizeBytes: number
-  eTag: string
-  uploadedBy: { id: number; employeeCode: string; name: string }
-  laboratoryTest: { id: number; date: string }
-  createdDate: string
-}
 
 export const laboratoryTestFileApi = {
   async upload(laboratoryTestId: number, file: File): Promise<LaboratoryTestFileResponse> {

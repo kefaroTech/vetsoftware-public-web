@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 
 /**
  * Selector de hora de inicio simple y coherente con el design system: dos

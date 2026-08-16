@@ -1,3 +1,4 @@
+import type { CashHistoryParams } from '../types/cashSession.types'
 import { http, TRANSFER_TIMEOUT_MS } from '@/services/http/http.client'
 import { withBranchBody, withBranchParam } from '@/features/branches/api/branchContext'
 import type {
@@ -10,15 +11,6 @@ import type {
 
 // Caja / arqueo (backend: /cash-sessions). La sede va como contexto multi-sucursal (body en escrituras,
 // query en lecturas). El backend la acota por el alcance del empleado.
-
-export interface CashHistoryParams {
-  branchId?: number | null
-  employeeId?: number
-  from?: string
-  to?: string
-  page?: number
-  pageSize?: number
-}
 
 export const cashSessionApi = {
   async open(payload: OpenCashSessionRequest): Promise<CashSessionView> {

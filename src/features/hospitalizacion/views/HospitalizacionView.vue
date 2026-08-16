@@ -6,10 +6,10 @@ import TreatmentScreen from '../components/TreatmentScreen.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { useHospitalizacion } from '../composables/useHospitalizacion'
 import { useToast } from '@/composables/useToast'
-import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
+import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/types/hospitalization.types'
 import type { OrderKind, OrderVM } from '../types/hospital'
 import type { ReasonLeaving } from '@/types/domain'
-import type { CreateHospitalizationMedicationPayload } from '../api/hospitalizationMedication.api'
+import type { CreateHospitalizationMedicationPayload } from '../types/hospitalizationMedication.types'
 
 type OrderPayload = Omit<CreateHospitalizationMedicationPayload, 'hospitalizationId'>
 

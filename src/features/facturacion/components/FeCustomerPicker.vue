@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { Search, User, Plus, ChevronRight, ArrowLeft, X, Check } from 'lucide-vue-next'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
-import PawLoader from '@/components/ui/PawLoader.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
+import PawLoader from '@/components/feedback/PawLoader.vue'
 import { useToast } from '@/composables/useToast'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useGeoCascade } from '@/features/dashboard/views/consulta/nueva/composables/useGeoCascade'
-import {
-  ownerApi,
-  type OwnerResponse,
-  type CreateOwnerRequest,
-} from '@/features/dashboard/views/consulta/nueva/api/owner.api'
+import { ownerApi } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
+import type {
+  OwnerResponse,
+  CreateOwnerRequest,
+} from '@/features/dashboard/views/consulta/nueva/types/owner.types'
 import { calcVerificationDigit } from '../composables/feFormat'
 import { OWNER_DOCTYPE_LABEL, type OwnerDocumentType } from '../composables/feFiscalChecklist'
 import { TAX_REGIME_LABEL, type PersonType, type TaxRegime } from '../types/facturacion'

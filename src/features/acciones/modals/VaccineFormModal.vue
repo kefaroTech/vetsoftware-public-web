@@ -1,21 +1,19 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { Syringe, PawPrint } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
-import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
-import SearchableSelect from '@/features/dashboard/components/ui/SearchableSelect.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseTextarea from '@/components/ui/BaseTextarea.vue'
+import DateInput from '@/components/ui/DateInput.vue'
+import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
-import { useVaccinationTypes } from '@/features/dashboard/views/consulta/nueva/composables/useVaccinationTypes'
+import { useVaccinationTypes } from '@/features/vaccination-types/composables/useVaccinationTypes'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
-import {
-  vaccinationApi,
-  type VaccinationResponse,
-} from '@/features/dashboard/views/consulta/nueva/api/vaccination.api'
-import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
+import { vaccinationApi } from '@/features/dashboard/views/consulta/nueva/api/vaccination.api'
+import type { VaccinationResponse } from '@/features/dashboard/views/consulta/nueva/types/vaccination.types'
+import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{

@@ -1,7 +1,7 @@
 import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useBranchStore } from '../stores/branch.store'
-import type { SaveBranchRequest } from '../api/branch.api'
+import type { SaveBranchRequest } from '../types/branch.types'
 
 /** Code de la sede sembrada por defecto (backfill migración 180). Se marca como "Principal" (solo lectura). */
 export const PRINCIPAL_BRANCH_CODE = 'PRINCIPAL'

@@ -1,24 +1,5 @@
+import type { ProcedureScheduleResponse } from '../types/procedureSchedule.types'
 import { http } from '@/services/http/http.client'
-import type { AppliedStatus } from './medicationSchedule.api'
-
-export interface ProcedureScheduleEmployeeSummary {
-  id: number
-  employeeCode: string
-  name: string
-}
-
-export interface ProcedureScheduleResponse {
-  id: number
-  hospitalizationProcedure: { id: number; name: string }
-  originalDateTime: string // ISO LocalDateTime 'yyyy-MM-ddTHH:mm:ss'
-  currentDateTime: string
-  realDateTime: string | null
-  appliedStatus: AppliedStatus | null
-  rescheduled: boolean | null
-  createdBy: ProcedureScheduleEmployeeSummary
-  createdDate: string
-  enabled: boolean
-}
 
 const BASE = '/procedure-schedules'
 

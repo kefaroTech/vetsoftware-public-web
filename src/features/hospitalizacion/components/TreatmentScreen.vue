@@ -17,7 +17,7 @@ import {
   type OrderVM,
   type ProcOrderVM,
 } from '../types/hospital'
-import type { CreateHospitalizationMedicationPayload } from '../api/hospitalizationMedication.api'
+import type { CreateHospitalizationMedicationPayload } from '../types/hospitalizationMedication.types'
 
 type OrderPayload = Omit<CreateHospitalizationMedicationPayload, 'hospitalizationId'>
 

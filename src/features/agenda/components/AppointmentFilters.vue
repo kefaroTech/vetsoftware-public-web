@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Filter } from 'lucide-vue-next'
-import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import { useAppointments } from '../composables/useAppointments'
 import { useVets } from '../composables/useVets'
 import { APPT_STATUS, type AppointmentStatus } from '../types/appointment'

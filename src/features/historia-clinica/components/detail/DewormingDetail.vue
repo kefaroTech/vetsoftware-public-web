@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import DetailField from '../DetailField.vue'
 import { formatEventDate } from '../../composables/format'
-import type { DewormingResponse } from '@/features/dashboard/views/consulta/nueva/api/deworming.api'
+import type { DewormingResponse } from '@/features/dashboard/views/consulta/nueva/types/deworming.types'
 import type { DewormingType } from '@/types/domain'
 
 defineProps<{ data: DewormingResponse }>()

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { PauseCircle, Pencil, Plus, RotateCcw } from 'lucide-vue-next'
-import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog.vue'
+import ConfirmDeleteDialog from '@/components/feedback/ConfirmDeleteDialog.vue'
 import TaxFormModal from '../components/TaxFormModal.vue'
 import { useTienda } from '../composables/useTienda'
 import { formatMoney } from '../composables/pricing'

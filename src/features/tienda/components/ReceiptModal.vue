@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Check, Printer } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
 import { formatMoney, type TotalsBreakdown } from '../composables/pricing'
 import type { SaleLine } from '../types/tienda'
 import { useReceiptPrint } from '@/composables/useReceiptPrint'

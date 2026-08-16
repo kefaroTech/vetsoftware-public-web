@@ -1,5 +1,5 @@
 import type { Animal } from '@/types/domain'
-import type { AnimalResponse, CreateAnimalRequest } from './animal.api'
+import type { AnimalResponse, CreateAnimalRequest } from '../types/animal.types'
 import type { PetDraft } from '../composables/useNuevaConsultaDraft'
 
 export function mapAnimalResponse(r: AnimalResponse): Animal {

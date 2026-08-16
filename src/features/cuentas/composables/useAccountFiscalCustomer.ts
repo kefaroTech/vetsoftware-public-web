@@ -1,11 +1,11 @@
 import { ref, type Ref } from 'vue'
 import { useToast } from '@/composables/useToast'
 import { getProblemDetailMessage } from '@/services/http/http.client'
-import {
-  ownerApi,
-  type OwnerResponse,
-  type UpdateOwnerRequest,
-} from '@/features/dashboard/views/consulta/nueva/api/owner.api'
+import { ownerApi } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
+import type {
+  OwnerResponse,
+  UpdateOwnerRequest,
+} from '@/features/dashboard/views/consulta/nueva/types/owner.types'
 import type { FiscalCustomer } from '@/features/facturacion/composables/feFiscalChecklist'
 import type { OwnerSummary } from '../types/cuentas'
 

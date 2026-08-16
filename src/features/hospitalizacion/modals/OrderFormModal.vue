@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { Pill, Activity, Lock } from 'lucide-vue-next'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
-import BaseTextarea from '@/features/dashboard/components/ui/BaseTextarea.vue'
-import SegmentedRadio from '@/features/dashboard/components/ui/SegmentedRadio.vue'
-import DateInput from '@/features/dashboard/components/ui/DateInput.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
+import BaseTextarea from '@/components/ui/BaseTextarea.vue'
+import SegmentedRadio from '@/components/ui/SegmentedRadio.vue'
+import DateInput from '@/components/ui/DateInput.vue'
 import EditImpactModal from './EditImpactModal.vue'
 import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
 import {
@@ -18,7 +18,7 @@ import {
   type OrderVM,
 } from '../types/hospital'
 import type { MedicationFrequency, GuidelineType, DurationMeasure } from '@/types/domain'
-import type { CreateHospitalizationMedicationPayload } from '../api/hospitalizationMedication.api'
+import type { CreateHospitalizationMedicationPayload } from '../types/hospitalizationMedication.types'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 type OrderPayload = Omit<CreateHospitalizationMedicationPayload, 'hospitalizationId'>

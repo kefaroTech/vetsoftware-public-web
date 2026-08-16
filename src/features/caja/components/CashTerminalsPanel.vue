@@ -1,20 +1,17 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { MonitorSmartphone, Pencil, Plus, Power, PowerOff } from 'lucide-vue-next'
-import BaseField from '@/features/dashboard/components/ui/BaseField.vue'
-import BaseInput from '@/features/dashboard/components/ui/BaseInput.vue'
-import BaseSelect from '@/features/dashboard/components/ui/BaseSelect.vue'
-import ModalShell from '@/features/dashboard/components/ui/ModalShell.vue'
+import BaseField from '@/components/ui/BaseField.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
+import ModalShell from '@/components/ui/ModalShell.vue'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useToast } from '@/composables/useToast'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { PERMISSIONS } from '@/constants/permissions'
-import type { BranchResponse } from '@/features/branches/api/branch.api'
-import {
-  cashTerminalApi,
-  type CashTerminal,
-  type SaveCashTerminalRequest,
-} from '../api/cashTerminal.api'
+import type { BranchResponse } from '@/features/branches/types/branch.types'
+import { cashTerminalApi } from '../api/cashTerminal.api'
+import type { CashTerminal, SaveCashTerminalRequest } from '../types/cashTerminal.types'
 
 const props = defineProps<{ branches: BranchResponse[] }>()
 const { can } = useAuthorization()
