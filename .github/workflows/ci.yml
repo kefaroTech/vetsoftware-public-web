@@ -5,10 +5,11 @@ on:
     branches:
       - develop
       - main
-  push:
-    branches:
-      - develop
-      - main
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
   workflow_dispatch:
 
 permissions:
@@ -59,8 +60,8 @@ jobs:
       - name: Enforce bundle budget
         run: npm run budget
 
-  visual-regression:
-    name: Visual regression
+  browser-suite:
+    name: Browser suite (visual regression + smoke)
     needs: frontend-quality-gate
     runs-on: ubuntu-24.04
     # Corre DENTRO de la imagen oficial de Playwright, no en el runner pelado, y
@@ -69,6 +70,11 @@ jobs:
     # antialiasing y las metricas de fuente son identicos. Sobre el runner
     # desnudo bastaria un cambio de fuentes del sistema para dejar la suite en
     # rojo sin que nadie haya tocado una linea de CSS.
+    #
+    # El smoke de autenticacion vivia en un job aparte sobre el runner desnudo y
+    # gastaba ~2 min en `npx playwright install --with-deps chromium` antes de
+    # correr dos casos. Al plegarlo aqui hereda el Chromium y las dependencias
+    # que la imagen ya trae, y de paso se ahorra un checkout y un `npm ci`.
     container:
       image: mcr.microsoft.com/playwright:v1.61.1-noble
     timeout-minutes: 20
@@ -91,8 +97,17 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      # Misma razon que en el smoke: el servidor de desarrollo no arranca sin un
-      # fichero de entorno que declare el perfil `localdev`.
+      # Playwright levanta `npm run dev`, que es `vite --mode localdev`, y
+      # `vite.config.ts` aborta si no encuentra un fichero de entorno cuyo
+      # `VETSOFTWARE_PROFILE` case con el modo. Ese fichero es `.env.local`, que
+      # esta en `.gitignore` --lleva la URL del backend de cada quien-- asi que
+      # el runner nunca lo tuvo y el servidor moria antes de servir nada.
+      #
+      # El ejemplo versionado es exactamente lo que un desarrollador copia en su
+      # primer arranque, y aqui basta: los dos casos del smoke no llaman al
+      # backend --uno comprueba el guard del router y el otro un mensaje que se
+      # inyecta en `sessionStorage`--. Los que si necesitan login ya se saltan
+      # solos cuando falta `E2E_PASSWORD`.
       - name: Provide the localdev environment file
         run: cp .env.local.example .env.local
 
@@ -126,73 +141,9 @@ jobs:
             playwright-report-visual/
           retention-days: 7
 
-  e2e-smoke:
-    name: Playwright smoke test
-    needs: frontend-quality-gate
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    env:
-      CI: true
-      HUSKY: 0
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: '24'
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
-
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-
-      # Playwright levanta `npm run dev`, que es `vite --mode localdev`, y
-      # `vite.config.ts` aborta si no encuentra un fichero de entorno cuyo
-      # `VETSOFTWARE_PROFILE` case con el modo. Ese fichero es `.env.local`, que
-      # esta en `.gitignore` --lleva la URL del backend de cada quien-- asi que
-      # el runner nunca lo tuvo y el servidor moria antes de servir nada.
-      #
-      # El ejemplo versionado es exactamente lo que un desarrollador copia en su
-      # primer arranque, y aqui basta: los dos casos de este smoke no llaman al
-      # backend --uno comprueba el guard del router y el otro un mensaje que se
-      # inyecta en `sessionStorage`--. Los que si necesitan login ya se saltan
-      # solos cuando falta `E2E_PASSWORD`.
-      - name: Provide the localdev environment file
-        run: cp .env.local.example .env.local
-
+      # El Chromium y sus dependencias los pone la imagen del contenedor, asi
+      # que aqui ya no hace falta `npx playwright install --with-deps`.
       - name: Run authentication smoke tests
         run: >-
           npx playwright test e2e/auth.spec.ts --project=chromium
           --grep "dashboard sin sesi.n redirige|otra sesi.n reemplaz."
-
-  container-image:
-    name: Build production container image
-    needs: e2e-smoke
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
-
-      - name: Build production image ephemerally (no ECR)
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
-        with:
-          context: .
-          platforms: linux/amd64
-          push: false
-          tags: vetsoftware/public-front:ci
-          cache-from: type=gha,scope=public-front
-          cache-to: type=gha,mode=max,scope=public-front
