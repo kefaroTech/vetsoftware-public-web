@@ -98,7 +98,12 @@ export interface Animal {
   size?: number
   animalType: AnimalType
   reproductiveState: ReproductiveState
+  // Hecho clínico: el animal murió. No es una baja lógica — su historia sigue viva.
   deceased: boolean
+  // Baja lógica (soft-delete) del backend: `false` = dado de baja, no es un paciente
+  // activo. Mismo criterio que `Employee.enabled` y que el resto de entidades del
+  // tenant (productos/servicios «pausados», roles, hospitalizaciones).
+  enabled: boolean
   ownerId: string
   lastVisit?: string
 }

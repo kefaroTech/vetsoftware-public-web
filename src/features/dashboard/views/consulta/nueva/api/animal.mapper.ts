@@ -23,6 +23,7 @@ export function mapAnimalResponse(r: AnimalResponse): Animal {
     animalType: r.animalType,
     reproductiveState: r.reproductiveState,
     deceased: r.deceased,
+    enabled: r.enabled,
     ownerId: String(r.owner.id),
   }
 }
