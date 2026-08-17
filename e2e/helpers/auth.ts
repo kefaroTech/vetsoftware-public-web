@@ -1,8 +1,19 @@
 import { type Page } from '@playwright/test'
 
-/** Credenciales de prueba — vienen del entorno, nunca hardcodeadas. */
-export const EMPLOYEE_CODE = 'O'
-export const PASSWORD = 'Orlando1997*'
+/**
+ * Credenciales de prueba — vienen del entorno, nunca hardcodeadas.
+ *
+ * <p>Hasta FE-05 esto era mentira: la constante traía una contraseña personal escrita a mano en el
+ * fichero, así que `PASSWORD` era siempre verdadera y los `test.skip(!PASSWORD, …)` repartidos por
+ * la suite nunca se disparaban — eran código muerto que aparentaba una protección inexistente.
+ * Ahora no hay valor por defecto para la contraseña: sin `E2E_PASSWORD` en el entorno, las suites
+ * que hacen login se saltan solas, que es lo que su guarda decía hacer desde el principio.
+ *
+ * <p>El código de empleado sí conserva un valor por defecto porque no es un secreto: identifica al
+ * usuario, no lo autentica.
+ */
+export const EMPLOYEE_CODE = process.env.E2E_EMPLOYEE_CODE ?? 'O'
+export const PASSWORD = process.env.E2E_PASSWORD ?? ''
 
 /**
  * Rellena el formulario de login y envía.
