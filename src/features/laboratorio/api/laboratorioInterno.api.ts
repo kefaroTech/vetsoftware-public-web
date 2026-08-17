@@ -2,7 +2,8 @@ import { http } from '@/services/http/http.client'
 import { withBranchParam } from '@/features/branches/api/branchContext'
 import { laboratoryTestApi } from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
 import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
-import type { LabSearchCriteria, PageResponse } from '../types/lab'
+import type { PageResponse } from '@/types/pagination'
+import type { LabSearchCriteria } from '../types/lab'
 
 /**
  * API del Laboratorio interno. Opera sobre los mismos LaboratoryTest del backend,

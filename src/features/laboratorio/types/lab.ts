@@ -1,14 +1,5 @@
 import type { LaboratoryTestPriority, LaboratoryTestStatus } from '@/types/domain'
 
-/** Espejo de com.vetsoftware.app.infrastructure.web.PageResponse */
-export interface PageResponse<T> {
-  content: T[]
-  page: number
-  pageSize: number
-  totalElements: number
-  totalPages: number
-}
-
 export interface LabSearchCriteria {
   statuses?: LaboratoryTestStatus[]
   animalId?: number | null

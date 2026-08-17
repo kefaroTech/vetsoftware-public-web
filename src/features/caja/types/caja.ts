@@ -78,11 +78,3 @@ export interface CloseCashSessionRequest {
   counts: CloseCashCountLine[]
   note?: string | null
 }
-
-export interface PageResponse<T> {
-  content: T[]
-  page: number
-  pageSize: number
-  totalElements: number
-  totalPages: number
-}

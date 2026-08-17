@@ -1,3 +1,4 @@
+import type { PageResponse } from '@/types/pagination'
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { openAccountApi } from '../api/openAccount.api'
@@ -15,7 +16,6 @@ import type {
   OpenAccountResponse,
   OpenAccountSearchCriteria,
   OpenAccountsSummary,
-  PageResponse,
   PaymentMethod,
   UnifiedCharge,
 } from '../types/cuentas'

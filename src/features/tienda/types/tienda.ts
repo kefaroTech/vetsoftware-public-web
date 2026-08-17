@@ -6,15 +6,6 @@
  * tipan como number en el front.
  */
 
-/** Espejo de com.vetsoftware.app.infrastructure.web.PageResponse */
-export interface PageResponse<T> {
-  content: T[]
-  page: number
-  pageSize: number
-  totalElements: number
-  totalPages: number
-}
-
 export interface CompanySummary {
   id: number
   name: string

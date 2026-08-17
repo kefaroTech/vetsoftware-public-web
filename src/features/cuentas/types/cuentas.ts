@@ -11,14 +11,6 @@
  * - El total/saldo lo calcula el backend (totalAmount/paidAmount/outstandingAmount).
  */
 
-export interface PageResponse<T> {
-  content: T[]
-  page: number
-  pageSize: number
-  totalElements: number
-  totalPages: number
-}
-
 export interface OwnerSummary {
   id: number
   name: string

@@ -1,14 +1,6 @@
 // Tipos del módulo Compras (punto 7). Espejan los DTOs del backend:
 // features supplier, purchaseorder, goodsreceipt, supplierinvoice, purchasereport.
 
-export interface PageResponse<T> {
-  content: T[]
-  page: number
-  pageSize: number
-  totalElements: number
-  totalPages: number
-}
-
 // ── Proveedores (supplier) ────────────────────────────────────────────────
 export interface Supplier {
   id: number

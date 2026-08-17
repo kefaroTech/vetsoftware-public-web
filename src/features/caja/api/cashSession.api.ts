@@ -1,3 +1,4 @@
+import type { PageResponse } from '@/types/pagination'
 import type { CashHistoryParams } from '../types/cashSession.types'
 import { http, TRANSFER_TIMEOUT_MS } from '@/services/http/http.client'
 import { withBranchBody, withBranchParam } from '@/features/branches/api/branchContext'
@@ -5,7 +6,6 @@ import type {
   CashSessionView,
   CloseCashSessionRequest,
   OpenCashSessionRequest,
-  PageResponse,
   RegisterCashMovementRequest,
 } from '../types/caja'
 

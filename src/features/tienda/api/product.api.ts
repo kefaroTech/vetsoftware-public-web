@@ -1,10 +1,6 @@
+import type { PageResponse } from '@/types/pagination'
 import { http } from '@/services/http/http.client'
-import type {
-  PageResponse,
-  ProductPayload,
-  ProductResponse,
-  ProductSearchCriteria,
-} from '../types/tienda'
+import type { ProductPayload, ProductResponse, ProductSearchCriteria } from '../types/tienda'
 
 export const productApi = {
   async listAll(): Promise<ProductResponse[]> {

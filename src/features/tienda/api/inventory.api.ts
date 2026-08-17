@@ -1,5 +1,5 @@
 import { http, TRANSFER_TIMEOUT_MS } from '@/services/http/http.client'
-import type { PageResponse } from '../types/tienda'
+import type { PageResponse } from '@/types/pagination'
 import type {
   AdjustStockPayload,
   ConsumeStockPayload,
