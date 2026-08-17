@@ -202,14 +202,19 @@ async function remove(id: number) {
 </script>
 
 <template>
-  <section class="wpanel">
-    <header class="wp-head">
-      <div class="wp-title">
+  <section class="wpanel ds-card">
+    <header class="wp-head ds-flex-row ds-flex-row--12">
+      <div class="wp-title ds-flex-row ds-flex-row--accent">
         <TrendingUp :size="16" :stroke-width="1.8" />
         <h2>Historial de peso</h2>
-        <span v-if="records.length" class="wp-count">{{ records.length }}</span>
+        <span v-if="records.length" class="wp-count ds-tone--accent">{{ records.length }}</span>
       </div>
-      <button v-if="canEdit && !showForm" type="button" class="wp-add" @click="openForm">
+      <button
+        v-if="canEdit && !showForm"
+        type="button"
+        class="wp-add ds-btn ds-btn--solid ds-btn--sm"
+        @click="openForm"
+      >
         <Plus :size="14" :stroke-width="1.8" />
         Registrar peso
       </button>
@@ -258,18 +263,25 @@ async function remove(id: number) {
           </BaseField>
         </div>
         <div v-if="saveError" class="wp-banner error">{{ saveError }}</div>
-        <div class="wp-form-actions">
-          <button type="button" class="wp-btn-ghost" :disabled="saving" @click="showForm = false">
+        <div class="wp-form-actions ds-actions">
+          <button
+            type="button"
+            class="wp-btn-ghost ds-btn ds-btn--ghost ds-btn--snug"
+            :disabled="saving"
+            @click="showForm = false"
+          >
             <X :size="14" :stroke-width="1.8" />
             Cancelar
           </button>
-          <button type="submit" class="wp-btn-primary" :disabled="saving">
+          <button type="submit" class="wp-btn-primary ds-btn ds-btn--solid" :disabled="saving">
             {{ saving ? 'Guardando…' : 'Guardar' }}
           </button>
         </div>
       </form>
 
-      <div v-if="records.length === 0" class="wp-empty">Sin registros de peso todavía.</div>
+      <div v-if="records.length === 0" class="wp-empty ds-empty">
+        Sin registros de peso todavía.
+      </div>
 
       <template v-else>
         <!-- Resumen + gráfico de tendencia -->
@@ -314,29 +326,30 @@ async function remove(id: number) {
               fill="var(--amatista-700)"
             />
           </svg>
-          <div class="wp-chart-axis">
+          <div class="wp-chart-axis ds-meta ds-meta--caption">
             <span>máx {{ chart.max.toFixed(2) }} kg</span>
             <span>mín {{ chart.min.toFixed(2) }} kg</span>
           </div>
         </div>
 
         <!-- Lista de registros (más reciente primero) -->
-        <ul class="wp-list">
-          <li v-for="r in descending" :key="r.id" class="wp-item">
+        <ul class="wp-list ds-list-reset ds-stack">
+          <li v-for="r in descending" :key="r.id" class="wp-item ds-flex-row ds-flex-row--12">
             <div class="wp-item-main">
-              <span class="wp-item-value">{{ r.value }} {{ UNIT_LABEL[r.unit] }}</span>
-              <span class="wp-item-date">{{ formatDateShort(r.measuredAt) }}</span>
+              <span class="wp-item-value ds-strong">{{ r.value }} {{ UNIT_LABEL[r.unit] }}</span>
+              <span class="ds-meta">{{ formatDateShort(r.measuredAt) }}</span>
             </div>
-            <div class="wp-item-meta">
+            <div class="wp-item-meta ds-flex-fill ds-flex-row">
               <span class="wp-src" :class="`src-${r.source.toLowerCase()}`">
                 {{ SOURCE_LABEL[r.source] }}
               </span>
-              <span v-if="r.note" class="wp-item-note">{{ r.note }}</span>
+              <span v-if="r.note" class="wp-item-note ds-truncate">{{ r.note }}</span>
             </div>
             <button
               v-if="canEdit"
               type="button"
               class="wp-del"
+              :class="{ 'ds-is-disabled': deletingId === r.id }"
               :disabled="deletingId === r.id"
               title="Eliminar registro"
               @click="remove(r.id)"
@@ -352,26 +365,17 @@ async function remove(id: number) {
 
 <style scoped>
 .wpanel {
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 14px;
-  padding: 18px 20px;
-  margin-bottom: 18px;
+  margin-bottom: var(--space-18);
+  padding: var(--space-18) var(--space-20);
 }
 
 .wp-head {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: var(--space-14);
 }
 
 .wp-title {
   display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--amatista-700);
 }
 
 .wp-title h2 {
@@ -382,31 +386,21 @@ async function remove(id: number) {
   margin: 0;
 }
 
+/* Resto sobre `.ds-tone--accent`: forma y tipografía del contador. */
 .wp-count {
   font-size: 11.5px;
   font-weight: 600;
-  color: var(--amatista-700);
-  background: var(--amatista-100);
   border-radius: var(--radius-pill);
   padding: 1px 8px;
 }
 
 .wp-add {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
-  font-size: 12.5px;
-  font-weight: 500;
-  background: var(--amatista-700);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: inherit;
+  border-radius: var(--radius-md);
 }
 
-.wp-add:hover {
+/* Gana al `filter: brightness()` de `.ds-btn--solid:hover` por especificidad
+   (0,4,0 frente a 0,3,0), no por orden de hoja. */
+.wp-add:hover:not(:disabled) {
   background: var(--amatista-600);
 }
 
@@ -434,10 +428,23 @@ async function remove(id: number) {
   margin-bottom: 16px;
 }
 
+/* 4 columnas con dos escalones de colapso: sin equivalente en el design system. */
 .wp-form-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px 16px;
+  gap: var(--space-14) var(--space-16);
+}
+
+@media (width <= 720px) {
+  .wp-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (width <= 480px) {
+  .wp-form-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .wp-note {
@@ -445,48 +452,28 @@ async function remove(id: number) {
 }
 
 .wp-form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 14px;
+  gap: var(--space-8);
+  margin-top: var(--space-14);
 }
 
 .wp-btn-primary {
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 500;
-  background: var(--amatista-700);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: inherit;
+  padding: var(--space-8) var(--space-16);
+  border-radius: var(--radius-md);
 }
 
+/* Este botón se apaga a 0,6 y no al 0,5 de `.ds-btn:disabled`. */
 .wp-btn-primary:disabled {
   opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .wp-btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  font-size: 13px;
+  border-radius: var(--radius-md);
   background: var(--warm-50);
-  color: var(--warm-700);
-  border: 1px solid var(--warm-200);
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: inherit;
 }
 
 .wp-empty {
-  padding: 28px 16px;
-  text-align: center;
-  color: var(--warm-500);
-  font-size: 13px;
+  padding: var(--space-28) var(--space-16);
+  font-size: var(--text-body);
 }
 
 .wp-chart-wrap {
@@ -526,29 +513,20 @@ async function remove(id: number) {
   display: block;
 }
 
+/* Resto sobre `.ds-meta --caption`: reparto de los dos extremos del eje. */
 .wp-chart-axis {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
-  color: var(--warm-500);
   margin-top: 2px;
 }
 
 .wp-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  gap: var(--space-2);
 }
 
 .wp-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 9px 10px;
-  border-radius: 9px;
+  padding: var(--space-9) var(--space-10);
+  border-radius: var(--radius-control);
 }
 
 .wp-item:hover {
@@ -563,22 +541,12 @@ async function remove(id: number) {
 }
 
 .wp-item-value {
-  font-size: 14.5px;
-  font-weight: 600;
-  color: var(--warm-900);
+  font-size: var(--text-xl);
 }
 
-.wp-item-date {
-  font-size: 12px;
-  color: var(--warm-500);
-}
-
+/* Resto sobre `.ds-flex-fill` + `.ds-flex-row`: gap propio (10px). */
 .wp-item-meta {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
+  gap: var(--space-10);
 }
 
 .wp-src {
@@ -601,11 +569,8 @@ async function remove(id: number) {
 }
 
 .wp-item-note {
-  font-size: 12.5px;
   color: var(--warm-600);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: var(--text-sm);
 }
 
 .wp-del {
@@ -621,22 +586,5 @@ async function remove(id: number) {
 .wp-del:hover {
   color: var(--danger-500);
   background: oklch(96% 0.02 25deg);
-}
-
-.wp-del:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-@media (width <= 720px) {
-  .wp-form-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (width <= 480px) {
-  .wp-form-grid {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

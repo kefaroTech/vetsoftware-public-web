@@ -214,7 +214,7 @@ function confirmImpact() {
         </span>
       </div>
 
-      <div class="grid-2">
+      <div class="grid-2 ds-grid-2">
         <BaseField label="Nombre" required :error="err('name')">
           <template #default="{ id }">
             <BaseInput
@@ -249,7 +249,7 @@ function confirmImpact() {
           <SegmentedRadio v-model="draft.durationMeasure" :options="durationOptions" />
         </template>
       </BaseField>
-      <div class="grid-2">
+      <div class="grid-2 ds-grid-2">
         <BaseField
           v-if="needsQuantity"
           :label="draft.durationMeasure === 'DAYS' ? 'Número de días' : 'Número de tomas'"
@@ -318,17 +318,11 @@ function confirmImpact() {
 </template>
 
 <style scoped>
+/* Resto sobre `.ds-grid-2`: gap propio (la primitiva usa 14/16) y el hueco
+   hacia el siguiente bloque. Mismo colapso a 1 columna en 640px que antes. */
 .grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 14px;
-}
-
-@media (width <= 640px) {
-  .grid-2 {
-    grid-template-columns: 1fr;
-  }
+  gap: var(--space-14);
+  margin-bottom: var(--space-14);
 }
 
 .applied-banner {

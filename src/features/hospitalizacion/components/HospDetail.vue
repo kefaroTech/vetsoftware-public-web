@@ -47,15 +47,15 @@ function fmtStamp(iso: string): string {
 </script>
 
 <template>
-  <div class="detail">
-    <button type="button" class="back" @click="emit('back')">
+  <div class="ds-page">
+    <button type="button" class="back ds-btn ds-btn--plain ds-hover-accent" @click="emit('back')">
       <ArrowLeft :size="14" :stroke-width="1.8" /> Volver al tablero
     </button>
 
-    <header class="head">
-      <div class="avatar">{{ initials(patient.animal.name) }}</div>
-      <div class="who">
-        <div class="name-row">
+    <header class="head ds-flex-row">
+      <div class="avatar ds-tone--accent">{{ initials(patient.animal.name) }}</div>
+      <div class="ds-flex-fill">
+        <div class="name-row ds-flex-row ds-flex-row--12">
           <h2 class="name">{{ patient.animal.name }}</h2>
           <!-- TODO backend: status clínico no existe en Hospitalization -->
           <HospStatusPill status="ESTABLE" />
@@ -68,7 +68,7 @@ function fmtStamp(iso: string): string {
           <span>Ingreso {{ formatDateLong(patient.startDate) }}</span>
         </div>
       </div>
-      <button type="button" class="discharge" @click="dischargeOpen = true">
+      <button type="button" class="discharge ds-btn ds-btn--solid" @click="dischargeOpen = true">
         <Check :size="15" :stroke-width="1.7" /> Dar de alta
       </button>
     </header>
@@ -82,10 +82,10 @@ function fmtStamp(iso: string): string {
       </template>
     </div>
 
-    <button type="button" class="treat-cta" @click="emit('administer')">
+    <button type="button" class="treat-cta ds-flex-row" @click="emit('administer')">
       <div class="cta-icon"><Stethoscope :size="20" :stroke-width="1.7" /></div>
-      <div class="cta-text">
-        <div class="cta-title">Tratamiento y administración de dosis</div>
+      <div class="ds-flex-fill">
+        <div class="cta-title ds-strong">Tratamiento y administración de dosis</div>
         <div class="cta-sub">Calendario semanal, plan de medicamentos y procedimientos</div>
       </div>
       <span class="cta-go">Administrar <ChevronRight :size="16" :stroke-width="1.8" /></span>
@@ -94,30 +94,34 @@ function fmtStamp(iso: string): string {
     <div class="cols">
       <!-- Observaciones -->
       <section class="block">
-        <div class="block-head">
+        <div class="block-head ds-block-head">
           <h3><ClipboardList :size="15" :stroke-width="1.7" /> Observaciones</h3>
-          <button type="button" class="mini" @click="obsOpen = true">
+          <button type="button" class="mini ds-tone--accent-soft" @click="obsOpen = true">
             <Plus :size="13" :stroke-width="1.8" /> Observación
           </button>
         </div>
         <p v-if="observations.length === 0" class="block-empty">Sin observaciones.</p>
         <div v-for="o in observations" :key="o.id" class="entry">
-          <div class="entry-meta">{{ fmtStamp(o.createdDate) }} · {{ o.createdBy.name }}</div>
+          <div class="entry-meta ds-hint">
+            {{ fmtStamp(o.createdDate) }} · {{ o.createdBy.name }}
+          </div>
           <p class="entry-text obs">{{ o.description }}</p>
         </div>
       </section>
 
       <!-- Notas evolutivas -->
       <section class="block">
-        <div class="block-head">
+        <div class="block-head ds-block-head">
           <h3><MessageSquare :size="15" :stroke-width="1.7" /> Notas evolutivas</h3>
-          <button type="button" class="mini" @click="noteOpen = true">
+          <button type="button" class="mini ds-tone--accent-soft" @click="noteOpen = true">
             <Plus :size="13" :stroke-width="1.8" /> Nota
           </button>
         </div>
         <p v-if="notes.length === 0" class="block-empty">Sin notas evolutivas.</p>
         <div v-for="n in notes" :key="n.id" class="entry">
-          <div class="entry-meta">{{ fmtStamp(n.createdDate) }} · {{ n.createdBy.name }}</div>
+          <div class="entry-meta ds-hint">
+            {{ fmtStamp(n.createdDate) }} · {{ n.createdBy.name }}
+          </div>
           <p class="entry-text">{{ n.description }}</p>
         </div>
       </section>
@@ -168,61 +172,36 @@ function fmtStamp(iso: string): string {
 </template>
 
 <style scoped>
-.detail {
-  font-family: var(--font-sans);
-}
-
+/* Resto sobre `.ds-btn --plain` + `.ds-hover-accent` (que gana al :hover de
+   --plain por orden en primitives.css, con la misma especificidad). */
 .back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 9px;
-  padding: 6px 10px;
-  font-family: inherit;
-  font-size: 12.5px;
-  color: var(--warm-600);
-  cursor: pointer;
-  margin-bottom: 14px;
+  margin-bottom: var(--space-14);
+  padding: var(--space-6) var(--space-10);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-normal);
 }
 
-.back:hover {
-  background: var(--amatista-50);
-  border-color: var(--amatista-300);
-  color: var(--amatista-700);
-}
-
+/* Resto sobre `.ds-flex-row`: gap propio (16px). */
 .head {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  gap: var(--space-16);
   flex-wrap: wrap;
 }
 
+/* Resto sobre `.ds-tone--accent`: forma y tipografía del avatar. */
 .avatar {
   width: 64px;
   height: 64px;
   border-radius: 16px;
   display: grid;
   place-items: center;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   font-family: var(--font-serif);
   font-size: 24px;
   font-weight: 500;
   flex-shrink: 0;
   box-shadow: 0 6px 18px -10px oklch(50% 0.18 var(--hue));
 }
-.who {
-  flex: 1;
-  min-width: 0;
-}
 
 .name-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -247,22 +226,14 @@ function fmtStamp(iso: string): string {
   font-family: var(--font-mono);
 }
 
+/* Resto sobre `.ds-btn --solid`: sin borde (la primitiva pone 1px transparente). */
 .discharge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
   border: none;
-  background: var(--amatista-700);
-  color: white;
-  border-radius: 9px;
-  padding: 9px 16px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
   flex-shrink: 0;
 }
-.discharge:hover {
+
+/* Gana al filter: brightness() de .ds-btn--solid:hover por especificidad. */
+.discharge:hover:not(:disabled) {
   background: var(--amatista-800);
 }
 
@@ -291,10 +262,9 @@ function fmtStamp(iso: string): string {
   margin-bottom: 0;
 }
 
+/* Resto sobre `.ds-flex-row`: gap propio (14px). */
 .treat-cta {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+  gap: var(--space-14);
   width: 100%;
   text-align: left;
   background: var(--warm-50);
@@ -319,14 +289,9 @@ function fmtStamp(iso: string): string {
   color: var(--amatista-700);
   flex-shrink: 0;
 }
-.cta-text {
-  flex: 1;
-  min-width: 0;
-}
+
 .cta-title {
-  font-size: 14.5px;
-  font-weight: 600;
-  color: var(--warm-900);
+  font-size: var(--text-xl);
 }
 .cta-sub {
   font-size: 12.5px;
@@ -344,24 +309,12 @@ function fmtStamp(iso: string): string {
   flex-shrink: 0;
 }
 
+/* Rejilla `auto-fit` local: el design system no cataloga ninguna equivalente. */
 .cols {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-top: 24px;
-}
-
-@media (width <= 820px) {
-  .cols {
-    grid-template-columns: 1fr;
-  }
-}
-
-.block-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: var(--space-20);
+  margin-top: var(--space-24);
 }
 
 .block-head h3 {
@@ -374,13 +327,12 @@ function fmtStamp(iso: string): string {
   color: var(--warm-900);
 }
 
+/* Resto sobre `.ds-tone--accent-soft`: forma y borde propios. */
 .mini {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   border: 1px solid var(--amatista-200);
-  background: var(--amatista-50);
-  color: var(--amatista-700);
   border-radius: 8px;
   padding: 6px 10px;
   font-family: inherit;
@@ -407,9 +359,7 @@ function fmtStamp(iso: string): string {
 }
 
 .entry-meta {
-  font-size: 11.5px;
-  color: var(--warm-500);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 
 .entry-text {

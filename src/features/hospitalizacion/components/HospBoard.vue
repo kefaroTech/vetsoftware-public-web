@@ -9,7 +9,7 @@ defineEmits<{ open: [patient: HospitalizationResponse] }>()
 
 <template>
   <div>
-    <div v-if="!loading && items.length === 0" class="empty">
+    <div v-if="!loading && items.length === 0" class="empty ds-empty ds-stack ds-stack--8">
       <BedDouble :size="32" :stroke-width="1.4" />
       <p>Sin pacientes internados</p>
       <span>Las hospitalizaciones activas (sin fecha de alta) aparecen aquí.</span>
@@ -28,13 +28,8 @@ defineEmits<{ open: [patient: HospitalizationResponse] }>()
 }
 
 .empty {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 56px 20px;
-  color: var(--warm-500);
-  text-align: center;
+  padding: 56px var(--space-20);
 }
 
 .empty p {

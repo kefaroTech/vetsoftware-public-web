@@ -40,10 +40,10 @@ function handleClick() {
       :disabled="!navigable"
       @click="handleClick"
     >
-      <div class="content">
-        <div class="head">
+      <div class="ds-flex-fill">
+        <div class="head ds-flex-row">
           <EventTypeChip :type="event.eventType" />
-          <span class="date">{{ dateLabel }}</span>
+          <span class="ds-meta">{{ dateLabel }}</span>
           <span class="source">#{{ event.sourceId }}</span>
         </div>
         <div class="summary">
@@ -100,22 +100,9 @@ function handleClick() {
   border-color: var(--hover-border);
 }
 
-.content {
-  flex: 1;
-  min-width: 0;
-}
-
 .head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  margin-bottom: var(--space-4);
   flex-wrap: wrap;
-}
-
-.date {
-  font-size: 12px;
-  color: var(--warm-500);
 }
 
 .source {

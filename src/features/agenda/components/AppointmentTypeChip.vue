@@ -8,21 +8,17 @@ const tokens = computed(() => apptTypeTokens(props.type))
 </script>
 
 <template>
-  <span class="type-chip" :style="{ background: tokens.bg, color: tokens.fg }">
+  <span class="type-chip ds-pill" :style="{ background: tokens.bg, color: tokens.fg }">
     <span aria-hidden="true">{{ meta.icon }}</span
     >{{ meta.label }}
   </span>
 </template>
 
 <style scoped>
+/* Resto sobre `.ds-pill`: chip más compacto que la píldora base. */
 .type-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 500;
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-  white-space: nowrap;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-8);
+  font-size: var(--text-caption);
 }
 </style>

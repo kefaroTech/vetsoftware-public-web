@@ -9,29 +9,27 @@ defineEmits<{ open: [] }>()
 </script>
 
 <template>
-  <button type="button" class="card" @click="$emit('open')">
+  <button type="button" class="card ds-stack" @click="$emit('open')">
     <div class="top">
       <!-- TODO backend: Hospitalization no expone status clínico; default ESTABLE -->
       <HospStatusPill status="ESTABLE" />
-      <span class="day">Día {{ daysSince(patient.startDate) }}</span>
+      <span class="day ds-hint">Día {{ daysSince(patient.startDate) }}</span>
     </div>
-    <div class="ident">
+    <div class="ds-flex-row ds-flex-row--12">
       <div class="avatar">{{ initials(patient.animal.name) }}</div>
       <div class="who">
-        <div class="name">{{ patient.animal.name }}</div>
+        <div class="name ds-item-label">{{ patient.animal.name }}</div>
         <div class="code">{{ patient.animal.code }}</div>
       </div>
     </div>
     <p class="reason">{{ patient.reason }}</p>
-    <div class="foot">Ingreso · {{ formatDateShort(patient.startDate) }}</div>
+    <div class="foot ds-hint">Ingreso · {{ formatDateShort(patient.startDate) }}</div>
   </button>
 </template>
 
 <style scoped>
 .card {
-  display: flex;
-  flex-direction: column;
-  gap: 11px;
+  gap: var(--space-11);
   text-align: left;
   width: 100%;
   padding: 16px;
@@ -57,15 +55,7 @@ defineEmits<{ open: [] }>()
 }
 
 .day {
-  font-size: 11.5px;
-  color: var(--warm-500);
-  font-weight: 500;
-}
-
-.ident {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  font-weight: var(--weight-medium);
 }
 
 .avatar {
@@ -83,9 +73,7 @@ defineEmits<{ open: [] }>()
 }
 
 .name {
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--warm-900);
+  font-size: var(--text-2xl);
 }
 
 .code {
@@ -106,9 +94,7 @@ defineEmits<{ open: [] }>()
 }
 
 .foot {
-  font-size: 11.5px;
-  color: var(--warm-500);
+  padding-top: var(--space-9);
   border-top: 1px solid var(--warm-150);
-  padding-top: 9px;
 }
 </style>

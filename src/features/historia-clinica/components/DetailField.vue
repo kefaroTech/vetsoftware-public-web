@@ -10,8 +10,8 @@ withDefaults(
 </script>
 
 <template>
-  <div class="field" :class="`span-${span}`">
-    <div class="field__label">{{ label }}</div>
+  <div class="field ds-stack" :class="`span-${span}`">
+    <div class="ds-label">{{ label }}</div>
     <div class="field__value">
       <slot>{{ value === null || value === undefined || value === '' ? '—' : value }}</slot>
     </div>
@@ -20,9 +20,7 @@ withDefaults(
 
 <style scoped>
 .field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  gap: var(--space-4);
   min-width: 0;
 }
 
@@ -32,14 +30,6 @@ withDefaults(
 
 .field.span-full {
   grid-column: 1 / -1;
-}
-
-.field__label {
-  font-size: 11.5px;
-  color: var(--warm-500);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  font-weight: 500;
 }
 
 .field__value {

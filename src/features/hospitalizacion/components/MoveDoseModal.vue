@@ -30,7 +30,7 @@ const emit = defineEmits<{
         <p class="lead">
           Esta orden usa pauta <strong>por intervalo</strong>. Elige cómo reprogramar:
         </p>
-        <ul class="opts">
+        <ul class="opts ds-stack ds-stack--8">
           <li>
             <strong>Solo esta toma</strong> — mueve únicamente esta toma; las siguientes no cambian.
           </li>
@@ -73,10 +73,7 @@ const emit = defineEmits<{
 
 .opts {
   margin: 0;
-  padding-left: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  padding-left: var(--space-18);
   font-size: 12.5px;
   color: var(--warm-700);
   line-height: 1.45;

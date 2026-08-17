@@ -134,7 +134,12 @@ function onDrop(dayIso: string, hour: number) {
     <div v-else ref="scrollEl" class="scroll">
       <div class="grid" :style="{ gridTemplateColumns: `64px repeat(7, minmax(96px, 1fr))` }">
         <div class="corner" />
-        <div v-for="(d, i) in days" :key="`h${i}`" class="dayhead" :class="{ today: isToday(d) }">
+        <div
+          v-for="(d, i) in days"
+          :key="`h${i}`"
+          class="dayhead ds-stack"
+          :class="{ today: isToday(d) }"
+        >
           <span class="dow">{{ WEEKDAYS_SHORT[i] }}</span>
           <span class="dnum">{{ d.getDate() }}</span>
         </div>
@@ -144,7 +149,7 @@ function onDrop(dayIso: string, hour: number) {
           <div
             v-for="cell in dayCells"
             :key="`c${hour}-${cell.iso}`"
-            class="cell"
+            class="cell ds-stack"
             :class="{
               today: isToday(cell.date),
               dropover: dragOver === `${cell.iso}-${hour}`,
@@ -169,7 +174,7 @@ function onDrop(dayIso: string, hour: number) {
               @dragend="onDragEnd"
             >
               <Lock v-if="statusOf(e.slot) === 'aplicada'" :size="10" :stroke-width="2.4" />
-              <span class="chip-name">{{ e.order.name }}</span>
+              <span class="ds-truncate">{{ e.order.name }}</span>
             </span>
           </div>
         </template>
@@ -210,12 +215,10 @@ function onDrop(dayIso: string, hour: number) {
 }
 
 .dayhead {
-  background: var(--warm-100);
-  padding: 8px 6px;
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-6);
+  background: var(--warm-100);
 }
 
 .dayhead.today {
@@ -245,12 +248,10 @@ function onDrop(dayIso: string, hour: number) {
 }
 
 .cell {
-  background: var(--warm-50);
+  gap: var(--space-4);
   min-height: 36px;
-  padding: 4px 5px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  padding: var(--space-4) var(--space-5);
+  background: var(--warm-50);
 }
 
 .cell.today {
@@ -273,11 +274,6 @@ function onDrop(dayIso: string, hour: number) {
   max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
-}
-
-.chip-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .chip.aplicada {

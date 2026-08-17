@@ -19,7 +19,7 @@ function handleClick(disabled: boolean | undefined) {
 <template>
   <button
     type="button"
-    class="crumb"
+    class="crumb ds-flex-row"
     :class="{ active, done, disabled }"
     :disabled="disabled"
     @click="handleClick(disabled)"
@@ -35,10 +35,7 @@ function handleClick(disabled: boolean | undefined) {
 
 <style scoped>
 .crumb {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
+  padding: var(--space-6) var(--space-10);
   border-radius: 7px;
   border: none;
   background: transparent;

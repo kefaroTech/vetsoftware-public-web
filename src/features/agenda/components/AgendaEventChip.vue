@@ -20,26 +20,23 @@ const tokens = computed(() => TYPE_COLORS[meta.value.color])
 <template>
   <button
     type="button"
-    class="chip"
+    class="chip ds-flex-row"
     :class="{ 'chip-dense': dense }"
     :style="{ background: tokens.bg, color: tokens.fg }"
     :title="`${meta.label}${event.subtitle ? ' · ' + event.subtitle : ''}`"
     @click.stop="$emit('click', event)"
   >
     <span class="icon" aria-hidden="true">{{ meta.icon }}</span>
-    <span class="label">
-      <span class="title">{{ event.title }}</span>
-      <span v-if="!dense && event.subtitle" class="subtitle">{{ event.subtitle }}</span>
+    <span class="label ds-stack">
+      <span class="ds-truncate">{{ event.title }}</span>
+      <span v-if="!dense && event.subtitle" class="subtitle ds-truncate">{{ event.subtitle }}</span>
     </span>
   </button>
 </template>
 
 <style scoped>
 .chip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
+  padding: var(--space-10) var(--space-12);
   border-radius: 8px;
   border: none;
   text-align: left;
@@ -73,25 +70,14 @@ const tokens = computed(() => TYPE_COLORS[meta.value.color])
 }
 
 .label {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  gap: var(--space-2);
   min-width: 0;
   overflow: hidden;
 }
 
-.title {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .subtitle {
-  font-size: 11.5px;
-  font-weight: 400;
+  font-size: var(--text-label);
+  font-weight: var(--weight-normal);
   opacity: 0.85;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 </style>

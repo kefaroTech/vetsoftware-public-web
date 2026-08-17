@@ -215,7 +215,7 @@ function goNuevaConsulta() {
 </script>
 
 <template>
-  <div class="step">
+  <div class="step ds-stack">
     <header class="patient-head">
       <button type="button" class="back-btn" @click="back">
         <ArrowLeft :size="14" :stroke-width="1.7" />
@@ -234,14 +234,14 @@ function goNuevaConsulta() {
         <div class="avatar">
           {{ state.pet.name.slice(0, 2).toUpperCase() }}
         </div>
-        <div class="patient-body">
-          <h1 class="patient-name">{{ state.pet.name }}</h1>
+        <div class="ds-flex-fill">
+          <h1 class="patient-name ds-display ds-display--sm">{{ state.pet.name }}</h1>
           <div class="pills">
-            <span class="pill">{{ state.pet.specie.name }}</span>
-            <span class="pill">{{ state.pet.breed.name }}</span>
-            <span class="pill">{{ sexLabel }}</span>
-            <span class="pill">{{ weightLabel }}</span>
-            <span v-if="state.pet.color" class="pill">{{ state.pet.color }}</span>
+            <span class="pill ds-pill">{{ state.pet.specie.name }}</span>
+            <span class="pill ds-pill">{{ state.pet.breed.name }}</span>
+            <span class="pill ds-pill">{{ sexLabel }}</span>
+            <span class="pill ds-pill">{{ weightLabel }}</span>
+            <span v-if="state.pet.color" class="pill ds-pill">{{ state.pet.color }}</span>
           </div>
           <div v-if="state.owner" class="owner-line">
             Propietario:
@@ -279,7 +279,7 @@ function goNuevaConsulta() {
     <div v-if="state.pet" class="weight-section">
       <button
         type="button"
-        class="weight-toggle"
+        class="weight-toggle ds-btn"
         :class="{ open: showWeight }"
         :aria-expanded="showWeight"
         @click="showWeight = !showWeight"
@@ -302,7 +302,7 @@ function goNuevaConsulta() {
       <div class="chips">
         <button
           type="button"
-          class="chip"
+          class="chip ds-pill"
           :class="{ active: filter === 'ALL' }"
           @click="filter = 'ALL'"
         >
@@ -312,7 +312,7 @@ function goNuevaConsulta() {
           v-for="row in typeCounts"
           :key="row.eventType"
           type="button"
-          class="chip"
+          class="chip ds-pill"
           :class="{ active: filter === row.eventType }"
           :style="
             filter === row.eventType
@@ -330,9 +330,13 @@ function goNuevaConsulta() {
         </button>
       </div>
 
-      <div class="search-box">
-        <Search :size="14" :stroke-width="1.7" class="search-icon" />
-        <input v-model="search" placeholder="Buscar en eventos…" class="search-input" />
+      <div class="search-box ds-flex-row">
+        <Search :size="14" :stroke-width="1.7" class="ds-icon-muted" />
+        <input
+          v-model="search"
+          placeholder="Buscar en eventos…"
+          class="search-input ds-flex-fill"
+        />
       </div>
     </div>
 
@@ -343,7 +347,7 @@ function goNuevaConsulta() {
 
       <div v-else-if="error" class="banner error">{{ error }}</div>
 
-      <div v-else-if="isEmpty" class="empty-card">
+      <div v-else-if="isEmpty" class="empty-card ds-empty">
         {{
           totalEvents === 0
             ? 'Sin historia clínica registrada todavía.'
@@ -379,8 +383,6 @@ function goNuevaConsulta() {
 .step {
   flex: 1;
   overflow: auto;
-  display: flex;
-  flex-direction: column;
 }
 
 .patient-head {
@@ -427,18 +429,7 @@ function goNuevaConsulta() {
   font-family: var(--font-serif);
 }
 
-.patient-body {
-  flex: 1;
-  min-width: 0;
-}
-
 .patient-name {
-  font-family: var(--font-serif);
-  font-size: 32px;
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  color: var(--warm-900);
-  margin: 0;
   line-height: 1.1;
 }
 
@@ -450,12 +441,8 @@ function goNuevaConsulta() {
 }
 
 .pill {
-  padding: 3px 9px;
-  border-radius: var(--radius-pill);
   background: var(--warm-200);
   color: var(--warm-700);
-  font-size: 11.5px;
-  font-weight: 500;
 }
 
 .owner-line {
@@ -478,23 +465,15 @@ function goNuevaConsulta() {
   padding: 18px 36px 0;
 }
 
+/* Resto sobre `.ds-btn` (base, sin `--ghost`: este control conserva su fondo
+   y su propio `:hover`, que sólo tiñe borde y texto). */
 .weight-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 14px;
-  font-size: 13px;
-  font-weight: 500;
-  font-family: inherit;
-  color: var(--warm-700);
+  gap: var(--space-8);
+  padding: var(--space-9) var(--space-14);
+  border-color: var(--warm-200);
+  border-radius: var(--radius-panel);
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 10px;
-  cursor: pointer;
-  transition:
-    background 0.12s ease,
-    border-color 0.12s ease,
-    color 0.12s ease;
+  color: var(--warm-700);
 }
 
 .weight-toggle:hover {
@@ -529,18 +508,13 @@ function goNuevaConsulta() {
 }
 
 .chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 11px;
-  border-radius: var(--radius-pill);
+  padding: var(--space-5) var(--space-11);
+  border: 1px solid var(--warm-200);
   background: var(--warm-50);
   color: var(--warm-700);
-  border: 1px solid var(--warm-200);
-  font-size: 12px;
-  font-weight: 400;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-normal);
   cursor: pointer;
-  font-family: inherit;
   transition:
     background 0.12s ease,
     border-color 0.12s ease,
@@ -563,23 +537,14 @@ function goNuevaConsulta() {
 }
 
 .search-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
+  padding: var(--space-10) var(--space-12);
   margin-bottom: 18px;
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 10px;
 }
 
-.search-icon {
-  color: var(--warm-500);
-  flex-shrink: 0;
-}
-
 .search-input {
-  flex: 1;
   border: none;
   outline: none;
   background: var(--warm-100);
@@ -588,7 +553,6 @@ function goNuevaConsulta() {
   font-size: 13.5px;
   font-family: inherit;
   color: var(--warm-900);
-  min-width: 0;
 }
 
 .timeline-wrap {
@@ -624,9 +588,7 @@ function goNuevaConsulta() {
 }
 
 .empty-card {
-  padding: 50px 20px;
-  text-align: center;
-  color: var(--warm-500);
+  padding: 50px var(--space-20);
   background: var(--warm-50);
   border: 1px dashed var(--warm-200);
   border-radius: 12px;

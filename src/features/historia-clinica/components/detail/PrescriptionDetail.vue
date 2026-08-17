@@ -12,9 +12,9 @@ defineProps<{ data: PrescriptionResponse }>()
     <DetailField label="Diagnóstico" :value="data.diagnosis" span="full" />
     <DetailField label="Observaciones" :value="data.observations" span="full" />
 
-    <div class="medicaments-section">
-      <div class="medicaments-head">
-        <span class="medicaments-label">Medicamentos</span>
+    <div class="ds-grid-span ds-stack ds-stack--10">
+      <div class="medicaments-head ds-flex-row">
+        <span class="ds-label">Medicamentos</span>
         <span class="medicaments-count">
           {{ data.medicaments.length === 1 ? '1 ítem' : `${data.medicaments.length} ítems` }}
         </span>
@@ -24,10 +24,10 @@ defineProps<{ data: PrescriptionResponse }>()
         Sin medicamentos registrados.
       </div>
 
-      <ul v-else class="medicaments">
-        <li v-for="med in data.medicaments" :key="med.id" class="med">
+      <ul v-else class="ds-list-reset ds-stack ds-stack--8">
+        <li v-for="med in data.medicaments" :key="med.id" class="med ds-stack">
           <div class="med-head">
-            <span class="med-name">{{ med.name }}</span>
+            <span class="ds-item-label ds-item-label--lg">{{ med.name }}</span>
             <span class="med-qty">×{{ med.quantity }}</span>
           </div>
           <div class="med-line">
@@ -49,25 +49,9 @@ defineProps<{ data: PrescriptionResponse }>()
 </template>
 
 <style scoped>
-.medicaments-section {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
+/* Resto sobre `.ds-flex-row`: gap propio (10px). */
 .medicaments-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.medicaments-label {
-  font-size: 11.5px;
-  color: var(--warm-500);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  font-weight: 500;
+  gap: var(--space-10);
 }
 
 .medicaments-count {
@@ -75,23 +59,12 @@ defineProps<{ data: PrescriptionResponse }>()
   color: var(--warm-400);
 }
 
-.medicaments {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 .med {
-  background: var(--warm-50);
+  gap: var(--space-6);
+  padding: var(--space-12) var(--space-14);
   border: 1px solid var(--warm-200);
-  border-radius: 10px;
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  border-radius: var(--radius-panel);
+  background: var(--warm-50);
 }
 
 .med-head {
@@ -99,12 +72,6 @@ defineProps<{ data: PrescriptionResponse }>()
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
-}
-
-.med-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--warm-900);
 }
 
 .med-qty {

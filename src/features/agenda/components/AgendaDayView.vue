@@ -45,7 +45,7 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
 
 <template>
   <div class="day-view">
-    <div v-if="isEmpty" class="day-empty">
+    <div v-if="isEmpty" class="day-empty ds-empty">
       <div class="empty-emoji" aria-hidden="true">📭</div>
       <div class="empty-text">No hay citas para este día.</div>
       <button
@@ -59,13 +59,13 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
     </div>
 
     <template v-else>
-      <div v-if="appointments.length > 0" class="timeline">
+      <div v-if="appointments.length > 0" class="timeline ds-stack">
         <div v-for="[hour, groupItems] in hourGroups" :key="hour" class="hour-group">
           <div class="hour-rail">
             <div class="hour-num">{{ String(hour).padStart(2, '0') }}:00</div>
             <div class="hour-line" />
           </div>
-          <div class="hour-cards">
+          <div class="hour-cards ds-stack ds-stack--8">
             <AppointmentCard
               v-for="a in groupItems"
               :key="a.id"
@@ -79,7 +79,7 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
       <!-- Eventos clínicos del día (read-only) -->
       <div v-if="clinicalEvents.length > 0" class="clinical">
         <div class="clinical-title">Eventos clínicos del día</div>
-        <ul class="clinical-list">
+        <ul class="ds-list-reset ds-stack ds-stack--8">
           <li v-for="ev in clinicalEvents" :key="ev.id" class="clinical-row">
             <button type="button" class="clinical-btn" @click="emit('event-click', ev)">
               <span
@@ -87,7 +87,7 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
                 :style="{ background: TYPE_COLORS[EVENT_TYPES[ev.type].color].dot }"
               />
               <span class="icon" aria-hidden="true">{{ EVENT_TYPES[ev.type].icon }}</span>
-              <span class="text">
+              <span class="text ds-stack">
                 <span class="title">{{ ev.title }}</span>
                 <span v-if="ev.subtitle" class="subtitle">{{ ev.subtitle }}</span>
               </span>
@@ -108,10 +108,9 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
   min-height: 600px;
 }
 
+/* Resto sobre `.ds-empty`: este vacío respira más que el catalogado. */
 .day-empty {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--warm-500);
+  padding: 60px var(--space-20);
 }
 
 .empty-emoji {
@@ -124,9 +123,7 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
 }
 
 .timeline {
-  display: flex;
-  flex-direction: column;
-  padding: 6px 6px 0;
+  padding: var(--space-6) var(--space-6) 0;
 }
 
 .hour-group {
@@ -158,10 +155,7 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
 }
 
 .hour-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-bottom: 14px;
+  padding-bottom: var(--space-14);
 }
 
 .clinical {
@@ -177,15 +171,6 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
   color: var(--warm-500);
   font-weight: 600;
   margin-bottom: 10px;
-}
-
-.clinical-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 .clinical-btn {
@@ -224,9 +209,7 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
 }
 
 .text {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  gap: var(--space-3);
   min-width: 0;
 }
 

@@ -31,7 +31,7 @@ const dose = computed(() => (props.order?.kind === 'med' ? (props.order.dose ?? 
     @close="emit('close')"
   >
     <template #body>
-      <dl v-if="order && doseSlot" class="facts">
+      <dl v-if="order && doseSlot" class="facts ds-stack ds-stack--10">
         <div class="row">
           <dt>{{ isMed ? 'Medicamento' : 'Procedimiento' }}</dt>
           <dd>{{ order.name }}</dd>
@@ -59,9 +59,6 @@ const dose = computed(() => (props.order?.kind === 'med' ? (props.order.dose ?? 
 <style scoped>
 .facts {
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 .row {

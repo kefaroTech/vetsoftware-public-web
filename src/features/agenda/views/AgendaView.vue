@@ -304,7 +304,7 @@ async function onRemove(appt: AppointmentResponse) {
 </script>
 
 <template>
-  <section class="agenda-page">
+  <section class="agenda-page ds-page ds-stack ds-stack--14">
     <PageHeader
       kicker="Trabajo · Citas"
       title="Agenda"
@@ -337,13 +337,18 @@ async function onRemove(appt: AppointmentResponse) {
 
     <AppointmentSummary v-if="view === 'day'" :appointments="dayAppointments" />
 
-    <button v-if="view === 'day' && previousView" type="button" class="back-btn" @click="goBack">
+    <button
+      v-if="view === 'day' && previousView"
+      type="button"
+      class="back-btn ds-btn ds-btn--ghost ds-hover-accent"
+      @click="goBack"
+    >
       <ArrowLeft :size="14" :stroke-width="1.8" />
       {{ backLabel }}
     </button>
 
     <div class="body">
-      <div v-if="loading && items.length === 0" class="loading">Cargando citas…</div>
+      <div v-if="loading && items.length === 0" class="loading ds-empty">Cargando citas…</div>
       <AgendaMonthView
         v-else-if="view === 'month'"
         :cursor="cursor"
@@ -398,40 +403,19 @@ async function onRemove(appt: AppointmentResponse) {
 </template>
 
 <style scoped>
+/* Resto sobre `.ds-page` + `.ds-stack --14`: la agenda es más ancha que
+   `.ds-page--contained` (1320 frente a 1180) y no lleva su padding. */
 .agenda-page {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  max-width: 1320px;
   margin: 0 auto;
-  font-family: var(--font-sans);
-  color: var(--warm-900);
+  max-width: 1320px;
 }
 
+/* Resto sobre `.ds-btn --ghost` + `.ds-hover-accent`: tamaño intermedio entre
+   `--sm` (7/12) y `--snug` (8/14), y alineado al inicio de la columna. */
 .back-btn {
   align-self: flex-start;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  background: transparent;
-  color: var(--warm-700);
-  border: 1px solid var(--warm-200);
-  border-radius: 9px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  transition:
-    background 0.12s ease,
-    border-color 0.12s ease,
-    color 0.12s ease;
-}
-
-.back-btn:hover {
-  background: var(--amatista-50);
-  border-color: var(--amatista-300);
-  color: var(--amatista-700);
+  padding: var(--space-7) var(--space-14);
+  font-size: var(--text-sm);
 }
 
 .body {
@@ -439,8 +423,7 @@ async function onRemove(appt: AppointmentResponse) {
 }
 
 .loading {
-  padding: 28px;
-  text-align: center;
+  padding: var(--space-28);
   background: var(--warm-100);
   border: 1px dashed var(--warm-300);
   border-radius: 12px;

@@ -47,7 +47,7 @@ function countLabel(n: number): string {
         v-for="(day, i) in days"
         :key="i"
         type="button"
-        class="header-cell"
+        class="header-cell ds-stack"
         :class="{ today: sameDay(day, today) }"
         @click="emit('day-click', day)"
       >
@@ -59,8 +59,13 @@ function countLabel(n: number): string {
       </button>
     </div>
     <div class="grid">
-      <div v-for="(day, i) in days" :key="i" class="col" :class="{ today: sameDay(day, today) }">
-        <div class="events">
+      <div
+        v-for="(day, i) in days"
+        :key="i"
+        class="col ds-stack"
+        :class="{ today: sameDay(day, today) }"
+      >
+        <div class="events ds-stack">
           <template v-for="it in on(day)" :key="it.id">
             <AppointmentChip
               v-if="it.kind === 'appointment'"
@@ -100,10 +105,8 @@ function countLabel(n: number): string {
 }
 
 .header-cell {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 10px 8px;
+  padding: var(--space-10) var(--space-8);
   gap: 4px;
   background: transparent;
   border: none;
@@ -152,10 +155,8 @@ function countLabel(n: number): string {
 }
 
 .col {
-  display: flex;
-  flex-direction: column;
   align-items: stretch;
-  padding: 10px 8px;
+  padding: var(--space-10) var(--space-8);
   background: var(--warm-50);
   border-right: 1px solid var(--warm-150);
 }
@@ -169,9 +170,7 @@ function countLabel(n: number): string {
 }
 
 .events {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  gap: var(--space-4);
 }
 
 .empty {

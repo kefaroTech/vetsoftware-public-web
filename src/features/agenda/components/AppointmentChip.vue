@@ -38,7 +38,7 @@ const subject = computed(() => props.appt.animal?.name || props.appt.clientName 
   <button
     v-if="variant === 'month'"
     type="button"
-    class="chip-dense"
+    class="chip-dense ds-flex-row"
     :style="{
       background: tokens.bg,
       color: tokens.fg,
@@ -49,14 +49,14 @@ const subject = computed(() => props.appt.animal?.name || props.appt.clientName 
     @click.stop="$emit('click', appt)"
   >
     <span class="c-time">{{ apptTime(appt.startAt) }}</span>
-    <span class="c-title">{{ subject }}</span>
-    <span class="c-status-dot" :style="{ background: statusMeta.dot }" />
+    <span class="c-title ds-truncate">{{ subject }}</span>
+    <span class="c-status-dot ds-status-dot" :style="{ background: statusMeta.dot }" />
   </button>
 
   <button
     v-else
     type="button"
-    class="chip-week"
+    class="chip-week ds-flex-row"
     :style="{
       background: tokens.bg,
       color: tokens.fg,
@@ -66,12 +66,12 @@ const subject = computed(() => props.appt.animal?.name || props.appt.clientName 
     :title="range"
     @click.stop="$emit('click', appt)"
   >
-    <span class="w-time">
+    <span class="w-time ds-stack">
       <span class="w-time-start">{{ apptTime(appt.startAt) }}</span>
       <span class="w-time-end">–{{ endTime }}</span>
     </span>
-    <span class="w-body">
-      <span class="w-line"
+    <span class="ds-flex-fill">
+      <span class="w-line ds-truncate"
         ><strong>{{ typeMeta.icon }} {{ subject }}</strong></span
       >
       <span class="w-sub">{{ typeMeta.label }}</span>
@@ -80,10 +80,9 @@ const subject = computed(() => props.appt.animal?.name || props.appt.clientName 
 </template>
 
 <style scoped>
+/* Resto sobre `.ds-flex-row`: gap propio (5px, fuera del catálogo 8/12). */
 .chip-dense {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  gap: var(--space-5);
   width: 100%;
   padding: 3px 6px;
   border: none;
@@ -103,24 +102,15 @@ const subject = computed(() => props.appt.animal?.name || props.appt.clientName 
 }
 
 .c-title {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   min-width: 0;
 }
 
+/* Resto sobre `.ds-status-dot`: este punto se empuja al final de la fila. */
 .c-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
   margin-left: auto;
-  flex-shrink: 0;
 }
 
 .chip-week {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   width: 100%;
   padding: 7px 9px;
   border: none;
@@ -136,8 +126,6 @@ const subject = computed(() => props.appt.animal?.name || props.appt.clientName 
 }
 
 .w-time {
-  display: flex;
-  flex-direction: column;
   align-items: flex-start;
   font-family: var(--font-mono);
   flex-shrink: 0;
@@ -156,17 +144,9 @@ const subject = computed(() => props.appt.animal?.name || props.appt.clientName 
   white-space: nowrap;
 }
 
-.w-body {
-  flex: 1;
-  min-width: 0;
-}
-
 .w-line {
   display: block;
-  font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: var(--text-xs);
 }
 
 .w-sub {

@@ -51,7 +51,7 @@ const MAX_VISIBLE = 3
         v-for="(day, i) in days"
         :key="i"
         type="button"
-        class="cell"
+        class="cell ds-stack"
         :class="{
           'other-month': day.getMonth() !== cursorMonth,
           today: sameDay(day, today),
@@ -62,7 +62,7 @@ const MAX_VISIBLE = 3
           <span :class="{ 'today-marker': sameDay(day, today) }">{{ day.getDate() }}</span>
           <span v-if="on(day).length > 0" class="day-count">{{ on(day).length }}</span>
         </div>
-        <div class="events">
+        <div class="events ds-stack">
           <template v-for="it in on(day).slice(0, MAX_VISIBLE)" :key="it.id">
             <AppointmentChip
               v-if="it.kind === 'appointment'"
@@ -121,10 +121,8 @@ const MAX_VISIBLE = 3
 }
 
 .cell {
-  display: flex;
-  flex-direction: column;
   align-items: stretch;
-  gap: 4px;
+  gap: var(--space-4);
   padding: 8px 8px 10px;
   background: var(--warm-50);
   border: none;
@@ -190,9 +188,7 @@ const MAX_VISIBLE = 3
 }
 
 .events {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  gap: var(--space-3);
   min-width: 0;
 }
 

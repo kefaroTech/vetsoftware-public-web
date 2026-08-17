@@ -68,15 +68,20 @@ onMounted(() => history.fetch())
 </script>
 
 <template>
-  <div class="history">
-    <div class="filters">
+  <div class="ds-page">
+    <div class="filters ds-flex-row">
       <div v-if="patientLabel" class="chip">
         {{ patientLabel }}
         <button type="button" aria-label="Quitar paciente" @click="clearPatient">
           <X :size="12" :stroke-width="2" />
         </button>
       </div>
-      <button v-else type="button" class="filter-btn" @click="patientPickerOpen = true">
+      <button
+        v-else
+        type="button"
+        class="filter-btn ds-btn ds-btn--ghost"
+        @click="patientPickerOpen = true"
+      >
         <Filter :size="14" :stroke-width="1.8" /> Filtrar por paciente
       </button>
 
@@ -103,7 +108,7 @@ onMounted(() => history.fetch())
         <DateInput v-model="local.dateTo" placeholder="Hasta" @update:model-value="apply" />
       </div>
 
-      <button type="button" class="clear" @click="clearAll">Limpiar</button>
+      <button type="button" class="clear ds-btn ds-btn--ghost" @click="clearAll">Limpiar</button>
     </div>
 
     <div v-if="history.error.value" class="ds-banner ds-banner--error">
@@ -133,7 +138,7 @@ onMounted(() => history.fetch())
             v-for="item in history.items.value"
             v-else
             :key="item.id"
-            class="clickable-row"
+            class="ds-row-clickable"
             @click="emit('open', item)"
           >
             <td class="mono">{{ labCode(item.id, item.date) }}</td>
@@ -170,16 +175,11 @@ onMounted(() => history.fetch())
 </template>
 
 <style scoped>
-.history {
-  font-family: var(--font-sans);
-}
-
+/* Resto sobre `.ds-flex-row`: gap propio (10px). */
 .filters {
-  display: flex;
+  gap: var(--space-10);
+  margin-bottom: var(--space-16);
   flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
 }
 .field {
   min-width: 180px;
@@ -188,20 +188,11 @@ onMounted(() => history.fetch())
   min-width: 150px;
 }
 
+/* Resto sobre `.ds-btn --ghost`: tamaño intermedio entre --sm y --snug. */
 .filter-btn,
 .clear {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  padding: 8px 12px;
-  border-radius: 9px;
-  border: 1px solid var(--warm-200);
-  background: transparent;
-  color: var(--warm-700);
-  cursor: pointer;
+  padding: var(--space-8) var(--space-12);
+  font-size: var(--text-sm);
 }
 
 .filter-btn:hover,
@@ -297,12 +288,5 @@ onMounted(() => history.fetch())
   text-align: center;
   color: var(--warm-500);
   padding: 24px 16px;
-}
-.clickable-row {
-  cursor: pointer;
-  transition: background 0.12s ease;
-}
-.clickable-row:hover td {
-  background: var(--amatista-50);
 }
 </style>

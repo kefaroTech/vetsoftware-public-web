@@ -130,15 +130,15 @@ const childrenCountLabel = computed(() =>
       span="full"
     />
 
-    <div class="children-section">
-      <div class="children-head">
-        <span class="children-label">Procedimientos asociados</span>
+    <div class="ds-grid-span ds-stack ds-stack--10">
+      <div class="children-head ds-flex-row">
+        <span class="ds-label">Procedimientos asociados</span>
         <span class="children-count">{{ childrenCountLabel }}</span>
       </div>
       <div v-if="children.length === 0" class="ds-empty ds-empty--boxed">
         Esta consulta no tiene procedimientos asociados.
       </div>
-      <ul v-else class="children-list">
+      <ul v-else class="ds-list-reset ds-stack ds-stack--8">
         <li v-for="c in childrenSorted" :key="`${c.eventType}-${c.sourceId}`">
           <button
             type="button"
@@ -150,10 +150,10 @@ const childrenCountLabel = computed(() =>
             <span class="child-icon" :aria-label="EVENT_TYPES[c.eventType].label">
               {{ EVENT_TYPES[c.eventType].icon }}
             </span>
-            <div class="child-body">
-              <div class="child-head">
+            <div class="ds-flex-fill">
+              <div class="child-head ds-flex-row">
                 <EventTypeChip :type="c.eventType" />
-                <span class="child-date">{{ formatDateShort(c.eventDate) }}</span>
+                <span class="ds-meta">{{ formatDateShort(c.eventDate) }}</span>
                 <span class="child-id">#{{ c.sourceId }}</span>
               </div>
               <div class="child-summary">
@@ -169,39 +169,14 @@ const childrenCountLabel = computed(() =>
 </template>
 
 <style scoped>
-.children-section {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
+/* Resto sobre `.ds-flex-row`: gap propio (10px). */
 .children-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.children-label {
-  font-size: 11.5px;
-  color: var(--warm-500);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  font-weight: 500;
+  gap: var(--space-10);
 }
 
 .children-count {
   font-size: 11.5px;
   color: var(--warm-400);
-}
-
-.children-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 .child {
@@ -243,22 +218,9 @@ const childrenCountLabel = computed(() =>
   flex-shrink: 0;
 }
 
-.child-body {
-  flex: 1;
-  min-width: 0;
-}
-
 .child-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  margin-bottom: var(--space-4);
   flex-wrap: wrap;
-}
-
-.child-date {
-  font-size: 12px;
-  color: var(--warm-500);
 }
 
 .child-id {

@@ -34,7 +34,7 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
               : 'ejecuciones aplicadas'
         }}. Son un registro histórico y <strong>no se modifican</strong>.
       </p>
-      <ul class="facts">
+      <ul class="facts ds-stack">
         <li>Las {{ kind === 'med' ? 'dosis' : 'ejecuciones' }} aplicadas se conservan tal cual.</li>
         <li>Solo se reprograman las pendientes con los nuevos parámetros.</li>
         <li>La fecha/hora de inicio no cambia.</li>
@@ -60,10 +60,8 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
 
 .facts {
   margin: 0;
-  padding-left: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  padding-left: var(--space-18);
+  gap: var(--space-6);
   font-size: 12.5px;
   color: var(--warm-700);
   line-height: 1.45;

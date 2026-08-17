@@ -43,25 +43,25 @@ onBeforeUnmount(() => observer?.disconnect())
 </script>
 
 <template>
-  <div class="owner-search">
-    <div class="search-box">
-      <Search :size="16" :stroke-width="1.7" class="search-icon" />
+  <div class="ds-stack ds-stack--14">
+    <div class="search-box ds-flex-row">
+      <Search :size="16" :stroke-width="1.7" class="ds-icon-muted" />
       <input
         v-model="query"
         type="text"
         autofocus
         placeholder="Buscar por nombre, documento o email…"
-        class="search-input"
+        class="search-input ds-flex-fill"
       />
       <span v-if="loading" class="loader-inline">
         <PawLoader :size="22" :glow="false" :speed="900" />
       </span>
     </div>
 
-    <div v-if="error" class="status error">{{ error }}</div>
+    <div v-if="error" class="status ds-empty error">{{ error }}</div>
 
     <div v-if="hasQuery" class="results">
-      <div v-if="!loading && results.length === 0 && !error" class="status empty">
+      <div v-if="!loading && results.length === 0 && !error" class="status ds-empty empty">
         Sin coincidencias para "<strong>{{ query }}</strong
         >"
       </div>
@@ -70,14 +70,14 @@ onBeforeUnmount(() => observer?.disconnect())
         v-for="(o, i) in results"
         :key="o.id"
         type="button"
-        class="result-row"
+        class="result-row ds-flex-row"
         :class="{ striped: i % 2 === 1 }"
         @click="emit('select', o)"
       >
         <div class="avatar">{{ initials(o.name) }}</div>
-        <div class="info">
-          <div class="name">{{ o.name }}</div>
-          <div class="meta">
+        <div class="ds-flex-fill">
+          <div class="name ds-truncate">{{ o.name }}</div>
+          <div class="meta ds-meta ds-flex-row">
             <span>{{ o.document }}</span>
             <template v-if="o.phone">
               <span class="dot">·</span>
@@ -101,41 +101,27 @@ onBeforeUnmount(() => observer?.disconnect())
       </div>
     </div>
 
-    <div v-else class="hint">Empieza a escribir para buscar al propietario.</div>
+    <div v-else class="hint ds-empty">Empieza a escribir para buscar al propietario.</div>
   </div>
 </template>
 
 <style scoped>
-.owner-search {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
+/* Resto sobre `.ds-flex-row`: gap propio (10px). */
 .search-box {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  gap: var(--space-10);
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 12px;
   padding: 12px 14px;
 }
 
-.search-icon {
-  color: var(--warm-500);
-  flex-shrink: 0;
-}
-
 .search-input {
-  flex: 1;
   border: none;
   outline: none;
   background: transparent;
   font-size: 15px;
   font-family: inherit;
   color: var(--warm-900);
-  min-width: 0;
 }
 
 .search-input::placeholder {
@@ -153,10 +139,9 @@ onBeforeUnmount(() => observer?.disconnect())
   overflow: hidden;
 }
 
+/* Resto sobre `.ds-flex-row`: gap propio (14px). */
 .result-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+  gap: var(--space-14);
   width: 100%;
   padding: 14px 16px;
   text-align: left;
@@ -193,27 +178,16 @@ onBeforeUnmount(() => observer?.disconnect())
   flex-shrink: 0;
 }
 
-.info {
-  flex: 1;
-  min-width: 0;
-}
-
 .name {
-  font-size: 14.5px;
-  font-weight: 500;
   color: var(--warm-900);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-medium);
 }
 
+/* Resto sobre `.ds-meta` + `.ds-flex-row`: gap propio (6px). */
 .meta {
-  font-size: 12px;
-  color: var(--warm-500);
-  margin-top: 2px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  margin-top: var(--space-2);
+  gap: var(--space-6);
   flex-wrap: wrap;
 }
 
@@ -243,9 +217,7 @@ onBeforeUnmount(() => observer?.disconnect())
 }
 
 .status {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--warm-500);
+  padding: var(--space-40) var(--space-20);
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 12px;
@@ -259,10 +231,8 @@ onBeforeUnmount(() => observer?.disconnect())
 }
 
 .hint {
-  font-size: 13.5px;
-  color: var(--warm-500);
-  text-align: center;
-  padding: 28px 20px;
+  padding: var(--space-28) var(--space-20);
+  font-size: var(--text-md);
   background: var(--warm-50);
   border: 1px dashed var(--warm-200);
   border-radius: 12px;

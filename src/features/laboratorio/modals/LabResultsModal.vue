@@ -74,8 +74,8 @@ async function submit() {
     <template #body>
       <div v-if="error" class="ds-banner ds-banner--sm ds-banner--error">{{ error }}</div>
 
-      <label class="label">Archivos de resultado</label>
-      <div class="dropzone" @click="pick" @dragover.prevent @drop.prevent="onDrop">
+      <label class="label ds-label">Archivos de resultado</label>
+      <div class="dropzone ds-stack" @click="pick" @dragover.prevent @drop.prevent="onDrop">
         <UploadCloud :size="22" :stroke-width="1.6" />
         <span>Haz clic para adjuntar o arrastra archivos aquí</span>
         <small>PDF o imágenes</small>
@@ -85,15 +85,15 @@ async function submit() {
         type="file"
         multiple
         accept="application/pdf,image/*"
-        class="sr-only"
+        class="ds-sr-only"
         @change="onFiles"
       />
 
-      <ul v-if="files.length" class="files">
-        <li v-for="(f, i) in files" :key="i" class="file">
+      <ul v-if="files.length" class="files ds-list-reset ds-stack">
+        <li v-for="(f, i) in files" :key="i" class="file ds-flex-row">
           <FileText :size="15" :stroke-width="1.7" />
-          <span class="name">{{ f.name }}</span>
-          <span class="size">{{ prettySize(f.size) }}</span>
+          <span class="ds-flex-fill ds-truncate">{{ f.name }}</span>
+          <span class="ds-hint">{{ prettySize(f.size) }}</span>
           <button type="button" class="rm" aria-label="Quitar" @click="removeAt(i)">
             <X :size="13" :stroke-width="1.9" />
           </button>
@@ -102,7 +102,7 @@ async function submit() {
     </template>
 
     <template #footer-left>
-      <span class="count">{{ files.length }} archivo(s) adjunto(s)</span>
+      <span class="ds-meta">{{ files.length }} archivo(s) adjunto(s)</span>
     </template>
     <template #footer-actions>
       <button
@@ -126,22 +126,17 @@ async function submit() {
 </template>
 
 <style scoped>
+/* Resto sobre `.ds-label`: rótulo un tono más oscuro. */
 .label {
   display: block;
-  font-size: 11.5px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  margin-bottom: var(--space-8);
   color: var(--warm-600);
-  margin-bottom: 8px;
 }
 
 .dropzone {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 26px;
+  gap: var(--space-6);
+  padding: var(--space-26);
   border: 1.5px dashed var(--warm-300);
   border-radius: 12px;
   color: var(--warm-600);
@@ -164,37 +159,17 @@ async function submit() {
 }
 
 .files {
-  list-style: none;
-  margin: 14px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: var(--space-6);
+  margin: var(--space-14) 0 0;
 }
 
 .file {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  padding: var(--space-8) var(--space-12);
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 9px;
   font-size: 12.5px;
   color: var(--warm-800);
-}
-
-.file .name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.file .size {
-  font-size: 11.5px;
-  color: var(--warm-500);
 }
 
 .rm {
@@ -213,22 +188,6 @@ async function submit() {
   color: oklch(45% 0.18 25deg);
 }
 
-.count {
-  font-size: 12px;
-  color: var(--warm-500);
-}
-
-/* El estado deshabilitado lo cubre `.ds-btn:disabled` (primitives.css). */
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
-}
+/* El estado deshabilitado lo cubre `.ds-btn:disabled` (primitives.css), y el
+   clip de accesibilidad del input nativo, `.ds-sr-only`. */
 </style>

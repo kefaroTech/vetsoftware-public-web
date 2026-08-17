@@ -189,7 +189,7 @@ function printReceta() {
       <button
         v-if="payload?.type === 'PRESCRIPTION'"
         type="button"
-        class="btn-print"
+        class="btn-print ds-btn ds-btn--snug"
         :disabled="printing"
         @click="printReceta"
       >
@@ -220,18 +220,10 @@ function printReceta() {
 }
 
 .btn-print {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  font-size: 13px;
-  font-weight: 500;
+  border-color: var(--amatista-300);
+  border-radius: var(--radius-md);
   background: var(--warm-50);
   color: var(--amatista-700);
-  border: 1px solid var(--amatista-300);
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: inherit;
 }
 
 .btn-print:hover:not(:disabled) {
