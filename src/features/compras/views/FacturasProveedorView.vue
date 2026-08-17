@@ -107,11 +107,11 @@ onMounted(refresh)
 <template>
   <div class="ds-page ds-page--contained">
     <header class="page-head">
-      <div class="title-wrap">
+      <div class="ds-flex-row ds-flex-row--12 ds-flex-row--accent">
         <ReceiptText :size="22" :stroke-width="1.7" />
         <div>
-          <h1>Facturas de proveedor</h1>
-          <p class="sub">Compras registradas y cuentas por pagar</p>
+          <h1 class="ds-display ds-display--xs">Facturas de proveedor</h1>
+          <p class="ds-view-subtitle">Compras registradas y cuentas por pagar</p>
         </div>
       </div>
       <button
@@ -137,7 +137,7 @@ onMounted(refresh)
 
     <!-- Facturas -->
     <template v-if="tab === 'facturas'">
-      <div class="filter-row">
+      <div class="filter-row ds-flex-row ds-meta-dark">
         <label>Estado</label>
         <select v-model="statusFilter" class="mini-select">
           <option v-for="o in statusOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
@@ -151,23 +151,23 @@ onMounted(refresh)
             <th>Proveedor</th>
             <th>Emisión</th>
             <th>Vence</th>
-            <th class="num">Total</th>
-            <th class="num">Saldo</th>
+            <th class="ds-num">Total</th>
+            <th class="ds-num">Saldo</th>
             <th>Estado</th>
             <th class="actions-col"></th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="!loading && items.length === 0">
-            <td colspan="8" class="empty-row">No hay facturas registradas.</td>
+            <td colspan="8" class="ds-empty ds-empty--md">No hay facturas registradas.</td>
           </tr>
           <tr v-for="inv in items" :key="inv.id">
-            <td class="strong">{{ inv.invoiceNumber }}</td>
+            <td class="ds-strong">{{ inv.invoiceNumber }}</td>
             <td>{{ inv.supplier.name }}</td>
             <td>{{ formatDateNumeric(inv.issueDate) }}</td>
             <td>{{ formatDateNumeric(inv.dueDate) }}</td>
-            <td class="num">{{ formatMoney(inv.total) }}</td>
-            <td class="num">{{ formatMoney(inv.balance) }}</td>
+            <td class="ds-num">{{ formatMoney(inv.total) }}</td>
+            <td class="ds-num">{{ formatMoney(inv.balance) }}</td>
             <td>
               <span class="pill" :class="statusClass(inv.status)">{{
                 invoiceStatusLabel(inv.status)
@@ -214,7 +214,7 @@ onMounted(refresh)
           </tr>
         </tbody>
       </table>
-      <p class="count">{{ total }} factura(s)</p>
+      <p class="count ds-meta">{{ total }} factura(s)</p>
     </template>
 
     <!-- Cuentas por pagar (aging) -->
@@ -227,38 +227,38 @@ onMounted(refresh)
           <tr>
             <th>Proveedor</th>
             <th>NIT</th>
-            <th class="num">Al día</th>
-            <th class="num">1–30</th>
-            <th class="num">31–60</th>
-            <th class="num">61–90</th>
-            <th class="num">+90</th>
-            <th class="num">Total</th>
+            <th class="ds-num">Al día</th>
+            <th class="ds-num">1–30</th>
+            <th class="ds-num">31–60</th>
+            <th class="ds-num">61–90</th>
+            <th class="ds-num">+90</th>
+            <th class="ds-num">Total</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="!agingLoading && agingCols.length === 0">
-            <td colspan="8" class="empty-row">No hay cuentas por pagar pendientes.</td>
+            <td colspan="8" class="ds-empty ds-empty--md">No hay cuentas por pagar pendientes.</td>
           </tr>
           <tr v-for="row in agingCols" :key="row.supplierId">
-            <td class="strong">{{ row.supplierName }}</td>
+            <td class="ds-strong">{{ row.supplierName }}</td>
             <td>{{ row.taxId ?? '—' }}</td>
-            <td class="num">{{ formatMoney(row.bucket.current) }}</td>
-            <td class="num">{{ formatMoney(row.bucket.days1to30) }}</td>
-            <td class="num">{{ formatMoney(row.bucket.days31to60) }}</td>
-            <td class="num">{{ formatMoney(row.bucket.days61to90) }}</td>
-            <td class="num over">{{ formatMoney(row.bucket.over90) }}</td>
-            <td class="num strong">{{ formatMoney(row.bucket.total) }}</td>
+            <td class="ds-num">{{ formatMoney(row.bucket.current) }}</td>
+            <td class="ds-num">{{ formatMoney(row.bucket.days1to30) }}</td>
+            <td class="ds-num">{{ formatMoney(row.bucket.days31to60) }}</td>
+            <td class="ds-num">{{ formatMoney(row.bucket.days61to90) }}</td>
+            <td class="ds-num ds-amount--neg">{{ formatMoney(row.bucket.over90) }}</td>
+            <td class="ds-num ds-strong">{{ formatMoney(row.bucket.total) }}</td>
           </tr>
         </tbody>
         <tfoot v-if="aging && agingCols.length > 0">
           <tr>
             <td colspan="2">TOTAL</td>
-            <td class="num">{{ formatMoney(aging.totals.current) }}</td>
-            <td class="num">{{ formatMoney(aging.totals.days1to30) }}</td>
-            <td class="num">{{ formatMoney(aging.totals.days31to60) }}</td>
-            <td class="num">{{ formatMoney(aging.totals.days61to90) }}</td>
-            <td class="num over">{{ formatMoney(aging.totals.over90) }}</td>
-            <td class="num strong">{{ formatMoney(aging.totals.total) }}</td>
+            <td class="ds-num">{{ formatMoney(aging.totals.current) }}</td>
+            <td class="ds-num">{{ formatMoney(aging.totals.days1to30) }}</td>
+            <td class="ds-num">{{ formatMoney(aging.totals.days31to60) }}</td>
+            <td class="ds-num">{{ formatMoney(aging.totals.days61to90) }}</td>
+            <td class="ds-num ds-amount--neg">{{ formatMoney(aging.totals.over90) }}</td>
+            <td class="ds-num ds-strong">{{ formatMoney(aging.totals.total) }}</td>
           </tr>
         </tfoot>
       </table>
@@ -285,32 +285,16 @@ onMounted(refresh)
 </template>
 
 <style scoped>
+/* Primitivas: `.ds-flex-row--12 --accent` + `--display--xs` + `--view-subtitle`
+   (cabecera), `.ds-flex-row --meta-dark` (filtro), `.ds-num`, `.ds-strong`,
+   `.ds-amount--neg`, `.ds-meta`, `.ds-empty --md` (fila vacía; su padding/color
+   los pisa `.grid-table td` a (0,2,1), igual que pisaba al `.empty-row` que
+   sustituye — mismo resultado en pantalla). */
 .page-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 18px;
-}
-
-.title-wrap {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  color: var(--amatista-700);
-}
-
-.title-wrap h1 {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: 26px;
-  font-weight: 400;
-  color: var(--warm-900);
-}
-
-.sub {
-  margin: 2px 0 0;
-  font-size: 13px;
-  color: var(--warm-500);
 }
 
 .tabs {
@@ -339,12 +323,7 @@ onMounted(refresh)
 }
 
 .filter-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   margin-bottom: 14px;
-  font-size: 13px;
-  color: var(--warm-600);
 }
 
 .mini-select {
@@ -383,20 +362,6 @@ onMounted(refresh)
   border-top: 2px solid var(--warm-300);
   font-weight: 700;
   color: var(--warm-900);
-}
-
-.strong {
-  font-weight: 600;
-  color: var(--warm-900);
-}
-
-.num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.over {
-  color: #b4453a;
 }
 
 .actions-col {
@@ -455,16 +420,8 @@ onMounted(refresh)
   color: var(--warm-500);
 }
 
-.empty-row {
-  text-align: center;
-  color: var(--warm-400);
-  padding: 26px;
-}
-
 .count {
   margin-top: 10px;
-  font-size: 12px;
-  color: var(--warm-500);
 }
 
 .aging-asof {

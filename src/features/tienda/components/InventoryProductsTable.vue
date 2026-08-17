@@ -144,7 +144,7 @@ function onStateFilter(value: string) {
         <td class="tmin" @click.stop>
           <input
             v-if="showStock && canAdjust"
-            class="min-input"
+            class="min-input ds-focus-ring"
             type="number"
             min="0"
             :value="rowStock(p).minStock"
@@ -163,7 +163,7 @@ function onStateFilter(value: string) {
           <button
             v-if="showStock"
             type="button"
-            class="iconbtn"
+            class="iconbtn ds-icon-btn ds-icon-btn--accent"
             title="Ver lotes y kardex"
             @click="emit('detail', p)"
           >
@@ -172,7 +172,7 @@ function onStateFilter(value: string) {
           <button
             v-if="canAdjust && showStock"
             type="button"
-            class="restock"
+            class="restock ds-hover-accent"
             @click="emit('restock', p)"
           >
             Entrada
@@ -180,7 +180,7 @@ function onStateFilter(value: string) {
           <button
             v-if="canAdjust && showStock"
             type="button"
-            class="iconbtn"
+            class="iconbtn ds-icon-btn ds-icon-btn--accent"
             title="Ajustar"
             @click="emit('adjust', p)"
           >
@@ -189,7 +189,7 @@ function onStateFilter(value: string) {
           <button
             v-if="canTransfer && showStock && hasTransferTargets"
             type="button"
-            class="iconbtn"
+            class="iconbtn ds-icon-btn ds-icon-btn--accent"
             title="Transferir"
             @click="emit('transfer', p)"
           >
@@ -198,7 +198,7 @@ function onStateFilter(value: string) {
           <button
             v-if="canAdjust && showStock"
             type="button"
-            class="iconbtn"
+            class="iconbtn ds-icon-btn ds-icon-btn--accent"
             title="Consumo clínico"
             @click="emit('consume', p)"
           >
@@ -207,7 +207,7 @@ function onStateFilter(value: string) {
           <button
             v-if="canDelete"
             type="button"
-            class="pause"
+            class="pause ds-icon-btn"
             title="Pausar"
             @click="emit('pause', p)"
           >
@@ -245,12 +245,24 @@ function onStateFilter(value: string) {
    gana a `.ds-table td` (0,1,1). Se arregla allí y no aquí a propósito: subir
    el peso desde el SFC es justo lo que rompió tres overrides deliberados en la
    pasada anterior. */
+
+/* NO es `.ds-row-clickable`: esa primitiva tiñe con amatista-50 y lo hace sobre
+   los `td`, no sobre la fila, además de añadir una transición. Esta fila gris
+   (`warm-100` sobre el `<tr>`) se repite en `CountsHistoryModal`,
+   `ImpuestosView` y el paginador; es una segunda variante real y no tiene
+   primitiva — anotada en el informe FE-08 como candidata. */
 .trow {
   cursor: pointer;
 }
 .trow:hover {
   background: var(--warm-100);
 }
+
+/* NO migran a `.ds-item-label` / `.ds-strong`: dentro de un `<td>` de
+   `.ds-table`, esas primitivas de una sola clase (0,1,0) pierden el `color`
+   contra `.ds-table td` (0,1,1). Es la trampa que `primitives.css` deja
+   documentada al final del bloque de tablas; el nombre local pesa (0,2,0) y
+   sigue ganando. */
 .tname {
   font-weight: 500;
   color: var(--warm-900);
@@ -280,16 +292,20 @@ function onStateFilter(value: string) {
   font-size: 12.5px;
   color: var(--warm-800);
 }
+
+/* El par borde+anillo es `.ds-focus-ring`; sólo queda quitar el contorno
+   nativo, que la primitiva no toca. */
 .min-input:focus {
   outline: none;
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
 }
 .tactions {
   display: flex;
   gap: 6px;
   align-items: center;
 }
+
+/* Botón de texto: la geometría es suya (5/11, 12px) pero el tinte del hover es
+   `.ds-hover-accent`, que coincidía en las tres declaraciones. */
 .restock {
   padding: 5px 11px;
   border-radius: 7px;
@@ -302,39 +318,27 @@ function onStateFilter(value: string) {
   cursor: pointer;
   white-space: nowrap;
 }
-.restock:hover {
-  background: var(--amatista-50);
-  border-color: var(--amatista-300);
-  color: var(--amatista-700);
-}
+
+/* Las tres acciones por fila son `.ds-icon-btn` (28×28, radio 7, contorno
+   warm-200) con el hover de `--accent`. De las nueve declaraciones de cada una
+   sólo se desvían el relleno y el tono del icono en reposo, que se quedan aquí
+   sobrescritos por su propio nombre. */
 .iconbtn {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  border: 1px solid var(--warm-200);
   background: var(--warm-50);
   color: var(--warm-600);
-  cursor: pointer;
 }
-.iconbtn:hover {
-  background: var(--amatista-50);
-  border-color: var(--amatista-300);
-  color: var(--amatista-700);
-}
+
+/* Mismo botón de icono, pero su hover es ámbar (pausar), no de acento. */
 .pause {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  border: 1px solid var(--warm-200);
-  background: transparent;
   color: var(--warm-600);
-  cursor: pointer;
 }
-.pause:hover {
+
+/* El selector nombra también la primitiva a propósito: `.ds-icon-btn:hover`
+   pesa (0,3,0) igual que `.pause:hover`, y un empate lo desempataría el orden
+   de inserción del bundle. Nombrando las dos clases esta desviación sube a
+   (0,4,0) y gana siempre — es el mismo recurso que usa `CountSheetModal` para
+   acotar su densidad de celda. */
+.ds-icon-btn.pause:hover {
   background: oklch(96% 0.04 80deg);
   color: oklch(45% 0.12 70deg);
   border-color: oklch(88% 0.08 80deg);

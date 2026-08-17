@@ -47,28 +47,11 @@ const STATUS_TONE: Record<LaboratoryTestStatus, { bg: string; fg: string; dot: s
 </script>
 
 <template>
-  <span class="pill" :style="{ background: STATUS_TONE[status].bg, color: STATUS_TONE[status].fg }">
-    <span class="dot" :style="{ background: STATUS_TONE[status].dot }" />
+  <span
+    class="ds-pill"
+    :style="{ background: STATUS_TONE[status].bg, color: STATUS_TONE[status].fg }"
+  >
+    <span class="ds-status-dot" :style="{ background: STATUS_TONE[status].dot }" />
     {{ STATUS_LABEL[status] }}
   </span>
 </template>
-
-<style scoped>
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 9px;
-  border-radius: var(--radius-pill);
-  font-size: 11.5px;
-  font-weight: 500;
-  white-space: nowrap;
-  font-family: var(--font-sans);
-}
-
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-}
-</style>

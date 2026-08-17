@@ -269,7 +269,7 @@ async function save() {
   <Teleport to="body">
     <Transition name="modal-fade">
       <div v-if="open" class="overlay" role="dialog" aria-modal="true">
-        <div class="card">
+        <div class="card ds-stack">
           <header class="head" :style="{ background: tokens.headerGradient }">
             <button
               type="button"
@@ -284,8 +284,8 @@ async function save() {
               <div class="avatar" :style="{ background: tokens.avatarBg, color: tokens.avatarFg }">
                 <Shield :size="22" :stroke-width="1.7" />
               </div>
-              <div class="head-content">
-                <div class="kicker">
+              <div class="ds-flex-fill">
+                <div class="kicker ds-kicker">
                   {{ readOnly ? 'Ver rol' : isCreate ? 'Crear rol' : 'Editar rol' }}
                   <span v-if="!readOnly" class="req" title="Campo obligatorio">*</span>
                 </div>
@@ -322,8 +322,8 @@ async function save() {
           </div>
 
           <div class="toolbar">
-            <div class="search">
-              <Search :size="14" :stroke-width="1.7" class="search-icon" />
+            <div class="search ds-flex-row">
+              <Search :size="14" :stroke-width="1.7" class="ds-icon-muted" />
               <input
                 v-model="search"
                 type="text"
@@ -332,25 +332,29 @@ async function save() {
                 spellcheck="false"
               />
             </div>
-            <button type="button" class="ghost" @click="expandAll">Expandir todo</button>
-            <button type="button" class="ghost" @click="collapseAll">Colapsar todo</button>
+            <button type="button" class="ghost ds-hover-neutral" @click="expandAll">
+              Expandir todo
+            </button>
+            <button type="button" class="ghost ds-hover-neutral" @click="collapseAll">
+              Colapsar todo
+            </button>
             <span class="bar" />
-            <span class="counter">
+            <span class="counter ds-tone--accent">
               {{ selectedCount }} de {{ totalCatalogPermissions }} permisos
             </span>
           </div>
 
-          <div class="body">
-            <div v-if="groups.length === 0" class="empty">
+          <div class="body ds-stack ds-stack--18">
+            <div v-if="groups.length === 0" class="empty ds-empty">
               {{
                 permissionsCatalog.loading.value
                   ? 'Cargando permisos…'
                   : 'No se encontraron permisos para los filtros aplicados.'
               }}
             </div>
-            <div v-for="g in groups" :key="g.moduleId" class="module-group">
+            <div v-for="g in groups" :key="g.moduleId" class="ds-stack ds-stack--8">
               <div class="module-label">{{ g.moduleName }}</div>
-              <div class="subs">
+              <div class="subs ds-stack">
                 <SubModuleAccordion
                   v-for="s in g.subModules"
                   :key="s.subModuleId"
@@ -372,10 +376,10 @@ async function save() {
             </div>
           </div>
 
-          <footer class="foot">
+          <footer class="foot ds-flex-row ds-flex-row--12">
             <div class="foot-left">
-              <strong>{{ selectedCount }}</strong> permisos seleccionados ·
-              <strong>{{ usedSubModulesCount }}</strong> sub-módulos
+              <strong class="ds-strong">{{ selectedCount }}</strong> permisos seleccionados ·
+              <strong class="ds-strong">{{ usedSubModulesCount }}</strong> sub-módulos
               <span v-if="search.trim()" class="filter-hint">
                 · mostrando {{ totalVisiblePermissions }} permisos
               </span>
@@ -437,8 +441,6 @@ async function save() {
   background: var(--warm-50);
   border-radius: 16px;
   box-shadow: 0 30px 80px oklch(15% 0.05 var(--hue) / 35%);
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
 }
 
@@ -489,18 +491,8 @@ async function save() {
   flex-shrink: 0;
 }
 
-.head-content {
-  flex: 1;
-  min-width: 0;
-}
-
 .kicker {
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--warm-500);
   margin-bottom: 4px;
-  font-weight: 500;
 }
 
 .name-input {
@@ -592,19 +584,11 @@ async function save() {
 
 .search {
   flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 6px 12px;
   background: var(--warm-100);
   border: 1px solid var(--warm-200);
   border-radius: 7px;
   min-width: 180px;
-}
-
-.search-icon {
-  color: var(--warm-500);
-  flex-shrink: 0;
 }
 
 .search-input {
@@ -637,11 +621,9 @@ async function save() {
     color 0.12s ease;
 }
 
-.ghost:hover {
-  background: var(--warm-100);
-  color: var(--warm-900);
-}
-
+/* El hover del fantasma es `.ds-hover-neutral` y el icono de búsqueda
+   `.ds-icon-muted`. `.close:disabled` NO migra a `.ds-is-disabled`: `.close`
+   declara `cursor:pointer` a (0,2,0) y la primitiva pesa (0,1,0). */
 .bar {
   width: 1px;
   height: 22px;
@@ -653,8 +635,6 @@ async function save() {
   font-weight: 500;
   padding: 3px 10px;
   border-radius: var(--radius-pill);
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   white-space: nowrap;
 }
 
@@ -663,22 +643,11 @@ async function save() {
   flex: 1;
   overflow: auto;
   padding: 18px 26px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
 }
 
 .empty {
-  font-size: 13px;
-  color: var(--warm-500);
   padding: 32px 0;
-  text-align: center;
-}
-
-.module-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  font-size: 13px;
 }
 
 .module-label {
@@ -690,16 +659,11 @@ async function save() {
 }
 
 .subs {
-  display: flex;
-  flex-direction: column;
   gap: 6px;
 }
 
 /* FOOTER */
 .foot {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 14px 26px;
   border-top: 1px solid var(--warm-200);
   background: var(--warm-100);
@@ -709,11 +673,6 @@ async function save() {
   flex: 1;
   font-size: 12.5px;
   color: var(--warm-600);
-}
-
-.foot-left strong {
-  color: var(--warm-900);
-  font-weight: 600;
 }
 
 .filter-hint {

@@ -7,13 +7,13 @@ defineEmits<{ confirm: []; cancel: [] }>()
 
 <template>
   <Teleport to="body">
-    <div v-if="open" class="overlay" role="alertdialog" aria-modal="true">
-      <div class="card">
-        <div class="icon">
+    <div v-if="open" class="ds-dialog-overlay overlay" role="alertdialog" aria-modal="true">
+      <div class="ds-dialog-card">
+        <div class="ds-dialog-icon icon">
           <TriangleAlert :size="22" :stroke-width="1.8" />
         </div>
         <h2 class="ds-title">¿Crear consulta para una mascota fallecida?</h2>
-        <p class="desc">
+        <p class="ds-dialog-body desc">
           {{ petName }} aparece marcada como fallecida. Esta consulta quedará registrada como
           necropsia o registro post-mortem.
         </p>
@@ -31,41 +31,20 @@ defineEmits<{ confirm: []; cancel: [] }>()
 </template>
 
 <style scoped>
+/* Residuo sobre `.ds-dialog-overlay`: el z-index no entra en la primitiva. */
 .overlay {
-  position: fixed;
-  inset: 0;
-  background: rgb(30 20 50 / 45%);
-  backdrop-filter: blur(2px);
-  display: grid;
-  place-items: center;
   z-index: 100;
 }
 
-.card {
-  width: 440px;
-  max-width: calc(100vw - 32px);
-  background: var(--warm-50);
-  border-radius: 16px;
-  padding: 28px;
-  box-shadow: 0 20px 60px rgb(40 20 80 / 30%);
-  font-family: var(--font-sans);
-}
-
+/* Tono ámbar a medida: no coincide byte a byte con ningún token de warning,
+   así que se queda local sobre `.ds-dialog-icon`. */
 .icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
   background: oklch(94% 0.05 80deg);
   color: oklch(40% 0.12 80deg);
-  display: grid;
-  place-items: center;
-  margin-bottom: 14px;
 }
 
+/* Residuo sobre `.ds-dialog-body` (el margen difiere entre los 4 diálogos). */
 .desc {
   margin: 0 0 22px;
-  font-size: 13.5px;
-  color: var(--warm-600);
-  line-height: 1.55;
 }
 </style>

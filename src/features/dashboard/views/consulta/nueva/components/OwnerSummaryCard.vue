@@ -31,7 +31,7 @@ function formatLocation(owner: Owner): string {
           <Phone :size="13" :stroke-width="1.7" />
         </div>
         <div>
-          <div class="lab">Teléfono</div>
+          <div class="lab ds-meta ds-meta--caption">Teléfono</div>
           <div class="val">{{ owner.phone }}</div>
         </div>
       </div>
@@ -40,7 +40,7 @@ function formatLocation(owner: Owner): string {
           <Mail :size="13" :stroke-width="1.7" />
         </div>
         <div>
-          <div class="lab">Email</div>
+          <div class="lab ds-meta ds-meta--caption">Email</div>
           <div class="val">{{ owner.email || '—' }}</div>
         </div>
       </div>
@@ -49,7 +49,7 @@ function formatLocation(owner: Owner): string {
           <MapPin :size="13" :stroke-width="1.7" />
         </div>
         <div>
-          <div class="lab">Dirección</div>
+          <div class="lab ds-meta ds-meta--caption">Dirección</div>
           <div class="val">{{ owner.address || '—' }}</div>
         </div>
       </div>
@@ -58,7 +58,7 @@ function formatLocation(owner: Owner): string {
           <MapPin :size="13" :stroke-width="1.7" />
         </div>
         <div>
-          <div class="lab">Ciudad</div>
+          <div class="lab ds-meta ds-meta--caption">Ciudad</div>
           <div class="val">{{ formatLocation(owner) }}</div>
         </div>
       </div>
@@ -128,9 +128,9 @@ function formatLocation(owner: Owner): string {
   min-width: 0;
 }
 
+/* Residuo sobre `.ds-meta` + `--caption` (warm-500 / 11px). No es `.ds-label`:
+   ésa fija además el peso 500, que aquí no está. */
 .lab {
-  font-size: 11px;
-  color: var(--warm-500);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }

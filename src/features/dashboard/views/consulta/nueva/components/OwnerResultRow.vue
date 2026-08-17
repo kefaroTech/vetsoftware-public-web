@@ -15,14 +15,14 @@ defineEmits<{ select: [] }>()
   <button type="button" class="row" @click="$emit('select')">
     <div class="avatar">{{ initials(owner.name) }}</div>
     <div class="ident">
-      <div class="name">{{ owner.name }}</div>
-      <div class="doc">{{ owner.document }}</div>
+      <div class="ds-item-label ds-item-label--lg">{{ owner.name }}</div>
+      <div class="doc ds-meta">{{ owner.document }}</div>
     </div>
-    <div class="phone">
+    <div class="phone ds-flex-row ds-flex-row--6 ds-meta-dark ds-meta-dark--sm">
       <Phone :size="12" :stroke-width="1.7" />
-      <span>{{ owner.phone }}</span>
+      <span class="ds-truncate">{{ owner.phone }}</span>
     </div>
-    <div class="email">{{ owner.email }}</div>
+    <div class="email ds-truncate ds-meta-dark ds-meta-dark--sm">{{ owner.email }}</div>
     <BaseChip variant="accent"> {{ petCount }} mascota{{ petCount === 1 ? '' : 's' }} </BaseChip>
   </button>
 </template>
@@ -73,39 +73,19 @@ defineEmits<{ select: [] }>()
   min-width: 0;
 }
 
-.name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--warm-900);
-}
-
+/* Único añadido sobre `.ds-meta`: el hueco bajo el nombre. */
 .doc {
-  font-size: 12px;
-  color: var(--warm-500);
   margin-top: 2px;
 }
 
+/* Residuo sobre `.ds-flex-row--6` + `.ds-meta-dark`/`--sm`. */
 .phone {
-  font-size: 12.5px;
-  color: var(--warm-600);
-  display: flex;
-  align-items: center;
-  gap: 6px;
   min-width: 0;
 }
 
-.phone span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
+/* El recorte lo pone `.ds-truncate` y el par color+tamaño `.ds-meta-dark`
+   + `--sm`. */
 .email {
-  font-size: 12.5px;
-  color: var(--warm-600);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   min-width: 0;
 }
 </style>

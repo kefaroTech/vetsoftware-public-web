@@ -121,14 +121,19 @@ const hasError = computed(() => roles.error.value ?? permissionsCatalog.error.va
 </script>
 
 <template>
-  <section class="roles-page">
+  <section class="roles-page ds-stack">
     <PageHeader
       kicker="Administración · Acceso"
       title="Roles y permisos"
       lead="Definí qué puede hacer cada miembro del equipo. Agrupá permisos por sub-módulo y mantené el control fino sobre quién accede a qué."
     >
       <template #action>
-        <button v-if="canCreateRole" type="button" class="create-btn" @click="openCreate">
+        <button
+          v-if="canCreateRole"
+          type="button"
+          class="create-btn ds-btn ds-btn--primary ds-btn--elevated"
+          @click="openCreate"
+        >
           <Plus :size="16" :stroke-width="1.8" />
           <span>Crear rol</span>
         </button>
@@ -152,7 +157,7 @@ const hasError = computed(() => roles.error.value ?? permissionsCatalog.error.va
         @toggle-active="(v: boolean) => onToggleActive(role, v)"
         @edit="openEdit(role)"
       />
-      <div v-if="orderedRoles.length === 0 && !isLoading" class="empty">
+      <div v-if="orderedRoles.length === 0 && !isLoading" class="empty ds-grid-span ds-empty">
         Aún no hay roles creados. Empezá con "Crear rol".
       </div>
     </div>
@@ -178,34 +183,9 @@ const hasError = computed(() => roles.error.value ?? permissionsCatalog.error.va
 
 <style scoped>
 .roles-page {
-  display: flex;
-  flex-direction: column;
   gap: 24px;
   max-width: 1320px;
   margin: 0 auto;
-}
-
-.create-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 16px;
-  background: var(--gradient-primary);
-  color: #fff;
-  border: none;
-  border-radius: 9px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  box-shadow:
-    0 1px 2px rgb(50 20 80 / 8%),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 50%);
-  transition: filter 0.12s ease;
-}
-
-.create-btn:hover {
-  filter: brightness(1.05);
 }
 
 .banner-error {
@@ -224,13 +204,10 @@ const hasError = computed(() => roles.error.value ?? permissionsCatalog.error.va
 }
 
 .empty {
-  grid-column: 1 / -1;
-  text-align: center;
   padding: 28px;
   background: var(--warm-50);
   border: 1px dashed var(--warm-300);
   border-radius: 12px;
-  color: var(--warm-500);
   font-size: 13px;
 }
 

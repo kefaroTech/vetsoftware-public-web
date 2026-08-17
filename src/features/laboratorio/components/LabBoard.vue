@@ -44,7 +44,7 @@ const columns = computed(() =>
   <div class="board">
     <section v-for="col in columns" :key="col.status" class="column" :data-status="col.status">
       <header class="col-head">
-        <span class="col-title">
+        <span class="col-title ds-flex-row">
           <component :is="col.meta.icon" :size="15" :stroke-width="1.7" />
           {{ col.label }}
         </span>
@@ -52,8 +52,8 @@ const columns = computed(() =>
           col.items.length
         }}</span>
       </header>
-      <div class="col-body">
-        <p v-if="!loading && col.items.length === 0" class="empty">Sin muestras</p>
+      <div class="ds-stack ds-stack--10">
+        <p v-if="!loading && col.items.length === 0" class="empty ds-empty">Sin muestras</p>
         <LabSampleCard
           v-for="item in col.items"
           :key="item.id"
@@ -67,10 +67,11 @@ const columns = computed(() =>
 </template>
 
 <style scoped>
+/* 4 columnas con dos escalones de colapso: sin equivalente en el design system. */
 .board {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: var(--space-16);
 }
 
 @media (width <= 1100px) {
@@ -115,9 +116,6 @@ const columns = computed(() =>
 }
 
 .col-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   font-size: 13px;
   font-weight: 600;
   color: var(--warm-800);
@@ -134,16 +132,8 @@ const columns = computed(() =>
   padding: 0 7px;
 }
 
-.col-body {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 .empty {
-  font-size: 12.5px;
-  color: var(--warm-500);
-  text-align: center;
-  padding: 16px 0;
+  padding: var(--space-16) 0;
+  font-size: var(--text-sm);
 }
 </style>

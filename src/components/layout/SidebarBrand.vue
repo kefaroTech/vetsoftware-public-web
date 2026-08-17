@@ -8,7 +8,7 @@ defineProps<{
 <template>
   <div class="brand">
     <div class="mark">V</div>
-    <div class="text">
+    <div class="text ds-stack">
       <div class="name">{{ appName }}</div>
       <div class="clinic">{{ clinic }}</div>
     </div>
@@ -39,8 +39,6 @@ defineProps<{
 }
 
 .text {
-  display: flex;
-  flex-direction: column;
   line-height: 1.1;
 }
 

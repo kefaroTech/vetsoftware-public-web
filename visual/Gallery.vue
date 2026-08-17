@@ -307,20 +307,27 @@ const sesiones: { id: number; sede: string; terminal: string; estado: CashSessio
       <div class="ancho">
         <CajaPanel title="Historial de cajas" :icon="History">
           <template #count>2 sesiones</template>
-          <!-- Las clases de celda (`.num`, `.branch-name`, `.empty-row`) las
+          <!-- Las clases de celda (`.ds-num`, `.branch-name`, `.empty-row`) las
                pone el consumidor y el armazón las alcanza con `:deep()`. Esta
                captura es la única prueba de que ese cruce de ámbitos sigue
                funcionando: la cabecera va a la IZQUIERDA aunque la columna sea
                numérica, que es el empate de especificidad que se replicó a
-               propósito al extraer el componente. -->
+               propósito al extraer el componente.
+
+               La cifra viaja en `.ds-num` (primitives.css) y ya no en un `.num`
+               local: `CashTable` dejó de declararlo cuando FE-08 lo subió al
+               sistema de diseño, y los tres paneles reales de caja
+               (`CajaHistoryPanel`, `CajaOpenSessionsPanel`, `CashMovementsTable`)
+               marcan así sus celdas. La galería tiene que pedir lo mismo que
+               pide la aplicación o deja de probar nada. -->
           <CashTable :min-width="520">
             <thead>
               <tr>
                 <th>Sede</th>
                 <th>Terminal</th>
                 <th>Estado</th>
-                <th class="num">Base</th>
-                <th class="num">Arqueo</th>
+                <th class="ds-num">Base</th>
+                <th class="ds-num">Arqueo</th>
               </tr>
             </thead>
             <tbody>
@@ -328,8 +335,8 @@ const sesiones: { id: number; sede: string; terminal: string; estado: CashSessio
                 <td class="branch-name">{{ s.sede }}</td>
                 <td class="employee">{{ s.terminal }}</td>
                 <td><CashStatusPill :status="s.estado" /></td>
-                <td class="num">$ 100.000</td>
-                <td class="num">
+                <td class="ds-num">$ 100.000</td>
+                <td class="ds-num">
                   <CashLinkButton>CSV</CashLinkButton>
                   <CashLinkButton>PDF</CashLinkButton>
                 </td>

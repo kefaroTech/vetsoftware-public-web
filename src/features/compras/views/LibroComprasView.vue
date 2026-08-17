@@ -48,11 +48,11 @@ onMounted(load)
 <template>
   <div class="ds-page ds-page--contained ds-page--wide">
     <header class="page-head">
-      <div class="title-wrap">
+      <div class="ds-flex-row ds-flex-row--12 ds-flex-row--accent">
         <BookText :size="22" :stroke-width="1.7" />
         <div>
-          <h1>Libro de compras</h1>
-          <p class="sub">
+          <h1 class="ds-display ds-display--xs">Libro de compras</h1>
+          <p class="ds-view-subtitle">
             Facturas de proveedor del periodo · sede
             {{ branchStore.selectedBranchId ? 'seleccionada' : '(todas)' }}
           </p>
@@ -61,11 +61,11 @@ onMounted(load)
     </header>
 
     <div class="controls">
-      <div class="date-field">
+      <div class="date-field ds-stack">
         <label>Desde</label>
         <DateInput v-model="from" :max="to" />
       </div>
-      <div class="date-field">
+      <div class="date-field ds-stack">
         <label>Hasta</label>
         <DateInput v-model="to" :min="from" />
       </div>
@@ -88,7 +88,7 @@ onMounted(load)
 
     <p v-if="error" class="ds-server-error">{{ error }}</p>
 
-    <div class="table-wrap">
+    <div class="ds-table-scroll">
       <table class="grid-table">
         <thead>
           <tr>
@@ -96,42 +96,42 @@ onMounted(load)
             <th>NIT</th>
             <th>Factura</th>
             <th>Emisión</th>
-            <th class="num">Base</th>
-            <th class="num">Impuesto</th>
-            <th class="num">Retención</th>
-            <th class="num">Total</th>
-            <th class="num">Pagado</th>
-            <th class="num">Saldo</th>
+            <th class="ds-num">Base</th>
+            <th class="ds-num">Impuesto</th>
+            <th class="ds-num">Retención</th>
+            <th class="ds-num">Total</th>
+            <th class="ds-num">Pagado</th>
+            <th class="ds-num">Saldo</th>
             <th>Estado</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="!loading && book && book.entries.length === 0">
-            <td colspan="11" class="empty-row">Sin compras en el periodo.</td>
+            <td colspan="11" class="ds-empty ds-empty--md">Sin compras en el periodo.</td>
           </tr>
           <tr v-for="e in book?.entries ?? []" :key="e.id">
-            <td class="strong">{{ e.supplierName }}</td>
+            <td class="ds-strong">{{ e.supplierName }}</td>
             <td>{{ e.supplierTaxId ?? '—' }}</td>
             <td>{{ e.invoiceNumber }}</td>
             <td>{{ formatDateNumeric(e.issueDate) }}</td>
-            <td class="num">{{ formatMoney(e.subtotal) }}</td>
-            <td class="num">{{ formatMoney(e.taxAmount) }}</td>
-            <td class="num">{{ formatMoney(e.withholdingAmount) }}</td>
-            <td class="num">{{ formatMoney(e.total) }}</td>
-            <td class="num">{{ formatMoney(e.paidAmount) }}</td>
-            <td class="num">{{ formatMoney(e.balance) }}</td>
+            <td class="ds-num">{{ formatMoney(e.subtotal) }}</td>
+            <td class="ds-num">{{ formatMoney(e.taxAmount) }}</td>
+            <td class="ds-num">{{ formatMoney(e.withholdingAmount) }}</td>
+            <td class="ds-num">{{ formatMoney(e.total) }}</td>
+            <td class="ds-num">{{ formatMoney(e.paidAmount) }}</td>
+            <td class="ds-num">{{ formatMoney(e.balance) }}</td>
             <td>{{ e.status }}</td>
           </tr>
         </tbody>
         <tfoot v-if="book && book.entries.length > 0">
           <tr>
             <td colspan="4">TOTAL ({{ book.totals.invoiceCount }})</td>
-            <td class="num">{{ formatMoney(book.totals.subtotal) }}</td>
-            <td class="num">{{ formatMoney(book.totals.taxAmount) }}</td>
-            <td class="num">{{ formatMoney(book.totals.withholdingAmount) }}</td>
-            <td class="num">{{ formatMoney(book.totals.total) }}</td>
-            <td class="num">{{ formatMoney(book.totals.paidAmount) }}</td>
-            <td class="num">{{ formatMoney(book.totals.balance) }}</td>
+            <td class="ds-num">{{ formatMoney(book.totals.subtotal) }}</td>
+            <td class="ds-num">{{ formatMoney(book.totals.taxAmount) }}</td>
+            <td class="ds-num">{{ formatMoney(book.totals.withholdingAmount) }}</td>
+            <td class="ds-num">{{ formatMoney(book.totals.total) }}</td>
+            <td class="ds-num">{{ formatMoney(book.totals.paidAmount) }}</td>
+            <td class="ds-num">{{ formatMoney(book.totals.balance) }}</td>
             <td></td>
           </tr>
         </tfoot>
@@ -141,29 +141,11 @@ onMounted(load)
 </template>
 
 <style scoped>
+/* Primitivas: `.ds-flex-row--12 --accent` + `--display--xs` + `--view-subtitle`
+   (cabecera), `.ds-stack` (fechas), `.ds-table-scroll` (envoltorio), `.ds-num`,
+   `.ds-strong` y `.ds-empty --md` (fila vacía, pisada por `.grid-table td`). */
 .page-head {
   margin-bottom: 18px;
-}
-
-.title-wrap {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  color: var(--amatista-700);
-}
-
-.title-wrap h1 {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: 26px;
-  font-weight: 400;
-  color: var(--warm-900);
-}
-
-.sub {
-  margin: 2px 0 0;
-  font-size: 13px;
-  color: var(--warm-500);
 }
 
 .controls {
@@ -175,8 +157,6 @@ onMounted(load)
 }
 
 .date-field {
-  display: flex;
-  flex-direction: column;
   gap: 4px;
   min-width: 160px;
 }
@@ -190,10 +170,6 @@ onMounted(load)
 
 .spacer {
   flex: 1;
-}
-
-.table-wrap {
-  overflow-x: auto;
 }
 
 .grid-table {
@@ -224,22 +200,6 @@ onMounted(load)
   border-top: 2px solid var(--warm-300);
   font-weight: 700;
   color: var(--warm-900);
-}
-
-.strong {
-  font-weight: 600;
-  color: var(--warm-900);
-}
-
-.num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.empty-row {
-  text-align: center;
-  color: var(--warm-400);
-  padding: 26px;
 }
 
 /* caja/compras usan un amatista un punto más claro que el resto. */

@@ -104,26 +104,26 @@ function onSave() {
     @close="emit('close')"
   >
     <template #body>
-      <div v-if="employee" class="body">
-        <div class="identity">
+      <div v-if="employee" class="body ds-stack">
+        <div class="identity ds-flex-row ds-flex-row--12">
           <EmployeeAvatar
             :initials="employee.initials"
             :size="48"
             :active="employee.enabled"
             :role-code="employee.roles[0]?.code ?? ''"
           />
-          <div class="identity-info">
-            <div class="identity-name">{{ employee.name }}</div>
+          <div class="ds-flex-fill">
+            <div class="ds-item-label ds-item-label--lg">{{ employee.name }}</div>
             <div class="identity-meta">{{ employee.employeeCode }} · {{ employee.email }}</div>
           </div>
         </div>
 
-        <section class="section">
-          <div class="section-head">
-            <span class="label">Roles actuales</span>
+        <section class="section ds-stack ds-stack--10">
+          <div class="section-head ds-flex-row ds-flex-row--12">
+            <span class="ds-kicker">Roles actuales</span>
             <span class="counter">{{ employee.roles.length }} roles</span>
           </div>
-          <div v-if="employee.roles.length > 0" class="current-pills">
+          <div v-if="employee.roles.length > 0" class="ds-wrap-row">
             <RolePill
               v-for="r in employee.roles"
               :key="r.id"
@@ -135,9 +135,9 @@ function onSave() {
           <div v-else class="no-current">Sin rol asignado</div>
         </section>
 
-        <section class="section">
-          <div class="section-head">
-            <span class="label">Asignar roles</span>
+        <section class="section ds-stack ds-stack--10">
+          <div class="section-head ds-flex-row ds-flex-row--12">
+            <span class="ds-kicker">Asignar roles</span>
             <span class="counter">{{ selectedRoleIds.size }} seleccionados</span>
           </div>
           <p class="hint">Un empleado puede tener varios roles. Debe tener al menos uno.</p>
@@ -159,7 +159,7 @@ function onSave() {
             <Bell :size="14" :stroke-width="1.8" />
             <span>Resumen de cambios</span>
           </div>
-          <ul class="diff-list">
+          <ul class="diff-list ds-list-reset ds-stack">
             <li v-if="addNames.length > 0" class="diff-add">
               <Plus :size="12" :stroke-width="2" />
               <span>Añade: {{ addNames.join(', ') }}</span>
@@ -196,29 +196,13 @@ function onSave() {
 
 <style scoped>
 .body {
-  display: flex;
-  flex-direction: column;
   gap: 22px;
 }
 
 .identity {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 14px 16px;
   background: var(--warm-100);
   border-radius: 11px;
-}
-
-.identity-info {
-  min-width: 0;
-  flex: 1;
-}
-
-.identity-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--warm-900);
 }
 
 .identity-meta {
@@ -228,25 +212,8 @@ function onSave() {
   word-break: break-all;
 }
 
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 .section-head {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-}
-
-.label {
-  font-size: 11.5px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--warm-500);
-  font-weight: 500;
 }
 
 .counter {
@@ -258,12 +225,7 @@ function onSave() {
   font-weight: 500;
 }
 
-.current-pills {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
+/* La fila de píldoras actuales usa `.ds-wrap-row` (primitives.css). */
 .no-current {
   font-size: 12.5px;
   color: var(--warm-500);
@@ -307,11 +269,6 @@ function onSave() {
 }
 
 .diff-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
   gap: 4px;
 }
 

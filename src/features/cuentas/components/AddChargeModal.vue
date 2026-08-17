@@ -178,7 +178,7 @@ async function addGeneral() {
     <template #body>
       <div class="section">
         <div class="label">¿Para cuál mascota?</div>
-        <div class="chips">
+        <div class="ds-wrap-row">
           <button
             v-for="p in pets"
             :key="p.id"
@@ -221,12 +221,12 @@ async function addGeneral() {
         </div>
         <div class="search">
           <Search :size="14" :stroke-width="1.7" class="s-icon" />
-          <input v-model="query" type="text" class="s-input" placeholder="Buscar…" />
+          <input v-model="query" type="text" class="s-input ds-focus-ring" placeholder="Buscar…" />
         </div>
-        <ul class="catalog">
-          <li v-for="it in catalog" :key="it.id" class="cat-row">
+        <ul class="catalog ds-list-reset ds-stack">
+          <li v-for="it in catalog" :key="it.id" class="cat-row ds-flex-row ds-flex-row--12">
             <span class="cat-name">{{ it.name }}</span>
-            <span class="cat-price">
+            <span class="ds-num ds-meta-dark">
               {{ formatMoney(it.price) }}
               <span v-if="tab === 'product' && qtyNum(it.id) > 1" class="cat-sub">
                 · {{ formatMoney(it.price * qtyNum(it.id)) }}
@@ -234,7 +234,7 @@ async function addGeneral() {
             </span>
             <input
               v-if="tab === 'product'"
-              class="qty-input"
+              class="qty-input ds-focus-ring"
               :class="{ invalid: qtyNum(it.id) < 1 }"
               type="text"
               inputmode="numeric"
@@ -244,7 +244,8 @@ async function addGeneral() {
             />
             <button
               type="button"
-              class="add-btn"
+              class="add-btn ds-tone--accent-soft"
+              :class="{ 'ds-is-disabled': busy || (tab === 'product' && qtyNum(it.id) < 1) }"
               :disabled="busy || (tab === 'product' && qtyNum(it.id) < 1)"
               @click="addCatalogItem(it.id)"
             >
@@ -257,7 +258,7 @@ async function addGeneral() {
         </ul>
       </template>
 
-      <div v-else class="general-form">
+      <div v-else class="ds-stack ds-stack--14">
         <BaseField label="Concepto" required>
           <template #default="{ id }">
             <BaseInput :id="id" v-model="general.name" placeholder="Ej. Insumo, recargo…" />
@@ -293,6 +294,7 @@ async function addGeneral() {
         <button
           type="button"
           class="add-btn solid"
+          :class="{ 'ds-is-disabled': !canAddGeneral || busy }"
           :disabled="!canAddGeneral || busy"
           @click="addGeneral"
         >
@@ -310,6 +312,17 @@ async function addGeneral() {
 </template>
 
 <style scoped>
+/* Layout via primitivas: .ds-stack(--14), .ds-flex-row(--12), .ds-wrap-row,
+   .ds-list-reset, .ds-focus-ring, .ds-num, .ds-meta-dark,
+   .ds-tone--accent-soft, .ds-is-disabled.
+
+   `.grid` sigue local: es una rejilla intrínseca de mínimo 220px, no el par
+   `repeat(2,…)` + media query que replican las primitivas de rejilla. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
 .section {
   margin-bottom: 16px;
 }
@@ -320,11 +333,6 @@ async function addGeneral() {
   color: var(--warm-500);
   font-weight: 500;
   margin-bottom: 8px;
-}
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
 }
 
 .chip {
@@ -389,25 +397,13 @@ async function addGeneral() {
   color: var(--warm-900);
   outline: none;
 }
-.s-input:focus {
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
-}
 .catalog {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
   gap: 6px;
   max-height: 320px;
   overflow: auto;
 }
 
 .cat-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 11px 14px;
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
@@ -420,15 +416,13 @@ async function addGeneral() {
   border-color: var(--amatista-300);
   background: var(--amatista-50);
 }
+
+/* `flex: 1` a secas, sin el `min-width: 0` de `.ds-flex-fill`: el nombre del
+   ítem no lleva elipsis y no debe encoger por debajo de su contenido. */
 .cat-name {
   flex: 1;
   font-size: 13.5px;
   color: var(--warm-900);
-}
-.cat-price {
-  font-size: 13px;
-  color: var(--warm-600);
-  font-variant-numeric: tabular-nums;
 }
 .cat-sub {
   color: var(--amatista-700);
@@ -450,10 +444,6 @@ async function addGeneral() {
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
-.qty-input:focus {
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
-}
 .qty-input.invalid {
   border-color: oklch(60% 0.18 25deg);
   box-shadow: 0 0 0 3px var(--danger-100);
@@ -469,18 +459,14 @@ async function addGeneral() {
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
-  background: var(--amatista-50);
-  color: var(--amatista-700);
   border: 1px solid var(--amatista-200);
 }
 .add-btn:hover:not(:disabled) {
   background: var(--amatista-100);
 }
-.add-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 
+/* El estado apagado lo pone `.ds-is-disabled` (primitives.css), enganchado
+   con `:class` en el template — la primitiva no sustituye al atributo nativo. */
 .add-btn.solid {
   background: var(--gradient-primary);
   color: white;
@@ -488,28 +474,5 @@ async function addGeneral() {
   padding: 9px 16px;
   font-size: 13px;
   align-self: flex-start;
-}
-.general-form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-}
-.check {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--warm-800);
-  cursor: pointer;
-}
-.check input {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--amatista-600);
 }
 </style>

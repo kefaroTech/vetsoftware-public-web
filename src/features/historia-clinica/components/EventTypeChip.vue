@@ -14,7 +14,7 @@ const tokens = computed(() => TYPE_COLORS[meta.value.color])
 </script>
 
 <template>
-  <span class="event-chip" :style="{ background: tokens.bg, color: tokens.fg }">
+  <span class="event-chip ds-pill" :style="{ background: tokens.bg, color: tokens.fg }">
     <span v-if="showIcon" class="icon">{{ meta.icon }}</span>
     <span>{{ meta.label }}</span>
   </span>
@@ -22,15 +22,9 @@ const tokens = computed(() => TYPE_COLORS[meta.value.color])
 
 <style scoped>
 .event-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 2px 9px;
-  border-radius: var(--radius-pill);
-  font-size: 11px;
-  font-weight: 500;
-  white-space: nowrap;
-  font-family: inherit;
+  gap: var(--space-5);
+  padding: var(--space-2) var(--space-9);
+  font-size: var(--text-caption);
 }
 
 .icon {

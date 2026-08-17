@@ -13,13 +13,13 @@ const id = useId()
 </script>
 
 <template>
-  <div class="field">
+  <div class="field ds-stack">
     <label :for="id" class="label">
       {{ label }}
       <span v-if="required" class="required">*</span>
     </label>
     <slot :id="id" />
-    <p v-if="hint && !error" class="hint">{{ hint }}</p>
+    <p v-if="hint && !error" class="hint ds-hint">{{ hint }}</p>
     <p v-if="error" class="error">
       <TriangleAlert :size="11" :stroke-width="1.8" />
       <span>{{ error }}</span>
@@ -29,8 +29,6 @@ const id = useId()
 
 <style scoped>
 .field {
-  display: flex;
-  flex-direction: column;
   gap: 6px;
   min-width: 0;
 }
@@ -51,8 +49,6 @@ const id = useId()
 
 .hint {
   margin: 0;
-  font-size: 11.5px;
-  color: var(--warm-500);
 }
 
 .error {

@@ -127,8 +127,8 @@ const notesCancellation = computed(() =>
     <template v-if="appointment" #body>
       <div class="detail-cols">
         <!-- Datos -->
-        <div class="detail-col">
-          <div class="status-hero">
+        <div class="detail-col ds-stack ds-stack--16">
+          <div class="status-hero ds-flex-row">
             <span class="hero-time">{{ timeRange }}</span>
             <AppointmentStatusPill :status="appointment.status" />
           </div>
@@ -142,7 +142,7 @@ const notesCancellation = computed(() =>
             </span>
           </div>
 
-          <div class="dfield">
+          <div class="dfield ds-stack">
             <div class="dlabel">Veterinario/a</div>
             <div class="dvalue">
               <AppointmentVetBadge
@@ -152,7 +152,7 @@ const notesCancellation = computed(() =>
             </div>
           </div>
 
-          <div class="dfield">
+          <div class="dfield ds-stack">
             <div class="dlabel">Paciente</div>
             <div class="dvalue">
               <template v-if="appointment.animal">
@@ -165,7 +165,7 @@ const notesCancellation = computed(() =>
             </div>
           </div>
 
-          <div class="dfield">
+          <div class="dfield ds-stack">
             <div class="dlabel">{{ appointment.owner ? 'Propietario' : 'Contacto' }}</div>
             <div class="dvalue">
               <template v-if="appointment.owner">{{ appointment.owner.name }}</template>
@@ -180,7 +180,7 @@ const notesCancellation = computed(() =>
             </div>
           </div>
 
-          <div v-if="appointment.notes" class="dfield">
+          <div v-if="appointment.notes" class="dfield ds-stack">
             <div class="dlabel">Notas</div>
             <div class="dvalue">{{ appointment.notes }}</div>
           </div>
@@ -192,7 +192,7 @@ const notesCancellation = computed(() =>
         </div>
 
         <!-- Acciones de estado -->
-        <div class="detail-col">
+        <div class="detail-col ds-stack ds-stack--16">
           <div class="section-title">{{ isTerminal ? 'Estado' : 'Siguiente paso' }}</div>
 
           <div v-if="isTerminal" class="terminal-note">
@@ -200,12 +200,13 @@ const notesCancellation = computed(() =>
             >. No admite más cambios de estado.
           </div>
 
-          <div v-else class="transitions">
+          <div v-else class="transitions ds-stack">
             <button
               v-for="st in statusNexts"
               :key="st"
               type="button"
               class="trans-btn"
+              :class="{ 'ds-is-disabled': !canUpdate }"
               :disabled="!canUpdate"
               @click="emit('transition', appointment, st)"
             >
@@ -225,7 +226,7 @@ const notesCancellation = computed(() =>
                 Cancelar la cita
                 <Ban :size="15" :stroke-width="1.7" class="trans-arrow" />
               </button>
-              <div v-else class="cancel-box">
+              <div v-else class="cancel-box ds-stack ds-stack--8">
                 <label class="dlabel">Motivo de cancelación (opcional)</label>
                 <BaseTextarea
                   v-model="reasonModel"
@@ -275,7 +276,7 @@ const notesCancellation = computed(() =>
       >
         <Trash2 :size="15" :stroke-width="1.7" /> Eliminar
       </button>
-      <div v-else class="confirm-delete">
+      <div v-else class="ds-flex-row">
         <span class="confirm-label">¿Eliminar?</span>
         <button type="button" class="ds-btn ds-btn--ghost" @click="confirmDelete = false">
           No
@@ -297,16 +298,12 @@ const notesCancellation = computed(() =>
 }
 
 .detail-col {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
   min-width: 0;
 }
 
+/* Resto sobre `.ds-flex-row`: gap propio (10px, fuera del catálogo 8/12). */
 .status-hero {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  gap: var(--space-10);
 }
 
 .hero-time {
@@ -327,9 +324,7 @@ const notesCancellation = computed(() =>
 }
 
 .dfield {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  gap: var(--space-3);
 }
 
 .dlabel {
@@ -382,9 +377,7 @@ const notesCancellation = computed(() =>
 }
 
 .transitions {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
+  gap: var(--space-7);
 }
 
 .trans-btn {
@@ -411,11 +404,6 @@ const notesCancellation = computed(() =>
   color: var(--amatista-700);
 }
 
-.trans-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .trans-btn b {
   font-weight: 600;
 }
@@ -439,9 +427,6 @@ const notesCancellation = computed(() =>
 }
 
 .cancel-box {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   background: var(--warm-100);
   border: 1px solid var(--warm-200);
   border-radius: 10px;
@@ -486,12 +471,6 @@ const notesCancellation = computed(() =>
 .foot-left-actions {
   display: flex;
   gap: 8px;
-}
-
-.confirm-delete {
-  display: flex;
-  gap: 8px;
-  align-items: center;
 }
 
 .confirm-label {

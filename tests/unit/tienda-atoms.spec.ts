@@ -101,7 +101,9 @@ describe('TonePill', () => {
     })
 
     expect(wrapper.text()).toBe('Stock bajo')
-    expect(wrapper.find('.pill').attributes('style')).toContain('background: rgb(1, 2, 3)')
+    // La caja de la píldora pasó a `.ds-pill` (primitives.css) en FE-08; el
+    // tono sigue llegando por `:style`, que es lo que comprueba esta línea.
+    expect(wrapper.find('.ds-pill').attributes('style')).toContain('background: rgb(1, 2, 3)')
     expect(wrapper.find('.dot').attributes('style')).toContain('background: rgb(7, 8, 9)')
   })
 

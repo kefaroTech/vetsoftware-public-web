@@ -32,12 +32,12 @@ const orderedBranches = computed(() =>
 </script>
 
 <template>
-  <div class="grid">
+  <div class="ds-stack ds-stack--8">
     <button
       v-for="branch in orderedBranches"
       :key="branch.id"
       type="button"
-      class="option"
+      class="option ds-flex-row ds-flex-row--12"
       :class="{ selected: selectedIds.has(branch.id) }"
       @click="toggle(branch.id)"
     >
@@ -45,29 +45,22 @@ const orderedBranches = computed(() =>
         <Check v-if="selectedIds.has(branch.id)" :size="12" :stroke-width="2.5" />
       </span>
       <Building2 class="ico" :size="16" :stroke-width="1.7" />
-      <span class="info">
+      <span class="info ds-stack ds-flex-fill">
         <span class="name-row">
-          <span class="name">{{ branch.name }}</span>
+          <span class="ds-text-strong ds-text-strong--md">{{ branch.name }}</span>
           <span v-if="currentBranchIds.has(branch.id)" class="badge-actual">actual</span>
         </span>
         <span v-if="branch.city?.name" class="desc">{{ branch.city.name }}</span>
       </span>
     </button>
-    <p v-if="orderedBranches.length === 0" class="empty">No hay sedes activas.</p>
+    <p v-if="orderedBranches.length === 0" class="empty ds-meta ds-meta--sm">
+      No hay sedes activas.
+    </p>
   </div>
 </template>
 
 <style scoped>
-.grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 .option {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 14px 16px;
   border: 1.5px solid var(--warm-200);
   border-radius: 11px;
@@ -115,11 +108,7 @@ const orderedBranches = computed(() =>
 }
 
 .info {
-  display: flex;
-  flex-direction: column;
   gap: 3px;
-  min-width: 0;
-  flex: 1;
 }
 
 .name-row {
@@ -127,12 +116,6 @@ const orderedBranches = computed(() =>
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-}
-
-.name {
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--warm-900);
 }
 
 .badge-actual {
@@ -152,10 +135,9 @@ const orderedBranches = computed(() =>
   line-height: 1.4;
 }
 
+/* El nombre es `.ds-text-strong` + `--md`; el vacío, `.ds-meta` + `--sm`. */
 .empty {
   margin: 0;
-  font-size: 12.5px;
-  color: var(--warm-500);
   font-style: italic;
 }
 </style>

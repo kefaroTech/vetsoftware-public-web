@@ -165,11 +165,11 @@ async function onConfirmDelete() {
             <th>Vacuna</th>
             <th>Lote</th>
             <th>Próxima</th>
-            <th v-if="canUpdate || canDelete" class="actions-col">Acciones</th>
+            <th v-if="canUpdate || canDelete" class="ds-col-actions">Acciones</th>
           </tr>
         </template>
         <template #row="{ item }">
-          <tr class="clickable-row" @click="onRowClick(item)">
+          <tr class="ds-row-clickable clickable-row" @click="onRowClick(item)">
             <td>{{ formatDateShort(item.date) }}</td>
             <td>{{ item.vaccinationType.name }}</td>
             <td class="mono">{{ item.lot }}</td>
@@ -236,17 +236,5 @@ async function onConfirmDelete() {
 .mono {
   font-family: var(--font-mono, monospace);
   font-size: 12.5px;
-}
-.actions-col {
-  width: 88px;
-  text-align: right;
-}
-
-.clickable-row {
-  cursor: pointer;
-  transition: background 0.12s ease;
-}
-.clickable-row:hover td {
-  background: var(--amatista-50);
 }
 </style>

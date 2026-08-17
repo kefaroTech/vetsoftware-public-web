@@ -85,7 +85,7 @@ function submit() {
       <div v-if="banner" class="ds-banner ds-banner--sm ds-banner--error">
         Revisa los campos marcados antes de continuar.
       </div>
-      <p class="intro">
+      <p class="intro ds-meta-dark">
         La contraseña anterior de
         <strong>{{ employee?.name ?? 'este empleado' }}</strong>
         ya está cifrada y no se puede recuperar. Escribe una nueva contraseña provisional; se
@@ -93,7 +93,7 @@ function submit() {
         ingreso.
       </p>
 
-      <div class="form">
+      <div class="ds-stack ds-stack--14">
         <BaseField
           label="Nueva contraseña provisional"
           required
@@ -145,16 +145,9 @@ function submit() {
 </template>
 
 <style scoped>
+/* Color y tamaño vienen de `.ds-meta-dark`. */
 .intro {
   margin: 0 0 16px;
-  font-size: 13px;
   line-height: 1.55;
-  color: var(--warm-600);
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
 }
 </style>

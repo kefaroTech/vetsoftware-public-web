@@ -24,7 +24,7 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
   >
     <template #body>
       <p class="lead">Al suspender:</p>
-      <ul class="facts">
+      <ul class="facts ds-stack">
         <li>
           Se eliminan las {{ kind === 'med' ? 'tomas' : 'ejecuciones' }}
           <strong>pendientes</strong> del calendario.
@@ -53,10 +53,8 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
 
 .facts {
   margin: 0;
-  padding-left: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  padding-left: var(--space-18);
+  gap: var(--space-6);
   font-size: 12.5px;
   color: var(--warm-700);
   line-height: 1.45;

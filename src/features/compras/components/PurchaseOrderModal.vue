@@ -185,7 +185,7 @@ async function submit() {
           <BaseSelect v-model="l.productId" :options="productOptions" placeholder="Producto" />
           <BaseInput v-model="l.quantity" placeholder="Cant." inputmode="numeric" />
           <BaseInput v-model="l.unitCost" placeholder="Costo unit." inputmode="decimal" />
-          <span class="line-sub">{{
+          <span class="ds-num ds-meta-dark ds-meta-dark--sm">{{
             formatMoney((Number(l.quantity) || 0) * (Number(l.unitCost) || 0))
           }}</span>
           <button type="button" class="icon-btn danger" @click="removeLine(l.uid)">
@@ -219,6 +219,8 @@ async function submit() {
 </template>
 
 <style scoped>
+/* `.ds-num` + `.ds-meta-dark --sm` dan el subtotal de línea; `.head-grid` sigue
+   local (son 3 columnas y ninguna primitiva las replica). */
 .head-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -257,13 +259,6 @@ async function submit() {
   gap: 8px;
   align-items: center;
   margin-bottom: 8px;
-}
-
-.line-sub {
-  font-size: 12.5px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  color: var(--warm-600);
 }
 
 .line-error {

@@ -62,17 +62,17 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
 </script>
 
 <template>
-  <div v-if="hasSelection" class="owner-selected">
+  <div v-if="hasSelection" class="owner-selected ds-flex-row">
     <div class="owner-avatar">{{ apptInitials(selectedName || '?') }}</div>
-    <div class="owner-info">
-      <div class="owner-name">{{ selectedName || 'Propietario seleccionado' }}</div>
-      <div class="owner-meta">ID {{ modelValue }}</div>
+    <div class="ds-flex-fill">
+      <div class="owner-name ds-truncate">{{ selectedName || 'Propietario seleccionado' }}</div>
+      <div class="owner-meta ds-hint ds-truncate">ID {{ modelValue }}</div>
     </div>
     <button type="button" class="owner-change" @click="change">Cambiar</button>
   </div>
 
   <div v-else ref="box" class="combo">
-    <div class="combo-input" :class="{ invalid }">
+    <div class="combo-input ds-flex-row ds-focus-ring" :class="{ invalid }">
       <Search :size="15" :stroke-width="1.7" class="combo-icon" />
       <input
         v-model="query"
@@ -88,11 +88,17 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
         Sin resultados para “{{ query }}”.
       </div>
       <div v-else-if="!query" class="combo-empty">Escribe para buscar un propietario.</div>
-      <button v-for="o in results" :key="o.id" type="button" class="combo-item" @click="choose(o)">
+      <button
+        v-for="o in results"
+        :key="o.id"
+        type="button"
+        class="combo-item ds-flex-row"
+        @click="choose(o)"
+      >
         <div class="owner-avatar sm">{{ apptInitials(o.name) }}</div>
-        <div class="owner-info">
-          <div class="owner-name">{{ o.name }}</div>
-          <div class="owner-meta">
+        <div class="ds-flex-fill">
+          <div class="owner-name ds-truncate">{{ o.name }}</div>
+          <div class="owner-meta ds-hint ds-truncate">
             ID {{ o.id }}<template v-if="o.document"> · {{ o.document }}</template>
             <template v-if="o.phone"> · {{ o.phone }}</template>
           </div>
@@ -108,9 +114,6 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
 }
 
 .combo-input {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 8px;
@@ -118,11 +121,6 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease;
-}
-
-.combo-input:focus-within {
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
 }
 
 .combo-input.invalid {
@@ -163,11 +161,6 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   }
 }
 
-.combo-icon {
-  color: var(--warm-500);
-  flex-shrink: 0;
-}
-
 .combo-input input {
   flex: 1;
   border: none;
@@ -194,10 +187,9 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   padding: 4px;
 }
 
+/* Resto sobre `.ds-flex-row`: gap propio (10px, fuera del catálogo 8/12). */
 .combo-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  gap: var(--space-10);
   width: 100%;
   text-align: left;
   background: transparent;
@@ -219,19 +211,13 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   color: var(--warm-500);
 }
 
+/* Resto sobre `.ds-flex-row`: gap propio (10px, fuera del catálogo 8/12). */
 .owner-selected {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  gap: var(--space-10);
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 8px;
   padding: 8px 10px;
-}
-
-.owner-info {
-  min-width: 0;
-  flex: 1;
 }
 
 .owner-avatar {
@@ -254,21 +240,13 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
 }
 
 .owner-name {
-  font-size: 13.5px;
-  font-weight: 500;
   color: var(--warm-900);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
 }
 
 .owner-meta {
-  font-size: 11.5px;
-  color: var(--warm-500);
   margin-top: 1px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .owner-change {

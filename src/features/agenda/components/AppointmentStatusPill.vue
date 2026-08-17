@@ -7,28 +7,14 @@ const meta = computed(() => APPT_STATUS[props.status])
 </script>
 
 <template>
-  <span class="pill" :style="{ background: meta.bg, color: meta.fg }">
-    <span class="dot" :style="{ background: meta.dot }" />
+  <span class="pill ds-pill" :style="{ background: meta.bg, color: meta.fg }">
+    <span class="ds-status-dot" :style="{ background: meta.dot }" />
     {{ meta.label }}
   </span>
 </template>
 
 <style scoped>
 .pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 500;
-  padding: 3px 9px;
-  border-radius: var(--radius-pill);
-  white-space: nowrap;
-}
-
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
+  font-size: var(--text-caption);
 }
 </style>

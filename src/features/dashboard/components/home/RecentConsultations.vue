@@ -10,7 +10,7 @@ defineProps<{
 
 <template>
   <section>
-    <header class="header">
+    <header class="header ds-block-head">
       <h3 class="title">Consultas recientes</h3>
       <a href="#" class="link">Ver todas →</a>
     </header>
@@ -22,16 +22,16 @@ defineProps<{
         class="row"
         :class="{ last: idx === consultations.length - 1 }"
       >
-        <div class="avatar">
+        <div class="avatar ds-tone--accent">
           <PawPrint :size="16" :stroke-width="1.5" />
         </div>
-        <div class="patient">
-          <div class="name">{{ c.patient.name }}</div>
-          <div class="meta">{{ c.patient.species }} · {{ c.patient.ageYears }} a</div>
+        <div class="ds-stack">
+          <div class="ds-item-label">{{ c.patient.name }}</div>
+          <div class="meta ds-hint">{{ c.patient.species }} · {{ c.patient.ageYears }} a</div>
         </div>
-        <div class="cell">{{ c.patient.ownerName }}</div>
-        <div class="cell">{{ c.reason }}</div>
-        <div class="cell">{{ c.dayLabel }} · {{ c.timeLabel }}</div>
+        <div class="ds-meta-dark ds-meta-dark--sm">{{ c.patient.ownerName }}</div>
+        <div class="ds-meta-dark ds-meta-dark--sm">{{ c.reason }}</div>
+        <div class="ds-meta-dark ds-meta-dark--sm">{{ c.dayLabel }} · {{ c.timeLabel }}</div>
         <ConsultationStatusPill :status="c.status" />
       </article>
     </div>
@@ -39,10 +39,8 @@ defineProps<{
 </template>
 
 <style scoped>
+/* Residuo sobre `.ds-block-head`: 14px de hueco, no los 10 de la primitiva. */
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 14px;
 }
 
@@ -84,35 +82,18 @@ defineProps<{
   border-bottom: none;
 }
 
+/* El par fondo+texto lo pone `.ds-tone--accent`. */
 .avatar {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.patient {
-  display: flex;
-  flex-direction: column;
-}
-
-.name {
-  font-weight: 500;
-  color: var(--warm-900);
-}
-
+/* Único añadido sobre `.ds-hint`: 1px, no los 2px de `--spaced`. */
 .meta {
-  font-size: 11.5px;
-  color: var(--warm-500);
   margin-top: 1px;
-}
-
-.cell {
-  font-size: 12.5px;
-  color: var(--warm-600);
 }
 </style>

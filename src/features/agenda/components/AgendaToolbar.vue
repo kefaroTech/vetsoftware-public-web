@@ -51,7 +51,7 @@ function selectView(v: ViewMode) {
 
 <template>
   <div class="toolbar">
-    <div class="left">
+    <div class="left ds-flex-row">
       <button type="button" class="today-btn" @click="today">Hoy</button>
       <button type="button" class="arrow-btn" aria-label="Anterior" @click="step(-1)">
         <ChevronLeft :size="16" :stroke-width="1.8" />
@@ -103,12 +103,6 @@ function selectView(v: ViewMode) {
   border: 1px solid var(--warm-200);
   border-radius: 12px;
   margin-top: 16px;
-}
-
-.left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .today-btn {

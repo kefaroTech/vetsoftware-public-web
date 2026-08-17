@@ -32,9 +32,9 @@ const rangeLabel = computed(() => {
     @close="$emit('close')"
   >
     <template #body>
-      <div v-if="event && meta && tokens" class="body">
-        <div class="header-row">
-          <span class="badge" :style="{ background: tokens.bg, color: tokens.fg }">
+      <div v-if="event && meta && tokens" class="ds-stack ds-stack--14">
+        <div class="header-row ds-flex-row">
+          <span class="badge ds-pill" :style="{ background: tokens.bg, color: tokens.fg }">
             <span aria-hidden="true">{{ meta.icon }}</span>
             {{ meta.label }}
           </span>
@@ -70,26 +70,15 @@ const rangeLabel = computed(() => {
 </template>
 
 <style scoped>
-.body {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
+/* Resto sobre `.ds-flex-row`: gap propio (10px, fuera del catálogo 8/12). */
 .header-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  gap: var(--space-10);
 }
 
+/* Resto sobre `.ds-pill`: esta insignia va un punto más grande y con más aire. */
 .badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
-  font-size: 12.5px;
-  font-weight: 500;
+  padding: var(--space-5) var(--space-12);
+  font-size: var(--text-sm);
 }
 
 .fields {

@@ -112,8 +112,8 @@ onMounted(() => {
   <div class="emp-page">
     <div class="emp-header">
       <div>
-        <div class="kicker">Administración · Empresa</div>
-        <h1 class="title">Empresa</h1>
+        <div class="ds-kicker-accent ds-kicker-accent--snug">Administración · Empresa</div>
+        <h1 class="title ds-display">Empresa</h1>
         <div class="lead">Datos fiscales, ubicación y sedes de tu empresa.</div>
       </div>
       <button v-if="feCanConfig" type="button" class="editbtn" @click="goEditFiscal">
@@ -124,9 +124,9 @@ onMounted(() => {
     <!-- Hero -->
     <div class="hero">
       <div class="mark">{{ initial }}</div>
-      <div class="heroinfo">
+      <div class="ds-flex-fill">
         <div class="heroname">{{ legalName }}</div>
-        <div class="herotags">
+        <div class="herotags ds-wrap-row">
           <span v-if="docTypeLabel && idDisplay" class="tag mono"
             >{{ docTypeLabel }} · {{ idDisplay }}</span
           >
@@ -136,45 +136,50 @@ onMounted(() => {
           <span v-if="!taxProfile && !loading" class="tag warn">Perfil fiscal sin configurar</span>
         </div>
       </div>
-      <div v-if="createdDate" class="herometa">
+      <div v-if="createdDate" class="herometa ds-stack">
         <span class="herometa-label">Activa desde</span>
         <span class="herometa-value">{{ createdDate }}</span>
       </div>
     </div>
 
     <!-- Info cards -->
-    <div class="cards">
+    <div class="cards ds-grid-2">
       <section class="ds-card">
         <header class="cardhead">
-          <span class="cardic"><ShieldCheck :size="16" :stroke-width="1.7" /></span>
+          <span class="cardic ds-tone--accent"><ShieldCheck :size="16" :stroke-width="1.7" /></span>
           <h3>Identidad fiscal</h3>
         </header>
-        <div v-if="taxProfile" class="rows">
+        <div v-if="taxProfile" class="ds-stack">
           <div class="row">
             <span class="row-label">Razón social</span
-            ><span class="row-value">{{ legalName }}</span>
+            ><span class="row-value ds-item-label">{{ legalName }}</span>
           </div>
           <div class="row">
             <span class="row-label">Tipo de documento</span
-            ><span class="row-value">{{ docTypeLabel }}</span>
+            ><span class="row-value ds-item-label">{{ docTypeLabel }}</span>
           </div>
           <div class="row">
             <span class="row-label">Número de documento</span
-            ><span class="row-value mono">{{ idDisplay }}</span>
+            ><span class="row-value mono ds-item-label">{{ idDisplay }}</span>
           </div>
           <div class="row">
             <span class="row-label">Régimen tributario</span
-            ><span class="row-value">{{ taxRegimeLabel }}</span>
+            ><span class="row-value ds-item-label">{{ taxRegimeLabel }}</span>
           </div>
           <div class="row">
             <span class="row-label">Tipo de persona</span
-            ><span class="row-value">{{ personType }}</span>
+            ><span class="row-value ds-item-label">{{ personType }}</span>
           </div>
         </div>
-        <div v-else class="empty-card">
+        <div v-else class="empty-card ds-stack ds-stack--8">
           <Building2 :size="18" :stroke-width="1.6" />
           <p>Aún no has configurado el perfil fiscal de la empresa.</p>
-          <button v-if="feCanConfig" type="button" class="empty-cta" @click="goEditFiscal">
+          <button
+            v-if="feCanConfig"
+            type="button"
+            class="empty-cta ds-tone--accent-soft"
+            @click="goEditFiscal"
+          >
             Configurar
           </button>
         </div>
@@ -182,25 +187,25 @@ onMounted(() => {
 
       <section class="ds-card">
         <header class="cardhead">
-          <span class="cardic"><MapPin :size="16" :stroke-width="1.7" /></span>
+          <span class="cardic ds-tone--accent"><MapPin :size="16" :stroke-width="1.7" /></span>
           <h3>Contacto y ubicación</h3>
         </header>
-        <div class="rows">
+        <div class="ds-stack">
           <div class="row">
             <span class="row-label">Correo fiscal</span
-            ><span class="row-value">{{ taxProfile?.fiscalEmail || '—' }}</span>
+            ><span class="row-value ds-item-label">{{ taxProfile?.fiscalEmail || '—' }}</span>
           </div>
           <div class="row">
             <span class="row-label">Teléfono</span
-            ><span class="row-value">{{ company?.contactNumber || '—' }}</span>
+            ><span class="row-value ds-item-label">{{ company?.contactNumber || '—' }}</span>
           </div>
           <div class="row">
             <span class="row-label">Dirección</span
-            ><span class="row-value">{{ company?.address || '—' }}</span>
+            ><span class="row-value ds-item-label">{{ company?.address || '—' }}</span>
           </div>
           <div class="row">
             <span class="row-label">Ciudad</span
-            ><span class="row-value">{{ company?.city?.name || '—' }}</span>
+            ><span class="row-value ds-item-label">{{ company?.city?.name || '—' }}</span>
           </div>
         </div>
       </section>
@@ -208,7 +213,7 @@ onMounted(() => {
 
     <!-- Sedes -->
     <div class="sedes">
-      <div class="sedeshead">
+      <div class="ds-head">
         <div class="sedestitle">
           <h3>Sedes</h3>
           <span class="sedescount">
@@ -237,7 +242,7 @@ onMounted(() => {
           @toggle-active="onToggleActive"
         />
       </div>
-      <div v-else-if="!loading" class="sedes-empty">
+      <div v-else-if="!loading" class="sedes-empty ds-stack ds-stack--8">
         <MapPin :size="20" :stroke-width="1.5" />
         <p>Aún no hay sedes registradas.</p>
       </div>
@@ -269,22 +274,13 @@ onMounted(() => {
   margin-bottom: 22px;
 }
 
-.kicker {
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--amatista-600);
-  font-weight: 600;
-}
-
+/* El rótulo usa `.ds-kicker-accent` + `--snug`. Antes declaraba amatista-600 /
+   peso 600: era deriva, no variante — es el ÚNICO amatista-600 del archivo
+   (los otros tres acentos de texto son amatista-700) y la familia del rótulo
+   de marca (PosCashGate, MyCashPanel) es 700/700. Se alinea. */
 .title {
   margin: 6px 0 4px;
-  font-family: var(--font-serif);
   font-size: 30px;
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  color: var(--warm-900);
-  line-height: 1.05;
 }
 
 .lead {
@@ -345,11 +341,6 @@ onMounted(() => {
   box-shadow: 0 6px 16px -6px oklch(45% 0.18 var(--hue) / 50%);
 }
 
-.heroinfo {
-  flex: 1;
-  min-width: 0;
-}
-
 .heroname {
   font-family: var(--font-serif);
   font-size: 24px;
@@ -359,10 +350,10 @@ onMounted(() => {
   line-height: 1.1;
 }
 
+/* La fila que envuelve es `.ds-wrap-row`. `.tag.amatista` NO puede migrar a
+   `.ds-tone--accent`: `.tag` ya declara fondo y color a (0,2,0) y la primitiva
+   pesa (0,1,0). */
 .herotags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
   margin-top: 10px;
 }
 
@@ -391,11 +382,9 @@ onMounted(() => {
 }
 
 .herometa {
-  display: flex;
-  flex-direction: column;
+  flex-shrink: 0;
   align-items: flex-end;
   text-align: right;
-  flex-shrink: 0;
 }
 
 .herometa-label {
@@ -415,8 +404,6 @@ onMounted(() => {
 
 /* Info cards */
 .cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-bottom: 28px;
 }
@@ -435,20 +422,14 @@ onMounted(() => {
   color: var(--warm-800);
 }
 
+/* El tono es `.ds-tone--accent` (en las dos cabeceras de tarjeta). */
 .cardic {
   width: 30px;
   height: 30px;
   border-radius: 8px;
   display: grid;
   place-items: center;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   flex-shrink: 0;
-}
-
-.rows {
-  display: flex;
-  flex-direction: column;
 }
 
 .row {
@@ -471,11 +452,8 @@ onMounted(() => {
 }
 
 .row-value {
-  font-size: 13px;
-  color: var(--warm-900);
-  font-weight: 500;
-  text-align: right;
   min-width: 0;
+  text-align: right;
 }
 
 .row-value.mono {
@@ -484,10 +462,7 @@ onMounted(() => {
 }
 
 .empty-card {
-  display: flex;
-  flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
   color: var(--warm-500);
   font-size: 12.5px;
 }
@@ -496,13 +471,12 @@ onMounted(() => {
   margin: 0;
 }
 
+/* Fondo y color son `.ds-tone--accent-soft`. */
 .empty-cta {
   margin-top: 4px;
   padding: 6px 12px;
   border-radius: 8px;
   border: 1px solid var(--amatista-300);
-  background: var(--amatista-50);
-  color: var(--amatista-700);
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 600;
@@ -512,14 +486,6 @@ onMounted(() => {
 /* Sedes */
 .sedes {
   margin-top: 4px;
-}
-
-.sedeshead {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
 }
 
 .sedestitle h3 {
@@ -545,10 +511,7 @@ onMounted(() => {
 }
 
 .sedes-empty {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
   padding: 40px 0;
   color: var(--warm-500);
   font-size: 13px;
@@ -559,10 +522,6 @@ onMounted(() => {
 }
 
 @media (width <= 900px) {
-  .cards {
-    grid-template-columns: 1fr;
-  }
-
   .hero {
     flex-wrap: wrap;
   }

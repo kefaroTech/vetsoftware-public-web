@@ -8,25 +8,17 @@ defineProps<{ tone: { bg: string; fg: string; dot: string } }>()
 </script>
 
 <template>
-  <span class="pill" :style="{ background: tone.bg, color: tone.fg }">
+  <span class="ds-pill" :style="{ background: tone.bg, color: tone.fg }">
     <span class="dot" :style="{ background: tone.dot }" />
     <slot />
   </span>
 </template>
 
 <style scoped>
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 9px;
-  border-radius: var(--radius-pill);
-  font-size: 11.5px;
-  font-weight: 500;
-  white-space: nowrap;
-  font-family: var(--font-sans);
-}
-
+/* La caja de la píldora es `.ds-pill` (primitives.css) y coincidía con ella en
+   las nueve declaraciones. El tono sigue llegando por `:style` y el punto de
+   estado se queda aquí: la primitiva sube la forma, nunca el color, justo para
+   que cada píldora conserve el suyo. */
 .dot {
   width: 6px;
   height: 6px;

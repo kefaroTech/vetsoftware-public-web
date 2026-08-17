@@ -82,7 +82,10 @@ function onUpdate(value: string | null) {
 </script>
 
 <template>
-  <div class="date-wrap" :class="{ invalid, disabled }">
+  <div
+    class="date-wrap"
+    :class="{ invalid, disabled, 'ds-field-shake': invalid, 'ds-is-disabled--60': disabled }"
+  >
     <DatePicker
       :value="modelValue || null"
       value-type="YYYY-MM-DD"
@@ -106,36 +109,12 @@ function onUpdate(value: string | null) {
 </template>
 
 <style scoped>
+/* El temblor de `invalid` es `.ds-field-shake` y el apagado de `disabled` es
+   `.ds-is-disabled--60`, los dos desde el template. `.invalid`/`.disabled`
+   siguen en el marcado porque los usa el bloque global de abajo para teñir
+   `.mx-input`, que es un nodo de la librería. */
 .date-wrap {
   width: 100%;
-}
-
-.date-wrap.invalid {
-  animation: shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
-}
-
-.date-wrap.disabled {
-  opacity: 0.6;
-}
-
-@keyframes shake {
-  10%,
-  90% {
-    transform: translateX(-1px);
-  }
-  20%,
-  80% {
-    transform: translateX(2px);
-  }
-  30%,
-  50%,
-  70% {
-    transform: translateX(-3px);
-  }
-  40%,
-  60% {
-    transform: translateX(3px);
-  }
 }
 </style>
 

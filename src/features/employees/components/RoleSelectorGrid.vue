@@ -32,12 +32,12 @@ const orderedRoles = computed(() =>
 </script>
 
 <template>
-  <div class="grid">
+  <div class="ds-stack ds-stack--8">
     <button
       v-for="role in orderedRoles"
       :key="role.id"
       type="button"
-      class="option"
+      class="option ds-flex-row ds-flex-row--12"
       :class="{ selected: selectedIds.has(role.id) }"
       @click="toggle(role.id)"
     >
@@ -45,9 +45,9 @@ const orderedRoles = computed(() =>
         <Check v-if="selectedIds.has(role.id)" :size="12" :stroke-width="2.5" />
       </span>
       <span class="dot" :style="{ background: colorsForCode(role.code).dot }" />
-      <span class="info">
+      <span class="info ds-stack ds-flex-fill">
         <span class="name-row">
-          <span class="name">{{ role.name }}</span>
+          <span class="ds-text-strong ds-text-strong--md">{{ role.name }}</span>
           <span v-if="currentRoleIds.has(role.id)" class="badge-actual">actual</span>
         </span>
         <span v-if="findKnownRole(role.code)?.description" class="desc">
@@ -59,16 +59,7 @@ const orderedRoles = computed(() =>
 </template>
 
 <style scoped>
-.grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 .option {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 14px 16px;
   border: 1.5px solid var(--warm-200);
   border-radius: 11px;
@@ -118,11 +109,7 @@ const orderedRoles = computed(() =>
 }
 
 .info {
-  display: flex;
-  flex-direction: column;
   gap: 3px;
-  min-width: 0;
-  flex: 1;
 }
 
 .name-row {
@@ -130,12 +117,6 @@ const orderedRoles = computed(() =>
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-}
-
-.name {
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--warm-900);
 }
 
 .badge-actual {

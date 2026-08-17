@@ -14,22 +14,17 @@ const TONE: Record<LaboratoryTestPriority, { bg: string; fg: string }> = {
 </script>
 
 <template>
-  <span class="pill" :style="{ background: TONE[prioridad].bg, color: TONE[prioridad].fg }">
+  <span class="pill ds-pill" :style="{ background: TONE[prioridad].bg, color: TONE[prioridad].fg }">
     {{ LABEL[prioridad] }}
   </span>
 </template>
 
 <style scoped>
 .pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-  font-size: 11px;
-  font-weight: 600;
+  padding: var(--space-2) var(--space-8);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  white-space: nowrap;
-  font-family: var(--font-sans);
 }
 </style>

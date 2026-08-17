@@ -162,11 +162,11 @@ async function onConfirmDelete() {
             <th>Servicio</th>
             <th>Motivo</th>
             <th>Detalles</th>
-            <th v-if="canUpdate || canDelete" class="actions-col">Acciones</th>
+            <th v-if="canUpdate || canDelete" class="ds-col-actions">Acciones</th>
           </tr>
         </template>
         <template #row="{ item }">
-          <tr class="clickable-row" @click="onRowClick(item)">
+          <tr class="ds-row-clickable clickable-row" @click="onRowClick(item)">
             <td>{{ formatDateShort(item.date) }}</td>
             <td>{{ item.spaType.name }}</td>
             <td class="truncate ds-truncate">{{ item.reason || '—' }}</td>
@@ -233,17 +233,5 @@ async function onConfirmDelete() {
 /* El recorte lo pone `.ds-truncate`; aquí solo el ancho de esta columna. */
 .truncate {
   max-width: 240px;
-}
-.actions-col {
-  width: 88px;
-  text-align: right;
-}
-
-.clickable-row {
-  cursor: pointer;
-  transition: background 0.12s ease;
-}
-.clickable-row:hover td {
-  background: var(--amatista-50);
 }
 </style>

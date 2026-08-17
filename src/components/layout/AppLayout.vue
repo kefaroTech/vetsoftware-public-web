@@ -10,7 +10,7 @@ const fullBleed = computed(() => Boolean(route.meta.fullBleed))
 <template>
   <div class="app-shell">
     <AppSidebar />
-    <div class="app-main">
+    <div class="ds-stack ds-flex-fill">
       <main class="app-content" :class="{ fullbleed: fullBleed }">
         <RouterView />
       </main>
@@ -27,13 +27,6 @@ const fullBleed = computed(() => Boolean(route.meta.fullBleed))
   color: var(--warm-900);
   font-family: var(--font-sans);
   overflow: hidden;
-}
-
-.app-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
 }
 
 .app-content {

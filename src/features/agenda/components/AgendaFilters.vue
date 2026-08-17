@@ -40,7 +40,7 @@ function select(value: ClinicalEventType | 'ALL') {
   <div class="filters">
     <button
       type="button"
-      class="chip all-chip"
+      class="chip all-chip ds-pill"
       :class="{ active: modelValue === 'ALL' }"
       @click="select('ALL')"
     >
@@ -51,7 +51,7 @@ function select(value: ClinicalEventType | 'ALL') {
       v-for="type in TYPE_ORDER"
       :key="type"
       type="button"
-      class="chip"
+      class="chip ds-pill"
       :class="{ active: modelValue === type }"
       :style="
         modelValue === type
@@ -79,15 +79,10 @@ function select(value: ClinicalEventType | 'ALL') {
   margin-top: 12px;
 }
 
+/* Resto sobre `.ds-pill`: filtro con más aire y un punto más grande. */
 .chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
+  padding: var(--space-5) var(--space-12);
+  font-size: var(--text-xs);
   background: transparent;
   color: var(--warm-700);
   border: 1px solid var(--warm-200);

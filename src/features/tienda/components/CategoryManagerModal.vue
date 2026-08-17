@@ -101,18 +101,18 @@ function confirmRemove(id: number) {
           <Plus :size="15" :stroke-width="1.8" /> Nueva categoría
         </AccentButton>
 
-        <div v-else-if="adding" class="editor">
+        <div v-else-if="adding" class="editor ds-stack ds-stack--8">
           <input
             v-model="draftName"
             type="text"
-            class="ed-input"
+            class="ed-input ds-focus-ring"
             placeholder="Nombre de la categoría"
             @keyup.enter="saveNew"
           />
           <input
             v-model="draftDesc"
             type="text"
-            class="ed-input"
+            class="ed-input ds-focus-ring"
             placeholder="Descripción"
             @keyup.enter="saveNew"
           />
@@ -131,20 +131,20 @@ function confirmRemove(id: number) {
           </div>
         </div>
 
-        <ul class="list">
+        <ul class="list ds-list-reset ds-stack">
           <li v-for="cat in categories" :key="cat.id" class="row">
             <template v-if="editingId === cat.id">
-              <div class="editor inline">
+              <div class="editor inline ds-stack ds-stack--8">
                 <input
                   v-model="editName"
                   type="text"
-                  class="ed-input"
+                  class="ed-input ds-focus-ring"
                   @keyup.enter="saveEdit(cat.id)"
                 />
                 <input
                   v-model="editDesc"
                   type="text"
-                  class="ed-input"
+                  class="ed-input ds-focus-ring"
                   placeholder="Descripción"
                   @keyup.enter="saveEdit(cat.id)"
                 />
@@ -175,7 +175,7 @@ function confirmRemove(id: number) {
                   {{ (counts[cat.id] ?? 0) === 1 ? 'ítem' : 'ítems' }}</span
                 >
               </div>
-              <div v-if="confirmingId === cat.id" class="confirm">
+              <div v-if="confirmingId === cat.id" class="confirm ds-flex-row">
                 <span>¿Eliminar?</span>
                 <button type="button" class="btn-danger-sm" @click="confirmRemove(cat.id)">
                   Sí
@@ -235,9 +235,6 @@ function confirmRemove(id: number) {
   align-self: flex-start;
 }
 .editor {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   background: var(--warm-100);
   border-radius: 10px;
   padding: 12px;
@@ -257,21 +254,18 @@ function confirmRemove(id: number) {
   color: var(--warm-900);
   outline: none;
 }
-.ed-input:focus {
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
-}
+
+/* El anillo de foco es `.ds-focus-ring` (primitives.css): la regla local
+   coincidía con ella en las dos declaraciones y se borra en vez de competir,
+   que es el contrato escrito en la propia primitiva. */
 .ed-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
 }
+
+/* `.ds-list-reset` + `.ds-stack`; 6px no es uno de los huecos catalogados. */
 .list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
   gap: 6px;
 }
 
@@ -302,9 +296,6 @@ function confirmRemove(id: number) {
 }
 
 .confirm {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   font-size: 12.5px;
   color: var(--warm-700);
 }

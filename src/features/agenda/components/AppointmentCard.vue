@@ -45,20 +45,23 @@ const secondary = computed(() => {
       hora, y ensancharla hasta que quepa le come el ancho al asunto de la cita, que es lo que
       el recepcionista lee primero.
     -->
-    <div class="card-time" :title="`${apptTime(appt.startAt)}–${endTime} · ${durationLabel}`">
+    <div
+      class="card-time ds-stack"
+      :title="`${apptTime(appt.startAt)}–${endTime} · ${durationLabel}`"
+    >
       <span class="hh">{{ apptTime(appt.startAt) }}</span>
       <span class="hh-end">–{{ endTime }}</span>
       <span class="type-ic" aria-hidden="true">{{ typeMeta.icon }}</span>
     </div>
     <div class="card-main">
-      <div class="line1">
-        <span class="title">{{ subject }}</span>
+      <div class="line1 ds-flex-row">
+        <span class="title ds-strong">{{ subject }}</span>
         <AppointmentTypeChip :type="appt.type" />
         <span v-if="hasClash" class="clash-flag">
           <AlertTriangle :size="11" :stroke-width="1.8" /> Choque
         </span>
       </div>
-      <div class="line2">
+      <div class="line2 ds-flex-row">
         <span class="secondary">{{ secondary }}</span>
         <template v-if="appt.notes">
           <span class="dot-sep">·</span>
@@ -66,7 +69,7 @@ const secondary = computed(() => {
         </template>
       </div>
     </div>
-    <div class="card-right">
+    <div class="card-right ds-stack">
       <AppointmentStatusPill :status="appt.status" />
       <AppointmentVetBadge :employee-id="appt.employee.id" :name="appt.employee.name" />
     </div>
@@ -114,10 +117,8 @@ const secondary = computed(() => {
 }
 
 .card-time {
-  display: flex;
-  flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: var(--space-2);
 }
 
 .hh {
@@ -147,16 +148,11 @@ const secondary = computed(() => {
 }
 
 .line1 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   flex-wrap: wrap;
 }
 
 .title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--warm-900);
+  font-size: var(--text-lg);
 }
 
 .clash-flag {
@@ -171,13 +167,12 @@ const secondary = computed(() => {
   color: oklch(45% 0.14 60deg);
 }
 
+/* Resto sobre `.ds-flex-row`: gap propio (7px, fuera del catálogo 8/12). */
 .line2 {
-  font-size: 12.5px;
+  margin-top: var(--space-3);
+  gap: var(--space-7);
   color: var(--warm-600);
-  margin-top: 3px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
+  font-size: var(--text-sm);
   flex-wrap: wrap;
 }
 
@@ -194,9 +189,7 @@ const secondary = computed(() => {
 }
 
 .card-right {
-  display: flex;
-  flex-direction: column;
   align-items: flex-end;
-  gap: 6px;
+  gap: var(--space-6);
 }
 </style>

@@ -140,17 +140,17 @@ function onSuspendConfirm() {
 </script>
 
 <template>
-  <div class="treat">
-    <button type="button" class="back" @click="emit('back')">
+  <div class="ds-page">
+    <button type="button" class="back ds-btn ds-btn--plain ds-hover-accent" @click="emit('back')">
       <ArrowLeft :size="14" :stroke-width="1.8" /> Volver al paciente
     </button>
 
-    <header class="head">
+    <header class="head ds-head">
       <div>
-        <div class="kicker">Tratamiento · Administración semanal</div>
-        <h2 class="title">{{ patientName }}</h2>
+        <div class="ds-kicker">Tratamiento · Administración semanal</div>
+        <h2 class="title ds-display ds-display--xs">{{ patientName }}</h2>
       </div>
-      <div class="weeknav">
+      <div class="ds-flex-row">
         <button type="button" class="nav" @click="shiftWeek(-1)">
           <ChevronLeft :size="16" :stroke-width="1.8" />
         </button>
@@ -172,16 +172,25 @@ function onSuspendConfirm() {
 
     <!-- Plan de medicamentos -->
     <section class="plan">
-      <div class="plan-head">
+      <div class="plan-head ds-block-head">
         <h3>Plan de medicamentos</h3>
-        <button type="button" class="add" @click="openCreate('med')">
+        <button
+          type="button"
+          class="add ds-btn ds-btn--sm ds-tone--accent-soft"
+          @click="openCreate('med')"
+        >
           <Plus :size="14" :stroke-width="1.8" /> Añadir medicamento
         </button>
       </div>
       <p v-if="meds.length === 0" class="plan-empty">Sin medicamentos en el plan.</p>
-      <div v-for="m in meds" :key="m.id" class="row" :class="{ suspended: !!m.suspensionDate }">
-        <div class="row-main">
-          <div class="row-name">
+      <div
+        v-for="m in meds"
+        :key="m.id"
+        class="row ds-flex-row"
+        :class="{ suspended: !!m.suspensionDate }"
+      >
+        <div class="ds-flex-fill">
+          <div class="row-name ds-item-label">
             {{ m.name }}<span v-if="m.dose"> · {{ m.dose }}</span>
             <span v-if="m.suspensionDate" class="susp-badge">Suspendido</span>
           </div>
@@ -191,10 +200,20 @@ function onSuspendConfirm() {
           </div>
         </div>
         <template v-if="!m.suspensionDate">
-          <button type="button" class="icon" aria-label="Editar" @click="openEdit(m)">
+          <button
+            type="button"
+            class="icon ds-hover-neutral"
+            aria-label="Editar"
+            @click="openEdit(m)"
+          >
             <Pencil :size="14" :stroke-width="1.7" />
           </button>
-          <button type="button" class="icon" aria-label="Suspender" @click="askSuspend('med', m)">
+          <button
+            type="button"
+            class="icon ds-hover-neutral"
+            aria-label="Suspender"
+            @click="askSuspend('med', m)"
+          >
             <Ban :size="14" :stroke-width="1.7" />
           </button>
         </template>
@@ -203,16 +222,25 @@ function onSuspendConfirm() {
 
     <!-- Plan de procedimientos -->
     <section class="plan">
-      <div class="plan-head">
+      <div class="plan-head ds-block-head">
         <h3>Plan de procedimientos</h3>
-        <button type="button" class="add" @click="openCreate('proc')">
+        <button
+          type="button"
+          class="add ds-btn ds-btn--sm ds-tone--accent-soft"
+          @click="openCreate('proc')"
+        >
           <Plus :size="14" :stroke-width="1.8" /> Añadir procedimiento
         </button>
       </div>
       <p v-if="procs.length === 0" class="plan-empty">Sin procedimientos en el plan.</p>
-      <div v-for="p in procs" :key="p.id" class="row" :class="{ suspended: !!p.suspensionDate }">
-        <div class="row-main">
-          <div class="row-name">
+      <div
+        v-for="p in procs"
+        :key="p.id"
+        class="row ds-flex-row"
+        :class="{ suspended: !!p.suspensionDate }"
+      >
+        <div class="ds-flex-fill">
+          <div class="row-name ds-item-label">
             {{ p.name }}
             <span v-if="p.suspensionDate" class="susp-badge">Suspendido</span>
           </div>
@@ -222,10 +250,20 @@ function onSuspendConfirm() {
           </div>
         </div>
         <template v-if="!p.suspensionDate">
-          <button type="button" class="icon" aria-label="Editar" @click="openEdit(p)">
+          <button
+            type="button"
+            class="icon ds-hover-neutral"
+            aria-label="Editar"
+            @click="openEdit(p)"
+          >
             <Pencil :size="14" :stroke-width="1.7" />
           </button>
-          <button type="button" class="icon" aria-label="Suspender" @click="askSuspend('proc', p)">
+          <button
+            type="button"
+            class="icon ds-hover-neutral"
+            aria-label="Suspender"
+            @click="askSuspend('proc', p)"
+          >
             <Ban :size="14" :stroke-width="1.7" />
           </button>
         </template>
@@ -265,61 +303,26 @@ function onSuspendConfirm() {
 </template>
 
 <style scoped>
-.treat {
-  font-family: var(--font-sans);
-}
-
+/* Resto sobre `.ds-btn --plain` + `.ds-hover-accent` (que gana al :hover de
+   --plain por orden en primitives.css, con la misma especificidad). */
 .back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 9px;
-  padding: 6px 10px;
-  font-family: inherit;
-  font-size: 12.5px;
-  color: var(--warm-600);
-  cursor: pointer;
-  margin-bottom: 14px;
-}
-
-.back:hover {
-  background: var(--amatista-50);
-  border-color: var(--amatista-300);
-  color: var(--amatista-700);
+  margin-bottom: var(--space-14);
+  padding: var(--space-6) var(--space-10);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-normal);
 }
 
 .head {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 18px;
+  gap: var(--space-18);
+  margin-bottom: var(--space-14);
   flex-wrap: wrap;
-  margin-bottom: 14px;
 }
 
-.kicker {
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--warm-500);
-  font-weight: 500;
-}
-
+/* Resto sobre `.ds-display --xs`: este titular no lleva el tracking negativo
+   de la primitiva y arranca 4px por debajo del rótulo. */
 .title {
-  margin: 4px 0 0;
-  font-family: var(--font-serif);
-  font-size: 26px;
-  font-weight: 400;
-  color: var(--warm-900);
-  line-height: 1.05;
-}
-
-.weeknav {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  margin: var(--space-4) 0 0;
+  letter-spacing: normal;
 }
 
 .nav,
@@ -356,25 +359,8 @@ function onSuspendConfirm() {
   text-align: center;
 }
 
-.volatile-banner {
-  margin: 0 0 16px;
-  padding: 9px 12px;
-  font-size: 12px;
-  line-height: 1.5;
-  color: oklch(45% 0.13 70deg);
-  background: oklch(96% 0.04 80deg);
-  border-left: 3px solid oklch(70% 0.13 75deg);
-  border-radius: 0 8px 8px 0;
-}
 .plan {
   margin-top: 26px;
-}
-
-.plan-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
 }
 
 .plan-head h3 {
@@ -384,19 +370,10 @@ function onSuspendConfirm() {
   color: var(--warm-900);
 }
 
+/* Resto sobre `.ds-btn --sm` + `.ds-tone--accent-soft`: borde y radio propios. */
 .add {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--amatista-200);
-  background: var(--amatista-50);
-  color: var(--amatista-700);
-  border-radius: 8px;
-  padding: 7px 12px;
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  cursor: pointer;
+  border-color: var(--amatista-200);
+  border-radius: var(--radius-md);
 }
 .add:hover {
   border-color: var(--amatista-500);
@@ -409,11 +386,10 @@ function onSuspendConfirm() {
   padding: 8px 0;
 }
 
+/* Resto sobre `.ds-flex-row`: gap propio (10px). */
 .row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 12px;
+  gap: var(--space-10);
+  padding: var(--space-11) var(--space-12);
   background: var(--warm-100);
   border-radius: 10px;
   margin-bottom: 6px;
@@ -437,15 +413,9 @@ function onSuspendConfirm() {
   color: var(--danger-700);
   border: 1px solid var(--danger-250);
 }
-.row-main {
-  flex: 1;
-  min-width: 0;
-}
 
 .row-name {
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--warm-900);
+  font-size: var(--text-md);
 }
 
 .row-detail {
@@ -465,9 +435,5 @@ function onSuspendConfirm() {
   cursor: pointer;
   color: var(--warm-600);
   flex-shrink: 0;
-}
-.icon:hover {
-  background: var(--warm-100);
-  color: var(--warm-900);
 }
 </style>

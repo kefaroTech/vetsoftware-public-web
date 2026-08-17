@@ -75,7 +75,7 @@ defineExpose({ reload: () => (isServer.value ? server.reload() : Promise.resolve
 
 <template>
   <div class="list-body">
-    <div class="search-row">
+    <div class="search-row ds-flex-row ds-flex-row--12">
       <div class="search">
         <Search :size="14" :stroke-width="1.7" class="icon" />
         <input v-model="query" type="text" :placeholder="placeholder" class="input" />
@@ -85,7 +85,7 @@ defineExpose({ reload: () => (isServer.value ? server.reload() : Promise.resolve
 
     <div v-if="busy" class="state">Cargando…</div>
     <div v-else-if="total === 0" class="state empty">{{ emptyText }}</div>
-    <div v-else class="tbl-scroll">
+    <div v-else class="ds-table-scroll">
       <table class="table">
         <thead>
           <slot name="header" />
@@ -112,17 +112,10 @@ defineExpose({ reload: () => (isServer.value ? server.reload() : Promise.resolve
   color: var(--warm-900);
 }
 
+/* Añadidos sobre `.ds-flex-row--12`: que la fila envuelva y su hueco inferior. */
 .search-row {
-  display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
   margin-bottom: 14px;
-}
-
-.tbl-scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .search {

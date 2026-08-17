@@ -100,7 +100,7 @@ function onNotifications() {
 </script>
 
 <template>
-  <aside class="sidebar">
+  <aside class="sidebar ds-stack">
     <SidebarBrand app-name="Vetrina" :clinic="mockUser.clinic" />
 
     <BranchSelector />
@@ -122,7 +122,7 @@ function onNotifications() {
       :expanded="openSection === 'consulta'"
       @click="toggleSection('consulta')"
     />
-    <div v-if="openSection === 'consulta'" class="sub-list">
+    <div v-if="openSection === 'consulta'" class="sub-list ds-stack">
       <button
         v-if="canCreateConsultation"
         type="button"
@@ -153,7 +153,7 @@ function onNotifications() {
         :expanded="openSection === 'acciones'"
         @click="toggleSection('acciones')"
       />
-      <div v-if="openSection === 'acciones'" class="sub-list">
+      <div v-if="openSection === 'acciones'" class="sub-list ds-stack">
         <SidebarSubItem
           v-for="item in accionesItems"
           :key="item.label"
@@ -196,7 +196,7 @@ function onNotifications() {
           :expanded="openSection === 'tienda'"
           @click="toggleSection('tienda')"
         />
-        <div v-if="openSection === 'tienda'" class="sub-list">
+        <div v-if="openSection === 'tienda'" class="sub-list ds-stack">
           <SidebarSubItem
             v-for="item in tiendaItems"
             :key="item.label"
@@ -217,7 +217,7 @@ function onNotifications() {
           :expanded="openSection === 'compras'"
           @click="toggleSection('compras')"
         />
-        <div v-if="openSection === 'compras'" class="sub-list">
+        <div v-if="openSection === 'compras'" class="sub-list ds-stack">
           <SidebarSubItem
             v-for="item in comprasItems"
             :key="item.label"
@@ -316,8 +316,6 @@ function onNotifications() {
   height: 100vh;
   flex-shrink: 0;
   padding: 20px 14px;
-  display: flex;
-  flex-direction: column;
   gap: 0;
   background: linear-gradient(
     180deg,
@@ -381,8 +379,6 @@ function onNotifications() {
 }
 
 .sub-list {
-  display: flex;
-  flex-direction: column;
   gap: 1px;
   padding-left: 28px;
   margin-top: 2px;

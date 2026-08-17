@@ -76,7 +76,7 @@ async function submit() {
     <div class="pub-card pub-reveal">
       <!-- Validando token -->
       <template v-if="state === 'loading'">
-        <div class="rp-center">
+        <div class="rp-center ds-stack ds-stack--14">
           <span class="rp-spin" />
           <p class="pub-sub">Validando el enlace…</p>
         </div>
@@ -161,10 +161,7 @@ async function submit() {
 
 <style scoped>
 .rp-center {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 14px;
   padding: 20px 0;
 }
 

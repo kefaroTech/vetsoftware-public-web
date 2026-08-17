@@ -51,7 +51,7 @@ const missing = computed(() => {
 </script>
 
 <template>
-  <div class="formcol">
+  <div class="ds-stack ds-stack--16">
     <SectionHead
       :icon="ShieldCheck"
       title="Revisión"
@@ -60,7 +60,7 @@ const missing = computed(() => {
 
     <div v-for="s in sections" :key="s.step" class="ds-card reviewcard">
       <div class="review-head">
-        <div class="review-title">
+        <div class="review-title ds-strong">
           <span class="review-badge" :class="s.ok ? 'ok' : 'pend'">
             <Check v-if="s.ok" :size="12" :stroke-width="2.6" />
             <template v-else>!</template>
@@ -72,19 +72,19 @@ const missing = computed(() => {
         </button>
       </div>
       <div v-if="s.rows.length" class="review-rows">
-        <div v-for="(r, i) in s.rows" :key="i">
+        <div v-for="(r, i) in s.rows" :key="i" class="ds-stack">
           <span>{{ r.label }}</span
           ><strong>{{ r.value || '—' }}</strong>
         </div>
       </div>
-      <div v-else class="review-empty">Sin datos todavía.</div>
+      <div v-else class="ds-meta ds-meta--sm">Sin datos todavía.</div>
     </div>
 
     <div v-if="ready" class="successbox">
       <div class="success-ic"><ShieldCheck :size="24" :stroke-width="1.8" /></div>
-      <div class="success-text">
+      <div class="ds-flex-fill">
         <div class="success-title">Lista para facturar</div>
-        <div class="success-sub">
+        <div class="success-sub ds-meta-dark ds-meta-dark--sm">
           La configuración fiscal está completa. Las ventas y cierres de cuenta generan documentos
           electrónicos automáticamente.
         </div>
@@ -103,12 +103,8 @@ const missing = computed(() => {
 </template>
 
 <style scoped>
-.formcol {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
+/* Layout: `.ds-stack--16` + `.ds-stack` (columnas), `.ds-strong` (título de sección)
+   y `.ds-flex-fill` (texto del recuadro de éxito). Aquí sólo lo propio. */
 .review-head {
   display: flex;
   align-items: center;
@@ -120,9 +116,7 @@ const missing = computed(() => {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 600;
   font-size: 14px;
-  color: var(--warm-900);
 }
 
 .review-badge {
@@ -163,8 +157,6 @@ const missing = computed(() => {
 }
 
 .review-rows > div {
-  display: flex;
-  flex-direction: column;
   gap: 2px;
 }
 
@@ -180,11 +172,6 @@ const missing = computed(() => {
   font-weight: 600;
   color: var(--warm-900);
   overflow-wrap: anywhere;
-}
-
-.review-empty {
-  font-size: 12.5px;
-  color: var(--warm-500);
 }
 
 .successbox {
@@ -208,11 +195,6 @@ const missing = computed(() => {
   flex-shrink: 0;
 }
 
-.success-text {
-  flex: 1;
-  min-width: 0;
-}
-
 .success-title {
   font-family: var(--font-serif);
   font-size: 19px;
@@ -220,8 +202,6 @@ const missing = computed(() => {
 }
 
 .success-sub {
-  font-size: 12.5px;
-  color: var(--warm-600);
   line-height: 1.45;
   margin-top: 2px;
 }

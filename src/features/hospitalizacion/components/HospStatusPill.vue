@@ -5,7 +5,10 @@ defineProps<{ status: HospStatus }>()
 </script>
 
 <template>
-  <span class="pill" :style="{ background: STATUS_META[status].bg, color: STATUS_META[status].fg }">
+  <span
+    class="pill ds-pill"
+    :style="{ background: STATUS_META[status].bg, color: STATUS_META[status].fg }"
+  >
     <span class="dot" :style="{ background: STATUS_META[status].dot }" />
     {{ STATUS_META[status].label }}
   </span>
@@ -13,14 +16,7 @@ defineProps<{ status: HospStatus }>()
 
 <style scoped>
 .pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  font-size: 11.5px;
-  font-weight: 500;
-  white-space: nowrap;
+  padding: var(--space-3) var(--space-10);
 }
 
 .dot {

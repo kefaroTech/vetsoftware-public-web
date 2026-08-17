@@ -27,11 +27,11 @@ function openWizard(step: number) {
 
 <template>
   <FeUpsell v-if="!hasModule" />
-  <div v-else class="page">
+  <div v-else class="page ds-stack">
     <header class="pagehead">
       <div>
-        <div class="kicker">
-          Facturación electrónica · DIAN <span class="premium">Premium</span>
+        <div class="ds-kicker ds-flex-row">
+          Facturación electrónica · DIAN <span class="premium ds-tone--accent">Premium</span>
         </div>
         <h1 class="ds-display fe-title">Facturación electrónica</h1>
       </div>
@@ -47,9 +47,12 @@ function openWizard(step: number) {
 </template>
 
 <style scoped>
+/* El layout se apoya en primitivas: `.ds-stack` (columna de la página),
+   `.ds-kicker` + `.ds-flex-row` (rótulo con la píldora Premium) y
+   `.ds-display` (titular). Aquí sólo queda lo que no es primitiva. */
+
+/* `gap: 22px` no está en el catálogo de `.ds-stack--*`, así que queda aquí. */
 .page {
-  display: flex;
-  flex-direction: column;
   gap: 22px;
 }
 
@@ -60,17 +63,6 @@ function openWizard(step: number) {
   gap: 24px;
 }
 
-.kicker {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--warm-500);
-  font-weight: 500;
-}
-
 .premium {
   text-transform: none;
   letter-spacing: 0;
@@ -78,8 +70,6 @@ function openWizard(step: number) {
   font-weight: 600;
   padding: 2px 8px;
   border-radius: var(--radius-pill);
-  color: var(--amatista-700);
-  background: var(--amatista-100);
 }
 
 .error-banner {

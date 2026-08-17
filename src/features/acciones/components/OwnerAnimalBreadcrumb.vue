@@ -13,14 +13,14 @@ defineEmits<{ reset: [] }>()
 
 <template>
   <div class="breadcrumb">
-    <div class="crumb">
-      <div class="badge"><User :size="13" :stroke-width="1.7" /></div>
+    <div class="crumb ds-flex-row">
+      <div class="badge ds-tone--accent"><User :size="13" :stroke-width="1.7" /></div>
       <span class="ds-item-label">{{ owner.name }}</span>
       <span class="ds-hint">{{ owner.document }}</span>
     </div>
     <ChevronRight :size="14" :stroke-width="1.6" class="sep" />
-    <div class="crumb">
-      <div class="badge paw"><PawPrint :size="13" :stroke-width="1.7" /></div>
+    <div class="crumb ds-flex-row">
+      <div class="badge paw ds-tone--accent"><PawPrint :size="13" :stroke-width="1.7" /></div>
       <span class="ds-item-label">{{ animal.name }}</span>
       <span class="ds-hint">{{ animal.specie.name }} · {{ animal.breed.name }}</span>
     </div>
@@ -45,19 +45,16 @@ defineEmits<{ reset: [] }>()
   font-family: var(--font-sans);
 }
 
+/* Único añadido sobre `.ds-flex-row`: que la miga pueda encogerse. */
 .crumb {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   min-width: 0;
 }
 
+/* El par fondo+texto lo pone `.ds-tone--accent`. */
 .badge {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   display: grid;
   place-items: center;
   flex-shrink: 0;

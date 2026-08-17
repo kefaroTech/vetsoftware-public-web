@@ -82,7 +82,7 @@ function back() {
       <PawLoader :size="42" :glow="false" :speed="900" />
     </div>
 
-    <div v-else-if="pets.length === 0 && !error && !ownerError" class="empty-card">
+    <div v-else-if="pets.length === 0 && !error && !ownerError" class="empty-card ds-empty">
       Este propietario aún no tiene mascotas registradas.
     </div>
 
@@ -152,9 +152,7 @@ function back() {
 }
 
 .empty-card {
-  padding: 40px 20px;
-  text-align: center;
-  color: var(--warm-500);
+  padding: var(--space-40) var(--space-20);
   background: var(--warm-50);
   border: 1px dashed var(--warm-200);
   border-radius: 12px;

@@ -31,7 +31,7 @@ const emit = defineEmits<{ close: []; edit: [] }>()
     @close="emit('close')"
   >
     <template #body>
-      <div class="detail-grid">
+      <div class="detail-grid ds-detail-grid">
         <DetailField
           v-for="(f, idx) in fields"
           :key="idx"
@@ -61,15 +61,8 @@ const emit = defineEmits<{ close: []; edit: [] }>()
 </template>
 
 <style scoped>
+/* Único añadido sobre `.ds-detail-grid`: esta ficha abre más la fila. */
 .detail-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px 24px;
-}
-
-@media (width <= 560px) {
-  .detail-grid {
-    grid-template-columns: 1fr;
-  }
+  row-gap: 18px;
 }
 </style>

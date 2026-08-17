@@ -176,10 +176,10 @@ async function onCategoryRemove(id: number) {
   <div class="ds-page">
     <header class="ds-head">
       <div>
-        <div class="kicker">Tienda · Servicios</div>
+        <div class="ds-kicker ds-kicker--spaced">Tienda · Servicios</div>
         <h1 class="ds-display">Servicios ofrecidos</h1>
       </div>
-      <div class="head-actions">
+      <div class="head-actions ds-flex-row">
         <SegTabs
           :model-value="mode"
           :options="[
@@ -231,10 +231,10 @@ async function onCategoryRemove(id: number) {
           <CategoryPill :tone="serviceCategoryTone(g)" :label="g.name" />
           <span class="ds-meta">{{ g.items.length }}</span>
         </div>
-        <div class="svc-list">
+        <div class="svc-list ds-stack">
           <div v-for="s in g.items" :key="s.id" class="svc-row" @click="onRowClick(s)">
             <div class="ds-flex-fill">
-              <div class="svc-name">{{ s.name }}</div>
+              <div class="ds-item-label ds-item-label--lg">{{ s.name }}</div>
               <div v-if="s.notes" class="svc-sub ds-meta">{{ s.notes }}</div>
             </div>
             <div class="svc-price ds-strong">{{ formatMoney(s.price) }}</div>
@@ -272,10 +272,10 @@ async function onCategoryRemove(id: number) {
       <div v-else-if="store.pausedServices.value.length === 0" class="state ds-empty">
         No hay servicios pausados.
       </div>
-      <div v-else class="svc-list">
+      <div v-else class="svc-list ds-stack">
         <div v-for="s in store.pausedServices.value" :key="s.id" class="svc-row static">
           <div class="ds-flex-fill">
-            <div class="svc-name">{{ s.name }}</div>
+            <div class="ds-item-label ds-item-label--lg">{{ s.name }}</div>
             <div class="svc-sub ds-meta">{{ s.serviceCategory.name }}</div>
           </div>
           <div class="svc-price ds-strong">{{ formatMoney(s.price) }}</div>
@@ -324,19 +324,12 @@ async function onCategoryRemove(id: number) {
 
 <style scoped>
 /* El contenedor usa `.ds-page` y la cabecera `.ds-head` (primitives.css). */
-.kicker {
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--warm-500);
-  font-weight: 500;
-  margin-bottom: 6px;
-}
+
+/* El rótulo en versalitas es `.ds-kicker ds-kicker--spaced` y la fila de la
+   cabecera `.ds-flex-row` (primitives.css): las dos reglas coincidían con ellas
+   declaración a declaración. */
 .head-actions {
-  display: flex;
-  gap: 8px;
   flex-shrink: 0;
-  align-items: center;
 }
 .paused-hint {
   margin: 0 0 14px;
@@ -365,8 +358,6 @@ async function onCategoryRemove(id: number) {
   margin-bottom: 8px;
 }
 .svc-list {
-  display: flex;
-  flex-direction: column;
   gap: 6px;
 }
 .svc-row {
@@ -389,11 +380,9 @@ async function onCategoryRemove(id: number) {
 .svc-row.static:hover {
   border-color: var(--warm-200);
 }
-.svc-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--warm-900);
-}
+
+/* `.svc-name` desapareció entera: el nombre del servicio es
+   `.ds-item-label ds-item-label--lg`, que es exactamente ese trío. */
 
 /* La nota del servicio activo y la categoría del pausado eran dos reglas con el
    mismo cuerpo: `.ds-meta` más el aire de la línea de arriba. */

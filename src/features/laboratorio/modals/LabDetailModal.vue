@@ -67,7 +67,7 @@ const showAttachments = computed(
     @close="emit('close')"
   >
     <template v-if="test" #body>
-      <div class="detail-grid">
+      <div class="detail-grid ds-detail-grid">
         <DetailField label="Paciente" :value="`${test.animal.name} · ${test.animal.code}`" />
         <DetailField label="Fecha" :value="formatDateShort(test.date)" />
         <DetailField label="Cantidad" :value="test.quantity" />
@@ -75,11 +75,11 @@ const showAttachments = computed(
       </div>
 
       <div class="pills">
-        <div class="pill-group">
+        <div class="pill-group ds-stack">
           <span class="pill-label">Estado</span>
           <LabStatusPill :status="test.status" />
         </div>
-        <div class="pill-group">
+        <div class="pill-group ds-stack">
           <span class="pill-label">Prioridad</span>
           <LabPriorityPill :prioridad="test.prioridad" />
         </div>
@@ -95,11 +95,16 @@ const showAttachments = computed(
         <p v-if="loadingFiles" class="att-state">Cargando adjuntos…</p>
         <p v-else-if="filesError" class="att-state error">{{ filesError }}</p>
         <p v-else-if="attachments.length === 0" class="att-state">Sin archivos adjuntos.</p>
-        <ul v-else class="att-list">
-          <li v-for="att in attachments" :key="att.id" class="att">
+        <ul v-else class="att-list ds-list-reset ds-stack">
+          <li v-for="att in attachments" :key="att.id" class="att ds-flex-row">
             <FileText :size="15" :stroke-width="1.7" />
-            <span class="att-name">{{ att.originalFileName }}</span>
-            <button type="button" class="dl" title="Descargar" @click="downloadFile(att)">
+            <span class="ds-flex-fill ds-truncate">{{ att.originalFileName }}</span>
+            <button
+              type="button"
+              class="ds-icon-btn ds-icon-btn--accent"
+              title="Descargar"
+              @click="downloadFile(att)"
+            >
               <Download :size="15" :stroke-width="1.7" />
             </button>
           </li>
@@ -158,16 +163,10 @@ const showAttachments = computed(
 </template>
 
 <style scoped>
+/* Resto sobre `.ds-detail-grid`: gap de fila propio (la primitiva usa 10/24).
+   Mismas 2 columnas y mismo colapso a 1 en 560px que antes. */
 .detail-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px 24px;
-}
-
-@media (width <= 560px) {
-  .detail-grid {
-    grid-template-columns: 1fr;
-  }
+  gap: var(--space-18) var(--space-24);
 }
 
 .pills {
@@ -177,9 +176,7 @@ const showAttachments = computed(
 }
 
 .pill-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: var(--space-6);
 }
 
 .pill-label {
@@ -223,49 +220,15 @@ const showAttachments = computed(
 }
 
 .att-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: var(--space-6);
 }
 
 .att {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  padding: var(--space-8) var(--space-12);
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 9px;
   font-size: 12.5px;
   color: var(--warm-800);
-}
-
-.att-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dl {
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  color: var(--warm-700);
-  border-radius: 7px;
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
-.dl:hover {
-  background: var(--amatista-50);
-  border-color: var(--amatista-300);
-  color: var(--amatista-700);
 }
 </style>

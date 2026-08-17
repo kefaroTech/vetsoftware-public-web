@@ -122,10 +122,10 @@ function ivaContenido(percentage: number): string {
   <div class="ds-page">
     <header class="ds-head">
       <div>
-        <div class="kicker">Tienda · Impuestos</div>
+        <div class="ds-kicker ds-kicker--spaced">Tienda · Impuestos</div>
         <h1 class="ds-display">Administración de impuestos</h1>
       </div>
-      <div class="head-actions">
+      <div class="head-actions ds-flex-row">
         <SegTabs
           :model-value="mode"
           :options="[
@@ -267,19 +267,11 @@ function ivaContenido(percentage: number): string {
 .ds-head {
   flex-wrap: wrap;
 }
-.kicker {
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--warm-500);
-  font-weight: 500;
-  margin-bottom: 6px;
-}
+
+/* El rótulo en versalitas es `.ds-kicker ds-kicker--spaced` y la fila de la
+   cabecera `.ds-flex-row` (primitives.css). */
 .head-actions {
-  display: flex;
-  gap: 8px;
   flex-shrink: 0;
-  align-items: center;
   flex-wrap: wrap;
 }
 .tbl-scroll {
@@ -292,6 +284,9 @@ function ivaContenido(percentage: number): string {
    `.ds-empty ds-empty--lg` de las cuatro celdas `<td colspan>` vacías lo
    resuelve la excepción `.ds-table td.ds-empty--lg` de `primitives.css`
    (0,2,1), que le gana a `.ds-table td` (0,1,1). */
+
+/* NO es `.ds-row-clickable` (tiñe de amatista y sobre el `td`); ver la misma
+   nota en `InventoryProductsTable`. */
 .trow {
   cursor: pointer;
 }

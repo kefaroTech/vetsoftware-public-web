@@ -157,8 +157,8 @@ function submit() {
     @close="emit('close')"
   >
     <template #body>
-      <div class="grid">
-        <div v-if="hasMultipleBranches" class="span-2">
+      <div class="grid ds-grid-2">
+        <div v-if="hasMultipleBranches" class="ds-grid-span">
           <BaseField
             label="Sede"
             hint="El prefijo se emite desde esta sede. «Todas las sedes» = resolución de empresa."
@@ -189,7 +189,7 @@ function submit() {
             />
           </template>
         </BaseField>
-        <div class="span-2">
+        <div class="ds-grid-span">
           <BaseField label="Número de resolución" required :error="err('resolutionNumber')">
             <template #default="{ id }">
               <BaseInput
@@ -239,7 +239,7 @@ function submit() {
             <DateInput :id="id" v-model="draft.validTo" :invalid="!!err('validTo')" />
           </template>
         </BaseField>
-        <div v-if="isInvoice" class="span-2">
+        <div v-if="isInvoice" class="ds-grid-span">
           <BaseField
             label="Clave técnica (DIAN)"
             hint="Solo para DIAN directa/producción. Con el proveedor MATIAS (sandbox) déjala vacía."
@@ -266,20 +266,10 @@ function submit() {
 </template>
 
 <style scoped>
+/* Layout: `.ds-grid-2` (dos columnas, colapso en 640px) + `.ds-grid-span`.
+   Aquí sólo el gap propio. */
 .grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px 22px;
-}
-
-@media (width <= 760px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.span-2 {
-  grid-column: 1 / -1;
+  gap: var(--space-18) var(--space-22);
 }
 
 .help {

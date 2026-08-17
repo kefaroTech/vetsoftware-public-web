@@ -53,8 +53,8 @@ const to = defineModel<string>('to', { required: true })
     <template #count>{{ total }} {{ total === 1 ? 'sesión' : 'sesiones' }}</template>
 
     <form class="history-filters" @submit.prevent="emit('apply')">
-      <label class="filter-field">
-        <span>Sede</span>
+      <label class="filter-field ds-stack">
+        <span class="ds-label ds-label--xs">Sede</span>
         <select v-model="branchId" :disabled="loading">
           <option :value="null">Todas las sedes asignadas</option>
           <option v-for="branch in branchOptions" :key="branch.id" :value="branch.id">
@@ -62,8 +62,8 @@ const to = defineModel<string>('to', { required: true })
           </option>
         </select>
       </label>
-      <label class="filter-field">
-        <span>Empleado que abrió</span>
+      <label class="filter-field ds-stack">
+        <span class="ds-label ds-label--xs">Empleado que abrió</span>
         <select v-model="employeeId" :disabled="loading || employeesLoading">
           <option :value="null">
             {{ employeesLoading ? 'Cargando empleados…' : 'Todos los empleados' }}
@@ -73,8 +73,8 @@ const to = defineModel<string>('to', { required: true })
           </option>
         </select>
       </label>
-      <label class="filter-field date-field">
-        <span>Desde</span>
+      <label class="filter-field date-field ds-stack">
+        <span class="ds-label ds-label--xs">Desde</span>
         <DateInput
           id="cash-history-from"
           v-model="from"
@@ -83,8 +83,8 @@ const to = defineModel<string>('to', { required: true })
           :disabled="loading"
         />
       </label>
-      <label class="filter-field date-field">
-        <span>Hasta</span>
+      <label class="filter-field date-field ds-stack">
+        <span class="ds-label ds-label--xs">Hasta</span>
         <DateInput
           id="cash-history-to"
           v-model="to"
@@ -118,9 +118,9 @@ const to = defineModel<string>('to', { required: true })
           <th>Abrió</th>
           <th>Cerró</th>
           <th>Estado</th>
-          <th class="num">Base</th>
-          <th class="num">Total cierre</th>
-          <th class="num">Arqueo</th>
+          <th class="ds-num">Base</th>
+          <th class="ds-num">Total cierre</th>
+          <th class="ds-num">Arqueo</th>
         </tr>
       </thead>
       <tbody>
@@ -145,11 +145,11 @@ const to = defineModel<string>('to', { required: true })
           <td>
             <CashStatusPill :status="s.status" />
           </td>
-          <td class="num">{{ formatMoney(s.openingFloat) }}</td>
-          <td class="num">
+          <td class="ds-num">{{ formatMoney(s.openingFloat) }}</td>
+          <td class="ds-num">
             {{ s.closingTotal == null ? '—' : formatMoney(s.closingTotal) }}
           </td>
-          <td class="num actions-cell">
+          <td class="ds-num actions-cell">
             <CashLinkButton
               :aria-label="'Descargar arqueo CSV de la sesión ' + s.id"
               title="Descargar CSV"
@@ -179,13 +179,8 @@ const to = defineModel<string>('to', { required: true })
 </template>
 
 <style scoped>
-.filter-field > span {
-  color: var(--warm-500);
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
+/* El rótulo de cada filtro es `.ds-label ds-label--xs` (primitives.css): la
+   regla `.filter-field > span` coincidía con ella en las cinco declaraciones. */
 
 /* Anillo propio, más oscuro que el `--ring` del sistema: no es `.ds-focus-ring`.
    Ver informe FE-08 del slice de caja. */
@@ -207,6 +202,11 @@ const to = defineModel<string>('to', { required: true })
   white-space: nowrap;
 }
 
+/* NO es `.ds-grid-auto`: esta barra tiene cinco pistas medidas a mano y
+   asimétricas (dos flexibles, dos fechas fijas de 170px y la de acciones a
+   `auto`) con hueco de 10px. La primitiva las repartiría todas iguales a partir
+   de 240px, así que el filtro de fecha se ensancharía y a 1180px caben cuatro
+   columnas donde hoy van cinco. Es otra rejilla, no la misma con deriva. */
 .history-filters {
   display: grid;
   grid-template-columns: minmax(160px, 1fr) minmax(190px, 1.2fr) 170px 170px auto;
@@ -219,10 +219,9 @@ const to = defineModel<string>('to', { required: true })
   background: var(--warm-100);
 }
 
+/* La columna es `.ds-stack`; 6px no es uno de los cinco huecos catalogados. */
 .filter-field {
-  display: flex;
   min-width: 0;
-  flex-direction: column;
   gap: 6px;
 }
 

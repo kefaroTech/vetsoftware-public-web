@@ -226,7 +226,7 @@ function medErr(
     @close="emit('close')"
   >
     <template #body>
-      <div v-if="medsError" class="catalog-error">{{ medsError }}</div>
+      <div v-if="medsError" class="ds-catalog-error">{{ medsError }}</div>
 
       <ExistingItemsSection
         :items="props.existing"
@@ -258,16 +258,16 @@ function medErr(
         </BaseField>
       </div>
 
-      <div class="meds-head">
-        <div class="meds-title">Medicamentos prescritos</div>
-        <div class="meds-count">{{ draft.medicaments.length }} en el plan</div>
+      <div class="ds-block-head">
+        <div class="ds-item-label">Medicamentos prescritos</div>
+        <div class="ds-hint">{{ draft.medicaments.length }} en el plan</div>
       </div>
 
-      <div class="meds-list">
+      <div class="ds-stack ds-stack--10">
         <div v-for="(m, i) in draft.medicaments" :key="m.uid" class="med-card">
           <div class="med-head">
-            <div class="med-num">{{ i + 1 }}</div>
-            <div class="med-name-preview">
+            <div class="med-num ds-tone--accent">{{ i + 1 }}</div>
+            <div class="med-name-preview ds-truncate ds-meta-dark ds-meta-dark--sm">
               {{ medLabel(m.medicamentId) || 'Nuevo medicamento' }}
             </div>
             <button
@@ -368,16 +368,6 @@ function medErr(
 </template>
 
 <style scoped>
-.catalog-error {
-  background: var(--danger-150);
-  border: 1px solid var(--danger-300);
-  color: oklch(35% 0.15 25deg);
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 12.5px;
-  margin-bottom: 14px;
-}
-
 .grid-1 {
   display: grid;
   grid-template-columns: 1fr;
@@ -387,30 +377,6 @@ function medErr(
 
 .med-obs {
   margin-top: 12px;
-}
-
-.meds-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.meds-title {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-900);
-}
-
-.meds-count {
-  font-size: 11.5px;
-  color: var(--warm-500);
-}
-
-.meds-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 .med-card {
@@ -427,26 +393,22 @@ function medErr(
   margin-bottom: 12px;
 }
 
+/* El par fondo+texto lo pone `.ds-tone--accent`. */
 .med-num {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   font-size: 11px;
   font-weight: 600;
   display: grid;
   place-items: center;
 }
 
+/* El recorte lo pone `.ds-truncate` y el par color+tamaño `.ds-meta-dark`
+   + `--sm`; aquí queda el reparto y el peso. */
 .med-name-preview {
   flex: 1;
-  font-size: 12.5px;
   font-weight: 500;
-  color: var(--warm-600);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .med-remove {
@@ -479,67 +441,6 @@ function medErr(
   .med-grid {
     grid-template-columns: 1fr;
   }
-}
-
-.suggest-wrap {
-  position: relative;
-}
-
-.suggest {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-300);
-  border-radius: 10px;
-  box-shadow: 0 12px 30px rgb(0 0 0 / 12%);
-  z-index: 10;
-  max-height: 220px;
-  overflow: auto;
-}
-
-.suggest-item {
-  width: 100%;
-  text-align: left;
-  background: transparent;
-  border: none;
-  padding: 10px 12px;
-  font-family: inherit;
-  font-size: 12.5px;
-  cursor: pointer;
-  border-bottom: 1px solid var(--warm-200);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.suggest-item:last-child {
-  border-bottom: none;
-}
-
-.suggest-item:hover {
-  background: var(--amatista-50);
-}
-
-.suggest-name {
-  font-weight: 500;
-  color: var(--warm-900);
-}
-
-.suggest-hint {
-  font-size: 11.5px;
-  color: var(--warm-500);
-}
-
-.suggest-empty {
-  padding: 10px 12px;
-  font-size: 12px;
-  color: var(--warm-500);
-}
-
-.suggest-empty strong {
-  color: var(--warm-900);
 }
 
 .add-med {

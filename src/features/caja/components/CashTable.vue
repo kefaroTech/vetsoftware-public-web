@@ -53,10 +53,10 @@ defineProps<{ minWidth: number }>()
   border-bottom: 1px solid var(--warm-100);
 }
 
-:deep(.num) {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
+/* La cifra ya no se declara aquí: las tres tablas de caja marcan sus celdas con
+   `.ds-num` (primitives.css), que es ese mismo par. El reparto de pesos no
+   cambia — `.movs :deep(th)` (0,2,1) le sigue ganando en los encabezados, que
+   por eso siguen alineados a la izquierda, y en las celdas no compite nadie. */
 
 :deep(.empty-row) {
   padding: var(--space-22);

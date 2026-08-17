@@ -26,9 +26,10 @@ const emit = defineEmits<{
 <template>
   <div>
     <div class="toolbar">
-      <div class="search">
+      <div class="search ds-flex-row">
         <Search :size="15" :stroke-width="1.7" class="ic" />
         <input
+          class="ds-flex-fill"
           :value="query"
           type="search"
           placeholder="Buscar por nombre, código o correo…"
@@ -37,7 +38,7 @@ const emit = defineEmits<{
       </div>
     </div>
 
-    <div class="table">
+    <div class="table ds-stack">
       <div class="head">
         <div class="cell avatar-cell" />
         <div class="cell name-cell">Empleado</div>
@@ -48,8 +49,8 @@ const emit = defineEmits<{
         <div class="cell chev-cell" />
       </div>
 
-      <div v-if="loading && employees.length === 0" class="empty">Cargando empleados…</div>
-      <div v-else-if="employees.length === 0" class="empty">
+      <div v-if="loading && employees.length === 0" class="empty ds-empty">Cargando empleados…</div>
+      <div v-else-if="employees.length === 0" class="empty ds-empty">
         {{
           query.trim()
             ? 'Sin resultados que coincidan con la búsqueda.'
@@ -91,9 +92,6 @@ const emit = defineEmits<{
 
 .search {
   flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 6px 12px;
   background: var(--warm-100);
   border-radius: 7px;
@@ -104,14 +102,12 @@ const emit = defineEmits<{
 }
 
 .search input {
-  flex: 1;
   border: none;
   background: transparent;
   outline: none;
   font-size: 13.5px;
   color: var(--warm-900);
   font-family: inherit;
-  min-width: 0;
 }
 
 .search input::placeholder {
@@ -123,8 +119,6 @@ const emit = defineEmits<{
   border: 1px solid var(--warm-200);
   border-radius: 12px;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
 .head {
@@ -175,8 +169,6 @@ const emit = defineEmits<{
 
 .empty {
   padding: 60px 20px;
-  text-align: center;
-  color: var(--warm-500);
   font-size: 14px;
 }
 </style>

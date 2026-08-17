@@ -19,7 +19,7 @@ defineEmits<{ back: []; next: [] }>()
     </button>
     <span v-else />
     <div class="right">
-      <span v-if="draftNote" class="draftnote">{{ draftNote }}</span>
+      <span v-if="draftNote" class="ds-meta">{{ draftNote }}</span>
       <button
         type="button"
         class="ds-btn ds-btn--primary ds-btn--strong"
@@ -33,6 +33,7 @@ defineEmits<{ back: []; next: [] }>()
 </template>
 
 <style scoped>
+/* `.ds-meta` pinta la nota; las filas siguen locales (gaps 16/14px, no los de `.ds-flex-row`). */
 .wizfoot {
   display: flex;
   align-items: center;
@@ -44,10 +45,5 @@ defineEmits<{ back: []; next: [] }>()
   display: flex;
   align-items: center;
   gap: 14px;
-}
-
-.draftnote {
-  font-size: 12px;
-  color: var(--warm-500);
 }
 </style>

@@ -201,7 +201,8 @@ onBeforeUnmount(() => {
       :id="controlId"
       ref="trigger"
       type="button"
-      class="trigger"
+      class="trigger ds-flex-row"
+      :class="{ 'ds-field-shake': invalid }"
       role="combobox"
       aria-haspopup="listbox"
       :aria-expanded="open"
@@ -213,14 +214,14 @@ onBeforeUnmount(() => {
       @click="toggle"
       @keydown="onKeydown"
     >
-      <span :class="['value', { placeholder: !selected }]">{{
+      <span :class="['value', 'ds-flex-fill', 'ds-truncate', { placeholder: !selected }]">{{
         selected?.label ?? placeholder
       }}</span>
-      <ChevronDown :size="13" :stroke-width="1.8" class="chev" />
+      <ChevronDown :size="13" :stroke-width="1.8" class="chev ds-icon-muted" />
     </button>
 
     <Teleport to="body">
-      <ul v-if="open" ref="panel" class="panel" role="listbox" :style="panelStyle">
+      <ul v-if="open" ref="panel" class="panel ds-list-reset" role="listbox" :style="panelStyle">
         <li v-if="options.length === 0" class="empty">Sin opciones</li>
         <li
           v-for="(o, i) in options"
@@ -234,7 +235,7 @@ onBeforeUnmount(() => {
           @mousedown.prevent="pick(o)"
           @mousemove="highlighted = i"
         >
-          <span class="item-label">{{ o.label }}</span>
+          <span class="ds-flex-fill ds-truncate">{{ o.label }}</span>
           <Check v-if="o.value === modelValue" :size="14" :stroke-width="2.4" class="item-check" />
         </li>
       </ul>
@@ -250,9 +251,6 @@ onBeforeUnmount(() => {
 
 .trigger {
   width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 8px;
@@ -284,10 +282,13 @@ onBeforeUnmount(() => {
   cursor: not-allowed;
 }
 
+/* El temblor lo pone `.ds-field-shake` desde el template. Borde+fondo se
+   quedan aquí: la regla base `.trigger` ya declara `background`/`border` y en
+   CSS scoped pesa (0,2,0), así que `.ds-field-invalid` (0,1,0) no le ganaría.
+   Igual para `.ds-field-invalid-focus` y `.ds-field-disabled`. */
 .select.invalid .trigger {
   border-color: oklch(60% 0.2 25deg);
   background: oklch(98.5% 0.02 25deg);
-  animation: shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 
 .select.invalid.open .trigger,
@@ -300,33 +301,8 @@ onBeforeUnmount(() => {
   color: oklch(55% 0.22 25deg);
 }
 
-@keyframes shake {
-  10%,
-  90% {
-    transform: translateX(-1px);
-  }
-  20%,
-  80% {
-    transform: translateX(2px);
-  }
-  30%,
-  50%,
-  70% {
-    transform: translateX(-3px);
-  }
-  40%,
-  60% {
-    transform: translateX(3px);
-  }
-}
-
 .value {
-  flex: 1;
-  min-width: 0;
   text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .value.placeholder {
@@ -334,8 +310,6 @@ onBeforeUnmount(() => {
 }
 
 .chev {
-  flex-shrink: 0;
-  color: var(--warm-500);
   pointer-events: none;
   transition:
     transform 0.18s ease,
@@ -352,9 +326,7 @@ onBeforeUnmount(() => {
 /* El panel se teletransporta a <body>: estilos globales acotados por la clase. */
 .panel[role='listbox'] {
   z-index: 2100;
-  margin: 0;
   padding: 5px;
-  list-style: none;
   overflow-y: auto;
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
@@ -388,14 +360,6 @@ onBeforeUnmount(() => {
 
 .panel[role='listbox'] .item + .item {
   margin-top: 2px;
-}
-
-.panel[role='listbox'] .item .item-label {
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .panel[role='listbox'] .item .item-check {

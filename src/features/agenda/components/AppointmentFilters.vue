@@ -42,8 +42,8 @@ const originModel = computed({
 </script>
 
 <template>
-  <div class="filterbar">
-    <Filter :size="15" :stroke-width="1.7" class="filter-icon" />
+  <div class="filterbar ds-flex-row">
+    <Filter :size="15" :stroke-width="1.7" class="ds-icon-muted" />
     <div class="sel"><BaseSelect v-model="vetModel" :options="vetOptions" /></div>
     <div class="sel"><BaseSelect v-model="statusModel" :options="statusOptions" /></div>
     <div class="sel"><BaseSelect v-model="originModel" :options="originOptions" /></div>
@@ -52,15 +52,7 @@ const originModel = computed({
 
 <style scoped>
 .filterbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   flex-wrap: wrap;
-}
-
-.filter-icon {
-  color: var(--warm-500);
-  flex-shrink: 0;
 }
 
 .sel {

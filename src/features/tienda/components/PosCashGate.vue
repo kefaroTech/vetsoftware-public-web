@@ -29,7 +29,7 @@ const emit = defineEmits<{ retry: []; goToCash: []; useCashBranch: [] }>()
 
 <template>
   <section v-if="checking" class="cash-gate checking" aria-live="polite">
-    <div class="cash-gate-card">
+    <div class="cash-gate-card ds-stack">
       <span class="cash-lock-icon"><RefreshCw :size="26" class="spin" /></span>
       <span class="cash-gate-kicker">Validando caja</span>
       <h2>Estamos comprobando tu sesión</h2>
@@ -38,7 +38,7 @@ const emit = defineEmits<{ retry: []; goToCash: []; useCashBranch: [] }>()
   </section>
 
   <section v-else-if="loadFailed" class="cash-gate" aria-live="polite">
-    <div class="cash-gate-card">
+    <div class="cash-gate-card ds-stack">
       <span class="cash-lock-icon error"><AlertTriangle :size="28" /></span>
       <span class="cash-gate-kicker">No pudimos validar la caja</span>
       <h2>El punto de venta permanece bloqueado</h2>
@@ -50,7 +50,7 @@ const emit = defineEmits<{ retry: []; goToCash: []; useCashBranch: [] }>()
   </section>
 
   <section v-else-if="noSession" class="cash-gate" aria-live="polite">
-    <div class="cash-gate-card">
+    <div class="cash-gate-card ds-stack">
       <span class="cash-lock-icon"><LockKeyhole :size="30" /></span>
       <span class="cash-gate-kicker">Punto de venta bloqueado</span>
       <h2>Debes abrir tu caja antes de vender</h2>
@@ -65,7 +65,7 @@ const emit = defineEmits<{ retry: []; goToCash: []; useCashBranch: [] }>()
   </section>
 
   <section v-else-if="branchMismatch" class="cash-gate" aria-live="polite">
-    <div class="cash-gate-card">
+    <div class="cash-gate-card ds-stack">
       <span class="cash-lock-icon"><LockKeyhole :size="30" /></span>
       <span class="cash-gate-kicker">Caja abierta en otra sede</span>
       <h2>Usa la sede asociada a tu caja</h2>
@@ -105,12 +105,15 @@ const emit = defineEmits<{ retry: []; goToCash: []; useCashBranch: [] }>()
   mask-image: linear-gradient(to bottom, #000, transparent 88%);
 }
 
+/* La columna es `.ds-stack` (primitives.css). El resto de esta pantalla no
+   tiene equivalente en la capa 2 y se documenta en el informe FE-08: el kicker
+   es de acento de marca (amatista-700 / 700 / .12em) y no la firma de
+   `.ds-kicker`, y el CTA lleva peso 650 y sombra propia, así que heredar
+   `.ds-btn` obligaría a sobrescribirle cuatro propiedades. */
 .cash-gate-card {
   position: relative;
   z-index: 1;
   width: min(100%, 520px);
-  display: flex;
-  flex-direction: column;
   align-items: center;
   text-align: center;
   padding: 38px 34px;
@@ -139,13 +142,8 @@ const emit = defineEmits<{ retry: []; goToCash: []; useCashBranch: [] }>()
   box-shadow: inset 0 0 0 1px oklch(84% 0.1 25deg);
 }
 
-.cash-gate-kicker {
-  color: var(--amatista-700);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
+/* El rótulo de acento de marca es `.ds-kicker-accent ds-kicker-accent--wide`
+   (primitives.css): coincidía con la primitiva en sus cinco declaraciones. */
 
 .cash-gate h2 {
   margin: 8px 0 10px;

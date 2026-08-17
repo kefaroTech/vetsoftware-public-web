@@ -27,10 +27,10 @@ defineEmits<{ back: []; next: [] }>()
       <ArrowLeft :size="13" :stroke-width="1.8" />
       <span>Atrás</span>
     </button>
-    <div class="extra">
+    <div class="ds-flex-row">
       <slot name="extra" />
     </div>
-    <div class="end">
+    <div class="end ds-flex-row">
       <slot name="endExtra" />
       <button
         v-if="showNext"
@@ -65,17 +65,9 @@ defineEmits<{ back: []; next: [] }>()
   }
 }
 
-.extra {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
+/* Único añadido sobre `.ds-flex-row`: empujar el bloque al extremo. */
 .end {
   margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .next.success {

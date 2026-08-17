@@ -24,9 +24,9 @@ const weightLabel = computed(() => {
 <template>
   <button type="button" class="pet-card" @click="emit('select', pet)">
     <div class="avatar">{{ petInitials }}</div>
-    <div class="body">
-      <div class="name">{{ pet.name }}</div>
-      <div class="taxa">{{ pet.specie.name }} · {{ pet.breed.name }}</div>
+    <div class="ds-flex-fill">
+      <div class="name ds-item-label">{{ pet.name }}</div>
+      <div class="taxa ds-meta">{{ pet.specie.name }} · {{ pet.breed.name }}</div>
       <div class="row">
         <span class="muted">Sexo:</span> {{ sexLabel }}
         <span class="sep">·</span>
@@ -72,21 +72,12 @@ const weightLabel = computed(() => {
   flex-shrink: 0;
 }
 
-.body {
-  flex: 1;
-  min-width: 0;
-}
-
 .name {
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--warm-900);
+  font-size: var(--text-2xl);
 }
 
 .taxa {
-  font-size: 12px;
-  color: var(--warm-500);
-  margin-top: 3px;
+  margin-top: var(--space-3);
 }
 
 .row {

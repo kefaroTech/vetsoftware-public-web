@@ -171,7 +171,7 @@ function save() {
     @close="emit('close')"
   >
     <template #body>
-      <div v-if="typesError" class="catalog-error">{{ typesError }}</div>
+      <div v-if="typesError" class="ds-catalog-error">{{ typesError }}</div>
 
       <ExistingItemsSection
         :items="props.existing"
@@ -188,7 +188,7 @@ function save() {
         <template #sub="{ item }">{{ truncate(item.description) }}</template>
       </ExistingItemsSection>
 
-      <div class="grid-2">
+      <div class="grid-2 ds-grid-2">
         <BaseField label="Fecha programada" required>
           <template #default>
             <DateInput v-model="draft.date" />
@@ -230,7 +230,7 @@ function save() {
         </template>
       </BaseField>
 
-      <div class="grid-2">
+      <div class="grid-2 ds-grid-2">
         <BaseField label="Observaciones">
           <template #default="{ id }">
             <BaseTextarea
@@ -268,26 +268,9 @@ function save() {
 </template>
 
 <style scoped>
-.catalog-error {
-  background: var(--danger-150);
-  border: 1px solid var(--danger-300);
-  color: oklch(35% 0.15 25deg);
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 12.5px;
-  margin-bottom: 14px;
-}
-
+/* Añadidos sobre `.ds-grid-2`: gap simétrico y el hueco hacia el bloque siguiente. */
 .grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 14px;
   margin-bottom: 14px;
-}
-
-@media (width <= 720px) {
-  .grid-2 {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

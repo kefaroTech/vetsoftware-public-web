@@ -251,10 +251,10 @@ watch(
 <template>
   <div class="ds-page ds-page--contained caja">
     <header class="page-head">
-      <div class="title-wrap">
+      <div class="ds-flex-row ds-flex-row--12 ds-flex-row--accent">
         <Wallet :size="22" :stroke-width="1.7" />
         <div>
-          <h1>Caja</h1>
+          <h1 class="ds-display ds-display--xs">Caja</h1>
           <p class="sub">Control de efectivo y arqueo por sede</p>
         </div>
       </div>
@@ -365,11 +365,15 @@ watch(
 
 <style scoped>
 /* El ancho, el centrado y el padding de la página son `.ds-page--contained`
-   (primitives.css); aquí sólo queda el tono de los botones de caja. */
+   (primitives.css); aquí sólo queda el tono de los botones de caja, que NO es
+   el de la primitiva: `.ds-btn--solid` cae por defecto en `--amatista-700` y
+   caja usa el escalón de encima. Sin esta línea los botones se oscurecen. */
 .caja {
   --ds-btn-solid-bg: var(--amatista-600);
 }
 
+/* NO es `.ds-head`: la primitiva alinea al pie (`flex-end`), añade `gap: 16px`
+   y deja 16px por debajo; esta cabecera alinea al centro y deja 20. */
 .page-head {
   display: flex;
   align-items: center;
@@ -377,21 +381,10 @@ watch(
   margin-bottom: 20px;
 }
 
-.title-wrap {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  color: var(--amatista-700);
-}
-
-.title-wrap h1 {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: 26px;
-  font-weight: 400;
-  color: var(--warm-900);
-}
-
+/* `.title-wrap` y su `h1` desaparecieron enteros: son `.ds-flex-row --12
+   --accent` y `.ds-display --xs`. El titular gana además el `line-height` 1.05
+   y el tracking de la familia display, que las 5 vistas de caja/compras no
+   declaraban — es la normalización que buscaba la primitiva. */
 .sub {
   margin: 2px 0 0;
   font-size: 13px;

@@ -200,60 +200,66 @@ async function submit() {
 
 <template>
   <!-- ══ Vista de búsqueda ══ -->
-  <div v-if="view === 'search'" class="cpk">
+  <div v-if="view === 'search'" class="cpk ds-stack">
     <div class="cpk-searchrow">
       <div class="search">
         <Search :size="14" :stroke-width="1.7" class="s-icon" />
-        <input v-model="query" type="text" placeholder="Buscar por nombre o documento…" autofocus />
+        <input
+          v-model="query"
+          type="text"
+          class="ds-focus-ring"
+          placeholder="Buscar por nombre o documento…"
+          autofocus
+        />
         <PawLoader v-if="searching" :size="20" :glow="false" :speed="900" class="s-loader" />
       </div>
-      <button type="button" class="newbtn" @click="goCreate">
+      <button type="button" class="newbtn ds-tone--accent-soft" @click="goCreate">
         <Plus :size="15" :stroke-width="2.2" /> Crear cliente
       </button>
     </div>
 
-    <ul v-if="results.length" class="results">
+    <ul v-if="results.length" class="results ds-list-reset ds-stack">
       <li v-for="o in results" :key="o.id">
         <button type="button" class="result" @click="emit('pick', o)">
-          <span class="avatar"><User :size="14" :stroke-width="1.7" /></span>
-          <span class="info">
-            <span class="name">{{ o.name }}</span>
-            <span class="meta">{{ o.document }}{{ o.phone ? ' · ' + o.phone : '' }}</span>
+          <span class="avatar ds-tone--accent"><User :size="14" :stroke-width="1.7" /></span>
+          <span class="ds-flex-fill">
+            <span class="name ds-text-strong ds-text-strong--md">{{ o.name }}</span>
+            <span class="ds-meta">{{ o.document }}{{ o.phone ? ' · ' + o.phone : '' }}</span>
           </span>
-          <ChevronRight :size="15" :stroke-width="1.8" class="chev" />
+          <ChevronRight :size="15" :stroke-width="1.8" class="ds-icon-muted ds-icon-muted--dim" />
         </button>
       </li>
     </ul>
 
     <div v-else-if="query.trim().length >= 2 && !searching" class="empty">
       <div class="empty-ic"><Search :size="20" :stroke-width="1.7" /></div>
-      <div class="empty-t">Sin resultados para “{{ query.trim() }}”</div>
-      <div class="empty-s">No encontramos un cliente con ese nombre o documento.</div>
+      <div class="empty-t ds-strong">Sin resultados para “{{ query.trim() }}”</div>
+      <div class="empty-s ds-meta">No encontramos un cliente con ese nombre o documento.</div>
       <button type="button" class="ds-btn ds-btn--primary ds-btn--strong" @click="goCreate">
         <Plus :size="14" :stroke-width="2.2" /> Crear cliente nuevo
       </button>
     </div>
 
-    <p v-else class="hint">
+    <p v-else class="hint ds-meta ds-meta--sm">
       Escribe el nombre o documento del cliente. Si no existe, podrás crearlo.
     </p>
   </div>
 
   <!-- ══ Vista de creación ══ -->
-  <div v-else class="cpk-create">
+  <div v-else class="cpk-create ds-stack">
     <button type="button" class="back" @click="view = 'search'">
       <ArrowLeft :size="14" :stroke-width="1.9" /> Volver a la búsqueda
     </button>
 
-    <div v-if="submitError" class="failbanner">
+    <div v-if="submitError" class="failbanner ds-flex-row">
       <X :size="14" :stroke-width="2.2" /> {{ submitError }}
     </div>
-    <div v-if="geoError" class="failbanner">
+    <div v-if="geoError" class="failbanner ds-flex-row">
       <X :size="14" :stroke-width="2.2" /> {{ geoError }}
     </div>
 
-    <div class="sectlabel">Datos básicos</div>
-    <div class="grid">
+    <div class="sectlabel ds-flex-row">Datos básicos</div>
+    <div class="grid ds-grid-2">
       <BaseField label="Nombre" required :error="err('name')">
         <template #default="{ id }">
           <BaseInput
@@ -310,7 +316,7 @@ async function submit() {
         </template>
       </BaseField>
 
-      <div class="span-2 geo">
+      <div class="ds-grid-span geo">
         <BaseField label="País" required>
           <template #default="{ id }">
             <BaseSelect
@@ -347,7 +353,7 @@ async function submit() {
         </BaseField>
       </div>
 
-      <div class="span-2">
+      <div class="ds-grid-span">
         <BaseField label="Dirección (opcional)">
           <template #default="{ id }">
             <BaseInput :id="id" v-model="draft.address" />
@@ -356,20 +362,22 @@ async function submit() {
       </div>
     </div>
 
-    <div class="sectlabel with-tag">
+    <div class="sectlabel with-tag ds-flex-row">
       Datos fiscales
       <span v-if="fiscal" class="reqtag">requeridos para factura electrónica</span>
       <span v-else class="opttag">opcionales</span>
     </div>
     <div class="fiscalbox" :class="{ req: fiscal }">
-      <div class="grid">
+      <div class="grid ds-grid-2">
         <BaseField label="Tipo de documento" :required="fiscal">
           <template #default="{ id }">
             <BaseSelect :id="id" v-model="draft.documentType" :options="docTypeOptions" />
           </template>
         </BaseField>
-        <div class="field">
-          <div class="field-lab">Tipo de persona <span v-if="fiscal" class="req">*</span></div>
+        <div class="ds-stack">
+          <div class="field-lab ds-text-strong">
+            Tipo de persona <span v-if="fiscal" class="req">*</span>
+          </div>
           <div class="segmented">
             <button
               type="button"
@@ -395,7 +403,7 @@ async function submit() {
           </template>
         </BaseField>
       </div>
-      <p v-if="isJuridica" class="juridica-hint">
+      <p v-if="isJuridica" class="juridica-hint ds-meta">
         El <strong>Nombre</strong> se usará como razón social de la empresa.
       </p>
       <button
@@ -409,7 +417,7 @@ async function submit() {
         </span>
         <span>
           <strong>Agente retenedor</strong>
-          <span class="agenthint">Si está activo se aplicarán retenciones.</span>
+          <span class="ds-hint">Si está activo se aplicarán retenciones.</span>
         </span>
       </button>
     </div>
@@ -429,9 +437,11 @@ async function submit() {
 </template>
 
 <style scoped>
+/* Layout via primitivas: .ds-stack (columna), .ds-grid-2 (rejillas del alta),
+   .ds-list-reset, .ds-flex-row, .ds-flex-fill, .ds-meta(--sm), .ds-hint,
+   .ds-strong, .ds-text-strong(--md), .ds-icon-muted(--dim), .ds-focus-ring y
+   .ds-tone--accent / --accent-soft. Aquí sólo queda lo propio del picker. */
 .cpk {
-  display: flex;
-  flex-direction: column;
   gap: 12px;
   font-family: var(--font-sans);
 }
@@ -467,11 +477,10 @@ async function submit() {
   color: var(--warm-900);
   outline: none;
 }
-.search input:focus {
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
-}
 
+/* Botón de acento que se estira con el `align-items: stretch` de la fila: por
+   eso `padding: 0 14px` y borde de 1.5px. NO es `.ds-btn` (fija padding
+   vertical y peso/tamaño distintos) — ver informe FE-08. */
 .newbtn {
   display: inline-flex;
   align-items: center;
@@ -479,8 +488,6 @@ async function submit() {
   padding: 0 14px;
   border-radius: 9px;
   border: 1.5px solid var(--amatista-300);
-  background: var(--amatista-50);
-  color: var(--amatista-700);
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 600;
@@ -492,11 +499,6 @@ async function submit() {
 }
 
 .results {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
   gap: 6px;
   max-height: 300px;
   overflow: auto;
@@ -523,34 +525,15 @@ async function submit() {
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   display: grid;
   place-items: center;
   flex-shrink: 0;
 }
-.info {
-  flex: 1;
-  min-width: 0;
-}
 .name {
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--warm-900);
   display: block;
-}
-.meta {
-  font-size: 12px;
-  color: var(--warm-500);
-}
-.chev {
-  color: var(--warm-400);
-  flex-shrink: 0;
 }
 
 .hint {
-  font-size: 12.5px;
-  color: var(--warm-500);
   text-align: center;
   padding: 18px;
   margin: 0;
@@ -575,19 +558,13 @@ async function submit() {
 }
 .empty-t {
   font-size: 14px;
-  font-weight: 600;
-  color: var(--warm-900);
 }
 .empty-s {
-  font-size: 12px;
-  color: var(--warm-500);
   margin-bottom: 12px;
 }
 
 /* ── Creación ── */
 .cpk-create {
-  display: flex;
-  flex-direction: column;
   font-family: var(--font-sans);
 }
 
@@ -608,9 +585,6 @@ async function submit() {
 }
 
 .failbanner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 10px 12px;
   border-radius: 9px;
   background: var(--danger-100);
@@ -627,9 +601,6 @@ async function submit() {
   text-transform: uppercase;
   color: var(--warm-600);
   margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 .sectlabel.with-tag {
   margin-top: 16px;
@@ -655,14 +626,14 @@ async function submit() {
   color: var(--warm-500);
 }
 
+/* El gap propio de este formulario; las dos columnas y su colapso en 640px los
+   pone `.ds-grid-2`. */
 .grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px 20px;
+  gap: var(--space-16) var(--space-20);
 }
-.span-2 {
-  grid-column: 1 / -1;
-}
+
+/* País/Depto/Ciudad se queda con su rejilla propia: son 3 columnas, no 2, y
+   ninguna primitiva las replica. */
 .geo {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -670,12 +641,10 @@ async function submit() {
 }
 
 @media (width <= 640px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
   .geo {
     grid-template-columns: 1fr;
   }
+
   .cpk-searchrow {
     flex-direction: column;
   }
@@ -727,18 +696,10 @@ async function submit() {
   border-color: oklch(90% 0.05 80deg);
 }
 .juridica-hint {
-  font-size: 12px;
-  color: var(--warm-500);
   margin: 12px 0 0;
-}
-.field {
-  display: flex;
-  flex-direction: column;
 }
 .field-lab {
   font-size: 12px;
-  font-weight: 500;
-  color: var(--warm-900);
   margin-bottom: 6px;
 }
 .req {
@@ -808,11 +769,6 @@ async function submit() {
   color: var(--warm-900);
   display: block;
 }
-.agenthint {
-  font-size: 11.5px;
-  color: var(--warm-500);
-}
-
 .createfoot {
   display: flex;
   justify-content: flex-end;

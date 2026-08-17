@@ -31,11 +31,17 @@ const emit = defineEmits<{ edit: [number]; remove: [number] }>()
 <template>
   <section v-if="props.items.length > 0 && props.editingIndex === null" class="existing-section">
     <h4 class="existing-title">{{ props.title }} ({{ props.items.length }})</h4>
-    <ul class="existing-list">
-      <li v-for="(item, idx) in props.items" :key="idx" class="existing-card">
-        <div class="existing-summary">
-          <div class="existing-main"><slot name="main" :item="item" /></div>
-          <div class="existing-sub"><slot name="sub" :item="item" /></div>
+    <ul class="ds-list-reset ds-stack ds-stack--8">
+      <li
+        v-for="(item, idx) in props.items"
+        :key="idx"
+        class="existing-card ds-flex-row ds-flex-row--12"
+      >
+        <div class="ds-flex-fill">
+          <div class="existing-main ds-truncate ds-text-strong">
+            <slot name="main" :item="item" />
+          </div>
+          <div class="existing-sub ds-truncate ds-meta-dark"><slot name="sub" :item="item" /></div>
         </div>
         <span v-if="item.savedId" class="saved-chip">✓ Guardado</span>
         <template v-else>
@@ -80,48 +86,23 @@ const emit = defineEmits<{ edit: [number]; remove: [number] }>()
   margin: 0 0 10px;
 }
 
-.existing-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 .existing-card {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 12px;
   padding: 14px 16px;
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 10px;
 }
 
-.existing-summary {
-  min-width: 0;
-  flex: 1;
-}
-
+/* El recorte lo pone `.ds-truncate` y el par color+peso `.ds-text-strong`. */
 .existing-main {
   font-size: 14.5px;
-  font-weight: 500;
-  color: var(--warm-900);
   line-height: 1.4;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
+/* Residuo sobre `.ds-meta-dark` (warm-600 / 13px). */
 .existing-sub {
-  font-size: 13px;
-  color: var(--warm-600);
   margin-top: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .saved-chip {

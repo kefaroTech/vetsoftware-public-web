@@ -29,7 +29,7 @@ defineProps<{
         <th>Fecha</th>
         <th>Tipo</th>
         <th>Medio</th>
-        <th class="num">Monto</th>
+        <th class="ds-num">Monto</th>
         <th>Referencia</th>
         <th>Nota</th>
       </tr>
@@ -42,7 +42,7 @@ defineProps<{
         <td>{{ formatDateTime(m.createdAt) }}</td>
         <td>{{ movementTypeLabel(m.type) }}</td>
         <td>{{ methodLabel(m.method) }}</td>
-        <td class="num" :class="isInflow(m.type) ? 'pos' : 'neg'">
+        <td class="ds-num" :class="isInflow(m.type) ? 'ds-amount--pos' : 'ds-amount--neg'">
           {{ isInflow(m.type) ? '+' : '−' }}{{ formatMoney(m.amount) }}
         </td>
         <td>{{ m.referenceId ? m.referenceType + ' #' + m.referenceId : '—' }}</td>
@@ -53,15 +53,12 @@ defineProps<{
 </template>
 
 <style scoped>
-/* El signo del importe. Mismo par que el arqueo de `CloseCashModal`, pero allí
-   vive en otra tabla; candidato a primitiva (ver informe FE-08). */
-.pos {
-  color: #2f7d4f;
-  font-weight: 600;
-}
-
-.neg {
-  color: #b4453a;
+/* El signo del importe es `.ds-amount--pos` / `--neg` (primitives.css). El
+   positivo coincide entero; el negativo de la primitiva es SÓLO color, así que
+   el peso —que esta tabla y el arqueo de `CloseCashModal` sí declaran— se queda
+   como único residuo. Anotado en el informe FE-08: la primitiva da por hecho
+   que el negativo no lleva peso, y en `caja` sus dos consumidores reales sí. */
+.ds-amount--neg {
   font-weight: 600;
 }
 </style>

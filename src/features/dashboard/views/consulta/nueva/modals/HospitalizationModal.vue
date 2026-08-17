@@ -188,7 +188,7 @@ function save() {
         <template #sub="{ item }">{{ item.reason }}</template>
       </ExistingItemsSection>
 
-      <div class="grid-2">
+      <div class="grid-2 ds-grid-2">
         <BaseField label="Tipo" required :error="err('type')">
           <template #default="{ id }">
             <BaseSelect
@@ -269,16 +269,9 @@ function save() {
 </template>
 
 <style scoped>
+/* Añadidos sobre `.ds-grid-2`: gap simétrico y el hueco hacia el bloque siguiente. */
 .grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 14px;
   margin-bottom: 14px;
-}
-
-@media (width <= 720px) {
-  .grid-2 {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

@@ -299,7 +299,7 @@ const subtitleText = computed(() =>
         <div v-if="banner" class="ds-banner ds-banner--sm ds-banner--error">
           Revisa los campos marcados antes de continuar.
         </div>
-        <div class="form">
+        <div class="ds-stack ds-stack--14">
           <BaseField label="Nombre completo" required :error="err('name')">
             <BaseInput
               v-model="draft.name"
@@ -310,7 +310,7 @@ const subtitleText = computed(() =>
             />
           </BaseField>
 
-          <div class="grid-2">
+          <div class="grid-2 ds-grid-2">
             <BaseField
               label="Código de empleado"
               required
@@ -428,12 +428,6 @@ const subtitleText = computed(() =>
 </template>
 
 <style scoped>
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
 .confirm p {
   margin: 0;
   font-size: 13.5px;
@@ -447,15 +441,9 @@ const subtitleText = computed(() =>
   font-size: 12.5px !important;
 }
 
+/* `.ds-grid-2` ya trae las 2 columnas y el colapso a 640px; aquí solo el gap,
+   que es uniforme (14px) en vez del 14/16 de la primitiva. */
 .grid-2 {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
-}
-
-@media (width <= 640px) {
-  .grid-2 {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

@@ -226,9 +226,12 @@ watch(
 </script>
 
 <template>
-  <div class="picker" :class="{ invalid, creating: ownerCreating || petCreating }">
+  <div
+    class="picker ds-stack ds-stack--10"
+    :class="{ invalid, creating: ownerCreating || petCreating }"
+  >
     <!-- ══ Paso PROPIETARIO ══ -->
-    <div v-if="!selectedOwner" class="step">
+    <div v-if="!selectedOwner" class="step ds-stack ds-stack--10">
       <!-- Crear propietario nuevo -->
       <template v-if="ownerCreating">
         <div class="form-head">
@@ -236,12 +239,12 @@ watch(
             <ArrowLeft :size="14" :stroke-width="1.9" /> Volver a la búsqueda
           </button>
         </div>
-        <div v-if="ownerSubmitError" class="form-banner" role="alert">
+        <div v-if="ownerSubmitError" class="form-banner ds-flex-row" role="alert">
           <TriangleAlert :size="14" :stroke-width="1.7" />
           <span>{{ ownerSubmitError }}</span>
         </div>
         <OwnerForm ref="ownerFormRef" v-model="ownerDraft" />
-        <div class="form-actions">
+        <div class="form-actions ds-actions">
           <button type="button" class="ds-btn ds-btn--ghost" @click="cancelCreateOwner">
             Cancelar
           </button>
@@ -268,8 +271,8 @@ watch(
             placeholder="Buscar por nombre, documento o email…"
           />
         </div>
-        <div v-if="searching" class="results state">Buscando…</div>
-        <div v-else-if="ownerQuery && ownerResults.length === 0" class="empty">
+        <div v-if="searching" class="results ds-stack state">Buscando…</div>
+        <div v-else-if="ownerQuery && ownerResults.length === 0" class="empty ds-stack">
           <span
             >Sin resultados para "<strong>{{ ownerQuery }}</strong
             >"</span
@@ -278,7 +281,7 @@ watch(
             <Plus :size="15" :stroke-width="2.2" /> Crear propietario nuevo
           </button>
         </div>
-        <div v-else-if="ownerResults.length > 0" class="results">
+        <div v-else-if="ownerResults.length > 0" class="results ds-stack">
           <button
             v-for="o in ownerResults"
             :key="o.id"
@@ -286,7 +289,7 @@ watch(
             class="result"
             @click="pickOwner(o)"
           >
-            <div class="avatar"><User :size="14" :stroke-width="1.7" /></div>
+            <div class="avatar ds-tone--accent"><User :size="14" :stroke-width="1.7" /></div>
             <div class="ds-flex-fill">
               <div class="name ds-item-label">{{ o.name }}</div>
               <div class="ds-hint ds-hint--spaced">{{ o.document }} · {{ o.phone }}</div>
@@ -300,10 +303,10 @@ watch(
     </div>
 
     <!-- ══ Paso MASCOTA (propietario seleccionado) ══ -->
-    <div v-else class="step">
+    <div v-else class="step ds-stack ds-stack--10">
       <div class="picked">
         <div class="picked-line">
-          <div class="badge"><User :size="13" :stroke-width="1.7" /></div>
+          <div class="badge ds-tone--accent"><User :size="13" :stroke-width="1.7" /></div>
           <div>
             <div class="picked-name ds-item-label">{{ selectedOwner.name }}</div>
             <div class="picked-meta">{{ selectedOwner.document }}</div>
@@ -318,12 +321,12 @@ watch(
 
       <!-- Crear mascota nueva -->
       <template v-if="petCreating">
-        <div v-if="petSubmitError" class="form-banner" role="alert">
+        <div v-if="petSubmitError" class="form-banner ds-flex-row" role="alert">
           <TriangleAlert :size="14" :stroke-width="1.7" />
           <span>{{ petSubmitError }}</span>
         </div>
         <PetForm ref="petFormRef" v-model="petDraft" />
-        <div class="form-actions">
+        <div class="form-actions ds-actions">
           <button type="button" class="ds-btn ds-btn--ghost" @click="cancelCreatePet">
             Cancelar
           </button>
@@ -335,9 +338,9 @@ watch(
 
       <!-- Selección de mascota -->
       <template v-else>
-        <div v-if="loadingAnimals" class="results state">Cargando mascotas…</div>
-        <div v-else-if="animalsError" class="results state error">{{ animalsError }}</div>
-        <div v-else-if="animals.length === 0" class="empty">
+        <div v-if="loadingAnimals" class="results ds-stack state">Cargando mascotas…</div>
+        <div v-else-if="animalsError" class="results ds-stack state error">{{ animalsError }}</div>
+        <div v-else-if="animals.length === 0" class="empty ds-stack">
           <span>Este propietario no tiene mascotas registradas</span>
           <button type="button" class="create-btn" @click="startCreatePet">
             <Plus :size="15" :stroke-width="2.2" /> Registrar mascota nueva
@@ -353,7 +356,7 @@ watch(
               :class="{ selected: selectedAnimal?.id === a.id }"
               @click="pickAnimal(a)"
             >
-              <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
+              <div class="paw ds-tone--accent"><PawPrint :size="14" :stroke-width="1.7" /></div>
               <div class="ds-flex-fill">
                 <div class="name ds-item-label">{{ a.name }}</div>
                 <div class="ds-hint ds-hint--spaced">{{ a.specie.name }} · {{ a.breed.name }}</div>
@@ -376,9 +379,6 @@ watch(
   border: 1px solid var(--warm-200);
   border-radius: 12px;
   padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 /* En modo creación el picker cede el fondo/borde a los forms (SectionCard) para que respiren */
@@ -391,12 +391,6 @@ watch(
 .picker.invalid {
   border-color: oklch(60% 0.2 25deg);
   background: oklch(98.5% 0.02 25deg);
-}
-
-.step {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 .hint {
@@ -439,9 +433,8 @@ watch(
   box-shadow: 0 0 0 3px color-mix(in oklch, var(--amatista-500) 16%, transparent);
 }
 
+/* Añadidos sobre `.ds-stack`: gap mínimo entre resultados y la caja con scroll. */
 .results {
-  display: flex;
-  flex-direction: column;
   gap: 2px;
   max-height: 220px;
   overflow: auto;
@@ -478,13 +471,12 @@ watch(
   background: var(--warm-100);
 }
 
+/* El par fondo+texto lo pone `.ds-tone--accent` (en los dos elementos). */
 .avatar,
 .badge {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -501,10 +493,8 @@ watch(
   line-height: 1.2;
 }
 
-/* Estado vacío con CTA de creación */
+/* Estado vacío con CTA de creación. Añadidos sobre `.ds-stack`: centrado y gap. */
 .empty {
-  display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 12px;
   padding: 20px 14px;
@@ -633,12 +623,12 @@ watch(
   background: var(--amatista-100);
 }
 
+/* El par fondo+texto en reposo lo pone `.ds-tone--accent`;
+   `.animal-card.selected .paw` (0,3,0) le sigue ganando al seleccionar. */
 .paw {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   display: grid;
   place-items: center;
 }
@@ -673,9 +663,6 @@ watch(
 }
 
 .form-banner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 10px 12px;
   border-radius: 9px;
   font-size: 12.5px;
@@ -684,9 +671,8 @@ watch(
   color: oklch(35% 0.15 25deg);
 }
 
+/* Único añadido sobre `.ds-actions`: estos dos botones respiran algo más. */
 .form-actions {
-  display: flex;
-  justify-content: flex-end;
   gap: 10px;
 }
 </style>

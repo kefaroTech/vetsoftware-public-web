@@ -333,9 +333,9 @@ async function doSave() {
           />
         </BaseField>
 
-        <div class="rows">
+        <div class="rows ds-stack">
           <div v-for="(row, i) in draft.rows" :key="row.uid" class="row-card">
-            <div class="row-head">
+            <div class="ds-block-head">
               <span class="row-num">Examen #{{ i + 1 }}</span>
               <button
                 v-if="!isEdit && draft.rows.length > 1"
@@ -347,7 +347,7 @@ async function doSave() {
                 <X :size="14" :stroke-width="1.8" />
               </button>
             </div>
-            <div class="row-grid">
+            <div class="row-grid ds-grid-2">
               <BaseField label="Tipo de examen" required :error="rowErr(i, 'testTypeId')">
                 <SearchableSelect
                   v-model="row.testTypeId"
@@ -391,9 +391,9 @@ async function doSave() {
           <span class="cb-box" :class="{ checked: draft.sampleCollected }">
             <Check v-if="draft.sampleCollected" :size="12" :stroke-width="3" />
           </span>
-          <input v-model="draft.sampleCollected" type="checkbox" class="sr-only" />
+          <input v-model="draft.sampleCollected" type="checkbox" class="ds-sr-only" />
           <div>
-            <div class="title">La muestra ya fue recolectada</div>
+            <div class="title ds-text-strong ds-text-strong--md">La muestra ya fue recolectada</div>
             <div class="desc">
               Marca esta opción si la muestra está tomada y solo falta procesarla en laboratorio. El
               estado pasará a
@@ -479,11 +479,15 @@ async function doSave() {
   font-weight: 600;
 }
 
+/* Añadidos sobre `.ds-stack`: gap propio y el hueco hacia el bloque anterior. */
 .rows {
-  display: flex;
-  flex-direction: column;
   gap: 12px;
   margin-top: 14px;
+}
+
+/* Único añadido sobre `.ds-grid-2`: el gap de fila propio de estas fichas. */
+.row-grid {
+  gap: 12px 16px;
 }
 
 .row-card {
@@ -491,13 +495,6 @@ async function doSave() {
   border: 1px solid var(--warm-200);
   border-radius: 12px;
   padding: 14px;
-}
-
-.row-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
 }
 
 .row-num {
@@ -524,18 +521,6 @@ async function doSave() {
   background: var(--danger-100);
   color: oklch(45% 0.18 25deg);
   border-color: var(--danger-400);
-}
-
-.row-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 16px;
-}
-
-@media (width <= 760px) {
-  .row-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 .add-row {
@@ -608,10 +593,8 @@ async function doSave() {
   border-color: oklch(58% 0.16 75deg);
 }
 
+/* Residuo sobre `.ds-text-strong` + `--md` (warm-900 / peso medio / 13,5px). */
 .sample-collected .title {
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--warm-900);
   line-height: 1.3;
 }
 
@@ -625,17 +608,5 @@ async function doSave() {
 .sample-collected .desc strong {
   color: oklch(40% 0.13 75deg);
   font-weight: 600;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
 }
 </style>

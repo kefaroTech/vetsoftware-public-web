@@ -185,8 +185,11 @@ defineExpose({ validate })
 </script>
 
 <template>
-  <div class="form">
-    <div v-if="speciesError || breedsError || colorsError" class="catalog-error">
+  <div class="ds-stack ds-stack--18">
+    <div
+      v-if="speciesError || breedsError || colorsError"
+      class="catalog-error ds-catalog-error ds-flex-row"
+    >
       <TriangleAlert :size="13" :stroke-width="1.7" />
       <span>{{ speciesError ?? breedsError ?? colorsError }}</span>
     </div>
@@ -357,22 +360,10 @@ defineExpose({ validate })
 </template>
 
 <style scoped>
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
+/* Único ajuste sobre `.ds-catalog-error`: dentro de una `.ds-stack` con gap,
+   el margen inferior de la primitiva se sumaría al hueco. */
 .catalog-error {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12.5px;
-  padding: 10px 14px;
-  background: var(--danger-150);
-  border: 1px solid var(--danger-300);
-  color: oklch(35% 0.15 25deg);
-  border-radius: 10px;
+  margin-bottom: 0;
 }
 
 .grid-2 {

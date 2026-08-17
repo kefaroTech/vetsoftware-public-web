@@ -32,10 +32,14 @@ const effectiveType = computed(() =>
 </script>
 
 <template>
-  <label class="input" :class="{ disabled, invalid }">
-    <component :is="icon" v-if="icon" :size="14" :stroke-width="1.6" class="icon" />
+  <label
+    class="input ds-flex-row ds-focus-ring"
+    :class="{ disabled, invalid, 'ds-field-shake': invalid }"
+  >
+    <component :is="icon" v-if="icon" :size="14" :stroke-width="1.6" class="icon ds-icon-muted" />
     <input
       :id="id"
+      class="ds-flex-fill"
       :type="effectiveType"
       :value="modelValue ?? ''"
       :placeholder="placeholder"
@@ -46,11 +50,11 @@ const effectiveType = computed(() =>
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       @blur="$emit('blur', $event)"
     />
-    <span v-if="suffix" class="suffix">{{ suffix }}</span>
+    <span v-if="suffix" class="suffix ds-hint">{{ suffix }}</span>
     <button
       v-if="isPassword"
       type="button"
-      class="reveal"
+      class="reveal ds-icon-muted"
       tabindex="-1"
       :aria-label="show ? 'Ocultar contraseña' : 'Mostrar contraseña'"
       @click.stop="show = !show"
@@ -62,9 +66,6 @@ const effectiveType = computed(() =>
 
 <style scoped>
 .input {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 8px;
@@ -81,11 +82,6 @@ const effectiveType = computed(() =>
   border-color: var(--warm-300);
 }
 
-.input:focus-within {
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
-}
-
 .input:focus-within .icon {
   color: var(--amatista-500);
 }
@@ -96,10 +92,14 @@ const effectiveType = computed(() =>
   cursor: not-allowed;
 }
 
+/* El temblor lo pone `.ds-field-shake` (primitives.css) desde el template.
+   El par borde+fondo NO puede subir a `.ds-field-invalid`: la regla base
+   `.input` ya declara `background`/`border` y en CSS scoped pesa (0,2,0),
+   así que una primitiva de una sola clase (0,1,0) nunca le ganaría. Lo mismo
+   con `.ds-field-invalid-focus` y `.ds-field-disabled` más abajo. */
 .input.invalid {
   border-color: oklch(60% 0.2 25deg);
   background: oklch(98.5% 0.02 25deg);
-  animation: shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 
 .input.invalid:focus-within {
@@ -111,41 +111,17 @@ const effectiveType = computed(() =>
   color: oklch(55% 0.22 25deg);
 }
 
-@keyframes shake {
-  10%,
-  90% {
-    transform: translateX(-1px);
-  }
-  20%,
-  80% {
-    transform: translateX(2px);
-  }
-  30%,
-  50%,
-  70% {
-    transform: translateX(-3px);
-  }
-  40%,
-  60% {
-    transform: translateX(3px);
-  }
-}
-
 .icon {
-  color: var(--warm-500);
-  flex-shrink: 0;
   transition: color 0.15s ease;
 }
 
 input {
-  flex: 1;
   border: none;
   outline: none;
   background: transparent;
   font-family: inherit;
   font-size: inherit;
   color: var(--warm-900);
-  min-width: 0;
 }
 
 input::placeholder {
@@ -157,19 +133,16 @@ input:disabled {
 }
 
 .suffix {
-  font-size: 11.5px;
-  color: var(--warm-500);
   flex-shrink: 0;
 }
 
+/* `color` + `flex-shrink` vienen de `.ds-icon-muted`. */
 .reveal {
   display: grid;
   place-items: center;
-  flex-shrink: 0;
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--warm-500);
   cursor: pointer;
   transition: color 0.15s ease;
 }

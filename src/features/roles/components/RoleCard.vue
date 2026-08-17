@@ -31,13 +31,13 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
 </script>
 
 <template>
-  <article class="card" :class="{ inactive: !active }">
+  <article class="card ds-stack" :class="{ inactive: !active }">
     <div class="head">
-      <div class="left">
+      <div class="ds-flex-row ds-flex-row--12 ds-flex-fill">
         <div class="avatar" :style="{ background: tokens.avatarBg, color: tokens.avatarFg }">
           <Shield :size="18" :stroke-width="1.7" />
         </div>
-        <div class="title-block">
+        <div class="title-block ds-stack">
           <h3 class="name">{{ role.name }}</h3>
           <StatusPill :active="active" />
         </div>
@@ -55,18 +55,18 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
       <span>Rol del sistema · solo lectura</span>
     </div>
 
-    <div v-if="isAdmin && !readOnly" class="admin-badge">
+    <div v-if="isAdmin && !readOnly" class="admin-badge ds-tone--accent-soft">
       <Sparkles :size="12" :stroke-width="1.8" />
       <span>Acceso total al sistema</span>
     </div>
 
     <div class="stats">
-      <div class="stat">
+      <div class="stat ds-stack">
         <div class="stat-num">{{ permissionCount }}</div>
         <div class="stat-label">permisos</div>
       </div>
       <div class="divider" />
-      <div class="stat">
+      <div class="stat ds-stack">
         <div class="stat-num">{{ subModules.length }}</div>
         <div class="stat-label">sub-módulos</div>
       </div>
@@ -78,7 +78,7 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
     </div>
     <div v-else class="chips-empty">Sin permisos asignados</div>
 
-    <button type="button" class="edit-btn" @click="emit('edit')">
+    <button type="button" class="edit-btn ds-tone--accent-soft" @click="emit('edit')">
       <span>{{ readOnly ? 'Ver permisos' : 'Editar permisos' }}</span>
       <ArrowRight :size="14" :stroke-width="1.8" />
     </button>
@@ -86,9 +86,8 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
 </template>
 
 <style scoped>
+/* La insignia de admin y el botón de editar usan `.ds-tone--accent-soft`. */
 .card {
-  display: flex;
-  flex-direction: column;
   gap: 12px;
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
@@ -117,14 +116,6 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   gap: 10px;
 }
 
-.left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-  flex: 1;
-}
-
 .avatar {
   width: 40px;
   height: 40px;
@@ -135,8 +126,6 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
 }
 
 .title-block {
-  display: flex;
-  flex-direction: column;
   gap: 4px;
   min-width: 0;
 }
@@ -158,9 +147,7 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   gap: 6px;
   align-self: flex-start;
   padding: 4px 10px;
-  background: var(--amatista-50);
   border: 1px solid var(--amatista-200);
-  color: var(--amatista-700);
   border-radius: 7px;
   font-size: 11.5px;
   font-weight: 500;
@@ -191,10 +178,8 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
 }
 
 .stat {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
   align-items: flex-start;
+  gap: 1px;
 }
 
 .stat-num {
@@ -249,9 +234,7 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: var(--amatista-50);
   border: 1px solid var(--amatista-200);
-  color: var(--amatista-700);
   border-radius: 7px;
   font-family: inherit;
   font-size: 12.5px;

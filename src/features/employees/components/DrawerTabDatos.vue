@@ -36,13 +36,13 @@ function formatDate(iso: string): string {
 </script>
 
 <template>
-  <div class="fields">
+  <div class="ds-stack">
     <div v-for="(f, i) in fields" :key="i" class="row" :class="{ first: i === 0 }">
       <div class="ic">
         <component :is="f.icon" :size="15" :stroke-width="1.7" />
       </div>
-      <div class="data">
-        <div class="label">{{ f.label }}</div>
+      <div class="ds-flex-fill">
+        <div class="label ds-hint">{{ f.label }}</div>
         <div class="value">{{ f.value }}</div>
       </div>
     </div>
@@ -51,8 +51,8 @@ function formatDate(iso: string): string {
       <div class="ic">
         <Building2 :size="15" :stroke-width="1.7" />
       </div>
-      <div class="data">
-        <div class="label">Sedes</div>
+      <div class="ds-flex-fill">
+        <div class="label ds-hint">Sedes</div>
         <div v-if="branches.length > 0" class="chips">
           <span v-for="b in branches" :key="b.id" class="chip">{{ b.name }}</span>
         </div>
@@ -63,11 +63,6 @@ function formatDate(iso: string): string {
 </template>
 
 <style scoped>
-.fields {
-  display: flex;
-  flex-direction: column;
-}
-
 .row {
   display: flex;
   align-items: flex-start;
@@ -92,14 +87,8 @@ function formatDate(iso: string): string {
   flex-shrink: 0;
 }
 
-.data {
-  flex: 1;
-  min-width: 0;
-}
-
+/* Color y tamaño vienen de `.ds-hint`. */
 .label {
-  font-size: 11.5px;
-  color: var(--warm-500);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   margin-bottom: 3px;

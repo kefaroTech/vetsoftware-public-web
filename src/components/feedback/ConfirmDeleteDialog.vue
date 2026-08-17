@@ -34,7 +34,7 @@ const emit = defineEmits<{
     @close="emit('cancel')"
   >
     <template #body>
-      <p class="msg">{{ message }}</p>
+      <p class="msg ds-dialog-body">{{ message }}</p>
     </template>
 
     <template #footer-actions>
@@ -46,7 +46,13 @@ const emit = defineEmits<{
       >
         Cancelar
       </button>
-      <button type="button" class="danger" :disabled="busy" @click="emit('confirm')">
+      <button
+        type="button"
+        class="danger"
+        :class="{ 'ds-is-disabled ds-is-disabled--60': busy }"
+        :disabled="busy"
+        @click="emit('confirm')"
+      >
         <Trash2 :size="14" :stroke-width="1.7" />
         {{ actionLabel }}
       </button>
@@ -55,12 +61,8 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
-.msg {
-  margin: 0;
-  font-size: 13.5px;
-  color: var(--warm-600);
-  line-height: 1.55;
-}
+/* `.msg` migró a `.ds-dialog-body` (primitives.css): margin+color+font-size+
+   line-height eran una coincidencia exacta. */
 
 /* El botón de cancelar usa `.ds-btn`; este destructivo se queda local por su
    borde del mismo tono que el texto, más marcado que el `--danger` del sistema. */
@@ -83,8 +85,6 @@ const emit = defineEmits<{
   background: oklch(91% 0.07 25deg);
 }
 
-.danger:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
+/* El `:disabled` local migró a `.ds-is-disabled` + `.ds-is-disabled--60`
+   (primitives.css), aplicadas por `:class` junto al atributo nativo. */
 </style>

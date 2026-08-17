@@ -360,11 +360,11 @@ function doEmit(forceOverlap = false) {
           </p>
         </div>
       </div>
-      <div v-else class="mform">
+      <div v-else class="ds-stack ds-stack--18">
         <!-- Motivo del último guardado fallido (p. ej. el 409 de solape). -->
         <div v-if="saveError" class="banner err" role="alert" data-error-anchor>
           <AlertTriangle :size="16" :stroke-width="1.7" class="banner-ic" />
-          <div class="banner-body">
+          <div class="banner-body ds-stack ds-stack--8">
             <span>{{ saveError }}</span>
             <!-- Forzar solo tiene sentido ante el 409 de solape, y solo si hay permiso. -->
             <button
@@ -383,19 +383,19 @@ function doEmit(forceOverlap = false) {
         </div>
 
         <!-- Cuándo + vet -->
-        <div class="cols">
-          <div class="col">
+        <div class="cols ds-grid-2">
+          <div class="col ds-stack ds-stack--16">
             <div class="field-row">
-              <div class="field">
-                <label class="flabel">Fecha <span class="req">*</span></label>
+              <div class="field ds-stack">
+                <label class="flabel ds-label">Fecha <span class="req">*</span></label>
                 <DateInput
                   v-model="date"
                   :invalid="submitted && !date"
                   placeholder="Selecciona fecha"
                 />
               </div>
-              <div class="field">
-                <label class="flabel">Hora de inicio <span class="req">*</span></label>
+              <div class="field ds-stack">
+                <label class="flabel ds-label">Hora de inicio <span class="req">*</span></label>
                 <TimeInput v-model="time" :invalid="submitted && !time" />
               </div>
             </div>
@@ -405,19 +405,21 @@ function doEmit(forceOverlap = false) {
               control y la fecha ("dd MMM yyyy") no entra. Va debajo, ocupando el ancho de la
               media columna, que además la empareja visualmente con la hora de inicio.
             -->
-            <div class="field">
-              <label class="flabel">Duración</label>
+            <div class="field ds-stack">
+              <label class="flabel ds-label">Duración</label>
               <BaseSelect
                 :model-value="durationMinutes != null ? String(durationMinutes) : ''"
                 :options="durationSelectOptions"
                 @update:model-value="(v: string) => (durationMinutes = v ? Number(v) : null)"
               />
-              <div v-if="endTime" class="fhint">Termina a las {{ endTime }}.</div>
+              <div v-if="endTime" class="fhint ds-hint">Termina a las {{ endTime }}.</div>
             </div>
           </div>
-          <div class="col">
-            <div class="field">
-              <label class="flabel">Veterinario/a asignado <span class="req">*</span></label>
+          <div class="col ds-stack ds-stack--16">
+            <div class="field ds-stack">
+              <label class="flabel ds-label"
+                >Veterinario/a asignado <span class="req">*</span></label
+              >
               <BaseSelect
                 :model-value="employeeId != null ? String(employeeId) : null"
                 :options="vetOptions"
@@ -426,22 +428,24 @@ function doEmit(forceOverlap = false) {
                 @update:model-value="(v: string) => (employeeId = Number(v))"
               />
             </div>
-            <div v-if="showBranchField" class="field">
-              <label class="flabel">Sede <span class="req">*</span></label>
+            <div v-if="showBranchField" class="field ds-stack">
+              <label class="flabel ds-label">Sede <span class="req">*</span></label>
               <BaseSelect
                 :model-value="branchId != null ? String(branchId) : null"
                 :options="branchOptions"
                 placeholder="Selecciona una sede"
                 @update:model-value="(v: string) => (branchId = Number(v))"
               />
-              <div class="fhint">Por defecto, la sede seleccionada en el menú principal.</div>
+              <div class="fhint ds-hint">
+                Por defecto, la sede seleccionada en el menú principal.
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Tipo (oculto en reprogramación) -->
-        <div v-if="!isReschedule" class="field">
-          <label class="flabel">Tipo de cita <span class="req">*</span></label>
+        <div v-if="!isReschedule" class="field ds-stack">
+          <label class="flabel ds-label">Tipo de cita <span class="req">*</span></label>
           <div class="typegrid">
             <button
               v-for="[key, m] in typeEntries"
@@ -472,10 +476,10 @@ function doEmit(forceOverlap = false) {
           <div class="divider" />
 
           <!-- Sujeto + notas -->
-          <div class="cols">
-            <div class="col">
-              <div class="field">
-                <label class="flabel">¿A quién es la cita?</label>
+          <div class="cols ds-grid-2">
+            <div class="col ds-stack ds-stack--16">
+              <div class="field ds-stack">
+                <label class="flabel ds-label">¿A quién es la cita?</label>
                 <div class="subject-toggle">
                   <button
                     type="button"
@@ -492,7 +496,7 @@ function doEmit(forceOverlap = false) {
                     Contacto libre
                   </button>
                 </div>
-                <div class="fhint">
+                <div class="fhint ds-hint">
                   {{
                     subjectMode === 'registered'
                       ? 'Busca el dueño por nombre, ID o documento; luego elige su mascota.'
@@ -502,8 +506,8 @@ function doEmit(forceOverlap = false) {
               </div>
 
               <template v-if="subjectMode === 'registered'">
-                <div class="field">
-                  <label class="flabel">Propietario</label>
+                <div class="field ds-stack">
+                  <label class="flabel ds-label">Propietario</label>
                   <OwnerSearchAutocomplete
                     v-model="ownerId"
                     :initial-name="ownerName"
@@ -511,8 +515,8 @@ function doEmit(forceOverlap = false) {
                     @select="onOwnerSelect"
                   />
                 </div>
-                <div class="field">
-                  <label class="flabel">Mascota</label>
+                <div class="field ds-stack">
+                  <label class="flabel ds-label">Mascota</label>
                   <BaseSelect
                     v-model="animalId"
                     :options="petOptions"
@@ -523,27 +527,29 @@ function doEmit(forceOverlap = false) {
               </template>
 
               <template v-else>
-                <div class="field">
-                  <label class="flabel">Nombre del contacto</label>
+                <div class="field ds-stack">
+                  <label class="flabel ds-label">Nombre del contacto</label>
                   <BaseInput
                     v-model="clientNameModel"
                     :invalid="submitted && missingSubject"
                     placeholder="Ej. María Pérez"
                   />
                 </div>
-                <div class="field">
-                  <label class="flabel">Teléfono</label>
+                <div class="field ds-stack">
+                  <label class="flabel ds-label">Teléfono</label>
                   <BaseInput v-model="clientPhoneModel" placeholder="Ej. 300 123 4567" />
                 </div>
-                <div class="field">
-                  <label class="flabel">Correo <span class="opt">(opcional)</span></label>
+                <div class="field ds-stack">
+                  <label class="flabel ds-label">Correo <span class="opt">(opcional)</span></label>
                   <BaseInput
                     v-model="clientEmailModel"
                     type="email"
                     :invalid="submitted && clientEmailInvalid"
                     placeholder="Ej. maria@correo.com"
                   />
-                  <div class="fhint">Si lo indicas, le enviaremos la confirmación de la cita.</div>
+                  <div class="fhint ds-hint">
+                    Si lo indicas, le enviaremos la confirmación de la cita.
+                  </div>
                 </div>
               </template>
 
@@ -553,9 +559,9 @@ function doEmit(forceOverlap = false) {
               </div>
             </div>
 
-            <div class="col">
-              <div class="field grow">
-                <label class="flabel">Motivo / notas de recepción</label>
+            <div class="col ds-stack ds-stack--16">
+              <div class="field ds-stack ds-flex-fill">
+                <label class="flabel ds-label">Motivo / notas de recepción</label>
                 <BaseTextarea
                   v-model="notesModel"
                   :rows="7"
@@ -594,12 +600,6 @@ function doEmit(forceOverlap = false) {
 </template>
 
 <style scoped>
-.mform {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
 .branch-confirm {
   display: flex;
   gap: 12px;
@@ -633,29 +633,21 @@ function doEmit(forceOverlap = false) {
   font-weight: 600;
 }
 
+/* Resto sobre `.ds-grid-2`: gap propio y alineación superior. La primitiva
+   conserva las 2 columnas exactas; sólo mueve el colapso de 720px a 640px. */
 .cols {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: var(--space-24);
   align-items: start;
 }
 
+/* Resto sobre `.ds-stack --16` / `.ds-stack`. */
 .col {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
   min-width: 0;
 }
 
 .field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: var(--space-6);
   min-width: 0;
-}
-
-.field.grow {
-  flex: 1;
 }
 
 .field-row {
@@ -664,12 +656,9 @@ function doEmit(forceOverlap = false) {
   gap: 12px;
 }
 
+/* Resto sobre `.ds-label`: el rótulo de este formulario va en semibold. */
 .flabel {
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--warm-500);
+  font-weight: var(--weight-semibold);
 }
 
 .req {
@@ -684,8 +673,6 @@ function doEmit(forceOverlap = false) {
 }
 
 .fhint {
-  font-size: 11.5px;
-  color: var(--warm-500);
   line-height: 1.45;
 }
 
@@ -779,13 +766,10 @@ function doEmit(forceOverlap = false) {
   margin-top: 1px;
 }
 
-/* Columna del cuerpo del banner: el texto del error y, debajo, la acción de
-   forzar el solape (o el aviso de que hace falta permiso para hacerlo). */
+/* Columna del cuerpo del banner (`.ds-stack --8`): el texto del error y, debajo,
+   la acción de forzar el solape (o el aviso de que hace falta permiso). */
 .banner-body {
-  display: flex;
-  flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
   min-width: 0;
 }
 
@@ -818,11 +802,5 @@ function doEmit(forceOverlap = false) {
 
 .banner b {
   font-weight: 600;
-}
-
-@media (width <= 720px) {
-  .cols {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

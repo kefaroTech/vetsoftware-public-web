@@ -29,8 +29,8 @@ function jumpTo(target: 1 | 2) {
 </script>
 
 <template>
-  <div class="historia-shell">
-    <header class="crumbs">
+  <div class="historia-shell ds-stack">
+    <header class="crumbs ds-flex-row">
       <BreadcrumbStep
         :index="1"
         label="Propietario"
@@ -65,20 +65,15 @@ function jumpTo(target: 1 | 2) {
 <style scoped>
 .historia-shell {
   flex: 1;
-  display: flex;
-  flex-direction: column;
   min-height: 0;
   background: var(--warm-100);
 }
 
 .crumbs {
   height: 56px;
-  padding: 0 28px;
+  padding: 0 var(--space-28);
   border-bottom: 1px solid var(--warm-200);
   background: var(--warm-50);
-  display: flex;
-  align-items: center;
-  gap: 8px;
   flex-shrink: 0;
 }
 

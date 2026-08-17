@@ -173,7 +173,7 @@ async function onAccountCreated(account: OpenAccountResponse) {
     </div>
     <div
       v-if="canCreate && !selected && branchStore.selectedBranchId == null"
-      class="banner branch-warning"
+      class="banner branch-warning ds-flex-row"
     >
       <MapPin :size="15" :stroke-width="1.8" />
       Selecciona una sede para abrir o agregar cargos a una cuenta.
@@ -216,24 +216,24 @@ async function onAccountCreated(account: OpenAccountResponse) {
       <input
         v-model="query"
         type="text"
-        class="search"
+        class="search ds-focus-ring"
         placeholder="Buscar por propietario o documento…"
       />
 
       <div v-if="loading && accounts.length === 0" class="state">Cargando…</div>
       <div v-else-if="isEmpty && isSearching" class="empty-state">
-        <div class="empty-ic"><Search :size="28" :stroke-width="1.5" /></div>
+        <div class="empty-ic ds-tone--accent-soft"><Search :size="28" :stroke-width="1.5" /></div>
         <div class="empty-title">Sin resultados</div>
-        <p class="empty-desc">
+        <p class="empty-desc ds-meta-dark">
           Ninguna cuenta {{ tab === 'activas' ? 'activa' : 'cerrada' }} coincide con tu búsqueda.
         </p>
       </div>
       <div v-else-if="isEmpty" class="empty-state">
-        <div class="empty-ic"><Receipt :size="28" :stroke-width="1.5" /></div>
+        <div class="empty-ic ds-tone--accent-soft"><Receipt :size="28" :stroke-width="1.5" /></div>
         <div class="empty-title">
           {{ tab === 'activas' ? 'Sin cuentas activas' : 'Sin cuentas cerradas' }}
         </div>
-        <p class="empty-desc">
+        <p class="empty-desc ds-meta-dark">
           {{
             tab === 'activas'
               ? 'Abre una cuenta para acumular cargos.'
@@ -246,7 +246,7 @@ async function onAccountCreated(account: OpenAccountResponse) {
           v-for="acc in accounts"
           :key="acc.id"
           type="button"
-          class="acct-card"
+          class="acct-card ds-stack"
           @click="selectAccount(acc)"
         >
           <div class="acct-top">
@@ -265,14 +265,14 @@ async function onAccountCreated(account: OpenAccountResponse) {
             <MapPin :size="13" :stroke-width="1.8" /> {{ acc.branch.name }}
             <span>· Cuenta desde {{ formatDateShort(acc.createdDate) }}</span>
           </div>
-          <div class="acct-totals">
-            <div class="row">
+          <div class="acct-totals ds-stack">
+            <div class="row ds-meta-dark ds-meta-dark--sm">
               <span>Acumulado</span><strong>{{ formatMoney(acc.totalAmount) }}</strong>
             </div>
-            <div v-if="acc.paidAmount > 0" class="row">
+            <div v-if="acc.paidAmount > 0" class="row ds-meta-dark ds-meta-dark--sm">
               <span>Abonado</span><strong>{{ formatMoney(acc.paidAmount) }}</strong>
             </div>
-            <div class="row saldo">
+            <div class="row saldo ds-meta-dark ds-meta-dark--sm">
               <span>{{ saldoLabel(acc) }}</span>
               <strong :class="{ zero: saldoValue(acc) <= 0 }">{{
                 formatMoney(saldoValue(acc))
@@ -314,9 +314,6 @@ async function onAccountCreated(account: OpenAccountResponse) {
 /* El banner de error usa `.ds-banner--error` (primitives.css). Este otro tiene
    tonos propios (hue 70/80 distintos a los del sistema) y se deja como está. */
 .banner.branch-warning {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   background: oklch(96% 0.04 80deg);
   border: 1px solid oklch(88% 0.08 80deg);
   color: oklch(42% 0.09 70deg);
@@ -390,8 +387,6 @@ async function onAccountCreated(account: OpenAccountResponse) {
   width: 60px;
   height: 60px;
   border-radius: 16px;
-  background: var(--amatista-50);
-  color: var(--amatista-700);
   display: grid;
   place-items: center;
   margin: 0 auto 14px;
@@ -402,8 +397,6 @@ async function onAccountCreated(account: OpenAccountResponse) {
   margin-bottom: 4px;
 }
 .empty-desc {
-  font-size: 13px;
-  color: var(--warm-600);
   margin: 0;
 }
 .alert {
@@ -435,10 +428,6 @@ async function onAccountCreated(account: OpenAccountResponse) {
   outline: none;
   margin-bottom: 16px;
 }
-.search:focus {
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
-}
 
 /* Centinela del scroll infinito. Ocupa alto para que el observer lo detecte antes del borde. */
 .sentinel {
@@ -459,7 +448,8 @@ async function onAccountCreated(account: OpenAccountResponse) {
   border-radius: 12px;
 }
 
-/* Tarjetas de lista */
+/* Tarjetas de lista: `auto-fill` con mínimo de 300px para que una sola cuenta
+   no ocupe todo el ancho. */
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -474,8 +464,6 @@ async function onAccountCreated(account: OpenAccountResponse) {
   border-radius: 14px;
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
-  display: flex;
-  flex-direction: column;
   gap: 11px;
   transition:
     border-color 0.12s,
@@ -503,8 +491,6 @@ async function onAccountCreated(account: OpenAccountResponse) {
   color: var(--warm-500);
 }
 .acct-totals {
-  display: flex;
-  flex-direction: column;
   gap: 4px;
   padding-top: 11px;
   border-top: 1px solid var(--warm-150);
@@ -513,8 +499,6 @@ async function onAccountCreated(account: OpenAccountResponse) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 12.5px;
-  color: var(--warm-600);
 }
 .acct-totals .row strong {
   color: var(--warm-900);

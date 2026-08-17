@@ -31,18 +31,19 @@ const stats = computed(() => {
 <template>
   <div class="summary">
     <div v-for="s in stats" :key="s.label" class="stat">
-      <div class="stat-label">{{ s.label }}</div>
+      <div class="stat-label ds-hint">{{ s.label }}</div>
       <div class="stat-value">{{ s.value }}</div>
-      <div class="stat-sub">{{ s.sub }}</div>
+      <div class="stat-sub ds-hint">{{ s.sub }}</div>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* 4 columnas con colapso a 2: sin equivalente en el design system. */
 .summary {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  gap: var(--space-10);
 }
 
 .stat {
@@ -53,9 +54,7 @@ const stats = computed(() => {
 }
 
 .stat-label {
-  font-size: 11.5px;
-  color: var(--warm-500);
-  margin-bottom: 5px;
+  margin-bottom: var(--space-5);
 }
 
 .stat-value {
@@ -66,9 +65,7 @@ const stats = computed(() => {
 }
 
 .stat-sub {
-  font-size: 11.5px;
-  margin-top: 3px;
-  color: var(--warm-500);
+  margin-top: var(--space-3);
 }
 
 @media (width <= 820px) {

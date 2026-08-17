@@ -22,28 +22,28 @@ defineEmits<{ select: [] }>()
     <span v-if="selected" class="check">
       <Check :size="12" :stroke-width="2" />
     </span>
-    <div class="head">
-      <div class="avatar">{{ initials(pet.name) }}</div>
-      <div class="meta">
-        <div class="name">
+    <div class="head ds-flex-row ds-flex-row--12">
+      <div class="avatar ds-tone--accent">{{ initials(pet.name) }}</div>
+      <div class="ds-flex-fill">
+        <div class="name ds-flex-row ds-flex-row--6 ds-text-strong">
           <span>{{ pet.name }}</span>
           <BaseChip v-if="pet.deceased" variant="neutral">Fallecido</BaseChip>
         </div>
-        <div class="sub">{{ pet.specie.name }} · {{ pet.breed.name }}</div>
+        <div class="sub ds-meta">{{ pet.specie.name }} · {{ pet.breed.name }}</div>
       </div>
     </div>
     <div class="grid">
       <div>
         <div class="lab">Edad</div>
-        <div class="val">{{ calcAge(pet.bod) }}</div>
+        <div class="val ds-text-strong">{{ calcAge(pet.bod) }}</div>
       </div>
       <div>
         <div class="lab">Género</div>
-        <div class="val">{{ genderLabel(pet.gender) }}</div>
+        <div class="val ds-text-strong">{{ genderLabel(pet.gender) }}</div>
       </div>
       <div>
         <div class="lab">Peso</div>
-        <div class="val">
+        <div class="val ds-text-strong">
           {{
             pet.weight != null ? `${pet.weight} ${weightUnitLabel(pet.weightType)}` : 'Sin registro'
           }}
@@ -51,7 +51,7 @@ defineEmits<{ select: [] }>()
       </div>
       <div>
         <div class="lab">Última consulta</div>
-        <div class="val">{{ pet.lastVisit ?? '—' }}</div>
+        <div class="val ds-text-strong">{{ pet.lastVisit ?? '—' }}</div>
       </div>
     </div>
   </button>
@@ -105,19 +105,16 @@ defineEmits<{ select: [] }>()
   place-items: center;
 }
 
+/* Único añadido sobre `.ds-flex-row--12`: el hueco hacia la rejilla de datos. */
 .head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   margin-bottom: 12px;
 }
 
+/* El par fondo+texto lo pone `.ds-tone--accent`. */
 .avatar {
   width: 44px;
   height: 44px;
   border-radius: 11px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -126,23 +123,13 @@ defineEmits<{ select: [] }>()
   font-weight: 500;
 }
 
-.meta {
-  min-width: 0;
-  flex: 1;
-}
-
+/* Residuo sobre `.ds-flex-row--6` + `.ds-text-strong`: sólo el tamaño. */
 .name {
   font-size: 15px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--warm-900);
 }
 
+/* Residuo sobre `.ds-meta` (warm-500 / 12px). */
 .sub {
-  font-size: 12px;
-  color: var(--warm-500);
   margin-top: 2px;
 }
 
@@ -160,10 +147,9 @@ defineEmits<{ select: [] }>()
   font-size: 10px;
 }
 
+/* Residuo sobre `.ds-text-strong` (warm-900 / peso medio). */
 .val {
-  color: var(--warm-900);
   margin-top: 2px;
   font-size: 12.5px;
-  font-weight: 500;
 }
 </style>

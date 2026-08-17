@@ -195,7 +195,7 @@ async function submit() {
   >
     <template #body>
       <p v-if="serverError" class="ds-server-error">{{ serverError }}</p>
-      <div class="head-grid">
+      <div class="head-grid ds-grid-2">
         <BaseField label="Orden de compra" hint="Opcional · prellena líneas">
           <BaseSelect
             v-model="form.purchaseOrderId"
@@ -268,17 +268,10 @@ async function submit() {
 </template>
 
 <style scoped>
+/* Layout apoyado en `.ds-grid-2` (dos columnas, colapso en 640px). */
 .head-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px 18px;
+  gap: var(--space-16) var(--space-18);
   margin-bottom: 18px;
-}
-
-@media (width <= 640px) {
-  .head-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 .lines {

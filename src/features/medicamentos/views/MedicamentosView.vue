@@ -106,7 +106,7 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
         <div class="ds-kicker ds-kicker--spaced">Administración · Medicamentos</div>
         <h1 class="ds-display">Catálogo de medicamentos</h1>
       </div>
-      <div class="head-actions">
+      <div class="head-actions ds-flex-row">
         <div class="seg" role="tablist">
           <button type="button" :class="{ on: mode === 'active' }" @click="switchMode('active')">
             Disponibles
@@ -129,7 +129,7 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
     <div v-if="store.error.value" class="ds-banner ds-banner--error">{{ store.error.value }}</div>
 
     <!-- ─────────── Modo DISPONIBLES ─────────── -->
-    <div v-if="mode === 'active'" class="tbl-scroll">
+    <div v-if="mode === 'active'" class="ds-table-scroll">
       <table class="ds-table">
         <thead>
           <tr>
@@ -146,11 +146,11 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
           <tr v-else-if="sorted.length === 0">
             <td colspan="4" class="ds-empty ds-empty--lg">Sin medicamentos. Crea el primero.</td>
           </tr>
-          <tr v-for="m in sorted" v-else :key="m.id" class="trow">
+          <tr v-for="m in sorted" v-else :key="m.id" class="ds-row-hover">
             <td class="tname">{{ m.name }}</td>
             <td class="tdesc">{{ m.description || '—' }}</td>
             <td>
-              <span v-if="m.general" class="scope global"
+              <span v-if="m.general" class="scope ds-tone--accent-soft"
                 ><Globe :size="12" :stroke-width="1.9" /> Global</span
               >
               <span v-else class="scope own">Propio</span>
@@ -184,7 +184,7 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
     </div>
 
     <!-- ─────────── Modo PAUSADOS ─────────── -->
-    <div v-else class="tbl-scroll">
+    <div v-else class="ds-table-scroll">
       <table class="ds-table">
         <thead>
           <tr>
@@ -246,10 +246,7 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
 /* El contenedor usa `.ds-page`, la cabecera `.ds-head` y el rótulo
    `.ds-kicker--spaced` (primitives.css). */
 .head-actions {
-  display: flex;
-  gap: 8px;
   flex-shrink: 0;
-  align-items: center;
 }
 .seg {
   display: inline-flex;
@@ -274,10 +271,11 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
   color: var(--amatista-700);
   box-shadow: 0 1px 2px rgb(50 20 80 / 8%);
 }
-.tbl-scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
+
+/* Los dos contenedores con scroll usan `.ds-table-scroll` y la fila con hover
+   `.ds-row-hover` (primitives.css). `.tname` NO puede migrar a
+   `.ds-text-strong`: es el propio `<td>`, y `.ds-table td` pesa (0,1,1), por
+   encima de cualquier primitiva de una sola clase que fije `color`. */
 
 /* Las dos tablas usan `.ds-table` (primitives.css): la firma "pantalla"
    (13px / radio 12 / celda 11×14) coincidía propiedad a propiedad, así que
@@ -288,9 +286,6 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
    `.tbl-scroll`), así que se conserva como override local mínimo. */
 .ds-table {
   min-width: 560px;
-}
-.trow:hover {
-  background: var(--warm-100);
 }
 .tname {
   font-weight: 500;
@@ -310,9 +305,9 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
   padding: 3px 9px;
   border-radius: var(--radius-pill);
 }
-.scope.global {
-  background: var(--amatista-50);
-  color: var(--amatista-700);
+
+/* El tono global es `.ds-tone--accent-soft`; sólo queda su borde. */
+.scope.ds-tone--accent-soft {
   border: 1px solid var(--amatista-200);
 }
 .scope.own {

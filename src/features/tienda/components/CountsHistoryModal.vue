@@ -205,6 +205,9 @@ watch(
    `.ds-empty` del `<td colspan>` vacío lo resuelve la excepción
    `.ds-table td.ds-empty` de `primitives.css` (0,2,1), que le gana a
    `.ds-table--dense td` (0,1,1). */
+
+/* NO es `.ds-row-clickable` (tiñe de amatista y sobre el `td`); ver la misma
+   nota en `InventoryProductsTable`. */
 .trow {
   cursor: pointer;
 }

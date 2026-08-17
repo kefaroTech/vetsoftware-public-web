@@ -93,7 +93,7 @@ async function submit() {
         <span>Saldo pendiente</span>
         <strong>{{ formatMoney(balance) }}</strong>
       </div>
-      <div class="grid">
+      <div class="ds-stack ds-stack--16">
         <BaseField
           label="Monto del abono"
           required
@@ -138,12 +138,7 @@ async function submit() {
 </template>
 
 <style scoped>
-.grid {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
+/* Layout apoyado en primitivas: `.ds-stack--16` (cuerpo del formulario). */
 .balance-row {
   display: flex;
   justify-content: space-between;

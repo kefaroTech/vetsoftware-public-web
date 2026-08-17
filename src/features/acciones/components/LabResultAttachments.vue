@@ -58,10 +58,10 @@ async function downloadFile(att: LaboratoryTestFileResponse) {
 <template>
   <div v-if="loading || error || attachments.length" class="attachments">
     <div class="att-label">Resultados adjuntos</div>
-    <p v-if="loading" class="att-state">Cargando adjuntos…</p>
-    <p v-else-if="error" class="att-state error">{{ error }}</p>
-    <ul v-else class="att-list">
-      <li v-for="att in attachments" :key="att.id" class="att">
+    <p v-if="loading" class="att-state ds-meta ds-meta--sm">Cargando adjuntos…</p>
+    <p v-else-if="error" class="att-state error ds-meta ds-meta--sm">{{ error }}</p>
+    <ul v-else class="att-list ds-list-reset ds-stack">
+      <li v-for="att in attachments" :key="att.id" class="att ds-flex-row">
         <FileText :size="15" :stroke-width="1.7" class="ds-icon-muted" />
         <button
           type="button"
@@ -106,28 +106,19 @@ async function downloadFile(att: LaboratoryTestFileResponse) {
   margin-bottom: 8px;
 }
 
-.att-state {
-  font-size: 12.5px;
-  color: var(--warm-500);
-}
-
+/* El par color+tamaño lo ponen `.ds-meta` + `--sm`; `.att-state.error` (0,2,0)
+   le sigue ganando el color al fallar la carga. */
 .att-state.error {
   color: oklch(45% 0.18 25deg);
 }
 
+/* Único añadido sobre `.ds-list-reset` + `.ds-stack`: el gap de 6px, más
+   apretado que los del catálogo. */
 .att-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
   gap: 6px;
 }
 
 .att {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 8px 12px;
   background: var(--warm-50);
   border: 1px solid var(--warm-200);

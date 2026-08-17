@@ -16,20 +16,14 @@ const tokens = computed(() => ROLE_COLORS[props.color])
 </script>
 
 <template>
-  <span class="pill" :class="size" :style="{ background: tokens.bg, color: tokens.fg }">
-    <span class="dot" :style="{ background: tokens.dot }" />
+  <span class="pill ds-pill" :class="size" :style="{ background: tokens.bg, color: tokens.fg }">
+    <span class="dot ds-status-dot" :style="{ background: tokens.dot }" />
     <span class="label">{{ label }}</span>
   </span>
 </template>
 
 <style scoped>
 .pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border-radius: var(--radius-pill);
-  font-weight: 500;
-  white-space: nowrap;
   line-height: 1;
 }
 
@@ -43,13 +37,8 @@ const tokens = computed(() => ROLE_COLORS[props.color])
   font-size: 13px;
 }
 
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
+/* Forma del punto: `.ds-status-dot` (primitives.css). El tamaño `md` es un
+   override local que pesa (0,3,0) y por tanto le gana. */
 .pill.md .dot {
   width: 5px;
   height: 5px;

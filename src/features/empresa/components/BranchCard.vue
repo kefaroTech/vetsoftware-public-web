@@ -15,28 +15,28 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="branchcard" :class="{ inactive: !branch.active }">
+  <div class="branchcard ds-stack" :class="{ inactive: !branch.active }">
     <div class="top">
-      <span class="ic"><MapPin :size="17" :stroke-width="1.7" /></span>
-      <div class="head">
-        <div class="name">{{ branch.name }}</div>
+      <span class="ic ds-tone--accent"><MapPin :size="17" :stroke-width="1.7" /></span>
+      <div class="ds-flex-fill">
+        <div class="name ds-strong">{{ branch.name }}</div>
         <div class="code">{{ branch.code }}</div>
       </div>
-      <div class="badges">
-        <span v-if="principal" class="badge principal">Principal</span>
-        <span class="badge" :class="branch.active ? 'active' : 'off'">
+      <div class="badges ds-stack">
+        <span v-if="principal" class="badge ds-tone--accent">Principal</span>
+        <span class="badge" :class="branch.active ? 'ds-tone--success' : 'ds-tone--neutral'">
           {{ branch.active ? 'Activa' : 'Inactiva' }}
         </span>
       </div>
     </div>
 
-    <div class="meta">
+    <div class="meta ds-stack">
       <div class="line">
-        <MapPin :size="13" :stroke-width="1.6" />
+        <MapPin :size="13" :stroke-width="1.6" class="ds-icon-muted ds-icon-muted--dim" />
         {{ branch.city?.name || '—' }}{{ branch.address ? ` · ${branch.address}` : '' }}
       </div>
       <div class="line">
-        <Phone :size="13" :stroke-width="1.6" />
+        <Phone :size="13" :stroke-width="1.6" class="ds-icon-muted ds-icon-muted--dim" />
         {{ branch.phone || 'Sin teléfono' }}
       </div>
     </div>
@@ -52,7 +52,7 @@ defineEmits<{
         <component :is="branch.active ? PowerOff : Power" :size="13" :stroke-width="1.7" />
         {{ branch.active ? 'Desactivar' : 'Activar' }}
       </button>
-      <button type="button" class="act edit" @click="$emit('edit', branch)">
+      <button type="button" class="act edit ds-hover-accent" @click="$emit('edit', branch)">
         <Pencil :size="13" :stroke-width="1.7" /> Editar
       </button>
     </div>
@@ -65,8 +65,6 @@ defineEmits<{
   border: 1px solid var(--warm-200);
   border-radius: 14px;
   padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
   transition:
     border-color 0.14s ease,
     box-shadow 0.14s ease;
@@ -87,6 +85,8 @@ defineEmits<{
   gap: 11px;
 }
 
+/* El tono en reposo es `.ds-tone--accent`; el de sede inactiva se queda local
+   porque pesa (0,3,0) y por tanto le gana. */
 .ic {
   width: 34px;
   height: 34px;
@@ -94,8 +94,6 @@ defineEmits<{
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
 }
 
 .branchcard.inactive .ic {
@@ -103,15 +101,9 @@ defineEmits<{
   color: var(--warm-500);
 }
 
-.head {
-  flex: 1;
-  min-width: 0;
-}
-
+/* Color y peso vienen de `.ds-strong`. */
 .name {
   font-size: 14.5px;
-  font-weight: 600;
-  color: var(--warm-900);
   line-height: 1.15;
 }
 
@@ -123,11 +115,9 @@ defineEmits<{
 }
 
 .badges {
-  display: flex;
-  flex-direction: column;
+  flex-shrink: 0;
   align-items: flex-end;
   gap: 4px;
-  flex-shrink: 0;
 }
 
 .badge {
@@ -139,24 +129,8 @@ defineEmits<{
   white-space: nowrap;
 }
 
-.badge.principal {
-  background: var(--amatista-100);
-  color: var(--amatista-700);
-}
-
-.badge.active {
-  background: var(--success-bg);
-  color: var(--success-fg);
-}
-
-.badge.off {
-  background: var(--warm-200);
-  color: var(--warm-600);
-}
-
+/* Los tres tonos de la insignia son `.ds-tone--accent`/`--success`/`--neutral`. */
 .meta {
-  display: flex;
-  flex-direction: column;
   gap: 6px;
   margin: 14px 0 12px;
 }
@@ -170,11 +144,7 @@ defineEmits<{
   min-width: 0;
 }
 
-.line :deep(svg) {
-  color: var(--warm-400);
-  flex-shrink: 0;
-}
-
+/* Los iconos de `.line` llevan `.ds-icon-muted.ds-icon-muted--dim`. */
 .foot {
   margin-top: auto;
   padding-top: 12px;
@@ -201,12 +171,6 @@ defineEmits<{
     background 0.12s ease,
     border-color 0.12s ease,
     color 0.12s ease;
-}
-
-.act.edit:hover {
-  background: var(--amatista-50);
-  border-color: var(--amatista-300);
-  color: var(--amatista-700);
 }
 
 .act.toggle:hover {

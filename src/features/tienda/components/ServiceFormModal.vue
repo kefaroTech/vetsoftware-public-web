@@ -222,7 +222,7 @@ async function submit() {
   >
     <template #body>
       <div v-if="saveError" class="ds-banner ds-banner--error">{{ saveError }}</div>
-      <div class="grid">
+      <div class="grid ds-grid-2">
         <BaseField label="Nombre" required :error="err('name')" class="ds-grid-span">
           <template #default="{ id }">
             <BaseInput
@@ -300,16 +300,11 @@ async function submit() {
 </template>
 
 <style scoped>
+/* Ver `ProductFormModal`: la rejilla es `.ds-grid-2` —no `.ds-grid-auto`, que
+   en un modal a ~90vw abriría seis pistas—; quedan el hueco y el alineado al
+   alto de la primera línea, que sí es propio de este formulario. */
 .grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px 20px;
   align-items: start;
-}
-
-@media (width <= 760px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

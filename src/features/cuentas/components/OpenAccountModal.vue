@@ -311,10 +311,10 @@ function goToExistingAccount(): void {
       <!-- Paso 2 · builder de cargos -->
       <template v-else>
         <div class="owner-card">
-          <span class="avatar">{{ initials(pickedOwner.name) }}</span>
-          <div class="who-text">
-            <div class="name">{{ pickedOwner.name }}</div>
-            <div class="meta">{{ pickedOwner.document }} · {{ pickedOwner.phone }}</div>
+          <span class="avatar ds-tone--accent">{{ initials(pickedOwner.name) }}</span>
+          <div class="who-text ds-flex-fill">
+            <div class="ds-item-label ds-item-label--lg">{{ pickedOwner.name }}</div>
+            <div class="meta ds-meta">{{ pickedOwner.document }} · {{ pickedOwner.phone }}</div>
           </div>
           <button type="button" class="change" @click="changeOwner">Cambiar</button>
         </div>
@@ -331,7 +331,7 @@ function goToExistingAccount(): void {
           <!-- Selector de mascota / general -->
           <div class="section">
             <div class="label">¿Para cuál mascota?</div>
-            <div class="chips">
+            <div class="ds-wrap-row">
               <button
                 v-for="p in ownerPets"
                 :key="p.id"
@@ -357,7 +357,7 @@ function goToExistingAccount(): void {
           </div>
 
           <!-- Registrar mascota nueva (form completo) -->
-          <div v-if="petCreating" class="petcreate">
+          <div v-if="petCreating" class="ds-stack ds-stack--14">
             <PetForm ref="petFormRef" :model-value="petDraft" />
             <p v-if="petError" class="pet-err">{{ petError }}</p>
             <div class="petcreate-actions">
@@ -394,7 +394,7 @@ function goToExistingAccount(): void {
             </template>
 
             <!-- Cargo general -->
-            <div v-else class="general-form">
+            <div v-else class="general-form ds-stack ds-stack--14">
               <BaseField label="Concepto" required>
                 <template #default="{ id }">
                   <BaseInput :id="id" v-model="general.name" placeholder="Ej. Insumo, recargo…" />
@@ -434,7 +434,8 @@ function goToExistingAccount(): void {
               </div>
               <button
                 type="button"
-                class="add-btn solid"
+                class="add-btn solid ds-tone--accent-soft"
+                :class="{ 'ds-is-disabled': !canAddGeneral }"
                 :disabled="!canAddGeneral"
                 @click="addGeneralToCart"
               >
@@ -463,7 +464,7 @@ function goToExistingAccount(): void {
     </template>
 
     <template #footer-left>
-      <span v-if="pickedOwner && !dupAccount && cart.length" class="foottotal">
+      <span v-if="pickedOwner && !dupAccount && cart.length" class="foottotal ds-meta-dark">
         Total cargos <strong>{{ formatMoney(total) }}</strong>
       </span>
     </template>
@@ -507,8 +508,6 @@ function goToExistingAccount(): void {
   width: 40px;
   height: 40px;
   border-radius: 11px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   display: grid;
   place-items: center;
   font-family: var(--font-serif);
@@ -516,18 +515,7 @@ function goToExistingAccount(): void {
   font-weight: 500;
   flex-shrink: 0;
 }
-.who-text {
-  min-width: 0;
-  flex: 1;
-}
-.who-text .name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--warm-900);
-}
 .who-text .meta {
-  font-size: 12px;
-  color: var(--warm-500);
   margin-top: 1px;
 }
 .change {
@@ -571,11 +559,6 @@ function goToExistingAccount(): void {
   font-weight: 500;
   margin-bottom: 8px;
 }
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
 .chip {
   padding: 7px 14px;
   border-radius: var(--radius-pill);
@@ -606,11 +589,6 @@ function goToExistingAccount(): void {
 }
 
 /* Registrar mascota nueva */
-.petcreate {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
 .petcreate-actions {
   display: flex;
   justify-content: flex-end;
@@ -629,43 +607,18 @@ function goToExistingAccount(): void {
 
 /* Cargo general */
 .general-form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
   margin-bottom: 16px;
 }
+
+/* `.grid` sigue local: rejilla intrínseca de mínimo 220px, que ninguna
+   primitiva replica. */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 14px;
 }
-.check {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--warm-800);
-  cursor: pointer;
-}
-.check input {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--amatista-600);
-}
-
-/* Carrito */
-.cart {
-  border: 1px solid var(--warm-200);
-  border-radius: 12px;
-  background: var(--warm-50);
-  overflow: hidden;
-}
 
 /* Footer */
-.foottotal {
-  font-size: 13px;
-  color: var(--warm-600);
-}
 .foottotal strong {
   font-size: 15px;
   color: var(--amatista-700);
@@ -688,8 +641,6 @@ function goToExistingAccount(): void {
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
-  background: var(--amatista-50);
-  color: var(--amatista-700);
   border: 1px solid var(--amatista-200);
 }
 
@@ -697,11 +648,8 @@ function goToExistingAccount(): void {
   background: var(--amatista-100);
 }
 
-.add-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
+/* El estado apagado lo pone `.ds-is-disabled` (primitives.css), enganchado
+   con `:class` en el template — la primitiva no sustituye al atributo nativo. */
 .add-btn.solid {
   background: var(--gradient-primary);
   color: white;

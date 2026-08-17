@@ -11,7 +11,7 @@ const meta = computed(() => STATUS_META[props.status] ?? STATUS_META.PENDIENTE)
 
 <template>
   <span
-    class="pill"
+    class="pill ds-pill"
     :class="`size-${size}`"
     :style="{ background: meta.tone.bg, color: meta.tone.fg }"
   >
@@ -21,15 +21,12 @@ const meta = computed(() => STATUS_META[props.status] ?? STATUS_META.PENDIENTE)
 </template>
 
 <style scoped>
+/* La CAJA de la píldora la pone `.ds-pill` (primitives.css); aquí quedan sólo
+   los valores propios de esta píldora y el punto de estado, que no suben. */
 .pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
   padding: 3px 10px;
-  border-radius: var(--radius-pill);
   font-size: 12px;
   font-weight: 600;
-  white-space: nowrap;
 }
 
 .pill.size-lg {

@@ -37,23 +37,23 @@ const actions = computed<CardAction[]>(() => {
 </script>
 
 <template>
-  <div class="card" @click="emit('open')">
-    <div class="top">
+  <div class="card ds-stack" @click="emit('open')">
+    <div class="top ds-flex-row">
       <span class="code">{{ labCode(item.id, item.date) }}</span>
       <LabPriorityPill :prioridad="item.prioridad" />
     </div>
-    <div class="test">{{ item.testType.name }}</div>
-    <div class="patient">
+    <div class="test ds-item-label">{{ item.testType.name }}</div>
+    <div class="patient ds-flex-row">
       <span class="paw"><PawPrint :size="12" :stroke-width="1.7" /></span>
       {{ item.animal.name }} · {{ item.animal.code }}
     </div>
-    <div class="date">{{ formatDateShort(item.date) }}</div>
-    <div v-if="actions.length" class="actions" @click.stop>
+    <div class="ds-hint">{{ formatDateShort(item.date) }}</div>
+    <div v-if="actions.length" class="actions ds-actions ds-actions--start" @click.stop>
       <button
         v-for="a in actions"
         :key="a.kind"
         type="button"
-        :class="['act', a.variant]"
+        :class="['act', 'ds-btn', a.variant === 'primary' ? 'ds-btn--solid' : 'ds-btn--ghost']"
         @click="emit('action', a.kind)"
       >
         {{ a.label }}
@@ -68,9 +68,7 @@ const actions = computed<CardAction[]>(() => {
   border: 1px solid var(--warm-200);
   border-radius: 12px;
   padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: var(--space-6);
   cursor: pointer;
   transition:
     border-color 0.12s ease,
@@ -83,10 +81,7 @@ const actions = computed<CardAction[]>(() => {
 }
 
 .top {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 8px;
 }
 
 .code {
@@ -96,18 +91,15 @@ const actions = computed<CardAction[]>(() => {
 }
 
 .test {
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--warm-900);
+  font-size: var(--text-md);
   line-height: 1.25;
 }
 
+/* Resto sobre `.ds-flex-row`: gap propio (6px). */
 .patient {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  gap: var(--space-6);
   color: var(--warm-600);
+  font-size: var(--text-xs);
 }
 
 .paw {
@@ -121,44 +113,16 @@ const actions = computed<CardAction[]>(() => {
   flex-shrink: 0;
 }
 
-.date {
-  font-size: 11.5px;
-  color: var(--warm-500);
-}
-
 .actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 4px;
+  margin-top: var(--space-4);
 }
 
+/* Resto sobre `.ds-btn` (+ --solid / --ghost según la variante): estas
+   acciones se reparten el ancho de la tarjeta y van un punto más compactas. */
 .act {
   flex: 1;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  padding: 6px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.act.primary {
-  background: var(--amatista-700);
-  color: white;
-}
-
-.act.primary:hover {
-  filter: brightness(1.05);
-}
-
-.act.ghost {
-  background: transparent;
-  border-color: var(--warm-200);
-  color: var(--warm-700);
-}
-
-.act.ghost:hover {
-  background: var(--warm-100);
+  padding: var(--space-6) var(--space-10);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
 }
 </style>

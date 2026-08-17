@@ -98,7 +98,7 @@ async function submit() {
         </p>
       </div>
 
-      <div v-else class="form">
+      <div v-else class="ds-stack ds-stack--16">
         <p class="warn">
           El cargo quedará registrado como <strong>anulado</strong> (visible, tachado) y dejará de
           contar en el total. Esta acción registra tu autoría y el motivo.
@@ -138,11 +138,7 @@ async function submit() {
 </template>
 
 <style scoped>
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+/* Layout via primitivas: .ds-stack--16. */
 .warn {
   margin: 0;
   font-size: 13px;

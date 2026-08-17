@@ -24,11 +24,11 @@ defineProps<{
 
 <template>
   <div class="cash-totals">
-    <div class="total-card base">
+    <div class="total-card base ds-stack">
       <span class="lbl">Base inicial</span>
       <span class="val">{{ formatMoney(openingFloat) }}</span>
     </div>
-    <div v-for="total in totals" :key="total.method" class="total-card">
+    <div v-for="total in totals" :key="total.method" class="total-card ds-stack">
       <span class="lbl">
         {{ expected ? methodLabel(total.method) + ' (esperado)' : methodLabel(total.method) }}
       </span>
@@ -38,6 +38,9 @@ defineProps<{
 </template>
 
 <style scoped>
+/* NO es `.ds-grid-auto`: las tarjetas de total miden 160px de mínimo y la
+   primitiva reparte a partir de 240, así que la fila de totales pasaría de
+   cuatro tarjetas a dos o tres. */
 .cash-totals {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -45,8 +48,6 @@ defineProps<{
 }
 
 .total-card {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-4);
   padding: var(--space-12) var(--space-14);
   border-radius: var(--radius-panel);

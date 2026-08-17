@@ -59,10 +59,10 @@ function isNavigable(eventType: ClinicalEvent['eventType']): boolean {
 
 <template>
   <section class="month-group">
-    <header class="month-head">
+    <header class="month-head ds-flex-row">
       <span class="label">{{ monthLabel }}</span>
       <span class="divider" />
-      <span class="count">{{ countLabel }}</span>
+      <span class="ds-meta">{{ countLabel }}</span>
     </header>
     <div class="timeline">
       <div class="rail" aria-hidden="true" />
@@ -95,11 +95,10 @@ function isNavigable(eventType: ClinicalEvent['eventType']): boolean {
   margin-bottom: 24px;
 }
 
+/* Resto sobre `.ds-flex-row`: gap propio (10px). */
 .month-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: var(--space-10);
+  margin-bottom: var(--space-10);
 }
 
 .label {
@@ -114,11 +113,6 @@ function isNavigable(eventType: ClinicalEvent['eventType']): boolean {
   flex: 1;
   height: 1px;
   background: var(--warm-200);
-}
-
-.count {
-  font-size: 12px;
-  color: var(--warm-500);
 }
 
 .timeline {

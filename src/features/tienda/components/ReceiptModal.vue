@@ -104,7 +104,7 @@ function onPrint() {
   >
     <template #body>
       <div class="receipt">
-        <div v-if="document" class="fe-doc">
+        <div v-if="document" class="fe-doc ds-stack">
           <div class="fe-doc-row">
             <span class="fe-doc-lab">Documento DIAN</span>
             <FeStatusPill :status="document.dianStatus" />
@@ -115,7 +115,7 @@ function onPrint() {
             habilitado).
           </p>
         </div>
-        <ul class="lines">
+        <ul class="lines ds-stack ds-stack--8">
           <li v-for="l in lines" :key="`${l.kind}-${l.id}`" class="line">
             <span class="ln-name"
               >{{ l.name }} <span class="ds-meta">×{{ l.qty }}</span></span
@@ -123,7 +123,7 @@ function onPrint() {
             <span class="ln-amount">{{ formatMoney(l.unitPrice * l.qty) }}</span>
           </li>
         </ul>
-        <div class="summary">
+        <div class="ds-stack ds-stack--8">
           <div class="srow">
             <span>Base gravable</span><span>{{ formatMoney(totals.net) }}</span>
           </div>
@@ -167,8 +167,6 @@ function onPrint() {
   font-family: var(--font-sans);
 }
 .fe-doc {
-  display: flex;
-  flex-direction: column;
   gap: 7px;
   padding: 12px 14px;
   margin-bottom: 14px;
@@ -196,14 +194,16 @@ function onPrint() {
   color: var(--warm-600);
   line-height: 1.4;
 }
+
+/* La columna es `.ds-stack ds-stack--8`. NO lleva `.ds-list-reset`: esa
+   primitiva pone `margin`/`padding` a 0 y esta lista necesita 14px por debajo
+   para separarse del filete de puntos, así que sólo se aprovecharía el
+   `list-style` a cambio de dejar dos reglas compitiendo. */
 .lines {
   list-style: none;
   margin: 0 0 14px;
   padding: 0 0 14px;
   border-bottom: 1px dashed var(--warm-300);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 .line {
   display: flex;
@@ -212,11 +212,8 @@ function onPrint() {
   font-size: 13.5px;
   color: var(--warm-800);
 }
-.summary {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+
+/* `.summary` desapareció entera: era `.ds-stack ds-stack--8`. */
 .srow {
   display: flex;
   align-items: center;
