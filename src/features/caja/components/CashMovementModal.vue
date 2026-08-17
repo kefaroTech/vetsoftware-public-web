@@ -89,7 +89,7 @@ async function submit() {
   >
     <template #body>
       <p v-if="serverError" class="ds-server-error">{{ serverError }}</p>
-      <div class="grid">
+      <div class="ds-stack ds-stack--18">
         <BaseField label="Tipo" required>
           <BaseSelect v-model="type" :options="TYPE_OPTIONS" />
         </BaseField>
@@ -131,12 +131,6 @@ async function submit() {
 </template>
 
 <style scoped>
-.grid {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
 /* caja/compras usan un amatista un punto más claro que el resto. */
 .ds-btn--solid {
   --ds-btn-solid-bg: var(--amatista-600);

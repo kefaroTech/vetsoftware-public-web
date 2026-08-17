@@ -2,14 +2,9 @@
 import { Wallet } from 'lucide-vue-next'
 import ModalShell from '@/components/ui/ModalShell.vue'
 import CashMovementsTable from './CashMovementsTable.vue'
-import {
-  branchLabel,
-  employeeLabel,
-  formatDateTime,
-  formatDuration,
-  formatMoney,
-  methodLabel,
-} from '../composables/useCaja'
+import CashStatusPill from './CashStatusPill.vue'
+import CashTotalsGrid from './CashTotalsGrid.vue'
+import { branchLabel, employeeLabel, formatDateTime, formatDuration } from '../composables/useCaja'
 import type { CashSessionView } from '../types/caja'
 
 /**
@@ -60,7 +55,7 @@ const emit = defineEmits<{ close: []; retry: [session: CashSessionView] }>()
         </button>
       </div>
 
-      <div v-else-if="detail && summary" class="cash-detail">
+      <div v-else-if="detail && summary" class="ds-stack ds-stack--18">
         <div class="cash-detail-grid">
           <div class="cash-detail-field">
             <span class="cash-detail-label">Sede</span>
@@ -72,9 +67,7 @@ const emit = defineEmits<{ close: []; retry: [session: CashSessionView] }>()
           </div>
           <div class="cash-detail-field">
             <span class="cash-detail-label">Estado</span>
-            <span class="pill" :class="detail.status === 'OPEN' ? 'open' : 'closed'">
-              {{ detail.status === 'OPEN' ? 'Abierta' : 'Cerrada' }}
-            </span>
+            <CashStatusPill :status="detail.status" />
           </div>
           <div class="cash-detail-field">
             <span class="cash-detail-label">Responsable</span>
@@ -93,16 +86,7 @@ const emit = defineEmits<{ close: []; retry: [session: CashSessionView] }>()
         </div>
 
         <h3 class="cash-detail-section-title">Dinero esperado</h3>
-        <div class="totals cash-detail-totals">
-          <div class="total-card base">
-            <span class="lbl">Base inicial</span>
-            <span class="val">{{ formatMoney(detail.openingFloat) }}</span>
-          </div>
-          <div v-for="total in detail.totals" :key="total.method" class="total-card">
-            <span class="lbl">{{ methodLabel(total.method) }}</span>
-            <span class="val">{{ formatMoney(total.expectedAmount) }}</span>
-          </div>
-        </div>
+        <CashTotalsGrid :opening-float="detail.openingFloat" :totals="detail.totals" />
 
         <h3 class="cash-detail-section-title">Movimientos</h3>
         <CashMovementsTable
@@ -140,12 +124,6 @@ const emit = defineEmits<{ close: []; retry: [session: CashSessionView] }>()
   margin: 0;
 }
 
-.cash-detail {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
 .cash-detail-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -181,60 +159,6 @@ const emit = defineEmits<{ close: []; retry: [session: CashSessionView] }>()
   font-family: var(--font-serif);
   font-size: 16px;
   font-weight: 400;
-}
-
-.pill {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: var(--radius-pill);
-  font-size: 11.5px;
-  font-weight: 600;
-}
-
-.pill.open {
-  background: oklch(92% 0.08 150deg);
-  color: oklch(40% 0.12 150deg);
-}
-
-.pill.closed {
-  background: var(--warm-100);
-  color: var(--warm-600);
-}
-
-.totals {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
-}
-
-.cash-detail-totals {
-  margin-bottom: 0;
-}
-
-.total-card {
-  background: var(--warm-100);
-  border-radius: 10px;
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.total-card.base {
-  background: var(--amatista-100, #efe6f7);
-}
-
-.total-card .lbl {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--warm-500);
-}
-
-.total-card .val {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--warm-900);
 }
 
 @media (width <= 720px) {

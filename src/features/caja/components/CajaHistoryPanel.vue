@@ -2,6 +2,10 @@
 import { FileDown, Filter, History, RotateCcw } from 'lucide-vue-next'
 import DateInput from '@/components/ui/DateInput.vue'
 import Pagination from '@/components/ui/Pagination.vue'
+import CajaPanel from './CajaPanel.vue'
+import CashLinkButton from './CashLinkButton.vue'
+import CashStatusPill from './CashStatusPill.vue'
+import CashTable from './CashTable.vue'
 import {
   branchLabel,
   employeeLabel,
@@ -15,9 +19,9 @@ import type { CashSessionView } from '../types/caja'
  * Pestaña de historial de cajas: filtros, tabla paginada y descarga de arqueos.
  *
  * Sale de `CajaView` porque era su bloque más grande: 147 líneas de marcado y
- * 66 de CSS propio. La base de tabla (`.movs`, `.num`, `.empty-row`…) se copia
- * aquí a propósito — las otras dos pestañas la siguen usando y el CSS scoped no
- * cruza fronteras de componente.
+ * 66 de CSS propio. La tarjeta, el armazón de la tabla, el distintivo de estado
+ * y las acciones en texto viven ahora en componentes del feature, así que aquí
+ * sólo queda lo propio de esta pestaña: la rejilla de filtros y las columnas.
  */
 defineProps<{
   rows: CashSessionView[]
@@ -45,11 +49,9 @@ const to = defineModel<string>('to', { required: true })
 </script>
 
 <template>
-  <section class="history">
-    <div class="history-head">
-      <h2 class="section-title"><History :size="16" :stroke-width="1.7" /> Historial de cajas</h2>
-      <span class="history-count">{{ total }} {{ total === 1 ? 'sesión' : 'sesiones' }}</span>
-    </div>
+  <CajaPanel title="Historial de cajas" :icon="History">
+    <template #count>{{ total }} {{ total === 1 ? 'sesión' : 'sesiones' }}</template>
+
     <form class="history-filters" @submit.prevent="emit('apply')">
       <label class="filter-field">
         <span>Sede</span>
@@ -105,75 +107,67 @@ const to = defineModel<string>('to', { required: true })
         </button>
       </div>
     </form>
-    <div class="table-scroll">
-      <table class="movs history-table">
-        <thead>
-          <tr>
-            <th>Sede</th>
-            <th>Apertura</th>
-            <th>Cierre</th>
-            <th>Duración</th>
-            <th>Terminal</th>
-            <th>Abrió</th>
-            <th>Cerró</th>
-            <th>Estado</th>
-            <th class="num">Base</th>
-            <th class="num">Total cierre</th>
-            <th class="num">Arqueo</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-if="loading">
-            <td colspan="11" class="empty-row">Cargando historial…</td>
-          </tr>
-          <tr v-else-if="rows.length === 0">
-            <td colspan="11" class="empty-row">Sin sesiones registradas.</td>
-          </tr>
-          <tr v-for="s in rows" v-else :key="s.id">
-            <td class="branch-name">{{ branchLabel(s.branchName, s.branchId) }}</td>
-            <td>{{ formatDateTime(s.openedAt) }}</td>
-            <td>{{ s.closedAt ? formatDateTime(s.closedAt) : '—' }}</td>
-            <td class="duration">{{ formatDuration(s.openedAt, s.closedAt) }}</td>
-            <td>{{ s.terminal }}</td>
-            <td class="employee">
-              {{ employeeLabel(s.openedByEmployeeName, s.openedByEmployeeId) }}
-            </td>
-            <td class="employee">
-              {{ employeeLabel(s.closedByEmployeeName, s.closedByEmployeeId) }}
-            </td>
-            <td>
-              <span class="pill" :class="s.status === 'OPEN' ? 'open' : 'closed'">
-                {{ s.status === 'OPEN' ? 'Abierta' : 'Cerrada' }}
-              </span>
-            </td>
-            <td class="num">{{ formatMoney(s.openingFloat) }}</td>
-            <td class="num">
-              {{ s.closingTotal == null ? '—' : formatMoney(s.closingTotal) }}
-            </td>
-            <td class="num actions-cell">
-              <button
-                type="button"
-                class="link"
-                :aria-label="'Descargar arqueo CSV de la sesión ' + s.id"
-                title="Descargar CSV"
-                @click="emit('export', s.id, 'csv')"
-              >
-                CSV
-              </button>
-              <button
-                type="button"
-                class="link"
-                :aria-label="'Descargar arqueo PDF de la sesión ' + s.id"
-                title="Descargar PDF"
-                @click="emit('export', s.id, 'pdf')"
-              >
-                <FileDown :size="13" :stroke-width="1.8" /> PDF
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <CashTable :min-width="1180">
+      <thead>
+        <tr>
+          <th>Sede</th>
+          <th>Apertura</th>
+          <th>Cierre</th>
+          <th>Duración</th>
+          <th>Terminal</th>
+          <th>Abrió</th>
+          <th>Cerró</th>
+          <th>Estado</th>
+          <th class="num">Base</th>
+          <th class="num">Total cierre</th>
+          <th class="num">Arqueo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-if="loading">
+          <td colspan="11" class="empty-row">Cargando historial…</td>
+        </tr>
+        <tr v-else-if="rows.length === 0">
+          <td colspan="11" class="empty-row">Sin sesiones registradas.</td>
+        </tr>
+        <tr v-for="s in rows" v-else :key="s.id">
+          <td class="branch-name">{{ branchLabel(s.branchName, s.branchId) }}</td>
+          <td>{{ formatDateTime(s.openedAt) }}</td>
+          <td>{{ s.closedAt ? formatDateTime(s.closedAt) : '—' }}</td>
+          <td class="duration">{{ formatDuration(s.openedAt, s.closedAt) }}</td>
+          <td>{{ s.terminal }}</td>
+          <td class="employee">
+            {{ employeeLabel(s.openedByEmployeeName, s.openedByEmployeeId) }}
+          </td>
+          <td class="employee">
+            {{ employeeLabel(s.closedByEmployeeName, s.closedByEmployeeId) }}
+          </td>
+          <td>
+            <CashStatusPill :status="s.status" />
+          </td>
+          <td class="num">{{ formatMoney(s.openingFloat) }}</td>
+          <td class="num">
+            {{ s.closingTotal == null ? '—' : formatMoney(s.closingTotal) }}
+          </td>
+          <td class="num actions-cell">
+            <CashLinkButton
+              :aria-label="'Descargar arqueo CSV de la sesión ' + s.id"
+              title="Descargar CSV"
+              @click="emit('export', s.id, 'csv')"
+            >
+              CSV
+            </CashLinkButton>
+            <CashLinkButton
+              :aria-label="'Descargar arqueo PDF de la sesión ' + s.id"
+              title="Descargar PDF"
+              @click="emit('export', s.id, 'pdf')"
+            >
+              <FileDown :size="13" :stroke-width="1.8" /> PDF
+            </CashLinkButton>
+          </td>
+        </tr>
+      </tbody>
+    </CashTable>
     <Pagination
       :page="page"
       :page-count="pageCount"
@@ -181,7 +175,7 @@ const to = defineModel<string>('to', { required: true })
       :page-size="pageSize"
       @update:page="emit('update:page', $event)"
     />
-  </section>
+  </CajaPanel>
 </template>
 
 <style scoped>
@@ -193,6 +187,8 @@ const to = defineModel<string>('to', { required: true })
   text-transform: uppercase;
 }
 
+/* Anillo propio, más oscuro que el `--ring` del sistema: no es `.ds-focus-ring`.
+   Ver informe FE-08 del slice de caja. */
 .filter-field select:focus {
   border-color: var(--amatista-500, #76519d);
   box-shadow: 0 0 0 3px rgb(92 45 140 / 10%);
@@ -209,13 +205,6 @@ const to = defineModel<string>('to', { required: true })
 
 .actions-cell {
   white-space: nowrap;
-}
-
-.history {
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 16px;
-  padding: 20px 22px;
 }
 
 .history-filters {
@@ -255,10 +244,6 @@ const to = defineModel<string>('to', { required: true })
   gap: 7px;
 }
 
-.history-table {
-  min-width: 1180px;
-}
-
 @media (width <= 1100px) {
   .history-filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -270,10 +255,6 @@ const to = defineModel<string>('to', { required: true })
 }
 
 @media (width <= 720px) {
-  .history {
-    padding: 16px;
-  }
-
   .history-filters {
     grid-template-columns: 1fr;
   }
@@ -282,123 +263,5 @@ const to = defineModel<string>('to', { required: true })
     grid-column: auto;
     flex-wrap: wrap;
   }
-}
-
-/* --- base de tabla compartida con las otras pestañas --- */
-
-.branch-name {
-  color: var(--warm-800);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.pill {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: var(--radius-pill);
-  font-size: 11.5px;
-  font-weight: 600;
-}
-
-.pill.open {
-  background: oklch(92% 0.08 150deg);
-  color: oklch(40% 0.12 150deg);
-}
-
-.pill.closed {
-  background: var(--warm-100);
-  color: var(--warm-600);
-}
-
-.section-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-serif);
-  font-size: 16px;
-  font-weight: 400;
-  color: var(--warm-800);
-  margin: 8px 0 10px;
-}
-
-.movs {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.movs th {
-  text-align: left;
-  color: var(--warm-500);
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 6px 8px;
-  border-bottom: 1px solid var(--warm-200);
-}
-
-.movs td {
-  padding: 7px 8px;
-  border-bottom: 1px solid var(--warm-100);
-}
-
-.num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.empty-row {
-  text-align: center;
-  color: var(--warm-400);
-  padding: 22px;
-}
-
-.history-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.history-count {
-  color: var(--warm-500);
-  font-size: 12px;
-}
-
-.table-scroll {
-  width: 100%;
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-
-.duration {
-  color: var(--warm-600);
-  font-variant-numeric: tabular-nums;
-}
-
-.employee {
-  color: var(--warm-600);
-  font-size: 12px;
-}
-
-.actions-cell {
-  white-space: nowrap;
-}
-
-.link {
-  background: none;
-  border: none;
-  color: var(--amatista-700);
-  font-weight: 600;
-  font-size: 12.5px;
-  cursor: pointer;
-  padding: 2px 6px;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.link:hover {
-  text-decoration: underline;
 }
 </style>

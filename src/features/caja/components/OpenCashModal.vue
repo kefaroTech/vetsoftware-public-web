@@ -200,7 +200,7 @@ async function submit() {
   >
     <template #body>
       <p v-if="serverError" class="ds-server-error">{{ serverError }}</p>
-      <div class="grid">
+      <div class="ds-stack ds-stack--18">
         <BaseField
           label="Base inicial (efectivo)"
           required
@@ -270,12 +270,6 @@ async function submit() {
 </template>
 
 <style scoped>
-.grid {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
 .branch-warning {
   margin: -8px 0 0;
   padding: 10px 12px;
