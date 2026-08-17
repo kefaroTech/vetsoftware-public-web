@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { Owner } from '@/types/domain'
-import { initials } from '../composables/format'
-
+import { initials } from '@/composables/format'
 defineProps<{
   owner: Owner
   petCount: number

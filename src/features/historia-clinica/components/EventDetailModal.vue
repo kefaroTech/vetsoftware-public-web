@@ -5,7 +5,7 @@ import ModalShell from '@/components/ui/ModalShell.vue'
 import PawLoader from '@/components/feedback/PawLoader.vue'
 import { usePrescriptionExport } from '@/features/dashboard/views/consulta/nueva/composables/usePrescriptionExport'
 import { EVENT_TYPES } from '../constants/eventTypes'
-import { formatEventDate } from '../composables/format'
+import { formatDateShort } from '@/composables/format'
 import type { ClinicalEvent } from '../types/historia'
 
 import { vaccinationApi } from '@/features/dashboard/views/consulta/nueva/api/vaccination.api'
@@ -142,7 +142,7 @@ const title = computed(() => {
 
 const subtitle = computed(() => {
   if (!props.event) return ''
-  return `${formatEventDate(props.event.eventDate)} · #${props.event.sourceId}`
+  return `${formatDateShort(props.event.eventDate)} · #${props.event.sourceId}`
 })
 
 // Imprimir la fórmula médica veterinaria (solo cuando el detalle es una receta).

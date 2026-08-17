@@ -12,7 +12,7 @@ import DateInput from '@/components/ui/DateInput.vue'
 import { useSuppliers } from '../composables/useSuppliers'
 import { useTienda } from '@/features/tienda/composables/useTienda'
 import { purchaseOrdersApi } from '../api/purchaseOrders.api'
-import { formatMoney } from '../composables/format'
+import { formatMoney } from '@/features/tienda/composables/pricing'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import type { PurchaseOrder } from '../types/compras'
 

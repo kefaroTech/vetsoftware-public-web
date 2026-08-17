@@ -10,7 +10,7 @@ import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 import type { Animal, Prescription, MedicamentPrescription } from '@/types/domain'
 import type { PrescriptionDraftItem } from '../composables/useNuevaConsultaDraft'
-import { todayISO, formatDateLong, formatDateShort } from '../composables/format'
+import { todayISO, formatDateLong, formatDateShort } from '@/composables/format'
 import { useMedicaments } from '../composables/useMedicaments'
 import { scrollToFirstError } from '@/composables/scrollToError'
 

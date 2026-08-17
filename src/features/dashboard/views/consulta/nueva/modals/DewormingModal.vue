@@ -10,7 +10,7 @@ import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import DateInput from '@/components/ui/DateInput.vue'
 import type { Animal, Deworming, DewormingType } from '@/types/domain'
 import type { DewormingDraftItem } from '../composables/useNuevaConsultaDraft'
-import { todayISO, formatDateLong, formatDateShort } from '../composables/format'
+import { todayISO, formatDateLong, formatDateShort } from '@/composables/format'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{

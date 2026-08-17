@@ -7,10 +7,7 @@ import OpenAccountModal from '../components/OpenAccountModal.vue'
 import AccountDetail from '../components/AccountDetail.vue'
 import { useCuentas } from '../composables/useCuentas'
 import { formatMoney } from '@/features/tienda/composables/pricing'
-import {
-  initials,
-  formatDateShort,
-} from '@/features/dashboard/views/consulta/nueva/composables/format'
+import { initials, formatDateShort } from '@/composables/format'
 import { animalApi } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'

@@ -9,7 +9,7 @@ import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 import type { Animal, DiagnosticImaging } from '@/types/domain'
 import type { DiagnosticImagingDraftItem } from '../composables/useNuevaConsultaDraft'
-import { todayISO, formatDateLong, formatDateShort } from '../composables/format'
+import { todayISO, formatDateLong, formatDateShort } from '@/composables/format'
 import { useDiagnosticImagingTypes } from '@/features/diagnostic-imaging-types/composables/useDiagnosticImagingTypes'
 import { scrollToFirstError } from '@/composables/scrollToError'
 

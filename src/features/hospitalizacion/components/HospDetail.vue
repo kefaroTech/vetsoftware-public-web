@@ -12,10 +12,7 @@ import {
 import HospStatusPill from './HospStatusPill.vue'
 import TextNoteModal from '../modals/TextNoteModal.vue'
 import DischargeDialog from '../modals/DischargeDialog.vue'
-import {
-  initials,
-  formatDateLong,
-} from '@/features/dashboard/views/consulta/nueva/composables/format'
+import { initials, formatDateLong } from '@/composables/format'
 import { daysSince } from '../composables/mar'
 import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/types/hospitalization.types'
 import type { HospitalizationObservationResponse } from '../types/hospitalizationObservation.types'

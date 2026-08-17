@@ -17,8 +17,7 @@ import { vaccinationApi } from '@/features/dashboard/views/consulta/nueva/api/va
 import type { VaccinationResponse } from '@/features/dashboard/views/consulta/nueva/types/vaccination.types'
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import type { Owner } from '@/types/domain'
-import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
-
+import { formatDateShort } from '@/composables/format'
 const { can } = useAuthorization()
 const toast = useToast()
 const canCreate = can(PERMISSIONS.VACCINATION_CREATE)

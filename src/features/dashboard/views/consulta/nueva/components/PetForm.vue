@@ -10,7 +10,7 @@ import SegmentedRadio from '@/components/ui/SegmentedRadio.vue'
 import { useSpecies } from '@/features/species/composables/useSpecies'
 import { useBreedsBySpecie } from '@/features/breeds/composables/useBreedsBySpecie'
 import { useAnimalColorsBySpecie } from '@/features/animal-colors/composables/useAnimalColorsBySpecie'
-import { weightUnitLabel } from '../composables/format'
+import { weightUnitLabel } from '@/composables/domainLabels'
 import type { PetDraft } from '../composables/useNuevaConsultaDraft'
 
 const props = defineProps<{ modelValue: PetDraft }>()

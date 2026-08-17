@@ -2,8 +2,7 @@
 import { Phone } from 'lucide-vue-next'
 import type { Owner } from '@/types/domain'
 import BaseChip from '@/components/ui/BaseChip.vue'
-import { initials } from '../composables/format'
-
+import { initials } from '@/composables/format'
 defineProps<{
   owner: Owner
   petCount: number

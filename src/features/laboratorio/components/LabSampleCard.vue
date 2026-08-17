@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { PawPrint } from 'lucide-vue-next'
 import LabPriorityPill from './LabPriorityPill.vue'
 import { labCode } from '../types/lab'
-import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
+import { formatDateShort } from '@/composables/format'
 import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 
 export type LabActionKind = 'collect' | 'take' | 'load' | 'return' | 'validate'

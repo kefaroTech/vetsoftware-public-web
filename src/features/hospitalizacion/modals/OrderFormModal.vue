@@ -9,7 +9,7 @@ import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import SegmentedRadio from '@/components/ui/SegmentedRadio.vue'
 import DateInput from '@/components/ui/DateInput.vue'
 import EditImpactModal from './EditImpactModal.vue'
-import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
+import { todayISO } from '@/composables/format'
 import {
   FREQUENCY_LABEL,
   GUIDELINE_LABEL,

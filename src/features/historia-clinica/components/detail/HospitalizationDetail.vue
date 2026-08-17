@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import DetailField from '../DetailField.vue'
-import { formatEventDate } from '../../composables/format'
+import { formatDateShort } from '@/composables/format'
 import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/types/hospitalization.types'
 import type { HospitalizationType, ReasonLeaving } from '@/types/domain'
 
@@ -25,9 +25,9 @@ const REASON_LEAVING_LABEL: Record<ReasonLeaving, string> = {
 <template>
   <div class="ds-detail-grid">
     <DetailField label="Tipo" :value="TYPE_LABEL[data.type]" />
-    <DetailField label="Fecha" :value="formatEventDate(data.date)" />
-    <DetailField label="Inicio" :value="formatEventDate(data.startDate)" />
-    <DetailField label="Fin" :value="data.endDate ? formatEventDate(data.endDate) : null" />
+    <DetailField label="Fecha" :value="formatDateShort(data.date)" />
+    <DetailField label="Inicio" :value="formatDateShort(data.startDate)" />
+    <DetailField label="Fin" :value="data.endDate ? formatDateShort(data.endDate) : null" />
     <DetailField
       label="Motivo de egreso"
       :value="data.reasonLeaving ? REASON_LEAVING_LABEL[data.reasonLeaving] : null"
@@ -36,7 +36,7 @@ const REASON_LEAVING_LABEL: Record<ReasonLeaving, string> = {
     <DetailField label="Motivo" :value="data.reason" span="full" />
     <DetailField label="Observaciones" :value="data.observations" span="full" />
     <DetailField v-if="data.consultation" label="Consulta vinculada" span="full">
-      #{{ data.consultation.id }} · {{ formatEventDate(data.consultation.date) }}
+      #{{ data.consultation.id }} · {{ formatDateShort(data.consultation.date) }}
     </DetailField>
   </div>
 </template>

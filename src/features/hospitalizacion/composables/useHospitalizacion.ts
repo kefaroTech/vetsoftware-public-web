@@ -23,7 +23,7 @@ import type { HospitalizationObservationResponse } from '../types/hospitalizatio
 import { hospitalizationProgressNoteApi } from '../api/hospitalizationProgressNote.api'
 import type { HospitalizationProgressNoteResponse } from '../types/hospitalizationProgressNote.types'
 import { useAuth } from '@/features/auth/composables/useAuth'
-import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
+import { todayISO } from '@/composables/format'
 import { scheduleToDoseSlot } from './mar'
 import type { DoseSlot, MedOrderVM, OrderVM, ProcOrderVM } from '../types/hospital'
 import type { ReasonLeaving } from '@/types/domain'
