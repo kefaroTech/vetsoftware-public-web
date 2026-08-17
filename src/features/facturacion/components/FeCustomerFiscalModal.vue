@@ -128,7 +128,7 @@ function save() {
       </div>
 
       <div class="field">
-        <div class="field-lab">Tipo de persona <span class="req">*</span></div>
+        <div class="field-lab ds-text-strong">Tipo de persona <span class="req">*</span></div>
         <div class="segmented">
           <button
             type="button"
@@ -171,9 +171,9 @@ function save() {
         </template>
       </BaseField>
 
-      <div v-if="customer?.cityName" class="city-info">
+      <div v-if="customer?.cityName" class="city-info ds-flex-row ds-flex-row--12">
         <span class="city-lab">Ciudad</span>
-        <span class="city-val">{{ customer.cityName }}</span>
+        <span class="ds-strong">{{ customer.cityName }}</span>
       </div>
 
       <BaseField label="Régimen tributario" required>
@@ -193,9 +193,7 @@ function save() {
         </span>
         <span>
           <strong>Agente retenedor</strong>
-          <span class="agenthint"
-            >Si está activo se aplicarán retenciones (ReteFuente/IVA/ICA).</span
-          >
+          <span class="ds-hint">Si está activo se aplicarán retenciones (ReteFuente/IVA/ICA).</span>
         </span>
       </button>
     </template>
@@ -210,6 +208,8 @@ function save() {
 </template>
 
 <style scoped>
+/* Layout desde primitives.css: .ds-flex-row--12 (fila de ciudad),
+   .ds-strong, .ds-hint y .ds-text-strong (tipografía). */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -250,14 +250,8 @@ function save() {
   margin-top: 3px;
 }
 
-.field {
-  margin-top: 16px;
-}
-
 .field-lab {
   font-size: 12px;
-  font-weight: 500;
-  color: var(--warm-900);
   margin-bottom: 6px;
 }
 
@@ -298,10 +292,7 @@ function save() {
 }
 
 .city-info {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 12px;
   padding: 10px 14px;
   border-radius: 10px;
   background: var(--warm-100);
@@ -310,11 +301,6 @@ function save() {
 
 .city-lab {
   color: var(--warm-500);
-}
-
-.city-val {
-  color: var(--warm-900);
-  font-weight: 600;
 }
 
 .agenttoggle {
@@ -358,10 +344,5 @@ function save() {
   font-size: 13px;
   color: var(--warm-900);
   display: block;
-}
-
-.agenthint {
-  font-size: 11.5px;
-  color: var(--warm-500);
 }
 </style>

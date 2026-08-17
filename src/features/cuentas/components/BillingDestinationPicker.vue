@@ -21,7 +21,7 @@ const emit = defineEmits<{ 'update:modelValue': [destino: BillingDestino] }>()
 </script>
 
 <template>
-  <div class="dest">
+  <div class="dest ds-grid-2">
     <button
       v-if="hasAccount"
       type="button"
@@ -32,9 +32,9 @@ const emit = defineEmits<{ 'update:modelValue': [destino: BillingDestino] }>()
       <span class="do-check"
         ><Check v-if="modelValue === 'existing'" :size="13" :stroke-width="3"
       /></span>
-      <span class="do-text">
-        <span class="do-title">Agregar a la cuenta abierta</span>
-        <span class="do-sub">Saldo proyectado {{ formatMoney(projectedSaldo) }}</span>
+      <span class="do-text ds-stack">
+        <span class="do-title ds-strong">Agregar a la cuenta abierta</span>
+        <span class="do-sub ds-hint">Saldo proyectado {{ formatMoney(projectedSaldo) }}</span>
       </span>
     </button>
 
@@ -48,9 +48,9 @@ const emit = defineEmits<{ 'update:modelValue': [destino: BillingDestino] }>()
       <span class="do-check"
         ><Check v-if="modelValue === 'new'" :size="13" :stroke-width="3"
       /></span>
-      <span class="do-text">
-        <span class="do-title">Abrir cuenta y agregar cargos</span>
-        <span class="do-sub">Registra estos cargos a crédito.</span>
+      <span class="do-text ds-stack">
+        <span class="do-title ds-strong">Abrir cuenta y agregar cargos</span>
+        <span class="do-sub ds-hint">Registra estos cargos a crédito.</span>
       </span>
     </button>
 
@@ -63,26 +63,20 @@ const emit = defineEmits<{ 'update:modelValue': [destino: BillingDestino] }>()
       <span class="do-check"
         ><Check v-if="modelValue === 'nada'" :size="13" :stroke-width="3"
       /></span>
-      <span class="do-text">
-        <span class="do-title">Solo guardar la consulta</span>
-        <span class="do-sub">Sin cobro ni cuenta. Podrás cobrar después.</span>
+      <span class="do-text ds-stack">
+        <span class="do-title ds-strong">Solo guardar la consulta</span>
+        <span class="do-sub ds-hint">Sin cobro ni cuenta. Podrás cobrar después.</span>
       </span>
     </button>
   </div>
 </template>
 
 <style scoped>
+/* Layout via primitivas: .ds-grid-2 (dos columnas + colapso en 640px, el mismo
+   breakpoint que tenía esta rejilla), .ds-stack, .ds-strong, .ds-hint. */
 .dest {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-bottom: 18px;
-}
-
-@media (width <= 640px) {
-  .dest {
-    grid-template-columns: 1fr;
-  }
 }
 
 .destopt {
@@ -124,20 +118,14 @@ const emit = defineEmits<{ 'update:modelValue': [destino: BillingDestino] }>()
   border-color: var(--amatista-600);
 }
 .do-text {
-  display: flex;
-  flex-direction: column;
   gap: 3px;
   min-width: 0;
 }
 .do-title {
   font-size: 13px;
-  font-weight: 600;
-  color: var(--warm-900);
   line-height: 1.25;
 }
 .do-sub {
-  font-size: 11.5px;
-  color: var(--warm-500);
   line-height: 1.35;
 }
 </style>

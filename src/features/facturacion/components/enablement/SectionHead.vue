@@ -6,12 +6,12 @@ defineProps<{ icon: Component; title: string; sub?: string }>()
 
 <template>
   <div class="sechead">
-    <div class="sechead-ic">
+    <div class="sechead-ic ds-tone--accent">
       <component :is="icon" :size="18" :stroke-width="1.8" />
     </div>
     <div>
       <div class="sechead-title">{{ title }}</div>
-      <div v-if="sub" class="sechead-sub">{{ sub }}</div>
+      <div v-if="sub" class="sechead-sub ds-meta-dark ds-meta-dark--sm">{{ sub }}</div>
     </div>
   </div>
 </template>
@@ -29,8 +29,6 @@ defineProps<{ icon: Component; title: string; sub?: string }>()
   border-radius: 10px;
   display: grid;
   place-items: center;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   flex-shrink: 0;
 }
 
@@ -45,8 +43,6 @@ defineProps<{ icon: Component; title: string; sub?: string }>()
 
 .sechead-sub {
   margin-top: 3px;
-  font-size: 12.5px;
-  color: var(--warm-600);
   line-height: 1.45;
   max-width: 60ch;
 }

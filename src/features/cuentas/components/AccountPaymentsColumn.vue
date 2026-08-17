@@ -18,14 +18,14 @@ const store = useCuentas()
 <template>
   <section class="col">
     <div class="section-head">
-      <span class="sh-title"><Wallet :size="16" :stroke-width="1.7" /> Abonos</span>
+      <span class="sh-title ds-text-strong"><Wallet :size="16" :stroke-width="1.7" /> Abonos</span>
     </div>
     <div v-if="store.payments.value.length === 0" class="mini-empty">Sin abonos registrados.</div>
-    <ul v-else class="pago-list">
+    <ul v-else class="pago-list ds-stack ds-stack--8">
       <li v-for="p in store.payments.value" :key="p.id" class="pago" :class="{ voided: p.voided }">
         <div class="pago-info">
-          <span class="pago-amt">{{ formatMoney(p.amount) }}</span>
-          <span class="pago-meta">
+          <span class="pago-amt ds-strong ds-num">{{ formatMoney(p.amount) }}</span>
+          <span class="pago-meta ds-hint">
             {{ p.createdDate.slice(0, 10) }} · {{ PAYMENT_METHOD_LABEL[p.paymentMethod] }}
             <template v-if="p.createdBy?.name"> · {{ p.createdBy.name }}</template>
           </span>
@@ -52,7 +52,9 @@ const store = useCuentas()
 
 <style scoped>
 /* Base de columna compartida con la otra mitad del detalle: el CSS scoped no
-   cruza fronteras de componente, así que va en ambas. */
+   cruza fronteras de componente, así que va en ambas.
+   Layout via primitivas: .ds-stack(--8), .ds-strong, .ds-text-strong, .ds-num,
+   .ds-hint. */
 .col {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
@@ -73,8 +75,6 @@ const store = useCuentas()
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  font-weight: 500;
-  color: var(--warm-900);
 }
 
 .sh-title svg {
@@ -97,9 +97,6 @@ const store = useCuentas()
   list-style: none;
   margin: 0;
   padding: 12px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 .pago {
@@ -118,14 +115,9 @@ const store = useCuentas()
 
 .pago-amt {
   font-size: 14px;
-  font-weight: 600;
-  color: var(--warm-900);
-  font-variant-numeric: tabular-nums;
 }
 
 .pago-meta {
-  font-size: 11.5px;
-  color: var(--warm-500);
   margin-top: 1px;
   display: block;
 }

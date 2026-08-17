@@ -120,10 +120,10 @@ async function onChargeVoided() {
   </button>
 
   <div class="detail-head">
-    <div class="who">
-      <span class="avatar lg">{{ initials(account.owner.name) }}</span>
+    <div class="who ds-flex-row">
+      <span class="avatar lg ds-tone--accent">{{ initials(account.owner.name) }}</span>
       <div>
-        <div class="name-row">
+        <div class="ds-flex-row ds-flex-row--11">
           <h1 class="name lg">{{ account.owner.name }}</h1>
           <span class="status-pill" :class="STATUS_TONE[account.status]">{{
             OPEN_ACCOUNT_STATUS_LABEL[account.status]
@@ -172,15 +172,15 @@ async function onChargeVoided() {
   </div>
 
   <div class="summary">
-    <div class="sum-box">
+    <div class="sum-box ds-stack">
       <span class="sum-lab">Acumulado</span>
       <span class="sum-val">{{ formatMoney(account.totalAmount) }}</span>
     </div>
-    <div class="sum-box">
+    <div class="sum-box ds-stack">
       <span class="sum-lab">Abonado</span>
       <span class="sum-val">{{ formatMoney(account.paidAmount) }}</span>
     </div>
-    <div class="sum-box alert">
+    <div class="sum-box alert ds-stack">
       <span class="sum-lab">Saldo pendiente</span>
       <span class="sum-val">{{ formatMoney(account.outstandingAmount) }}</span>
     </div>
@@ -286,9 +286,7 @@ async function onChargeVoided() {
 }
 
 .who {
-  display: flex;
-  align-items: center;
-  gap: 11px;
+  gap: 14px;
   min-width: 0;
 }
 
@@ -296,8 +294,6 @@ async function onChargeVoided() {
   width: 42px;
   height: 42px;
   border-radius: 11px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   display: grid;
   place-items: center;
   font-family: var(--font-serif);
@@ -314,8 +310,6 @@ async function onChargeVoided() {
 }
 
 .name {
-  font-size: 15px;
-  font-weight: 500;
   color: var(--warm-900);
 }
 
@@ -328,12 +322,6 @@ async function onChargeVoided() {
   line-height: 1.05;
 }
 
-.doc {
-  font-size: 12px;
-  color: var(--warm-500);
-  margin-top: 1px;
-}
-
 .detail-head {
   display: flex;
   align-items: center;
@@ -341,17 +329,6 @@ async function onChargeVoided() {
   gap: 24px;
   flex-wrap: wrap;
   margin-bottom: 18px;
-}
-
-.detail-head .who {
-  align-items: center;
-  gap: 14px;
-}
-
-.name-row {
-  display: flex;
-  align-items: center;
-  gap: 11px;
 }
 
 .detail-meta {
@@ -366,6 +343,7 @@ async function onChargeVoided() {
   gap: 10px;
 }
 
+/* Rejilla propia: 3 columnas fijas, ninguna primitiva la replica. */
 .summary {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -378,8 +356,6 @@ async function onChargeVoided() {
   border: 1px solid var(--warm-200);
   border-radius: 12px;
   padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
   gap: 5px;
 }
 
@@ -407,6 +383,7 @@ async function onChargeVoided() {
   color: oklch(45% 0.13 70deg);
 }
 
+/* Columnas asimétricas a propósito (cargos 1.5fr / abonos 1fr). */
 .cols {
   display: grid;
   grid-template-columns: 1.5fr 1fr;

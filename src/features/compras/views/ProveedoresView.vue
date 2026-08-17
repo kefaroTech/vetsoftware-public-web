@@ -59,11 +59,11 @@ onMounted(refresh)
 <template>
   <div class="ds-page ds-page--contained">
     <header class="page-head">
-      <div class="title-wrap">
+      <div class="ds-flex-row ds-flex-row--12 ds-flex-row--accent">
         <Truck :size="22" :stroke-width="1.7" />
         <div>
-          <h1>Proveedores</h1>
-          <p class="sub">Terceros a los que le compras bienes o servicios</p>
+          <h1 class="ds-display ds-display--xs">Proveedores</h1>
+          <p class="ds-view-subtitle">Terceros a los que le compras bienes o servicios</p>
         </div>
       </div>
       <button
@@ -76,7 +76,7 @@ onMounted(refresh)
       </button>
     </header>
 
-    <div class="search-bar">
+    <div class="search-bar ds-flex-row">
       <Search :size="16" :stroke-width="1.7" />
       <input
         v-model="q"
@@ -96,21 +96,23 @@ onMounted(refresh)
           <th>Contacto</th>
           <th>Teléfono</th>
           <th>Correo</th>
-          <th class="num">Crédito</th>
+          <th class="ds-num">Crédito</th>
           <th class="actions-col"></th>
         </tr>
       </thead>
       <tbody>
         <tr v-if="!loading && items.length === 0">
-          <td colspan="7" class="empty-row">No hay proveedores registrados.</td>
+          <td colspan="7" class="ds-empty ds-empty--md">No hay proveedores registrados.</td>
         </tr>
         <tr v-for="s in items" :key="s.id">
-          <td class="strong">{{ s.name }}</td>
+          <td class="ds-strong">{{ s.name }}</td>
           <td>{{ s.taxId ?? '—' }}</td>
           <td>{{ s.contactName ?? '—' }}</td>
           <td>{{ s.phone ?? '—' }}</td>
           <td>{{ s.email ?? '—' }}</td>
-          <td class="num">{{ s.paymentTermsDays != null ? s.paymentTermsDays + ' días' : '—' }}</td>
+          <td class="ds-num">
+            {{ s.paymentTermsDays != null ? s.paymentTermsDays + ' días' : '—' }}
+          </td>
           <td class="ds-actions">
             <button
               v-if="canUpdate"
@@ -134,7 +136,7 @@ onMounted(refresh)
         </tr>
       </tbody>
     </table>
-    <p class="count">{{ total }} proveedor(es)</p>
+    <p class="count ds-meta">{{ total }} proveedor(es)</p>
 
     <SupplierModal
       :open="modalOpen"
@@ -146,6 +148,9 @@ onMounted(refresh)
 </template>
 
 <style scoped>
+/* Primitivas: `.ds-flex-row--12 --accent` + `--display--xs` + `--view-subtitle`
+   (cabecera), `.ds-flex-row` (búsqueda), `.ds-num`, `.ds-strong`, `.ds-meta` y
+   `.ds-empty --md` (fila vacía; padding/color los pisa `.grid-table td`). */
 .page-head {
   display: flex;
   align-items: center;
@@ -153,31 +158,7 @@ onMounted(refresh)
   margin-bottom: 20px;
 }
 
-.title-wrap {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  color: var(--amatista-700);
-}
-
-.title-wrap h1 {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: 26px;
-  font-weight: 400;
-  color: var(--warm-900);
-}
-
-.sub {
-  margin: 2px 0 0;
-  font-size: 13px;
-  color: var(--warm-500);
-}
-
 .search-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 9px 14px;
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
@@ -218,16 +199,6 @@ onMounted(refresh)
   color: var(--warm-700);
 }
 
-.strong {
-  font-weight: 600;
-  color: var(--warm-900);
-}
-
-.num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
 .actions-col {
   width: 90px;
 }
@@ -251,16 +222,8 @@ onMounted(refresh)
   color: oklch(50% 0.2 25deg);
 }
 
-.empty-row {
-  text-align: center;
-  color: var(--warm-400);
-  padding: 26px;
-}
-
 .count {
   margin-top: 10px;
-  font-size: 12px;
-  color: var(--warm-500);
 }
 
 /* caja/compras usan un amatista un punto más claro que el resto. */

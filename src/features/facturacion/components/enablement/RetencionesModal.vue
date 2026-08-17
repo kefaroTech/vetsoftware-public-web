@@ -81,13 +81,13 @@ async function save() {
       <div class="example">
         <div class="example-title">Ejemplo sobre base {{ feMoney(example) }} (IVA 19%)</div>
         <div class="example-rows">
-          <div>
+          <div class="ds-stack">
             <span>ReteFuente</span><strong>−{{ feMoney(exFuente) }}</strong>
           </div>
-          <div>
+          <div class="ds-stack">
             <span>ReteIVA</span><strong>−{{ feMoney(exIva) }}</strong>
           </div>
-          <div>
+          <div class="ds-stack">
             <span>ReteICA</span><strong>−{{ feMoney(exIca) }}</strong>
           </div>
         </div>
@@ -112,6 +112,7 @@ async function save() {
 </template>
 
 <style scoped>
+/* Layout: `.ds-stack` en las celdas del ejemplo; la rejilla sigue local (mínimo 150px). */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -139,8 +140,6 @@ async function save() {
 }
 
 .example-rows > div {
-  display: flex;
-  flex-direction: column;
   gap: 2px;
 }
 

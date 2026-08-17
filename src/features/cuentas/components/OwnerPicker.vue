@@ -41,19 +41,19 @@ watch(query, (q) => {
       <input
         v-model="query"
         type="text"
-        class="input"
+        class="input ds-focus-ring"
         placeholder="Buscar propietario por nombre o documento…"
       />
       <PawLoader v-if="loading" :size="20" :glow="false" :speed="900" class="loader" />
     </div>
 
-    <ul v-if="results.length" class="results">
+    <ul v-if="results.length" class="results ds-stack">
       <li v-for="o in results" :key="o.id">
         <button type="button" class="result" @click="emit('select', o)">
-          <span class="avatar"><User :size="15" :stroke-width="1.7" /></span>
+          <span class="avatar ds-tone--accent"><User :size="15" :stroke-width="1.7" /></span>
           <span class="info">
-            <span class="name">{{ o.name }}</span>
-            <span class="meta">{{ o.document }} · {{ o.phone }}</span>
+            <span class="name ds-text-strong ds-text-strong--md">{{ o.name }}</span>
+            <span class="ds-meta">{{ o.document }} · {{ o.phone }}</span>
           </span>
         </button>
       </li>
@@ -65,6 +65,8 @@ watch(query, (q) => {
 </template>
 
 <style scoped>
+/* Layout via primitivas: .ds-stack, .ds-focus-ring, .ds-meta,
+   .ds-text-strong(--md) y .ds-tone--accent. */
 .owner-picker {
   font-family: var(--font-sans);
 }
@@ -94,16 +96,10 @@ watch(query, (q) => {
   color: var(--warm-900);
   outline: none;
 }
-.input:focus {
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
-}
 .results {
   list-style: none;
   margin: 10px 0 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
   gap: 6px;
   max-height: 280px;
   overflow: auto;
@@ -130,21 +126,12 @@ watch(query, (q) => {
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   display: grid;
   place-items: center;
   flex-shrink: 0;
 }
 .name {
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--warm-900);
   display: block;
-}
-.meta {
-  font-size: 12px;
-  color: var(--warm-500);
 }
 .empty {
   font-size: 13px;

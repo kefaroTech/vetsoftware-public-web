@@ -81,7 +81,7 @@ function onShellClose() {
   >
     <template #body>
       <!-- PASO COBRO -->
-      <div v-if="step === 'cobro'" class="form">
+      <div v-if="step === 'cobro'" class="ds-stack ds-stack--16">
         <div class="field-lab">Motivo del cierre</div>
         <div class="mode">
           <button
@@ -93,9 +93,9 @@ function onShellClose() {
             <span class="do-check"
               ><Check v-if="motivo === 'COBRADA'" :size="13" :stroke-width="3"
             /></span>
-            <span class="do-text">
-              <span class="do-title">Cobrar y cerrar</span>
-              <span class="do-sub">Registra el pago del saldo y cierra la cuenta.</span>
+            <span class="do-text ds-stack">
+              <span class="do-title ds-strong">Cobrar y cerrar</span>
+              <span class="do-sub ds-hint">Registra el pago del saldo y cierra la cuenta.</span>
             </span>
           </button>
           <button
@@ -109,30 +109,31 @@ function onShellClose() {
             /></span>
             <span class="do-text">
               <span class="do-title">Cancelar cuenta</span>
-              <span class="do-sub">Cierra sin cobro; el saldo queda anulado.</span>
+              <span class="do-sub ds-hint">Cierra sin cobro; el saldo queda anulado.</span>
             </span>
           </button>
         </div>
 
         <!-- Desglose fiscal de la cuenta -->
-        <div class="desglose">
-          <div class="dg-row">
+        <div class="desglose ds-stack">
+          <div class="ds-meta-dark dg-row">
             <span>Base gravable + exenta</span><span>{{ formatMoney(breakdown.base) }}</span>
           </div>
-          <div v-for="r in breakdown.taxRows" :key="r.name" class="dg-row dg-tax">
+          <div v-for="r in breakdown.taxRows" :key="r.name" class="ds-meta-dark dg-row dg-tax">
             <span>{{ r.name }}</span
             ><span>{{ formatMoney(r.tax) }}</span>
           </div>
-          <div v-if="breakdown.taxRows.length === 0" class="dg-row dg-tax">
+          <div v-if="breakdown.taxRows.length === 0" class="ds-meta-dark dg-row dg-tax">
             <span>Impuestos</span><span>Sin impuestos</span>
           </div>
-          <div class="dg-row dg-total">
-            <span>Total cuenta</span><span>{{ formatMoney(breakdown.total) }}</span>
+          <div class="ds-meta-dark dg-row dg-total">
+            <span class="ds-strong">Total cuenta</span
+            ><span class="ds-strong">{{ formatMoney(breakdown.total) }}</span>
           </div>
-          <div v-if="(account?.paidAmount ?? 0) > 0" class="dg-row">
+          <div v-if="(account?.paidAmount ?? 0) > 0" class="ds-meta-dark dg-row">
             <span>Ya abonado</span><span>− {{ formatMoney(account?.paidAmount ?? 0) }}</span>
           </div>
-          <div class="dg-row dg-saldo">
+          <div class="ds-meta-dark dg-row dg-saldo">
             <span>{{ motivo === 'CANCELADA' ? 'Saldo a anular' : 'Saldo a cobrar' }}</span>
             <span>{{ formatMoney(outstanding) }}</span>
           </div>
@@ -174,7 +175,7 @@ function onShellClose() {
           </template>
         </BaseField>
 
-        <p class="note">{{ note }}</p>
+        <p class="note ds-meta-dark ds-meta-dark--sm">{{ note }}</p>
 
         <p v-if="retryHint" class="retry-hint">
           El cobro ya se registró; reintenta <strong>Cobrar y cerrar</strong> para terminar de
@@ -193,7 +194,7 @@ function onShellClose() {
     </template>
 
     <template #footer-left>
-      <span v-if="step === 'cobro'" class="foottotal">
+      <span v-if="step === 'cobro'" class="foottotal ds-meta-dark">
         Saldo <strong>{{ formatMoney(outstanding) }}</strong>
       </span>
       <div v-else-if="step === 'recibo'" class="w-seg" role="group" aria-label="Ancho del tiquete">
@@ -235,6 +236,8 @@ function onShellClose() {
 </template>
 
 <style scoped>
+/* Layout via primitivas: .ds-stack(--16), .ds-strong, .ds-hint y
+   .ds-meta-dark(--sm). */
 .w-seg {
   display: inline-flex;
   border: 1px solid var(--warm-300);
@@ -257,11 +260,6 @@ function onShellClose() {
   background: var(--warm-100);
   color: var(--warm-900);
 }
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
 .field-lab {
   font-size: 12.5px;
   font-weight: 600;
@@ -269,7 +267,7 @@ function onShellClose() {
   margin-bottom: -6px;
 }
 
-/* Tarjetas-radio de motivo */
+/* Tarjetas-radio de motivo: dos columnas fijas dentro de un modal de 520px. */
 .mode {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -321,33 +319,23 @@ function onShellClose() {
   border-color: var(--amatista-600);
 }
 .do-text {
-  display: flex;
-  flex-direction: column;
   gap: 3px;
   min-width: 0;
 }
 .do-title {
   font-size: 13px;
-  font-weight: 600;
-  color: var(--warm-900);
   line-height: 1.25;
 }
 .do-sub {
-  font-size: 11.5px;
-  color: var(--warm-500);
   line-height: 1.35;
 }
 
 .note {
   margin: 0;
-  font-size: 12.5px;
-  color: var(--warm-600);
   line-height: 1.4;
 }
 
 .desglose {
-  display: flex;
-  flex-direction: column;
   gap: 6px;
   padding: 13px 15px;
   border-radius: 12px;
@@ -358,8 +346,6 @@ function onShellClose() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 13px;
-  color: var(--warm-600);
 }
 .dg-row span:last-child {
   color: var(--warm-800);
@@ -374,10 +360,6 @@ function onShellClose() {
   padding-top: 8px;
   margin-top: 2px;
   border-top: 1px solid var(--warm-200);
-}
-.dg-total span {
-  color: var(--warm-900);
-  font-weight: 600;
 }
 .dg-saldo span {
   color: var(--warm-900);
@@ -402,10 +384,6 @@ function onShellClose() {
 }
 
 /* Footer */
-.foottotal {
-  font-size: 13px;
-  color: var(--warm-600);
-}
 .foottotal strong {
   font-size: 15px;
   color: var(--amatista-700);

@@ -42,7 +42,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="cols">
+  <div class="cols ds-grid-2">
     <!-- Izquierda — catálogo -->
     <div class="catalog">
       <div class="srcseg">
@@ -66,15 +66,20 @@ const emit = defineEmits<{
       <input
         :value="query"
         type="text"
-        class="search"
+        class="search ds-focus-ring"
         placeholder="Buscar por nombre o categoría…"
         @input="emit('update:query', ($event.target as HTMLInputElement).value)"
       />
-      <ul class="catlist">
-        <li v-for="it in catalog" :key="it.id" class="catrow" :class="{ disabled: it.soldOut }">
+      <ul class="catlist ds-list-reset ds-stack">
+        <li
+          v-for="it in catalog"
+          :key="it.id"
+          class="catrow ds-flex-row ds-flex-row--12"
+          :class="{ 'ds-is-disabled--60': it.soldOut }"
+        >
           <span class="cr-name">{{ it.name }}</span>
           <span v-if="it.soldOut" class="badge-out">Agotado</span>
-          <span v-else class="cr-price">{{ formatMoney(it.price) }}</span>
+          <span v-else class="ds-num ds-meta-dark">{{ formatMoney(it.price) }}</span>
           <button
             type="button"
             class="cr-add"
@@ -91,29 +96,33 @@ const emit = defineEmits<{
     </div>
 
     <!-- Derecha — cargos seleccionados -->
-    <div class="selected">
+    <div class="selected ds-stack">
       <div class="selhead">{{ heading }}</div>
 
       <!-- Cargos previos (solo lectura) -->
       <template v-if="showExisting && existingCharges.length">
         <div class="existing-lab">Ya en la cuenta · solo lectura</div>
-        <ul class="existing-list">
-          <li v-for="c in existingCharges" :key="`${c.kind}-${c.id}`" class="existing-row">
-            <Check :size="13" :stroke-width="2" class="ex-check" />
-            <span class="ex-concept">{{ c.concept }}</span>
-            <span class="ex-date">{{ c.date.slice(5, 10) }}</span>
-            <span class="ex-amount">{{ formatMoney(c.amount) }}</span>
+        <ul class="existing-list ds-list-reset ds-stack">
+          <li
+            v-for="c in existingCharges"
+            :key="`${c.kind}-${c.id}`"
+            class="existing-row ds-flex-row ds-meta-dark ds-meta-dark--sm"
+          >
+            <Check :size="13" :stroke-width="2" class="ds-icon-muted ds-icon-muted--dim" />
+            <span class="ds-flex-fill ds-truncate">{{ c.concept }}</span>
+            <span class="ex-date ds-num">{{ c.date.slice(5, 10) }}</span>
+            <span class="ds-num">{{ formatMoney(c.amount) }}</span>
           </li>
         </ul>
         <div class="divider">Nuevos cargos</div>
       </template>
 
       <!-- Cargos nuevos editables -->
-      <ul v-if="items.length" class="sel-list">
+      <ul v-if="items.length" class="sel-list ds-list-reset ds-stack">
         <li v-for="line in items" :key="`${line.kind}-${line.id}`" class="selrow">
-          <span class="sel-info">
-            <span class="sel-name">{{ line.name }}</span>
-            <span class="sel-kind"
+          <span class="ds-flex-fill ds-stack sel-info">
+            <span class="sel-name ds-truncate">{{ line.name }}</span>
+            <span class="ds-meta ds-meta--caption"
               >{{ line.kind === 'service' ? 'Servicio' : 'Producto' }} ·
               {{ formatMoney(line.unitPrice) }}</span
             >
@@ -133,13 +142,13 @@ const emit = defineEmits<{
               <Plus :size="12" :stroke-width="2.2" />
             </button>
           </span>
-          <span class="sel-total">{{ formatMoney(line.unitPrice * line.qty) }}</span>
+          <span class="sel-total ds-num">{{ formatMoney(line.unitPrice * line.qty) }}</span>
           <button type="button" class="sel-remove" title="Quitar" @click="emit('remove', line)">
             <X :size="13" :stroke-width="1.9" />
           </button>
         </li>
       </ul>
-      <div v-else class="sel-empty">
+      <div v-else class="sel-empty ds-stack">
         <span>Aún no has agregado cargos.</span>
         <span class="hint">Elige del catálogo a la izquierda.</span>
       </div>
@@ -148,17 +157,13 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
+/* Layout via primitivas: .ds-grid-2 (dos columnas exactas y su colapso en
+   640px, que es el que ya tenía), .ds-stack, .ds-flex-row, .ds-flex-fill,
+   .ds-truncate, .ds-num, .ds-list-reset, .ds-focus-ring, .ds-meta(--caption),
+   .ds-meta-dark(--sm), .ds-icon-muted(--dim) y .ds-is-disabled--60. */
 .cols {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 16px;
   align-items: start;
-}
-
-@media (width <= 640px) {
-  .cols {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* Catálogo */
@@ -198,24 +203,12 @@ const emit = defineEmits<{
   outline: none;
   margin-bottom: 10px;
 }
-.search:focus {
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
-}
 .catlist {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
   gap: 6px;
   max-height: 280px;
   overflow: auto;
 }
 .catrow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 11px 14px;
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
@@ -224,22 +217,17 @@ const emit = defineEmits<{
     border-color 0.12s,
     background 0.12s;
 }
-.catrow:hover:not(.disabled) {
+.catrow:hover:not(.ds-is-disabled--60) {
   border-color: var(--amatista-300);
   background: var(--amatista-50);
 }
-.catrow.disabled {
-  opacity: 0.6;
-}
+
+/* `flex: 1` a secas, sin el `min-width: 0` de `.ds-flex-fill`: el nombre del
+   ítem no debe encogerse por debajo de su contenido (no lleva elipsis). */
 .cr-name {
   flex: 1;
   font-size: 13.5px;
   color: var(--warm-900);
-}
-.cr-price {
-  font-size: 13px;
-  color: var(--warm-600);
-  font-variant-numeric: tabular-nums;
 }
 .badge-out {
   font-size: 10.5px;
@@ -277,8 +265,6 @@ const emit = defineEmits<{
   border-radius: 12px;
   background: var(--warm-50);
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
   min-height: 240px;
 }
 .selhead {
@@ -299,40 +285,16 @@ const emit = defineEmits<{
   padding: 10px 16px 6px;
 }
 .existing-list {
-  list-style: none;
-  margin: 0;
   padding: 0 12px;
-  display: flex;
-  flex-direction: column;
   gap: 3px;
   opacity: 0.75;
 }
 .existing-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 7px 6px;
-  font-size: 12.5px;
-  color: var(--warm-600);
-}
-.ex-check {
-  color: var(--warm-400);
-  flex-shrink: 0;
-}
-.ex-concept {
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .ex-date {
   font-size: 11px;
   color: var(--warm-400);
-  font-variant-numeric: tabular-nums;
-}
-.ex-amount {
-  font-variant-numeric: tabular-nums;
 }
 .divider {
   font-size: 10.5px;
@@ -345,11 +307,7 @@ const emit = defineEmits<{
   margin-top: 6px;
 }
 .sel-list {
-  list-style: none;
-  margin: 0;
   padding: 8px 12px 12px;
-  display: flex;
-  flex-direction: column;
   gap: 6px;
 }
 .selrow {
@@ -361,22 +319,11 @@ const emit = defineEmits<{
   background: var(--warm-100);
 }
 .sel-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
   gap: 1px;
 }
 .sel-name {
   font-size: 13px;
   color: var(--warm-900);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.sel-kind {
-  font-size: 11px;
-  color: var(--warm-500);
 }
 .stepper {
   display: inline-flex;
@@ -421,10 +368,8 @@ const emit = defineEmits<{
   font-size: 13px;
   font-weight: 500;
   color: var(--warm-900);
-  font-variant-numeric: tabular-nums;
   white-space: nowrap;
   min-width: 64px;
-  text-align: right;
 }
 .sel-remove {
   width: 22px;
@@ -444,8 +389,6 @@ const emit = defineEmits<{
 }
 .sel-empty {
   flex: 1;
-  display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 6px;

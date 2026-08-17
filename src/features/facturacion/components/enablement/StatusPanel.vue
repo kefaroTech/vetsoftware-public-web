@@ -68,17 +68,17 @@ function alertText(
 </script>
 
 <template>
-  <div class="board">
+  <div class="ds-stack ds-stack--14">
     <div class="readycard" :class="{ ready }">
       <div class="readycard-ic">
         <ShieldCheck v-if="ready" :size="26" :stroke-width="1.8" />
         <FileText v-else :size="26" :stroke-width="1.8" />
       </div>
-      <div class="readycard-text">
+      <div class="ds-flex-fill">
         <div class="readycard-title">
           {{ ready ? 'Lista para facturar' : 'Habilitación en curso' }}
         </div>
-        <div class="readycard-sub">
+        <div class="readycard-sub ds-meta-dark ds-meta-dark--sm">
           {{
             ready
               ? 'La empresa cumple los requisitos para emitir documentos electrónicos.'
@@ -110,7 +110,7 @@ function alertText(
       <button type="button" class="alertcta" @click="emit('openWizard', 2)">Revisar</button>
     </div>
 
-    <div class="checklist">
+    <div class="ds-stack ds-stack--10">
       <button
         v-for="r in reqs"
         :key="r.key"
@@ -123,14 +123,14 @@ function alertText(
           <Bell v-else-if="r.attention" :size="15" :stroke-width="1.9" />
           <component :is="r.icon" v-else :size="15" :stroke-width="1.8" />
         </div>
-        <div class="check-text">
-          <div class="check-title">
+        <div class="ds-flex-fill">
+          <div class="check-title ds-flex-row ds-strong">
             {{ r.title }}
-            <span class="reqbadge" :class="r.ok ? 'ok' : r.attention ? 'att' : 'pend'">
+            <span class="reqbadge" :class="r.ok ? 'ok' : r.attention ? 'att' : 'ds-tone--neutral'">
               {{ r.ok ? 'Listo' : r.attention ? 'Atención' : 'Pendiente' }}
             </span>
           </div>
-          <div class="check-sub">{{ r.desc }}</div>
+          <div class="check-sub ds-truncate">{{ r.desc }}</div>
         </div>
         <span class="check-cta"
           >{{ r.ok ? 'Editar' : 'Completar' }} <ChevronRight :size="14" :stroke-width="1.8"
@@ -142,12 +142,12 @@ function alertText(
           <Check v-if="withholding" :size="16" :stroke-width="2.4" />
           <Receipt v-else :size="15" :stroke-width="1.8" />
         </div>
-        <div class="check-text">
-          <div class="check-title">
+        <div class="ds-flex-fill">
+          <div class="check-title ds-flex-row ds-strong">
             Retenciones
             <span class="opt-tag">Opcional</span>
           </div>
-          <div class="check-sub">
+          <div class="check-sub ds-truncate">
             {{ withholding ? 'Configuradas' : 'Para clientes agentes retenedores' }}
           </div>
         </div>
@@ -160,12 +160,8 @@ function alertText(
 </template>
 
 <style scoped>
-.board {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
+/* Layout: `.ds-stack--14/--10`, `.ds-flex-fill`, `.ds-flex-row` + `.ds-strong`
+   (título de fila) y `.ds-truncate` (subtítulo de una línea). Aquí sólo lo propio. */
 .readycard {
   display: flex;
   align-items: center;
@@ -197,11 +193,6 @@ function alertText(
   color: oklch(40% 0.13 150deg);
 }
 
-.readycard-text {
-  flex: 1;
-  min-width: 0;
-}
-
 .readycard-title {
   font-family: var(--font-serif);
   font-size: 21px;
@@ -209,8 +200,6 @@ function alertText(
 }
 
 .readycard-sub {
-  font-size: 12.5px;
-  color: var(--warm-600);
   margin-top: 2px;
 }
 
@@ -237,12 +226,6 @@ function alertText(
   font-weight: 600;
   font-size: 12.5px;
   cursor: pointer;
-}
-
-.checklist {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 .checkrow {
@@ -294,18 +277,8 @@ function alertText(
   color: var(--amatista-600);
 }
 
-.check-text {
-  flex: 1;
-  min-width: 0;
-}
-
 .check-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
   font-size: 13.5px;
-  color: var(--warm-900);
 }
 
 .reqbadge {
@@ -318,11 +291,6 @@ function alertText(
 .reqbadge.ok {
   background: var(--success-50);
   color: oklch(40% 0.13 150deg);
-}
-
-.reqbadge.pend {
-  background: var(--warm-200);
-  color: var(--warm-600);
 }
 
 .reqbadge.att {
@@ -343,9 +311,6 @@ function alertText(
   font-size: 12px;
   color: var(--warm-600);
   margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .check-cta {

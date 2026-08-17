@@ -133,7 +133,7 @@ function copyId() {
 </script>
 
 <template>
-  <div class="detail">
+  <div class="ds-stack ds-stack--18">
     <button type="button" class="back" @click="emit('back')">
       <ArrowLeft :size="15" :stroke-width="1.7" /> Volver a documentos
     </button>
@@ -142,16 +142,18 @@ function copyId() {
       <div>
         <div class="num">{{ doc.prefix }}-{{ doc.consecutive }}</div>
         <h1 class="type">{{ DOC_TYPE_LABEL[doc.documentType] }}</h1>
-        <div class="meta">Emitido {{ doc.issueDate }} {{ doc.issueTime?.slice(0, 5) }}</div>
+        <div class="meta ds-meta ds-meta--sm">
+          Emitido {{ doc.issueDate }} {{ doc.issueTime?.slice(0, 5) }}
+        </div>
       </div>
-      <div class="head-right">
+      <div class="head-right ds-stack ds-stack--8">
         <FeStatusPill :status="doc.dianStatus" size="lg" />
         <span v-if="doc.reversed" class="reversed">Anulada por nota crédito</span>
       </div>
     </div>
 
     <div class="statusbar">
-      <div class="timeline">
+      <div class="ds-flex-row ds-flex-row--6">
         <template v-for="(s, i) in steps" :key="i">
           <div
             class="tlstep"
@@ -160,7 +162,7 @@ function copyId() {
               err: doc.dianStatus === 'RECHAZADO' && i === steps.length - 1,
             }"
           >
-            <span class="tldot">
+            <span class="tldot ds-tone--neutral">
               <Check v-if="i < steps.length - 1 || validated" :size="11" :stroke-width="2.6" />
               <template v-else>{{ i + 1 }}</template>
             </span>
@@ -169,7 +171,7 @@ function copyId() {
           <span v-if="i < steps.length - 1" class="tlbar" />
         </template>
       </div>
-      <div class="statusactions">
+      <div class="ds-wrap-row">
         <button
           v-if="doc.dianStatus === 'PENDIENTE'"
           type="button"
@@ -210,7 +212,7 @@ function copyId() {
         </div>
       </div>
     </div>
-    <div v-if="doc.dianStatus === 'NO_ELECTRONICO'" class="noelecbox">
+    <div v-if="doc.dianStatus === 'NO_ELECTRONICO'" class="noelecbox ds-flex-row">
       <FileText :size="15" :stroke-width="1.8" />
       Este registro no se envió a la DIAN porque el plan no incluye facturación electrónica.
     </div>
@@ -219,8 +221,8 @@ function copyId() {
       <div class="ds-card">
         <div class="card-title">Emisor</div>
         <div class="party">
-          <div class="party-name">{{ issuerParty.name }}</div>
-          <div class="party-rows">
+          <div class="party-name ds-strong">{{ issuerParty.name }}</div>
+          <div class="party-rows ds-stack">
             <div>
               <span>Documento</span
               ><span
@@ -240,8 +242,8 @@ function copyId() {
       <div class="ds-card">
         <div class="card-title">Adquiriente</div>
         <div class="party">
-          <div class="party-name">{{ customerParty.name }}</div>
-          <div class="party-rows">
+          <div class="party-name ds-strong">{{ customerParty.name }}</div>
+          <div class="party-rows ds-stack">
             <div>
               <span>Documento</span
               ><span
@@ -266,13 +268,13 @@ function copyId() {
         <img v-if="doc.qrUrl" :src="doc.qrUrl" alt="Código QR DIAN" class="qr-img" />
         <ScanLine v-else :size="48" :stroke-width="1.2" />
       </div>
-      <div class="cufe-text">
+      <div class="ds-flex-fill">
         <div class="card-title">{{ idLabel }}</div>
         <div class="cufeval">{{ idValue }}</div>
         <button type="button" class="copybtn" @click="copyId">
           <FileText :size="12" :stroke-width="1.8" /> Copiar {{ idLabel }}
         </button>
-        <div class="meta" style="margin-top: 6px">
+        <div class="meta ds-meta ds-meta--sm" style="margin-top: 6px">
           <template v-if="doc.dianValidationDate"
             >Validado {{ doc.dianValidationDate.replace('T', ' ').slice(0, 16) }} · </template
           >UUID {{ doc.uuid }}
@@ -282,7 +284,7 @@ function copyId() {
 
     <div v-if="doc.lines.length" class="ds-card">
       <div class="card-title">Detalle</div>
-      <div class="tbl-scroll">
+      <div class="ds-table-scroll">
         <table class="lines">
           <thead>
             <tr>
@@ -299,7 +301,9 @@ function copyId() {
               <td>{{ l.quantity }}</td>
               <td style="text-align: right">{{ feMoney(l.unitPrice) }}</td>
               <td>
-                <span v-if="l.taxScheme" class="taxchip">{{ l.taxScheme }} {{ l.taxRate }}%</span>
+                <span v-if="l.taxScheme" class="taxchip ds-tone--accent-soft"
+                  >{{ l.taxScheme }} {{ l.taxRate }}%</span
+                >
                 <span v-else class="taxchip muted">{{ l.taxCategory }}</span>
               </td>
               <td style="text-align: right; font-weight: 600">{{ feMoney(l.totalAmount) }}</td>
@@ -309,7 +313,7 @@ function copyId() {
       </div>
     </div>
 
-    <div class="ds-card totals">
+    <div class="ds-card totals ds-stack">
       <div class="tot-row">
         <span>Subtotal (base)</span><span>{{ feMoney(doc.lineExtensionAmount) }}</span>
       </div>
@@ -334,7 +338,7 @@ function copyId() {
           <span>Neto a pagar</span><span>{{ feMoney(doc.netPayableAmount) }}</span>
         </div>
       </template>
-      <div class="tot-pay">
+      <div class="tot-pay ds-meta">
         {{ doc.paymentForm === 'CONTADO' ? 'Contado' : 'Crédito' }}
         <template v-for="p in doc.payments" :key="p.id">
           · {{ PAYMENT_MEANS_LABEL[p.paymentMeans] }}</template
@@ -361,12 +365,9 @@ function copyId() {
 </template>
 
 <style scoped>
-.detail {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
+/* Layout via primitivas: .ds-stack(--8/--18), .ds-flex-row(--6), .ds-wrap-row,
+   .ds-flex-fill, .ds-strong, .ds-meta(--sm), .ds-table-scroll y
+   .ds-tone--neutral / --accent-soft. Aquí sólo lo propio del documento. */
 .back {
   align-self: flex-start;
   display: inline-flex;
@@ -412,16 +413,11 @@ function copyId() {
 }
 
 .meta {
-  font-size: 12.5px;
-  color: var(--warm-500);
   margin-top: 6px;
 }
 
 .head-right {
-  display: flex;
-  flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
 }
 
 .reversed {
@@ -445,12 +441,6 @@ function copyId() {
   border: 1px solid var(--warm-200);
 }
 
-.timeline {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
 .tlstep {
   display: flex;
   align-items: center;
@@ -463,8 +453,6 @@ function copyId() {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: var(--warm-200);
-  color: var(--warm-600);
   font-size: 11px;
   font-weight: 600;
 }
@@ -491,12 +479,6 @@ function copyId() {
   border-radius: 2px;
 }
 
-.statusactions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
 .rejectbox {
   display: flex;
   align-items: flex-start;
@@ -511,9 +493,6 @@ function copyId() {
 }
 
 .noelecbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 12px 16px;
   border-radius: 12px;
   background: var(--warm-100);
@@ -521,15 +500,11 @@ function copyId() {
   font-size: 12.5px;
 }
 
+/* Rejilla intrínseca propia: mínimo de columna 260px. */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
-}
-
-.tbl-scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .card-title {
@@ -542,15 +517,11 @@ function copyId() {
 }
 
 .party-name {
-  font-weight: 600;
   font-size: 14.5px;
-  color: var(--warm-900);
   margin-bottom: 8px;
 }
 
 .party-rows {
-  display: flex;
-  flex-direction: column;
   gap: 5px;
 }
 
@@ -598,11 +569,6 @@ function copyId() {
   border-radius: 12px;
 }
 
-.cufe-text {
-  flex: 1;
-  min-width: 0;
-}
-
 .cufeval {
   font-family: var(--font-mono);
   font-size: 12px;
@@ -648,8 +614,6 @@ function copyId() {
   font-size: 11px;
   padding: 2px 7px;
   border-radius: 6px;
-  background: var(--amatista-50);
-  color: var(--amatista-700);
   font-weight: 600;
 }
 
@@ -659,8 +623,6 @@ function copyId() {
 }
 
 .totals {
-  display: flex;
-  flex-direction: column;
   gap: 7px;
 }
 
@@ -700,8 +662,6 @@ function copyId() {
 
 .tot-pay {
   margin-top: 8px;
-  font-size: 12px;
-  color: var(--warm-500);
 }
 
 .noteactions {

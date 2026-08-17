@@ -84,7 +84,7 @@ function shortId(cufe: string | null, cude: string | null): string {
   <div v-else class="ds-page ds-page--stack">
     <header class="pagehead">
       <div>
-        <div class="kicker">Facturación electrónica · DIAN</div>
+        <div class="ds-kicker">Facturación electrónica · DIAN</div>
         <h1 class="ds-display fe-title">Documentos electrónicos</h1>
       </div>
     </header>
@@ -110,7 +110,7 @@ function shortId(cufe: string | null, cude: string | null): string {
       </button>
     </div>
 
-    <div class="autobanner">
+    <div class="autobanner ds-flex-row">
       <History :size="14" :stroke-width="1.8" />
       <span>
         La emisión es <strong>automática</strong> al cerrar/cobrar una venta. Usa
@@ -120,7 +120,7 @@ function shortId(cufe: string | null, cude: string | null): string {
 
     <p v-if="error" class="error-banner">{{ error }}</p>
 
-    <div class="tbl-scroll">
+    <div class="ds-table-scroll">
       <table class="table">
         <thead>
           <tr>
@@ -135,13 +135,13 @@ function shortId(cufe: string | null, cude: string | null): string {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="d in rows" :key="d.id" class="row" @click="selectedId = d.id">
+          <tr v-for="d in rows" :key="d.id" class="ds-row-clickable" @click="selectedId = d.id">
             <td>
               <span class="num">{{ d.prefix }}-{{ d.consecutive }}</span>
             </td>
             <td>{{ DOC_TYPE_LABEL[d.documentType] }}</td>
             <td class="date">{{ d.issueDate }}</td>
-            <td class="cust">
+            <td class="ds-flex-row">
               {{ d.customer.legalName || d.customer.name }}
               <span v-if="d.reversed" class="reversed">Anulada</span>
             </td>
@@ -150,9 +150,9 @@ function shortId(cufe: string | null, cude: string | null): string {
             </td>
             <td><FeStatusPill :status="d.dianStatus" /></td>
             <td>
-              <span class="cufe">{{ shortId(d.cufe, d.cude) }}</span>
+              <span class="cufe ds-hint">{{ shortId(d.cufe, d.cude) }}</span>
             </td>
-            <td><ChevronRight :size="15" :stroke-width="1.6" class="chev" /></td>
+            <td><ChevronRight :size="15" :stroke-width="1.6" class="ds-icon-muted--dim" /></td>
           </tr>
           <tr v-if="isEmpty">
             <td colspan="8" class="ds-empty">Sin documentos para los filtros aplicados.</td>
@@ -180,19 +180,15 @@ function shortId(cufe: string | null, cude: string | null): string {
 </template>
 
 <style scoped>
+/* El layout se apoya en primitivas: `.ds-flex-row` (aviso de emisión y celda
+   de cliente), `.ds-row-clickable` (fila navegable), `.ds-kicker` (rótulo),
+   `.ds-hint` (CUFE/CUDE) y `.ds-empty` (estado vacío). Aquí sólo queda lo que
+   no es primitiva. */
 .pagehead {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-}
-
-.kicker {
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--warm-500);
-  font-weight: 500;
 }
 
 .listhead {
@@ -221,9 +217,6 @@ function shortId(cufe: string | null, cude: string | null): string {
 }
 
 .autobanner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 10px 14px;
   border-radius: 10px;
   background: var(--amatista-50);
@@ -240,11 +233,6 @@ function shortId(cufe: string | null, cude: string | null): string {
   border: 1px solid var(--danger-250);
   color: oklch(45% 0.16 25deg);
   font-size: 13px;
-}
-
-.tbl-scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .table {
@@ -273,15 +261,6 @@ function shortId(cufe: string | null, cude: string | null): string {
   border-bottom: 1px solid var(--warm-200);
 }
 
-.row {
-  cursor: pointer;
-  transition: background 0.12s ease;
-}
-
-.row:hover {
-  background: var(--amatista-50);
-}
-
 .table td {
   padding: 12px;
   border-bottom: 1px solid var(--warm-100);
@@ -300,12 +279,6 @@ function shortId(cufe: string | null, cude: string | null): string {
   font-variant-numeric: tabular-nums;
 }
 
-.cust {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .reversed {
   font-size: 10.5px;
   font-weight: 600;
@@ -315,14 +288,9 @@ function shortId(cufe: string | null, cude: string | null): string {
   border-radius: var(--radius-pill);
 }
 
+/* El color y el tamaño los pone `.ds-hint`; aquí sólo la familia monoespaciada. */
 .cufe {
   font-family: var(--font-mono);
-  font-size: 11.5px;
-  color: var(--warm-500);
-}
-
-.chev {
-  color: var(--warm-400);
 }
 
 /* El titular usa `.ds-display`; sólo conserva su separación superior. */

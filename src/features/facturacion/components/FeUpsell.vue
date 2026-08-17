@@ -10,13 +10,13 @@ const benefits = [
 </script>
 
 <template>
-  <div class="upsell">
-    <div class="upsell-ic"><ShieldCheck :size="34" :stroke-width="1.6" /></div>
+  <div class="upsell ds-stack">
+    <div class="upsell-ic ds-tone--accent"><ShieldCheck :size="34" :stroke-width="1.6" /></div>
     <h1 class="upsell-title">La facturación electrónica está disponible en el plan Premium</h1>
     <p class="upsell-sub">
       Cumple con la DIAN y emite documentos fiscales válidos directamente desde tus ventas.
     </p>
-    <div class="upsell-list">
+    <div class="upsell-list ds-stack ds-stack--10">
       <div v-for="b in benefits" :key="b" class="upsell-item">
         <Check :size="15" :stroke-width="2.4" /> {{ b }}
       </div>
@@ -26,12 +26,11 @@ const benefits = [
 </template>
 
 <style scoped>
+/* Layout desde primitives.css: .ds-stack (columna) y .ds-stack--10 (lista). */
 .upsell {
   max-width: 560px;
   margin: 40px auto;
   text-align: center;
-  display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 12px;
 }
@@ -42,8 +41,6 @@ const benefits = [
   border-radius: 20px;
   display: grid;
   place-items: center;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
 }
 
 .upsell-title {
@@ -64,9 +61,6 @@ const benefits = [
 }
 
 .upsell-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
   margin: 12px 0;
   text-align: left;
 }
@@ -93,8 +87,6 @@ const benefits = [
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow:
-    0 1px 2px rgb(50 20 80 / 8%),
-    0 6px 16px -6px oklch(40% 0.18 var(--hue) / 45%);
+  box-shadow: var(--shadow-primary-soft);
 }
 </style>

@@ -81,7 +81,7 @@ async function submit() {
     @close="emit('close')"
   >
     <template #body>
-      <div class="form">
+      <div class="ds-stack ds-stack--16">
         <p class="warn">
           El abono quedará registrado como <strong>anulado</strong> (visible, tachado) y dejará de
           contar en el saldo. Esta acción registra tu autoría y el motivo.
@@ -120,11 +120,7 @@ async function submit() {
 </template>
 
 <style scoped>
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+/* Layout via primitivas: .ds-stack--16. */
 .warn {
   margin: 0;
   font-size: 13px;

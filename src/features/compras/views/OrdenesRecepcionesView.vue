@@ -129,11 +129,11 @@ onMounted(refresh)
 <template>
   <div class="ds-page ds-page--contained">
     <header class="page-head">
-      <div class="title-wrap">
+      <div class="ds-flex-row ds-flex-row--12 ds-flex-row--accent">
         <ClipboardList :size="22" :stroke-width="1.7" />
         <div>
-          <h1>Órdenes y recepción</h1>
-          <p class="sub">Pedidos a proveedores y entrada de mercancía al inventario</p>
+          <h1 class="ds-display ds-display--xs">Órdenes y recepción</h1>
+          <p class="ds-view-subtitle">Pedidos a proveedores y entrada de mercancía al inventario</p>
         </div>
       </div>
       <button
@@ -173,21 +173,21 @@ onMounted(refresh)
           <th>Proveedor</th>
           <th>Fecha</th>
           <th>Esperada</th>
-          <th class="num">Total</th>
+          <th class="ds-num">Total</th>
           <th>Estado</th>
           <th class="actions-col"></th>
         </tr>
       </thead>
       <tbody>
         <tr v-if="orderRows.length === 0">
-          <td colspan="7" class="empty-row">No hay órdenes de compra.</td>
+          <td colspan="7" class="ds-empty ds-empty--md">No hay órdenes de compra.</td>
         </tr>
         <tr v-for="po in orderRows" :key="po.id">
-          <td class="strong">#{{ po.id }}</td>
+          <td class="ds-strong">#{{ po.id }}</td>
           <td>{{ po.supplier.name }}</td>
           <td>{{ formatDateNumeric(po.orderDate) }}</td>
           <td>{{ formatDateNumeric(po.expectedDate) }}</td>
-          <td class="num">{{ formatMoney(poTotal(po)) }}</td>
+          <td class="ds-num">{{ formatMoney(poTotal(po)) }}</td>
           <td>
             <span class="pill" :class="po.status.toLowerCase().replaceAll('_', '-')">
               {{ PO_STATUS[po.status] }}
@@ -244,22 +244,22 @@ onMounted(refresh)
           <th>Fecha</th>
           <th>Factura</th>
           <th>OC</th>
-          <th class="num">Líneas</th>
+          <th class="ds-num">Líneas</th>
           <th>Estado</th>
           <th class="actions-col"></th>
         </tr>
       </thead>
       <tbody>
         <tr v-if="receiptRows.length === 0">
-          <td colspan="8" class="empty-row">No hay recepciones registradas.</td>
+          <td colspan="8" class="ds-empty ds-empty--md">No hay recepciones registradas.</td>
         </tr>
         <tr v-for="gr in receiptRows" :key="gr.id">
-          <td class="strong">#{{ gr.id }}</td>
+          <td class="ds-strong">#{{ gr.id }}</td>
           <td>{{ gr.supplier.name }}</td>
           <td>{{ formatDateNumeric(gr.receiptDate) }}</td>
           <td>{{ gr.supplierInvoiceNumber ?? '—' }}</td>
           <td>{{ gr.purchaseOrderId ? '#' + gr.purchaseOrderId : '—' }}</td>
-          <td class="num">{{ gr.lines.length }}</td>
+          <td class="ds-num">{{ gr.lines.length }}</td>
           <td>
             <span class="pill" :class="gr.status.toLowerCase()">{{ GR_STATUS[gr.status] }}</span>
           </td>
@@ -324,32 +324,14 @@ onMounted(refresh)
 </template>
 
 <style scoped>
+/* Primitivas: `.ds-flex-row--12 --accent` + `--display--xs` + `--view-subtitle`
+   (cabecera), `.ds-num`, `.ds-strong` y `.ds-empty --md` (fila vacía; su
+   padding/color los pisa `.grid-table td`, igual que al `.empty-row` anterior). */
 .page-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 18px;
-}
-
-.title-wrap {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  color: var(--amatista-700);
-}
-
-.title-wrap h1 {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: 26px;
-  font-weight: 400;
-  color: var(--warm-900);
-}
-
-.sub {
-  margin: 2px 0 0;
-  font-size: 13px;
-  color: var(--warm-500);
 }
 
 .tabs {
@@ -397,16 +379,6 @@ onMounted(refresh)
   padding: 9px 8px;
   border-bottom: 1px solid var(--warm-100);
   color: var(--warm-700);
-}
-
-.strong {
-  font-weight: 600;
-  color: var(--warm-900);
-}
-
-.num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
 }
 
 .actions-col {
@@ -471,12 +443,6 @@ onMounted(refresh)
 .pill.cancelled {
   background: var(--warm-100);
   color: var(--warm-500);
-}
-
-.empty-row {
-  text-align: center;
-  color: var(--warm-400);
-  padding: 26px;
 }
 
 /* caja/compras usan un amatista un punto más claro que el resto. */

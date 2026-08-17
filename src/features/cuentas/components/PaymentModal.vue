@@ -125,7 +125,7 @@ function finish() {
   >
     <template #body>
       <!-- Paso 1 · formulario -->
-      <div v-if="!done" class="form">
+      <div v-if="!done" class="ds-stack ds-stack--16">
         <BaseField
           label="Monto"
           required
@@ -146,32 +146,32 @@ function finish() {
             <BaseSelect :id="id" v-model="form.method" :options="METHOD_OPTIONS" />
           </template>
         </BaseField>
-        <div v-if="amountNum > 0 && !amountError" class="breakdown">
-          <div class="brow">
+        <div v-if="amountNum > 0 && !amountError" class="breakdown ds-stack">
+          <div class="ds-meta-dark brow">
             <span>Saldo actual</span><span>{{ formatMoney(outstanding) }}</span>
           </div>
-          <div class="brow">
+          <div class="ds-meta-dark brow">
             <span>Abono</span><span>− {{ formatMoney(amountNum) }}</span>
           </div>
-          <div class="brow saldo">
+          <div class="ds-meta-dark brow saldo">
             <span>Saldo restante</span><span>{{ formatMoney(newOutstanding) }}</span>
           </div>
         </div>
       </div>
 
       <!-- Paso 2 · confirmación -->
-      <div v-else class="receipt">
-        <div class="badge"><Check :size="26" :stroke-width="2.4" /></div>
-        <div class="rec-title">Abono registrado</div>
+      <div v-else class="receipt ds-stack">
+        <div class="badge ds-tone--accent"><Check :size="26" :stroke-width="2.4" /></div>
+        <div class="rec-title ds-strong">Abono registrado</div>
         <div class="rec-amt">{{ formatMoney(done.amount) }}</div>
-        <div class="rec-rows">
-          <div class="brow">
+        <div class="rec-rows ds-stack">
+          <div class="ds-meta-dark brow">
             <span>Método</span><span>{{ methodLabel(done.method) }}</span>
           </div>
-          <div class="brow">
+          <div class="ds-meta-dark brow">
             <span>Saldo anterior</span><span>{{ formatMoney(done.prevOutstanding) }}</span>
           </div>
-          <div class="brow saldo">
+          <div class="ds-meta-dark brow saldo">
             <span>Saldo restante</span><span>{{ formatMoney(done.newOutstanding) }}</span>
           </div>
         </div>
@@ -203,14 +203,9 @@ function finish() {
 </template>
 
 <style scoped>
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+/* Layout via primitivas: .ds-stack(--16), .ds-strong, .ds-meta-dark y
+   .ds-tone--accent. */
 .breakdown {
-  display: flex;
-  flex-direction: column;
   gap: 6px;
   padding: 12px 14px;
   border-radius: 11px;
@@ -221,8 +216,6 @@ function finish() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 13px;
-  color: var(--warm-600);
 }
 .brow span:last-child {
   color: var(--warm-800);
@@ -244,8 +237,6 @@ function finish() {
 
 /* Recibo de confirmación */
 .receipt {
-  display: flex;
-  flex-direction: column;
   align-items: center;
   text-align: center;
   gap: 4px;
@@ -256,14 +247,10 @@ function finish() {
   border-radius: 16px;
   display: grid;
   place-items: center;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   margin-bottom: 6px;
 }
 .rec-title {
   font-size: 15px;
-  font-weight: 600;
-  color: var(--warm-900);
 }
 .rec-amt {
   font-size: 28px;
@@ -274,8 +261,6 @@ function finish() {
 }
 .rec-rows {
   width: 100%;
-  display: flex;
-  flex-direction: column;
   gap: 6px;
   padding: 12px 14px;
   border-radius: 11px;

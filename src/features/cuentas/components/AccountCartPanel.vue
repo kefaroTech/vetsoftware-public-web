@@ -20,11 +20,13 @@ const emit = defineEmits<{
 <template>
   <div class="cart">
     <div class="cart-head">Cargos a registrar</div>
-    <ul v-if="lines.length" class="cart-list">
+    <ul v-if="lines.length" class="cart-list ds-list-reset ds-stack">
       <li v-for="line in lines" :key="line.uid" class="cart-row">
-        <span class="cl-info">
-          <span class="cl-name">{{ line.name }}</span>
-          <span class="cl-tag">{{ lineLabel(line) }} · {{ formatMoney(line.unitPrice) }}</span>
+        <span class="cl-info ds-flex-fill ds-stack">
+          <span class="cl-name ds-truncate">{{ line.name }}</span>
+          <span class="ds-meta ds-meta--caption"
+            >{{ lineLabel(line) }} · {{ formatMoney(line.unitPrice) }}</span
+          >
         </span>
         <span class="stepper">
           <button type="button" class="st-btn" @click="emit('setQty', line, line.qty - 1)">
@@ -41,7 +43,9 @@ const emit = defineEmits<{
             <Plus :size="12" :stroke-width="2.2" />
           </button>
         </span>
-        <span class="cl-total">{{ formatMoney(line.unitPrice * line.qty) }}</span>
+        <span class="cl-total ds-item-label ds-num">{{
+          formatMoney(line.unitPrice * line.qty)
+        }}</span>
         <button type="button" class="cl-remove" title="Quitar" @click="emit('remove', line)">
           <X :size="13" :stroke-width="1.9" />
         </button>
@@ -52,6 +56,18 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
+/* Layout via primitivas: .ds-stack, .ds-list-reset, .ds-flex-fill, .ds-truncate,
+   .ds-item-label, .ds-num, .ds-meta(--caption).
+   La caja vivía en el CSS scoped de `OpenAccountModal` y llegaba hasta aquí
+   porque el scoped del padre sí alcanza el elemento raíz del hijo. Se trae a
+   su propio componente, que es donde se usa. */
+.cart {
+  border: 1px solid var(--warm-200);
+  border-radius: 12px;
+  background: var(--warm-50);
+  overflow: hidden;
+}
+
 .cart-head {
   font-size: 11px;
   text-transform: uppercase;
@@ -63,11 +79,7 @@ const emit = defineEmits<{
 }
 
 .cart-list {
-  list-style: none;
-  margin: 0;
   padding: 8px 12px 12px;
-  display: flex;
-  flex-direction: column;
   gap: 6px;
 }
 
@@ -81,24 +93,12 @@ const emit = defineEmits<{
 }
 
 .cl-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
   gap: 1px;
 }
 
 .cl-name {
   font-size: 13px;
   color: var(--warm-900);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.cl-tag {
-  font-size: 11px;
-  color: var(--warm-500);
 }
 
 .stepper {
@@ -146,13 +146,8 @@ const emit = defineEmits<{
 }
 
 .cl-total {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-900);
-  font-variant-numeric: tabular-nums;
   white-space: nowrap;
   min-width: 64px;
-  text-align: right;
 }
 
 .cl-remove {

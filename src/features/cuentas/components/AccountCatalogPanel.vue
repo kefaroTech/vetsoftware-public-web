@@ -51,17 +51,28 @@ const emit = defineEmits<{
     <input
       :value="query"
       type="text"
-      class="s-input"
+      class="s-input ds-focus-ring"
       placeholder="Buscar por nombre o categoría…"
       @input="emit('update:query', ($event.target as HTMLInputElement).value)"
     />
   </div>
-  <ul class="catalog">
-    <li v-for="it in items" :key="it.id" class="cat-row" :class="{ disabled: it.soldOut }">
+  <ul class="catalog ds-stack">
+    <li
+      v-for="it in items"
+      :key="it.id"
+      class="cat-row ds-flex-row ds-flex-row--12"
+      :class="{ 'ds-is-disabled--60': it.soldOut }"
+    >
       <span class="cat-name">{{ it.name }}</span>
       <span v-if="it.soldOut" class="badge-out">Agotado</span>
-      <span v-else class="cat-price">{{ formatMoney(it.price) }}</span>
-      <button type="button" class="add-btn" :disabled="it.soldOut" @click="emit('add', it)">
+      <span v-else class="ds-num ds-meta-dark">{{ formatMoney(it.price) }}</span>
+      <button
+        type="button"
+        class="add-btn ds-tone--accent-soft"
+        :class="{ 'ds-is-disabled': it.soldOut }"
+        :disabled="it.soldOut"
+        @click="emit('add', it)"
+      >
         <Plus :size="14" :stroke-width="1.9" /> Agregar
       </button>
     </li>
@@ -72,6 +83,9 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
+/* Layout via primitivas: .ds-stack, .ds-flex-row(--12), .ds-focus-ring,
+   .ds-num, .ds-meta-dark, .ds-tone--accent-soft, .ds-is-disabled(--60). */
+
 /* Tabs + búsqueda */
 .tabs {
   display: flex;
@@ -123,27 +137,17 @@ const emit = defineEmits<{
   outline: none;
 }
 
-.s-input:focus {
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
-}
-
 /* Catálogo */
 .catalog {
   list-style: none;
   margin: 0 0 16px;
   padding: 0;
-  display: flex;
-  flex-direction: column;
   gap: 6px;
   max-height: 240px;
   overflow: auto;
 }
 
 .cat-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 11px 14px;
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
@@ -153,25 +157,17 @@ const emit = defineEmits<{
     background 0.12s;
 }
 
-.cat-row:hover:not(.disabled) {
+.cat-row:hover:not(.ds-is-disabled--60) {
   border-color: var(--amatista-300);
   background: var(--amatista-50);
 }
 
-.cat-row.disabled {
-  opacity: 0.6;
-}
-
+/* `flex: 1` a secas, sin el `min-width: 0` de `.ds-flex-fill`: el nombre del
+   ítem no lleva elipsis y no debe encoger por debajo de su contenido. */
 .cat-name {
   flex: 1;
   font-size: 13.5px;
   color: var(--warm-900);
-}
-
-.cat-price {
-  font-size: 13px;
-  color: var(--warm-600);
-  font-variant-numeric: tabular-nums;
 }
 
 .badge-out {
@@ -193,8 +189,6 @@ const emit = defineEmits<{
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
-  background: var(--amatista-50);
-  color: var(--amatista-700);
   border: 1px solid var(--amatista-200);
 }
 
@@ -202,8 +196,6 @@ const emit = defineEmits<{
   background: var(--amatista-100);
 }
 
-.add-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* El estado apagado lo pone `.ds-is-disabled` (primitives.css), enganchado
+   con `:class` en el template — la primitiva no sustituye al atributo nativo. */
 </style>

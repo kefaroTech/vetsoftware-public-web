@@ -26,22 +26,24 @@ const CHARGE_ICON: Record<ChargeKind, typeof Package> = {
 <template>
   <section class="col">
     <div class="section-head">
-      <span class="sh-title"><FileText :size="16" :stroke-width="1.7" /> Cargos por mascota</span>
+      <span class="sh-title ds-text-strong"
+        ><FileText :size="16" :stroke-width="1.7" /> Cargos por mascota</span
+      >
     </div>
 
     <div v-if="store.charges.value.length === 0" class="mini-empty">Sin cargos todavía.</div>
     <div v-for="group in store.chargesByPet.value" v-else :key="group.key" class="group">
       <div class="group-head">
         <span class="group-id">
-          <span class="pet-avatar" :class="{ general: group.key === 'general' }">
+          <span class="pet-avatar ds-tone--accent" :class="{ general: group.key === 'general' }">
             <Package v-if="group.key === 'general'" :size="13" :stroke-width="1.8" />
             <template v-else>{{ group.name.slice(0, 2).toUpperCase() }}</template>
           </span>
-          <span class="group-name">{{ group.name }}</span>
+          <span class="group-name ds-strong">{{ group.name }}</span>
         </span>
         <span class="group-sub">{{ formatMoney(group.subtotal) }}</span>
       </div>
-      <ul class="charge-list">
+      <ul class="ds-list-reset">
         <li
           v-for="c in group.charges"
           :key="`${c.kind}-${c.id}`"
@@ -55,7 +57,7 @@ const CHARGE_ICON: Record<ChargeKind, typeof Package> = {
             class="c-icon"
             :class="c.kind"
           />
-          <span class="c-concept">
+          <span class="c-concept ds-flex-fill ds-truncate">
             {{ c.concept }}<span v-if="c.quantity > 1" class="c-qty">x{{ c.quantity }}</span>
             <span
               v-if="c.voided"
@@ -65,11 +67,14 @@ const CHARGE_ICON: Record<ChargeKind, typeof Package> = {
               Anulado{{ c.voidedByName ? ` por ${c.voidedByName}` : '' }}
             </span>
           </span>
-          <span v-if="c.createdByName" class="c-by" :title="`Registrado por ${c.createdByName}`">{{
-            c.createdByName
-          }}</span>
-          <span class="c-date">{{ c.date.slice(5, 10) }}</span>
-          <span class="c-amount">{{ formatMoney(c.amount) }}</span>
+          <span
+            v-if="c.createdByName"
+            class="c-by ds-truncate"
+            :title="`Registrado por ${c.createdByName}`"
+            >{{ c.createdByName }}</span
+          >
+          <span class="c-date ds-num">{{ c.date.slice(5, 10) }}</span>
+          <span class="c-amount ds-item-label ds-num">{{ formatMoney(c.amount) }}</span>
           <button
             v-if="!readOnly && !c.voided && canVoid"
             type="button"
@@ -88,7 +93,9 @@ const CHARGE_ICON: Record<ChargeKind, typeof Package> = {
 
 <style scoped>
 /* Base de columna compartida con la otra mitad del detalle: el CSS scoped no
-   cruza fronteras de componente, así que va en ambas. */
+   cruza fronteras de componente, así que va en ambas.
+   Layout via primitivas: .ds-list-reset, .ds-flex-fill, .ds-truncate,
+   .ds-item-label, .ds-num, .ds-strong, .ds-text-strong, .ds-tone--accent. */
 .col {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
@@ -109,8 +116,6 @@ const CHARGE_ICON: Record<ChargeKind, typeof Package> = {
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  font-weight: 500;
-  color: var(--warm-900);
 }
 
 .sh-title svg {
@@ -156,8 +161,6 @@ const CHARGE_ICON: Record<ChargeKind, typeof Package> = {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   font-size: 10.5px;
   font-weight: 700;
 }
@@ -169,8 +172,6 @@ const CHARGE_ICON: Record<ChargeKind, typeof Package> = {
 
 .group-name {
   font-size: 13.5px;
-  font-weight: 600;
-  color: var(--warm-900);
 }
 
 .group-sub {
@@ -179,12 +180,6 @@ const CHARGE_ICON: Record<ChargeKind, typeof Package> = {
   color: var(--amatista-700);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-
-.charge-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
 }
 
 .charge {
@@ -212,37 +207,24 @@ const CHARGE_ICON: Record<ChargeKind, typeof Package> = {
 }
 
 .c-concept {
-  flex: 1;
-  min-width: 0;
   font-size: 13px;
   color: var(--warm-800);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .c-by {
   font-size: 11px;
   color: var(--warm-400);
-  white-space: nowrap;
   max-width: 90px;
-  overflow: hidden;
-  text-overflow: ellipsis;
   flex-shrink: 0;
 }
 
 .c-date {
   font-size: 11px;
   color: var(--warm-400);
-  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .c-amount {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-900);
-  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 

@@ -30,7 +30,7 @@ const finalConsumer = defineModel<boolean>('finalConsumer', { required: true })
 
 <template>
   <!-- FE OBLIGATORIA por superar 5 UVT -->
-  <div v-if="overUvt" class="fe-block uvt">
+  <div v-if="overUvt" class="fe-block uvt ds-stack ds-stack--10">
     <FeThresholdBanner :total="totalAmount" />
     <div class="doctypesel">
       <div class="doctype on"><FileText :size="15" :stroke-width="1.8" /> Factura electrónica</div>
@@ -40,7 +40,9 @@ const finalConsumer = defineModel<boolean>('finalConsumer', { required: true })
       </div>
     </div>
     <FeFiscalCustomerCard :customer="customer" @complete="emit('completeCustomer')" />
-    <p v-if="loading" class="fe-loading">Cargando datos fiscales del cliente…</p>
+    <p v-if="loading" class="fe-loading ds-meta ds-meta--sm">
+      Cargando datos fiscales del cliente…
+    </p>
     <div v-else-if="loadError" class="fe-loaderr">
       <span>No se pudieron cargar los datos fiscales del titular.</span>
       <button type="button" @click="emit('retryLoad')">Reintentar</button>
@@ -52,7 +54,7 @@ const finalConsumer = defineModel<boolean>('finalConsumer', { required: true })
   </div>
 
   <!-- Caso normal (≤ 5 UVT): tipo de documento + consumidor final -->
-  <div v-else class="fe-block">
+  <div v-else class="fe-block ds-stack ds-stack--10">
     <div class="field-lab">Facturación electrónica</div>
     <BaseField label="Tipo de documento">
       <template #default="{ id }">
@@ -68,11 +70,14 @@ const finalConsumer = defineModel<boolean>('finalConsumer', { required: true })
       <span class="fc-box"><Check v-if="finalConsumer" :size="12" :stroke-width="2.6" /></span>
       Consumidor final
     </button>
-    <p class="fe-hint">Se emite a la DIAN al cerrar la venta. La validación es asíncrona.</p>
+    <p class="fe-hint ds-hint">
+      Se emite a la DIAN al cerrar la venta. La validación es asíncrona.
+    </p>
   </div>
 </template>
 
 <style scoped>
+/* Layout via primitivas: .ds-stack(--10), .ds-hint, .ds-meta(--sm). */
 .field-lab {
   font-size: 12.5px;
   font-weight: 600;
@@ -80,9 +85,6 @@ const finalConsumer = defineModel<boolean>('finalConsumer', { required: true })
   margin-bottom: -6px;
 }
 .fe-block {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
   padding: 14px;
   border-radius: 12px;
   background: var(--amatista-50);
@@ -128,8 +130,6 @@ const finalConsumer = defineModel<boolean>('finalConsumer', { required: true })
 }
 .fe-hint {
   margin: 0;
-  font-size: 11.5px;
-  color: var(--warm-500);
 }
 .doctypesel {
   display: grid;
@@ -168,8 +168,6 @@ const finalConsumer = defineModel<boolean>('finalConsumer', { required: true })
   place-items: center;
 }
 .fe-loading {
-  font-size: 12.5px;
-  color: var(--warm-500);
   padding: 12px 14px;
   border-radius: 11px;
   background: var(--warm-50);

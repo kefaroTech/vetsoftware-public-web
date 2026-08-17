@@ -26,11 +26,11 @@ const docLabel = computed(() => {
 
 <template>
   <!-- Estado vacío: sin cliente -->
-  <div v-if="!customer" class="custempty">
+  <div v-if="!customer" class="custempty ds-flex-row ds-flex-row--12">
     <div class="custempty-ic"><User :size="20" :stroke-width="1.7" /></div>
-    <div class="custempty-text">
-      <div class="custempty-t">Cliente requerido</div>
-      <div class="custempty-s">
+    <div class="ds-flex-fill">
+      <div class="custempty-t ds-strong">Cliente requerido</div>
+      <div class="custempty-s ds-hint">
         La factura electrónica debe ir a nombre de un cliente identificado.
       </div>
     </div>
@@ -40,19 +40,19 @@ const docLabel = computed(() => {
   </div>
 
   <!-- Cliente seleccionado: tarjeta + checklist -->
-  <div v-else class="custcard" :class="{ ok: checklist.complete }">
-    <div class="custcard-head">
-      <div class="custcard-av">{{ initials }}</div>
-      <div class="custcard-id">
-        <div class="custcard-name">{{ customer.legalName || customer.name }}</div>
-        <div class="custcard-doc">{{ docLabel }}</div>
+  <div v-else class="custcard ds-stack" :class="{ ok: checklist.complete }">
+    <div class="ds-flex-row ds-flex-row--11">
+      <div class="custcard-av ds-tone--accent">{{ initials }}</div>
+      <div class="ds-flex-fill">
+        <div class="custcard-name ds-strong">{{ customer.legalName || customer.name }}</div>
+        <div class="custcard-doc ds-hint">{{ docLabel }}</div>
       </div>
       <button v-if="selectable" type="button" class="custcard-change" @click="emit('select')">
         Cambiar
       </button>
     </div>
 
-    <div class="checklistgrid">
+    <div class="checklistgrid ds-grid-2">
       <div v-for="it in checklist.items" :key="it.key" class="clitem" :class="it.ok ? 'ok' : 'bad'">
         <Check v-if="it.ok" :size="13" :stroke-width="2.6" />
         <X v-else :size="13" :stroke-width="2.6" />
@@ -67,10 +67,12 @@ const docLabel = computed(() => {
 </template>
 
 <style scoped>
+/* Layout desde primitives.css: .ds-flex-row--12 (cabeceras), .ds-flex-fill,
+   .ds-stack (tarjeta), .ds-grid-2 (checklist), .ds-strong y .ds-hint.
+
+   El checklist usa `.ds-grid-2`: conserva sus dos columnas exactas y sólo
+   adelanta el colapso de 420px a 640px. */
 .custempty {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 14px;
   border-radius: 12px;
   background: var(--warm-50);
@@ -88,20 +90,11 @@ const docLabel = computed(() => {
   flex-shrink: 0;
 }
 
-.custempty-text {
-  flex: 1;
-  min-width: 0;
-}
-
 .custempty-t {
   font-size: 13.5px;
-  font-weight: 600;
-  color: var(--warm-900);
 }
 
 .custempty-s {
-  font-size: 11.5px;
-  color: var(--warm-500);
   margin-top: 1px;
 }
 
@@ -110,8 +103,6 @@ const docLabel = computed(() => {
   border-radius: 12px;
   background: var(--warm-50);
   border: 1.5px solid oklch(88% 0.06 25deg);
-  display: flex;
-  flex-direction: column;
   gap: 12px;
 }
 
@@ -119,18 +110,10 @@ const docLabel = computed(() => {
   border-color: oklch(85% 0.08 150deg);
 }
 
-.custcard-head {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-}
-
 .custcard-av {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   display: grid;
   place-items: center;
   font-size: 12px;
@@ -138,20 +121,11 @@ const docLabel = computed(() => {
   flex-shrink: 0;
 }
 
-.custcard-id {
-  flex: 1;
-  min-width: 0;
-}
-
 .custcard-name {
   font-size: 14px;
-  font-weight: 600;
-  color: var(--warm-900);
 }
 
 .custcard-doc {
-  font-size: 11.5px;
-  color: var(--warm-500);
   margin-top: 1px;
 }
 
@@ -166,15 +140,7 @@ const docLabel = computed(() => {
 }
 
 .checklistgrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 6px 14px;
-}
-
-@media (width <= 420px) {
-  .checklistgrid {
-    grid-template-columns: 1fr;
-  }
 }
 
 .clitem {

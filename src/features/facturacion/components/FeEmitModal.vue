@@ -94,26 +94,26 @@ async function submit() {
       <div v-else-if="accounts.length === 0" class="acc-empty">
         No hay cuentas cerradas pendientes de facturar.
       </div>
-      <div v-else class="acclist">
+      <div v-else class="ds-stack ds-stack--8">
         <button
           v-for="a in accounts"
           :key="a.id"
           type="button"
-          class="accrow"
+          class="accrow ds-flex-row ds-flex-row--12"
           :class="{ on: selected?.id === a.id }"
           @click="selected = a"
         >
           <div class="acc-check">
             <Check v-if="selected?.id === a.id" :size="13" :stroke-width="2.6" />
           </div>
-          <div class="acc-text">
-            <div class="acc-name">{{ a.owner.name }}</div>
-            <div class="acc-meta">
+          <div class="ds-flex-fill">
+            <div class="acc-name ds-strong">{{ a.owner.name }}</div>
+            <div class="ds-meta">
               Cuenta #{{ a.id
               }}<template v-if="a.closedAt"> · cerrada {{ a.closedAt.slice(0, 10) }}</template>
             </div>
           </div>
-          <span class="acc-total">{{ feMoney(a.totalAmount) }}</span>
+          <span class="acc-total ds-strong">{{ feMoney(a.totalAmount) }}</span>
         </button>
       </div>
 
@@ -145,7 +145,7 @@ async function submit() {
           >. Verifica que tenga documento, tipo y ciudad completos en su ficha fiscal.
         </span>
       </div>
-      <div class="asyncnote">
+      <div class="asyncnote ds-meta">
         <History :size="13" :stroke-width="1.8" />
         La validación DIAN es asíncrona: el documento nace <strong>Validando…</strong> y obtiene su
         CUFE en unos segundos.
@@ -167,6 +167,8 @@ async function submit() {
 </template>
 
 <style scoped>
+/* Layout desde primitives.css: .ds-stack--8 (lista de cuentas),
+   .ds-flex-row--12 (fila), .ds-flex-fill, .ds-strong y .ds-meta (tipografía). */
 .fieldlabel {
   font-size: 11.5px;
   text-transform: uppercase;
@@ -185,16 +187,7 @@ async function submit() {
   border-radius: 10px;
 }
 
-.acclist {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 .accrow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 11px 14px;
   border: 1px solid var(--warm-200);
   border-radius: 10px;
@@ -231,26 +224,12 @@ async function submit() {
   border-color: var(--amatista-600);
 }
 
-.acc-text {
-  flex: 1;
-  min-width: 0;
-}
-
 .acc-name {
-  font-weight: 600;
   font-size: 13.5px;
-  color: var(--warm-900);
-}
-
-.acc-meta {
-  font-size: 12px;
-  color: var(--warm-500);
 }
 
 .acc-total {
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  color: var(--warm-900);
 }
 
 .grid {
@@ -318,8 +297,6 @@ async function submit() {
   align-items: flex-start;
   gap: 6px;
   margin-top: 12px;
-  font-size: 12px;
-  color: var(--warm-500);
   line-height: 1.45;
 }
 </style>

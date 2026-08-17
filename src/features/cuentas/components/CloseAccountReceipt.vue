@@ -17,14 +17,14 @@ defineProps<{
 </script>
 
 <template>
-  <div class="receipt">
-    <div class="badge" :class="{ cancel: cancelled }">
+  <div class="receipt ds-stack">
+    <div class="badge ds-tone--success" :class="{ cancel: cancelled }">
       <X v-if="cancelled" :size="26" :stroke-width="2.4" />
       <Check v-else :size="26" :stroke-width="2.4" />
     </div>
-    <div class="rec-title">{{ title }}</div>
+    <div class="rec-title ds-strong">{{ title }}</div>
     <div class="rec-amt">{{ formatMoney(charged) }}</div>
-    <div class="rec-rows">
+    <div class="rec-rows ds-stack">
       <div class="rec-row">
         <span>Acumulado</span><span>{{ formatMoney(account.totalAmount) }}</span>
       </div>
@@ -43,9 +43,8 @@ defineProps<{
 </template>
 
 <style scoped>
+/* Layout via primitivas: .ds-stack, .ds-strong, .ds-tone--success. */
 .receipt {
-  display: flex;
-  flex-direction: column;
   align-items: center;
   text-align: center;
   gap: 10px;
@@ -57,8 +56,6 @@ defineProps<{
   border-radius: 16px;
   display: grid;
   place-items: center;
-  background: var(--success-bg);
-  color: var(--success-fg);
 }
 .badge.cancel {
   background: oklch(92% 0.06 60deg);
@@ -66,8 +63,6 @@ defineProps<{
 }
 .rec-title {
   font-size: 15px;
-  font-weight: 600;
-  color: var(--warm-900);
 }
 .rec-amt {
   font-family: var(--font-serif);
@@ -79,8 +74,6 @@ defineProps<{
 .rec-rows {
   width: 100%;
   margin-top: 8px;
-  display: flex;
-  flex-direction: column;
   gap: 2px;
 }
 .rec-row {

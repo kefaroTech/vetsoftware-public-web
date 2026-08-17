@@ -134,7 +134,7 @@ async function save() {
 </script>
 
 <template>
-  <div class="formcol">
+  <div class="ds-stack ds-stack--18">
     <SectionHead
       :icon="User"
       title="Identidad fiscal de la empresa"
@@ -162,13 +162,13 @@ async function save() {
           </BaseField>
           <div v-if="isNit" class="dv">
             <div class="dv-lbl">DV</div>
-            <div class="dv-val">{{ verificationDigit || '–' }}</div>
+            <div class="dv-val ds-tone--accent-soft">{{ verificationDigit || '–' }}</div>
           </div>
         </div>
-        <p v-if="isNit" class="help span-2">
+        <p v-if="isNit" class="help ds-hint ds-grid-span">
           El dígito de verificación se calcula automáticamente.
         </p>
-        <div class="span-2">
+        <div class="ds-grid-span">
           <BaseField label="Razón social" required :error="err('legalName')">
             <template #default="{ id }">
               <BaseInput :id="id" v-model="draft.legalName" :invalid="!!err('legalName')" />
@@ -196,7 +196,7 @@ async function save() {
             <BaseSelect :id="id" v-model="draft.taxRegime" :options="regimeOptions" />
           </template>
         </BaseField>
-        <div class="span-2 actpick">
+        <div class="ds-grid-span actpick">
           <BaseField label="Actividad económica (CIIU)">
             <template #default="{ id }">
               <BaseInput
@@ -233,8 +233,10 @@ async function save() {
 
       <div class="resp">
         <div class="resp-label">Responsabilidades fiscales (RUT)</div>
-        <p class="help" style="margin: 4px 0 10px">Selecciona las que apliquen según tu RUT.</p>
-        <div class="resplist">
+        <p class="help ds-hint" style="margin: 4px 0 10px">
+          Selecciona las que apliquen según tu RUT.
+        </p>
+        <div class="ds-stack ds-stack--8">
           <button
             v-for="opt in RESPONSIBILITY_OPTIONS"
             :key="opt.code"
@@ -271,12 +273,9 @@ async function save() {
 </template>
 
 <style scoped>
-.formcol {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
+/* Layout: `.ds-stack--18/--8`, `.ds-grid-span`, `.ds-hint` y
+   `.ds-tone--accent-soft`. La rejilla es local: dos columnas cuyo colapso tiene
+   que ser por viewport (760px), no por espacio intrínseco. */
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -287,10 +286,6 @@ async function save() {
   .grid {
     grid-template-columns: 1fr;
   }
-}
-
-.span-2 {
-  grid-column: 1 / -1;
 }
 
 .doc-row {
@@ -316,8 +311,6 @@ async function save() {
   font-family: var(--font-mono);
   font-size: 18px;
   font-weight: 600;
-  color: var(--amatista-700);
-  background: var(--amatista-50);
   border-radius: 8px;
   padding: 6px 12px;
   min-width: 40px;
@@ -325,8 +318,6 @@ async function save() {
 
 .help {
   margin: 0;
-  font-size: 11.5px;
-  color: var(--warm-500);
 }
 
 .actpick {
@@ -382,16 +373,6 @@ async function save() {
   letter-spacing: 0.06em;
   color: var(--warm-500);
   font-weight: 600;
-}
-
-.req {
-  color: var(--danger-500);
-}
-
-.resplist {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 .respitem {

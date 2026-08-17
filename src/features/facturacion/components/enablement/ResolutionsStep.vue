@@ -73,7 +73,7 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
 </script>
 
 <template>
-  <div class="formcol">
+  <div class="ds-stack ds-stack--18">
     <SectionHead
       :icon="FileText"
       title="Resoluciones de numeración"
@@ -84,20 +84,23 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
       <div
         v-for="dt in REQUIRED_TYPES"
         :key="dt"
-        class="rescard"
+        class="rescard ds-stack ds-stack--8"
         :class="{ set: !!resolutionByType[dt] }"
       >
         <div class="rescard-top">
-          <div class="rescard-type">
+          <div class="rescard-type ds-flex-row ds-strong">
             {{ DOC_TYPE_LABEL[dt] }}
-            <span v-if="dt === 'FE_VENTA'" class="keyreq">clave técnica</span>
+            <span v-if="dt === 'FE_VENTA'" class="keyreq ds-tone--accent-soft">clave técnica</span>
           </div>
           <span v-if="resolutionByType[dt]" class="badge ok">Configurada</span>
-          <span v-else class="badge pend">Pendiente</span>
+          <span v-else class="badge ds-tone--neutral">Pendiente</span>
         </div>
 
         <template v-if="resolutionByType[dt]">
-          <div v-if="branchName(resolutionByType[dt]!.branchId)" class="branchtag">
+          <div
+            v-if="branchName(resolutionByType[dt]!.branchId)"
+            class="branchtag ds-tone--accent-soft"
+          >
             {{ branchName(resolutionByType[dt]!.branchId) }}
           </div>
           <div class="rescard-meta">
@@ -164,12 +167,9 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
 </template>
 
 <style scoped>
-.formcol {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
+/* Layout: `.ds-stack--18/--8`, `.ds-flex-row` + `.ds-strong` (cabecera de
+   tarjeta) y `.ds-tone--accent-soft` / `--neutral` (etiquetas). `.resgrid`
+   sigue local: su columna mínima de 260px no la replica ninguna primitiva. */
 .resgrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -181,9 +181,6 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
   border-radius: 14px;
   padding: 18px;
   background: var(--warm-50);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 .rescard.set {
@@ -198,20 +195,13 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
 }
 
 .rescard-type {
-  font-weight: 600;
   font-size: 14px;
-  color: var(--warm-900);
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .keyreq {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--amatista-700);
-  background: var(--amatista-50);
   padding: 2px 6px;
   border-radius: 5px;
   font-weight: 600;
@@ -229,11 +219,6 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
   color: oklch(40% 0.13 150deg);
 }
 
-.badge.pend {
-  background: var(--warm-200);
-  color: var(--warm-600);
-}
-
 .rescard-meta {
   font-size: 12px;
   color: var(--warm-600);
@@ -243,8 +228,6 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
   align-self: flex-start;
   font-size: 10.5px;
   font-weight: 600;
-  color: var(--amatista-700);
-  background: var(--amatista-50);
   border: 1px solid var(--amatista-200);
   padding: 2px 8px;
   border-radius: var(--radius-pill);

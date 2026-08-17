@@ -10,7 +10,7 @@ const { uvtThresholdQty, threshold, thresholdBreakdown } = useFeUvt()
 
 <template>
   <div class="uvtbanner">
-    <Bell :size="16" :stroke-width="1.9" />
+    <Bell :size="16" :stroke-width="1.9" class="ds-banner-icon" />
     <div>
       <strong>Esta venta supera {{ uvtThresholdQty }} UVT ({{ feMoney(threshold) }}).</strong>
       La DIAN exige <strong>Factura electrónica</strong> con los datos fiscales del cliente.
@@ -31,11 +31,6 @@ const { uvtThresholdQty, threshold, thresholdBreakdown } = useFeUvt()
   background: var(--warning-50);
   border: 1px solid var(--warning-200);
   color: oklch(40% 0.11 70deg);
-}
-
-.uvtbanner :deep(svg) {
-  flex-shrink: 0;
-  margin-top: 1px;
 }
 
 .sub {

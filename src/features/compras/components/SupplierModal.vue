@@ -104,9 +104,9 @@ async function submit() {
   >
     <template #body>
       <p v-if="serverError" class="ds-server-error">{{ serverError }}</p>
-      <div class="grid">
+      <div class="grid ds-grid-2">
         <BaseField
-          class="col-2"
+          class="ds-grid-span"
           label="Nombre / Razón social"
           required
           :error="submitted ? (nameError ?? undefined) : undefined"
@@ -148,7 +148,7 @@ async function submit() {
         <BaseField label="Dirección">
           <BaseInput v-model="form.address" placeholder="Cra 1 # 2-3" />
         </BaseField>
-        <BaseField class="col-2" label="Notas" hint="Opcional">
+        <BaseField class="ds-grid-span" label="Notas" hint="Opcional">
           <BaseTextarea v-model="form.notes" placeholder="Condiciones, observaciones…" :rows="2" />
         </BaseField>
       </div>
@@ -170,20 +170,10 @@ async function submit() {
 </template>
 
 <style scoped>
+/* Layout apoyado en `.ds-grid-2` (dos columnas, colapso en 640px) y
+   `.ds-grid-span` (campos a ancho completo). Sólo queda aquí el gap propio. */
 .grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px 20px;
-}
-
-.col-2 {
-  grid-column: 1 / -1;
-}
-
-@media (width <= 640px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
+  gap: var(--space-16) var(--space-20);
 }
 
 /* caja/compras usan un amatista un punto más claro que el resto. */

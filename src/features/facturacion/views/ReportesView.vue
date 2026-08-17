@@ -80,7 +80,7 @@ onMounted(() => {
   <div v-else class="ds-page ds-page--stack">
     <header class="pagehead">
       <div>
-        <div class="kicker">Facturación electrónica · DIAN</div>
+        <div class="ds-kicker">Facturación electrónica · DIAN</div>
         <h1 class="ds-display fe-title">Reportes</h1>
       </div>
     </header>
@@ -106,9 +106,9 @@ onMounted(() => {
           <ShieldCheck :size="15" :stroke-width="1.7" /> Conciliación DIAN
         </button>
       </div>
-      <div class="daterange">
+      <div class="daterange ds-flex-row">
         <DateInput v-model="from" :max="to" @update:model-value="load" />
-        <span class="sep">→</span>
+        <span class="ds-icon-muted--dim">→</span>
         <DateInput v-model="to" :min="from" @update:model-value="load" />
       </div>
     </div>
@@ -119,16 +119,16 @@ onMounted(() => {
     <!-- Libro de ventas -->
     <template v-else-if="tab === 'libro' && book">
       <div class="cards">
-        <div class="rep-card">
+        <div class="rep-card ds-stack">
           <span>Documentos</span><strong>{{ book.totals.documentCount }}</strong>
         </div>
-        <div class="rep-card">
+        <div class="rep-card ds-stack">
           <span>Base</span><strong>{{ feMoney(book.totals.base) }}</strong>
         </div>
-        <div class="rep-card">
+        <div class="rep-card ds-stack">
           <span>IVA</span><strong>{{ feMoney(book.totals.iva) }}</strong>
         </div>
-        <div class="rep-card hl">
+        <div class="rep-card hl ds-stack">
           <span>Total</span><strong>{{ feMoney(book.totals.total) }}</strong>
         </div>
       </div>
@@ -136,7 +136,7 @@ onMounted(() => {
       <div class="cols">
         <div class="ds-card">
           <div class="card-title">Impuestos por tarifa</div>
-          <div class="tbl-scroll">
+          <div class="ds-table-scroll">
             <table class="minitable">
               <thead>
                 <tr>
@@ -162,7 +162,7 @@ onMounted(() => {
         </div>
         <div class="ds-card">
           <div class="card-title">Recaudo por medio de pago</div>
-          <div class="tbl-scroll">
+          <div class="ds-table-scroll">
             <table class="minitable">
               <thead>
                 <tr>
@@ -186,7 +186,7 @@ onMounted(() => {
 
       <div class="ds-card">
         <div class="card-title">Documentos del periodo</div>
-        <div class="tbl-scroll">
+        <div class="ds-table-scroll">
           <table class="minitable">
             <thead>
               <tr>
@@ -225,19 +225,19 @@ onMounted(() => {
     <!-- Conciliación -->
     <template v-else-if="tab === 'concil' && recon">
       <div class="cards">
-        <div class="rep-card">
+        <div class="rep-card ds-stack">
           <span>Validados</span
           ><strong style="color: oklch(50% 0.15 150deg)">{{ recon.validados }}</strong>
         </div>
-        <div class="rep-card">
+        <div class="rep-card ds-stack">
           <span>Pendientes</span
           ><strong style="color: oklch(50% 0.16 240deg)">{{ recon.pendientes }}</strong>
         </div>
-        <div class="rep-card">
+        <div class="rep-card ds-stack">
           <span>En contingencia</span
           ><strong style="color: oklch(58% 0.14 75deg)">{{ recon.contingencia }}</strong>
         </div>
-        <div class="rep-card">
+        <div class="rep-card ds-stack">
           <span>Rechazados</span
           ><strong style="color: oklch(55% 0.2 25deg)">{{ recon.rechazados }}</strong>
         </div>
@@ -248,7 +248,7 @@ onMounted(() => {
         <div v-if="recon.needsAttention.length === 0" class="ds-empty pad">
           Todos los documentos del periodo están validados.
         </div>
-        <div v-else class="tbl-scroll">
+        <div v-else class="ds-table-scroll">
           <table class="minitable">
             <thead>
               <tr>
@@ -276,19 +276,35 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* El layout se apoya en primitivas: `.ds-stack` (cuerpo de cada tarjeta),
+   `.ds-flex-row` (rango de fechas), `.ds-kicker` (rótulo de sección),
+   `.ds-card` (superficie de los bloques) y `.ds-empty` (estado vacío).
+   Aquí sólo queda lo que no es primitiva. */
+
+/* Rejilla propia: 4 columnas con un escalón intermedio de 2 en 1024px. */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (width <= 1024px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (width <= 760px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}
+
 .pagehead {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-}
-
-.kicker {
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--warm-500);
-  font-weight: 500;
 }
 
 .repfilters {
@@ -323,18 +339,8 @@ onMounted(() => {
   border-bottom-color: var(--amatista-600);
 }
 
-.daterange {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .daterange :deep(.date-wrap) {
   width: 170px;
-}
-
-.sep {
-  color: var(--warm-400);
 }
 
 .error-banner {
@@ -354,31 +360,12 @@ onMounted(() => {
   font-size: 13px;
 }
 
-.cards {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-}
-
-@media (width <= 1024px) {
-  .cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (width <= 760px) {
-  .cards {
-    grid-template-columns: 1fr;
-  }
-}
-
+/* `gap: 6px` no está en el catálogo de `.ds-stack--*`, así que queda aquí. */
 .rep-card {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 14px;
   padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
   gap: 6px;
 }
 
@@ -414,11 +401,6 @@ onMounted(() => {
   color: var(--warm-500);
   font-weight: 600;
   margin-bottom: 10px;
-}
-
-.tbl-scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .minitable {

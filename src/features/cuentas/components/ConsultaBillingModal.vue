@@ -91,9 +91,9 @@ async function onConfirm() {
         </div>
 
         <!-- Banda de estado de cuenta -->
-        <div v-if="hasAccount && existingAccount" class="acctcard">
+        <div v-if="hasAccount && existingAccount" class="acctcard ds-flex-row ds-flex-row--12">
           <div class="ac-ic"><Receipt :size="17" :stroke-width="1.7" /></div>
-          <div class="ac-text">
+          <div class="ds-flex-fill">
             <div class="ac-title">
               {{ firstName }} ya tiene una cuenta abierta en {{ existingAccount.branch.name }}
             </div>
@@ -149,7 +149,7 @@ async function onConfirm() {
     </template>
 
     <template #footer-left>
-      <span v-if="showCharges && items.length" class="foottotal"
+      <span v-if="showCharges && items.length" class="foottotal ds-meta-dark"
         >Total cargos <strong>{{ formatMoney(total) }}</strong></span
       >
     </template>
@@ -182,11 +182,8 @@ async function onConfirm() {
   font-size: 13px;
 }
 
-/* Banda de estado */
+/* Banda de estado. Layout via primitivas: .ds-flex-row(--12), .ds-flex-fill. */
 .acctcard {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 14px 16px;
   margin-bottom: 16px;
   background: var(--success-bg);
@@ -202,10 +199,6 @@ async function onConfirm() {
   flex-shrink: 0;
   background: color-mix(in oklch, var(--success-bg), white 35%);
   color: var(--success-fg);
-}
-.ac-text {
-  flex: 1;
-  min-width: 0;
 }
 .ac-title {
   font-size: 14px;
@@ -259,10 +252,6 @@ async function onConfirm() {
 }
 
 /* Footer */
-.foottotal {
-  font-size: 13px;
-  color: var(--warm-600);
-}
 .foottotal strong {
   font-size: 15px;
   color: var(--amatista-700);

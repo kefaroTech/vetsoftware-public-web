@@ -31,7 +31,7 @@ function go(n: number) {
 </script>
 
 <template>
-  <div class="wizard">
+  <div class="wizard ds-stack">
     <header class="wiz-top">
       <button type="button" class="wiz-exit" @click="emit('exit')">
         <ArrowLeft :size="15" :stroke-width="1.8" /> Volver al estado
@@ -39,7 +39,7 @@ function go(n: number) {
       <span class="wiz-title">Habilitar facturación electrónica</span>
     </header>
 
-    <div class="stepper">
+    <div class="ds-flex-row ds-flex-row--6">
       <template v-for="(s, i) in STEPS" :key="s.n">
         <button
           type="button"
@@ -47,7 +47,7 @@ function go(n: number) {
           :class="{ cur: s.n === step, done: okByStep[s.n] && s.n < step }"
           @click="go(s.n)"
         >
-          <span class="wstep-dot">
+          <span class="wstep-dot ds-tone--neutral">
             <Check v-if="okByStep[s.n] && s.n < step" :size="13" :stroke-width="2.6" />
             <template v-else>{{ s.n }}</template>
           </span>
@@ -66,9 +66,8 @@ function go(n: number) {
 </template>
 
 <style scoped>
+/* Layout: `.ds-stack` en la columna raíz; su gap (24px) no está catalogado y queda aquí. */
 .wizard {
-  display: flex;
-  flex-direction: column;
   gap: 24px;
 }
 
@@ -103,12 +102,6 @@ function go(n: number) {
   color: var(--warm-900);
 }
 
-.stepper {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
 .wstep {
   display: inline-flex;
   align-items: center;
@@ -126,8 +119,6 @@ function go(n: number) {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: var(--warm-200);
-  color: var(--warm-600);
   font-size: 12.5px;
   font-weight: 600;
 }
