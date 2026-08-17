@@ -23,6 +23,7 @@ const GALLERY = '/visual/gallery.html'
 
 /** Bloques de la galería; cada uno lleva `data-shot` en `Gallery.vue`. */
 const SHOTS = [
+  // Primitivas y patrones compartidos: la red original del hallazgo.
   'botones',
   'icon-btn',
   'banners',
@@ -31,6 +32,24 @@ const SHOTS = [
   'vacios',
   'rejillas',
   'existing-items',
+
+  // Los 16 componentes que la última tanda de FE-08 extrajo de `tienda`,
+  // `caja` y `acciones`. Entraron aquí porque al dejar de ser marcado copiado
+  // dentro de cada vista dejaron de estar protegidos por la captura de esa
+  // vista: hoy los comparten el POS, la caja y los siete modales de acciones,
+  // y un cambio en cualquiera de ellos se propaga a todos a la vez.
+  'pos-filtros',
+  'pos-celdas',
+  'pos-pies',
+  'caja-panel',
+  'caja-totales',
+  'acciones-paciente',
+
+  // El estado vacío DENTRO de una tabla. El bloque «vacios» solo capturaba
+  // `.ds-empty` suelta, donde nadie le disputa nada; el defecto de
+  // especificidad que la mantuvo inerte durante meses vivía en la celda de una
+  // tabla, que es donde este bloque la pone.
+  'vacios-en-tabla',
 ] as const
 
 /**
