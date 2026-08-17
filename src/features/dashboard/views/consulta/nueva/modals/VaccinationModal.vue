@@ -209,7 +209,7 @@ function save() {
     @close="emit('close')"
   >
     <template #body>
-      <div v-if="typesError" class="catalog-error">{{ typesError }}</div>
+      <div v-if="typesError" class="ds-catalog-error">{{ typesError }}</div>
 
       <ExistingItemsSection
         :items="props.existing"
@@ -234,11 +234,11 @@ function save() {
         </BaseField>
       </div>
 
-      <div class="vacs-list">
+      <div class="ds-stack ds-stack--10">
         <div v-for="(v, i) in draft.vaccinations" :key="v.uid" class="vac-card">
           <div class="vac-head">
-            <div class="vac-num">{{ i + 1 }}</div>
-            <div class="vac-title">Vacuna {{ i + 1 }}</div>
+            <div class="vac-num ds-tone--accent">{{ i + 1 }}</div>
+            <div class="vac-title ds-meta-dark ds-meta-dark--sm">Vacuna {{ i + 1 }}</div>
             <button
               v-if="draft.vaccinations.length > 1"
               type="button"
@@ -315,25 +315,9 @@ function save() {
 </template>
 
 <style scoped>
-.catalog-error {
-  background: var(--danger-150);
-  border: 1px solid var(--danger-300);
-  color: oklch(35% 0.15 25deg);
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 12.5px;
-  margin-bottom: 14px;
-}
-
 .row-date {
   max-width: 280px;
   margin-bottom: 14px;
-}
-
-.vacs-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 .vac-card {
@@ -350,23 +334,21 @@ function save() {
   margin-bottom: 12px;
 }
 
+/* El par fondo+texto lo pone `.ds-tone--accent`. */
 .vac-num {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   font-size: 11px;
   font-weight: 600;
   display: grid;
   place-items: center;
 }
 
+/* Residuo sobre `.ds-meta-dark` + `--sm` (warm-600 / 12,5px). */
 .vac-title {
   flex: 1;
-  font-size: 12.5px;
   font-weight: 500;
-  color: var(--warm-600);
 }
 
 .remove {

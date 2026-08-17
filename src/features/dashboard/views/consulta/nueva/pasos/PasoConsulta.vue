@@ -231,12 +231,12 @@ watch(
       subtitle="Solo el tipo y la anamnesis son obligatorios. Lo demás puedes completarlo durante la atención."
     />
 
-    <div v-if="typesError" class="catalog-error">
+    <div v-if="typesError" class="ds-catalog-error ds-flex-row">
       <TriangleAlert :size="13" :stroke-width="1.7" />
       <span>{{ typesError }}</span>
     </div>
 
-    <div class="stack">
+    <div class="stack ds-stack">
       <SectionCard accent :icon="Stethoscope" title="Información general">
         <div class="grid-1-2">
           <BaseField label="Fecha" required :error="err('date')">
@@ -438,7 +438,7 @@ watch(
 
       <QuickActionsCard :counts="counts" @select="onSelectAction" />
 
-      <div v-if="draft.actionsCount.value > 0" class="actions-banner">
+      <div v-if="draft.actionsCount.value > 0" class="actions-banner ds-flex-row">
         <Sparkles :size="14" :stroke-width="1.7" />
         <span>
           <strong>{{ draft.actionsCount.value }}</strong> acción{{
@@ -517,22 +517,8 @@ watch(
 </template>
 
 <style scoped>
-.catalog-error {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12.5px;
-  padding: 10px 14px;
-  background: var(--danger-150);
-  border: 1px solid var(--danger-300);
-  color: oklch(35% 0.15 25deg);
-  border-radius: 10px;
-  margin-bottom: 14px;
-}
-
+/* Único añadido sobre `.ds-stack`: el gap fluido de esta pantalla. */
 .stack {
-  display: flex;
-  flex-direction: column;
   gap: clamp(12px, 0.8vw + 6px, 22px);
 }
 
@@ -545,12 +531,6 @@ watch(
 .weight-row {
   margin-top: clamp(14px, 1.2vw + 4px, 28px);
   max-width: 320px;
-}
-
-.planes {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(12px, 1vw + 4px, 22px);
 }
 
 .vitals-grid {
@@ -569,8 +549,7 @@ watch(
 }
 
 @media (width <= 880px) {
-  .grid-1-2,
-  .planes {
+  .grid-1-2 {
     grid-template-columns: 1fr;
   }
 
@@ -586,9 +565,6 @@ watch(
 }
 
 .actions-banner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 10px 14px;
   background: var(--amatista-50);
   border: 1px solid var(--amatista-200);

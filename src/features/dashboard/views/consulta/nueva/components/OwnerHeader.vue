@@ -10,11 +10,11 @@ defineEmits<{ edit: [] }>()
 </script>
 
 <template>
-  <div class="owner-header">
+  <div class="owner-header ds-flex-row ds-flex-row--12">
     <div class="avatar">{{ initials(owner.name) }}</div>
-    <div class="meta">
-      <div class="name">{{ owner.name }}</div>
-      <div class="sub">
+    <div class="ds-flex-fill">
+      <div class="ds-item-label">{{ owner.name }}</div>
+      <div class="sub ds-hint">
         {{ owner.document }} · {{ petCount }} mascota{{ petCount === 1 ? '' : 's' }}
       </div>
     </div>
@@ -25,9 +25,6 @@ defineEmits<{ edit: [] }>()
 
 <style scoped>
 .owner-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 11px 16px;
   margin-bottom: 18px;
   background: var(--warm-50);
@@ -48,20 +45,8 @@ defineEmits<{ edit: [] }>()
   flex-shrink: 0;
 }
 
-.meta {
-  flex: 1;
-  min-width: 0;
-}
-
-.name {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-900);
-}
-
+/* Único añadido sobre `.ds-hint`: 1px, no los 2px de `--spaced`. */
 .sub {
-  font-size: 11.5px;
-  color: var(--warm-500);
   margin-top: 1px;
 }
 

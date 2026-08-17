@@ -4,7 +4,7 @@ withDefaults(defineProps<{ maxWidth?: number }>(), { maxWidth: 1600 })
 
 <template>
   <div class="wrap">
-    <div class="inner" :style="{ maxWidth: `${maxWidth}px` }">
+    <div class="inner ds-stack" :style="{ maxWidth: `${maxWidth}px` }">
       <slot />
     </div>
   </div>
@@ -19,7 +19,5 @@ withDefaults(defineProps<{ maxWidth?: number }>(), { maxWidth: 1600 })
 .inner {
   margin: 0 auto;
   width: 100%;
-  display: flex;
-  flex-direction: column;
 }
 </style>

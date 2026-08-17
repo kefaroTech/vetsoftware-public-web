@@ -50,17 +50,17 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
     <Transition name="resume-fade">
       <div
         v-if="open"
-        class="overlay"
+        class="ds-dialog-overlay overlay"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="resume-title"
       >
-        <div class="card">
-          <div class="icon">
+        <div class="ds-dialog-card ds-dialog-card--wide">
+          <div class="ds-dialog-icon ds-tone--accent">
             <PawPrint :size="22" :stroke-width="1.8" />
           </div>
           <h2 id="resume-title" class="title">Tienes una consulta en marcha</h2>
-          <p class="desc">
+          <p class="ds-dialog-body desc">
             Estás registrando una consulta
             <template v-if="ownerName">
               para <strong>{{ ownerName }}</strong>
@@ -69,9 +69,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               y su mascota <strong>{{ petName }}</strong> </template
             >. ¿Quieres retomarla donde la dejaste o empezar una nueva desde cero?
           </p>
-          <div class="step-chip">{{ stepLabel }}</div>
+          <div class="step-chip ds-tone--accent">{{ stepLabel }}</div>
 
-          <div class="actions">
+          <div class="actions ds-actions">
             <button type="button" class="ds-btn ds-btn--ghost" @click="emit('createNew')">
               <Sparkles :size="14" :stroke-width="1.8" />
               <span>Crear una nueva</span>
@@ -86,7 +86,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               <ArrowRight :size="14" :stroke-width="1.8" />
             </button>
           </div>
-          <p class="hint">
+          <p class="hint ds-meta">
             Si creas una nueva se borrarán los datos del propietario, mascota y consulta actuales.
           </p>
         </div>
@@ -96,13 +96,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 </template>
 
 <style scoped>
+/* Residuo sobre `.ds-dialog-overlay`: este diálogo necesita ganarle a otros
+   modales, por eso su z-index es 1500 y no el 100 de los otros tres. */
 .overlay {
-  position: fixed;
-  inset: 0;
-  background: rgb(30 20 50 / 45%);
-  backdrop-filter: blur(2px);
-  display: grid;
-  place-items: center;
   z-index: 1500;
 }
 
@@ -116,27 +112,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   opacity: 0;
 }
 
-.card {
-  width: 480px;
-  max-width: calc(100vw - 32px);
-  background: var(--warm-50);
-  border-radius: 16px;
-  padding: 28px;
-  box-shadow: 0 20px 60px rgb(40 20 80 / 30%);
-  font-family: var(--font-sans);
-}
-
-.icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
-  display: grid;
-  place-items: center;
-  margin-bottom: 14px;
-}
-
 .title {
   margin: 0 0 8px;
   font-family: var(--font-serif);
@@ -146,11 +121,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   color: var(--warm-900);
 }
 
+/* Residuo sobre `.ds-dialog-body`: éste usa 14px de margen, los otros tres 22. */
 .desc {
   margin: 0 0 14px;
-  font-size: 13.5px;
-  color: var(--warm-600);
-  line-height: 1.55;
 }
 
 .desc strong {
@@ -158,6 +131,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   font-weight: 500;
 }
 
+/* No es `.ds-pill`: su padding es 3/9 y añade `gap`/`white-space`. Sólo el par
+   de color sube, vía `.ds-tone--accent`. */
 .step-chip {
   display: inline-flex;
   align-items: center;
@@ -167,22 +142,18 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   font-weight: 500;
   padding: 4px 10px;
   border-radius: var(--radius-pill);
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   margin-bottom: 22px;
 }
 
+/* Añadidos sobre `.ds-actions`: más aire entre botones y salto de línea. */
 .actions {
-  display: flex;
   gap: 10px;
-  justify-content: flex-end;
   flex-wrap: wrap;
 }
 
+/* Residuo sobre `.ds-meta` (warm-500 / 12px). */
 .hint {
   margin: 14px 0 0;
-  font-size: 12px;
-  color: var(--warm-500);
   line-height: 1.5;
   text-align: right;
 }

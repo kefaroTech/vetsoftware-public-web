@@ -33,13 +33,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 
 <template>
   <Teleport to="body">
-    <div v-if="open" class="overlay" role="alertdialog" aria-modal="true">
-      <div class="card">
-        <div class="icon">
+    <div v-if="open" class="ds-dialog-overlay overlay" role="alertdialog" aria-modal="true">
+      <div class="ds-dialog-card">
+        <div class="ds-dialog-icon ds-tone--accent">
           <Stethoscope :size="22" :stroke-width="1.8" />
         </div>
         <h2 class="ds-title">¿Guardar la consulta?</h2>
-        <p class="desc">
+        <p class="ds-dialog-body desc">
           Se registrará la consulta<span v-if="petName">
             de <strong>{{ petName }}</strong></span
           >
@@ -70,13 +70,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 </template>
 
 <style scoped>
+/* Residuo sobre `.ds-dialog-overlay`: el z-index y la animación de entrada no
+   entran en la primitiva (sólo 2 de los 4 diálogos animan). */
 .overlay {
-  position: fixed;
-  inset: 0;
-  background: rgb(30 20 50 / 45%);
-  backdrop-filter: blur(2px);
-  display: grid;
-  place-items: center;
   z-index: 100;
   animation: fade 0.15s ease-out;
 }
@@ -87,31 +83,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   }
 }
 
-.card {
-  width: 440px;
-  max-width: calc(100vw - 32px);
-  background: var(--warm-50);
-  border-radius: 16px;
-  padding: 28px;
-  box-shadow: 0 20px 60px rgb(40 20 80 / 30%);
-  font-family: var(--font-sans);
-}
-
-.icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
-  display: grid;
-  place-items: center;
-  margin-bottom: 14px;
-}
-
+/* Residuo sobre `.ds-dialog-body` (el margen difiere entre los 4 diálogos). */
 .desc {
   margin: 0 0 22px;
-  font-size: 13.5px;
-  color: var(--warm-600);
-  line-height: 1.55;
 }
 </style>

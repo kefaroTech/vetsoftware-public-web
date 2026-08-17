@@ -9,7 +9,7 @@ defineProps<{
 
 <template>
   <div class="stat-card">
-    <div class="label">{{ label }}</div>
+    <div class="label ds-hint">{{ label }}</div>
     <div class="value">{{ value }}</div>
     <div class="sub" :class="`sub-${tone}`">{{ sub }}</div>
   </div>
@@ -23,9 +23,8 @@ defineProps<{
   padding: 14px 16px;
 }
 
+/* Único añadido sobre `.ds-hint`: el hueco hacia la cifra. */
 .label {
-  font-size: 11.5px;
-  color: var(--warm-500);
   margin-bottom: 6px;
 }
 

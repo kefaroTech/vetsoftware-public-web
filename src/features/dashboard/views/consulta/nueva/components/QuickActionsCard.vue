@@ -56,19 +56,22 @@ function pick(action: QuickAction) {
         v-for="a in actions"
         :key="a.label"
         type="button"
-        class="action"
+        class="action ds-stack ds-stack--8"
         :class="{
           muted: a.muted,
           highlighted: a.kind ? counts[a.kind] > 0 : false,
         }"
         @click="pick(a)"
       >
-        <div class="ic" :class="{ filled: a.kind ? counts[a.kind] > 0 : false }">
+        <div
+          class="ic ds-tone--accent-soft"
+          :class="{ filled: a.kind ? counts[a.kind] > 0 : false }"
+        >
           <component :is="a.icon" :size="17" :stroke-width="1.6" />
         </div>
         <div class="meta">
-          <div class="lab">{{ a.label }}</div>
-          <div class="sub">
+          <div class="ds-item-label">{{ a.label }}</div>
+          <div class="ds-hint ds-hint--spaced">
             {{
               a.kind && counts[a.kind] > 0
                 ? `${counts[a.kind]} generada${counts[a.kind] === 1 ? '' : 's'} · click para añadir más`
@@ -105,9 +108,6 @@ function pick(action: QuickAction) {
   padding: 12px;
   font-family: inherit;
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   text-align: left;
   transition:
     border-color 0.15s,
@@ -136,12 +136,12 @@ function pick(action: QuickAction) {
   padding: 11.5px;
 }
 
+/* El par fondo+texto en reposo lo pone `.ds-tone--accent-soft`; `.ic.filled`
+   (0,2,0) le sigue ganando cuando la acción ya tiene items. */
 .ic {
   width: 34px;
   height: 34px;
   border-radius: 9px;
-  background: var(--amatista-50);
-  color: var(--amatista-700);
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -153,18 +153,6 @@ function pick(action: QuickAction) {
 .ic.filled {
   background: var(--amatista-700);
   color: white;
-}
-
-.lab {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-900);
-}
-
-.sub {
-  font-size: 11.5px;
-  color: var(--warm-500);
-  margin-top: 2px;
 }
 
 .count-badge {

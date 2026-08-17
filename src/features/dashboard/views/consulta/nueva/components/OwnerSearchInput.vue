@@ -31,7 +31,7 @@ const focused = ref(false)
 
 <template>
   <div class="search" :class="{ active: focused || (modelValue && modelValue.length > 0) }">
-    <Search :size="17" :stroke-width="1.6" class="icon" />
+    <Search :size="17" :stroke-width="1.6" class="icon ds-icon-muted" />
     <input
       ref="inputEl"
       :value="modelValue"
@@ -69,11 +69,6 @@ const focused = ref(false)
   background: var(--warm-50);
   border: 1.5px solid var(--amatista-700);
   box-shadow: var(--ring);
-}
-
-.icon {
-  color: var(--warm-500);
-  flex-shrink: 0;
 }
 
 .search.active .icon {

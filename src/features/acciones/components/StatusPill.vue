@@ -1,26 +1,33 @@
 <script setup lang="ts">
-defineProps<{
+import { computed } from 'vue'
+
+type Tone = 'success' | 'warn' | 'neutral' | 'danger' | 'info'
+
+const props = defineProps<{
   label: string
-  tone?: 'success' | 'warn' | 'neutral' | 'danger' | 'info'
+  tone?: Tone
 }>()
+
+/** `info` es el único tono cuyo par fondo+texto ya vive en el catálogo. */
+const TONE_CLASS: Record<Tone, string> = {
+  success: 'tone-success',
+  warn: 'tone-warn',
+  neutral: 'tone-neutral',
+  danger: 'tone-danger',
+  info: 'ds-tone--accent',
+}
+
+const toneClass = computed(() => TONE_CLASS[props.tone ?? 'neutral'])
 </script>
 
 <template>
-  <span class="pill" :class="`tone-${tone ?? 'neutral'}`">{{ label }}</span>
+  <span class="pill ds-pill" :class="toneClass">{{ label }}</span>
 </template>
 
 <style scoped>
+/* Único añadido sobre `.ds-pill`: esta familia de estados abre un pelo la letra. */
 .pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 9px;
-  border-radius: var(--radius-pill);
-  font-size: 11.5px;
-  font-weight: 500;
-  font-family: var(--font-sans);
   letter-spacing: 0.01em;
-  white-space: nowrap;
 }
 
 .tone-success {
@@ -41,10 +48,5 @@ defineProps<{
 .tone-danger {
   background: oklch(94% 0.07 25deg);
   color: oklch(42% 0.18 25deg);
-}
-
-.tone-info {
-  background: var(--amatista-100);
-  color: var(--amatista-700);
 }
 </style>

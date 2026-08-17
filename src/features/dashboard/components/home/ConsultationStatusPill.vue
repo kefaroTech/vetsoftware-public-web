@@ -6,22 +6,28 @@ const props = defineProps<{
   status: ConsultationStatus
 }>()
 
+/**
+ * `tone` sigue nombrando la clase local que colorea el punto
+ * (`.pill-<tone> .dot`); `ds` es el par fondo+texto de la píldora, que ya vive
+ * en el catálogo. El tono de espera no tiene primitiva equivalente
+ * (warm-150/warm-700 frente al warm-200/warm-600 de `.ds-tone--neutral`).
+ */
 const meta = computed(() => {
   switch (props.status) {
     case 'en_curso':
-      return { label: 'En curso', tone: 'amatista' as const }
+      return { label: 'En curso', tone: 'amatista' as const, ds: 'ds-tone--accent' }
     case 'programada':
-      return { label: 'Programada', tone: 'wait' as const }
+      return { label: 'Programada', tone: 'wait' as const, ds: '' }
     case 'completada':
-      return { label: 'Completada', tone: 'ok' as const }
+      return { label: 'Completada', tone: 'ok' as const, ds: 'ds-tone--success' }
   }
-  return { label: props.status, tone: 'wait' as const }
+  return { label: props.status, tone: 'wait' as const, ds: '' }
 })
 </script>
 
 <template>
-  <span class="pill" :class="`pill-${meta.tone}`">
-    <span class="dot" />
+  <span class="pill" :class="[`pill-${meta.tone}`, meta.ds]">
+    <span class="dot ds-status-dot" />
     {{ meta.label }}
   </span>
 </template>
@@ -37,18 +43,6 @@ const meta = computed(() => {
   font-weight: 500;
 }
 
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.pill-amatista {
-  background: var(--amatista-100);
-  color: var(--amatista-700);
-}
-
 .pill-amatista .dot {
   background: var(--amatista-500);
 }
@@ -60,11 +54,6 @@ const meta = computed(() => {
 
 .pill-wait .dot {
   background: var(--warm-500);
-}
-
-.pill-ok {
-  background: var(--success-bg);
-  color: var(--success-fg);
 }
 
 .pill-ok .dot {

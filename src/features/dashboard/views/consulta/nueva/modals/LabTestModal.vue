@@ -245,7 +245,7 @@ function doSave() {
         </div>
       </div>
       <template v-else>
-        <div v-if="typesError" class="catalog-error">{{ typesError }}</div>
+        <div v-if="typesError" class="ds-catalog-error">{{ typesError }}</div>
 
         <BaseField v-if="showBranchField" label="Sede" required class="branch-field">
           <BaseSelect
@@ -273,11 +273,11 @@ function doSave() {
           </template>
         </ExistingItemsSection>
 
-        <div class="tests-list">
+        <div class="ds-stack ds-stack--10">
           <div v-for="(t, i) in draft.tests" :key="t.uid" class="test-card">
             <div class="test-head">
-              <div class="test-num">{{ i + 1 }}</div>
-              <div class="test-title">Examen {{ i + 1 }}</div>
+              <div class="test-num ds-tone--accent">{{ i + 1 }}</div>
+              <div class="test-title ds-meta-dark ds-meta-dark--sm">Examen {{ i + 1 }}</div>
               <button
                 v-if="draft.tests.length > 1"
                 type="button"
@@ -362,16 +362,6 @@ function doSave() {
 </template>
 
 <style scoped>
-.catalog-error {
-  background: var(--danger-150);
-  border: 1px solid var(--danger-300);
-  color: oklch(35% 0.15 25deg);
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 12.5px;
-  margin-bottom: 14px;
-}
-
 .branch-field {
   margin-bottom: 16px;
   max-width: 380px;
@@ -410,12 +400,6 @@ function doSave() {
   font-weight: 600;
 }
 
-.tests-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 .test-card {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
@@ -430,23 +414,21 @@ function doSave() {
   margin-bottom: 12px;
 }
 
+/* El par fondo+texto lo pone `.ds-tone--accent`. */
 .test-num {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   font-size: 11px;
   font-weight: 600;
   display: grid;
   place-items: center;
 }
 
+/* Residuo sobre `.ds-meta-dark` + `--sm` (warm-600 / 12,5px). */
 .test-title {
   flex: 1;
-  font-size: 12.5px;
   font-weight: 500;
-  color: var(--warm-600);
 }
 
 .remove {

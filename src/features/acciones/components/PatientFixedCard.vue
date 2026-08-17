@@ -31,7 +31,7 @@ defineProps<{
 
 <template>
   <div v-if="summary || animal" class="patient-fixed">
-    <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
+    <div class="paw ds-tone--accent"><PawPrint :size="14" :stroke-width="1.7" /></div>
     <div>
       <div class="ds-item-label">{{ summary?.name ?? animal?.name }}</div>
       <div v-if="summary" class="ds-hint ds-hint--spaced">{{ summary.code }}</div>
@@ -54,12 +54,11 @@ defineProps<{
   padding: 10px 12px;
 }
 
+/* El par fondo+texto lo pone `.ds-tone--accent`. */
 .paw {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   display: grid;
   place-items: center;
 }

@@ -283,9 +283,9 @@ function clearBanner() {
           </div>
 
           <div v-if="!query" class="empty">
-            <div class="empty-ic"><User :size="26" :stroke-width="1.6" /></div>
-            <div class="empty-title">Empieza buscando un propietario</div>
-            <p class="empty-desc">
+            <div class="empty-ic ds-tone--accent-soft"><User :size="26" :stroke-width="1.6" /></div>
+            <div class="empty-title ds-text-strong">Empieza buscando un propietario</div>
+            <p class="empty-desc ds-meta-dark">
               Escribe el nombre, documento o email. Si no existe, podrás crearlo desde aquí mismo.
             </p>
             <button type="button" class="btn-create" @click="startCreateOwner">
@@ -294,17 +294,17 @@ function clearBanner() {
             </button>
           </div>
 
-          <div v-else-if="loading" class="loading">
+          <div v-else-if="loading" class="loading ds-flex-row ds-meta-dark">
             <PawLoader :size="22" :glow="false" :speed="900" />
             <span>Buscando…</span>
           </div>
 
-          <div v-else-if="searchError" class="search-error">
+          <div v-else-if="searchError" class="search-error ds-flex-row ds-meta-dark">
             <TriangleAlert :size="14" :stroke-width="1.7" />
             <span>{{ searchError }}</span>
           </div>
 
-          <div v-else-if="results.length > 0" class="results">
+          <div v-else-if="results.length > 0" class="ds-stack">
             <OwnerResultRow
               v-for="o in results"
               :key="o.id"
@@ -312,10 +312,14 @@ function clearBanner() {
               :pet-count="o.pets.length"
               @select="selectOwner(o)"
             />
-            <button type="button" class="not-found" @click="startCreateOwner">
-              <div class="nf-ic"><Plus :size="15" :stroke-width="1.6" /></div>
+            <button
+              type="button"
+              class="not-found ds-flex-row ds-flex-row--12"
+              @click="startCreateOwner"
+            >
+              <div class="nf-ic ds-tone--accent"><Plus :size="15" :stroke-width="1.6" /></div>
               <div class="nf-meta">
-                <div class="nf-title">¿No encuentras a "{{ query }}"?</div>
+                <div class="ds-item-label">¿No encuentras a "{{ query }}"?</div>
                 <div class="nf-sub">Registra un propietario nuevo</div>
               </div>
               <ArrowRight :size="14" :stroke-width="1.6" class="nf-arrow" />
@@ -370,9 +374,11 @@ function clearBanner() {
             />
             <SectionCard :padded="false">
               <div class="empty">
-                <div class="empty-ic"><PawPrint :size="30" :stroke-width="1.5" /></div>
-                <div class="empty-title">Sin mascotas registradas</div>
-                <p class="empty-desc">
+                <div class="empty-ic ds-tone--accent-soft">
+                  <PawPrint :size="30" :stroke-width="1.5" />
+                </div>
+                <div class="empty-title ds-text-strong">Sin mascotas registradas</div>
+                <p class="empty-desc ds-meta-dark">
                   Registra la primera mascota de
                   {{ selectedOwner.name?.split(' ')[0] }} para poder iniciar la consulta.
                 </p>
@@ -401,9 +407,9 @@ function clearBanner() {
                 :selected="selectedPetId(p)"
                 @select="handleSelectPet(p)"
               />
-              <button type="button" class="add-pet" @click="startCreatePet">
-                <div class="add-ic"><Plus :size="18" :stroke-width="1.6" /></div>
-                <div class="add-title">Nueva mascota</div>
+              <button type="button" class="add-pet ds-stack ds-stack--8" @click="startCreatePet">
+                <div class="add-ic ds-tone--accent"><Plus :size="18" :stroke-width="1.6" /></div>
+                <div class="ds-item-label">Nueva mascota</div>
                 <div class="add-sub">
                   Registrar mascota a nombre de {{ selectedOwner.name?.split(' ')[0] }}
                 </div>
@@ -495,29 +501,26 @@ function clearBanner() {
   text-align: center;
 }
 
+/* El par fondo+texto lo pone `.ds-tone--accent-soft`. */
 .empty-ic {
   width: 56px;
   height: 56px;
   border-radius: 16px;
-  background: var(--amatista-50);
-  color: var(--amatista-700);
   display: grid;
   place-items: center;
   margin: 0 auto 14px;
 }
 
+/* Residuo sobre `.ds-text-strong` (warm-900 / peso medio). */
 .empty-title {
   font-size: 15px;
-  font-weight: 500;
   margin-bottom: 4px;
-  color: var(--warm-900);
 }
 
+/* Residuo sobre `.ds-meta-dark` (warm-600 / 13px). */
 .empty-desc {
   margin: 0 auto 18px;
   max-width: 380px;
-  font-size: 13px;
-  color: var(--warm-600);
   line-height: 1.55;
 }
 
@@ -540,20 +543,12 @@ function clearBanner() {
   background: var(--warm-100);
 }
 
-.results {
-  display: flex;
-  flex-direction: column;
-}
-
 .not-found {
   border: none;
   border-top: 1px solid var(--warm-200);
   padding: 14px 18px;
   background: var(--warm-150);
   font-family: inherit;
-  display: flex;
-  align-items: center;
-  gap: 12px;
   cursor: pointer;
   text-align: left;
   transition: background 0.12s;
@@ -563,24 +558,17 @@ function clearBanner() {
   background: var(--warm-200);
 }
 
+/* El par fondo+texto lo pone `.ds-tone--accent`. */
 .nf-ic {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   display: grid;
   place-items: center;
 }
 
 .nf-meta {
   flex: 1;
-}
-
-.nf-title {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-900);
 }
 
 .nf-sub {
@@ -599,15 +587,11 @@ function clearBanner() {
   margin-bottom: 14px;
 }
 
+/* Añadidos sobre `.ds-flex-row` + `.ds-meta-dark`: centrado horizontal y aire. */
 .loading,
 .search-error {
   padding: 28px 20px;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--warm-600);
 }
 
 .search-error {
@@ -639,11 +623,8 @@ function clearBanner() {
   padding: 16px;
   cursor: pointer;
   font-family: inherit;
-  display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
   min-height: 175px;
   color: var(--warm-600);
   transition:
@@ -656,20 +637,13 @@ function clearBanner() {
   background: var(--amatista-50);
 }
 
+/* El par fondo+texto lo pone `.ds-tone--accent`. */
 .add-ic {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   display: grid;
   place-items: center;
-}
-
-.add-title {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-900);
 }
 
 .add-sub {

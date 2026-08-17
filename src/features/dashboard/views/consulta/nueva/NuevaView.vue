@@ -197,7 +197,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="wizard">
+  <div class="wizard ds-stack">
     <header class="topbar">
       <button type="button" class="back" @click="goHome">
         <ArrowLeft :size="15" :stroke-width="1.7" />
@@ -205,19 +205,19 @@ onUnmounted(() => {
       </button>
       <span class="divider" />
       <h1 class="brand">Nueva consulta</h1>
-      <span class="badge">Borrador</span>
+      <span class="badge ds-tone--accent">Borrador</span>
       <button type="button" class="cancel" @click="attemptCancel">
         <X :size="14" :stroke-width="1.7" />
         <span>Cancelar</span>
       </button>
     </header>
 
-    <main class="content">
+    <main class="content ds-stack">
       <PasoPaciente v-if="step === 1" ref="pasoRef" />
       <PasoConsulta v-else ref="pasoRef" />
     </main>
 
-    <div v-if="saveError && step === 2" class="save-error">
+    <div v-if="saveError && step === 2" class="save-error ds-flex-row">
       <X :size="14" :stroke-width="1.7" />
       <span>{{ saveError }}</span>
     </div>
@@ -274,8 +274,6 @@ onUnmounted(() => {
   background: var(--warm-100);
   font-family: var(--font-sans);
   color: var(--warm-900);
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
 }
 
@@ -324,12 +322,11 @@ onUnmounted(() => {
   color: var(--warm-900);
 }
 
+/* El par fondo+texto lo pone `.ds-tone--accent`. */
 .badge {
   font-size: 11px;
   padding: 3px 8px;
   border-radius: var(--radius-pill);
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-weight: 500;
@@ -371,14 +368,9 @@ onUnmounted(() => {
 .content {
   flex: 1;
   overflow: auto;
-  display: flex;
-  flex-direction: column;
 }
 
 .save-error {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   font-size: 13px;
   padding: 12px 18px;
   background: var(--danger-150);
@@ -400,26 +392,5 @@ onUnmounted(() => {
 .discard-extra:hover {
   background: var(--warm-100);
   color: var(--warm-900);
-}
-
-.btn-keep-owner {
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  padding: 9px 14px;
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-900);
-  cursor: pointer;
-}
-
-.btn-keep-owner:hover:not(:disabled) {
-  background: var(--warm-100);
-}
-
-.btn-keep-owner:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>

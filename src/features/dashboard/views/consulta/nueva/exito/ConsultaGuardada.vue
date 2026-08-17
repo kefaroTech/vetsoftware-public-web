@@ -58,13 +58,13 @@ function createAnother() {
       <p class="who">
         {{ state.petName }}<span v-if="state.ownerName"> · {{ state.ownerName }}</span>
       </p>
-      <p class="meta">
+      <p class="meta ds-view-subtitle">
         <span v-if="state.date">{{ formatDateLong(state.date) }}</span>
         <span v-if="state.consultationType"> · {{ state.consultationType }}</span>
         <span> · {{ code }}</span>
       </p>
       <div v-if="prescriptions.length" class="rx-block">
-        <div class="rx-title">
+        <div class="rx-title ds-label">
           {{ prescriptions.length === 1 ? 'Receta de esta consulta' : 'Recetas de esta consulta' }}
         </div>
         <div class="rx-buttons">
@@ -144,10 +144,10 @@ function createAnother() {
   color: var(--warm-600);
 }
 
+/* Residuo sobre `.ds-view-subtitle` (warm-500 / 13px): aquí el margen va
+   abajo, no arriba. */
 .meta {
   margin: 0 0 28px;
-  font-size: 13px;
-  color: var(--warm-500);
 }
 
 .rx-block {
@@ -158,12 +158,8 @@ function createAnother() {
   border-radius: 12px;
 }
 
+/* Único añadido sobre `.ds-label`: el hueco hacia los botones. */
 .rx-title {
-  font-size: 11.5px;
-  color: var(--warm-500);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  font-weight: 500;
   margin-bottom: 10px;
 }
 

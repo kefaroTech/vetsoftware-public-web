@@ -185,11 +185,11 @@ function typeLabel(t: DewormingResponse['type']): string {
             <th>Producto</th>
             <th>Dosis</th>
             <th>Próximo</th>
-            <th v-if="canUpdate || canDelete" class="actions-col">Acciones</th>
+            <th v-if="canUpdate || canDelete" class="ds-col-actions">Acciones</th>
           </tr>
         </template>
         <template #row="{ item }">
-          <tr class="clickable-row" @click="onRowClick(item)">
+          <tr class="ds-row-clickable clickable-row" @click="onRowClick(item)">
             <td>{{ formatDateShort(item.date) }}</td>
             <td>{{ typeLabel(item.type) }}</td>
             <td>{{ item.product }}</td>
@@ -252,18 +252,3 @@ function typeLabel(t: DewormingResponse['type']): string {
     />
   </div>
 </template>
-
-<style scoped>
-.actions-col {
-  width: 88px;
-  text-align: right;
-}
-
-.clickable-row {
-  cursor: pointer;
-  transition: background 0.12s ease;
-}
-.clickable-row:hover td {
-  background: var(--amatista-50);
-}
-</style>

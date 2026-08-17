@@ -11,17 +11,17 @@ defineProps<{
 
 <template>
   <div class="ctx">
-    <div class="avatar">
+    <div class="avatar ds-tone--accent">
       <PawPrint :size="18" :stroke-width="1.7" />
     </div>
-    <div class="meta">
-      <div class="name">
+    <div class="ds-flex-fill">
+      <div class="name ds-item-label ds-item-label--lg ds-flex-row">
         <span>{{ pet.name }}</span>
-        <span class="dim">
+        <span class="dim ds-hint">
           · {{ pet.specie.name }} · {{ pet.breed.name }} · {{ calcAge(pet.bod) }}
         </span>
       </div>
-      <div class="owner">Propietario: {{ owner.name }} · {{ owner.document }}</div>
+      <div class="owner ds-hint">Propietario: {{ owner.name }} · {{ owner.document }}</div>
     </div>
     <BaseChip variant="success">Pasos 1-2 ✓</BaseChip>
   </div>
@@ -39,41 +39,28 @@ defineProps<{
   border-radius: 10px;
 }
 
+/* El par fondo+texto lo pone `.ds-tone--accent`. */
 .avatar {
   width: 36px;
   height: 36px;
   border-radius: 9px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   display: grid;
   place-items: center;
   flex-shrink: 0;
 }
 
-.meta {
-  flex: 1;
-  min-width: 0;
-}
-
+/* Único añadido sobre `.ds-item-label--lg` + `.ds-flex-row`: que la línea envuelva. */
 .name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--warm-900);
-  display: flex;
-  align-items: center;
-  gap: 8px;
   flex-wrap: wrap;
 }
 
+/* Único añadido sobre `.ds-hint`: no heredar el peso 500 del nombre. */
 .dim {
-  font-size: 11.5px;
-  color: var(--warm-500);
   font-weight: 400;
 }
 
+/* Único añadido sobre `.ds-hint`: 1px, no los 2px de `--spaced`. */
 .owner {
-  font-size: 11.5px;
-  color: var(--warm-500);
   margin-top: 1px;
 }
 </style>

@@ -9,7 +9,7 @@ defineProps<{
 
 <template>
   <div class="row" :class="{ last }">
-    <div class="lab">{{ label }}</div>
+    <div class="lab ds-hint">{{ label }}</div>
     <div class="val" :class="{ muted: empty }">
       <slot>
         <em v-if="empty">Sin completar</em>
@@ -32,9 +32,8 @@ defineProps<{
   border-bottom: none;
 }
 
+/* Residuo sobre `.ds-hint` (warm-500 / 11,5px). */
 .lab {
-  font-size: 11.5px;
-  color: var(--warm-500);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   padding-top: 2px;

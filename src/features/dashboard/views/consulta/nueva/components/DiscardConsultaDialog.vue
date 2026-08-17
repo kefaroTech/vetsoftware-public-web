@@ -34,13 +34,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 
 <template>
   <Teleport to="body">
-    <div v-if="open" class="overlay" role="alertdialog" aria-modal="true">
-      <div class="card">
-        <div class="icon">
+    <div v-if="open" class="ds-dialog-overlay overlay" role="alertdialog" aria-modal="true">
+      <div class="ds-dialog-card">
+        <div class="ds-dialog-icon icon">
           <TriangleAlert :size="22" :stroke-width="1.8" />
         </div>
         <h2 class="ds-title">¿Descartar esta consulta?</h2>
-        <p class="desc">
+        <p class="ds-dialog-body desc">
           Perderás todos los datos ingresados<span v-if="petName">
             de <strong>{{ petName }}</strong></span
           >. Esta acción no se puede deshacer.
@@ -60,13 +60,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 </template>
 
 <style scoped>
+/* Residuo sobre `.ds-dialog-overlay`: z-index y animación de entrada. */
 .overlay {
-  position: fixed;
-  inset: 0;
-  background: rgb(30 20 50 / 45%);
-  backdrop-filter: blur(2px);
-  display: grid;
-  place-items: center;
   z-index: 100;
   animation: fade 0.15s ease-out;
 }
@@ -77,32 +72,17 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   }
 }
 
-.card {
-  width: 440px;
-  max-width: calc(100vw - 32px);
-  background: var(--warm-50);
-  border-radius: 16px;
-  padding: 28px;
-  box-shadow: 0 20px 60px rgb(40 20 80 / 30%);
-  font-family: var(--font-sans);
-}
-
+/* NO es `.ds-tone--danger` (danger-200 / oklch(50% 0.2 25deg)): este par es
+   danger-150 / danger-600, un rojo más claro de fondo y menos saturado de
+   texto. Se queda local sobre `.ds-dialog-icon`. */
 .icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
   background: var(--danger-150);
   color: var(--danger-600);
-  display: grid;
-  place-items: center;
-  margin-bottom: 14px;
 }
 
+/* Residuo sobre `.ds-dialog-body` (el margen difiere entre los 4 diálogos). */
 .desc {
   margin: 0 0 22px;
-  font-size: 13.5px;
-  color: var(--warm-600);
-  line-height: 1.55;
 }
 
 .danger {
