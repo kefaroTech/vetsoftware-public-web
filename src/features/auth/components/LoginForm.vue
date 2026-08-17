@@ -86,7 +86,7 @@ async function submit() {
       </AuthBanner>
     </div>
 
-    <div class="login-fields">
+    <div class="ds-stack ds-stack--14">
       <AuthField label="Empleado" required :error="err('employeeCode')">
         <AuthInput
           v-model="form.employeeCode"
@@ -123,7 +123,7 @@ async function submit() {
       </PrimaryButton>
     </div>
 
-    <div class="login-divider">
+    <div class="login-divider ds-flex-row ds-flex-row--12">
       <span class="login-divider-line" />
       <span class="login-divider-word">o</span>
       <span class="login-divider-line" />
@@ -143,12 +143,6 @@ async function submit() {
 
 .login-banner {
   margin-bottom: 20px;
-}
-
-.login-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
 }
 
 .login-forgot {
@@ -178,9 +172,6 @@ async function submit() {
 }
 
 .login-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   margin: 24px 0 18px;
 }
 

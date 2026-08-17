@@ -26,7 +26,7 @@ const emit = defineEmits<{
     @close="emit('cancel')"
   >
     <template #body>
-      <p class="msg">
+      <p class="msg ds-dialog-body">
         Los empleados con este rol dejarán de tener los permisos asociados hasta que vuelvas a
         activarlo. La configuración del rol y sus permisos se mantienen intactos.
       </p>
@@ -41,7 +41,13 @@ const emit = defineEmits<{
       >
         Cancelar
       </button>
-      <button type="button" class="danger" :disabled="busy" @click="emit('confirm')">
+      <button
+        type="button"
+        class="danger"
+        :class="{ 'ds-is-disabled--60': busy }"
+        :disabled="busy"
+        @click="emit('confirm')"
+      >
         <Power :size="14" :stroke-width="1.7" />
         Desactivar
       </button>
@@ -50,11 +56,9 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
+/* Color, tamaño e interlineado vienen de `.ds-dialog-body`. */
 .msg {
   margin: 0;
-  font-size: 13.5px;
-  color: var(--warm-600);
-  line-height: 1.55;
 }
 
 /* El botón de cancelar usa `.ds-btn` (primitives.css). Este destructivo se
@@ -81,8 +85,10 @@ const emit = defineEmits<{
   background: oklch(91% 0.07 25deg);
 }
 
+/* La opacidad la pone `.ds-is-disabled--60` desde el template. El cursor NO
+   puede subir a la primitiva: `.danger` ya declara `cursor:pointer` y en CSS
+   scoped pesa (0,2,0), por encima de `.ds-is-disabled` (0,1,0). */
 .danger:disabled {
   cursor: not-allowed;
-  opacity: 0.6;
 }
 </style>

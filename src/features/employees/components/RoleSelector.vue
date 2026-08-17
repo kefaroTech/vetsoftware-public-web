@@ -17,7 +17,7 @@ const currentId = computed(() => props.currentCode.trim().toLowerCase())
 <template>
   <div>
     <div class="hint">Selección de rol — pendiente de integración con backend.</div>
-    <div class="list">
+    <div class="ds-stack ds-stack--8">
       <div
         v-for="r in ROLES"
         :key="r.id"
@@ -30,9 +30,9 @@ const currentId = computed(() => props.currentCode.trim().toLowerCase())
         "
       >
         <span class="dot" :style="{ background: ROLE_COLORS[r.color].dot }" />
-        <div class="body">
-          <div class="title-row">
-            <span class="role-name">{{ r.name }}</span>
+        <div class="ds-flex-fill">
+          <div class="ds-flex-row">
+            <span class="ds-item-label ds-item-label--lg">{{ r.name }}</span>
             <span
               v-if="r.id === currentId"
               class="actual"
@@ -66,12 +66,6 @@ const currentId = computed(() => props.currentCode.trim().toLowerCase())
   margin-bottom: 14px;
 }
 
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 .item {
   display: flex;
   align-items: flex-start;
@@ -95,23 +89,6 @@ const currentId = computed(() => props.currentCode.trim().toLowerCase())
   border-radius: 50%;
   margin-top: 7px;
   flex-shrink: 0;
-}
-
-.body {
-  flex: 1;
-  min-width: 0;
-}
-
-.title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.role-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--warm-900);
 }
 
 .actual {

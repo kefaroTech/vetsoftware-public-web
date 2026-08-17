@@ -133,7 +133,7 @@ async function resend() {
 
         <div v-if="submitError" class="pub-error rc-error--sent">{{ submitError }}</div>
 
-        <div class="rc-resend">
+        <div class="rc-resend ds-flex-row">
           <span>¿No lo recibiste?</span>
           <span v-if="cooldown > 0" class="rc-resend-wait"
             >Podrás reenviar en {{ cooldown }} s</span
@@ -169,9 +169,6 @@ async function resend() {
 }
 
 .rc-resend {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   flex-wrap: wrap;
   font-size: 13px;
   color: var(--pub-ink-500);

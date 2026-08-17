@@ -40,24 +40,26 @@ const branchNames = computed(() => props.employee.branches.map((b) => b.name).jo
       />
     </div>
     <div class="cell name-cell">
-      <div class="name">{{ employee.name }}</div>
-      <div class="sub">{{ employee.employeeCode }}</div>
+      <div class="ds-item-label ds-item-label--lg ds-truncate">{{ employee.name }}</div>
+      <div class="sub ds-meta">{{ employee.employeeCode }}</div>
     </div>
     <div class="cell role-cell">
       <div v-if="employee.roles.length > 0" class="pills">
         <RolePill v-for="r in employee.roles" :key="r.id" :name="r.name" :code="r.code" />
       </div>
-      <span v-else class="no-role">Sin rol</span>
+      <span v-else class="no-role ds-meta">Sin rol</span>
     </div>
     <div class="cell sedes-cell">
       <div v-if="employee.branches.length > 0" class="sedes" :title="branchNames">
-        <span v-for="b in visibleBranches" :key="b.id" class="sede-chip">{{ b.name }}</span>
-        <span v-if="hiddenCount > 0" class="sede-more">+{{ hiddenCount }}</span>
+        <span v-for="b in visibleBranches" :key="b.id" class="sede-chip ds-truncate">{{
+          b.name
+        }}</span>
+        <span v-if="hiddenCount > 0" class="sede-more ds-hint">+{{ hiddenCount }}</span>
       </div>
-      <span v-else class="no-sede">Sin sede</span>
+      <span v-else class="no-sede ds-meta">Sin sede</span>
     </div>
     <div class="cell contact-cell">
-      <div class="email">{{ employee.email }}</div>
+      <div class="email ds-truncate ds-meta-dark ds-meta-dark--sm">{{ employee.email }}</div>
     </div>
     <div class="cell status-cell">
       <StatusPill :active="employee.enabled" :invited="employee.status === 'INVITED'" />
@@ -144,29 +146,14 @@ const branchNames = computed(() => props.employee.branches.map((b) => b.name).jo
   color: var(--warm-400);
 }
 
-.name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--warm-900);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .sub {
-  font-size: 12px;
-  color: var(--warm-500);
   margin-top: 2px;
 }
 
-.email {
-  font-size: 12.5px;
-  color: var(--warm-600);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
+/* `.email` es `.ds-meta-dark` + `--sm`; el par «sin rol»/«sin sede» es
+   `.ds-meta`; el chip de sede recorta con `.ds-truncate` y el «+N» es
+   `.ds-hint`. `.row:hover` NO migra a `.ds-row-hover`: pesa (0,2,0) y
+   perdería contra `.row.zebra` (0,3,0), que hoy sí pierde contra el hover. */
 .pills {
   display: flex;
   gap: 4px;
@@ -175,8 +162,6 @@ const branchNames = computed(() => props.employee.branches.map((b) => b.name).jo
 
 .no-role,
 .no-sede {
-  font-size: 12px;
-  color: var(--warm-500);
   font-style: italic;
 }
 
@@ -195,14 +180,9 @@ const branchNames = computed(() => props.employee.branches.map((b) => b.name).jo
   background: var(--warm-100);
   border: 1px solid var(--warm-200);
   border-radius: var(--radius-pill);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .sede-more {
-  font-size: 11.5px;
-  color: var(--warm-500);
   font-weight: 500;
 }
 </style>

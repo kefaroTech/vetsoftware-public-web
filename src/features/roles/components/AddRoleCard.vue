@@ -5,22 +5,19 @@ defineEmits<{ click: [] }>()
 </script>
 
 <template>
-  <button type="button" class="add" @click="$emit('click')">
-    <div class="icon">
+  <button type="button" class="add ds-stack ds-stack--10" @click="$emit('click')">
+    <div class="icon ds-tone--accent">
       <Plus :size="22" :stroke-width="1.6" />
     </div>
-    <div class="title">Crear rol</div>
-    <div class="subtitle">Define un rol personalizado para tu equipo.</div>
+    <div class="ds-item-label ds-item-label--lg">Crear rol</div>
+    <div class="subtitle ds-meta">Define un rol personalizado para tu equipo.</div>
   </button>
 </template>
 
 <style scoped>
 .add {
-  display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
   min-height: 230px;
   padding: 22px 18px;
   background: transparent;
@@ -40,25 +37,16 @@ defineEmits<{ click: [] }>()
   background: var(--amatista-50);
 }
 
+/* El tono es `.ds-tone--accent`. */
 .icon {
   width: 46px;
   height: 46px;
   border-radius: 13px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
   display: grid;
   place-items: center;
 }
 
-.title {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--warm-900);
-}
-
 .subtitle {
-  font-size: 12px;
-  color: var(--warm-500);
   max-width: 200px;
   line-height: 1.45;
 }

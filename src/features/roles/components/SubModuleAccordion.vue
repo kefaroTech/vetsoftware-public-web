@@ -42,8 +42,18 @@ function isHighlighted(text: string): boolean {
 
 <template>
   <div class="acc" :class="{ open: expanded }">
-    <button type="button" class="row" :aria-expanded="expanded" @click="emit('toggle-expand')">
-      <ChevronRight class="chev" :class="{ open: expanded }" :size="14" :stroke-width="1.7" />
+    <button
+      type="button"
+      class="row ds-flex-row ds-flex-row--12"
+      :aria-expanded="expanded"
+      @click="emit('toggle-expand')"
+    >
+      <ChevronRight
+        class="chev ds-icon-muted"
+        :class="{ open: expanded }"
+        :size="14"
+        :stroke-width="1.7"
+      />
       <span class="cb-wrap" @click.stop>
         <TristateCheckbox
           :value="tristate"
@@ -52,16 +62,28 @@ function isHighlighted(text: string): boolean {
           @toggle="emit('toggle-sub')"
         />
       </span>
-      <span class="meta">
-        <span class="name" :class="{ hl: isHighlighted(subModule.name) }">{{
+      <span class="meta ds-stack ds-flex-fill">
+        <span class="name ds-text-strong" :class="{ hl: isHighlighted(subModule.name) }">{{
           subModule.name
         }}</span>
-        <span class="count">{{ selectedCount }} de {{ total }} permisos</span>
+        <span class="ds-hint">{{ selectedCount }} de {{ total }} permisos</span>
       </span>
-      <span class="status" :class="tristate">{{ statusLabel }}</span>
+      <!-- `empty` y `partial` son tonos del sistema; `full` (amatista-200) no
+           tiene primitiva y se queda con su clase local. -->
+      <span
+        class="status"
+        :class="
+          tristate === 'empty'
+            ? 'ds-tone--neutral'
+            : tristate === 'partial'
+              ? 'ds-tone--accent'
+              : 'full'
+        "
+        >{{ statusLabel }}</span
+      >
     </button>
 
-    <ul v-if="expanded" class="perm-list">
+    <ul v-if="expanded" class="perm-list ds-list-reset">
       <li v-for="p in permissions" :key="p.id" class="perm-row">
         <label class="perm-label">
           <input
@@ -92,9 +114,6 @@ function isHighlighted(text: string): boolean {
 
 .row {
   width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 11px 14px;
   background: transparent;
   border: none;
@@ -107,10 +126,9 @@ function isHighlighted(text: string): boolean {
   background: var(--warm-100);
 }
 
+/* Color y `flex-shrink` vienen de `.ds-icon-muted`. */
 .chev {
-  color: var(--warm-500);
   transition: transform 0.15s ease;
-  flex-shrink: 0;
 }
 
 .chev.open {
@@ -123,17 +141,12 @@ function isHighlighted(text: string): boolean {
 }
 
 .meta {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
   gap: 1px;
-  min-width: 0;
 }
 
+/* Color y peso vienen de `.ds-text-strong`. */
 .name {
   font-size: 13.5px;
-  font-weight: 500;
-  color: var(--warm-900);
   line-height: 1.2;
 }
 
@@ -142,11 +155,6 @@ function isHighlighted(text: string): boolean {
   border-radius: 3px;
   padding: 0 3px;
   margin: 0 -3px;
-}
-
-.count {
-  font-size: 11.5px;
-  color: var(--warm-500);
 }
 
 .status {
@@ -158,24 +166,12 @@ function isHighlighted(text: string): boolean {
   flex-shrink: 0;
 }
 
-.status.empty {
-  background: var(--warm-200);
-  color: var(--warm-600);
-}
-
-.status.partial {
-  background: var(--amatista-100);
-  color: var(--amatista-700);
-}
-
 .status.full {
   background: var(--amatista-200);
   color: var(--amatista-700);
 }
 
 .perm-list {
-  list-style: none;
-  margin: 0;
   padding: 0 16px 10px 44px;
 }
 

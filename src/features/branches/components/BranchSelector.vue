@@ -8,7 +8,7 @@ const { options, selectedValue, hasBranches, loading } = useBranches()
 </script>
 
 <template>
-  <div v-if="hasBranches" class="branch-selector">
+  <div v-if="hasBranches" class="branch-selector ds-stack">
     <span class="bs-label">Sede</span>
     <BaseSelect
       :model-value="selectedValue"
@@ -21,8 +21,6 @@ const { options, selectedValue, hasBranches, loading } = useBranches()
 
 <style scoped>
 .branch-selector {
-  display: flex;
-  flex-direction: column;
   gap: 5px;
   padding: 4px 10px 12px;
   margin-bottom: 4px;

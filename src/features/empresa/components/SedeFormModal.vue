@@ -115,8 +115,8 @@ function submit() {
     @close="emit('close')"
   >
     <template #body>
-      <div class="form">
-        <div class="grid-2">
+      <div class="ds-stack ds-stack--18">
+        <div class="grid-2 ds-grid-2">
           <BaseField label="Nombre de la sede" required :error="err('name')">
             <template #default="{ id }">
               <BaseInput
@@ -211,15 +211,7 @@ function submit() {
 </template>
 
 <style scoped>
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
 .grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 18px 22px;
 }
 
@@ -230,7 +222,6 @@ function submit() {
 }
 
 @media (width <= 620px) {
-  .grid-2,
   .grid-3 {
     grid-template-columns: 1fr;
   }

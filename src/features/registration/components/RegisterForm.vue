@@ -319,7 +319,7 @@ async function submit() {
           title="Empresa"
           desc="Datos fiscales y ubicación del centro veterinario."
         />
-        <div class="reg-fields">
+        <div class="reg-fields ds-stack">
           <div class="reg-grid-2">
             <AuthField label="Tipo de documento" required>
               <AuthSelect v-model="form.documentType" :options="docTypeOptions" />
@@ -460,7 +460,7 @@ async function submit() {
           title="Usuario administrador"
           desc="La persona que gestionará la cuenta."
         />
-        <div class="reg-fields">
+        <div class="reg-fields ds-stack">
           <AuthField
             label="Nombre completo"
             required
@@ -592,8 +592,6 @@ async function submit() {
 }
 
 .reg-fields {
-  display: flex;
-  flex-direction: column;
   gap: 15px;
   margin-top: 18px;
 }

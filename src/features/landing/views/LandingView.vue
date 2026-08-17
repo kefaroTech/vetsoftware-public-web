@@ -29,7 +29,7 @@ const trust = [
 </script>
 
 <template>
-  <div ref="stage" class="pub-scope land-stage" @mousemove="onMove">
+  <div ref="stage" class="pub-scope land-stage ds-stack" @mousemove="onMove">
     <div class="land-glow" :style="{ background: glow }" />
     <div
       class="pub-blob pub-drift"
@@ -76,7 +76,7 @@ const trust = [
       </RouterLink>
     </header>
 
-    <main class="land-main">
+    <main class="land-main ds-stack">
       <div class="land-eyebrow pub-reveal" style="animation-delay: 0.05s">
         <v-icon size="13">mdi-star-four-points-outline</v-icon> Plataforma de gestión veterinaria
       </div>
@@ -91,10 +91,10 @@ const trust = [
         segura. Comienza en segundos.
       </p>
 
-      <div class="land-cards pub-reveal" style="animation-delay: 0.28s">
+      <div class="land-cards ds-grid-2 pub-reveal" style="animation-delay: 0.28s">
         <RouterLink
           :to="{ name: 'signup' }"
-          class="land-card land-card--primary"
+          class="land-card land-card--primary ds-stack"
           :class="{ 'is-active': hover === 'signup' }"
           @mouseenter="hover = 'signup'"
           @mouseleave="hover = ''"
@@ -113,7 +113,7 @@ const trust = [
 
         <RouterLink
           :to="{ name: 'login' }"
-          class="land-card land-card--secondary"
+          class="land-card land-card--secondary ds-stack"
           :class="{ 'is-active': hover === 'login' }"
           @mouseenter="hover = 'login'"
           @mouseleave="hover = ''"
@@ -154,8 +154,6 @@ const trust = [
   width: 100%;
   min-height: 100vh;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
   background: radial-gradient(ellipse at top, #f3e8ff 0%, #f5f1fa 48%, #ede8f4 100%);
   font-family: Inter, sans-serif;
   color: var(--pub-ink-900);
@@ -224,8 +222,6 @@ const trust = [
 .land-main {
   position: relative;
   flex: 1;
-  display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 12px 24px 8px;
@@ -273,8 +269,6 @@ const trust = [
 }
 
 .land-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 18px;
   margin-top: 40px;
   width: 100%;
@@ -286,8 +280,6 @@ const trust = [
   overflow: hidden;
   text-align: left;
   text-decoration: none;
-  display: flex;
-  flex-direction: column;
   padding: 24px 24px 22px;
   border-radius: 16px;
   transition:
@@ -467,10 +459,6 @@ const trust = [
 }
 
 @media (width <= 720px) {
-  .land-cards {
-    grid-template-columns: 1fr;
-  }
-
   .land-topbar,
   .land-footer {
     padding-left: 24px;

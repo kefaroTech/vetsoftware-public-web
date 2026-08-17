@@ -57,9 +57,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   <Teleport to="body">
     <Transition name="drawer">
       <div v-if="open && employee" class="drawer-root" role="dialog" aria-modal="true">
-        <aside class="drawer">
+        <aside class="drawer ds-stack">
           <header class="head" :style="headerStyle">
-            <button type="button" class="close" aria-label="Cerrar" @click="emit('close')">
+            <button
+              type="button"
+              class="close ds-hover-neutral"
+              aria-label="Cerrar"
+              @click="emit('close')"
+            >
               <X :size="15" :stroke-width="1.8" />
             </button>
 
@@ -70,10 +75,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
                 :active="employee.enabled"
                 :role-code="employee.roles[0]?.code ?? ''"
               />
-              <div class="head-info">
+              <div class="head-info ds-flex-fill">
                 <h2 class="name">{{ employee.name }}</h2>
-                <div class="code">{{ employee.employeeCode }}</div>
-                <div class="pills">
+                <div class="code ds-meta-dark">{{ employee.employeeCode }}</div>
+                <div class="pills ds-flex-row">
                   <template v-if="employee.roles.length > 0">
                     <RolePill
                       v-for="r in employee.roles"
@@ -83,7 +88,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
                       size="lg"
                     />
                   </template>
-                  <span v-else class="no-role">Sin rol asignado</span>
+                  <span v-else class="no-role ds-meta ds-meta--sm">Sin rol asignado</span>
                   <StatusPill
                     :active="employee.enabled"
                     :invited="employee.status === 'INVITED'"
@@ -102,7 +107,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
             <button
               v-if="isInvited && canUpdate"
               type="button"
-              class="ds-btn ds-btn--ghost ds-btn--snug accent"
+              class="ds-btn ds-btn--ghost ds-btn--snug accent ds-tone--accent-soft"
               :disabled="busy"
               title="Enviar de nuevo la invitación con una nueva contraseña provisional"
               @click="emit('resend-invitation', employee)"
@@ -155,7 +160,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               <Building2 :size="14" :stroke-width="1.7" />
               Cambiar sedes
             </button>
-            <div class="spacer" />
+            <div class="ds-flex-fill" />
             <span
               v-if="canUpdate && employee.enabled && isAdmin"
               class="admin-lock"
@@ -168,6 +173,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               v-else-if="canUpdate && employee.enabled"
               type="button"
               class="danger"
+              :class="{ 'ds-is-disabled--60': busy }"
               :disabled="busy"
               @click="emit('deactivate', employee)"
             >
@@ -211,8 +217,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   background: var(--warm-50);
   border-left: 1px solid var(--warm-200);
   box-shadow: -20px 0 60px -20px oklch(20% 0.05 var(--hue) / 25%);
-  display: flex;
-  flex-direction: column;
 }
 
 .drawer-enter-active,
@@ -257,11 +261,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   transition: background 0.12s ease;
 }
 
-.close:hover {
-  background: var(--warm-100);
-  color: var(--warm-900);
-}
-
+/* El hover del cerrar es `.ds-hover-neutral` (primitives.css): pesa (0,3,0) y
+   por tanto le gana al fondo/color en reposo de `.close`. */
 .head-row {
   display: flex;
   align-items: flex-start;
@@ -269,8 +270,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 }
 
 .head-info {
-  flex: 1;
-  min-width: 0;
   padding-top: 4px;
 }
 
@@ -285,23 +284,18 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   overflow-wrap: anywhere;
 }
 
+/* Color y tamaño vienen de `.ds-meta-dark`. */
 .code {
-  font-size: 13px;
-  color: var(--warm-600);
   margin-top: 4px;
 }
 
 .pills {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
   flex-wrap: wrap;
-  align-items: center;
+  margin-top: 12px;
 }
 
+/* Color y tamaño vienen de `.ds-meta` + `.ds-meta--sm`. */
 .no-role {
-  font-size: 12.5px;
-  color: var(--warm-500);
   font-style: italic;
 }
 
@@ -321,10 +315,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   flex-wrap: wrap;
 }
 
-.spacer {
-  flex: 1;
-}
-
 /* El fantasma y el primario usan `.ds-btn` (primitives.css); este destructivo
    se queda local por su borde del mismo tono que el texto. */
 .danger {
@@ -339,11 +329,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   border: 1px solid transparent;
 }
 
+/* Fondo y color son `.ds-tone--accent-soft`; el peso ya lo pone `.ds-btn`. */
 .accent {
-  color: var(--amatista-700);
   border-color: var(--amatista-200, oklch(88% 0.05 300deg));
-  background: var(--amatista-50);
-  font-weight: 500;
 }
 
 .accent:hover:not(:disabled) {
@@ -361,9 +349,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   background: oklch(91% 0.07 25deg);
 }
 
+/* La opacidad la pone `.ds-is-disabled--60` desde el template; el cursor no
+   puede, porque `.danger` ya declara `cursor:pointer` a (0,2,0). */
 .danger:disabled {
   cursor: not-allowed;
-  opacity: 0.6;
 }
 
 .admin-lock {

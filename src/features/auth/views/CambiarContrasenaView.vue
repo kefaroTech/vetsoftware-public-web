@@ -71,7 +71,7 @@ async function submit() {
           <AuthBanner tone="error" @close="submitError = null">{{ submitError }}</AuthBanner>
         </div>
 
-        <div class="cp-fields">
+        <div class="ds-stack ds-stack--14">
           <AuthField label="Nueva contraseña" required :error="err('password')">
             <AuthInput
               v-model="form.password"
@@ -110,12 +110,6 @@ async function submit() {
 <style scoped>
 .cp-banner {
   margin-bottom: 20px;
-}
-
-.cp-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
 }
 
 .logout-link {
