@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { Bug, PawPrint } from 'lucide-vue-next'
+import { Bug } from 'lucide-vue-next'
 import ModalShell from '@/components/ui/ModalShell.vue'
 import BaseField from '@/components/ui/BaseField.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -8,8 +8,9 @@ import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import DateInput from '@/components/ui/DateInput.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
+import PatientFixedCard from '../components/PatientFixedCard.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
-import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
+import { todayISO } from '@/composables/format'
 import { dewormingApi } from '@/features/dashboard/views/consulta/nueva/api/deworming.api'
 import type { DewormingResponse } from '@/features/dashboard/views/consulta/nueva/types/deworming.types'
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
@@ -158,25 +159,9 @@ async function save() {
       >
         <PatientCascadePicker v-model="patientId" :invalid="!!err('patient')" />
       </BaseField>
-      <div v-else-if="isEdit && initial" class="patient-fixed">
-        <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
-        <div class="info">
-          <div class="name">{{ initial.animal.name }}</div>
-          <div class="meta">{{ initial.animal.code }}</div>
-        </div>
-      </div>
-      <div v-else-if="preSelectedAnimal" class="patient-fixed">
-        <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
-        <div class="info">
-          <div class="name">{{ preSelectedAnimal.name }}</div>
-          <div class="meta">
-            {{ preSelectedAnimal.specie.name }} · {{ preSelectedAnimal.breed.name }}
-            <span v-if="preSelectedAnimal.owner"> · {{ preSelectedAnimal.owner.name }}</span>
-          </div>
-        </div>
-      </div>
+      <PatientFixedCard v-else :summary="initial?.animal" :animal="preSelectedAnimal" />
 
-      <div class="grid">
+      <div class="ds-grid-2 form-grid">
         <BaseField label="Fecha" required>
           <DateInput v-model="draft.date" />
         </BaseField>
@@ -199,7 +184,7 @@ async function save() {
         <BaseField label="Próximo control">
           <DateInput v-model="draft.nextControl" />
         </BaseField>
-        <BaseField label="Observaciones" class="full">
+        <BaseField label="Observaciones" class="ds-grid-span">
           <BaseTextarea v-model="draft.observations" :rows="2" />
         </BaseField>
       </div>
@@ -227,49 +212,15 @@ async function save() {
 </template>
 
 <style scoped>
-.patient-fixed {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--warm-100);
-  border: 1px solid var(--warm-200);
-  border-radius: 9px;
-  padding: 10px 12px;
-}
-
-.patient-fixed .paw {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
-  display: grid;
-  place-items: center;
-}
-
-.patient-fixed .name {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-900);
-}
-
-.patient-fixed .meta {
-  font-size: 11.5px;
-  color: var(--warm-500);
-  margin-top: 2px;
-}
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 16px;
+/* Solo el hueco superior y el corte a 1 columna: el resto de la rejilla
+   (columnas y gap) lo pone `.ds-grid-2`. El corte propio va a 760px, no a los
+   640px de la primitiva, porque estos formularios viven en un modal de 820px. */
+.form-grid {
   margin-top: 14px;
-}
-.grid .full {
-  grid-column: 1 / -1;
 }
 
 @media (width <= 760px) {
-  .grid {
+  .form-grid {
     grid-template-columns: 1fr;
   }
 }

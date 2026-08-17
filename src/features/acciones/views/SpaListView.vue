@@ -17,8 +17,7 @@ import { spaApi } from '@/features/dashboard/views/consulta/nueva/api/spa.api'
 import type { SpaResponse } from '@/features/dashboard/views/consulta/nueva/types/spa.types'
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import type { Owner } from '@/types/domain'
-import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
-
+import { formatDateShort } from '@/composables/format'
 const { can } = useAuthorization()
 const toast = useToast()
 const canCreate = can(PERMISSIONS.SPA_CREATE)
@@ -170,8 +169,8 @@ async function onConfirmDelete() {
           <tr class="clickable-row" @click="onRowClick(item)">
             <td>{{ formatDateShort(item.date) }}</td>
             <td>{{ item.spaType.name }}</td>
-            <td class="truncate">{{ item.reason || '—' }}</td>
-            <td class="truncate">{{ item.details || '—' }}</td>
+            <td class="truncate ds-truncate">{{ item.reason || '—' }}</td>
+            <td class="truncate ds-truncate">{{ item.details || '—' }}</td>
             <td v-if="canUpdate || canDelete" class="ds-actions">
               <button
                 v-if="canUpdate"
@@ -231,11 +230,9 @@ async function onConfirmDelete() {
 </template>
 
 <style scoped>
+/* El recorte lo pone `.ds-truncate`; aquí solo el ancho de esta columna. */
 .truncate {
   max-width: 240px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .actions-col {
   width: 88px;

@@ -2,7 +2,7 @@
 import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import { nextRowUid } from '@/composables/rowUid'
 import { computed, reactive, ref, watch } from 'vue'
-import { Beaker, Check, PawPrint, Plus, X, AlertTriangle } from 'lucide-vue-next'
+import { Beaker, Check, Plus, X, AlertTriangle } from 'lucide-vue-next'
 import ModalShell from '@/components/ui/ModalShell.vue'
 import BaseField from '@/components/ui/BaseField.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -11,10 +11,11 @@ import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import DateInput from '@/components/ui/DateInput.vue'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
+import PatientFixedCard from '../components/PatientFixedCard.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { useBranches } from '@/features/branches/composables/useBranches'
 import { useTestTypes } from '@/features/laboratory-test-types/composables/useLaboratoryTestTypes'
-import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
+import { todayISO } from '@/composables/format'
 import { laboratoryTestApi } from '@/features/dashboard/views/consulta/nueva/api/laboratoryTest.api'
 import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
@@ -312,23 +313,7 @@ async function doSave() {
         >
           <PatientCascadePicker v-model="patientId" :invalid="!!err('patient')" />
         </BaseField>
-        <div v-else-if="isEdit && initial" class="patient-fixed">
-          <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
-          <div class="info">
-            <div class="name">{{ initial.animal.name }}</div>
-            <div class="meta">{{ initial.animal.code }}</div>
-          </div>
-        </div>
-        <div v-else-if="preSelectedAnimal" class="patient-fixed">
-          <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
-          <div class="info">
-            <div class="name">{{ preSelectedAnimal.name }}</div>
-            <div class="meta">
-              {{ preSelectedAnimal.specie.name }} · {{ preSelectedAnimal.breed.name }}
-              <span v-if="preSelectedAnimal.owner"> · {{ preSelectedAnimal.owner.name }}</span>
-            </div>
-          </div>
-        </div>
+        <PatientFixedCard v-else :summary="initial?.animal" :animal="preSelectedAnimal" />
 
         <BaseField label="Fecha" required>
           <DateInput v-model="draft.date" />
@@ -382,7 +367,7 @@ async function doSave() {
                   :invalid="!!rowErr(i, 'quantity')"
                 />
               </BaseField>
-              <BaseField label="Observaciones" :error="rowErr(i, 'diagnosis')" class="full">
+              <BaseField label="Observaciones" :error="rowErr(i, 'diagnosis')" class="ds-grid-span">
                 <BaseTextarea
                   v-model="row.diagnosis"
                   :rows="2"
@@ -494,38 +479,6 @@ async function doSave() {
   font-weight: 600;
 }
 
-.patient-fixed {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--warm-100);
-  border: 1px solid var(--warm-200);
-  border-radius: 9px;
-  padding: 10px 12px;
-}
-
-.patient-fixed .paw {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: var(--amatista-100);
-  color: var(--amatista-700);
-  display: grid;
-  place-items: center;
-}
-
-.patient-fixed .name {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-900);
-}
-
-.patient-fixed .meta {
-  font-size: 11.5px;
-  color: var(--warm-500);
-  margin-top: 2px;
-}
-
 .rows {
   display: flex;
   flex-direction: column;
@@ -577,10 +530,6 @@ async function doSave() {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px 16px;
-}
-
-.row-grid .full {
-  grid-column: 1 / -1;
 }
 
 @media (width <= 760px) {

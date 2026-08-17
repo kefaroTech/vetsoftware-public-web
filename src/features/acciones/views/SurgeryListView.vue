@@ -17,8 +17,7 @@ import { surgeryApi } from '@/features/dashboard/views/consulta/nueva/api/surger
 import type { SurgeryResponse } from '@/features/dashboard/views/consulta/nueva/types/surgery.types'
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import type { Owner } from '@/types/domain'
-import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
-
+import { formatDateShort } from '@/composables/format'
 const { can } = useAuthorization()
 const toast = useToast()
 const canCreate = can(PERMISSIONS.SURGERY_CREATE)
@@ -171,8 +170,8 @@ async function onConfirmDelete() {
           <tr class="clickable-row" @click="onRowClick(item)">
             <td>{{ formatDateShort(item.date) }}</td>
             <td>{{ item.surgeryType.name }}</td>
-            <td class="ellipsis">{{ item.description }}</td>
-            <td class="ellipsis">{{ item.complications || '—' }}</td>
+            <td class="ellipsis ds-truncate">{{ item.description }}</td>
+            <td class="ellipsis ds-truncate">{{ item.complications || '—' }}</td>
             <td v-if="canUpdate || canDelete" class="ds-actions">
               <button
                 v-if="canUpdate"
@@ -232,11 +231,9 @@ async function onConfirmDelete() {
 </template>
 
 <style scoped>
+/* El recorte lo pone `.ds-truncate`; aquí solo el ancho de esta columna. */
 .ellipsis {
   max-width: 240px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .actions-col {
   width: 88px;

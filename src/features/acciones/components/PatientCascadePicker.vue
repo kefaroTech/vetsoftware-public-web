@@ -287,9 +287,9 @@ watch(
             @click="pickOwner(o)"
           >
             <div class="avatar"><User :size="14" :stroke-width="1.7" /></div>
-            <div class="info">
-              <div class="name">{{ o.name }}</div>
-              <div class="meta">{{ o.document }} · {{ o.phone }}</div>
+            <div class="ds-flex-fill">
+              <div class="name ds-item-label">{{ o.name }}</div>
+              <div class="ds-hint ds-hint--spaced">{{ o.document }} · {{ o.phone }}</div>
             </div>
           </button>
         </div>
@@ -305,7 +305,7 @@ watch(
         <div class="picked-line">
           <div class="badge"><User :size="13" :stroke-width="1.7" /></div>
           <div>
-            <div class="picked-name">{{ selectedOwner.name }}</div>
+            <div class="picked-name ds-item-label">{{ selectedOwner.name }}</div>
             <div class="picked-meta">{{ selectedOwner.document }}</div>
           </div>
         </div>
@@ -354,9 +354,9 @@ watch(
               @click="pickAnimal(a)"
             >
               <div class="paw"><PawPrint :size="14" :stroke-width="1.7" /></div>
-              <div class="info">
-                <div class="name">{{ a.name }}</div>
-                <div class="meta">{{ a.specie.name }} · {{ a.breed.name }}</div>
+              <div class="ds-flex-fill">
+                <div class="name ds-item-label">{{ a.name }}</div>
+                <div class="ds-hint ds-hint--spaced">{{ a.specie.name }} · {{ a.breed.name }}</div>
               </div>
             </button>
           </div>
@@ -495,22 +495,10 @@ watch(
   height: 24px;
 }
 
-.info {
-  min-width: 0;
-  flex: 1;
-}
-
-.name {
-  font-size: 13px;
-  color: var(--warm-900);
-  font-weight: 500;
+/* Único añadido sobre `.ds-item-label`: estas dos fichas aprietan la línea. */
+.name,
+.picked-name {
   line-height: 1.2;
-}
-
-.meta {
-  font-size: 11.5px;
-  color: var(--warm-500);
-  margin-top: 2px;
 }
 
 /* Estado vacío con CTA de creación */
@@ -589,13 +577,7 @@ watch(
   gap: 10px;
 }
 
-.picked-name {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-900);
-  line-height: 1.2;
-}
-
+/* 11px, no los 11.5px de `.ds-hint`: es el dato más pequeño de la pantalla. */
 .picked-meta {
   font-size: 11px;
   color: var(--warm-500);

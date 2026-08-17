@@ -19,8 +19,7 @@ import { laboratoryTestApi } from '@/features/dashboard/views/consulta/nueva/api
 import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import type { Owner } from '@/types/domain'
-import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
-
+import { formatDateShort } from '@/composables/format'
 const { can } = useAuthorization()
 const toast = useToast()
 const canCreate = can(PERMISSIONS.LABORATORY_TEST_CREATE)
@@ -183,7 +182,7 @@ async function onConfirmDelete() {
             <td>{{ formatDateShort(item.date) }}</td>
             <td>{{ item.testType.name }}</td>
             <td>{{ item.quantity }}</td>
-            <td class="ellipsis">{{ item.diagnosis }}</td>
+            <td class="ellipsis ds-truncate">{{ item.diagnosis }}</td>
             <td><LabStatusPill :status="item.status" /></td>
             <td v-if="canUpdate || canDelete" class="ds-actions">
               <button
@@ -247,11 +246,9 @@ async function onConfirmDelete() {
 </template>
 
 <style scoped>
+/* El recorte lo pone `.ds-truncate`; aquí solo el ancho de esta columna. */
 .ellipsis {
   max-width: 280px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .actions-col {
   width: 88px;
