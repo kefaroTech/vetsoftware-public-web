@@ -73,7 +73,9 @@ function download(format: 'csv' | 'pdf') {
 }
 
 function diffClass(diff: number): string {
-  return diff === 0 ? '' : diff > 0 ? 'pos' : 'neg'
+  // Devuelve el nombre de la primitiva de signo (`primitives.css`), no una
+  // clase local: el par color+peso del importe ya vive en la capa 2.
+  return diff === 0 ? '' : diff > 0 ? 'ds-amount--pos' : 'ds-amount--neg'
 }
 </script>
 
@@ -99,16 +101,16 @@ function diffClass(diff: number): string {
           <thead>
             <tr>
               <th>Medio</th>
-              <th class="num">Esperado</th>
-              <th class="num">Contado</th>
-              <th class="num">Diferencia</th>
+              <th class="ds-num">Esperado</th>
+              <th class="ds-num">Contado</th>
+              <th class="ds-num">Diferencia</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="t in rows" :key="t.method">
               <td>{{ methodLabel(t.method) }}</td>
-              <td class="num">{{ formatMoney(t.expectedAmount) }}</td>
-              <td class="num">
+              <td class="ds-num">{{ formatMoney(t.expectedAmount) }}</td>
+              <td class="ds-num">
                 <BaseInput
                   v-model="counted[t.method]"
                   class="count-input"
@@ -116,7 +118,7 @@ function diffClass(diff: number): string {
                   placeholder="0"
                 />
               </td>
-              <td class="num" :class="diffClass(differenceOf(t.method))">
+              <td class="ds-num" :class="diffClass(differenceOf(t.method))">
                 {{ formatMoney(differenceOf(t.method)) }}
               </td>
             </tr>
@@ -124,9 +126,9 @@ function diffClass(diff: number): string {
           <tfoot>
             <tr>
               <td>Total</td>
-              <td class="num">{{ formatMoney(totalExpected) }}</td>
-              <td class="num">{{ formatMoney(totalCounted) }}</td>
-              <td class="num" :class="diffClass(totalDifference)">
+              <td class="ds-num">{{ formatMoney(totalExpected) }}</td>
+              <td class="ds-num">{{ formatMoney(totalCounted) }}</td>
+              <td class="ds-num" :class="diffClass(totalDifference)">
                 {{ formatMoney(totalDifference) }}
               </td>
             </tr>
@@ -220,23 +222,14 @@ function diffClass(diff: number): string {
   border-top: 2px solid var(--warm-300);
 }
 
-.num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
 .count-input {
   max-width: 140px;
   margin-left: auto;
 }
 
-.pos {
-  color: #2f7d4f;
-  font-weight: 600;
-}
-
-.neg {
-  color: #b4453a;
+/* Ver `CashMovementsTable`: la primitiva del negativo es sólo color y aquí el
+   arqueo también lo pone en semibold. */
+.ds-amount--neg {
   font-weight: 600;
 }
 

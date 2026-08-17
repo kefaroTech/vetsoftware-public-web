@@ -33,24 +33,24 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <aside class="ticket">
-    <header class="ticket-head">
+  <aside class="ticket ds-stack">
+    <header class="ticket-head ds-item-label ds-item-label--lg">
       <Receipt :size="17" :stroke-width="1.7" />
       <span>Ticket de venta</span>
     </header>
 
-    <button type="button" class="customer" @click="emit('toggleCustomer')">
+    <button type="button" class="customer ds-flex-row" @click="emit('toggleCustomer')">
       <User :size="14" :stroke-width="1.7" />
       <span>{{ customer ? customer.name : 'Asociar propietario (opcional)' }}</span>
       <X v-if="customer" :size="13" :stroke-width="1.8" class="cust-x" />
     </button>
 
-    <div class="lines">
-      <div v-if="lines.length === 0" class="lines-empty">
+    <div class="lines ds-stack">
+      <div v-if="lines.length === 0" class="lines-empty ds-stack ds-stack--10">
         <Receipt :size="26" :stroke-width="1.4" />
         <span>Agrega productos o servicios</span>
       </div>
-      <div v-for="l in lines" :key="`${l.kind}-${l.id}`" class="line">
+      <div v-for="l in lines" :key="`${l.kind}-${l.id}`" class="line ds-flex-row">
         <div class="ds-flex-fill">
           <div class="ds-item-label">
             <span v-if="l.kind === 'service'" class="line-tag">Servicio</span>{{ l.name }}
@@ -81,7 +81,7 @@ const emit = defineEmits<{
       </div>
     </div>
 
-    <div class="summary">
+    <div class="summary ds-stack">
       <div class="srow">
         <span>Subtotal (IVA incl.)</span><span>{{ formatMoney(grossSubtotal) }}</span>
       </div>
@@ -97,7 +97,13 @@ const emit = defineEmits<{
       <div class="srow grand">
         <span>Total</span><span>{{ formatMoney(total) }}</span>
       </div>
-      <button type="button" class="charge" :disabled="chargeDisabled" @click="emit('charge')">
+      <button
+        type="button"
+        class="charge"
+        :class="{ 'ds-is-disabled': chargeDisabled }"
+        :disabled="chargeDisabled"
+        @click="emit('charge')"
+      >
         Cobrar {{ formatMoney(total) }}
       </button>
     </div>
@@ -105,26 +111,27 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
+/* La columna es `.ds-stack` (primitives.css). NO es `.ds-card`: la tarjeta del
+   sistema trae padding propio y el ticket pinta sus secciones a sangre, con las
+   separaciones puestas por los bordes internos de cada bloque. */
 .ticket {
   position: sticky;
   top: 12px;
-  display: flex;
-  flex-direction: column;
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 14px;
   overflow: hidden;
 }
 
+/* El par color+tamaño+peso es `.ds-item-label ds-item-label--lg`; el `gap: 9px`
+   no es ninguna de las dos variantes catalogadas (8/12) de `.ds-flex-row`, así
+   que la fila se queda local para no dejar una regla compitiendo con ella. */
 .ticket-head {
   display: flex;
   align-items: center;
   gap: 9px;
   padding: 15px 18px;
   border-bottom: 1px solid var(--warm-200);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--warm-900);
 }
 
 .ticket-head svg {
@@ -132,9 +139,6 @@ const emit = defineEmits<{
 }
 
 .customer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   width: 100%;
   padding: 11px 18px;
   border: none;
@@ -158,19 +162,17 @@ const emit = defineEmits<{
   flex: 1;
   overflow-y: auto;
   padding: 8px;
-  display: flex;
-  flex-direction: column;
   gap: 4px;
   max-height: 360px;
 }
 
+/* NO es `.ds-empty`: aquí el gris es `warm-400` (un escalón más claro que el
+   `--text-subtle` de la primitiva) y el aire es 40/20, no 32. Sólo se comparte
+   la columna centrada, que sí es `.ds-stack ds-stack--10`. */
 .lines-empty {
   flex: 1;
-  display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
   color: var(--warm-400);
   font-size: 13px;
   padding: 40px 20px;
@@ -178,9 +180,6 @@ const emit = defineEmits<{
 }
 
 .line {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 9px 10px;
   border-radius: 9px;
 }
@@ -276,8 +275,6 @@ const emit = defineEmits<{
 .summary {
   border-top: 1px solid var(--warm-200);
   padding: 14px 18px;
-  display: flex;
-  flex-direction: column;
   gap: 7px;
 }
 
@@ -315,13 +312,12 @@ const emit = defineEmits<{
   cursor: pointer;
 }
 
+/* El apagado es `.ds-is-disabled`, atado al mismo booleano que el atributo
+   nativo. NO se migra a `.ds-btn--primary`: la primitiva lleva borde de 1px y
+   este botón va a `border: none`, así que heredarla le añadiría 2px de alto al
+   CTA más visible del punto de venta. */
 .charge:hover:not(:disabled) {
   filter: brightness(1.05);
-}
-
-.charge:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 @media (width <= 760px) {

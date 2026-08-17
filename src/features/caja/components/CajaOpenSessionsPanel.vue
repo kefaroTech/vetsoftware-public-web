@@ -42,7 +42,7 @@ const emit = defineEmits<{ open: [session: CashSessionView] }>()
           <th>Apertura</th>
           <th>Duración</th>
           <th>Abrió</th>
-          <th class="num">Base</th>
+          <th class="ds-num">Base</th>
           <th>Acción</th>
         </tr>
       </thead>
@@ -61,7 +61,7 @@ const emit = defineEmits<{ open: [session: CashSessionView] }>()
           <td class="employee">
             {{ employeeLabel(session.openedByEmployeeName, session.openedByEmployeeId) }}
           </td>
-          <td class="num">{{ formatMoney(session.openingFloat) }}</td>
+          <td class="ds-num">{{ formatMoney(session.openingFloat) }}</td>
           <td>
             <CashLinkButton @click="emit('open', session)">
               {{ session.id === myOpenSessionId ? 'Ver mi caja' : 'Ver caja' }}

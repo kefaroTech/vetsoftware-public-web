@@ -110,7 +110,7 @@ async function submit() {
   >
     <template #body>
       <div v-if="saveError" class="ds-banner ds-banner--error">{{ saveError }}</div>
-      <div class="form">
+      <div class="ds-stack ds-stack--16">
         <BaseField label="Nombre" required :error="err('name')">
           <template #default="{ id }">
             <BaseInput
@@ -161,11 +161,6 @@ async function submit() {
 </template>
 
 <style scoped>
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
 .note {
   margin: 0;
   font-size: 12.5px;

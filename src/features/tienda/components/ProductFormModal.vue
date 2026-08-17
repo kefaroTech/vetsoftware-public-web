@@ -245,7 +245,7 @@ async function submit() {
   >
     <template #body>
       <div v-if="saveError" class="ds-banner ds-banner--error">{{ saveError }}</div>
-      <div class="grid">
+      <div class="grid ds-grid-2">
         <BaseField label="Nombre" required :error="err('name')" class="ds-grid-span">
           <template #default="{ id }">
             <BaseInput
@@ -349,15 +349,16 @@ async function submit() {
 </template>
 
 <style scoped>
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px 20px;
-}
+/* La rejilla y su `@media` de colapso son `.ds-grid-2` (primitives.css), que
+   conserva las DOS columnas exactas y sólo mueve el punto de colapso (640px en
+   la primitiva, 760 aquí). Sólo queda el hueco como residuo.
 
-@media (width <= 760px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
+   NO es `.ds-grid-auto`: `ModalShell` ignora la prop `width` salvo en modo
+   `compact` (ver su `cardWidth`), así que este modal no mide 680px sino ~90vw.
+   Con columnas de 240px mínimo, en un cuerpo de ~1500px caben seis pistas y
+   `auto-fit` sólo colapsa las VACÍAS: el formulario pasaría de 2 columnas a una
+   sola fila de cinco campos. */
+.grid {
+  gap: 18px 20px;
 }
 </style>

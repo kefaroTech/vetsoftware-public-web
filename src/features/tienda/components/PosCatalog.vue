@@ -42,8 +42,8 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <section class="catalog">
-    <div class="catalog-head">
+  <section class="catalog ds-stack">
+    <div class="catalog-head ds-stack">
       <div class="modetabs">
         <button
           type="button"
@@ -101,10 +101,10 @@ const emit = defineEmits<{
     </div>
 
     <div class="grid">
-      <div v-if="mode === 'paquete'" class="grid-empty ds-grid-span">
+      <div v-if="mode === 'paquete'" class="grid-empty ds-grid-span ds-empty">
         El backend aún no soporta paquetes.
       </div>
-      <div v-else-if="cards.length === 0" class="grid-empty ds-grid-span">
+      <div v-else-if="cards.length === 0" class="grid-empty ds-grid-span ds-empty">
         {{
           mode === 'producto' ? 'Sin productos para el filtro.' : 'Sin servicios para el filtro.'
         }}
@@ -113,7 +113,7 @@ const emit = defineEmits<{
         v-for="c in cards"
         :key="`${mode}-${c.id}`"
         type="button"
-        class="pcard"
+        class="pcard ds-stack ds-stack--8"
         @click="emit('add', c)"
       >
         <span v-if="c.promoName" class="promo-badge">Promo</span>
@@ -141,15 +141,14 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
+/* Las dos columnas son `.ds-stack` (primitives.css); 12px no es ninguno de los
+   cinco huecos catalogados, así que el `gap` se queda aquí — la primitiva base
+   no declara ninguno, de modo que no hay dos reglas compitiendo. */
 .catalog {
-  display: flex;
-  flex-direction: column;
   min-height: 0;
 }
 
 .catalog-head {
-  display: flex;
-  flex-direction: column;
   gap: 12px;
   margin-bottom: 14px;
 }
@@ -223,6 +222,8 @@ const emit = defineEmits<{
   cursor: pointer;
 }
 
+/* NO es `.ds-hover-accent`: esa primitiva tiñe fondo, borde y texto a la vez, y
+   aquí la píldora de categoría sólo oscurece el contorno. */
 .cat:hover {
   border-color: var(--amatista-300);
 }
@@ -234,6 +235,9 @@ const emit = defineEmits<{
   font-weight: 500;
 }
 
+/* NO es `.ds-grid-auto`: la primitiva reparte columnas de 240px como mínimo y
+   estas tarjetas de producto miden 160. Con la primitiva el catálogo pasaría de
+   5-6 columnas a 3-4 al mismo ancho. */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -241,18 +245,16 @@ const emit = defineEmits<{
   align-content: start;
 }
 
+/* `.ds-empty` pone el color y el centrado; el aire de esta rejilla es 28/14 en
+   vez de 32, y sobrescribir el `padding` de la primitiva por su propio nombre
+   es el patrón que `primitives.css` documenta como deliberado. */
 .grid-empty {
   padding: 28px 14px;
-  text-align: center;
-  color: var(--warm-500);
   font-size: 13px;
 }
 
 .pcard {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 12px;

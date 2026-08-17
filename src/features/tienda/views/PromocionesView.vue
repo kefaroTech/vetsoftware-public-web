@@ -140,7 +140,7 @@ async function onConfirmDelete() {
 </script>
 
 <template>
-  <div class="page">
+  <div class="ds-page">
     <PageHeader
       kicker="Tienda"
       title="Promociones"
@@ -185,7 +185,7 @@ async function onConfirmDelete() {
           <th>Valor</th>
           <th>Vigencia</th>
           <th>Estado</th>
-          <th v-if="canUpdate || canDelete" class="actions-col">Acciones</th>
+          <th v-if="canUpdate || canDelete" class="ds-col-actions">Acciones</th>
         </tr>
       </template>
       <template #row="{ item }">
@@ -195,7 +195,7 @@ async function onConfirmDelete() {
             <span class="typepill">{{ TYPE_LABEL[item.promotionType] }}</span>
           </td>
           <td>{{ APP_LABEL[item.applicationType] }}</td>
-          <td class="truncate">{{ targetName(item) }}</td>
+          <td class="truncate ds-truncate">{{ targetName(item) }}</td>
           <td>{{ valueLabel(item) }}</td>
           <td class="dates">{{ vigencia(item) }}</td>
           <td><PromoStatusPill :status="promoStatus(item, today)" /></td>
@@ -256,10 +256,8 @@ async function onConfirmDelete() {
 </template>
 
 <style scoped>
-.page {
-  font-family: var(--font-sans);
-  color: var(--warm-900);
-}
+/* El contenedor es `.ds-page` (primitives.css): coincidía en sus dos
+   declaraciones. */
 .alert {
   display: flex;
   align-items: center;
@@ -317,19 +315,19 @@ async function onConfirmDelete() {
   background: var(--amatista-100);
   color: var(--amatista-700);
 }
+
+/* El recorte es `.ds-truncate`; sólo queda el ancho máximo de esta columna. */
 .truncate {
   max-width: 200px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .dates {
   font-size: 12px;
   color: var(--warm-600);
   white-space: nowrap;
 }
-.actions-col {
-  width: 88px;
-  text-align: right;
-}
+
+/* `.actions-col` desapareció entera: es `.ds-col-actions`. Ojo, su
+   `text-align: right` ya era código muerto antes de migrar y lo sigue siendo:
+   `ListBody` declara `.table :deep(th) { text-align: left }`, que pesa (0,2,1)
+   y le gana. Lo que se ve —el ancho de 88px— no cambia. */
 </style>

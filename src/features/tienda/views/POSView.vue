@@ -284,7 +284,7 @@ function openFiscalPicker() {
     <template v-else>
       <div v-if="taxProfileMissing" class="banner warn">
         <AlertTriangle :size="18" class="warn-icon" />
-        <div class="warn-text">
+        <div class="warn-text ds-stack">
           <strong>Configura la identidad fiscal de tu empresa</strong>
           <span
             >Cada venta genera un documento (tiquete POS o factura) que debe llevar los datos
@@ -395,8 +395,6 @@ function openFiscalPicker() {
 }
 
 .banner.warn .warn-text {
-  display: flex;
-  flex-direction: column;
   gap: 2px;
   font-size: 13px;
   min-width: 0;
@@ -436,6 +434,11 @@ function openFiscalPicker() {
   color: oklch(50% 0.05 70deg);
 }
 
+/* NO es `.ds-grid-auto`: no son dos columnas iguales que colapsan, es el
+   armazón de la pantalla —catálogo elástico + ticket fijo de 380px—. La
+   primitiva repartiría el mismo ancho a los dos y el ticket se ensancharía
+   hasta la mitad de la vista. Sus dos `@media` son el estrechamiento del
+   ticket y el apilado, no un colapso de rejilla simétrica. */
 .pos {
   display: grid;
   grid-template-columns: 1fr 380px;

@@ -34,7 +34,7 @@ const openedAt = computed(() => props.detail && formatDateTime(props.detail.open
       <header class="detail-page-head">
         <div class="detail-title-wrap">
           <div>
-            <span class="detail-eyebrow">Mi caja abierta</span>
+            <span class="ds-kicker-accent ds-kicker-accent--snug">Mi caja abierta</span>
             <h1>{{ branchLabel(session.branchName, session.branchId) }}</h1>
             <p>Terminal {{ detail.terminal }}</p>
           </div>
@@ -44,7 +44,9 @@ const openedAt = computed(() => props.detail && formatDateTime(props.detail.open
 
       <div class="panel-head">
         <div>
-          <span class="opened">Desde {{ openedAt }} · terminal {{ detail.terminal }}</span>
+          <span class="ds-meta ds-meta--sm"
+            >Desde {{ openedAt }} · terminal {{ detail.terminal }}</span
+          >
         </div>
         <div class="panel-actions">
           <button
@@ -103,13 +105,8 @@ const openedAt = computed(() => props.detail && formatDateTime(props.detail.open
   gap: 20px;
 }
 
-.detail-eyebrow {
-  color: var(--amatista-700);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
+/* El rótulo de acento de marca es `.ds-kicker-accent ds-kicker-accent--snug`
+   (primitives.css): coincidía con la primitiva en sus cinco declaraciones. */
 
 .detail-title-wrap h1 {
   margin: 4px 0 2px;
@@ -139,11 +136,12 @@ const openedAt = computed(() => props.detail && formatDateTime(props.detail.open
   margin-bottom: 18px;
 }
 
-.opened {
-  font-size: 12.5px;
-  color: var(--warm-500);
-}
+/* El dato de apoyo de la cabecera es `.ds-meta ds-meta--sm` (primitives.css):
+   mismo warm-500 y mismos 12,5px. */
 
+/* NO es `.ds-flex-row`: la primitiva añade `align-items: center`, que esta fila
+   no declara. Con dos botones de la misma altura se vería igual, pero el
+   contrato es sustituir cuerpos idénticos, no parecidos. */
 .panel-actions {
   display: flex;
   gap: 8px;

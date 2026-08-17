@@ -194,10 +194,10 @@ function onFormClose() {
   <div class="ds-page">
     <header class="ds-head">
       <div>
-        <div class="kicker">Tienda · Inventario</div>
+        <div class="ds-kicker ds-kicker--spaced">Tienda · Inventario</div>
         <h1 class="ds-display">Inventario por sede</h1>
       </div>
-      <div class="head-actions">
+      <div class="head-actions ds-flex-row">
         <FilterSelect
           v-if="branches.hasBranches.value"
           v-model="branches.selectedValue.value"
@@ -397,19 +397,11 @@ function onFormClose() {
 /* El contenedor usa `.ds-page` y la cabecera `.ds-head` (primitives.css).
    Los filtros, las tablas y los avisos se fueron con sus componentes; aquí solo
    queda el CSS de la cabecera. */
-.kicker {
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--warm-500);
-  font-weight: 500;
-  margin-bottom: 6px;
-}
+
+/* El rótulo en versalitas es `.ds-kicker ds-kicker--spaced` y la fila de la
+   cabecera `.ds-flex-row` (primitives.css). */
 .head-actions {
-  display: flex;
-  gap: 8px;
   flex-shrink: 0;
-  align-items: center;
 }
 
 /* El selector de sede es un `FilterSelect` teñido: solo se queda el tinte, que

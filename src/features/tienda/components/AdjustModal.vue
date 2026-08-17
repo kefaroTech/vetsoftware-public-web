@@ -80,7 +80,7 @@ function submit() {
             { value: 'out', label: 'Salida (−)' },
           ]"
         />
-        <div class="grid">
+        <div class="ds-grid-2">
           <BaseField label="Cantidad" required :error="qtyError">
             <template #default="{ id }">
               <BaseInput
@@ -128,15 +128,13 @@ function submit() {
 .seg {
   align-self: flex-start;
 }
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 16px;
-}
 
-@media (width <= 560px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-}
+/* La rejilla es `.ds-grid-2` (primitives.css): coincidía con ella en las tres
+   declaraciones, incluido el hueco 14/16, así que no queda residuo. Sólo se
+   mueve el punto de colapso a móvil (640px en la primitiva, 560 aquí).
+
+   NO es `.ds-grid-auto`: `ModalShell` ignora la prop `width` fuera del modo
+   `compact`, así que el cuerpo no mide 480px sino ~90vw. Con el mínimo de 240px
+   de la primitiva se abrirían seis pistas y `auto-fit` sólo colapsa las vacías:
+   los dos campos quedarían en una fila de columnas estrechas. */
 </style>

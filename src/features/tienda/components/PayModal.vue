@@ -170,7 +170,7 @@ function confirm() {
     @close="emit('close')"
   >
     <template #body>
-      <div class="form">
+      <div class="ds-stack ds-stack--16">
         <div v-if="uvtUncertain" class="uvt-warn">
           No se pudieron cargar los parámetros fiscales (UVT). No es posible determinar si esta
           venta requiere factura electrónica; reintenta en un momento para cobrar este monto.
@@ -234,11 +234,7 @@ function confirm() {
 </template>
 
 <style scoped>
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+/* El cuerpo es `.ds-stack ds-stack--16` (primitives.css). */
 .uvt-warn {
   padding: 11px 14px;
   border-radius: 10px;

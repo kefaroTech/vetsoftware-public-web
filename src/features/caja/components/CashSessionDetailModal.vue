@@ -57,29 +57,29 @@ const emit = defineEmits<{ close: []; retry: [session: CashSessionView] }>()
 
       <div v-else-if="detail && summary" class="ds-stack ds-stack--18">
         <div class="cash-detail-grid">
-          <div class="cash-detail-field">
+          <div class="cash-detail-field ds-stack">
             <span class="cash-detail-label">Sede</span>
             <strong>{{ branchLabel(summary.branchName, detail.branchId) }}</strong>
           </div>
-          <div class="cash-detail-field">
+          <div class="cash-detail-field ds-stack">
             <span class="cash-detail-label">Terminal</span>
             <strong>{{ detail.terminal }}</strong>
           </div>
-          <div class="cash-detail-field">
+          <div class="cash-detail-field ds-stack">
             <span class="cash-detail-label">Estado</span>
             <CashStatusPill :status="detail.status" />
           </div>
-          <div class="cash-detail-field">
+          <div class="cash-detail-field ds-stack">
             <span class="cash-detail-label">Responsable</span>
             <strong>
               {{ employeeLabel(summary.openedByEmployeeName, detail.openedByEmployeeId) }}
             </strong>
           </div>
-          <div class="cash-detail-field">
+          <div class="cash-detail-field ds-stack">
             <span class="cash-detail-label">Apertura</span>
             <strong>{{ formatDateTime(detail.openedAt) }}</strong>
           </div>
-          <div class="cash-detail-field">
+          <div class="cash-detail-field ds-stack">
             <span class="cash-detail-label">Tiempo abierta</span>
             <strong>{{ formatDuration(detail.openedAt, detail.closedAt) }}</strong>
           </div>
@@ -124,6 +124,11 @@ const emit = defineEmits<{ close: []; retry: [session: CashSessionView] }>()
   margin: 0;
 }
 
+/* NO es `.ds-grid-auto` ni `.ds-grid-2`: son TRES columnas, y las dos primitivas
+   de rejilla del sistema son de dos. Además `ModalShell` ignora la prop `width`
+   fuera de `compact`, así que este cuerpo mide ~90vw: con el mínimo de 240px de
+   `auto-fit` el detalle de caja se abriría a seis columnas. La `@media` de
+   colapso se queda aquí con ella. */
 .cash-detail-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -136,8 +141,6 @@ const emit = defineEmits<{ close: []; retry: [session: CashSessionView] }>()
   border: 1px solid var(--warm-200);
   border-radius: 10px;
   background: var(--warm-50);
-  display: flex;
-  flex-direction: column;
   align-items: flex-start;
   justify-content: center;
   gap: 5px;
@@ -145,6 +148,10 @@ const emit = defineEmits<{ close: []; retry: [session: CashSessionView] }>()
   font-size: 13px;
 }
 
+/* NO es `.ds-label ds-label--xs`, aunque se le parezca: el tracking aquí es
+   .05em y el de la primitiva .04em. Es la misma familia con otro valor, no una
+   copia con deriva — el rótulo de `CajaHistoryPanel`, que sí es .04em, sí
+   migró. */
 .cash-detail-label {
   color: var(--warm-500);
   font-size: 10.5px;

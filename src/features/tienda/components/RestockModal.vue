@@ -58,7 +58,7 @@ function submit() {
     @close="emit('close')"
   >
     <template #body>
-      <div class="grid">
+      <div class="ds-grid-2">
         <BaseField label="Unidades a ingresar" required>
           <template #default="{ id }">
             <BaseInput :id="id" v-model="form.qty" inputmode="numeric" placeholder="12" />
@@ -99,15 +99,7 @@ function submit() {
 </template>
 
 <style scoped>
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 16px;
-}
-
-@media (width <= 560px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-}
+/* La rejilla es `.ds-grid-2` (primitives.css), igual que en `AdjustModal`: mismo
+   cuerpo exacto y mismo motivo para no usar `.ds-grid-auto` (los modales de este
+   repo miden ~90vw, no la prop `width`). */
 </style>

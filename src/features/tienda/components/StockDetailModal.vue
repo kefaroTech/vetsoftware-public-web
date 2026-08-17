@@ -164,8 +164,8 @@ watch(
           <tr>
             <th>Lote</th>
             <th>Vencimiento</th>
-            <th class="num">Disponible</th>
-            <th class="num">Costo unit.</th>
+            <th class="num ds-num">Disponible</th>
+            <th class="num ds-num">Costo unit.</th>
           </tr>
         </thead>
         <tbody>
@@ -178,8 +178,8 @@ watch(
           <tr v-for="l in lots" v-else :key="l.lotId">
             <td>{{ l.lotNumber || '—' }}</td>
             <td>{{ fmtDate(l.expireDate) }}</td>
-            <td class="num">{{ l.quantityAvailable }} u</td>
-            <td class="num">{{ formatMoney(l.unitCost) }}</td>
+            <td class="num ds-num">{{ l.quantityAvailable }} u</td>
+            <td class="num ds-num">{{ formatMoney(l.unitCost) }}</td>
           </tr>
         </tbody>
       </table>
@@ -193,8 +193,8 @@ watch(
               <th>Fecha</th>
               <th>Movimiento</th>
               <th>Origen</th>
-              <th class="num">Cantidad</th>
-              <th class="num">Costo unit.</th>
+              <th class="num ds-num">Cantidad</th>
+              <th class="num ds-num">Costo unit.</th>
               <th>Motivo</th>
             </tr>
           </thead>
@@ -209,10 +209,10 @@ watch(
               <td class="date">{{ fmtDateTime(m.createdDate) }}</td>
               <td>{{ movementLabel(m.type) }}</td>
               <td class="ref">{{ referenceLabel(m.referenceType) }}</td>
-              <td class="num" :class="m.quantity >= 0 ? 'in' : 'out'">
+              <td class="num ds-num" :class="m.quantity >= 0 ? 'in' : 'out'">
                 {{ m.quantity >= 0 ? '+' : '' }}{{ m.quantity }}
               </td>
-              <td class="num">{{ formatMoney(m.unitCost) }}</td>
+              <td class="num ds-num">{{ formatMoney(m.unitCost) }}</td>
               <td class="reason">{{ m.reason || '—' }}</td>
             </tr>
           </tbody>
@@ -249,11 +249,15 @@ watch(
    `primitives.css` (0,2,1), que le gana a `.ds-table--dense td` (0,1,1).
 
    `.table th.num { text-align: right }` desaparece con ella y no hace falta
-   reescribirla: existía sólo para ganarle a `.table th`, y `.num` (0,2,0 con el
-   `data-v`) ya pesa más que `.ds-table th` (0,1,1). */
+   reescribirla.
+
+   La cifra pasó a `.ds-num` (primitives.css), que es exactamente el par
+   `text-align: right` + `font-variant-numeric`. Los encabezados siguen
+   alineados a la derecha porque `primitives.css` trae la excepción
+   `.ds-table th.ds-num` (0,2,1), que le gana a `.ds-table th` (0,1,1); en las
+   celdas no compite nadie. Sólo se queda el `white-space`, que la primitiva no
+   declara, y con él los modificadores de signo `.num.in`/`.num.out`. */
 .num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .num.in {

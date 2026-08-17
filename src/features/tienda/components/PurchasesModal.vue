@@ -104,9 +104,9 @@ watch(
             <td>
               {{ r.productName }} <span class="sku">{{ r.productCode }}</span>
             </td>
-            <td class="num">{{ r.quantity }} u</td>
-            <td class="num">{{ formatMoney(r.unitCost) }}</td>
-            <td class="num total">{{ formatMoney(r.total) }}</td>
+            <td class="num ds-num">{{ r.quantity }} u</td>
+            <td class="num ds-num">{{ formatMoney(r.unitCost) }}</td>
+            <td class="num ds-num total">{{ formatMoney(r.total) }}</td>
           </tr>
         </tbody>
       </table>
@@ -134,11 +134,10 @@ watch(
    con ella. El `.ds-empty` del `<td colspan>` vacío lo resuelve la excepción
    `.ds-table td.ds-empty` de `primitives.css` (0,2,1), que le gana a
    `.ds-table--dense td` (0,1,1).
-   Ningún `<th>` lleva `.num` aquí, así que la cifra sigue
-   siendo cosa de las celdas de datos y `.num` no necesita reescritura. */
+   Ningún `<th>` lleva `.num` aquí, así que la cifra es sólo cosa de las celdas
+   de datos: son `.ds-num` (primitives.css) y de la regla local sólo sobrevive
+   el `white-space`, que la primitiva no declara. */
 .num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .total {

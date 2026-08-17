@@ -146,7 +146,7 @@ async function toggle(terminal: CashTerminal) {
       </div>
     </div>
 
-    <div v-if="loading" class="empty">Cargando terminales…</div>
+    <div v-if="loading" class="empty ds-empty">Cargando terminales…</div>
     <div v-else-if="terminals.length" class="terminal-grid">
       <article
         v-for="terminal in terminals"
@@ -155,14 +155,14 @@ async function toggle(terminal: CashTerminal) {
         :class="{ inactive: !terminal.active }"
       >
         <span class="terminal-icon"><MonitorSmartphone :size="18" :stroke-width="1.6" /></span>
-        <div class="terminal-info">
+        <div class="terminal-info ds-stack">
           <strong>{{ terminal.name }}</strong>
           <span>{{ terminal.code }}</span>
         </div>
         <span class="status" :class="terminal.active ? 'active' : 'off'">
           {{ terminal.active ? 'Activo' : 'Inactivo' }}
         </span>
-        <div v-if="canManage" class="terminal-actions">
+        <div v-if="canManage" class="terminal-actions ds-grid-span">
           <button type="button" title="Editar terminal" @click="openEdit(terminal)">
             <Pencil :size="13" /> Editar
           </button>
@@ -173,7 +173,7 @@ async function toggle(terminal: CashTerminal) {
         </div>
       </article>
     </div>
-    <div v-else class="empty">
+    <div v-else class="empty ds-empty">
       {{
         selectedBranchId
           ? 'No hay terminales registrados en esta sede.'
@@ -308,8 +308,6 @@ button:disabled {
   color: var(--amatista-700);
 }
 .terminal-info {
-  display: flex;
-  flex-direction: column;
   min-width: 0;
 }
 .terminal-info strong {
@@ -336,7 +334,6 @@ button:disabled {
   color: var(--warm-600);
 }
 .terminal-actions {
-  grid-column: 1 / -1;
   display: flex;
   justify-content: flex-end;
   gap: 7px;
@@ -356,12 +353,14 @@ button:disabled {
   font-size: 11.5px;
   cursor: pointer;
 }
+
+/* `.ds-empty` pone el color y el centrado. NO se usa `--boxed`: esa variante
+   alinea a la izquierda y trae fondo propio; aquí el mensaje va centrado dentro
+   de un marco de puntos. El aire (24px, no 32) se sobrescribe por nombre. */
 .empty {
   padding: 24px;
-  text-align: center;
   border: 1px dashed var(--warm-200);
   border-radius: 12px;
-  color: var(--warm-500);
   font-size: 13px;
 }
 .form-grid {
