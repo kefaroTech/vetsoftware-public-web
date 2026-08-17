@@ -8,7 +8,9 @@ withDefaults(
 </script>
 
 <template>
-  <span class="chip" :class="`v-${variant}`">
+  <!-- El tono de acento es `.ds-tone--accent` (primitives.css); los otros tres
+       no tienen primitiva equivalente y siguen siendo locales. -->
+  <span class="chip" :class="variant === 'accent' ? 'ds-tone--accent' : `v-${variant}`">
     <slot />
   </span>
 </template>
@@ -29,11 +31,6 @@ withDefaults(
 .v-neutral {
   background: var(--warm-150);
   color: var(--warm-600);
-}
-
-.v-accent {
-  background: var(--amatista-100);
-  color: var(--amatista-700);
 }
 
 .v-success {

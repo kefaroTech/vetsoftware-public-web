@@ -19,10 +19,12 @@ withDefaults(
 <template>
   <section class="section-card">
     <header v-if="title || subtitle || icon || $slots.action" class="head">
-      <div v-if="icon" class="icon" :class="{ accent }">
+      <!-- El tono va en una clase aparte de la forma: `.ds-tone--accent`
+           (primitives.css) o el neutro local, nunca los dos. -->
+      <div v-if="icon" class="icon" :class="accent ? 'ds-tone--accent' : 'icon-neutral'">
         <component :is="icon" :size="16" :stroke-width="1.6" />
       </div>
-      <div class="meta">
+      <div class="ds-flex-fill">
         <h2 v-if="title" class="title">{{ title }}</h2>
         <p v-if="subtitle" class="subtitle">{{ subtitle }}</p>
       </div>
@@ -57,21 +59,14 @@ withDefaults(
   width: 34px;
   height: 34px;
   border-radius: 9px;
-  background: var(--warm-150);
-  color: var(--warm-600);
   display: grid;
   place-items: center;
   flex-shrink: 0;
 }
 
-.icon.accent {
-  background: var(--amatista-100);
-  color: var(--amatista-700);
-}
-
-.meta {
-  flex: 1;
-  min-width: 0;
+.icon-neutral {
+  background: var(--warm-150);
+  color: var(--warm-600);
 }
 
 .title {

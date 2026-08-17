@@ -3,8 +3,8 @@ defineProps<{ kicker: string; title: string; lead?: string }>()
 </script>
 
 <template>
-  <header class="page-head">
-    <div class="kicker">{{ kicker }}</div>
+  <header class="page-head ds-stack ds-stack--8">
+    <div class="ds-kicker">{{ kicker }}</div>
     <div class="title-row">
       <div>
         <h1 class="ds-display">{{ title }}</h1>
@@ -19,17 +19,7 @@ defineProps<{ kicker: string; title: string; lead?: string }>()
 
 <style scoped>
 .page-head {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   margin-bottom: 24px;
-}
-.kicker {
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--warm-500);
-  font-weight: 500;
 }
 .title-row {
   display: flex;

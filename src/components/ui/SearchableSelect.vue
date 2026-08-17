@@ -191,20 +191,21 @@ onBeforeUnmount(() => {
     <button
       ref="trigger"
       type="button"
-      class="trigger"
+      class="trigger ds-flex-row"
+      :class="{ 'ds-field-shake': invalid }"
       :disabled="disabled"
       :aria-expanded="open"
       :aria-invalid="invalid || undefined"
       @click="toggle"
     >
-      <span :class="['value', { placeholder: !selected }]">
+      <span :class="['value', 'ds-truncate', { placeholder: !selected }]">
         {{ loading ? 'Cargando…' : (selected?.label ?? placeholder) }}
       </span>
-      <ChevronDown :size="13" :stroke-width="1.8" class="caret" />
+      <ChevronDown :size="13" :stroke-width="1.8" class="ds-icon-muted" />
     </button>
 
     <Teleport to="body">
-      <div v-if="open" ref="panel" class="panel" :style="panelStyle">
+      <div v-if="open" ref="panel" class="panel ds-stack" :style="panelStyle">
         <template v-if="!creating">
           <div class="search-wrap">
             <Search :size="13" :stroke-width="1.7" class="search-icon" />
@@ -218,20 +219,20 @@ onBeforeUnmount(() => {
             />
           </div>
           <div class="list">
-            <div v-if="filtered.length === 0" class="empty">Sin coincidencias</div>
+            <div v-if="filtered.length === 0" class="empty ds-empty">Sin coincidencias</div>
             <button
               v-for="o in filtered"
               :key="o.value"
               type="button"
-              class="item"
+              class="item ds-stack"
               :class="{ selected: o.value === modelValue }"
               @mousedown.prevent="pick(o)"
             >
-              <span class="item-label">{{ o.label }}</span>
-              <span v-if="o.hint" class="item-hint">{{ o.hint }}</span>
+              <span class="ds-item-label">{{ o.label }}</span>
+              <span v-if="o.hint" class="ds-hint">{{ o.hint }}</span>
             </button>
           </div>
-          <button v-if="showCreate" type="button" class="create" @click="startCreate">
+          <button v-if="showCreate" type="button" class="create ds-flex-row" @click="startCreate">
             <Plus :size="13" :stroke-width="1.8" />
             <template v-if="q.trim()">
               <span
@@ -244,7 +245,7 @@ onBeforeUnmount(() => {
           </button>
         </template>
 
-        <div v-else class="form" @mousedown.stop>
+        <div v-else class="form ds-stack ds-stack--8" @mousedown.stop>
           <div class="form-title">{{ createLabel }}</div>
           <input
             ref="newNameInput"
@@ -266,7 +267,7 @@ onBeforeUnmount(() => {
             @keydown.escape.prevent="cancelCreate"
           />
           <div v-if="createError" class="form-error">{{ createError }}</div>
-          <div class="form-actions">
+          <div class="form-actions ds-actions">
             <button
               type="button"
               class="ds-btn ds-btn--sm ds-btn--ghost"
@@ -305,9 +306,6 @@ onBeforeUnmount(() => {
   font-size: 13.5px;
   font-family: inherit;
   color: var(--warm-800);
-  display: flex;
-  align-items: center;
-  gap: 8px;
   cursor: pointer;
   transition:
     border-color 0.15s,
@@ -327,51 +325,26 @@ onBeforeUnmount(() => {
   cursor: not-allowed;
 }
 
+/* El temblor lo pone `.ds-field-shake` desde el template. Borde+fondo se
+   quedan aquí: la base `.trigger` ya declara `background`/`border` y en CSS
+   scoped pesa (0,2,0), por encima de `.ds-field-invalid` (0,1,0). Igual para
+   `.ds-field-disabled` en `.ss.disabled .trigger`. */
 .ss.invalid .trigger {
   border-color: oklch(60% 0.2 25deg);
   background: oklch(98.5% 0.02 25deg);
-  animation: shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 
 .ss.invalid.open .trigger {
   box-shadow: 0 0 0 3px var(--danger-200);
 }
 
-@keyframes shake {
-  10%,
-  90% {
-    transform: translateX(-1px);
-  }
-  20%,
-  80% {
-    transform: translateX(2px);
-  }
-  30%,
-  50%,
-  70% {
-    transform: translateX(-3px);
-  }
-  40%,
-  60% {
-    transform: translateX(3px);
-  }
-}
-
 .value {
   flex: 1;
   text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .value.placeholder {
   color: var(--warm-400);
-}
-
-.caret {
-  color: var(--warm-500);
-  flex-shrink: 0;
 }
 
 /* Teletransportado a <body> y posicionado con estilo inline (position: fixed).
@@ -384,8 +357,6 @@ onBeforeUnmount(() => {
   box-shadow: 0 12px 32px rgb(40 20 80 / 14%);
   z-index: 2100;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
 .search-wrap {
@@ -423,8 +394,6 @@ onBeforeUnmount(() => {
 .empty {
   padding: 14px 12px;
   font-size: 12.5px;
-  color: var(--warm-500);
-  text-align: center;
 }
 
 .item {
@@ -433,8 +402,6 @@ onBeforeUnmount(() => {
   border: none;
   padding: 8px 10px;
   border-radius: 6px;
-  display: flex;
-  flex-direction: column;
   gap: 2px;
   text-align: left;
   font-family: inherit;
@@ -449,17 +416,6 @@ onBeforeUnmount(() => {
   background: var(--amatista-100);
 }
 
-.item-label {
-  font-size: 13px;
-  color: var(--warm-900);
-  font-weight: 500;
-}
-
-.item-hint {
-  font-size: 11.5px;
-  color: var(--warm-500);
-}
-
 .create {
   border-top: 1px solid var(--warm-200);
   padding: 10px 14px;
@@ -472,9 +428,6 @@ onBeforeUnmount(() => {
   font-weight: 500;
   color: var(--amatista-700);
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
   justify-content: flex-start;
   text-align: left;
 }
@@ -489,9 +442,6 @@ onBeforeUnmount(() => {
 
 .form {
   padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 .form-title {
@@ -527,9 +477,6 @@ onBeforeUnmount(() => {
 }
 
 .form-actions {
-  display: flex;
-  gap: 6px;
-  justify-content: flex-end;
   margin-top: 4px;
 }
 

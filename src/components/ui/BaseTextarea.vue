@@ -20,8 +20,8 @@ defineEmits<{
 <template>
   <textarea
     :id="id"
-    class="textarea"
-    :class="{ invalid }"
+    class="textarea ds-focus-ring ds-focus-ring--no-outline"
+    :class="{ invalid, 'ds-field-shake': invalid }"
     :rows="rows"
     :value="modelValue ?? ''"
     :placeholder="placeholder"
@@ -55,12 +55,6 @@ defineEmits<{
   border-color: var(--warm-300);
 }
 
-.textarea:focus {
-  outline: none;
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
-}
-
 .textarea::placeholder {
   color: var(--warm-500);
 }
@@ -71,34 +65,17 @@ defineEmits<{
   cursor: not-allowed;
 }
 
+/* El temblor lo pone `.ds-field-shake` y el `outline:none` del foco
+   `.ds-focus-ring--no-outline`, los dos desde el template. Borde+fondo se
+   quedan aquí: la base `.textarea` ya declara `background`/`border` y en CSS
+   scoped pesa (0,2,0), por encima de `.ds-field-invalid` (0,1,0). */
 .textarea.invalid {
   border-color: oklch(60% 0.2 25deg);
   background: oklch(98.5% 0.02 25deg);
-  animation: shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 
 .textarea.invalid:focus {
   border-color: oklch(55% 0.22 25deg);
   box-shadow: 0 0 0 3px var(--danger-200);
-}
-
-@keyframes shake {
-  10%,
-  90% {
-    transform: translateX(-1px);
-  }
-  20%,
-  80% {
-    transform: translateX(2px);
-  }
-  30%,
-  50%,
-  70% {
-    transform: translateX(-3px);
-  }
-  40%,
-  60% {
-    transform: translateX(3px);
-  }
 }
 </style>

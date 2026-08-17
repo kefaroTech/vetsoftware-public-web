@@ -12,7 +12,7 @@ const emit = defineEmits<(e: 'close') => void>()
 
 <template>
   <div class="pub-banner" :class="`pub-banner--${tone}`" role="alert">
-    <v-icon size="17" class="pub-banner-ico">
+    <v-icon size="17" class="ds-banner-icon">
       {{ tone === 'warning' ? 'mdi-alert-outline' : 'mdi-alert-circle-outline' }}
     </v-icon>
     <div class="pub-banner-body"><slot /></div>
@@ -52,11 +52,7 @@ const emit = defineEmits<(e: 'close') => void>()
   color: var(--pub-warn-tx);
 }
 
-.pub-banner-ico {
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
+/* El icono usa `.ds-banner-icon` (primitives.css). */
 .pub-banner-body {
   flex: 1;
 }

@@ -71,8 +71,8 @@ onBeforeUnmount(() => {
       @click="toggle"
     >
       <div class="avatar">{{ initials }}</div>
-      <div class="info">
-        <div class="name">{{ fullName }}</div>
+      <div class="info ds-stack ds-flex-fill">
+        <div class="name ds-truncate">{{ fullName }}</div>
         <div class="role">{{ role }}</div>
       </div>
       <ChevronRight :size="14" :stroke-width="1.5" class="chev" />
@@ -120,19 +120,9 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 
-.info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
 .name {
   font-size: 12.5px;
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .role {
