@@ -66,6 +66,8 @@ export const PERMISSIONS = {
   APPOINTMENT_UPDATE: 'appointment.update',
   APPOINTMENT_DELETE: 'appointment.delete',
   APPOINTMENT_CANCEL: 'appointment.cancel',
+  // Agendar sobre un hueco ya ocupado (BE-17). Va ADEMÁS de create/update; solo lo trae ADMIN.
+  APPOINTMENT_OVERLAP_FORCE: 'appointment.overlap.force',
 
   // Tienda
   PRODUCT_CREATE: 'product.create',

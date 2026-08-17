@@ -10,6 +10,7 @@ import {
   type AppointmentResponse,
   type AppointmentType,
   type CreateAppointmentRequest,
+  type RescheduleAppointmentRequest,
 } from '../types/appointment'
 
 export type FormMode = 'create' | 'edit' | 'reschedule'
@@ -33,6 +34,8 @@ export function useAppointmentForm(ctx: {
 }) {
   const date = ref('')
   const time = ref('09:00')
+  /** `null` = «por defecto»: la duración la resuelve la empresa (o el respaldo de 30 min). */
+  const durationMinutes = ref<number | null>(null)
   const type = ref<AppointmentType>('CONSULTATION')
   const employeeId = ref<number | null>(null)
   const subjectMode = ref<'registered' | 'free'>('registered')
@@ -54,6 +57,7 @@ export function useAppointmentForm(ctx: {
     if (appt) {
       date.value = apptDate(appt.startAt)
       time.value = apptTime(appt.startAt)
+      durationMinutes.value = appt.durationMinutes
       type.value = appt.type
       employeeId.value = appt.employee.id
       const free = !appt.owner && !!appt.clientName
@@ -69,6 +73,7 @@ export function useAppointmentForm(ctx: {
     }
     date.value = ctx.focusDate.value
     time.value = '09:00'
+    durationMinutes.value = null
     type.value = 'CONSULTATION'
     employeeId.value = firstVetId
     subjectMode.value = 'registered'
@@ -134,11 +139,23 @@ export function useAppointmentForm(ctx: {
     return 'Agendar cita'
   })
 
-  /** Traduce el formulario al cuerpo de la petición. La sede sólo viaja al crear. */
-  function buildPayload(branchId: number | null): CreateAppointmentRequest {
+  /**
+   * Traduce el formulario al cuerpo de la petición. La sede sólo viaja al crear.
+   *
+   * `forceOverlap` se manda siempre —el backend lo declara `boolean` con
+   * `@JsonSetter(AS_EMPTY)`, así que `false` es tan válido como omitirlo— para que el reenvío
+   * desde el botón «Agendar de todos modos» sea el mismo payload con un flag distinto y no
+   * una segunda forma de armarlo.
+   */
+  function buildPayload(
+    branchId: number | null,
+    opts: { forceOverlap?: boolean } = {},
+  ): CreateAppointmentRequest {
     const registered = subjectMode.value === 'registered'
     return {
       startAt: toIsoLocalDateTime(date.value, time.value),
+      durationMinutes: durationMinutes.value,
+      forceOverlap: opts.forceOverlap === true,
       type: type.value,
       employeeId: employeeId.value as number,
       ownerId: registered && ownerId.value ? Number(ownerId.value) : null,
@@ -151,9 +168,27 @@ export function useAppointmentForm(ctx: {
     }
   }
 
+  /**
+   * Cuerpo de `PATCH /appointments/{id}/reschedule`. Ojo con la asimetría: aquí
+   * `durationMinutes: null` significa «no la toques», no «vuelve a la de la empresa». Por eso
+   * el formulario arranca con la duración que ya tenía la cita y sólo manda un número cuando
+   * el usuario elige uno.
+   */
+  function buildReschedulePayload(
+    opts: { forceOverlap?: boolean } = {},
+  ): RescheduleAppointmentRequest {
+    return {
+      startAt: startAtIso.value,
+      durationMinutes: durationMinutes.value,
+      employeeId: employeeId.value as number,
+      forceOverlap: opts.forceOverlap === true,
+    }
+  }
+
   return {
     date,
     time,
+    durationMinutes,
     type,
     employeeId,
     subjectMode,
@@ -181,5 +216,6 @@ export function useAppointmentForm(ctx: {
     submitLabel,
     resetFrom,
     buildPayload,
+    buildReschedulePayload,
   }
 }
