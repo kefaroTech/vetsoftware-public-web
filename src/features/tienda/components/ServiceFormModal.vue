@@ -223,7 +223,7 @@ async function submit() {
     <template #body>
       <div v-if="saveError" class="ds-banner ds-banner--error">{{ saveError }}</div>
       <div class="grid">
-        <BaseField label="Nombre" required :error="err('name')" class="col-2">
+        <BaseField label="Nombre" required :error="err('name')" class="ds-grid-span">
           <template #default="{ id }">
             <BaseInput
               :id="id"
@@ -275,7 +275,7 @@ async function submit() {
             />
           </template>
         </BaseField>
-        <BaseField label="Notas" class="col-2">
+        <BaseField label="Notas" class="ds-grid-span">
           <template #default="{ id }">
             <BaseTextarea :id="id" v-model="draft.notes" :rows="2" placeholder="Opcional" />
           </template>
@@ -306,27 +306,10 @@ async function submit() {
   gap: 18px 20px;
   align-items: start;
 }
-.col-2 {
-  grid-column: 1 / -1;
-}
 
 @media (width <= 760px) {
   .grid {
     grid-template-columns: 1fr;
   }
-}
-.check {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--warm-800);
-  cursor: pointer;
-  padding-bottom: 10px;
-}
-.check input {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--amatista-600);
 }
 </style>

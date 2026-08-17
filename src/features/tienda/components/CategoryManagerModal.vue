@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { Pencil, Plus, Tag, Trash2 } from 'lucide-vue-next'
 import ModalShell from '@/components/ui/ModalShell.vue'
+import AccentButton from './AccentButton.vue'
 import type { CategoryResponse } from '../types/tienda'
 
 const props = withDefaults(
@@ -95,10 +96,10 @@ function confirmRemove(id: number) {
     @close="emit('close')"
   >
     <template #body>
-      <div class="manager">
-        <button v-if="!adding && canCreate" type="button" class="add-btn" @click="startAdd">
+      <div class="manager ds-stack ds-stack--14">
+        <AccentButton v-if="!adding && canCreate" size="md" class="add-btn" @click="startAdd">
           <Plus :size="15" :stroke-width="1.8" /> Nueva categoría
-        </button>
+        </AccentButton>
 
         <div v-else-if="adding" class="editor">
           <input
@@ -169,7 +170,7 @@ function confirmRemove(id: number) {
             <template v-else>
               <div class="row-main">
                 <span class="cat-name">{{ cat.name }}</span>
-                <span class="count"
+                <span class="ds-hint"
                   >{{ counts[cat.id] ?? 0 }}
                   {{ (counts[cat.id] ?? 0) === 1 ? 'ítem' : 'ítems' }}</span
                 >
@@ -224,30 +225,14 @@ function confirmRemove(id: number) {
 </template>
 
 <style scoped>
+/* La columna es `.ds-stack--14`; aquí solo queda la fuente del modal. */
 .manager {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
   font-family: var(--font-sans);
 }
 
+/* El botón es `AccentButton`; su colocación en la columna sigue siendo local. */
 .add-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
   align-self: flex-start;
-  padding: 9px 14px;
-  font-size: 13px;
-  font-weight: 500;
-  font-family: inherit;
-  background: var(--amatista-50);
-  color: var(--amatista-700);
-  border: 1px solid var(--amatista-200);
-  border-radius: 9px;
-  cursor: pointer;
-}
-.add-btn:hover {
-  background: var(--amatista-100);
 }
 .editor {
   display: flex;
@@ -310,10 +295,6 @@ function confirmRemove(id: number) {
   font-size: 13.5px;
   font-weight: 500;
   color: var(--warm-900);
-}
-.count {
-  font-size: 11.5px;
-  color: var(--warm-500);
 }
 .row-actions {
   display: flex;

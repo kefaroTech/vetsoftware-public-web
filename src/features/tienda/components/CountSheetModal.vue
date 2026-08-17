@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { ClipboardList, History, Search } from 'lucide-vue-next'
+import { ClipboardList, History } from 'lucide-vue-next'
 import ModalShell from '@/components/ui/ModalShell.vue'
+import DiffCell from './DiffCell.vue'
+import FilterSelect from './FilterSelect.vue'
+import LinkButton from './LinkButton.vue'
+import SearchField from './SearchField.vue'
 import type { ProductResponse, CategoryResponse } from '../types/tienda'
 import type { StockView } from '../types/inventory'
 
@@ -100,14 +104,11 @@ function submit() {
       </p>
 
       <div class="filters">
-        <div class="search">
-          <Search :size="15" :stroke-width="1.7" class="s-icon" />
-          <input v-model="search" type="search" placeholder="Buscar nombre o SKU…" />
-        </div>
-        <select v-model="catFilter" class="fsel">
+        <SearchField v-model="search" fill size="sm" placeholder="Buscar nombre o SKU…" />
+        <FilterSelect v-model="catFilter" size="sm">
           <option value="">Todas las categorías</option>
           <option v-for="c in categories" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
-        </select>
+        </FilterSelect>
       </div>
 
       <div v-if="submitted && !canConfirm" class="ds-banner ds-banner--error">
@@ -115,7 +116,7 @@ function submit() {
       </div>
 
       <div class="scroll">
-        <table class="table">
+        <table class="ds-table ds-table--dense">
           <thead>
             <tr>
               <th>Producto</th>
@@ -146,16 +147,7 @@ function submit() {
                 />
               </td>
               <td class="num">
-                <span
-                  v-if="diffOf(p.id) !== null"
-                  class="diff"
-                  :class="{
-                    zero: diffOf(p.id) === 0,
-                    neg: (diffOf(p.id) ?? 0) < 0,
-                    pos: (diffOf(p.id) ?? 0) > 0,
-                  }"
-                  >{{ (diffOf(p.id) ?? 0) > 0 ? '+' : '' }}{{ diffOf(p.id) }}</span
-                >
+                <DiffCell v-if="diffOf(p.id) !== null" :value="diffOf(p.id) ?? 0" />
                 <span v-else class="muted">—</span>
               </td>
             </tr>
@@ -175,10 +167,12 @@ function submit() {
     </template>
 
     <template #footer-left>
-      <button type="button" class="link" @click="emit('history')">
+      <LinkButton @click="emit('history')">
         <History :size="14" :stroke-width="1.8" /> Historial
-      </button>
-      <span class="counter">{{ countedCount }} contado(s) · {{ diffCount }} con diferencia</span>
+      </LinkButton>
+      <span class="counter ds-meta"
+        >{{ countedCount }} contado(s) · {{ diffCount }} con diferencia</span
+      >
     </template>
     <template #footer-actions>
       <button type="button" class="ds-btn ds-btn--ghost ds-btn--lg" @click="emit('close')">
@@ -209,93 +203,69 @@ function submit() {
   margin-bottom: 12px;
   flex-wrap: wrap;
 }
-.search {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 9px;
-  padding: 9px 12px;
-  max-width: 320px;
-  flex: 1;
-}
-.search:focus-within {
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
-}
-.s-icon {
-  color: var(--warm-500);
-  flex-shrink: 0;
-}
-.search input {
-  flex: 1;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 13px;
-  color: var(--warm-900);
-  min-width: 0;
-}
-
-.fsel {
-  appearance: none;
-  border: 1px solid var(--warm-200);
-  background: var(--warm-50);
-  border-radius: 9px;
-  padding: 9px 30px 9px 13px;
-  font-family: inherit;
-  font-size: 13px;
-  color: var(--warm-800);
-  cursor: pointer;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23999' stroke-width='1.5' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 11px center;
-}
-.fsel:focus {
-  outline: none;
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
-}
 .scroll {
   max-height: 46vh;
   overflow-y: auto;
   border: 1px solid var(--warm-200);
   border-radius: 10px;
 }
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12.5px;
-  background: var(--warm-50);
+
+/* La tabla es `.ds-table ds-table--dense` (primitives.css) y la regla `.table`
+   local se borró entera porque la primitiva la REEMPLAZA, no convive con ella.
+   El `.ds-empty` del `<td colspan>` vacío lo resuelve la excepción
+   `.ds-table td.ds-empty` de `primitives.css` (0,2,1), que le gana a
+   `.ds-table--dense td` (0,1,1). Aquí sólo hay que no estorbarla — ver el
+   punto 3.
+
+   Quedan tres cosas que la primitiva no puede saber y que sí son de este
+   modal: */
+
+/* 1. La caja (borde, radio y recorte) la pone `.scroll`, no la tabla. Si la
+      tabla trajera la suya se vería una segunda línea justo dentro del marco
+      del contenedor, y peor: el `overflow: hidden` de `.ds-table` convertiría a
+      la propia tabla en el contenedor de scroll más cercano y el encabezado
+      sticky dejaría de pegarse. */
+.ds-table {
+  overflow: visible;
+  border: none;
+  border-radius: 0;
 }
-.table th {
+
+/* 2. El encabezado se queda fijo mientras se recorre la hoja dentro del alto de
+      46vh de `.scroll`. Es comportamiento del modal, no de la primitiva. */
+.ds-table th {
   position: sticky;
   top: 0;
-  text-align: left;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--warm-500);
-  font-weight: 600;
-  padding: 9px 12px;
-  background: var(--warm-100);
-  border-bottom: 1px solid var(--warm-200);
   z-index: 1;
 }
-.table td {
-  padding: 7px 12px;
-  border-bottom: 1px solid var(--warm-150);
-  color: var(--warm-800);
+
+/* 3. Densidad propia: 7px de alto de celda frente a los 9px del resto de la
+      familia densa. Es intencionado, no deriva — esta hoja lista el catálogo
+      entero para teclear cantidad por fila, así que caben ~2 filas más por
+      pantalla sin tocar el tamaño de letra. Sólo se sobrescribe `padding`.
+
+      El `:not(.ds-empty)` acota esa desviación a las filas de datos, que son a
+      las que va dirigida. Sin él el selector pesa (0,2,1) con su `data-v` —
+      exactamente lo mismo que la excepción `.ds-table td.ds-empty` de
+      `primitives.css` —, y al empatar desempata el orden de inserción, que
+      favorece a la hoja scoped: la celda vacía se quedaba en 7×12 en lugar de
+      recibir el estado vacío. Excluyéndola, esta regla sube a (0,3,1) para las
+      filas de datos y deja de cubrir la celda vacía, que cae limpiamente en la
+      excepción. Es el contrato que quedó escrito en `primitives.css`: quien se
+      desvía acota su desviación, en vez de pedirle más peso a la primitiva. */
+.ds-table td:not(.ds-empty) {
+  padding: var(--space-7) var(--space-12);
 }
-.table tbody tr:last-child td {
-  border-bottom: none;
-}
+
+/* La cifra: `text-align` se separa a `td.num` porque `.ds-table th` alinea a la
+   izquierda con menos peso que `.num`, y estos encabezados iban a la izquierda
+   antes de migrar (se lo ganaba `.table th`). */
 .num {
-  text-align: right;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+td.num {
+  text-align: right;
 }
 .tname {
   font-weight: 500;
@@ -329,18 +299,6 @@ function submit() {
   border-color: var(--amatista-500);
   box-shadow: var(--ring);
 }
-.diff {
-  font-weight: 600;
-}
-.diff.zero {
-  color: oklch(55% 0.12 150deg);
-}
-.diff.neg {
-  color: oklch(52% 0.18 25deg);
-}
-.diff.pos {
-  color: oklch(52% 0.12 70deg);
-}
 .muted {
   color: var(--warm-400);
 }
@@ -366,25 +324,7 @@ function submit() {
   border-color: var(--amatista-500);
   box-shadow: var(--ring);
 }
-.link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: none;
-  color: var(--amatista-700);
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0;
-}
-.link:hover {
-  text-decoration: underline;
-}
 .counter {
-  font-size: 12px;
-  color: var(--warm-500);
   margin-left: 12px;
 }
 </style>

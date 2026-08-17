@@ -5,6 +5,7 @@ import ModalShell from '@/components/ui/ModalShell.vue'
 import BaseField from '@/components/ui/BaseField.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseTextarea from '@/components/ui/BaseTextarea.vue'
+import SegTabs from './SegTabs.vue'
 import type { ProductResponse } from '../types/tienda'
 
 /** Ajuste de conteo físico: entrada (+) o salida (−) con motivo obligatorio. */
@@ -70,15 +71,15 @@ function submit() {
     @close="emit('close')"
   >
     <template #body>
-      <div class="body">
-        <div class="seg" role="tablist">
-          <button type="button" :class="{ on: dir === 'in' }" @click="dir = 'in'">
-            Entrada (+)
-          </button>
-          <button type="button" :class="{ on: dir === 'out' }" @click="dir = 'out'">
-            Salida (−)
-          </button>
-        </div>
+      <div class="ds-stack ds-stack--14">
+        <SegTabs
+          v-model="dir"
+          size="md"
+          :options="[
+            { value: 'in', label: 'Entrada (+)' },
+            { value: 'out', label: 'Salida (−)' },
+          ]"
+        />
         <div class="grid">
           <BaseField label="Cantidad" required :error="qtyError">
             <template #default="{ id }">
@@ -122,34 +123,10 @@ function submit() {
 </template>
 
 <style scoped>
-.body {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
+/* El cuerpo es `.ds-stack--14` y el conmutador `SegTabs`; queda su colocación,
+   que sí es de este modal. */
 .seg {
-  display: inline-flex;
-  background: var(--warm-100);
-  border: 1px solid var(--warm-200);
-  border-radius: 9px;
-  padding: 2px;
   align-self: flex-start;
-}
-.seg button {
-  border: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--warm-600);
-  padding: 6px 14px;
-  border-radius: 7px;
-  cursor: pointer;
-}
-.seg button.on {
-  background: var(--warm-50);
-  color: var(--amatista-700);
-  box-shadow: 0 1px 2px rgb(50 20 80 / 8%);
 }
 .grid {
   display: grid;

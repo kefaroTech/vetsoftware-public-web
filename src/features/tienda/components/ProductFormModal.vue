@@ -246,7 +246,7 @@ async function submit() {
     <template #body>
       <div v-if="saveError" class="ds-banner ds-banner--error">{{ saveError }}</div>
       <div class="grid">
-        <BaseField label="Nombre" required :error="err('name')" class="col-2">
+        <BaseField label="Nombre" required :error="err('name')" class="ds-grid-span">
           <template #default="{ id }">
             <BaseInput
               :id="id"
@@ -324,7 +324,7 @@ async function submit() {
             />
           </template>
         </BaseField>
-        <BaseField label="Notas" class="col-2">
+        <BaseField label="Notas" class="ds-grid-span">
           <template #default="{ id }">
             <BaseTextarea :id="id" v-model="draft.notes" :rows="2" placeholder="Opcional" />
           </template>
@@ -354,46 +354,10 @@ async function submit() {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px 20px;
 }
-.col-2 {
-  grid-column: 1 / -1;
-}
 
 @media (width <= 760px) {
   .grid {
     grid-template-columns: 1fr;
   }
-}
-.margin-hint {
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--amatista-700);
-  background: var(--amatista-50);
-  border: 1px solid var(--amatista-200);
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin-top: -4px;
-}
-.margin-hint.below {
-  color: oklch(45% 0.18 25deg);
-  background: oklch(96% 0.04 25deg);
-  border-color: var(--danger-400);
-}
-.checks {
-  display: flex;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-.check {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--warm-800);
-  cursor: pointer;
-}
-.check input {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--amatista-600);
 }
 </style>

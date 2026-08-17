@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Package, Search, Stethoscope } from 'lucide-vue-next'
+import { Package, Stethoscope } from 'lucide-vue-next'
+import SearchField from './SearchField.vue'
 import { formatMoney } from '../composables/pricing'
 import type { StockState, TaxTreatment } from '../types/tienda'
 
@@ -71,15 +72,11 @@ const emit = defineEmits<{
       </div>
 
       <template v-if="mode !== 'paquete'">
-        <div class="search">
-          <Search :size="15" :stroke-width="1.7" class="s-icon" />
-          <input
-            :value="query"
-            type="search"
-            :placeholder="mode === 'producto' ? 'Buscar producto o SKU…' : 'Buscar servicio…'"
-            @input="emit('update:query', ($event.target as HTMLInputElement).value)"
-          />
-        </div>
+        <SearchField
+          :model-value="query"
+          :placeholder="mode === 'producto' ? 'Buscar producto o SKU…' : 'Buscar servicio…'"
+          @update:model-value="emit('update:query', $event)"
+        />
         <div class="cats">
           <button
             type="button"
@@ -104,8 +101,10 @@ const emit = defineEmits<{
     </div>
 
     <div class="grid">
-      <div v-if="mode === 'paquete'" class="grid-empty">El backend aún no soporta paquetes.</div>
-      <div v-else-if="cards.length === 0" class="grid-empty">
+      <div v-if="mode === 'paquete'" class="grid-empty ds-grid-span">
+        El backend aún no soporta paquetes.
+      </div>
+      <div v-else-if="cards.length === 0" class="grid-empty ds-grid-span">
         {{
           mode === 'producto' ? 'Sin productos para el filtro.' : 'Sin servicios para el filtro.'
         }}
@@ -121,9 +120,9 @@ const emit = defineEmits<{
         <div class="pcard-thumb" :style="{ background: c.toneBg, color: c.toneFg }">
           <component :is="c.isService ? Stethoscope : Package" :size="22" :stroke-width="1.6" />
         </div>
-        <div class="pcard-name">{{ c.name }}</div>
+        <div class="pcard-name ds-item-label">{{ c.name }}</div>
         <div class="pcard-foot">
-          <span class="pcard-price">
+          <span class="pcard-price ds-strong">
             <span v-if="c.promoName" class="price-old">{{ formatMoney(c.basePrice) }}</span>
             {{ formatMoney(c.price) }}
           </span>
@@ -155,21 +154,42 @@ const emit = defineEmits<{
   margin-bottom: 14px;
 }
 
+/* Un único bloque por pieza: `.modetabs`, `.modetab` y `.grid-empty` estaban
+   declarados dos veces cada uno y ganaba el segundo. Al consolidarlos quedó a
+   la vista que el valor ganador de `.modetabs` no era el bueno: era
+   `grid-template-columns: 1fr`, un valor de móvil que se escapó del
+   `@media` y que apilaba las tres pestañas en vertical a CUALQUIER ancho. El
+   resto del estilo pedía lo contrario a gritos (fondo `--warm-150` con
+   `padding: 3px`, `gap: 3px`, pestaña `inline-flex` centrada y activa con
+   fondo claro y sombra: un conmutador segmentado de manual). Corregido aquí a
+   horizontal con reparto a partes iguales.
+
+   Va con `flex-wrap` en vez de tres columnas fijas para no inventarse un punto
+   de corte: las tres pestañas miden ~300px con su icono, así que caben en una
+   línea desde ~360px de ancho y por debajo de eso una salta sola a la
+   siguiente en lugar de desbordar la caja. El `@media (width <= 760px)` de
+   este archivo NO es su sitio: allí el catálogo ya ocupa el ancho completo
+   (`.pos` de `POSView` pasa a una columna en 900px) y espacio es justo lo que
+   sobra — apilarlas ahí sería volver al defecto, no arreglarlo. */
 .modetabs {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
   gap: 3px;
   background: var(--warm-150);
   border: 1px solid var(--warm-200);
   border-radius: 9px;
   padding: 3px;
-  align-self: flex-start;
+  align-self: stretch;
+  width: 100%;
 }
 
 .modetab {
+  flex: 1 1 0;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 7px 14px;
+  padding: 7px 8px;
   border: none;
   background: transparent;
   border-radius: 7px;
@@ -184,37 +204,6 @@ const emit = defineEmits<{
   background: var(--warm-50);
   color: var(--amatista-700);
   box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
-}
-
-.search {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 9px;
-  padding: 10px 13px;
-}
-
-.search:focus-within {
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
-}
-
-.s-icon {
-  color: var(--warm-500);
-  flex-shrink: 0;
-}
-
-.search input {
-  flex: 1;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 13.5px;
-  color: var(--warm-900);
-  min-width: 0;
 }
 
 .cats {
@@ -253,8 +242,7 @@ const emit = defineEmits<{
 }
 
 .grid-empty {
-  grid-column: 1 / -1;
-  padding: 40px;
+  padding: 28px 14px;
   text-align: center;
   color: var(--warm-500);
   font-size: 13px;
@@ -277,14 +265,12 @@ const emit = defineEmits<{
     box-shadow 0.12s ease;
 }
 
-.pcard:hover:not(.disabled) {
+/* No hay estado deshabilitado en la tarjeta: el POS avisa del agotado con la
+   píldora de stock, nunca bloquea el clic. La regla `.pcard.disabled` y el
+   `:not(.disabled)` de este hover no llegaban a aplicarse nunca. */
+.pcard:hover {
   border-color: var(--amatista-300);
-  box-shadow: 0 4px 14px -8px rgb(20 15 30 / 18%);
-}
-
-.pcard.disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
+  box-shadow: var(--shadow-sm);
 }
 
 .pcard-thumb {
@@ -294,20 +280,9 @@ const emit = defineEmits<{
   place-items: center;
 }
 
-.pcard-thumb.prod {
-  background: var(--warm-150);
-  color: var(--warm-600);
-}
-
-.pcard-thumb.svc {
-  background: var(--amatista-50);
-  color: var(--amatista-700);
-}
-
+/* El tono del thumb llega en `:style` desde `categoryTone`; las variantes
+   `.prod`/`.svc` que había aquí no las ponía nadie. */
 .pcard-name {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-900);
   line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -326,8 +301,6 @@ const emit = defineEmits<{
 
 .pcard-price {
   font-size: 14px;
-  font-weight: 600;
-  color: var(--warm-900);
 }
 
 .price-old {
@@ -378,22 +351,6 @@ const emit = defineEmits<{
   border-radius: var(--radius-pill);
   background: oklch(58% 0.18 25deg);
   color: #fff;
-}
-
-.modetabs {
-  display: grid;
-  grid-template-columns: 1fr;
-  align-self: stretch;
-  width: 100%;
-}
-
-.modetab {
-  justify-content: center;
-  padding: 7px 8px;
-}
-
-.grid-empty {
-  padding: 28px 14px;
 }
 
 @media (width <= 760px) {

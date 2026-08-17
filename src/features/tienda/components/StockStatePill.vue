@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TonePill from './TonePill.vue'
 import type { StockState } from '../types/tienda'
 
 defineProps<{ state: StockState }>()
@@ -16,28 +17,5 @@ const TONE: Record<StockState, { bg: string; fg: string; dot: string }> = {
 </script>
 
 <template>
-  <span class="pill" :style="{ background: TONE[state].bg, color: TONE[state].fg }">
-    <span class="dot" :style="{ background: TONE[state].dot }" />
-    {{ LABEL[state] }}
-  </span>
+  <TonePill :tone="TONE[state]">{{ LABEL[state] }}</TonePill>
 </template>
-
-<style scoped>
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 9px;
-  border-radius: var(--radius-pill);
-  font-size: 11.5px;
-  font-weight: 500;
-  white-space: nowrap;
-  font-family: var(--font-sans);
-}
-
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-}
-</style>

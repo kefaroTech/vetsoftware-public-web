@@ -7,7 +7,7 @@ import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import DateInput from '@/components/ui/DateInput.vue'
 import { getProblemDetailMessage } from '@/services/http/http.client'
-import { todayISO } from '@/features/dashboard/views/consulta/nueva/composables/format'
+import { todayISO } from '@/composables/format'
 import { useTienda } from '../composables/useTienda'
 import type {
   ApplicationType,
@@ -196,7 +196,7 @@ async function submit() {
     <template #body>
       <div v-if="saveError" class="ds-banner ds-banner--error">{{ saveError }}</div>
       <div class="grid">
-        <BaseField label="Nombre" required :error="err('name')" class="col-2">
+        <BaseField label="Nombre" required :error="err('name')" class="ds-grid-span">
           <template #default="{ id }">
             <BaseInput
               :id="id"
@@ -216,7 +216,7 @@ async function submit() {
             <BaseSelect :id="id" v-model="draft.applicationType" :options="APPLICATION_OPTIONS" />
           </template>
         </BaseField>
-        <BaseField label="Destino" required :error="err('applicationItem')" class="col-2">
+        <BaseField label="Destino" required :error="err('applicationItem')" class="ds-grid-span">
           <template #default="{ id }">
             <BaseSelect
               :id="id"
@@ -259,7 +259,7 @@ async function submit() {
         <BaseField label="Fin" required :error="err('endDate')">
           <DateInput v-model="draft.endDate" :invalid="!!err('endDate')" />
         </BaseField>
-        <label class="check col-2">
+        <label class="check ds-grid-span">
           <input v-model="draft.active" type="checkbox" />
           <span>Promoción activa</span>
         </label>
@@ -287,9 +287,6 @@ async function submit() {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px 20px;
-}
-.col-2 {
-  grid-column: 1 / -1;
 }
 
 @media (width <= 760px) {

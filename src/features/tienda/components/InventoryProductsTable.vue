@@ -1,16 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import {
-  ArrowLeftRight,
-  Boxes,
-  ChevronLeft,
-  ChevronRight,
-  PauseCircle,
-  Search,
-  SlidersHorizontal,
-  Syringe,
-} from 'lucide-vue-next'
+import { ArrowLeftRight, Boxes, PauseCircle, SlidersHorizontal, Syringe } from 'lucide-vue-next'
 import StockStatePill from './StockStatePill.vue'
+import CategoryPill from './CategoryPill.vue'
+import FilterSelect from './FilterSelect.vue'
+import PagerBar from './PagerBar.vue'
+import SearchField from './SearchField.vue'
 import { formatMoney, stateOf, stockOf, taxTreatmentLabel } from '../composables/pricing'
 import { productCategoryTone } from '../composables/categoryTone'
 import type { CategoryResponse, ProductResponse, StockState } from '../types/tienda'
@@ -88,30 +83,32 @@ const slice = computed(() =>
 function rowStock(p: ProductResponse) {
   return stockOf(props.stockByProduct, p.id)
 }
+
+/** El `<select>` compartido habla en `string`; el filtro tiene su propia unión. */
+function onStateFilter(value: string) {
+  stState.value = value as '' | StockState | 'REPONER'
+}
 </script>
 
 <template>
   <div class="filters">
-    <div class="search">
-      <Search :size="15" :stroke-width="1.7" class="s-icon" />
-      <input v-model="query" type="search" placeholder="Buscar nombre, SKU o proveedor…" />
-    </div>
-    <select v-model="cat" class="fsel">
+    <SearchField v-model="query" fill placeholder="Buscar nombre, SKU o proveedor…" />
+    <FilterSelect v-model="cat">
       <option value="">Todas las categorías</option>
       <option v-for="c in categories" :key="c.id" :value="String(c.id)">
         {{ c.name }}
       </option>
-    </select>
-    <select v-model="stState" class="fsel">
+    </FilterSelect>
+    <FilterSelect :model-value="stState" @update:model-value="onStateFilter">
       <option value="">Todo estado</option>
       <option value="REPONER">Por reponer</option>
       <option value="OK">En stock</option>
       <option value="BAJO">Stock bajo</option>
       <option value="AGOTADO">Agotado</option>
-    </select>
+    </FilterSelect>
   </div>
 
-  <table class="table">
+  <table class="ds-table">
     <thead>
       <tr>
         <th>Producto</th>
@@ -135,14 +132,10 @@ function rowStock(p: ProductResponse) {
       <tr v-for="p in slice" v-else :key="p.id" class="trow" @click="emit('rowClick', p)">
         <td class="tname">{{ p.name }}</td>
         <td>
-          <span
-            class="catpill"
-            :style="{
-              background: productCategoryTone(p.productCategory).bg,
-              color: productCategoryTone(p.productCategory).fg,
-            }"
-            >{{ p.productCategory.name }}</span
-          >
+          <CategoryPill
+            :tone="productCategoryTone(p.productCategory)"
+            :label="p.productCategory.name"
+          />
         </td>
         <td class="tsku">{{ p.code }}</td>
         <td>{{ formatMoney(p.salePrice) }}</td>
@@ -225,17 +218,15 @@ function rowStock(p: ProductResponse) {
     </tbody>
   </table>
 
-  <div v-if="pageCount > 1" class="pag">
-    <span>{{ filtered.length }} productos · página {{ page }} de {{ pageCount }}</span>
-    <div class="pag-ctrl">
-      <button type="button" :disabled="page === 1" @click="page--">
-        <ChevronLeft :size="14" />
-      </button>
-      <button type="button" :disabled="page === pageCount" @click="page++">
-        <ChevronRight :size="14" />
-      </button>
-    </div>
-  </div>
+  <PagerBar
+    v-if="pageCount > 1"
+    size="md"
+    :label="`${filtered.length} productos · página ${page} de ${pageCount}`"
+    :prev-disabled="page === 1"
+    :next-disabled="page === pageCount"
+    @prev="page--"
+    @next="page++"
+  />
 </template>
 
 <style scoped>
@@ -245,83 +236,15 @@ function rowStock(p: ProductResponse) {
   margin-bottom: 14px;
   flex-wrap: wrap;
 }
-.search {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 9px;
-  padding: 10px 13px;
-  max-width: 340px;
-  flex: 1;
-}
-.search:focus-within {
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
-}
-.s-icon {
-  color: var(--warm-500);
-  flex-shrink: 0;
-}
-.search input {
-  flex: 1;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 13.5px;
-  color: var(--warm-900);
-  min-width: 0;
-}
-.fsel {
-  appearance: none;
-  border: 1px solid var(--warm-200);
-  background: var(--warm-50);
-  border-radius: 9px;
-  padding: 10px 30px 10px 14px;
-  font-family: inherit;
-  font-size: 13.5px;
-  color: var(--warm-800);
-  cursor: pointer;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23999' stroke-width='1.5' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 11px center;
-}
-.fsel:focus {
-  outline: none;
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
-}
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 12px;
-  overflow: hidden;
-}
-.table th {
-  text-align: left;
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--warm-500);
-  font-weight: 600;
-  padding: 11px 14px;
-  background: var(--warm-100);
-  border-bottom: 1px solid var(--warm-200);
-}
-.table td {
-  padding: 11px 14px;
-  border-bottom: 1px solid var(--warm-150);
-  color: var(--warm-800);
-  vertical-align: middle;
-}
-.table tbody tr:last-child td {
-  border-bottom: none;
-}
+
+/* La tabla es `.ds-table` (primitives.css). No queda ninguna regla `.table`
+   local: la primitiva la REEMPLAZA, no compite con ella.
+
+   El `.ds-empty ds-empty--lg` del `<td colspan>` vacío lo resuelve la
+   excepción `.ds-table td.ds-empty--lg` de `primitives.css` (0,2,1), que le
+   gana a `.ds-table td` (0,1,1). Se arregla allí y no aquí a propósito: subir
+   el peso desde el SFC es justo lo que rompió tres overrides deliberados en la
+   pasada anterior. */
 .trow {
   cursor: pointer;
 }
@@ -361,16 +284,6 @@ function rowStock(p: ProductResponse) {
   outline: none;
   border-color: var(--amatista-500);
   box-shadow: var(--ring);
-}
-.catpill {
-  display: inline-flex;
-  padding: 2px 9px;
-  border-radius: var(--radius-pill);
-  font-size: 11px;
-  font-weight: 500;
-  white-space: nowrap;
-  background: var(--warm-150);
-  color: var(--warm-700);
 }
 .tactions {
   display: flex;
@@ -426,36 +339,6 @@ function rowStock(p: ProductResponse) {
   color: oklch(45% 0.12 70deg);
   border-color: oklch(88% 0.08 80deg);
 }
-.pag {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 14px;
-  font-size: 12.5px;
-  color: var(--warm-500);
-}
-.pag-ctrl {
-  display: flex;
-  gap: 6px;
-}
-.pag-ctrl button {
-  width: 30px;
-  height: 30px;
-  border: 1px solid var(--warm-200);
-  background: var(--warm-50);
-  border-radius: 7px;
-  color: var(--warm-700);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-}
-.pag-ctrl button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-.pag-ctrl button:hover:not(:disabled) {
-  background: var(--warm-100);
-}
 
 @media (width <= 760px) {
   .filters {
@@ -463,12 +346,15 @@ function rowStock(p: ProductResponse) {
     align-items: stretch;
     flex-direction: column;
   }
+
+  /* `SearchField` y `FilterSelect` traen su piel, pero el ancho es cosa de esta
+     barra de filtros: sus raíces siguen llevando el `data-v` de este archivo. */
   .search,
   .fsel {
     width: 100%;
     max-width: none;
   }
-  .table {
+  .ds-table {
     display: block;
     overflow-x: auto;
   }

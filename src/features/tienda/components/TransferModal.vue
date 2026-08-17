@@ -73,7 +73,7 @@ function submit() {
     @close="emit('close')"
   >
     <template #body>
-      <div class="body">
+      <div class="ds-stack ds-stack--14">
         <BaseField label="Sede destino" required :error="destError">
           <template #default="{ id }">
             <BaseSelect
@@ -115,10 +115,4 @@ function submit() {
   </ModalShell>
 </template>
 
-<style scoped>
-.body {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-</style>
+<!-- Sin estilos propios: el cuerpo es `.ds-stack--14` y los campos son `BaseField`. -->

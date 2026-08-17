@@ -3,6 +3,8 @@ import { computed, onMounted, ref } from 'vue'
 import { PauseCircle, Pencil, Plus, RotateCcw } from 'lucide-vue-next'
 import ConfirmDeleteDialog from '@/components/feedback/ConfirmDeleteDialog.vue'
 import TaxFormModal from '../components/TaxFormModal.vue'
+import AccentButton from '../components/AccentButton.vue'
+import SegTabs from '../components/SegTabs.vue'
 import { useTienda } from '../composables/useTienda'
 import { formatMoney } from '../composables/pricing'
 import { useToast } from '@/composables/useToast'
@@ -124,14 +126,14 @@ function ivaContenido(percentage: number): string {
         <h1 class="ds-display">Administración de impuestos</h1>
       </div>
       <div class="head-actions">
-        <div class="seg" role="tablist">
-          <button type="button" :class="{ on: mode === 'active' }" @click="switchMode('active')">
-            Activos
-          </button>
-          <button type="button" :class="{ on: mode === 'paused' }" @click="switchMode('paused')">
-            Pausados
-          </button>
-        </div>
+        <SegTabs
+          :model-value="mode"
+          :options="[
+            { value: 'active', label: 'Activos' },
+            { value: 'paused', label: 'Pausados' },
+          ]"
+          @update:model-value="switchMode"
+        />
         <button
           v-if="canCreate && mode === 'active'"
           type="button"
@@ -147,7 +149,7 @@ function ivaContenido(percentage: number): string {
 
     <!-- ─────────── Modo ACTIVOS ─────────── -->
     <div v-if="mode === 'active'" class="tbl-scroll">
-      <table class="table">
+      <table class="ds-table">
         <thead>
           <tr>
             <th>Impuesto</th>
@@ -201,7 +203,7 @@ function ivaContenido(percentage: number): string {
 
     <!-- ─────────── Modo PAUSADOS ─────────── -->
     <div v-else class="tbl-scroll">
-      <table class="table">
+      <table class="ds-table">
         <thead>
           <tr>
             <th>Impuesto</th>
@@ -222,9 +224,9 @@ function ivaContenido(percentage: number): string {
             <td>{{ t.taxScheme }}</td>
             <td class="tstock">{{ t.percentage }}%</td>
             <td>
-              <button v-if="canDelete" type="button" class="reactivate" @click="onReactivate(t)">
+              <AccentButton v-if="canDelete" @click="onReactivate(t)">
                 <RotateCcw :size="14" :stroke-width="1.7" /> Reactivar
-              </button>
+              </AccentButton>
             </td>
           </tr>
         </tbody>
@@ -280,62 +282,16 @@ function ivaContenido(percentage: number): string {
   align-items: center;
   flex-wrap: wrap;
 }
-.seg {
-  display: inline-flex;
-  background: var(--warm-100);
-  border: 1px solid var(--warm-200);
-  border-radius: 9px;
-  padding: 2px;
-}
-.seg button {
-  border: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--warm-600);
-  padding: 6px 12px;
-  border-radius: 7px;
-  cursor: pointer;
-}
-.seg button.on {
-  background: var(--warm-50);
-  color: var(--amatista-700);
-  box-shadow: 0 1px 2px rgb(50 20 80 / 8%);
-}
 .tbl-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 12px;
-  overflow: hidden;
-}
-.table th {
-  text-align: left;
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--warm-500);
-  font-weight: 600;
-  padding: 11px 14px;
-  background: var(--warm-100);
-  border-bottom: 1px solid var(--warm-200);
-}
-.table td {
-  padding: 11px 14px;
-  border-bottom: 1px solid var(--warm-150);
-  color: var(--warm-800);
-  vertical-align: middle;
-}
-.table tbody tr:last-child td {
-  border-bottom: none;
-}
+
+/* Las dos tablas (activos y pausados) son `.ds-table` (primitives.css). Aquí no
+   queda ninguna regla `.table`: la primitiva la sustituye por completo. El
+   `.ds-empty ds-empty--lg` de las cuatro celdas `<td colspan>` vacías lo
+   resuelve la excepción `.ds-table td.ds-empty--lg` de `primitives.css`
+   (0,2,1), que le gana a `.ds-table td` (0,1,1). */
 .trow {
   cursor: pointer;
 }
@@ -359,24 +315,6 @@ function ivaContenido(percentage: number): string {
   align-items: center;
 }
 
-.reactivate {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--amatista-200);
-  background: var(--amatista-50);
-  color: var(--amatista-700);
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.reactivate:hover {
-  background: var(--amatista-100);
-}
 .note {
   margin: 16px 0 0;
   font-size: 12.5px;

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { BookText, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { BookText } from 'lucide-vue-next'
 import ModalShell from '@/components/ui/ModalShell.vue'
+import ExportBar from './ExportBar.vue'
+import PagerBar from './PagerBar.vue'
 import { inventoryApi } from '../api/inventory.api'
 import { formatMoney } from '../composables/pricing'
 import { getProblemDetailMessage } from '@/services/http/http.client'
@@ -79,26 +81,8 @@ watch(
   >
     <template #body>
       <div v-if="error" class="ds-banner ds-banner--error">{{ error }}</div>
-      <div class="exportbar">
-        <span class="exp-lbl">Descargar</span>
-        <button
-          type="button"
-          class="exp"
-          :disabled="exporting || loading"
-          @click="exportPurchases('csv')"
-        >
-          CSV
-        </button>
-        <button
-          type="button"
-          class="exp"
-          :disabled="exporting || loading"
-          @click="exportPurchases('pdf')"
-        >
-          PDF
-        </button>
-      </div>
-      <table class="table">
+      <ExportBar label="Descargar" :disabled="exporting || loading" @export="exportPurchases" />
+      <table class="ds-table ds-table--dense">
         <thead>
           <tr>
             <th>Fecha</th>
@@ -126,17 +110,14 @@ watch(
           </tr>
         </tbody>
       </table>
-      <div v-if="totalPages > 1" class="pag">
-        <span>Página {{ page + 1 }} de {{ totalPages }}</span>
-        <div class="pag-ctrl">
-          <button type="button" :disabled="page === 0" @click="load(page - 1)">
-            <ChevronLeft :size="14" />
-          </button>
-          <button type="button" :disabled="page + 1 >= totalPages" @click="load(page + 1)">
-            <ChevronRight :size="14" />
-          </button>
-        </div>
-      </div>
+      <PagerBar
+        v-if="totalPages > 1"
+        :label="`Página ${page + 1} de ${totalPages}`"
+        :prev-disabled="page === 0"
+        :next-disabled="page + 1 >= totalPages"
+        @prev="load(page - 1)"
+        @next="load(page + 1)"
+      />
     </template>
 
     <template #footer-actions>
@@ -148,34 +129,13 @@ watch(
 </template>
 
 <style scoped>
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12.5px;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 10px;
-  overflow: hidden;
-}
-.table th {
-  text-align: left;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--warm-500);
-  font-weight: 600;
-  padding: 9px 12px;
-  background: var(--warm-100);
-  border-bottom: 1px solid var(--warm-200);
-}
-.table td {
-  padding: 9px 12px;
-  border-bottom: 1px solid var(--warm-150);
-  color: var(--warm-800);
-}
-.table tbody tr:last-child td {
-  border-bottom: none;
-}
+/* La tabla es `.ds-table ds-table--dense` (primitives.css); la regla `.table`
+   local se borró entera para que la primitiva la sustituya en vez de competir
+   con ella. El `.ds-empty` del `<td colspan>` vacío lo resuelve la excepción
+   `.ds-table td.ds-empty` de `primitives.css` (0,2,1), que le gana a
+   `.ds-table--dense td` (0,1,1).
+   Ningún `<th>` lleva `.num` aquí, así que la cifra sigue
+   siendo cosa de las celdas de datos y `.num` no necesita reescritura. */
 .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -193,63 +153,5 @@ watch(
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--warm-500);
-}
-.exportbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.exp-lbl {
-  font-size: 11.5px;
-  color: var(--warm-500);
-  margin-right: 2px;
-}
-.exp {
-  padding: 5px 12px;
-  border-radius: 7px;
-  border: 1px solid var(--warm-200);
-  background: var(--warm-50);
-  color: var(--warm-700);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-}
-.exp:hover:not(:disabled) {
-  background: var(--amatista-50);
-  border-color: var(--amatista-300);
-  color: var(--amatista-700);
-}
-.exp:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.pag {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 12px;
-  font-size: 12px;
-  color: var(--warm-500);
-}
-.pag-ctrl {
-  display: flex;
-  gap: 6px;
-}
-.pag-ctrl button {
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--warm-200);
-  background: var(--warm-50);
-  border-radius: 7px;
-  color: var(--warm-700);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-}
-.pag-ctrl button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 </style>
