@@ -1,5 +1,5 @@
 import { test, expect, type Page, type Locator } from '@playwright/test'
-import { login } from './helpers/auth'
+import { login, PASSWORD } from './helpers/auth'
 import {
   gotoNuevaConsulta,
   createAndSelectOwner,
@@ -27,6 +27,10 @@ import {
  *    y no lo recorta el modal, incluso con el campo al fondo. "Crear medicamento"
  *    abre el formulario sin cerrar el panel.
  */
+
+// Todos los casos entran por login real. Sin credenciales en el entorno la suite se salta en vez
+// de fallar con un login vacío, igual que hacen consulta, acciones e historia.
+test.skip(!PASSWORD, 'Define E2E_PASSWORD para correr el suite de modales')
 
 interface Box {
   x: number

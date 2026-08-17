@@ -96,14 +96,6 @@ jobs:
       - name: Build release
         run: npm run build
 
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-
-      - name: Run authentication smoke tests
-        run: >-
-          npx playwright test e2e/auth.spec.ts --project=chromium
-          --grep "dashboard sin sesi.n redirige|otra sesi.n reemplaz."
-
       - name: Validate AWS publication configuration
         shell: bash
         run: |

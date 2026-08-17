@@ -1,5 +1,5 @@
 import { test, expect, type Page, type Locator } from '@playwright/test'
-import { login } from './helpers/auth'
+import { login, PASSWORD } from './helpers/auth'
 import { uniqueSuffix } from './helpers/consulta'
 
 /**
@@ -16,6 +16,10 @@ import { uniqueSuffix } from './helpers/consulta'
  * Los casos que ESCRIBEN usan nombres ÚNICOS por ejecución (uniqueSuffix) para no
  * chocar con la restricción UNIQUE del nombre del catálogo.
  */
+
+// Todos los casos entran por login real. Sin credenciales en el entorno la suite se salta en vez
+// de fallar con un login vacío, igual que hacen consulta, acciones e historia.
+test.skip(!PASSWORD, 'Define E2E_PASSWORD para correr el suite de medicamentos')
 
 const MEDS_URL = '/dashboard/catalogos/medicamentos'
 const SEEDED_GLOBAL = 'Meloxicam' // sembrado global por la migración 173
