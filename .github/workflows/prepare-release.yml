@@ -80,6 +80,9 @@ jobs:
       - name: Run global quality gate
         run: npm run quality
 
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+
       - name: Build release candidate
         run: npm run build
 
