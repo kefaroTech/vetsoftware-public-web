@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { scrollToFirstError } from '@/composables/scrollToError'
-import { Calendar, Check, AlertTriangle } from 'lucide-vue-next'
+import { Calendar, Check, AlertTriangle, Zap } from 'lucide-vue-next'
 import ModalShell from '@/components/ui/ModalShell.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
@@ -11,12 +11,17 @@ import TimeInput from './TimeInput.vue'
 import OwnerSearchAutocomplete from './OwnerSearchAutocomplete.vue'
 import { useVets } from '../composables/useVets'
 import { useAppointmentForm } from '../composables/useAppointmentForm'
+import { useAppointmentDuration } from '../composables/useAppointmentDuration'
+import { useAuthorization } from '@/features/auth/composables/useAuthorization'
+import { PERMISSIONS } from '@/constants/permissions'
 import { useBranches } from '@/features/branches/composables/useBranches'
 import { useAnimalsByOwnerStore } from '@/features/dashboard/views/consulta/nueva/stores/animalsByOwner.store'
 import {
   APPT_TYPES,
   APPT_NOTES_MAX,
   apptClashes,
+  apptEndTime,
+  apptTimeRange,
   type AppointmentResponse,
   type AppointmentType,
   type CreateAppointmentRequest,
@@ -33,6 +38,18 @@ const props = defineProps<{
   appointment: AppointmentResponse | null
   focusDate: string // yyyy-MM-dd
   existing: AppointmentResponse[]
+  /**
+   * Motivo del último guardado fallido, o `null`. Lo posee la vista, que es quien
+   * llama a la API: el `submit` de este modal es fire-and-forget y no puede saber
+   * si el POST salió bien. Se limpia al abrir y al reintentar.
+   */
+  saveError: string | null
+  /**
+   * `true` sólo cuando ese fallo fue el 409 de solape (`APPOINTMENT_OVERLAP`). Es lo que
+   * distingue «el hueco está ocupado, puedes forzarlo» de cualquier otro error de guardado,
+   * donde ofrecer «Agendar de todos modos» sería mentir: reintentar igual volvería a fallar.
+   */
+  saveErrorOverlap: boolean
 }>()
 
 const emit = defineEmits<{
@@ -46,6 +63,15 @@ const emit = defineEmits<{
 }>()
 
 const { vets, load: loadVets } = useVets()
+// Duración por defecto de la empresa: hace falta para calcular el solape y pintar el rango.
+const {
+  defaultDurationMinutes,
+  refresh: refreshDuration,
+  options: durationOptions,
+} = useAppointmentDuration()
+// Forzar el solape es un permiso aparte (`appointment.overlap.force`), solo del rol ADMIN.
+const { can } = useAuthorization()
+const canForceOverlap = can(PERMISSIONS.APPOINTMENT_OVERLAP_FORCE)
 // Desplegable de sede: solo las sedes ASIGNADAS al usuario (aunque sea admin).
 const { assignedBranches, selectedBranchId } = useBranches()
 const animalsStore = useAnimalsByOwnerStore()
@@ -65,6 +91,7 @@ const form = useAppointmentForm({
 const {
   date,
   time,
+  durationMinutes,
   type,
   employeeId,
   subjectMode,
@@ -112,10 +139,25 @@ watch(
       // El modal está siempre montado (se controla con :open), así que su onMounted corre una sola vez.
       // Al ABRIR se recarga siempre la lista de veterinarios desde el backend (por si cambió).
       void loadVets(true)
+      // Ídem con la duración por defecto de la empresa: un admin pudo cambiarla entre aperturas.
+      void refreshDuration()
       resetFromProps()
     }
   },
   { immediate: true },
+)
+
+/**
+ * El banner del error de guardado vive arriba del formulario: si el cuerpo del modal estaba
+ * desplazado al pulsar Guardar, el motivo aparece fuera de la vista y el usuario sólo ve que
+ * "no pasa nada". Se reutiliza el mismo desplazamiento que la validación (el banner lleva el
+ * marcador `data-error-anchor`, que `scrollToFirstError` reconoce).
+ */
+watch(
+  () => props.saveError,
+  (message) => {
+    if (message) void scrollToFirstError()
+  },
 )
 
 // Default de sede cuando las sucursales llegan tarde.
@@ -204,19 +246,48 @@ const petOptions = computed(() => [
   })),
 ])
 
+// ── Duración ─────────────────────────────────────────────────────────
+/**
+ * El valor `''` es «por defecto». Su etiqueta cambia con el modo porque el backend le da dos
+ * significados: en crear/editar (PUT) `null` devuelve la cita a la duración de la empresa;
+ * en reprogramar (PATCH) `null` deja la que ya tenía.
+ */
+const defaultDurationLabel = computed(() => {
+  const current = props.appointment?.durationMinutes
+  if (isReschedule.value && current != null) return `Sin cambios (${current} min)`
+  return `Por defecto de la empresa (${defaultDurationMinutes.value} min)`
+})
+const durationSelectOptions = computed(() => [
+  { value: '', label: defaultDurationLabel.value },
+  ...durationOptions(props.appointment?.durationMinutes ?? null),
+])
+/** Fin calculado, para que el usuario vea el hueco que está reservando. */
+const endTime = computed(() =>
+  apptEndTime(startAtIso.value, durationMinutes.value, defaultDurationMinutes.value),
+)
+
 // ── Clash preview ────────────────────────────────────────────────────
 const clashing = computed(() => {
   if (employeeId.value == null || !startAtIso.value) return []
-  return apptClashes(props.existing, {
-    id: props.appointment?.id,
-    employeeId: employeeId.value,
-    startAt: startAtIso.value,
-    status: props.appointment?.status ?? 'REQUESTED',
-  })
+  return apptClashes(
+    props.existing,
+    {
+      id: props.appointment?.id,
+      employeeId: employeeId.value,
+      startAt: startAtIso.value,
+      durationMinutes: durationMinutes.value,
+      status: props.appointment?.status ?? 'REQUESTED',
+    },
+    defaultDurationMinutes.value,
+  )
 })
 const clashVetName = computed(
   () => vets.value.find((v) => v.id === employeeId.value)?.name ?? 'El veterinario/a',
 )
+/** "09:00–09:45" de cada cita en conflicto, para que el aviso diga qué hueco choca. */
+function clashRange(appt: AppointmentResponse): string {
+  return apptTimeRange(appt.startAt, appt.durationMinutes, defaultDurationMinutes.value)
+}
 
 function submit() {
   submitted.value = true
@@ -233,7 +304,16 @@ function submit() {
   doEmit()
 }
 
-function doEmit() {
+/**
+ * Reenvío del mismo formulario con `forceOverlap: true`, desde el banner del 409. Nada más
+ * cambia: si la sede ya se confirmó, no se vuelve a preguntar.
+ */
+function forceSubmit() {
+  if (!valid.value || employeeId.value == null) return
+  doEmit(true)
+}
+
+function doEmit(forceOverlap = false) {
   confirmingBranch.value = false
   if (employeeId.value == null) return
 
@@ -241,12 +321,12 @@ function doEmit() {
     emit('submit', {
       mode: 'reschedule',
       id: props.appointment.id,
-      payload: { startAt: startAtIso.value, employeeId: employeeId.value },
+      payload: form.buildReschedulePayload({ forceOverlap }),
     })
     return
   }
 
-  const payload = form.buildPayload(branchId.value)
+  const payload = form.buildPayload(branchId.value, { forceOverlap })
   if (isEdit.value && props.appointment) {
     emit('submit', { mode: 'edit', id: props.appointment.id, payload })
   } else {
@@ -281,6 +361,27 @@ function doEmit() {
         </div>
       </div>
       <div v-else class="mform">
+        <!-- Motivo del último guardado fallido (p. ej. el 409 de solape). -->
+        <div v-if="saveError" class="banner err" role="alert" data-error-anchor>
+          <AlertTriangle :size="16" :stroke-width="1.7" class="banner-ic" />
+          <div class="banner-body">
+            <span>{{ saveError }}</span>
+            <!-- Forzar solo tiene sentido ante el 409 de solape, y solo si hay permiso. -->
+            <button
+              v-if="saveErrorOverlap && canForceOverlap"
+              type="button"
+              class="ds-btn ds-btn--ghost force-btn"
+              @click="forceSubmit"
+            >
+              <Zap :size="15" :stroke-width="1.8" /> Agendar de todos modos
+            </button>
+            <span v-else-if="saveErrorOverlap" class="force-hint">
+              Agendar sobre un hueco ocupado requiere permiso de administrador. Elige otro horario o
+              pide que lo agenden por ti.
+            </span>
+          </div>
+        </div>
+
         <!-- Cuándo + vet -->
         <div class="cols">
           <div class="col">
@@ -297,6 +398,21 @@ function doEmit() {
                 <label class="flabel">Hora de inicio <span class="req">*</span></label>
                 <TimeInput v-model="time" :invalid="submitted && !time" />
               </div>
+            </div>
+            <!--
+              La duración NO cabe como tercera columna de la fila de arriba: con el modal a
+              640px y la rejilla a dos columnas, `Fecha | Hora | Duración` deja ~86px por
+              control y la fecha ("dd MMM yyyy") no entra. Va debajo, ocupando el ancho de la
+              media columna, que además la empareja visualmente con la hora de inicio.
+            -->
+            <div class="field">
+              <label class="flabel">Duración</label>
+              <BaseSelect
+                :model-value="durationMinutes != null ? String(durationMinutes) : ''"
+                :options="durationSelectOptions"
+                @update:model-value="(v: string) => (durationMinutes = v ? Number(v) : null)"
+              />
+              <div v-if="endTime" class="fhint">Termina a las {{ endTime }}.</div>
             </div>
           </div>
           <div class="col">
@@ -346,8 +462,9 @@ function doEmit() {
           <AlertTriangle :size="16" :stroke-width="1.7" class="banner-ic" />
           <span>
             <b>Choque de horario.</b> {{ clashVetName }} ya tiene
-            {{ clashing.length === 1 ? 'otra cita' : `${clashing.length} citas` }} a las {{ time }}.
-            Se puede agendar igual — sólo es una advertencia.
+            {{ clashing.length === 1 ? 'otra cita' : `${clashing.length} citas` }} que se cruzan con
+            {{ time }}–{{ endTime }} ({{ clashing.map(clashRange).join(', ') }}). Si el hueco sigue
+            ocupado al guardar, la cita se rechazará.
           </span>
         </div>
 
@@ -462,7 +579,7 @@ function doEmit() {
         <button type="button" class="ds-btn ds-btn--ghost" @click="confirmingBranch = false">
           Volver
         </button>
-        <button type="button" class="ds-btn ds-btn--solid" @click="doEmit">
+        <button type="button" class="ds-btn ds-btn--solid" @click="doEmit()">
           <Check :size="16" :stroke-width="1.8" /> Sí, agendar en esta sede
         </button>
       </template>
@@ -660,6 +777,31 @@ function doEmit() {
 .banner-ic {
   flex-shrink: 0;
   margin-top: 1px;
+}
+
+/* Columna del cuerpo del banner: el texto del error y, debajo, la acción de
+   forzar el solape (o el aviso de que hace falta permiso para hacerlo). */
+.banner-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.force-btn {
+  border-color: oklch(80% 0.09 25deg);
+  color: var(--danger-700);
+}
+
+.force-btn:hover {
+  background: oklch(96% 0.04 25deg);
+}
+
+.force-hint {
+  font-size: 11.5px;
+  line-height: 1.45;
+  opacity: 0.85;
 }
 
 .banner.warn {

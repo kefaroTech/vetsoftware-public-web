@@ -45,6 +45,7 @@ import type {
   RescheduleAppointmentRequest,
   UpdateAppointmentRequest,
 } from '../features/agenda/types/appointment'
+import type { CompanySettingDto } from '../features/agenda/types/companySetting.types'
 import type { LoginEmployeeRequest, MeResponse, TokenResponse } from '../features/auth/types/index'
 import type { BranchResponse, SaveBranchRequest } from '../features/branches/types/branch.types'
 import type {
@@ -390,6 +391,7 @@ export type ContractAssertions = [
   Expect<MatchesContract<CityResponse, 'CityResponse'>>,
   Expect<MatchesContract<CitySummary, 'CitySummary'>>,
   Expect<MatchesContract<ClinicalEventResponse, 'ClinicalEventResponse'>>,
+  Expect<MatchesContract<CompanySettingDto, 'CompanySettingDto'>>,
   Expect<MatchesContract<CloseCashSessionRequest, 'CloseCashSessionRequest'>>,
   Expect<MatchesContract<CompanyResponse, 'CompanyResponse'>>,
   Expect<MatchesContract<CompanySummary, 'CompanySummary'>>,

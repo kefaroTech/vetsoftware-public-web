@@ -4,8 +4,11 @@ import { nextTick } from 'vue'
  * Marcadores DOM que dejan los primitivos de formulario cuando un campo es inválido:
  * - `aria-invalid="true"` / `.invalid` → BaseInput, BaseSelect, BaseTextarea, DateInput…
  * - `p.error` → mensaje de error que pinta BaseField bajo el campo.
+ * - `[data-error-anchor]` → marcador explícito para lo que no es un campo pero sí es el
+ *   motivo del fallo, típicamente el banner con el error que devolvió el servidor. Sin él,
+ *   un formulario desplazado deja el mensaje fuera de la vista y parece que no pasó nada.
  */
-const ERROR_SELECTOR = '[aria-invalid="true"], .invalid, p.error'
+const ERROR_SELECTOR = '[aria-invalid="true"], .invalid, p.error, [data-error-anchor]'
 
 function isVisible(el: HTMLElement): boolean {
   return el.getClientRects().length > 0

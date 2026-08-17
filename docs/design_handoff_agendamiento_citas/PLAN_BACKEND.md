@@ -6,7 +6,8 @@
 ## 0. Decisiones tomadas
 - `owner_id` **NO** obligatorio. Una cita puede ser de alguien nuevo no registrado → `owner_id` nullable + campos de contacto libre (`client_name`, `client_phone`).
 - `type` = enum (`AppointmentType`), no catálogo configurable en P0.
-- **Solape = solo advertencia.** No se bloquea la reserva; el service calcula los solapes del mismo vet y los devuelve como aviso (nunca 409).
+- ~~**Solape = solo advertencia.** No se bloquea la reserva; el service calcula los solapes del mismo vet y los devuelve como aviso (nunca 409).~~
+  **Revisado en BE-17:** el solape **sí bloquea**. Las citas tienen duración y el service rechaza con **409 `APPOINTMENT_OVERLAP`** cuando el intervalo pisa el de otra cita del mismo vet; se puede agendar igualmente reenviando con el flag de forzado. Los solapes que quedan registrados siguen viajando en `overlappingAppointmentIds`.
 - `animal_id` **NO** obligatorio → nullable (mascota por confirmar). Regla mínima: al menos uno de `{animal, owner, client_name}`.
 - Sin vínculo `consultation_id` en P0.
 
@@ -14,7 +15,7 @@
 | Columna | Tipo | Null | Notas |
 |---|---|---|---|
 | id | BIGINT AUTO_INCREMENT PK | no | |
-| start_at | DATETIME | no | Inicio con hora (LocalDateTime). Punto en el tiempo, sin duración. |
+| start_at | DATETIME | no | Inicio con hora (LocalDateTime). ~~Punto en el tiempo, sin duración.~~ BE-17: la cita ocupa un intervalo — el fin sale de la duración. |
 | type | VARCHAR(30) | no | AppointmentType |
 | status | VARCHAR(20) | no | AppointmentStatus. Default REQUESTED |
 | notes | VARCHAR(1000) | sí | Motivo / notas de recepción |
@@ -104,8 +105,12 @@ Todos scoped a la company (el controller inyecta `authz.currentCompanyId()`; el 
 // PATCH /appointments/{id}/cancel      -> { "reason": "..." }        // ≤300, opcional
 
 // AppointmentResponse incluye:
-//   overlappingAppointmentIds: []   // aviso de choque; NO bloquea
+//   overlappingAppointmentIds: []   // solapes registrados (BE-17: el solape no forzado se rechaza con 409)
 ```
 
-### Regla de solape (§4.3)
-`findClashingIds(employeeId, startAt, excludeId)` — citas del mismo vet a la misma **hora de inicio** (`start_at`), `enabled=true` y estado no terminal (CANCELLED/NO_SHOW no cuentan). No bloquea: se guarda igual y los ids en choque van en `overlappingAppointmentIds`.
+### Regla de solape (§4.3) — reescrita en BE-17
+~~`findClashingIds(employeeId, startAt, excludeId)` — citas del mismo vet a la misma **hora de inicio** (`start_at`), `enabled=true` y estado no terminal (CANCELLED/NO_SHOW no cuentan). No bloquea: se guarda igual y los ids en choque van en `overlappingAppointmentIds`.~~
+
+La cita ocupa un **intervalo** (inicio + duración), no un punto: chocan las citas del mismo vet cuyos intervalos se cruzan, `enabled=true` y en estado no terminal (CANCELLED/NO_SHOW siguen sin contar). El choque **bloquea**: el endpoint responde **409 con `code = APPOINTMENT_OVERLAP`**, y sólo se agenda encima si la petición llega con el flag de forzado. Los solapes que así se aceptan se devuelven en `overlappingAppointmentIds`.
+
+Del lado del front: `isAppointmentOverlap(error)` (en `http.client.ts`) reconoce ese 409; `AgendaView.handleError` recarga la agenda para que la cita que bloquea el hueco aparezca, y el motivo se repinta en el banner rojo del modal.

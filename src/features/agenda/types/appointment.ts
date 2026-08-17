@@ -34,9 +34,32 @@ export interface AppointmentEmployeeRef {
   name: string
 }
 
+/**
+ * Duración de una cita cuando ni la cita ni la empresa dicen otra cosa.
+ *
+ * Es el respaldo del backend replicado aquí a propósito (mismo criterio que el UVT en
+ * `systemConfig.store`): `CompanySettingsAppointmentDurationPolicy.DEFAULT_MINUTES`. La
+ * cadena real es cita → ajuste `appointment.default_duration_minutes` de la empresa → estos
+ * 30 minutos; el eslabón del medio lo lee `useAppointmentDuration`, y si esa lectura falla
+ * (red, o un usuario sin `company.read`) se conserva este valor para que el aviso de solape
+ * del formulario siga funcionando.
+ */
+export const DEFAULT_APPOINTMENT_DURATION_MINUTES = 30
+
+/** Techo del dominio (`Appointment.MAX_DURATION_MINUTES`): 12 horas. */
+export const APPT_MAX_DURATION_MINUTES = 12 * 60
+
+/** Duraciones que ofrece el desplegable del formulario, en minutos. */
+export const APPT_DURATION_CHOICES: readonly number[] = [15, 30, 45, 60, 90]
+
 export interface AppointmentResponse {
   id: number
   startAt: string // ISO LocalDateTime "yyyy-MM-ddTHH:mm:ss"
+  /**
+   * Duración propia de la cita, en minutos. `null` = hereda la duración por defecto de la
+   * empresa. El fin nunca viaja: es derivado (`startAt + duración`).
+   */
+  durationMinutes: number | null
   type: AppointmentType
   status: AppointmentStatus
   notes: string | null
@@ -50,12 +73,21 @@ export interface AppointmentResponse {
   version: number
   enabled: boolean
   createdDate: string
-  /** Aviso de choque (mismo vet + misma hora). NUNCA bloquea. */
+  /**
+   * Citas del mismo veterinario/a con las que ésta comparte hueco. El solape se
+   * rechaza con 409 (`APPOINTMENT_OVERLAP`) salvo que se agende forzándolo, así
+   * que lo que llega aquí son los solapes que quedaron registrados a propósito.
+   */
   overlappingAppointmentIds: number[]
 }
 
 export interface CreateAppointmentRequest {
   startAt: string
+  /**
+   * Duración en minutos (1..720). Omitirla —o mandar `null`— significa «usa la duración por
+   * defecto de la empresa»; no significa «sin duración».
+   */
+  durationMinutes?: number | null
   type: AppointmentType
   employeeId: number
   animalId?: number | null
@@ -68,6 +100,12 @@ export interface CreateAppointmentRequest {
   // Sede en la que se agenda. Se elige en el form (default = sede del menú principal); si no viene, el backend
   // usa la sede activa por defecto. Solo aplica al crear (el update no cambia de sede).
   branchId?: number | null
+  /**
+   * Agendar aunque el hueco del veterinario/a ya esté ocupado. Sin él, el cruce responde
+   * 409 `APPOINTMENT_OVERLAP`; con él, exige además el permiso `appointment.overlap.force`
+   * y responde 403 a quien no lo tenga.
+   */
+  forceOverlap?: boolean
 }
 
 /**
@@ -77,9 +115,15 @@ export interface CreateAppointmentRequest {
  */
 export type UpdateAppointmentRequest = Omit<CreateAppointmentRequest, 'branchId'>
 
+/**
+ * Reprogramar es un PATCH, no un reemplazo: aquí `durationMinutes: null` significa «no toques
+ * la duración», al revés que en crear/editar, donde significa «vuelve a la de la empresa».
+ */
 export interface RescheduleAppointmentRequest {
   startAt: string
+  durationMinutes?: number | null
   employeeId: number
+  forceOverlap?: boolean
 }
 
 export interface ChangeStatusRequest {
@@ -224,21 +268,101 @@ export function toIsoLocalDateTime(date: string, time: string): string {
   return `${date}T${time.length === 5 ? `${time}:00` : time}`
 }
 
+// ── Intervalos ───────────────────────────────────────────────────────
+const ISO_LOCAL_DATE_TIME = /^(\d{4})-(\d{2})-(\d{2})T(\d{1,2}):(\d{2})/
+
 /**
- * Choque de horario (§4.3): mismo vet, misma hora de inicio (al minuto), ambos
- * activos y no-terminales. Es sólo un aviso — nunca bloquea.
+ * El instante del ISO LocalDateTime como minutos absolutos, para poder compararlo y sumarle
+ * duraciones sin aritmética de calendario. `null` si el texto no es un LocalDateTime.
+ *
+ * Se apoya en `Date.UTC` a propósito: el ISO del backend es hora de pared sin zona, así que
+ * interpretarlo en UTC lo convierte en un número estable —el mismo en Bogotá y en CI— y de
+ * paso cruza bien los bordes de mes y de año. Los segundos se descartan: el minuto es la
+ * unidad de la agenda.
+ */
+export function apptStartMinutes(iso: string | null | undefined): number | null {
+  const m = iso ? ISO_LOCAL_DATE_TIME.exec(iso) : null
+  if (!m) return null
+  return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5])) / 60_000
+}
+
+/**
+ * Duración efectiva en minutos: la propia de la cita si la tiene, y si no la de la empresa.
+ * Un valor no positivo se trata como ausente — el backend hace lo mismo al parsear el ajuste.
+ */
+export function apptDuration(
+  durationMinutes: number | null | undefined,
+  defaultDurationMinutes: number = DEFAULT_APPOINTMENT_DURATION_MINUTES,
+): number {
+  if (durationMinutes != null && durationMinutes > 0) return durationMinutes
+  return defaultDurationMinutes > 0 ? defaultDurationMinutes : DEFAULT_APPOINTMENT_DURATION_MINUTES
+}
+
+/** "HH:mm" de la hora de fin (inicio + duración efectiva), o '' si no hay inicio. */
+export function apptEndTime(
+  startAt: string | null | undefined,
+  durationMinutes: number | null | undefined,
+  defaultDurationMinutes?: number,
+): string {
+  const start = apptStartMinutes(startAt)
+  if (start === null) return ''
+  const end = new Date((start + apptDuration(durationMinutes, defaultDurationMinutes)) * 60_000)
+  const hh = String(end.getUTCHours()).padStart(2, '0')
+  const mm = String(end.getUTCMinutes()).padStart(2, '0')
+  return `${hh}:${mm}`
+}
+
+/** "09:00–09:45". Si no hay inicio devuelve ''. */
+export function apptTimeRange(
+  startAt: string | null | undefined,
+  durationMinutes: number | null | undefined,
+  defaultDurationMinutes?: number,
+): string {
+  const end = apptEndTime(startAt, durationMinutes, defaultDurationMinutes)
+  return end ? `${apptTime(startAt)}–${end}` : ''
+}
+
+/**
+ * Vista previa del choque de horario, en el cliente: mismo vet, intervalos que se cruzan,
+ * ambos activos y no-terminales.
+ *
+ * **La intersección es semiabierta**: cada cita ocupa `[inicio, inicio + duración)`, así que
+ * una de 10:00 a 10:30 y otra de 10:30 a 11:00 NO chocan. Es la misma regla que aplica el
+ * backend (`startAt.isBefore(slotEnd) && slot.startAt.isBefore(endAt)`); si aquí se cerrara
+ * el intervalo, cada par de citas consecutivas daría un conflicto falso y el aviso sería
+ * ruido que el usuario aprende a ignorar.
+ *
+ * La cita que no declara duración hereda `defaultDurationMinutes` — el ajuste
+ * `appointment.default_duration_minutes` de la empresa, que pasa `useAppointmentDuration`.
+ * Sigue siendo una ayuda visual: quien decide es el backend, que responde 409
+ * (`APPOINTMENT_OVERLAP`) cuando el hueco está ocupado.
+ *
+ * Comportamiento fijado en `tests/unit/agenda-appointment.spec.ts`.
  */
 export function apptClashes(
   list: AppointmentResponse[],
-  candidate: { id?: number; employeeId: number; startAt: string; status: AppointmentStatus },
+  candidate: {
+    id?: number
+    employeeId: number
+    startAt: string
+    status: AppointmentStatus
+    durationMinutes?: number | null
+  },
+  defaultDurationMinutes: number = DEFAULT_APPOINTMENT_DURATION_MINUTES,
 ): AppointmentResponse[] {
   if (APPT_TERMINAL.has(candidate.status)) return []
-  return list.filter(
-    (o) =>
-      o.id !== candidate.id &&
-      o.enabled !== false &&
-      o.employee.id === candidate.employeeId &&
-      o.startAt.slice(0, 16) === candidate.startAt.slice(0, 16) &&
-      !APPT_TERMINAL.has(o.status),
-  )
+  const start = apptStartMinutes(candidate.startAt)
+  if (start === null) return []
+  const end = start + apptDuration(candidate.durationMinutes, defaultDurationMinutes)
+
+  return list.filter((o) => {
+    if (o.id === candidate.id) return false
+    if (o.enabled === false) return false
+    if (o.employee.id !== candidate.employeeId) return false
+    if (APPT_TERMINAL.has(o.status)) return false
+    const otherStart = apptStartMinutes(o.startAt)
+    if (otherStart === null) return false
+    const otherEnd = otherStart + apptDuration(o.durationMinutes, defaultDurationMinutes)
+    return start < otherEnd && otherStart < end
+  })
 }

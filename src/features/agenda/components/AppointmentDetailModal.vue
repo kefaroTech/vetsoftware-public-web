@@ -23,11 +23,11 @@ import {
   APPT_TYPES,
   APPT_REASON_MAX,
   apptDate,
-  apptTime,
   type AppointmentResponse,
   type AppointmentStatus,
 } from '../types/appointment'
 import { formatDayLong, parseISO } from '../composables/dateUtils'
+import { useAppointmentDuration } from '../composables/useAppointmentDuration'
 
 const props = defineProps<{ appointment: AppointmentResponse | null }>()
 
@@ -47,6 +47,22 @@ const canDelete = can(PERMISSIONS.APPOINTMENT_DELETE)
 
 const open = computed(() => props.appointment !== null)
 
+const { durationOf, rangeOf, refresh: refreshDuration } = useAppointmentDuration()
+/** "09:00–09:45" del hueco que ocupa la cita. */
+const timeRange = computed(() => (props.appointment ? rangeOf(props.appointment) : ''))
+/**
+ * "45 min", y de dónde sale: si la cita no declara duración propia, lo que se está mostrando
+ * es el ajuste de la empresa y conviene decirlo — cambiarlo mueve el fin de esta cita.
+ */
+const durationLabel = computed(() => {
+  const appt = props.appointment
+  if (!appt) return ''
+  const minutes = durationOf(appt)
+  return appt.durationMinutes == null
+    ? `${minutes} min · por defecto de la empresa`
+    : `${minutes} min`
+})
+
 const cancelOpen = ref(false)
 const reason = ref('')
 const confirmDelete = ref(false)
@@ -54,10 +70,12 @@ const confirmDelete = ref(false)
 // Reset del estado interno cada vez que cambia la cita mostrada.
 watch(
   () => props.appointment?.id,
-  () => {
+  (id) => {
     cancelOpen.value = false
     reason.value = ''
     confirmDelete.value = false
+    // Al ABRIR el modal se relee la duración por defecto: el fin que se pinta depende de ella.
+    if (id != null) void refreshDuration()
   },
 )
 
@@ -81,7 +99,8 @@ const subtitle = computed(() => {
   const a = props.appointment
   if (!a) return ''
   const d = parseISO(apptDate(a.startAt))
-  return d ? `${formatDayLong(d)}, ${apptTime(a.startAt)}` : apptTime(a.startAt)
+  const range = rangeOf(a)
+  return d ? `${formatDayLong(d)}, ${range}` : range
 })
 
 const reasonModel = computed({
@@ -110,14 +129,15 @@ const notesCancellation = computed(() =>
         <!-- Datos -->
         <div class="detail-col">
           <div class="status-hero">
-            <span class="hero-time">{{ apptTime(appointment.startAt) }}</span>
+            <span class="hero-time">{{ timeRange }}</span>
             <AppointmentStatusPill :status="appointment.status" />
           </div>
+          <div class="hero-duration">{{ durationLabel }}</div>
 
           <div v-if="clashIds.length > 0" class="banner warn">
             <AlertTriangle :size="16" :stroke-width="1.7" class="banner-ic" />
             <span>
-              <b>Choque de horario:</b> comparte las {{ apptTime(appointment.startAt) }} con
+              <b>Choque de horario:</b> el hueco {{ timeRange }} se cruza con
               {{ clashIds.map((id) => '#' + id).join(', ') }}.
             </span>
           </div>
@@ -291,10 +311,19 @@ const notesCancellation = computed(() =>
 
 .hero-time {
   font-family: var(--font-mono);
-  font-size: 22px;
+
+  /* Baja de 22px porque ahora imprime el rango completo ("09:00–09:45"), no solo el inicio. */
+  font-size: 19px;
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--warm-900);
+  white-space: nowrap;
+}
+
+.hero-duration {
+  margin-top: -10px;
+  font-size: 12px;
+  color: var(--warm-500);
 }
 
 .dfield {

@@ -13,6 +13,7 @@ import AppointmentFormModal from '../components/AppointmentFormModal.vue'
 import AgendaEventDetailModal from '../components/AgendaEventDetailModal.vue'
 import { useAppointments } from '../composables/useAppointments'
 import { useAgendaEvents } from '../composables/useAgendaEvents'
+import { useAppointmentDuration } from '../composables/useAppointmentDuration'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useToast } from '@/composables/useToast'
 import { PERMISSIONS } from '@/constants/permissions'
@@ -28,7 +29,12 @@ import {
   type UpdateAppointmentRequest,
 } from '../types/appointment'
 import type { AgendaEvent, AgendaItem } from '../types/agenda'
-import { isConcurrencyConflict } from '@/services/http/http.client'
+import {
+  getProblemDetailCode,
+  getProblemDetailMessage,
+  isAppointmentOverlap,
+  isConcurrencyConflict,
+} from '@/services/http/http.client'
 
 type ViewMode = 'month' | 'week' | 'day'
 
@@ -62,9 +68,26 @@ const selectedEvent = ref<AgendaEvent | null>(null)
 const formOpen = ref(false)
 const formMode = ref<'create' | 'edit' | 'reschedule'>('create')
 const formAppointment = ref<AppointmentResponse | null>(null)
+/**
+ * Error del último intento de guardado, para repintarlo DENTRO del modal.
+ *
+ * El modal se queda abierto cuando el guardado falla (`formOpen` sólo baja si el
+ * `await` no lanzó), pero hasta ahora no repintaba nada: el usuario veía un aviso
+ * que se va solo y un formulario intacto. La vista es quien llama a la API, así
+ * que es quien conoce el fallo; el modal lo recibe como prop y lo muestra.
+ */
+const formError = ref<string | null>(null)
+/**
+ * `true` cuando ese error fue el 409 de solape y por tanto tiene sentido ofrecer el reenvío
+ * forzado. Se apaga en cuanto el fallo es otro — incluido el 403 de quien no puede forzar,
+ * que si dejara el botón a la vista invitaría a repetir un intento que nunca va a pasar.
+ */
+const formErrorOverlap = ref(false)
 
 // Eventos clínicos (read-only, coexisten con las citas).
 const { events: clinicalEvents } = useAgendaEvents(cursor)
+// Duración por defecto de la empresa: se relee al abrir la pantalla, como el resto.
+const { refresh: refreshDuration } = useAppointmentDuration()
 
 // ── Rango de citas: cubre el grid mensual de 6 semanas (como los eventos) ──
 function applyRangeAndLoad(d: Date) {
@@ -76,7 +99,10 @@ function applyRangeAndLoad(d: Date) {
 // Navegación (cambio de cursor) → nuevo rango + recarga desde el backend.
 watch(cursor, (d) => applyRangeAndLoad(d))
 // Al ABRIR la Agenda, siempre recargar desde el backend (sin usar caché del store).
-onMounted(() => applyRangeAndLoad(cursor.value))
+onMounted(() => {
+  applyRangeAndLoad(cursor.value)
+  void refreshDuration()
+})
 
 // ── Modelo unificado ─────────────────────────────────────────────────
 const items = computed<AgendaItem[]>(() => {
@@ -140,38 +166,60 @@ const backLabel = computed(() =>
 )
 
 // ── Apertura de modales ──────────────────────────────────────────────
+function clearFormError() {
+  formError.value = null
+  formErrorOverlap.value = false
+}
+
 function openCreate() {
   formMode.value = 'create'
   formAppointment.value = null
   selectedAppointment.value = null
+  clearFormError()
   formOpen.value = true
 }
 function openEdit(appt: AppointmentResponse) {
   formMode.value = 'edit'
   formAppointment.value = appt
   selectedAppointment.value = null
+  clearFormError()
   formOpen.value = true
 }
 function openReschedule(appt: AppointmentResponse) {
   formMode.value = 'reschedule'
   formAppointment.value = appt
   selectedAppointment.value = null
+  clearFormError()
   formOpen.value = true
 }
+function closeForm() {
+  formOpen.value = false
+  clearFormError()
+}
 
+/**
+ * Aviso de que la cita guardada comparte hueco con otra del mismo veterinario/a.
+ *
+ * Ya no es "el solape nunca bloquea": el backend responde 409 y sólo deja pasar
+ * el solape cuando se fuerza a propósito. Este toast informa de los solapes que
+ * SÍ quedaron registrados.
+ */
 function notifyClash(appt: AppointmentResponse) {
   const n = appt.overlappingAppointmentIds?.length ?? 0
   if (n > 0) {
     toast.warn(
       'Choque de horario',
-      `La cita #${appt.id} coincide con ${n === 1 ? 'otra cita' : `${n} citas`} del mismo veterinario/a.`,
+      `La cita #${appt.id} comparte hueco con ${n === 1 ? 'otra cita' : `${n} citas`} del mismo veterinario/a.`,
     )
   }
 }
 
 function handleError(e: unknown, title: string) {
   toast.errorFrom(title, e, 'Inténtalo de nuevo.')
-  if (isConcurrencyConflict(e)) {
+  // Los dos 409 significan lo mismo para la pantalla: lo que se ve ya no es lo que
+  // hay en el servidor. En el de solape (BE-17) la recarga es la mitad del aviso —
+  // sin ella el usuario no ve la cita que le está bloqueando el hueco.
+  if (isConcurrencyConflict(e) || isAppointmentOverlap(e)) {
     void load()
   }
 }
@@ -183,6 +231,8 @@ async function onFormSubmit(
     | { mode: 'edit'; id: number; payload: UpdateAppointmentRequest }
     | { mode: 'reschedule'; id: number; payload: RescheduleAppointmentRequest },
 ) {
+  clearFormError()
+  const forced = result.payload.forceOverlap === true
   try {
     if (result.mode === 'create') {
       const created = await create(result.payload)
@@ -205,6 +255,20 @@ async function onFormSubmit(
     formOpen.value = false
   } catch (e) {
     handleError(e, 'No se pudo guardar la cita')
+    // El modal sigue abierto: que el motivo quede a la vista dentro del formulario
+    // y no sólo en un aviso que se va solo.
+    formError.value = getProblemDetailMessage(e, 'No se pudo guardar la cita. Inténtalo de nuevo.')
+    formErrorOverlap.value = isAppointmentOverlap(e)
+
+    // Forzar el solape exige `appointment.overlap.force`, que solo trae ADMIN. Si el intento
+    // forzado se rechaza con 403, el texto del servidor es «Access denied» a secas: aquí se
+    // sustituye por el motivo real. La traza no se pierde — el toast de `handleError` ya salió
+    // por `errorFrom`, con su `X-Trace-Id`.
+    if (forced && getProblemDetailCode(e) === 'FORBIDDEN') {
+      formError.value =
+        'No tienes permiso para agendar sobre un hueco ocupado. Elige otro horario o pide a un administrador que la agende.'
+      formErrorOverlap.value = false
+    }
   }
 }
 
@@ -244,7 +308,7 @@ async function onRemove(appt: AppointmentResponse) {
     <PageHeader
       kicker="Trabajo · Citas"
       title="Agenda"
-      lead="Reserva, confirma, atiende, reprograma y cancela citas. El choque de horario avisa, pero nunca bloquea."
+      lead="Reserva, confirma, atiende, reprograma y cancela citas. Si el hueco del veterinario/a ya está ocupado, la cita no se agenda."
     >
       <template #action>
         <button
@@ -323,7 +387,9 @@ async function onRemove(appt: AppointmentResponse) {
       :appointment="formAppointment"
       :focus-date="focusDate"
       :existing="appointments"
-      @close="formOpen = false"
+      :save-error="formError"
+      :save-error-overlap="formErrorOverlap"
+      @close="closeForm"
       @submit="onFormSubmit"
     />
 

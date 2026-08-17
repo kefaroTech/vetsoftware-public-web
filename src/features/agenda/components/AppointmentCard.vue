@@ -11,9 +11,14 @@ import {
   apptTime,
   type AppointmentResponse,
 } from '../types/appointment'
+import { useAppointmentDuration } from '../composables/useAppointmentDuration'
 
 const props = defineProps<{ appt: AppointmentResponse }>()
 defineEmits<{ click: [appt: AppointmentResponse] }>()
+
+const { durationOf, endOf } = useAppointmentDuration()
+const endTime = computed(() => endOf(props.appt))
+const durationLabel = computed(() => `${durationOf(props.appt)} min`)
 
 const typeMeta = computed(() => APPT_TYPES[props.appt.type])
 const tokens = computed(() => apptTypeTokens(props.appt.type))
@@ -35,8 +40,14 @@ const secondary = computed(() => {
     :style="{ borderLeftColor: tokens.dot }"
     @click="$emit('click', appt)"
   >
-    <div class="card-time">
+    <!--
+      El rango va apilado, no en una línea: "09:00–09:45" seguido no cabe en la columna de
+      hora, y ensancharla hasta que quepa le come el ancho al asunto de la cita, que es lo que
+      el recepcionista lee primero.
+    -->
+    <div class="card-time" :title="`${apptTime(appt.startAt)}–${endTime} · ${durationLabel}`">
       <span class="hh">{{ apptTime(appt.startAt) }}</span>
+      <span class="hh-end">–{{ endTime }}</span>
       <span class="type-ic" aria-hidden="true">{{ typeMeta.icon }}</span>
     </div>
     <div class="card-main">
@@ -65,7 +76,9 @@ const secondary = computed(() => {
 <style scoped>
 .card {
   display: grid;
-  grid-template-columns: 52px 1fr auto;
+
+  /* 56px: lo justo para "09:00" a 15px y "–09:45" a 11px, cada uno en su línea. */
+  grid-template-columns: 56px 1fr auto;
   gap: 14px;
   align-items: center;
   background: var(--warm-50);
@@ -113,6 +126,15 @@ const secondary = computed(() => {
   font-weight: 600;
   color: var(--warm-900);
   letter-spacing: -0.02em;
+}
+
+.hh-end {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--warm-500);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 .type-ic {

@@ -8,6 +8,7 @@ import {
   apptTime,
   type AppointmentResponse,
 } from '../types/appointment'
+import { useAppointmentDuration } from '../composables/useAppointmentDuration'
 
 const props = defineProps<{
   appt: AppointmentResponse
@@ -15,6 +16,16 @@ const props = defineProps<{
 }>()
 
 defineEmits<{ click: [appt: AppointmentResponse] }>()
+
+const { rangeOf, endOf } = useAppointmentDuration()
+/**
+ * En la vista MES el chip mide 11px y ya reparte hora + asunto + punto de estado en el ancho
+ * de una celda del calendario: meter ahí "09:00–09:45" empuja el nombre del paciente fuera y
+ * cambia el dato útil por uno accesorio. El rango va al tooltip, y a la vista semana —que sí
+ * tiene alto— apilado bajo la hora de inicio.
+ */
+const range = computed(() => rangeOf(props.appt))
+const endTime = computed(() => endOf(props.appt))
 
 const typeMeta = computed(() => APPT_TYPES[props.appt.type])
 const tokens = computed(() => apptTypeTokens(props.appt.type))
@@ -34,6 +45,7 @@ const subject = computed(() => props.appt.animal?.name || props.appt.clientName 
       borderLeft: `3px solid ${tokens.dot}`,
       opacity: terminal ? 0.6 : 1,
     }"
+    :title="`${range} · ${subject}`"
     @click.stop="$emit('click', appt)"
   >
     <span class="c-time">{{ apptTime(appt.startAt) }}</span>
@@ -51,9 +63,13 @@ const subject = computed(() => props.appt.animal?.name || props.appt.clientName 
       borderLeft: `4px solid ${tokens.dot}`,
       opacity: terminal ? 0.62 : 1,
     }"
+    :title="range"
     @click.stop="$emit('click', appt)"
   >
-    <span class="w-time">{{ apptTime(appt.startAt) }}</span>
+    <span class="w-time">
+      <span class="w-time-start">{{ apptTime(appt.startAt) }}</span>
+      <span class="w-time-end">–{{ endTime }}</span>
+    </span>
     <span class="w-body">
       <span class="w-line"
         ><strong>{{ typeMeta.icon }} {{ subject }}</strong></span
@@ -120,10 +136,24 @@ const subject = computed(() => props.appt.animal?.name || props.appt.clientName 
 }
 
 .w-time {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   font-family: var(--font-mono);
+  flex-shrink: 0;
+  line-height: 1.25;
+}
+
+.w-time-start {
   font-size: 12px;
   font-weight: 600;
-  flex-shrink: 0;
+}
+
+.w-time-end {
+  font-size: 10px;
+  font-weight: 500;
+  opacity: 0.75;
+  white-space: nowrap;
 }
 
 .w-body {
