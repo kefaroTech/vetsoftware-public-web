@@ -44,7 +44,8 @@ Los archivos en `prototype/` son **referencias de diseño creadas en HTML/React 
 Modal ancho (~800px) con layout de **2 columnas**:
 - Fila superior: **Fecha** | **Hora de inicio** (col izq) · **Veterinario/a asignado** (col der).
 - Banda a todo el ancho: **Tipo de cita** — grid de botones (icono emoji + label) de los 9 tipos; seleccionado con borde/fondo amatista.
-- Aviso de **choque de horario** (banner ámbar) si el vet ya tiene cita a esa hora — informativo, no bloquea.
+- Aviso de **choque de horario** (banner ámbar) si el vet ya tiene cita a esa hora — es una previsualización; el rechazo lo decide el backend (ver "Solape").
+- Banner rojo con el **motivo del guardado fallido** cuando el servidor rechaza la cita (el modal se queda abierto con los datos escritos).
 - Dos columnas: izq = **"¿A quién es la cita?"** toggle *Cliente registrado / Contacto libre*; der = **Notas** (textarea, ≤1000, con contador).
   - *Cliente registrado*: **buscador de propietario** (input con lupa) que filtra por **nombre, ID o documento**, dropdown con avatar+nombre+ID+documento+teléfono; al elegir queda una tarjeta con botón "Cambiar". Debajo, **select de mascota** habilitado solo con dueño elegido, con opción "Por confirmar".
   - *Contacto libre*: inputs **Nombre del contacto** (≤120) y **Teléfono** (≤30).
@@ -63,8 +64,9 @@ Modal ancho (~800px) con layout de **2 columnas**:
 ## Interacciones & comportamiento
 - **Navegación temporal**: flechas mueven mes/semana/día según la vista; "Hoy" vuelve al día de hoy.
 - **Máquina de estados**: solo se ofrecen transiciones válidas (ver PLAN_BACKEND §2). El cambio de estado usa `PATCH /status`; cancelar usa `PATCH /cancel` con motivo.
-- **Reprogramar** = `PATCH /reschedule` (fecha/hora + vet). En el prototipo abre el mismo formulario de edición.
-- **Solape**: al crear/editar/reprogramar, si hay choque (mismo vet + misma hora de inicio, citas activas no terminales) se muestra aviso; **nunca bloquea** el guardado. Los ids en choque llegan en `overlappingAppointmentIds`.
+- **Reprogramar** = `PATCH /reschedule` (fecha/hora + duración + vet). En el prototipo abre el mismo formulario de edición. Ojo con la asimetría del PATCH: aquí `durationMinutes: null` significa «no la cambies», mientras que en crear/editar (PUT) significa «vuelve a la de la empresa».
+- **Duración** (BE-17): cada cita ocupa `[inicio, inicio + duración)`. El desplegable ofrece 15/30/45/60/90 min más «Por defecto de la empresa», que viaja como `null`. Esa duración por defecto sale de `GET /company-settings` (clave `appointment.default_duration_minutes`), cacheada en `appointmentSettings.store`; si la lectura falla —red, o un rol sin `company.read`— se conserva el respaldo de **30 min**, el mismo del backend. El rango se pinta en la tarjeta del día (apilado bajo la hora), en el chip de la semana y en el encabezado del detalle; en la vista mes sólo va en el tooltip, porque el chip no tiene ancho para él.
+- **Solape** (revisado en BE-17): al crear/editar/reprogramar el formulario avisa si detecta cruce (mismo vet, **intervalos que se cruzan** con intersección **semiabierta** — 10:00–10:30 y 10:30–11:00 NO chocan —, citas activas no terminales), pero **la decisión es del backend**, que aplica la misma regla y rechaza con **409 `APPOINTMENT_OVERLAP`**. Ante ese 409 la agenda se recarga —para que la cita que bloquea el hueco quede a la vista—, el motivo se repinta dentro del modal (que además se desplaza hasta el banner) y aparece **«Agendar de todos modos»**, que reenvía con `forceOverlap: true`. Ese botón sólo se muestra a quien tenga `appointment.overlap.force` (rol ADMIN); al resto se le explica que hace falta un administrador, y si aun así el servidor responde 403 el banner lo dice con ese motivo en vez de con el «Access denied» genérico. Los ids de los solapes que sí quedaron registrados llegan en `overlappingAppointmentIds`.
 - **Eliminar** = soft delete (`enabled=false`).
 - **Filtros** por vet y por estado se aplican a las tres vistas.
 - **Toasts** de confirmación tras cada acción (crear, actualizar, cambiar estado, cancelar, eliminar).
