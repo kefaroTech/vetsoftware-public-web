@@ -168,6 +168,12 @@ function load(): NuevaConsultaDraft {
     // Deep-merge de la consulta: drafts LEGACY no traen los campos de examen físico /
     // pronóstico (Fase 3); sin esto quedarían `undefined` y romperían los v-model.
     merged.consultation = { ...emptyConsultation(), ...(parsed.consultation ?? {}) }
+    // El paciente se persiste como `Animal` completo. Drafts LEGACY se guardaron antes de
+    // que `Animal` declarara `enabled` (baja lógica): sin default el campo llega
+    // `undefined` —falsy— y un paciente activo se leería como dado de baja.
+    const legacyPet = parsed.pet as
+      (Omit<Animal, 'enabled'> & { enabled?: boolean }) | null | undefined
+    if (legacyPet) merged.pet = { ...legacyPet, enabled: legacyPet.enabled ?? true }
     // Paso persistido del wizard actual (1 o 2), preservado tal cual. Además,
     // drafts LEGACY de 4 pasos (3/4) colapsan al paso 2. `>= 2` cubre ambos:
     // conserva el paso 2 ACTUAL (antes se perdía) y mapea los antiguos 3/4.

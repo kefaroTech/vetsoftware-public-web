@@ -49,6 +49,10 @@ export interface AnimalResponse {
   deceasedDate: string | null
   company: AnimalCompanySummary
   createdDate: string
+  // Baja lógica (soft-delete). `false` = el animal fue dado de baja y no debe listarse
+  // como paciente activo. Ortogonal a `deceased`, que es un hecho clínico: un animal
+  // fallecido sigue enabled=true y su historia clínica sigue siendo consultable.
+  enabled: boolean
 }
 
 export interface CreateAnimalRequest {
