@@ -100,10 +100,10 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
 </script>
 
 <template>
-  <div class="inv">
+  <div class="ds-page">
     <header class="ds-head">
       <div>
-        <div class="kicker">Administración · Medicamentos</div>
+        <div class="ds-kicker ds-kicker--spaced">Administración · Medicamentos</div>
         <h1 class="ds-display">Catálogo de medicamentos</h1>
       </div>
       <div class="head-actions">
@@ -130,7 +130,7 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
 
     <!-- ─────────── Modo DISPONIBLES ─────────── -->
     <div v-if="mode === 'active'" class="tbl-scroll">
-      <table class="table">
+      <table class="ds-table">
         <thead>
           <tr>
             <th>Medicamento</th>
@@ -185,7 +185,7 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
 
     <!-- ─────────── Modo PAUSADOS ─────────── -->
     <div v-else class="tbl-scroll">
-      <table class="table">
+      <table class="ds-table">
         <thead>
           <tr>
             <th>Medicamento</th>
@@ -243,18 +243,8 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
 </template>
 
 <style scoped>
-.inv {
-  font-family: var(--font-sans);
-  color: var(--warm-900);
-}
-.kicker {
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--warm-500);
-  font-weight: 500;
-  margin-bottom: 6px;
-}
+/* El contenedor usa `.ds-page`, la cabecera `.ds-head` y el rótulo
+   `.ds-kicker--spaced` (primitives.css). */
 .head-actions {
   display: flex;
   gap: 8px;
@@ -288,35 +278,16 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
-.table {
-  width: 100%;
+
+/* Las dos tablas usan `.ds-table` (primitives.css): la firma "pantalla"
+   (13px / radio 12 / celda 11×14) coincidía propiedad a propiedad, así que
+   las reglas `.table`, `.table th`, `.table td` y `.table tbody
+   tr:last-child td` se borraron en vez de dejarlas competir con la
+   primitiva. Lo único que la primitiva NO cubre es el ancho mínimo, que es
+   propio de esta vista (sus columnas se aplastarían dentro de
+   `.tbl-scroll`), así que se conserva como override local mínimo. */
+.ds-table {
   min-width: 560px;
-  border-collapse: collapse;
-  font-size: 13px;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 12px;
-  overflow: hidden;
-}
-.table th {
-  text-align: left;
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--warm-500);
-  font-weight: 600;
-  padding: 11px 14px;
-  background: var(--warm-100);
-  border-bottom: 1px solid var(--warm-200);
-}
-.table td {
-  padding: 11px 14px;
-  border-bottom: 1px solid var(--warm-150);
-  color: var(--warm-800);
-  vertical-align: middle;
-}
-.table tbody tr:last-child td {
-  border-bottom: none;
 }
 .trow:hover {
   background: var(--warm-100);
