@@ -12,7 +12,7 @@ import type {
   WeightSource,
 } from '@/features/dashboard/views/consulta/nueva/types/weightRecord.types'
 import type { WeightUnit } from '@/types/domain'
-import { formatEventDate } from '../composables/format'
+import { formatDateShort } from '@/composables/format'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
@@ -325,7 +325,7 @@ async function remove(id: number) {
           <li v-for="r in descending" :key="r.id" class="wp-item">
             <div class="wp-item-main">
               <span class="wp-item-value">{{ r.value }} {{ UNIT_LABEL[r.unit] }}</span>
-              <span class="wp-item-date">{{ formatEventDate(r.measuredAt) }}</span>
+              <span class="wp-item-date">{{ formatDateShort(r.measuredAt) }}</span>
             </div>
             <div class="wp-item-meta">
               <span class="wp-src" :class="`src-${r.source.toLowerCase()}`">

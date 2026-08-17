@@ -9,7 +9,7 @@ import type { LabActionKind } from '../components/LabSampleCard.vue'
 import { laboratoryTestFileApi } from '../api/laboratoryTestFile.api'
 import type { LaboratoryTestFileResponse } from '../types/laboratoryTestFile.types'
 import { labCode } from '../types/lab'
-import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
+import { formatDateShort } from '@/composables/format'
 import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 
 const props = defineProps<{ open: boolean; test: LaboratoryTestResponse | null }>()

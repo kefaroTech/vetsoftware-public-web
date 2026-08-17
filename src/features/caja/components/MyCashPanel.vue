@@ -2,7 +2,9 @@
 import { computed } from 'vue'
 import { ArrowLeftRight, LockKeyhole } from 'lucide-vue-next'
 import CashMovementsTable from './CashMovementsTable.vue'
-import { branchLabel, formatDateTime, formatMoney, methodLabel } from '../composables/useCaja'
+import CashStatusPill from './CashStatusPill.vue'
+import CashTotalsGrid from './CashTotalsGrid.vue'
+import { branchLabel, formatDateTime } from '../composables/useCaja'
 import type { CashSessionView } from '../types/caja'
 
 /**
@@ -36,7 +38,7 @@ const openedAt = computed(() => props.detail && formatDateTime(props.detail.open
             <h1>{{ branchLabel(session.branchName, session.branchId) }}</h1>
             <p>Terminal {{ detail.terminal }}</p>
           </div>
-          <span class="pill open">Abierta</span>
+          <CashStatusPill status="OPEN" />
         </div>
       </header>
 
@@ -64,16 +66,12 @@ const openedAt = computed(() => props.detail && formatDateTime(props.detail.open
         </div>
       </div>
 
-      <div class="totals">
-        <div class="total-card base">
-          <span class="lbl">Base inicial</span>
-          <span class="val">{{ formatMoney(detail.openingFloat) }}</span>
-        </div>
-        <div v-for="t in detail.totals" :key="t.method" class="total-card">
-          <span class="lbl">{{ methodLabel(t.method) }} (esperado)</span>
-          <span class="val">{{ formatMoney(t.expectedAmount) }}</span>
-        </div>
-      </div>
+      <CashTotalsGrid
+        class="my-totals"
+        :opening-float="detail.openingFloat"
+        :totals="detail.totals"
+        expected
+      />
 
       <h3 class="movement-title">Movimientos</h3>
       <CashMovementsTable
@@ -151,50 +149,8 @@ const openedAt = computed(() => props.detail && formatDateTime(props.detail.open
   gap: 8px;
 }
 
-.pill {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: var(--radius-pill);
-  font-size: 11.5px;
-  font-weight: 600;
-}
-
-.pill.open {
-  background: oklch(92% 0.08 150deg);
-  color: oklch(40% 0.12 150deg);
-}
-
-.totals {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
+.my-totals {
   margin-bottom: 22px;
-}
-
-.total-card {
-  background: var(--warm-100);
-  border-radius: 10px;
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.total-card.base {
-  background: var(--amatista-100, #efe6f7);
-}
-
-.total-card .lbl {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--warm-500);
-}
-
-.total-card .val {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--warm-900);
 }
 
 .movement-title {

@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { ChevronRight } from 'lucide-vue-next'
 import EventTypeChip from './EventTypeChip.vue'
 import { EVENT_TYPES, TYPE_COLORS } from '../constants/eventTypes'
-import { formatEventDate } from '../composables/format'
+import { formatDateShort } from '@/composables/format'
 import type { ClinicalEvent } from '../types/historia'
 
 interface Props {
@@ -16,7 +16,7 @@ const emit = defineEmits<(e: 'select', event: ClinicalEvent) => void>()
 
 const meta = computed(() => EVENT_TYPES[props.event.eventType])
 const tokens = computed(() => TYPE_COLORS[meta.value.color])
-const dateLabel = computed(() => formatEventDate(props.event.eventDate))
+const dateLabel = computed(() => formatDateShort(props.event.eventDate))
 
 function handleClick() {
   if (props.navigable) emit('select', props.event)

@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { CircleCheck } from 'lucide-vue-next'
 import ModalShell from '@/components/ui/ModalShell.vue'
-import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
+import { formatDateShort } from '@/composables/format'
 import type { DoseSlot, OrderVM } from '../types/hospital'
 
 const props = defineProps<{

@@ -6,7 +6,9 @@ import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
 import { useToast } from '@/composables/useToast'
 import { PERMISSIONS } from '@/constants/permissions'
-import { formatMoney, formatDate, invoiceStatusLabel } from '../composables/format'
+import { formatDateNumeric } from '@/composables/format'
+import { formatMoney } from '@/features/tienda/composables/pricing'
+import { invoiceStatusLabel } from '../composables/comprasLabels'
 import SupplierInvoiceModal from '../components/SupplierInvoiceModal.vue'
 import SupplierPaymentModal from '../components/SupplierPaymentModal.vue'
 import type { SupplierInvoice, SupplierInvoiceStatus } from '../types/compras'
@@ -162,8 +164,8 @@ onMounted(refresh)
           <tr v-for="inv in items" :key="inv.id">
             <td class="strong">{{ inv.invoiceNumber }}</td>
             <td>{{ inv.supplier.name }}</td>
-            <td>{{ formatDate(inv.issueDate) }}</td>
-            <td>{{ formatDate(inv.dueDate) }}</td>
+            <td>{{ formatDateNumeric(inv.issueDate) }}</td>
+            <td>{{ formatDateNumeric(inv.dueDate) }}</td>
             <td class="num">{{ formatMoney(inv.total) }}</td>
             <td class="num">{{ formatMoney(inv.balance) }}</td>
             <td>
@@ -217,7 +219,9 @@ onMounted(refresh)
 
     <!-- Cuentas por pagar (aging) -->
     <template v-else>
-      <p v-if="aging" class="aging-asof">Antigüedad de saldos al {{ formatDate(aging.asOf) }}</p>
+      <p v-if="aging" class="aging-asof">
+        Antigüedad de saldos al {{ formatDateNumeric(aging.asOf) }}
+      </p>
       <table class="grid-table">
         <thead>
           <tr>

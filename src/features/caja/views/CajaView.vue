@@ -249,7 +249,7 @@ watch(
 </script>
 
 <template>
-  <div class="caja">
+  <div class="ds-page ds-page--contained caja">
     <header class="page-head">
       <div class="title-wrap">
         <Wallet :size="22" :stroke-width="1.7" />
@@ -364,11 +364,10 @@ watch(
 </template>
 
 <style scoped>
+/* El ancho, el centrado y el padding de la página son `.ds-page--contained`
+   (primitives.css); aquí sólo queda el tono de los botones de caja. */
 .caja {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 24px 28px;
-  font-family: var(--font-sans);
+  --ds-btn-solid-bg: var(--amatista-600);
 }
 
 .page-head {
@@ -475,12 +474,6 @@ watch(
   border-radius: 50%;
   background: #2f9d62;
   box-shadow: 0 0 0 3px rgb(47 157 98 / 12%);
-}
-
-/* Los botones usan `.ds-btn` (primitives.css). Caja/compras van con el tono
-   --amatista-600, un punto más claro que el --amatista-700 del resto. */
-.caja {
-  --ds-btn-solid-bg: var(--amatista-600);
 }
 
 @media (width <= 720px) {

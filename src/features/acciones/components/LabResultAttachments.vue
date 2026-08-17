@@ -62,14 +62,29 @@ async function downloadFile(att: LaboratoryTestFileResponse) {
     <p v-else-if="error" class="att-state error">{{ error }}</p>
     <ul v-else class="att-list">
       <li v-for="att in attachments" :key="att.id" class="att">
-        <FileText :size="15" :stroke-width="1.7" class="att-icon" />
-        <button type="button" class="att-name" title="Ver archivo" @click="viewFile(att)">
+        <FileText :size="15" :stroke-width="1.7" class="ds-icon-muted" />
+        <button
+          type="button"
+          class="att-name ds-flex-fill ds-truncate"
+          title="Ver archivo"
+          @click="viewFile(att)"
+        >
           {{ att.originalFileName }}
         </button>
-        <button type="button" class="icon" title="Ver" @click="viewFile(att)">
+        <button
+          type="button"
+          class="ds-icon-btn ds-icon-btn--accent att-action"
+          title="Ver"
+          @click="viewFile(att)"
+        >
           <Eye :size="15" :stroke-width="1.7" />
         </button>
-        <button type="button" class="icon" title="Descargar" @click="downloadFile(att)">
+        <button
+          type="button"
+          class="ds-icon-btn ds-icon-btn--accent att-action"
+          title="Descargar"
+          @click="downloadFile(att)"
+        >
           <Download :size="15" :stroke-width="1.7" />
         </button>
       </li>
@@ -121,17 +136,9 @@ async function downloadFile(att: LaboratoryTestFileResponse) {
   color: var(--warm-800);
 }
 
-.att-icon {
-  color: var(--warm-500);
-  flex-shrink: 0;
-}
-
+/* El recorte y el `flex:1` los ponen `.ds-truncate` y `.ds-flex-fill`; aquí
+   queda solo lo que hace que un `<button>` parezca un enlace. */
 .att-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   text-align: left;
   background: transparent;
   border: none;
@@ -145,22 +152,8 @@ async function downloadFile(att: LaboratoryTestFileResponse) {
   text-decoration: underline;
 }
 
-.icon {
-  background: transparent;
-  border: 1px solid var(--warm-200);
-  color: var(--warm-700);
-  border-radius: 7px;
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
+/* Único añadido sobre `.ds-icon-btn`: no encoger frente al nombre del archivo. */
+.att-action {
   flex-shrink: 0;
-}
-
-.icon:hover {
-  background: var(--amatista-50);
-  border-color: var(--amatista-300);
-  color: var(--amatista-700);
 }
 </style>

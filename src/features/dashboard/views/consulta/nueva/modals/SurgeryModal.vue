@@ -10,7 +10,7 @@ import DateInput from '@/components/ui/DateInput.vue'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 import type { Animal, Surgery } from '@/types/domain'
 import type { SurgeryDraftItem } from '../composables/useNuevaConsultaDraft'
-import { todayISO, formatDateLong, formatDateShort } from '../composables/format'
+import { todayISO, formatDateLong, formatDateShort } from '@/composables/format'
 import { useSurgeryTypes } from '@/features/surgery-types/composables/useSurgeryTypes'
 import { scrollToFirstError } from '@/composables/scrollToError'
 

@@ -10,10 +10,7 @@ import VoidPaymentModal from './VoidPaymentModal.vue'
 import VoidChargeModal from './VoidChargeModal.vue'
 import { useCuentas } from '../composables/useCuentas'
 import { formatMoney } from '@/features/tienda/composables/pricing'
-import {
-  initials,
-  formatDateShort,
-} from '@/features/dashboard/views/consulta/nueva/composables/format'
+import { initials, formatDateShort } from '@/composables/format'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
 import {
   OPEN_ACCOUNT_STATUS_LABEL,

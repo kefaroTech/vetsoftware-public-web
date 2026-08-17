@@ -15,6 +15,8 @@ import CategoryManagerModal from '../components/CategoryManagerModal.vue'
 import InventoryAlerts from '../components/InventoryAlerts.vue'
 import InventoryProductsTable from '../components/InventoryProductsTable.vue'
 import InventoryPausedTable from '../components/InventoryPausedTable.vue'
+import FilterSelect from '../components/FilterSelect.vue'
+import SegTabs from '../components/SegTabs.vue'
 import { useTienda } from '../composables/useTienda'
 import { useInventoryActions } from '../composables/useInventoryActions'
 import { useBranches } from '@/features/branches/composables/useBranches'
@@ -196,23 +198,23 @@ function onFormClose() {
         <h1 class="ds-display">Inventario por sede</h1>
       </div>
       <div class="head-actions">
-        <select
+        <FilterSelect
           v-if="branches.hasBranches.value"
           v-model="branches.selectedValue.value"
-          class="fsel branch"
+          class="branch"
         >
           <option v-for="o in branches.options.value" :key="o.value" :value="o.value">
             {{ o.label }}
           </option>
-        </select>
-        <div class="seg" role="tablist">
-          <button type="button" :class="{ on: mode === 'active' }" @click="switchMode('active')">
-            Activos
-          </button>
-          <button type="button" :class="{ on: mode === 'paused' }" @click="switchMode('paused')">
-            Pausados
-          </button>
-        </div>
+        </FilterSelect>
+        <SegTabs
+          :model-value="mode"
+          :options="[
+            { value: 'active', label: 'Activos' },
+            { value: 'paused', label: 'Pausados' },
+          ]"
+          @update:model-value="switchMode"
+        />
         <button
           v-if="showStock"
           type="button"
@@ -409,45 +411,13 @@ function onFormClose() {
   flex-shrink: 0;
   align-items: center;
 }
-.seg {
-  display: inline-flex;
-  background: var(--warm-100);
-  border: 1px solid var(--warm-200);
-  border-radius: 9px;
-  padding: 2px;
-}
-.seg button {
-  border: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--warm-600);
-  padding: 6px 12px;
-  border-radius: 7px;
-  cursor: pointer;
-}
-.seg button.on {
-  background: var(--warm-50);
-  color: var(--amatista-700);
-  box-shadow: 0 1px 2px rgb(50 20 80 / 8%);
-}
 
-/* El selector de sede es el único `.fsel` que queda en la vista. */
-.fsel {
-  appearance: none;
-  border: 1px solid var(--warm-200);
-  background: var(--warm-50);
-  border-radius: 9px;
-  padding: 10px 30px 10px 14px;
-  font-family: inherit;
-  font-size: 13.5px;
-  color: var(--warm-800);
-  cursor: pointer;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23999' stroke-width='1.5' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 11px center;
-}
+/* El selector de sede es un `FilterSelect` teñido: solo se queda el tinte, que
+   es propio de esta vista.
+
+   El `:focus` se repite aquí a propósito. `.fsel.branch` pesa lo mismo que el
+   `:focus` del componente y el desempate lo decidiría el orden del bundle; con
+   las dos reglas en este archivo, el borde de foco gana siempre por orden. */
 .fsel.branch {
   color: var(--amatista-700);
   border-color: var(--amatista-200);
@@ -455,9 +425,7 @@ function onFormClose() {
   font-weight: 500;
 }
 .fsel:focus {
-  outline: none;
   border-color: var(--amatista-500);
-  box-shadow: var(--ring);
 }
 
 @media (width <= 760px) {
@@ -472,14 +440,14 @@ function onFormClose() {
   }
 
   /* Los antiguos `.cta`/`.ghost-cta` son ahora `.ds-btn`; todos viven dentro
-     de `.head-actions`, así que el selector sigue acotado a ellos. */
+     de `.head-actions`, así que el selector sigue acotado a ellos. `.seg` y
+     `.fsel` son raíces de componente y conservan el `data-v` de esta vista. */
   .seg,
   .head-actions .ds-btn,
   .fsel {
     width: 100%;
     max-width: none;
   }
-  .seg button,
   .head-actions .ds-btn {
     justify-content: center;
   }

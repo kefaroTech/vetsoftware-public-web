@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import HospStatusPill from './HospStatusPill.vue'
-import {
-  initials,
-  formatDateShort,
-} from '@/features/dashboard/views/consulta/nueva/composables/format'
+import { initials, formatDateShort } from '@/composables/format'
 import { daysSince } from '../composables/mar'
 import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/types/hospitalization.types'
 

@@ -2,8 +2,7 @@
 import { PawPrint } from 'lucide-vue-next'
 import type { Animal, Owner } from '@/types/domain'
 import BaseChip from '@/components/ui/BaseChip.vue'
-import { calcAge } from '../composables/format'
-
+import { calcAge } from '@/composables/format'
 defineProps<{
   owner: Owner
   pet: Animal

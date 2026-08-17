@@ -109,7 +109,7 @@ function onPrint() {
             <span class="fe-doc-lab">Documento DIAN</span>
             <FeStatusPill :status="document.dianStatus" />
           </div>
-          <div v-if="docNumber" class="fe-doc-num">N.º {{ docNumber }}</div>
+          <div v-if="docNumber" class="fe-doc-num ds-strong">N.º {{ docNumber }}</div>
           <p v-else-if="document.dianStatus === 'PENDIENTE'" class="fe-doc-hint">
             Datos guardados. La emisión a la DIAN queda pendiente (módulo de facturación no
             habilitado).
@@ -118,7 +118,7 @@ function onPrint() {
         <ul class="lines">
           <li v-for="l in lines" :key="`${l.kind}-${l.id}`" class="line">
             <span class="ln-name"
-              >{{ l.name }} <span class="ln-qty">×{{ l.qty }}</span></span
+              >{{ l.name }} <span class="ds-meta">×{{ l.qty }}</span></span
             >
             <span class="ln-amount">{{ formatMoney(l.unitPrice * l.qty) }}</span>
           </li>
@@ -189,8 +189,6 @@ function onPrint() {
 }
 .fe-doc-num {
   font-size: 13px;
-  font-weight: 600;
-  color: var(--warm-900);
 }
 .fe-doc-hint {
   margin: 0;
@@ -213,10 +211,6 @@ function onPrint() {
   justify-content: space-between;
   font-size: 13.5px;
   color: var(--warm-800);
-}
-.ln-qty {
-  color: var(--warm-500);
-  font-size: 12px;
 }
 .summary {
   display: flex;
@@ -241,6 +235,9 @@ function onPrint() {
   border-top: 1px solid var(--warm-200);
 }
 
+/* NO es `.ds-btn--ghost`: aquí el borde es `warm-300`, el fondo blanco opaco y
+   el texto `warm-800`, y al pasar el ratón oscurece el borde en vez de rellenar.
+   Migrarlo aclararía el botón "Imprimir" — queda anotado en el informe. */
 .btn-ghost {
   display: inline-flex;
   align-items: center;
@@ -278,6 +275,9 @@ function onPrint() {
   background: transparent;
   color: var(--warm-600);
 }
+
+/* Mismo cuerpo que el hover de un botón fantasma, pero esto es un ESTADO
+   activo: el ancho de tiquete elegido. No es `.ds-btn--plain`. */
 .w-seg button.on {
   background: var(--warm-100);
   color: var(--warm-900);

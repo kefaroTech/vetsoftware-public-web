@@ -122,7 +122,7 @@ async function toggle(terminal: CashTerminal) {
 
 <template>
   <section class="terminals-panel">
-    <div class="panel-head">
+    <div class="ds-head panel-head">
       <div>
         <h3><MonitorSmartphone :size="17" :stroke-width="1.7" /> Terminales de caja</h3>
         <p>Administra los puntos de caja disponibles en cada sede.</p>
@@ -247,13 +247,9 @@ async function toggle(terminal: CashTerminal) {
   padding-top: 24px;
   border-top: 1px solid var(--warm-200);
 }
-.panel-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 16px;
-  margin-bottom: 16px;
-}
+
+/* El armazón de la cabecera es `.ds-head` (primitives.css); aquí sólo queda su
+   contenido y el apilado en móvil. */
 .panel-head h3 {
   display: flex;
   align-items: center;

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { initialsFromName } from '../composables/format'
+import { initials } from '@/composables/format'
 import type { Animal } from '@/types/domain'
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits<(e: 'select', pet: Animal) => void>()
 
-const initials = computed(() => initialsFromName(props.pet.name))
+const petInitials = computed(() => initials(props.pet.name))
 
 const sexLabel = computed(() => (props.pet.gender === 'FEMALE' ? 'Hembra' : 'Macho'))
 
@@ -23,7 +23,7 @@ const weightLabel = computed(() => {
 
 <template>
   <button type="button" class="pet-card" @click="emit('select', pet)">
-    <div class="avatar">{{ initials }}</div>
+    <div class="avatar">{{ petInitials }}</div>
     <div class="body">
       <div class="name">{{ pet.name }}</div>
       <div class="taxa">{{ pet.specie.name }} · {{ pet.breed.name }}</div>

@@ -18,8 +18,7 @@ import { hospitalizationApi } from '@/features/dashboard/views/consulta/nueva/ap
 import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/types/hospitalization.types'
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import type { Owner } from '@/types/domain'
-import { formatDateShort } from '@/features/dashboard/views/consulta/nueva/composables/format'
-
+import { formatDateShort } from '@/composables/format'
 const { can } = useAuthorization()
 const toast = useToast()
 const canCreate = can(PERMISSIONS.HOSPITALIZATION_CREATE)
@@ -185,7 +184,7 @@ function isActive(item: HospitalizationResponse): boolean {
           <tr class="clickable-row" @click="onRowClick(item)">
             <td>{{ formatDateShort(item.startDate) }}</td>
             <td>{{ typeLabel(item.type) }}</td>
-            <td class="ellipsis">{{ item.reason }}</td>
+            <td class="ellipsis ds-truncate">{{ item.reason }}</td>
             <td>
               <StatusPill v-if="isActive(item)" label="Activa" tone="warn" />
               <StatusPill v-else label="Cerrada" tone="success" />
@@ -245,11 +244,9 @@ function isActive(item: HospitalizationResponse): boolean {
 </template>
 
 <style scoped>
+/* El recorte lo pone `.ds-truncate`; aquí solo el ancho de esta columna. */
 .ellipsis {
   max-width: 320px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .actions-col {
   width: 88px;

@@ -51,8 +51,8 @@ const emit = defineEmits<{
         <span>Agrega productos o servicios</span>
       </div>
       <div v-for="l in lines" :key="`${l.kind}-${l.id}`" class="line">
-        <div class="line-info">
-          <div class="line-name">
+        <div class="ds-flex-fill">
+          <div class="ds-item-label">
             <span v-if="l.kind === 'service'" class="line-tag">Servicio</span>{{ l.name }}
           </div>
           <div class="line-price">
@@ -74,7 +74,7 @@ const emit = defineEmits<{
             <Plus :size="13" :stroke-width="2" />
           </button>
         </div>
-        <div class="line-total">{{ formatMoney(l.unitPrice * l.qty) }}</div>
+        <div class="line-total ds-strong">{{ formatMoney(l.unitPrice * l.qty) }}</div>
         <button type="button" class="line-x" aria-label="Quitar" @click="emit('remove', l)">
           <Trash2 :size="13" :stroke-width="1.7" />
         </button>
@@ -189,17 +189,6 @@ const emit = defineEmits<{
   background: var(--warm-100);
 }
 
-.line-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.line-name {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-900);
-}
-
 .line-tag {
   display: inline-block;
   font-size: 9.5px;
@@ -263,8 +252,6 @@ const emit = defineEmits<{
 
 .line-total {
   font-size: 13px;
-  font-weight: 600;
-  color: var(--warm-900);
   min-width: 64px;
   text-align: right;
 }

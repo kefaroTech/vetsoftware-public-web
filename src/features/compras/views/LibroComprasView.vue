@@ -6,7 +6,8 @@ import { useBranchStore } from '@/features/branches/stores/branch.store'
 import { useToast } from '@/composables/useToast'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { purchaseReportApi } from '../api/purchaseReport.api'
-import { formatMoney, formatDate } from '../composables/format'
+import { formatDateNumeric } from '@/composables/format'
+import { formatMoney } from '@/features/tienda/composables/pricing'
 import type { PurchaseBook } from '../types/compras'
 
 const branchStore = useBranchStore()
@@ -112,7 +113,7 @@ onMounted(load)
             <td class="strong">{{ e.supplierName }}</td>
             <td>{{ e.supplierTaxId ?? '—' }}</td>
             <td>{{ e.invoiceNumber }}</td>
-            <td>{{ formatDate(e.issueDate) }}</td>
+            <td>{{ formatDateNumeric(e.issueDate) }}</td>
             <td class="num">{{ formatMoney(e.subtotal) }}</td>
             <td class="num">{{ formatMoney(e.taxAmount) }}</td>
             <td class="num">{{ formatMoney(e.withholdingAmount) }}</td>

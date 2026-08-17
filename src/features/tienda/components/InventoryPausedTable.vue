@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { RotateCcw } from 'lucide-vue-next'
+import AccentButton from './AccentButton.vue'
+import CategoryPill from './CategoryPill.vue'
 import { formatMoney } from '../composables/pricing'
 import { productCategoryTone } from '../composables/categoryTone'
 import type { ProductResponse } from '../types/tienda'
@@ -23,7 +25,7 @@ const emit = defineEmits<{ reactivate: [product: ProductResponse] }>()
   <p class="paused-hint">
     Productos pausados (ocultos del punto de venta). Reactívalos para volverlos a vender.
   </p>
-  <table class="table">
+  <table class="ds-table">
     <thead>
       <tr>
         <th>Producto</th>
@@ -43,21 +45,17 @@ const emit = defineEmits<{ reactivate: [product: ProductResponse] }>()
       <tr v-for="p in products" v-else :key="p.id">
         <td class="tname">{{ p.name }}</td>
         <td>
-          <span
-            class="catpill"
-            :style="{
-              background: productCategoryTone(p.productCategory).bg,
-              color: productCategoryTone(p.productCategory).fg,
-            }"
-            >{{ p.productCategory.name }}</span
-          >
+          <CategoryPill
+            :tone="productCategoryTone(p.productCategory)"
+            :label="p.productCategory.name"
+          />
         </td>
         <td class="tsku">{{ p.code }}</td>
         <td>{{ formatMoney(p.salePrice) }}</td>
         <td class="tactions">
-          <button v-if="canDelete" type="button" class="reactivate" @click="emit('reactivate', p)">
+          <AccentButton v-if="canDelete" @click="emit('reactivate', p)">
             <RotateCcw :size="14" :stroke-width="1.7" /> Reactivar
-          </button>
+          </AccentButton>
         </td>
       </tr>
     </tbody>
@@ -70,35 +68,12 @@ const emit = defineEmits<{ reactivate: [product: ProductResponse] }>()
   font-size: 12.5px;
   color: var(--warm-500);
 }
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 12px;
-  overflow: hidden;
-}
-.table th {
-  text-align: left;
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--warm-500);
-  font-weight: 600;
-  padding: 11px 14px;
-  background: var(--warm-100);
-  border-bottom: 1px solid var(--warm-200);
-}
-.table td {
-  padding: 11px 14px;
-  border-bottom: 1px solid var(--warm-150);
-  color: var(--warm-800);
-  vertical-align: middle;
-}
-.table tbody tr:last-child td {
-  border-bottom: none;
-}
+
+/* La tabla es `.ds-table` (primitives.css); la regla `.table` local se borró
+   entera porque la primitiva la REEMPLAZA, no convive con ella. El
+   `.ds-empty ds-empty--lg` del `<td colspan>` vacío lo resuelve la excepción
+   `.ds-table td.ds-empty--lg` de `primitives.css` (0,2,1), que le gana a
+   `.ds-table td` (0,1,1). */
 .tname {
   font-weight: 500;
   color: var(--warm-900);
@@ -108,42 +83,14 @@ const emit = defineEmits<{ reactivate: [product: ProductResponse] }>()
   font-size: 12px;
   color: var(--warm-600);
 }
-.catpill {
-  display: inline-flex;
-  padding: 2px 9px;
-  border-radius: var(--radius-pill);
-  font-size: 11px;
-  font-weight: 500;
-  white-space: nowrap;
-  background: var(--warm-150);
-  color: var(--warm-700);
-}
 .tactions {
   display: flex;
   gap: 6px;
   align-items: center;
 }
-.reactivate {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--amatista-200);
-  background: var(--amatista-50);
-  color: var(--amatista-700);
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.reactivate:hover {
-  background: var(--amatista-100);
-}
 
 @media (width <= 760px) {
-  .table {
+  .ds-table {
     display: block;
     overflow-x: auto;
   }

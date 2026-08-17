@@ -3,7 +3,7 @@ import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { ChevronRight, Search } from 'lucide-vue-next'
 import PawLoader from '@/components/feedback/PawLoader.vue'
 import { useOwnerSearch } from '@/features/dashboard/views/consulta/nueva/composables/useOwnerSearch'
-import { initialsFromName } from '../composables/format'
+import { initials } from '@/composables/format'
 import type { Owner } from '@/types/domain'
 
 const emit = defineEmits<(e: 'select', owner: Owner) => void>()
@@ -74,7 +74,7 @@ onBeforeUnmount(() => observer?.disconnect())
         :class="{ striped: i % 2 === 1 }"
         @click="emit('select', o)"
       >
-        <div class="avatar">{{ initialsFromName(o.name) }}</div>
+        <div class="avatar">{{ initials(o.name) }}</div>
         <div class="info">
           <div class="name">{{ o.name }}</div>
           <div class="meta">

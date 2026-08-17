@@ -2,8 +2,8 @@
 import { Check } from 'lucide-vue-next'
 import type { Animal } from '@/types/domain'
 import BaseChip from '@/components/ui/BaseChip.vue'
-import { calcAge, genderLabel, initials, weightUnitLabel } from '../composables/format'
-
+import { calcAge, initials } from '@/composables/format'
+import { genderLabel, weightUnitLabel } from '@/composables/domainLabels'
 defineProps<{
   pet: Animal
   selected: boolean

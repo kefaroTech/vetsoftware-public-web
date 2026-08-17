@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { ChevronRight } from 'lucide-vue-next'
 import DetailField from '../DetailField.vue'
 import EventTypeChip from '../EventTypeChip.vue'
-import { formatEventDate } from '../../composables/format'
+import { formatDateShort } from '@/composables/format'
 import { EVENT_TYPES, EVENT_TYPE_DETAILABLE } from '../../constants/eventTypes'
 import type { ClinicalEvent } from '../../types/historia'
 import type { ConsultationResponse } from '@/features/dashboard/views/consulta/nueva/types/consultation.types'
@@ -69,10 +69,10 @@ const childrenCountLabel = computed(() =>
 <template>
   <div class="ds-detail-grid">
     <DetailField label="Tipo de consulta" :value="data.consultationType.name" />
-    <DetailField label="Fecha" :value="formatEventDate(data.date)" />
+    <DetailField label="Fecha" :value="formatDateShort(data.date)" />
     <DetailField
       label="Próximo control"
-      :value="data.nextControl ? formatEventDate(data.nextControl) : null"
+      :value="data.nextControl ? formatDateShort(data.nextControl) : null"
     />
     <DetailField label="Anamnesis" :value="clean(data.anamnesis)" span="full" />
 
@@ -153,7 +153,7 @@ const childrenCountLabel = computed(() =>
             <div class="child-body">
               <div class="child-head">
                 <EventTypeChip :type="c.eventType" />
-                <span class="child-date">{{ formatEventDate(c.eventDate) }}</span>
+                <span class="child-date">{{ formatDateShort(c.eventDate) }}</span>
                 <span class="child-id">#{{ c.sourceId }}</span>
               </div>
               <div class="child-summary">

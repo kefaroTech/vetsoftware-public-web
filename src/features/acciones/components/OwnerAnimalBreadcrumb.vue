@@ -15,14 +15,14 @@ defineEmits<{ reset: [] }>()
   <div class="breadcrumb">
     <div class="crumb">
       <div class="badge"><User :size="13" :stroke-width="1.7" /></div>
-      <span class="name">{{ owner.name }}</span>
-      <span class="meta">{{ owner.document }}</span>
+      <span class="ds-item-label">{{ owner.name }}</span>
+      <span class="ds-hint">{{ owner.document }}</span>
     </div>
     <ChevronRight :size="14" :stroke-width="1.6" class="sep" />
     <div class="crumb">
       <div class="badge paw"><PawPrint :size="13" :stroke-width="1.7" /></div>
-      <span class="name">{{ animal.name }}</span>
-      <span class="meta">{{ animal.specie.name }} · {{ animal.breed.name }}</span>
+      <span class="ds-item-label">{{ animal.name }}</span>
+      <span class="ds-hint">{{ animal.specie.name }} · {{ animal.breed.name }}</span>
     </div>
     <button type="button" class="reset" @click="$emit('reset')">
       <X :size="12" :stroke-width="1.8" />
@@ -65,17 +65,6 @@ defineEmits<{ reset: [] }>()
 
 .badge.paw {
   border-radius: 7px;
-}
-
-.name {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-900);
-}
-
-.meta {
-  font-size: 11.5px;
-  color: var(--warm-500);
 }
 
 .sep {

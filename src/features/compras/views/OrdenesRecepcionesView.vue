@@ -8,7 +8,8 @@ import { goodsReceiptsApi } from '../api/goodsReceipts.api'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useToast } from '@/composables/useToast'
 import { PERMISSIONS } from '@/constants/permissions'
-import { formatMoney, formatDate } from '../composables/format'
+import { formatDateNumeric } from '@/composables/format'
+import { formatMoney } from '@/features/tienda/composables/pricing'
 import PurchaseOrderModal from '../components/PurchaseOrderModal.vue'
 import GoodsReceiptModal from '../components/GoodsReceiptModal.vue'
 import Pagination from '@/components/ui/Pagination.vue'
@@ -184,8 +185,8 @@ onMounted(refresh)
         <tr v-for="po in orderRows" :key="po.id">
           <td class="strong">#{{ po.id }}</td>
           <td>{{ po.supplier.name }}</td>
-          <td>{{ formatDate(po.orderDate) }}</td>
-          <td>{{ formatDate(po.expectedDate) }}</td>
+          <td>{{ formatDateNumeric(po.orderDate) }}</td>
+          <td>{{ formatDateNumeric(po.expectedDate) }}</td>
           <td class="num">{{ formatMoney(poTotal(po)) }}</td>
           <td>
             <span class="pill" :class="po.status.toLowerCase().replaceAll('_', '-')">
@@ -255,7 +256,7 @@ onMounted(refresh)
         <tr v-for="gr in receiptRows" :key="gr.id">
           <td class="strong">#{{ gr.id }}</td>
           <td>{{ gr.supplier.name }}</td>
-          <td>{{ formatDate(gr.receiptDate) }}</td>
+          <td>{{ formatDateNumeric(gr.receiptDate) }}</td>
           <td>{{ gr.supplierInvoiceNumber ?? '—' }}</td>
           <td>{{ gr.purchaseOrderId ? '#' + gr.purchaseOrderId : '—' }}</td>
           <td class="num">{{ gr.lines.length }}</td>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import EventCard from './EventCard.vue'
-import { formatMonthLabel } from '../composables/format'
+import { formatMonthLabel } from '@/composables/format'
 import { EVENT_TYPE_DETAILABLE } from '../constants/eventTypes'
 import type { ClinicalEvent } from '../types/historia'
 

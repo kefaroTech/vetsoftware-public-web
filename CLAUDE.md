@@ -402,13 +402,42 @@ Referencia: `uml/Veterinaria.puml` en el repo del backend.
 | `ReproductiveState` | `STERILIZED`, `NO_STERILIZED`, `UNKNOWN` | ✅ alineado     |
 
 Para el display en español, las funciones `genderLabel` /
-`reproductiveLabel` / `weightUnitLabel` en `composables/format.ts` traducen
-los valores del enum (ej. `'KILOGRAMS'` → `'kg'`, `'FEMALE'` → `'Hembra'`).
-**Nunca** uses el valor crudo del enum en la UI.
+`reproductiveLabel` / `weightUnitLabel` en `src/composables/domainLabels.ts`
+traducen los valores del enum (ej. `'KILOGRAMS'` → `'kg'`, `'FEMALE'` →
+`'Hembra'`). **Nunca** uses el valor crudo del enum en la UI.
 
 Al alinear un enum: actualizar el tipo en `src/types/domain.ts`, los
 `*Options` del componente, los defaults de `*Draft`, los mocks en `data/`,
-los formatters/labels en `format.ts`, y cualquier mapper de API.
+las etiquetas en `src/composables/domainLabels.ts`, y cualquier mapper de API.
+
+## Formato transversal (fechas, iniciales, edad)
+
+Hay **un solo** módulo de formato genérico: `src/composables/format.ts`
+(`todayISO`, `parseISODate`, `formatDateShort`, `formatDateLong`,
+`formatDateNumeric`, `formatMonthLabel`, `calcAge`, `initials`). Ninguna
+feature declara el suyo: llegaron a convivir tres `format.ts` —compras, el
+asistente de consulta y la historia clínica— con tres implementaciones de la
+misma fecha corta y dos de las mismas iniciales, y el punto de venta importaba
+su helper de fechas desde dentro del wizard de consulta, a ocho niveles de
+profundidad.
+
+Los dos formatos de fecha que **sí** conviven, porque son distintos:
+
+| Función             | Salida               | Dónde                       |
+| ------------------- | -------------------- | --------------------------- |
+| `formatDateShort`   | `13 ago 2026`        | por defecto en toda la app  |
+| `formatDateNumeric` | `13/08/2026`         | tablas contables de compras |
+| `formatDateLong`    | `13 de agosto, 2026` | encabezados y frases        |
+
+Todas parsean con `parseISODate`, que fija la medianoche **local** y por tanto
+tolera tanto `yyyy-MM-dd` como `yyyy-MM-ddTHH:mm:ss` sin corrimiento de zona
+horaria. El marcador de "sin dato" es `—`; pásales `''` como segundo argumento
+si el hueco debe quedar vacío. Cubierto por `tests/unit/format.spec.ts`.
+
+Lo específico de una feature no sube aquí: los importes van por
+`formatMoney` de `features/tienda/composables/pricing.ts` (núcleo monetario) y
+el vocabulario de cada feature se queda en su `*Labels.ts`
+(`features/compras/composables/comprasLabels.ts`).
 
 ## Los dos fronts son independientes, pero se escriben igual (TR-02)
 

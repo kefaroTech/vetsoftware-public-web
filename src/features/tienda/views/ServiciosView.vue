@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { Package, PauseCircle, Pencil, Plus, RotateCcw, Search } from 'lucide-vue-next'
+import { Package, PauseCircle, Pencil, Plus, RotateCcw } from 'lucide-vue-next'
 import ConfirmDeleteDialog from '@/components/feedback/ConfirmDeleteDialog.vue'
 import ServiceFormModal from '../components/ServiceFormModal.vue'
 import CategoryManagerModal from '../components/CategoryManagerModal.vue'
+import AccentButton from '../components/AccentButton.vue'
+import CategoryPill from '../components/CategoryPill.vue'
+import FilterSelect from '../components/FilterSelect.vue'
+import SearchField from '../components/SearchField.vue'
+import SegTabs from '../components/SegTabs.vue'
 import { useTienda } from '../composables/useTienda'
 import { formatMoney } from '../composables/pricing'
 import { serviceCategoryTone } from '../composables/categoryTone'
@@ -175,14 +180,14 @@ async function onCategoryRemove(id: number) {
         <h1 class="ds-display">Servicios ofrecidos</h1>
       </div>
       <div class="head-actions">
-        <div class="seg" role="tablist">
-          <button type="button" :class="{ on: mode === 'active' }" @click="switchMode('active')">
-            Activos
-          </button>
-          <button type="button" :class="{ on: mode === 'paused' }" @click="switchMode('paused')">
-            Pausados
-          </button>
-        </div>
+        <SegTabs
+          :model-value="mode"
+          :options="[
+            { value: 'active', label: 'Activos' },
+            { value: 'paused', label: 'Pausados' },
+          ]"
+          @update:model-value="switchMode"
+        />
         <button
           v-if="canManageCategories"
           type="button"
@@ -207,40 +212,32 @@ async function onCategoryRemove(id: number) {
     <!-- ─────────── Modo ACTIVOS ─────────── -->
     <template v-if="mode === 'active'">
       <div class="filters">
-        <div class="search">
-          <Search :size="15" :stroke-width="1.7" class="s-icon" />
-          <input v-model="query" type="search" placeholder="Buscar servicio…" />
-        </div>
-        <select v-model="cat" class="fsel">
+        <SearchField v-model="query" fill placeholder="Buscar servicio…" />
+        <FilterSelect v-model="cat">
           <option value="">Todas las categorías</option>
           <option v-for="c in store.serviceCategories.value" :key="c.id" :value="String(c.id)">
             {{ c.name }}
           </option>
-        </select>
+        </FilterSelect>
       </div>
 
-      <div v-if="store.loading.value" class="state">Cargando…</div>
-      <div v-else-if="groups.length === 0" class="state">Sin servicios para el filtro.</div>
+      <div v-if="store.loading.value" class="state ds-empty">Cargando…</div>
+      <div v-else-if="groups.length === 0" class="state ds-empty">
+        Sin servicios para el filtro.
+      </div>
 
       <section v-for="g in groups" v-else :key="g.id" class="svc-group">
         <div class="svc-group-head">
-          <span
-            class="catpill"
-            :style="{
-              background: serviceCategoryTone(g).bg,
-              color: serviceCategoryTone(g).fg,
-            }"
-            >{{ g.name }}</span
-          >
-          <span class="svc-group-count">{{ g.items.length }}</span>
+          <CategoryPill :tone="serviceCategoryTone(g)" :label="g.name" />
+          <span class="ds-meta">{{ g.items.length }}</span>
         </div>
         <div class="svc-list">
           <div v-for="s in g.items" :key="s.id" class="svc-row" @click="onRowClick(s)">
-            <div class="svc-info">
+            <div class="ds-flex-fill">
               <div class="svc-name">{{ s.name }}</div>
-              <div v-if="s.notes" class="svc-notes">{{ s.notes }}</div>
+              <div v-if="s.notes" class="svc-sub ds-meta">{{ s.notes }}</div>
             </div>
-            <div class="svc-price">{{ formatMoney(s.price) }}</div>
+            <div class="svc-price ds-strong">{{ formatMoney(s.price) }}</div>
             <div class="svc-actions" @click.stop>
               <button
                 v-if="canUpdate"
@@ -271,21 +268,21 @@ async function onCategoryRemove(id: number) {
       <p class="paused-hint">
         Servicios pausados (ocultos del punto de venta). Reactívalos para volver a ofrecerlos.
       </p>
-      <div v-if="pausedLoading" class="state">Cargando…</div>
-      <div v-else-if="store.pausedServices.value.length === 0" class="state">
+      <div v-if="pausedLoading" class="state ds-empty">Cargando…</div>
+      <div v-else-if="store.pausedServices.value.length === 0" class="state ds-empty">
         No hay servicios pausados.
       </div>
       <div v-else class="svc-list">
         <div v-for="s in store.pausedServices.value" :key="s.id" class="svc-row static">
-          <div class="svc-info">
+          <div class="ds-flex-fill">
             <div class="svc-name">{{ s.name }}</div>
-            <div class="svc-cat">{{ s.serviceCategory.name }}</div>
+            <div class="svc-sub ds-meta">{{ s.serviceCategory.name }}</div>
           </div>
-          <div class="svc-price">{{ formatMoney(s.price) }}</div>
+          <div class="svc-price ds-strong">{{ formatMoney(s.price) }}</div>
           <div class="svc-actions">
-            <button v-if="canDelete" type="button" class="reactivate" @click="onReactivate(s)">
+            <AccentButton v-if="canDelete" @click="onReactivate(s)">
               <RotateCcw :size="14" :stroke-width="1.7" /> Reactivar
-            </button>
+            </AccentButton>
           </div>
         </div>
       </div>
@@ -341,29 +338,6 @@ async function onCategoryRemove(id: number) {
   flex-shrink: 0;
   align-items: center;
 }
-.seg {
-  display: inline-flex;
-  background: var(--warm-100);
-  border: 1px solid var(--warm-200);
-  border-radius: 9px;
-  padding: 2px;
-}
-.seg button {
-  border: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--warm-600);
-  padding: 6px 12px;
-  border-radius: 7px;
-  cursor: pointer;
-}
-.seg button.on {
-  background: var(--warm-50);
-  color: var(--amatista-700);
-  box-shadow: 0 1px 2px rgb(50 20 80 / 8%);
-}
 .paused-hint {
   margin: 0 0 14px;
   font-size: 12.5px;
@@ -375,59 +349,10 @@ async function onCategoryRemove(id: number) {
   margin-bottom: 16px;
   flex-wrap: wrap;
 }
-.search {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 9px;
-  padding: 10px 13px;
-  max-width: 340px;
-  flex: 1;
-}
-.search:focus-within {
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
-}
-.s-icon {
-  color: var(--warm-500);
-  flex-shrink: 0;
-}
-.search input {
-  flex: 1;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 13.5px;
-  color: var(--warm-900);
-  min-width: 0;
-}
 
-.fsel {
-  appearance: none;
-  border: 1px solid var(--warm-200);
-  background: var(--warm-50);
-  border-radius: 9px;
-  padding: 10px 30px 10px 14px;
-  font-family: inherit;
-  font-size: 13.5px;
-  color: var(--warm-800);
-  cursor: pointer;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23999' stroke-width='1.5' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 11px center;
-}
-.fsel:focus {
-  outline: none;
-  border-color: var(--amatista-500);
-  box-shadow: var(--ring);
-}
+/* `.state` es `.ds-empty` con más aire: solo sobrevive lo que se desvía. */
 .state {
   padding: 48px;
-  text-align: center;
-  color: var(--warm-500);
   font-size: 13px;
 }
 .svc-group {
@@ -438,20 +363,6 @@ async function onCategoryRemove(id: number) {
   align-items: center;
   gap: 9px;
   margin-bottom: 8px;
-}
-.svc-group-count {
-  font-size: 12px;
-  color: var(--warm-500);
-}
-.catpill {
-  display: inline-flex;
-  padding: 2px 9px;
-  border-radius: var(--radius-pill);
-  font-size: 11px;
-  font-weight: 500;
-  white-space: nowrap;
-  background: var(--warm-150);
-  color: var(--warm-700);
 }
 .svc-list {
   display: flex;
@@ -478,29 +389,19 @@ async function onCategoryRemove(id: number) {
 .svc-row.static:hover {
   border-color: var(--warm-200);
 }
-.svc-info {
-  flex: 1;
-  min-width: 0;
-}
 .svc-name {
   font-size: 14px;
   font-weight: 500;
   color: var(--warm-900);
 }
-.svc-notes {
-  font-size: 12px;
-  color: var(--warm-500);
-  margin-top: 2px;
-}
-.svc-cat {
-  font-size: 12px;
-  color: var(--warm-500);
+
+/* La nota del servicio activo y la categoría del pausado eran dos reglas con el
+   mismo cuerpo: `.ds-meta` más el aire de la línea de arriba. */
+.svc-sub {
   margin-top: 2px;
 }
 .svc-price {
   font-size: 15px;
-  font-weight: 600;
-  color: var(--warm-900);
   white-space: nowrap;
 }
 .svc-actions {
@@ -508,25 +409,6 @@ async function onCategoryRemove(id: number) {
   gap: 4px;
   flex-shrink: 0;
   align-items: center;
-}
-
-.reactivate {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--amatista-200);
-  background: var(--amatista-50);
-  color: var(--amatista-700);
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.reactivate:hover {
-  background: var(--amatista-100);
 }
 
 @media (width <= 760px) {
@@ -543,7 +425,9 @@ async function onCategoryRemove(id: number) {
   }
 
   /* Los antiguos `.cta`/`.ghost-cta` son ahora `.ds-btn`; todos viven dentro
-     de `.head-actions`, así que el selector sigue acotado a ellos. */
+     de `.head-actions`, así que el selector sigue acotado a ellos. `.seg`,
+     `.search` y `.fsel` son raíces de componente: conservan el `data-v` de esta
+     vista, así que el ancho se sigue decidiendo aquí. */
   .seg,
   .head-actions .ds-btn,
   .search,
@@ -552,7 +436,6 @@ async function onCategoryRemove(id: number) {
     max-width: none;
   }
 
-  .seg button,
   .head-actions .ds-btn {
     justify-content: center;
   }

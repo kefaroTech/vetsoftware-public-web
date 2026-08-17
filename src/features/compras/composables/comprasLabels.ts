@@ -1,21 +1,12 @@
+/**
+ * Vocabulario de Compras: estados de factura de proveedor y métodos de pago.
+ *
+ * Es lo único de aquel `composables/format.ts` que era genuinamente de esta
+ * feature. El formato de fecha (`formatDateNumeric`) y el de importe
+ * (`formatMoney`) eran duplicados y viven donde tienen que vivir:
+ * `@/composables/format` y `@/features/tienda/composables/pricing`.
+ */
 import type { SupplierInvoiceStatus, SupplierPaymentMethod } from '../types/compras'
-
-const money = new Intl.NumberFormat('es-CO', {
-  style: 'currency',
-  currency: 'COP',
-  maximumFractionDigits: 0,
-})
-
-export function formatMoney(value: number | null | undefined): string {
-  return money.format(value ?? 0)
-}
-
-export function formatDate(iso: string | null | undefined): string {
-  if (!iso) return '—'
-  return new Date(iso + (iso.length === 10 ? 'T00:00:00' : '')).toLocaleDateString('es-CO', {
-    dateStyle: 'medium',
-  })
-}
 
 const STATUS_LABELS: Record<SupplierInvoiceStatus, string> = {
   PENDING: 'Pendiente',
@@ -23,6 +14,7 @@ const STATUS_LABELS: Record<SupplierInvoiceStatus, string> = {
   PAID: 'Pagada',
   CANCELLED: 'Anulada',
 }
+
 export function invoiceStatusLabel(status: SupplierInvoiceStatus): string {
   return STATUS_LABELS[status]
 }
@@ -33,6 +25,7 @@ const METHOD_LABELS: Record<SupplierPaymentMethod, string> = {
   TRANSFER: 'Transferencia',
   OTHER: 'Otro',
 }
+
 export function paymentMethodLabel(method: SupplierPaymentMethod): string {
   return METHOD_LABELS[method]
 }

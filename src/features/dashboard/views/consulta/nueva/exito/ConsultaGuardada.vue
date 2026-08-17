@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { Check, ArrowRight, Plus, Printer } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
-import { formatDateLong } from '../composables/format'
+import { formatDateLong } from '@/composables/format'
 import { usePrescriptionExport } from '../composables/usePrescriptionExport'
 
 const router = useRouter()

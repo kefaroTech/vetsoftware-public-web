@@ -10,7 +10,8 @@ import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import DateInput from '@/components/ui/DateInput.vue'
 import type { Animal, Hospitalization, HospitalizationType, ReasonLeaving } from '@/types/domain'
 import type { HospitalizationDraftItem } from '../composables/useNuevaConsultaDraft'
-import { todayISO, formatDateLong, formatDateShort, weightUnitLabel } from '../composables/format'
+import { todayISO, formatDateLong, formatDateShort } from '@/composables/format'
+import { weightUnitLabel } from '@/composables/domainLabels'
 import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{

@@ -9,7 +9,7 @@ import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import DateInput from '@/components/ui/DateInput.vue'
 import { useSuppliers } from '../composables/useSuppliers'
 import { useSupplierInvoices } from '../composables/useSupplierInvoices'
-import { formatMoney } from '../composables/format'
+import { formatMoney } from '@/features/tienda/composables/pricing'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import type { Supplier, SupplierInvoice } from '../types/compras'
 
