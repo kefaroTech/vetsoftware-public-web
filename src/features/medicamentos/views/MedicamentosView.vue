@@ -147,7 +147,7 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
             <td colspan="4" class="ds-empty ds-empty--lg">Sin medicamentos. Crea el primero.</td>
           </tr>
           <tr v-for="m in sorted" v-else :key="m.id" class="ds-row-hover">
-            <td class="tname">{{ m.name }}</td>
+            <td class="tname ds-text-strong">{{ m.name }}</td>
             <td class="tdesc">{{ m.description || '—' }}</td>
             <td>
               <span v-if="m.general" class="scope ds-tone--accent-soft"
@@ -201,7 +201,7 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
             <td colspan="3" class="ds-empty ds-empty--lg">No hay medicamentos pausados.</td>
           </tr>
           <tr v-for="m in store.disabled.value" v-else :key="m.id">
-            <td class="tname">{{ m.name }}</td>
+            <td class="tname ds-text-strong">{{ m.name }}</td>
             <td class="tdesc">{{ m.description || '—' }}</td>
             <td>
               <button v-if="canDelete" type="button" class="reactivate" @click="onReactivate(m)">
@@ -273,9 +273,11 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
 }
 
 /* Los dos contenedores con scroll usan `.ds-table-scroll` y la fila con hover
-   `.ds-row-hover` (primitives.css). `.tname` NO puede migrar a
-   `.ds-text-strong`: es el propio `<td>`, y `.ds-table td` pesa (0,1,1), por
-   encima de cualquier primitiva de una sola clase que fije `color`. */
+   `.ds-row-hover` (primitives.css). `.tname` migra por completo a
+   `.ds-text-strong`: la primitiva aporta el `font-weight` desde su base y el
+   `color` desde la excepción `.ds-table td.ds-text-strong` (primitives.css,
+   auditoría FE-08 fase final), que le gana a `.ds-table td` (0,1,1) por
+   nombre — ya no queda CSS local para esta celda. */
 
 /* Las dos tablas usan `.ds-table` (primitives.css): la firma "pantalla"
    (13px / radio 12 / celda 11×14) coincidía propiedad a propiedad, así que
@@ -286,10 +288,6 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
    `.tbl-scroll`), así que se conserva como override local mínimo. */
 .ds-table {
   min-width: 560px;
-}
-.tname {
-  font-weight: 500;
-  color: var(--warm-900);
 }
 .tdesc {
   color: var(--warm-600);

@@ -14,6 +14,7 @@ const emit = defineEmits<{ export: [format: 'csv' | 'pdf'] }>()
     <button
       type="button"
       class="exp ds-hover-accent"
+      :class="{ 'ds-is-disabled': disabled }"
       :disabled="disabled"
       @click="emit('export', 'csv')"
     >
@@ -22,6 +23,7 @@ const emit = defineEmits<{ export: [format: 'csv' | 'pdf'] }>()
     <button
       type="button"
       class="exp ds-hover-accent"
+      :class="{ 'ds-is-disabled': disabled }"
       :disabled="disabled"
       @click="emit('export', 'pdf')"
     >
@@ -52,10 +54,14 @@ const emit = defineEmits<{ export: [format: 'csv' | 'pdf'] }>()
   font-family: inherit;
   font-size: 12px;
   font-weight: 500;
-  cursor: pointer;
 }
-.exp:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+
+/* El estado apagado es `.ds-is-disabled` (primitives.css, opacidad 0.5). La
+   regla local se borró en vez de dejarla competir, que es el contrato de esa
+   primitiva. El `cursor` se acota al botón activo porque `.ds-is-disabled`
+   pesa (0,1,0) y un `.exp[data-v]` (0,2,0) con `pointer` le ganaría el
+   `cursor: not-allowed`. */
+.exp:not(:disabled) {
+  cursor: pointer;
 }
 </style>

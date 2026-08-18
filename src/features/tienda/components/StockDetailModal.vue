@@ -268,15 +268,20 @@ watch(
   color: oklch(48% 0.16 25deg);
   font-weight: 600;
 }
-.date {
-  color: var(--warm-600);
-  white-space: nowrap;
-}
-.ref {
-  color: var(--warm-600);
-}
+
+/* Las tres celdas secundarias comparten tono, así que comparten regla; el
+   `nowrap` y el ancho máximo son de una sola cada uno. No hay primitiva para
+   este par: `.ds-meta-dark` es warm-600 pero fija 13px y aquí la tabla es
+   densa (12,5px). */
+.date,
+.ref,
 .reason {
   color: var(--warm-600);
+}
+.date {
+  white-space: nowrap;
+}
+.reason {
   max-width: 200px;
 }
 </style>

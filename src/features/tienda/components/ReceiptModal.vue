@@ -147,8 +147,20 @@ function onPrint() {
     </template>
     <template #footer-left>
       <div class="w-seg" role="group" aria-label="Ancho del tiquete">
-        <button type="button" :class="{ on: width === '80' }" @click="setWidth('80')">80mm</button>
-        <button type="button" :class="{ on: width === '58' }" @click="setWidth('58')">58mm</button>
+        <button
+          type="button"
+          :class="width === '80' ? 'on ds-text-strong' : null"
+          @click="setWidth('80')"
+        >
+          80mm
+        </button>
+        <button
+          type="button"
+          :class="width === '58' ? 'on ds-text-strong' : null"
+          @click="setWidth('58')"
+        >
+          58mm
+        </button>
       </div>
     </template>
     <template #footer-actions>
@@ -261,6 +273,13 @@ function onPrint() {
   gap: 2px;
 }
 
+/* La regla base se queda con la GEOMETRÍA; el color viaja aparte. `.ds-hover-
+   neutral` no sirve aquí (sólo pinta en `:hover` y esto es un ESTADO activo:
+   el ancho de tiquete elegido), así que el tono fuerte lo pone
+   `.ds-text-strong` desde el marcado — con el `color` fuera de esta regla la
+   primitiva (0,1,0) ya no pierde contra `.w-seg button[data-v]` (0,2,1). El
+   `font-weight: 500` coincide con el de la primitiva, así que activar y
+   apagar no cambia el peso. */
 .w-seg button {
   font-family: inherit;
   font-size: 12px;
@@ -270,13 +289,11 @@ function onPrint() {
   cursor: pointer;
   border: none;
   background: transparent;
+}
+.w-seg button:not(.on) {
   color: var(--warm-600);
 }
-
-/* Mismo cuerpo que el hover de un botón fantasma, pero esto es un ESTADO
-   activo: el ancho de tiquete elegido. No es `.ds-btn--plain`. */
 .w-seg button.on {
   background: var(--warm-100);
-  color: var(--warm-900);
 }
 </style>

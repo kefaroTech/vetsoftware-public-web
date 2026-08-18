@@ -157,9 +157,9 @@ async function toggle(terminal: CashTerminal) {
         <span class="terminal-icon"><MonitorSmartphone :size="18" :stroke-width="1.6" /></span>
         <div class="terminal-info ds-stack">
           <strong>{{ terminal.name }}</strong>
-          <span>{{ terminal.code }}</span>
+          <span class="ds-meta ds-meta--caption">{{ terminal.code }}</span>
         </div>
-        <span class="status" :class="terminal.active ? 'active' : 'off'">
+        <span class="status" :class="terminal.active ? 'ds-tone--success' : 'ds-tone--neutral'">
           {{ terminal.active ? 'Activo' : 'Inactivo' }}
         </span>
         <div v-if="canManage" class="terminal-actions ds-grid-span">
@@ -314,10 +314,12 @@ button:disabled {
   font-size: 13.5px;
   color: var(--warm-900);
 }
+
+/* El par color+tamaño es `.ds-meta ds-meta--caption` (primitives.css:
+   warm-500 + 11px, exactamente lo que había). Sólo queda la fuente mono, que
+   ninguna primitiva declara. */
 .terminal-info span {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--warm-500);
 }
 .status {
   font-size: 10.5px;
@@ -325,14 +327,11 @@ button:disabled {
   padding: 3px 8px;
   border-radius: var(--radius-pill);
 }
-.status.active {
-  background: var(--success-bg);
-  color: var(--success-fg);
-}
-.status.off {
-  background: var(--warm-200);
-  color: var(--warm-600);
-}
+
+/* Los dos tonos son `.ds-tone--success` / `.ds-tone--neutral` (primitives.css),
+   aplicados desde el marcado: coincidían declaración a declaración. `.status`
+   no fija ni `background` ni `color`, así que las primitivas ganan con su peso
+   natural y las reglas locales se borraron en vez de competir con ellas. */
 .terminal-actions {
   display: flex;
   justify-content: flex-end;
@@ -368,15 +367,20 @@ button:disabled {
   gap: 16px;
 }
 
+/* Las dos filas de la cabecera se apilan igual en móvil, así que van en una
+   sola regla. `align-items: stretch` NO es redundante aquí aunque sea el valor
+   inicial: `.panel-head` lleva `.ds-head`, que fija `align-items: flex-end`, y
+   `.actions` lo fija en `center` — sin el reset, los hijos quedarían alineados
+   al borde en vez de a lo ancho. El `min-width: 0` lo necesita `.actions`
+   (arranca en 390px, más que el ancho disponible a 720px); sobre `.panel-head`
+   es inerte, porque no es un ítem flex y `min-width: auto` ya resuelve a 0 en
+   una caja de bloque. */
 @media (width <= 720px) {
-  .panel-head {
-    align-items: stretch;
-    flex-direction: column;
-  }
+  .panel-head,
   .actions {
-    min-width: 0;
-    flex-direction: column;
     align-items: stretch;
+    flex-direction: column;
+    min-width: 0;
   }
 }
 </style>

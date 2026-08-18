@@ -148,7 +148,7 @@ function ivaContenido(percentage: number): string {
     <div v-if="store.error.value" class="ds-banner ds-banner--error">{{ store.error.value }}</div>
 
     <!-- ─────────── Modo ACTIVOS ─────────── -->
-    <div v-if="mode === 'active'" class="tbl-scroll">
+    <div v-if="mode === 'active'" class="ds-table-scroll">
       <table class="ds-table">
         <thead>
           <tr>
@@ -167,8 +167,14 @@ function ivaContenido(percentage: number): string {
           <tr v-else-if="store.taxes.value.length === 0">
             <td colspan="6" class="ds-empty ds-empty--lg">Sin impuestos. Crea el primero.</td>
           </tr>
-          <tr v-for="t in store.taxes.value" v-else :key="t.id" class="trow" @click="onRowClick(t)">
-            <td class="tname">{{ t.name }}</td>
+          <tr
+            v-for="t in store.taxes.value"
+            v-else
+            :key="t.id"
+            class="trow ds-row-hover"
+            @click="onRowClick(t)"
+          >
+            <td class="tname ds-text-strong">{{ t.name }}</td>
             <td>{{ t.taxScheme }}</td>
             <td class="tstock">{{ t.percentage }}%</td>
             <td>{{ ivaContenido(t.percentage) }}</td>
@@ -202,7 +208,7 @@ function ivaContenido(percentage: number): string {
     </div>
 
     <!-- ─────────── Modo PAUSADOS ─────────── -->
-    <div v-else class="tbl-scroll">
+    <div v-else class="ds-table-scroll">
       <table class="ds-table">
         <thead>
           <tr>
@@ -220,7 +226,7 @@ function ivaContenido(percentage: number): string {
             <td colspan="4" class="ds-empty ds-empty--lg">No hay impuestos pausados.</td>
           </tr>
           <tr v-for="t in store.pausedTaxes.value" v-else :key="t.id">
-            <td class="tname">{{ t.name }}</td>
+            <td class="tname ds-text-strong">{{ t.name }}</td>
             <td>{{ t.taxScheme }}</td>
             <td class="tstock">{{ t.percentage }}%</td>
             <td>
@@ -274,29 +280,27 @@ function ivaContenido(percentage: number): string {
   flex-shrink: 0;
   flex-wrap: wrap;
 }
-.tbl-scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
 
-/* Las dos tablas (activos y pausados) son `.ds-table` (primitives.css). Aquí no
+/* Los dos contenedores con scroll son `.ds-table-scroll` (primitives.css): las
+   dos declaraciones coincidían byte a byte y la regla local se borró.
+
+   Las dos tablas (activos y pausados) son `.ds-table` (primitives.css). Aquí no
    queda ninguna regla `.table`: la primitiva la sustituye por completo. El
    `.ds-empty ds-empty--lg` de las cuatro celdas `<td colspan>` vacías lo
    resuelve la excepción `.ds-table td.ds-empty--lg` de `primitives.css`
    (0,2,1), que le gana a `.ds-table td` (0,1,1). */
 
-/* NO es `.ds-row-clickable` (tiñe de amatista y sobre el `td`); ver la misma
-   nota en `InventoryProductsTable`. */
+/* NO es `.ds-row-clickable` (tiñe de amatista y sobre el `td`); el gris sobre
+   el `<tr>` es `.ds-row-hover`, que va en el marcado. Ver la misma nota en
+   `InventoryProductsTable`. */
 .trow {
   cursor: pointer;
 }
-.trow:hover {
-  background: var(--warm-100);
-}
-.tname {
-  font-weight: 500;
-  color: var(--warm-900);
-}
+
+/* El `font-weight` Y el `color` los pone `.ds-text-strong` (primitives.css):
+   el `color` le llega vía la excepción `.ds-table td.ds-text-strong`
+   (auditoría FE-08 fase final), que le gana a `.ds-table td` (0,1,1) por
+   nombre; ya no queda CSS local para esta celda. */
 .tstock {
   font-weight: 600;
 }

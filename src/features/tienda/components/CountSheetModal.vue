@@ -131,14 +131,15 @@ function submit() {
               <td colspan="5" class="ds-empty">Sin productos para el filtro.</td>
             </tr>
             <tr v-for="p in filtered" v-else :key="p.id">
-              <td class="tname">
-                {{ p.name }} <span class="sku">{{ p.code }}</span>
+              <td class="tname ds-text-strong">
+                {{ p.name }}
+                <span class="sku ds-meta ds-meta--caption">{{ p.code }}</span>
               </td>
               <td class="tcat">{{ p.productCategory.name }}</td>
               <td class="num sys">{{ systemOf(p.id) }}</td>
               <td class="num">
                 <input
-                  class="count-input"
+                  class="count-input ds-focus-ring ds-focus-ring--no-outline"
                   type="text"
                   inputmode="numeric"
                   placeholder="—"
@@ -159,6 +160,7 @@ function submit() {
         <span>Nota (opcional)</span>
         <input
           v-model="note"
+          class="ds-focus-ring ds-focus-ring--no-outline"
           type="text"
           placeholder="Conteo semanal, cierre de mes…"
           maxlength="255"
@@ -267,17 +269,23 @@ function submit() {
 td.num {
   text-align: right;
 }
-.tname {
-  font-weight: 500;
-  color: var(--warm-900);
-}
+
+/* El `font-weight` Y el `color` los pone `.ds-text-strong` (primitives.css)
+   desde el marcado —sobre el `<td>`, no sobre un `<span>` alrededor del
+   nombre: el `.sku` que va dentro hereda hoy ese peso 500 y envolver sólo el
+   nombre se lo quitaría—. El `color` le llega vía la excepción
+   `.ds-table td.ds-text-strong` (auditoría FE-08 fase final), que le gana a
+   `.ds-table td` (0,1,1) por nombre; ya no queda CSS local para esta celda. */
 .tcat {
   color: var(--warm-600);
 }
+
+/* El par color+tamaño es `.ds-meta ds-meta--caption` (primitives.css:
+   warm-500 + 11px). Va sobre el `<span>`, no sobre el `<td>`, así que
+   `.ds-table td` (0,1,1) no compite y la primitiva gana con su peso natural.
+   Sólo queda la fuente mono. */
 .sku {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--warm-500);
 }
 .sys {
   color: var(--warm-600);
@@ -294,10 +302,16 @@ td.num {
   color: var(--warm-900);
   font-variant-numeric: tabular-nums;
 }
+
+/* Los dos campos de este modal llevan `.ds-focus-ring ds-focus-ring--no-outline`
+   (primitives.css): la primitiva pone el `box-shadow` y el `outline: none`, y
+   esas dos declaraciones locales se borraron. Sólo se conserva el
+   `border-color`, porque la primitiva pesa (0,2,0) y no gana de forma estable
+   contra las bases que declaran el atajo `border` —`.count-input[data-v]`
+   (0,2,0), empate que resolvería el orden del bundle, y `.note input[data-v]`
+   (0,2,1), que directamente le gana—. */
 .count-input:focus {
-  outline: none;
   border-color: var(--amatista-500);
-  box-shadow: var(--ring);
 }
 .muted {
   color: var(--warm-400);
@@ -320,9 +334,7 @@ td.num {
   color: var(--warm-900);
 }
 .note input:focus {
-  outline: none;
   border-color: var(--amatista-500);
-  box-shadow: var(--ring);
 }
 .counter {
   margin-left: 12px;

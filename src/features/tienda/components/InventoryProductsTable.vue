@@ -91,7 +91,7 @@ function onStateFilter(value: string) {
 </script>
 
 <template>
-  <div class="filters">
+  <div class="filters ds-stack-mobile">
     <SearchField v-model="query" fill placeholder="Buscar nombre, SKU o proveedor…" />
     <FilterSelect v-model="cat">
       <option value="">Todas las categorías</option>
@@ -129,8 +129,14 @@ function onStateFilter(value: string) {
       <tr v-else-if="slice.length === 0">
         <td colspan="9" class="ds-empty ds-empty--lg">Sin productos para el filtro.</td>
       </tr>
-      <tr v-for="p in slice" v-else :key="p.id" class="trow" @click="emit('rowClick', p)">
-        <td class="tname">{{ p.name }}</td>
+      <tr
+        v-for="p in slice"
+        v-else
+        :key="p.id"
+        class="trow ds-row-hover"
+        @click="emit('rowClick', p)"
+      >
+        <td class="tname ds-text-strong">{{ p.name }}</td>
         <td>
           <CategoryPill
             :tone="productCategoryTone(p.productCategory)"
@@ -247,36 +253,35 @@ function onStateFilter(value: string) {
    pasada anterior. */
 
 /* NO es `.ds-row-clickable`: esa primitiva tiñe con amatista-50 y lo hace sobre
-   los `td`, no sobre la fila, además de añadir una transición. Esta fila gris
-   (`warm-100` sobre el `<tr>`) se repite en `CountsHistoryModal`,
-   `ImpuestosView` y el paginador; es una segunda variante real y no tiene
-   primitiva — anotada en el informe FE-08 como candidata. */
+   los `td`, no sobre la fila, además de añadir una transición. La fila gris
+   (`warm-100` sobre el `<tr>`) sí tiene primitiva desde la 2ª vuelta de FE-08:
+   `.ds-row-hover`, que va en el marcado. Aquí solo queda el cursor. */
 .trow {
   cursor: pointer;
 }
-.trow:hover {
-  background: var(--warm-100);
-}
 
-/* NO migran a `.ds-item-label` / `.ds-strong`: dentro de un `<td>` de
-   `.ds-table`, esas primitivas de una sola clase (0,1,0) pierden el `color`
-   contra `.ds-table td` (0,1,1). Es la trampa que `primitives.css` deja
-   documentada al final del bloque de tablas; el nombre local pesa (0,2,0) y
-   sigue ganando. */
-.tname {
-  font-weight: 500;
-  color: var(--warm-900);
+/* Migración completa (auditoría FE-08, fase final): `.ds-text-strong`
+   (primitives.css) va en el `<td>` y aporta tanto el `font-weight` como el
+   `color`, éste vía la excepción `.ds-table td.ds-text-strong`, que le gana a
+   `.ds-table td` (0,1,1) por nombre — ya no queda CSS local para esta celda.
+   `.ds-item-label` / `.ds-strong` siguen sin servir aquí: además de tener el
+   mismo problema de especificidad, fijan tamaño o peso 600. */
+
+/* SKU e impuesto comparten tono, así que comparten regla; cada uno conserva su
+   tamaño. El tono no puede venir de `.ds-meta-dark` (warm-600 pero 13px fijos,
+   y además perdería contra `.ds-table td`). */
+.tsku,
+.ttax {
+  color: var(--warm-600);
 }
 .tsku {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--warm-600);
 }
 .tstock {
   font-weight: 600;
 }
 .ttax {
-  color: var(--warm-600);
   font-size: 12.5px;
 }
 .muted {
@@ -345,17 +350,22 @@ function onStateFilter(value: string) {
 }
 
 @media (width <= 760px) {
-  .filters {
-    width: 100%;
-    align-items: stretch;
-    flex-direction: column;
-  }
+  /* `.filters` apilaba con `width: 100%; flex-direction: column` (sin
+     `align-items: stretch`: la base no fija `align-items`, así que el valor
+     inicial ya era `stretch`). Ese cuerpo es ahora `.ds-stack-mobile`
+     (primitives.css, auditoría FE-08 fase final), aplicada desde el
+     marcado — el `align-items: stretch` que añade es el mismo valor que ya
+     estaba activo por defecto, así que no cambia nada. */
 
   /* `SearchField` y `FilterSelect` traen su piel, pero el ancho es cosa de esta
-     barra de filtros: sus raíces siguen llevando el `data-v` de este archivo. */
+     barra de filtros: sus raíces siguen llevando el `data-v` de este archivo.
+     El `max-width` se separa porque sólo `SearchField` declara uno propio
+     (`.search--fill`); `.fsel` nunca tuvo ninguno que anular. */
   .search,
   .fsel {
     width: 100%;
+  }
+  .search {
     max-width: none;
   }
   .ds-table {

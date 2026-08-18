@@ -197,7 +197,7 @@ function onFormClose() {
         <div class="ds-kicker ds-kicker--spaced">Tienda · Inventario</div>
         <h1 class="ds-display">Inventario por sede</h1>
       </div>
-      <div class="head-actions ds-flex-row">
+      <div class="head-actions ds-flex-row ds-stack-mobile">
         <FilterSelect
           v-if="branches.hasBranches.value"
           v-model="branches.selectedValue.value"
@@ -420,25 +420,27 @@ function onFormClose() {
   border-color: var(--amatista-500);
 }
 
+/* `align-items: stretch` NO es redundante en `.ds-head`: `.ds-head`
+   (primitives.css) fija `flex-end` y sin el reset el bloque quedaría pegado
+   al borde derecho y encogido a su contenido. `.head-actions` apilaba igual,
+   pero ese cuerpo (auditoría FE-08, fase final) es ahora `.ds-stack-mobile`
+   (primitives.css), aplicada desde el marcado — ya no hace falta repetirlo
+   aquí. */
 @media (width <= 760px) {
   .ds-head {
-    align-items: stretch;
-    flex-direction: column;
-  }
-  .head-actions {
-    width: 100%;
     align-items: stretch;
     flex-direction: column;
   }
 
   /* Los antiguos `.cta`/`.ghost-cta` son ahora `.ds-btn`; todos viven dentro
      de `.head-actions`, así que el selector sigue acotado a ellos. `.seg` y
-     `.fsel` son raíces de componente y conservan el `data-v` de esta vista. */
+     `.fsel` son raíces de componente y conservan el `data-v` de esta vista.
+     Sin `max-width: none`: ninguno de los tres declara un `max-width` propio
+     que anular (`SegTabs` y `FilterSelect` no lo usan y `.ds-btn` tampoco). */
   .seg,
   .head-actions .ds-btn,
   .fsel {
     width: 100%;
-    max-width: none;
   }
   .head-actions .ds-btn {
     justify-content: center;
