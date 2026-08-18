@@ -19,7 +19,11 @@ function onClick() {
   <button
     type="button"
     class="tri"
-    :class="value"
+    :class="[
+      value,
+      value === 'empty' ? 'tone-empty' : 'ds-tone--accent-solid',
+      { 'ds-is-disabled': disabled },
+    ]"
     :aria-checked="value === 'full' ? 'true' : value === 'partial' ? 'mixed' : 'false'"
     :aria-label="ariaLabel"
     :disabled="disabled"
@@ -32,15 +36,18 @@ function onClick() {
 </template>
 
 <style scoped>
+/* La base se queda con la GEOMETRÍA. El relleno amatista de marcado/parcial es
+   `.ds-tone--accent-solid` (primitives.css), que pesa (0,1,0) y perdería contra
+   un `.tri.full` scoped, que pesa (0,3,0): por eso el tono de reposo también
+   viaja como clase desde el marcado, excluyente con el otro. */
 .tri {
   width: 16px;
   height: 16px;
   border-radius: 4px;
-  border: 1.5px solid var(--warm-400);
-  background: var(--warm-50);
+  border-width: 1.5px;
+  border-style: solid;
   display: grid;
   place-items: center;
-  cursor: pointer;
   padding: 0;
   transition:
     background 0.12s,
@@ -48,15 +55,15 @@ function onClick() {
   flex-shrink: 0;
 }
 
-.tri.partial,
-.tri.full {
-  background: var(--amatista-600);
-  border-color: var(--amatista-600);
+.tone-empty {
+  background: var(--warm-50);
+  border-color: var(--warm-400);
 }
 
-.tri:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+/* Mismo motivo con el cursor: se declara con `:not(:disabled)` para no competir
+   con `.ds-is-disabled`, que pesa (0,1,0). */
+.tri:not(:disabled) {
+  cursor: pointer;
 }
 
 .mark {

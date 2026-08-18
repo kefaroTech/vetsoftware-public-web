@@ -29,12 +29,33 @@ const isPassword = computed(() => props.type === 'password')
 const effectiveType = computed(() =>
   isPassword.value ? (show.value ? 'text' : 'password') : props.type,
 )
+
+// El foco se refleja en una bandera porque `.ds-field-invalid-focus`
+// (primitives.css) es una clase plana, no una regla `:focus-within`.
+const focused = ref(false)
+
+/**
+ * Tono del campo: los tres estados son EXCLUYENTES y viajan como clase desde el
+ * marcado. Así ninguna regla scoped del componente compite con las primitivas
+ * `.ds-field-*`, que pesan (0,1,0) y perderían contra cualquier `.input.estado`
+ * scoped, que pesa (0,2,0). `.ds-focus-ring` se retira en inválido para que el
+ * anillo rojo de `.ds-field-invalid-focus` no compita con el amatista.
+ */
+const toneClass = computed(() => {
+  if (props.invalid) {
+    return ['ds-field-invalid', focused.value ? 'ds-field-invalid-focus' : null]
+  }
+  if (props.disabled) return ['tone-border', 'ds-field-disabled', 'ds-focus-ring']
+  return ['tone-border', 'tone-bg', 'ds-focus-ring']
+})
 </script>
 
 <template>
   <label
-    class="input ds-flex-row ds-focus-ring"
-    :class="{ disabled, invalid, 'ds-field-shake': invalid }"
+    class="input ds-flex-row"
+    :class="[toneClass, { disabled, invalid }]"
+    @focusin="focused = true"
+    @focusout="focused = false"
   >
     <component :is="icon" v-if="icon" :size="14" :stroke-width="1.6" class="icon ds-icon-muted" />
     <input
@@ -65,17 +86,40 @@ const effectiveType = computed(() =>
 </template>
 
 <style scoped>
+/* La base se queda con la GEOMETRÍA. Ni `background` ni `border-color`: en CSS
+   scoped esta regla pesa (0,2,0) y le ganaría a `.ds-field-invalid` /
+   `.ds-field-disabled` (0,1,0). El color vive en las clases de tono, que el
+   marcado aplica de forma excluyente. */
 .input {
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border-width: 1px;
+  border-style: solid;
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 13.5px;
-  cursor: text;
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease,
     background-color 0.15s ease;
+}
+
+/* Mismo motivo con el cursor: `.ds-field-disabled` trae `cursor: not-allowed`
+   y se excluye aquí en vez de competir. */
+.input:not(.disabled) {
+  cursor: text;
+}
+
+/* Tono en reposo, partido en las dos propiedades que cada estado sustituye por
+   separado: el borde neutro lo comparten reposo y deshabilitado; el fondo sólo
+   lo lleva reposo (en deshabilitado lo pone `.ds-field-disabled`, en inválido
+   `.ds-field-invalid`). Conservan el peso (0,2,0) y la posición que tenía el
+   par dentro de `.input`, así que la resolución frente a
+   `.ds-focus-ring:focus-within` no cambia. */
+.tone-border {
+  border-color: var(--warm-200);
+}
+
+.tone-bg {
+  background: var(--warm-50);
 }
 
 .input:hover:not(.disabled, .invalid, :focus-within) {
@@ -84,27 +128,6 @@ const effectiveType = computed(() =>
 
 .input:focus-within .icon {
   color: var(--amatista-500);
-}
-
-.input.disabled {
-  background: var(--warm-100);
-  color: var(--warm-500);
-  cursor: not-allowed;
-}
-
-/* El temblor lo pone `.ds-field-shake` (primitives.css) desde el template.
-   El par borde+fondo NO puede subir a `.ds-field-invalid`: la regla base
-   `.input` ya declara `background`/`border` y en CSS scoped pesa (0,2,0),
-   así que una primitiva de una sola clase (0,1,0) nunca le ganaría. Lo mismo
-   con `.ds-field-invalid-focus` y `.ds-field-disabled` más abajo. */
-.input.invalid {
-  border-color: oklch(60% 0.2 25deg);
-  background: oklch(98.5% 0.02 25deg);
-}
-
-.input.invalid:focus-within {
-  border-color: oklch(55% 0.22 25deg);
-  box-shadow: 0 0 0 3px var(--danger-200);
 }
 
 .input.invalid .icon {

@@ -27,10 +27,20 @@ const emit = defineEmits<{ prev: []; next: [] }>()
   <div class="pag" :class="`pag--${size}`">
     <span>{{ label }}</span>
     <div class="pag-ctrl">
-      <button type="button" :disabled="prevDisabled" @click="emit('prev')">
+      <button
+        type="button"
+        :class="{ 'ds-is-disabled ds-is-disabled--40': prevDisabled }"
+        :disabled="prevDisabled"
+        @click="emit('prev')"
+      >
         <ChevronLeft :size="14" />
       </button>
-      <button type="button" :disabled="nextDisabled" @click="emit('next')">
+      <button
+        type="button"
+        :class="{ 'ds-is-disabled ds-is-disabled--40': nextDisabled }"
+        :disabled="nextDisabled"
+        @click="emit('next')"
+      >
         <ChevronRight :size="14" />
       </button>
     </div>
@@ -61,9 +71,19 @@ const emit = defineEmits<{ prev: []; next: [] }>()
   background: var(--warm-50);
   border-radius: 7px;
   color: var(--warm-700);
-  cursor: pointer;
   display: grid;
   place-items: center;
+}
+
+/* El `cursor` se declara con `:not(:disabled)` a propósito. El estado apagado
+   es `.ds-is-disabled ds-is-disabled--40` (primitives.css), que pesa (0,1,0) y
+   perdería el `cursor: not-allowed` contra un `.pag-ctrl button[data-v]`
+   (0,2,1) que fijara `pointer`. Acotando la regla base al botón activo no hay
+   nada que competir: es la salida que `primitives.css` documenta para esta
+   familia («si un consumidor choca así, el defecto está en la regla que
+   compite»). */
+.pag-ctrl button:not(:disabled) {
+  cursor: pointer;
 }
 .pag--sm .pag-ctrl button {
   width: 28px;
@@ -72,10 +92,6 @@ const emit = defineEmits<{ prev: []; next: [] }>()
 .pag--md .pag-ctrl button {
   width: 30px;
   height: 30px;
-}
-.pag-ctrl button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 /* Solo el paginador de pantalla se realzaba al pasar el ratón; los tres de

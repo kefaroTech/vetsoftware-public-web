@@ -60,7 +60,7 @@ onBeforeUnmount(() => observer?.disconnect())
 
     <div v-if="error" class="status ds-empty error">{{ error }}</div>
 
-    <div v-if="hasQuery" class="results">
+    <div v-if="hasQuery" class="ds-frame">
       <div v-if="!loading && results.length === 0 && !error" class="status ds-empty empty">
         Sin coincidencias para "<strong>{{ query }}</strong
         >"
@@ -132,12 +132,8 @@ onBeforeUnmount(() => observer?.disconnect())
   display: inline-flex;
 }
 
-.results {
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 12px;
-  overflow: hidden;
-}
+/* El marco de la lista es `.ds-frame` (mismos valores: `--surface` = warm-50,
+   `--border` = warm-200, `--radius-lg` = 12px). */
 
 /* Resto sobre `.ds-flex-row`: gap propio (14px). */
 .result-row {

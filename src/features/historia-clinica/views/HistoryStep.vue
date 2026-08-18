@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, ChevronDown, Download, Plus, Search, TrendingUp } from 'lucide-vue-next'
+import { ChevronDown, Search, TrendingUp } from 'lucide-vue-next'
 import PawLoader from '@/components/feedback/PawLoader.vue'
 import MonthTimelineGroup from '../components/MonthTimelineGroup.vue'
 import EventDetailModal from '../components/EventDetailModal.vue'
+import PatientHeader from '../components/PatientHeader.vue'
 import WeightHistoryPanel from '../components/WeightHistoryPanel.vue'
 import { useHistoriaSelection } from '../composables/useHistoriaSelection'
 import { fetchConsultationChildren, useClinicalHistory } from '../composables/useClinicalHistory'
@@ -107,15 +108,6 @@ const grouped = computed(() => {
   return Array.from(map.entries())
 })
 
-const sexLabel = computed(() => (state.pet?.gender === 'FEMALE' ? 'Hembra' : 'Macho'))
-const weightLabel = computed(() => {
-  const p = state.pet
-  if (!p) return ''
-  if (p.weight == null) return 'Sin registro'
-  const unit = p.weightType === 'GRAMS' ? 'g' : p.weightType === 'POUNDS' ? 'lb' : 'kg'
-  return `${p.weight} ${unit}`
-})
-
 function back() {
   router.push({
     name: 'consulta-historial-pet',
@@ -216,65 +208,18 @@ function goNuevaConsulta() {
 
 <template>
   <div class="step ds-stack">
-    <header class="patient-head">
-      <button type="button" class="back-btn" @click="back">
-        <ArrowLeft :size="14" :stroke-width="1.7" />
-        Cambiar mascota
-      </button>
-
-      <div v-if="hydrating" class="hydrating">
-        <PawLoader :size="32" :glow="false" :speed="900" />
-      </div>
-
-      <div v-else-if="hydrateError" class="banner error">
-        {{ hydrateError }}
-      </div>
-
-      <div v-else-if="state.pet" class="patient">
-        <div class="avatar">
-          {{ state.pet.name.slice(0, 2).toUpperCase() }}
-        </div>
-        <div class="ds-flex-fill">
-          <h1 class="patient-name ds-display ds-display--sm">{{ state.pet.name }}</h1>
-          <div class="pills">
-            <span class="pill ds-pill">{{ state.pet.specie.name }}</span>
-            <span class="pill ds-pill">{{ state.pet.breed.name }}</span>
-            <span class="pill ds-pill">{{ sexLabel }}</span>
-            <span class="pill ds-pill">{{ weightLabel }}</span>
-            <span v-if="state.pet.color" class="pill ds-pill">{{ state.pet.color }}</span>
-          </div>
-          <div v-if="state.owner" class="owner-line">
-            Propietario:
-            <strong>{{ state.owner.name }}</strong>
-            <template v-if="state.owner.phone"> · {{ state.owner.phone }}</template>
-          </div>
-        </div>
-        <div class="actions">
-          <button
-            type="button"
-            class="ds-btn ds-btn--ghost ds-btn--snug"
-            :disabled="exporting || !state.pet"
-            @click="onExport"
-          >
-            <Download :size="14" :stroke-width="1.7" />
-            {{ exporting ? 'Generando…' : 'Exportar PDF' }}
-          </button>
-          <button
-            v-if="canCreateConsultation"
-            type="button"
-            class="ds-btn ds-btn--solid ds-btn--snug"
-            @click="goNuevaConsulta"
-          >
-            <Plus :size="14" :stroke-width="1.8" />
-            Nueva consulta
-          </button>
-        </div>
-      </div>
-
-      <div v-if="exportError" class="banner error export-error">
-        {{ exportError }}
-      </div>
-    </header>
+    <PatientHeader
+      :pet="state.pet"
+      :owner="state.owner"
+      :hydrating="hydrating"
+      :hydrate-error="hydrateError"
+      :exporting="exporting"
+      :export-error="exportError"
+      :can-create-consultation="canCreateConsultation"
+      @back="back"
+      @export="onExport"
+      @new-consultation="goNuevaConsulta"
+    />
 
     <div v-if="state.pet" class="weight-section">
       <button
@@ -385,105 +330,40 @@ function goNuevaConsulta() {
   overflow: auto;
 }
 
-.patient-head {
-  padding: 24px 36px;
-  background: linear-gradient(180deg, var(--amatista-50), var(--warm-50));
-  border-bottom: 1px solid var(--warm-200);
-}
-
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: none;
-  color: var(--warm-600);
-  font-size: 13px;
-  cursor: pointer;
-  font-family: inherit;
-  padding: 0;
-  margin-bottom: 14px;
-}
-
-.back-btn:hover {
-  color: var(--amatista-700);
-}
-
-.patient {
-  display: flex;
-  align-items: flex-start;
-  gap: 18px;
-}
-
-.avatar {
-  width: 72px;
-  height: 72px;
-  border-radius: 18px;
-  background: var(--amatista-200);
-  color: var(--amatista-700);
-  display: grid;
-  place-items: center;
-  font-weight: 600;
-  font-size: 22px;
-  flex-shrink: 0;
-  font-family: var(--font-serif);
-}
-
-.patient-name {
-  line-height: 1.1;
-}
-
-.pills {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 6px;
-}
-
-.pill {
-  background: var(--warm-200);
-  color: var(--warm-700);
-}
-
-.owner-line {
-  font-size: 13px;
-  color: var(--warm-600);
-  margin-top: 8px;
-}
-
-.owner-line strong {
-  color: var(--warm-900);
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
+/* La cabecera del paciente (incluidos su avatar, píldoras, línea de propietario y
+   sus dos acciones) vive en `components/PatientHeader.vue`. */
 
 .weight-section {
   padding: 18px 36px 0;
 }
 
 /* Resto sobre `.ds-btn` (base, sin `--ghost`: este control conserva su fondo
-   y su propio `:hover`, que sólo tiñe borde y texto). */
+   y su propio `:hover`, que sólo tiñe borde y texto).
+
+   El par borde+texto de acento (amatista-300 / amatista-700) es el cuerpo de
+   `.ds-tone--accent-border`, pero aquí los dos estados que lo usan son `:hover` y
+   `.open` y la primitiva no tiene forma `:hover` — añadírsela toca
+   `primitives.css`, que es gemelo TR-02. Se resuelve con el mismo mecanismo que
+   ya usa `.ds-btn--solid` (`--ds-btn-solid-bg`): el tono entra por variable, así
+   que el par deja de estar copiado como cuerpo de regla. */
 .weight-toggle {
   gap: var(--space-8);
   padding: var(--space-9) var(--space-14);
-  border-color: var(--warm-200);
+  border-color: var(--wt-border, var(--warm-200));
   border-radius: var(--radius-panel);
   background: var(--warm-50);
-  color: var(--warm-700);
+  color: var(--wt-fg, var(--warm-700));
 }
 
 .weight-toggle:hover {
-  border-color: var(--amatista-300);
-  color: var(--amatista-700);
+  --wt-border: var(--amatista-300);
+  --wt-fg: var(--amatista-700);
 }
 
 .weight-toggle.open {
-  color: var(--amatista-700);
-  border-color: var(--amatista-300);
+  --wt-border: var(--amatista-300);
+  --wt-fg: var(--amatista-700);
+
   background: var(--amatista-50);
   margin-bottom: 12px;
 }

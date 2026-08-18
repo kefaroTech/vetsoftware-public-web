@@ -1,4 +1,5 @@
 <script setup lang="ts" generic="T extends { savedId?: number }">
+import { computed } from 'vue'
 import { Pencil, X } from 'lucide-vue-next'
 
 /**
@@ -26,6 +27,20 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{ edit: [number]; remove: [number] }>()
+
+/**
+ * Los dos predicados que alimentan el atributo `disabled` nativo. Se nombran
+ * porque `.ds-is-disabled` se aplica con `:class` (no se deriva del atributo),
+ * así que la condición tiene que estar disponible en el template.
+ */
+function editDisabled(idx: number): boolean {
+  return props.editingIndex !== null && props.editingIndex !== idx
+}
+const removeDisabled = computed(() => props.editingIndex !== null)
+
+function disabledClass(disabled: boolean): string | undefined {
+  return disabled ? 'ds-is-disabled ds-is-disabled--40' : undefined
+}
 </script>
 
 <template>
@@ -48,9 +63,9 @@ const emit = defineEmits<{ edit: [number]; remove: [number] }>()
           <button
             type="button"
             class="edit-existing"
-            :class="{ active: props.editingIndex === idx }"
+            :class="[{ active: props.editingIndex === idx }, disabledClass(editDisabled(idx))]"
             :aria-label="`Editar ${props.noun}`"
-            :disabled="props.editingIndex !== null && props.editingIndex !== idx"
+            :disabled="editDisabled(idx)"
             @click="emit('edit', idx)"
           >
             <Pencil :size="14" :stroke-width="1.7" />
@@ -58,8 +73,9 @@ const emit = defineEmits<{ edit: [number]; remove: [number] }>()
           <button
             type="button"
             class="remove-existing"
+            :class="disabledClass(removeDisabled)"
             :aria-label="`Eliminar ${props.noun}`"
-            :disabled="props.editingIndex !== null"
+            :disabled="removeDisabled"
             @click="emit('remove', idx)"
           >
             <X :size="14" :stroke-width="1.7" />
@@ -125,9 +141,17 @@ const emit = defineEmits<{ edit: [number]; remove: [number] }>()
   border-radius: 8px;
   display: grid;
   place-items: center;
-  cursor: pointer;
   color: var(--warm-600);
   flex-shrink: 0;
+}
+
+/* `cursor` NO va en la regla base: con el atributo de scope ésta pesa (0,2,0) y
+   le ganaría al `cursor: not-allowed` de `.ds-is-disabled` (0,1,0). Acotarla al
+   estado habilitado deja el estado apagado enteramente en manos de la
+   primitiva, que es el contrato que pide `primitives.css`. */
+.edit-existing:not(:disabled),
+.remove-existing:not(:disabled) {
+  cursor: pointer;
 }
 
 .edit-existing:hover:not(:disabled) {
@@ -146,11 +170,5 @@ const emit = defineEmits<{ edit: [number]; remove: [number] }>()
   background: var(--danger-150);
   border-color: var(--danger-300);
   color: oklch(35% 0.15 25deg);
-}
-
-.edit-existing:disabled,
-.remove-existing:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 </style>

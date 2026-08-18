@@ -179,7 +179,7 @@ async function onCategoryRemove(id: number) {
         <div class="ds-kicker ds-kicker--spaced">Tienda · Servicios</div>
         <h1 class="ds-display">Servicios ofrecidos</h1>
       </div>
-      <div class="head-actions ds-flex-row">
+      <div class="head-actions ds-flex-row ds-stack-mobile">
         <SegTabs
           :model-value="mode"
           :options="[
@@ -211,7 +211,7 @@ async function onCategoryRemove(id: number) {
 
     <!-- ─────────── Modo ACTIVOS ─────────── -->
     <template v-if="mode === 'active'">
-      <div class="filters">
+      <div class="filters ds-stack-mobile">
         <SearchField v-model="query" fill placeholder="Buscar servicio…" />
         <FilterSelect v-model="cat">
           <option value="">Todas las categorías</option>
@@ -400,15 +400,14 @@ async function onCategoryRemove(id: number) {
   align-items: center;
 }
 
+/* `align-items: stretch` NO es redundante en `.ds-head`: `.ds-head`
+   (primitives.css) fija `flex-end` y sin el reset el bloque quedaría pegado
+   al borde derecho y encogido a su contenido. `.head-actions` y `.filters`
+   apilaban igual, pero ese cuerpo (auditoría FE-08, fase final) es ahora
+   `.ds-stack-mobile` (primitives.css), aplicada desde el marcado — ya no
+   hace falta repetirlo aquí. */
 @media (width <= 760px) {
   .ds-head {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .head-actions,
-  .filters {
-    width: 100%;
     align-items: stretch;
     flex-direction: column;
   }
@@ -416,12 +415,16 @@ async function onCategoryRemove(id: number) {
   /* Los antiguos `.cta`/`.ghost-cta` son ahora `.ds-btn`; todos viven dentro
      de `.head-actions`, así que el selector sigue acotado a ellos. `.seg`,
      `.search` y `.fsel` son raíces de componente: conservan el `data-v` de esta
-     vista, así que el ancho se sigue decidiendo aquí. */
+     vista, así que el ancho se sigue decidiendo aquí. El `max-width` se separa
+     porque sólo `SearchField` declara uno propio (`.search--fill`); `.seg`,
+     `.fsel` y `.ds-btn` nunca tuvieron ninguno que anular. */
   .seg,
   .head-actions .ds-btn,
   .search,
   .fsel {
     width: 100%;
+  }
+  .search {
     max-width: none;
   }
 

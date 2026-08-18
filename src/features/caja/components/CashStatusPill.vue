@@ -12,7 +12,7 @@ defineProps<{ status: CashSessionStatus }>()
 </script>
 
 <template>
-  <span class="cash-pill" :class="status === 'OPEN' ? 'open' : 'closed'">
+  <span class="cash-pill" :class="status === 'OPEN' ? ['open', 'ds-tone--compras-ok'] : 'closed'">
     {{ status === 'OPEN' ? 'Abierta' : 'Cerrada' }}
   </span>
 </template>
@@ -26,10 +26,10 @@ defineProps<{ status: CashSessionStatus }>()
   font-weight: var(--weight-semibold);
 }
 
-.cash-pill.open {
-  background: oklch(92% 0.08 150deg);
-  color: oklch(40% 0.12 150deg);
-}
+/* El color de "abierta" lo pone `.ds-tone--compras-ok` (primitives.css,
+   auditoría FE-08 fase final) desde el marcado; `.open` se conserva vacía a
+   propósito porque `tests/unit/caja-components.spec.ts` la usa como
+   contrato de estado. */
 
 .cash-pill.closed {
   background: var(--warm-100);

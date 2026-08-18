@@ -7,17 +7,14 @@ import { useFacturacionDocs } from '../composables/useFacturacionDocs'
 import { feMoney } from '../composables/feFormat'
 import FeStatusPill from './FeStatusPill.vue'
 import FeNoteModal from './FeNoteModal.vue'
+import FeDocumentParties from './FeDocumentParties.vue'
+import FeDocumentTotals from './FeDocumentTotals.vue'
 import {
-  COMPANY_DOCTYPE_LABEL,
   DOC_TYPE_LABEL,
-  PAYMENT_MEANS_LABEL,
-  type CompanyDocumentType,
   type CreditNoteReason,
-  type CustomerSnapshot,
   type DebitNoteReason,
   type DianStatus,
   type ElectronicDocumentResponse,
-  type IssuerSnapshot,
 } from '../types/facturacion'
 
 const props = defineProps<{ doc: ElectronicDocumentResponse }>()
@@ -32,10 +29,6 @@ const busy = ref(false)
 
 const isInvoice = computed(() => props.doc.documentType === 'FE_VENTA')
 const validated = computed(() => props.doc.dianStatus === 'VALIDADO')
-const hasReten = computed(
-  () =>
-    props.doc.reteFuenteAmount > 0 || props.doc.reteIvaAmount > 0 || props.doc.reteIcaAmount > 0,
-)
 const idLabel = computed(() => (props.doc.cufe ? 'CUFE' : 'CUDE'))
 const idValue = computed(() => props.doc.cufe || props.doc.cude || '')
 
@@ -47,36 +40,6 @@ const TIMELINE: Record<DianStatus, string[]> = {
   NO_ELECTRONICO: ['Guardado local'],
 }
 const steps = computed(() => TIMELINE[props.doc.dianStatus] ?? [])
-
-function docTypeLabel(dt: string): string {
-  return COMPANY_DOCTYPE_LABEL[dt as CompanyDocumentType]?.split(' ')[0] ?? dt
-}
-
-const issuerParty = computed(() => partyFromIssuer(props.doc.issuer))
-const customerParty = computed(() => partyFromCustomer(props.doc.customer))
-
-function partyFromIssuer(p: IssuerSnapshot) {
-  return {
-    name: p.legalName ?? '—',
-    docType: docTypeLabel(p.documentType),
-    docId: p.documentId,
-    dv: p.verificationDigit,
-    regime: p.taxRegime,
-    personType: null as string | null,
-    email: p.email,
-  }
-}
-function partyFromCustomer(p: CustomerSnapshot) {
-  return {
-    name: p.legalName || p.name || '—',
-    docType: docTypeLabel(p.documentType),
-    docId: p.documentId,
-    dv: p.verificationDigit,
-    regime: null as string | null,
-    personType: p.personType,
-    email: p.email,
-  }
-}
 
 async function doRefresh() {
   busy.value = true
@@ -134,7 +97,7 @@ function copyId() {
 
 <template>
   <div class="ds-stack ds-stack--18">
-    <button type="button" class="back" @click="emit('back')">
+    <button type="button" class="back ds-hover-accent" @click="emit('back')">
       <ArrowLeft :size="15" :stroke-width="1.7" /> Volver a documentos
     </button>
 
@@ -217,51 +180,7 @@ function copyId() {
       Este registro no se envió a la DIAN porque el plan no incluye facturación electrónica.
     </div>
 
-    <div class="grid">
-      <div class="ds-card">
-        <div class="card-title">Emisor</div>
-        <div class="party">
-          <div class="party-name ds-strong">{{ issuerParty.name }}</div>
-          <div class="party-rows ds-stack">
-            <div>
-              <span>Documento</span
-              ><span
-                >{{ issuerParty.docType }} {{ issuerParty.docId
-                }}<template v-if="issuerParty.dv">-{{ issuerParty.dv }}</template></span
-              >
-            </div>
-            <div v-if="issuerParty.regime">
-              <span>Régimen</span><span>{{ issuerParty.regime }}</span>
-            </div>
-            <div>
-              <span>Correo</span><span>{{ issuerParty.email || '—' }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="ds-card">
-        <div class="card-title">Adquiriente</div>
-        <div class="party">
-          <div class="party-name ds-strong">{{ customerParty.name }}</div>
-          <div class="party-rows ds-stack">
-            <div>
-              <span>Documento</span
-              ><span
-                >{{ customerParty.docType }} {{ customerParty.docId
-                }}<template v-if="customerParty.dv">-{{ customerParty.dv }}</template></span
-              >
-            </div>
-            <div v-if="customerParty.personType">
-              <span>Tipo</span
-              ><span>{{ customerParty.personType === 'JURIDICA' ? 'Jurídica' : 'Natural' }}</span>
-            </div>
-            <div>
-              <span>Correo</span><span>{{ customerParty.email || '—' }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <FeDocumentParties :issuer="doc.issuer" :customer="doc.customer" />
 
     <div v-if="validated && idValue" class="ds-card cufebox">
       <div class="qr">
@@ -313,38 +232,7 @@ function copyId() {
       </div>
     </div>
 
-    <div class="ds-card totals ds-stack">
-      <div class="tot-row">
-        <span>Subtotal (base)</span><span>{{ feMoney(doc.lineExtensionAmount) }}</span>
-      </div>
-      <div class="tot-row">
-        <span>Total con impuestos</span><span>{{ feMoney(doc.taxInclusiveAmount) }}</span>
-      </div>
-      <div class="tot-row sub">
-        <span>Total a pagar</span><span>{{ feMoney(doc.payableAmount) }}</span>
-      </div>
-      <template v-if="hasReten">
-        <div class="reten-head">Retenciones del adquiriente</div>
-        <div v-if="doc.reteFuenteAmount > 0" class="tot-row reten">
-          <span>ReteFuente</span><span>−{{ feMoney(doc.reteFuenteAmount) }}</span>
-        </div>
-        <div v-if="doc.reteIvaAmount > 0" class="tot-row reten">
-          <span>ReteIVA</span><span>−{{ feMoney(doc.reteIvaAmount) }}</span>
-        </div>
-        <div v-if="doc.reteIcaAmount > 0" class="tot-row reten">
-          <span>ReteICA</span><span>−{{ feMoney(doc.reteIcaAmount) }}</span>
-        </div>
-        <div class="tot-row net">
-          <span>Neto a pagar</span><span>{{ feMoney(doc.netPayableAmount) }}</span>
-        </div>
-      </template>
-      <div class="tot-pay ds-meta">
-        {{ doc.paymentForm === 'CONTADO' ? 'Contado' : 'Crédito' }}
-        <template v-for="p in doc.payments" :key="p.id">
-          · {{ PAYMENT_MEANS_LABEL[p.paymentMeans] }}</template
-        >
-      </div>
-    </div>
+    <FeDocumentTotals :doc="doc" />
 
     <div v-if="isInvoice && validated && !doc.reversed && canEmit" class="noteactions">
       <button type="button" class="ds-btn ds-btn--ghost ds-btn--snug" @click="noteModal = 'credit'">
@@ -383,10 +271,12 @@ function copyId() {
   border-radius: 8px;
 }
 
-.back:hover {
-  background: var(--amatista-50);
-  color: var(--amatista-700);
-}
+/* El hover del "volver" es `.ds-hover-accent` (primitives.css) — la variante de
+   BOTÓN DE TEXTO del trío de acento, la que documenta `ExportBar.vue`. No es
+   `.ds-tone--accent-soft`, que no tiene forma `:hover` y en reposo perdería
+   contra `.back[data-v-…]`: aquí gana con (0,3,0) sobre (0,2,0). Su tercera
+   declaración (`border-color: amatista-300`) es inerte en este botón, que
+   declara `border: none` — el ancho usado es 0 y el color no se ve. */
 
 .head {
   display: flex;
@@ -500,13 +390,6 @@ function copyId() {
   font-size: 12.5px;
 }
 
-/* Rejilla intrínseca propia: mínimo de columna 260px. */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
-}
-
 .card-title {
   font-size: 11.5px;
   text-transform: uppercase;
@@ -514,32 +397,6 @@ function copyId() {
   color: var(--warm-500);
   font-weight: 600;
   margin-bottom: 10px;
-}
-
-.party-name {
-  font-size: 14.5px;
-  margin-bottom: 8px;
-}
-
-.party-rows {
-  gap: 5px;
-}
-
-.party-rows > div {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 12.5px;
-}
-
-.party-rows span:first-child {
-  color: var(--warm-500);
-}
-
-.party-rows span:last-child {
-  color: var(--warm-800);
-  text-align: right;
-  overflow-wrap: anywhere;
 }
 
 .cufebox {
@@ -620,48 +477,6 @@ function copyId() {
 .taxchip.muted {
   background: var(--warm-150, var(--warm-100));
   color: var(--warm-600);
-}
-
-.totals {
-  gap: 7px;
-}
-
-.tot-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  color: var(--warm-700);
-  font-variant-numeric: tabular-nums;
-}
-
-.tot-row.sub {
-  font-weight: 700;
-  color: var(--warm-900);
-  padding-top: 7px;
-  border-top: 1px solid var(--warm-200);
-}
-
-.reten-head {
-  margin-top: 6px;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--warm-500);
-}
-
-.tot-row.reten {
-  color: oklch(50% 0.16 25deg);
-}
-
-.tot-row.net {
-  font-weight: 700;
-  color: var(--warm-900);
-  padding-top: 6px;
-  border-top: 1px solid var(--warm-200);
-}
-
-.tot-pay {
-  margin-top: 8px;
 }
 
 .noteactions {

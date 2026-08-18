@@ -67,7 +67,9 @@ const finalConsumer = defineModel<boolean>('finalConsumer', { required: true })
       :class="{ on: finalConsumer }"
       @click="finalConsumer = !finalConsumer"
     >
-      <span class="fc-box"><Check v-if="finalConsumer" :size="12" :stroke-width="2.6" /></span>
+      <span class="fc-box" :class="finalConsumer ? 'ds-tone--accent-solid' : 'fc-box-off'"
+        ><Check v-if="finalConsumer" :size="12" :stroke-width="2.6"
+      /></span>
       Consumidor final
     </button>
     <p class="fe-hint ds-hint">
@@ -114,19 +116,24 @@ const finalConsumer = defineModel<boolean>('finalConsumer', { required: true })
   border-color: var(--amatista-500);
   color: var(--amatista-700);
 }
+
+/* El tono de la casilla lo pone `.ds-tone--accent-solid` (marcada) o
+   `.fc-box-off` (en reposo) desde el template: si el fondo y el color de borde
+   vivieran en esta regla pesarían (0,2,0) con el `[data-v-…]` del scope y le
+   ganarían a la primitiva (0,1,0). */
 .fc-box {
   width: 18px;
   height: 18px;
   border-radius: 5px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--warm-300);
-  background: white;
+  border-width: 1px;
+  border-style: solid;
   color: white;
 }
-.fc-toggle.on .fc-box {
-  background: var(--amatista-600);
-  border-color: var(--amatista-600);
+.fc-box-off {
+  background: white;
+  border-color: var(--warm-300);
 }
 .fe-hint {
   margin: 0;

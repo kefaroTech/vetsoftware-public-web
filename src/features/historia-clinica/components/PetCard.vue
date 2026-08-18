@@ -22,7 +22,7 @@ const weightLabel = computed(() => {
 </script>
 
 <template>
-  <button type="button" class="pet-card" @click="emit('select', pet)">
+  <button type="button" class="pet-card ds-hover-accent" @click="emit('select', pet)">
     <div class="avatar">{{ petInitials }}</div>
     <div class="ds-flex-fill">
       <div class="name ds-item-label">{{ pet.name }}</div>
@@ -54,10 +54,10 @@ const weightLabel = computed(() => {
     background 0.12s ease;
 }
 
-.pet-card:hover {
-  border-color: var(--amatista-300);
-  background: var(--amatista-50);
-}
+/* El hover de acento lo pone `.ds-hover-accent` (0,3,0), que gana al `background`
+   y al `border` de la base (0,2,0). Su tercera declaración, `color`, es inerte
+   aquí: todo el texto de la tarjeta lleva color propio (`.ds-item-label`,
+   `.ds-meta`, `.row`, `.muted`, `.sep`) y el botón no tiene texto suelto. */
 
 .avatar {
   width: 48px;

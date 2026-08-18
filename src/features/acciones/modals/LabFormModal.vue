@@ -2,7 +2,7 @@
 import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import { nextRowUid } from '@/composables/rowUid'
 import { computed, reactive, ref, watch } from 'vue'
-import { Beaker, Check, Plus, X, AlertTriangle } from 'lucide-vue-next'
+import { Beaker, Plus, X } from 'lucide-vue-next'
 import ModalShell from '@/components/ui/ModalShell.vue'
 import BaseField from '@/components/ui/BaseField.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -12,6 +12,8 @@ import DateInput from '@/components/ui/DateInput.vue'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import PatientFixedCard from '../components/PatientFixedCard.vue'
+import BranchConfirmNotice from '@/features/dashboard/views/consulta/nueva/components/BranchConfirmNotice.vue'
+import SampleCollectedToggle from '../components/SampleCollectedToggle.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { useBranches } from '@/features/branches/composables/useBranches'
 import { useTestTypes } from '@/features/laboratory-test-types/composables/useLaboratoryTestTypes'
@@ -286,19 +288,11 @@ async function doSave() {
     @close="emit('close')"
   >
     <template #body>
-      <div v-if="confirmingBranch" class="branch-confirm">
-        <AlertTriangle :size="22" :stroke-width="1.7" class="bc-ic" />
-        <div>
-          <p class="bc-title">Sede distinta a la del menú</p>
-          <p class="bc-text">
-            Vas a registrar esta solicitud en <b>{{ branchName(branchId) }}</b
-            >, que es <b>diferente</b> a la sede por defecto (<b>{{
-              branchName(defaultBranchId)
-            }}</b
-            >). ¿Seguro que quieres usar esa sede?
-          </p>
-        </div>
-      </div>
+      <BranchConfirmNotice
+        v-if="confirmingBranch"
+        :branch-name="branchName(branchId)"
+        :default-branch-name="branchName(defaultBranchId)"
+      />
       <template v-else>
         <div v-if="typesError" class="ds-banner ds-banner--sm ds-banner--error">
           {{ typesError }}
@@ -379,28 +373,16 @@ async function doSave() {
           </div>
         </div>
 
-        <button v-if="!isEdit" type="button" class="add-row" @click="addRow">
+        <button
+          v-if="!isEdit"
+          type="button"
+          class="add-row ds-tone--accent-outline"
+          @click="addRow"
+        >
           <Plus :size="14" :stroke-width="1.8" /> Agregar otro examen
         </button>
 
-        <label
-          v-if="showSampleCollected"
-          class="sample-collected"
-          :class="{ checked: draft.sampleCollected }"
-        >
-          <span class="cb-box" :class="{ checked: draft.sampleCollected }">
-            <Check v-if="draft.sampleCollected" :size="12" :stroke-width="3" />
-          </span>
-          <input v-model="draft.sampleCollected" type="checkbox" class="ds-sr-only" />
-          <div>
-            <div class="title ds-text-strong ds-text-strong--md">La muestra ya fue recolectada</div>
-            <div class="desc">
-              Marca esta opción si la muestra está tomada y solo falta procesarla en laboratorio. El
-              estado pasará a
-              <strong>Pendiente por procesar</strong>.
-            </div>
-          </div>
-        </label>
+        <SampleCollectedToggle v-if="showSampleCollected" v-model="draft.sampleCollected" />
       </template>
     </template>
 
@@ -446,39 +428,6 @@ async function doSave() {
 </template>
 
 <style scoped>
-.branch-confirm {
-  display: flex;
-  gap: 12px;
-  padding: 16px 18px;
-  border-radius: 11px;
-  background: oklch(96% 0.05 80deg);
-  border: 1px solid var(--warning-200);
-}
-
-.bc-ic {
-  flex-shrink: 0;
-  color: oklch(55% 0.14 60deg);
-  margin-top: 2px;
-}
-
-.bc-title {
-  margin: 0 0 4px;
-  font-size: 14px;
-  font-weight: 600;
-  color: oklch(38% 0.13 60deg);
-}
-
-.bc-text {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--warm-700);
-}
-
-.bc-text b {
-  font-weight: 600;
-}
-
 /* Añadidos sobre `.ds-stack`: gap propio y el hueco hacia el bloque anterior. */
 .rows {
   gap: 12px;
@@ -538,75 +487,6 @@ async function doSave() {
   gap: 6px;
 }
 
-.add-row:hover {
-  border-color: var(--amatista-500);
-  background: var(--amatista-50);
-}
-
-.sample-collected {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--warm-100);
-  border: 1.5px solid var(--warm-200);
-  border-radius: 10px;
-  cursor: pointer;
-  margin-top: 12px;
-  position: relative;
-  transition:
-    border-color 0.15s ease,
-    background 0.12s ease;
-}
-
-.sample-collected:hover {
-  border-color: var(--amatista-300);
-}
-
-.sample-collected.checked {
-  background: linear-gradient(135deg, var(--warning-50), oklch(96% 0.02 var(--hue)));
-  border-color: oklch(70% 0.13 75deg);
-}
-
-.cb-box {
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  border: 1.5px solid var(--warm-300);
-  background: var(--warm-50);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  margin-top: 1px;
-  color: white;
-  transition:
-    background 0.12s ease,
-    border-color 0.12s ease;
-}
-
-.sample-collected:hover .cb-box:not(.checked) {
-  border-color: var(--amatista-400);
-}
-
-.cb-box.checked {
-  background: oklch(58% 0.16 75deg);
-  border-color: oklch(58% 0.16 75deg);
-}
-
-/* Residuo sobre `.ds-text-strong` + `--md` (warm-900 / peso medio / 13,5px). */
-.sample-collected .title {
-  line-height: 1.3;
-}
-
-.sample-collected .desc {
-  font-size: 12px;
-  color: var(--warm-600);
-  margin-top: 3px;
-  line-height: 1.5;
-}
-
-.sample-collected .desc strong {
-  color: oklch(40% 0.13 75deg);
-  font-weight: 600;
-}
+/* El estado `:hover` lo pinta `.ds-tone--accent-outline:hover:not(:disabled)`
+   (primitives.css) — aplicada desde el marcado, ver arriba. */
 </style>

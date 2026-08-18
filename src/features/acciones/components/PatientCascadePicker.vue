@@ -1,22 +1,11 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Search, User, PawPrint, X, Plus, ArrowLeft, TriangleAlert } from 'lucide-vue-next'
+import { Search, User, PawPrint, X, Plus } from 'lucide-vue-next'
 import { useOwnerSearch } from '@/features/dashboard/views/consulta/nueva/composables/useOwnerSearch'
 import { animalApi } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
-import { ownerApi } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
-import { mapOwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.mapper'
-import { buildCreateAnimalRequest } from '@/features/dashboard/views/consulta/nueva/api/animal.mapper'
-import OwnerForm from '@/features/dashboard/views/consulta/nueva/components/OwnerForm.vue'
-import PetForm from '@/features/dashboard/views/consulta/nueva/components/PetForm.vue'
-import type {
-  OwnerDraft,
-  PetDraft,
-} from '@/features/dashboard/views/consulta/nueva/composables/useNuevaConsultaDraft'
-import { useAuth } from '@/features/auth/composables/useAuth'
-import { getProblemDetailMessage } from '@/services/http/http.client'
-import type { OwnerDocumentType } from '@/features/facturacion/composables/feFiscalChecklist'
-import type { PersonType } from '@/features/facturacion/types/facturacion'
+import InlineOwnerCreate from './InlineOwnerCreate.vue'
+import InlinePetCreate from './InlinePetCreate.vue'
 import type { Owner } from '@/types/domain'
 
 const props = defineProps<{
@@ -29,8 +18,6 @@ const emit = defineEmits<{
   'update:selection': [info: { owner: Owner; animal: AnimalResponse } | null]
 }>()
 
-const { companyId } = useAuth()
-
 const ownerQuery = ref('')
 const { results: ownerResults, loading: searching } = useOwnerSearch(ownerQuery)
 
@@ -39,39 +26,6 @@ const animals = ref<AnimalResponse[]>([])
 const loadingAnimals = ref(false)
 const animalsError = ref<string | null>(null)
 const selectedAnimal = ref<AnimalResponse | null>(null)
-
-// ── Factories de borrador (espejo de nuevaConsultaDraft.store) ────────────────
-function emptyOwnerDraft(prefill?: Partial<OwnerDraft>): OwnerDraft {
-  return {
-    name: '',
-    document: '',
-    phone: '',
-    email: '',
-    documentType: '',
-    personType: '',
-    countryId: '',
-    stateId: '',
-    cityId: '',
-    address: '',
-    ...(prefill ?? {}),
-  }
-}
-function emptyPetDraft(): PetDraft {
-  return {
-    name: '',
-    chipNumber: '',
-    specieId: '',
-    breedId: '',
-    gender: '',
-    colorId: '',
-    bod: '',
-    animalType: 'NONE',
-    weight: '',
-    weightType: 'KILOGRAMS',
-    size: '',
-    reproductiveState: '',
-  }
-}
 
 // ── Selección de propietario ──────────────────────────────────────────────────
 function pickOwner(owner: Owner) {
@@ -114,105 +68,29 @@ function pickAnimal(animal: AnimalResponse) {
   }
 }
 
-// ── Creación de propietario (inline) ─────────────────────────────────────────
+// ── Creación inline (propietario / mascota) ──────────────────────────────────
+// El borrador, la validación y el POST viven en `InlineOwnerCreate` /
+// `InlinePetCreate`; aquí solo queda qué panel está abierto y qué hacer con lo
+// que devuelven.
 const ownerCreating = ref(false)
-const ownerDraft = ref<OwnerDraft>(emptyOwnerDraft())
-const ownerFormRef = ref<{ validate: () => boolean } | null>(null)
-const ownerSubmitError = ref<string | null>(null)
-const savingOwner = ref(false)
+const petCreating = ref(false)
 
 function startCreateOwner() {
-  ownerDraft.value = emptyOwnerDraft({ name: ownerQuery.value.trim() })
-  ownerSubmitError.value = null
   ownerCreating.value = true
 }
-function cancelCreateOwner() {
-  ownerCreating.value = false
-  ownerSubmitError.value = null
-}
-async function saveOwner() {
-  if (ownerFormRef.value && !ownerFormRef.value.validate()) {
-    ownerSubmitError.value = 'Revisa los campos marcados antes de continuar.'
-    return
-  }
-  if (companyId.value == null) {
-    ownerSubmitError.value = 'No se pudo identificar la empresa actual. Vuelve a iniciar sesión.'
-    return
-  }
-  const o = ownerDraft.value
-  const cityIdNum = Number(o.cityId)
-  if (!Number.isFinite(cityIdNum)) {
-    ownerSubmitError.value = 'Selecciona una ciudad válida.'
-    return
-  }
-  savingOwner.value = true
-  ownerSubmitError.value = null
-  try {
-    const created = await ownerApi.create({
-      name: o.name.trim(),
-      document: o.document.trim(),
-      phone: o.phone.trim(),
-      email: o.email.trim(),
-      documentType: o.documentType as OwnerDocumentType,
-      personType: o.personType as PersonType,
-      address: o.address.trim(),
-      cityId: cityIdNum,
-    })
-    ownerCreating.value = false
-    pickOwner(mapOwnerResponse(created))
-  } catch (e: unknown) {
-    ownerSubmitError.value = getProblemDetailMessage(
-      e,
-      'No se pudo crear el propietario. Intenta nuevamente.',
-    )
-  } finally {
-    savingOwner.value = false
-  }
-}
-
-// ── Creación de mascota (inline) ──────────────────────────────────────────────
-const petCreating = ref(false)
-const petDraft = ref<PetDraft>(emptyPetDraft())
-const petFormRef = ref<{ validate: () => boolean } | null>(null)
-const petSubmitError = ref<string | null>(null)
-const savingPet = ref(false)
-
 function startCreatePet() {
-  petDraft.value = emptyPetDraft()
-  petSubmitError.value = null
   petCreating.value = true
 }
-function cancelCreatePet() {
-  petCreating.value = false
-  petSubmitError.value = null
+
+function onOwnerCreated(owner: Owner) {
+  ownerCreating.value = false
+  pickOwner(owner)
 }
-async function savePet() {
-  const owner = selectedOwner.value
-  if (!owner) return
-  if (petFormRef.value && !petFormRef.value.validate()) {
-    petSubmitError.value = 'Revisa los campos marcados antes de continuar.'
-    return
-  }
-  if (companyId.value == null) {
-    petSubmitError.value = 'No se pudo identificar la empresa actual. Vuelve a iniciar sesión.'
-    return
-  }
-  savingPet.value = true
-  petSubmitError.value = null
-  try {
-    const payload = buildCreateAnimalRequest(petDraft.value, owner.id)
-    const created = await animalApi.create(payload)
-    animals.value = [...animals.value, created]
-    petCreating.value = false
-    pickAnimal(created)
-  } catch (e: unknown) {
-    petSubmitError.value = getProblemDetailMessage(
-      e,
-      'No se pudo registrar la mascota. Intenta nuevamente.',
-    )
-  } finally {
-    savingPet.value = false
-  }
+
+function onPetCreated(created: AnimalResponse) {
+  animals.value = [...animals.value, created]
+  petCreating.value = false
+  pickAnimal(created)
 }
 
 watch(
@@ -233,31 +111,12 @@ watch(
     <!-- ══ Paso PROPIETARIO ══ -->
     <div v-if="!selectedOwner" class="step ds-stack ds-stack--10">
       <!-- Crear propietario nuevo -->
-      <template v-if="ownerCreating">
-        <div class="form-head">
-          <button type="button" class="back" @click="cancelCreateOwner">
-            <ArrowLeft :size="14" :stroke-width="1.9" /> Volver a la búsqueda
-          </button>
-        </div>
-        <div v-if="ownerSubmitError" class="form-banner ds-flex-row" role="alert">
-          <TriangleAlert :size="14" :stroke-width="1.7" />
-          <span>{{ ownerSubmitError }}</span>
-        </div>
-        <OwnerForm ref="ownerFormRef" v-model="ownerDraft" />
-        <div class="form-actions ds-actions">
-          <button type="button" class="ds-btn ds-btn--ghost" @click="cancelCreateOwner">
-            Cancelar
-          </button>
-          <button
-            type="button"
-            class="ds-btn ds-btn--solid"
-            :disabled="savingOwner"
-            @click="saveOwner"
-          >
-            {{ savingOwner ? 'Creando…' : 'Crear y seleccionar' }}
-          </button>
-        </div>
-      </template>
+      <InlineOwnerCreate
+        v-if="ownerCreating"
+        :initial-name="ownerQuery"
+        @created="onOwnerCreated"
+        @cancel="ownerCreating = false"
+      />
 
       <!-- Búsqueda de propietario -->
       <template v-else>
@@ -296,7 +155,7 @@ watch(
             </div>
           </button>
         </div>
-        <button type="button" class="create-link" @click="startCreateOwner">
+        <button type="button" class="create-link ds-tone--accent-outline" @click="startCreateOwner">
           <Plus :size="15" :stroke-width="2.2" /> Crear propietario nuevo
         </button>
       </template>
@@ -320,21 +179,12 @@ watch(
       <label class="hint">Mascota</label>
 
       <!-- Crear mascota nueva -->
-      <template v-if="petCreating">
-        <div v-if="petSubmitError" class="form-banner ds-flex-row" role="alert">
-          <TriangleAlert :size="14" :stroke-width="1.7" />
-          <span>{{ petSubmitError }}</span>
-        </div>
-        <PetForm ref="petFormRef" v-model="petDraft" />
-        <div class="form-actions ds-actions">
-          <button type="button" class="ds-btn ds-btn--ghost" @click="cancelCreatePet">
-            Cancelar
-          </button>
-          <button type="button" class="ds-btn ds-btn--solid" :disabled="savingPet" @click="savePet">
-            {{ savingPet ? 'Guardando…' : 'Crear y seleccionar' }}
-          </button>
-        </div>
-      </template>
+      <InlinePetCreate
+        v-if="petCreating"
+        :owner-id="selectedOwner.id"
+        @created="onPetCreated"
+        @cancel="petCreating = false"
+      />
 
       <!-- Selección de mascota -->
       <template v-else>
@@ -363,7 +213,7 @@ watch(
               </div>
             </button>
           </div>
-          <button type="button" class="create-link" @click="startCreatePet">
+          <button type="button" class="create-link ds-tone--accent-outline" @click="startCreatePet">
             <Plus :size="15" :stroke-width="2.2" /> Registrar mascota nueva
           </button>
         </template>
@@ -546,10 +396,8 @@ watch(
     background 0.12s;
 }
 
-.create-link:hover {
-  border-color: var(--amatista-500);
-  background: var(--amatista-50);
-}
+/* El estado `:hover` lo pinta `.ds-tone--accent-outline:hover:not(:disabled)`
+   (primitives.css) — aplicada desde el marcado, ver arriba. */
 
 .picked {
   display: flex;
@@ -613,6 +461,7 @@ watch(
     background 0.12s;
 }
 
+/* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- `.ds-tone--accent-selected` sólo existe en forma plana y aquí el par es EXCLUSIVO del `:hover`: la ficha en reposo es warm-50/warm-200 y su estado real de selección es otro par (`.animal-card.selected`, amatista-100/amatista-500), así que llevar la clase en el marcado dejaría todas las fichas con aspecto de preseleccionadas. */
 .animal-card:hover {
   border-color: var(--amatista-300);
   background: var(--amatista-50);
@@ -635,44 +484,5 @@ watch(
 
 .animal-card.selected .paw {
   background: var(--amatista-200);
-}
-
-/* Formularios de creación inline */
-.form-head {
-  display: flex;
-  align-items: center;
-}
-
-.back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: none;
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--amatista-700);
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 6px;
-}
-
-.back:hover {
-  background: var(--amatista-50);
-}
-
-.form-banner {
-  padding: 10px 12px;
-  border-radius: 9px;
-  font-size: 12.5px;
-  background: var(--danger-150);
-  border: 1px solid var(--danger-300);
-  color: oklch(35% 0.15 25deg);
-}
-
-/* Único añadido sobre `.ds-actions`: estos dos botones respiran algo más. */
-.form-actions {
-  gap: 10px;
 }
 </style>

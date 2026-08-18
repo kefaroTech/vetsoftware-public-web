@@ -123,7 +123,7 @@ watch(
               <td colspan="4" class="ds-empty">Cargando…</td>
             </tr>
             <tr v-for="l in detail.lines" v-else :key="l.productId">
-              <td class="tname">{{ nameOf(l.productId) }}</td>
+              <td class="tname ds-text-strong">{{ nameOf(l.productId) }}</td>
               <td class="num sys">{{ l.systemQuantity }}</td>
               <td class="num">{{ l.countedQuantity }}</td>
               <td class="num">
@@ -153,7 +153,13 @@ watch(
             <tr v-else-if="rows.length === 0">
               <td colspan="5" class="ds-empty">Aún no hay conteos registrados.</td>
             </tr>
-            <tr v-for="r in rows" v-else :key="r.id" class="trow" @click="openDetail(r.id)">
+            <tr
+              v-for="r in rows"
+              v-else
+              :key="r.id"
+              class="trow ds-row-hover"
+              @click="openDetail(r.id)"
+            >
               <td class="date">{{ fmtDateTime(r.createdDate) }}</td>
               <td class="num">{{ r.totalLines }}</td>
               <td class="num">
@@ -206,13 +212,11 @@ watch(
    `.ds-table td.ds-empty` de `primitives.css` (0,2,1), que le gana a
    `.ds-table--dense td` (0,1,1). */
 
-/* NO es `.ds-row-clickable` (tiñe de amatista y sobre el `td`); ver la misma
-   nota en `InventoryProductsTable`. */
+/* NO es `.ds-row-clickable` (tiñe de amatista y sobre el `td`); el gris sobre
+   el `<tr>` es `.ds-row-hover`, que va en el marcado. Ver la misma nota en
+   `InventoryProductsTable`. */
 .trow {
   cursor: pointer;
-}
-.trow:hover {
-  background: var(--warm-100);
 }
 
 /* La cifra: `text-align` se separa a `td.num` porque `.ds-table th` alinea a la
@@ -225,19 +229,22 @@ watch(
 td.num {
   text-align: right;
 }
-.tname {
-  font-weight: 500;
-  color: var(--warm-900);
-}
-.date {
-  color: var(--warm-600);
-  white-space: nowrap;
-}
-.tnote {
-  color: var(--warm-600);
-}
+
+/* El `font-weight` Y el `color` los pone `.ds-text-strong` (primitives.css):
+   el `color` le llega vía la excepción `.ds-table td.ds-text-strong`
+   (auditoría FE-08 fase final), que le gana a `.ds-table td` (0,1,1) por
+   nombre; ya no queda CSS local para esta celda. */
+
+/* Las tres celdas secundarias comparten tono, así que comparten regla; el
+   `nowrap` es sólo de la fecha. No hay primitiva para este par: `.ds-meta-dark`
+   es warm-600 pero fija 13px y aquí la tabla es densa (12,5px). */
+.date,
+.tnote,
 .sys {
   color: var(--warm-600);
+}
+.date {
+  white-space: nowrap;
 }
 .badge {
   display: inline-flex;

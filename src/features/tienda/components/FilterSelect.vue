@@ -19,7 +19,11 @@ const model = defineModel<string>({ required: true })
 </script>
 
 <template>
-  <select v-model="model" class="fsel" :class="`fsel--${size}`">
+  <select
+    v-model="model"
+    class="fsel ds-focus-ring ds-focus-ring--no-outline"
+    :class="`fsel--${size}`"
+  >
     <slot />
   </select>
 </template>
@@ -47,9 +51,15 @@ const model = defineModel<string>({ required: true })
   padding: 9px 30px 9px 13px;
   font-size: 13px;
 }
+
+/* El anillo de foco es `.ds-focus-ring ds-focus-ring--no-outline`
+   (primitives.css): el `box-shadow` y el `outline: none` los pone la primitiva
+   y sus reglas locales se borraron. El `border-color` NO puede irse: la
+   primitiva pesa (0,2,0) exactamente lo mismo que `.fsel[data-v]`, que declara
+   el atajo `border`, y el desempate lo decidiría el orden del bundle. Con la
+   regla aquí gana siempre — es el mismo motivo por el que `InventarioView`
+   repite este `:focus` para su variante `.fsel.branch`. */
 .fsel:focus {
-  outline: none;
   border-color: var(--amatista-500);
-  box-shadow: var(--ring);
 }
 </style>

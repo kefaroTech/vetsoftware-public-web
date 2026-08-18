@@ -61,7 +61,7 @@ const emit = defineEmits<{
       v-for="it in items"
       :key="it.id"
       class="cat-row ds-flex-row ds-flex-row--12"
-      :class="{ 'ds-is-disabled--60': it.soldOut }"
+      :class="it.soldOut ? 'ds-is-disabled--60' : 'ds-hover-accent'"
     >
       <span class="cat-name">{{ it.name }}</span>
       <span v-if="it.soldOut" class="badge-out">Agotado</span>
@@ -157,10 +157,13 @@ const emit = defineEmits<{
     background 0.12s;
 }
 
-.cat-row:hover:not(.ds-is-disabled--60) {
-  border-color: var(--amatista-300);
-  background: var(--amatista-50);
-}
+/* El hover de la fila es `.ds-hover-accent` (primitives.css), enganchada con
+   `:class` sólo cuando el ítem NO está agotado — así sustituye al
+   `:not(.ds-is-disabled--60)` que tenía el selector local. Pesa (0,3,0) y gana
+   al `.cat-row[data-v-…]` de (0,2,0) sin tocar la regla base. Su tercera
+   declaración (`color: amatista-700`) no se ve: `.cat-name`, `.badge-out`,
+   `.ds-meta-dark` y `.add-btn` fijan su propio color y la fila no tiene texto
+   directo. */
 
 /* `flex: 1` a secas, sin el `min-width: 0` de `.ds-flex-fill`: el nombre del
    ítem no lleva elipsis y no debe encoger por debajo de su contenido. */

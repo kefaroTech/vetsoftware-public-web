@@ -91,7 +91,7 @@ onMounted(() => {
           type="button"
           role="tab"
           class="tab"
-          :class="{ active: tab === 'libro' }"
+          :class="tab === 'libro' ? 'ds-tab--active' : 'tab-off'"
           @click="setTab('libro')"
         >
           <BarChart3 :size="15" :stroke-width="1.7" /> Libro de ventas
@@ -100,7 +100,7 @@ onMounted(() => {
           type="button"
           role="tab"
           class="tab"
-          :class="{ active: tab === 'concil' }"
+          :class="tab === 'concil' ? 'ds-tab--active' : 'tab-off'"
           @click="setTab('concil')"
         >
           <ShieldCheck :size="15" :stroke-width="1.7" /> Conciliación DIAN
@@ -320,23 +320,27 @@ onMounted(() => {
   gap: 4px;
 }
 
+/* El estado activo lo pinta `.ds-tab--active` y el de reposo `.tab-off`, las dos
+   desde el template. La base no declara `color` ni `border-bottom-color`: con el
+   `[data-v-…]` del scope pesarían (0,2,0) y la primitiva (0,1,0) no ganaría. El
+   `border-width` en forma larga evita el `border-color: currentcolor` que
+   arrastra el atajo `border: none`. */
 .tab {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   padding: 9px 14px;
-  border: none;
   background: transparent;
-  border-bottom: 2px solid transparent;
+  border-width: 0 0 2px;
+  border-style: solid;
   font-size: 13px;
   font-weight: 500;
-  color: var(--warm-500);
   cursor: pointer;
 }
 
-.tab.active {
-  color: var(--amatista-700);
-  border-bottom-color: var(--amatista-600);
+.tab-off {
+  border-bottom-color: transparent;
+  color: var(--warm-500);
 }
 
 .daterange :deep(.date-wrap) {

@@ -102,7 +102,8 @@ watch(
           <tr v-for="r in rows" v-else :key="r.id">
             <td class="date">{{ fmtDateTime(r.createdDate) }}</td>
             <td>
-              {{ r.productName }} <span class="sku">{{ r.productCode }}</span>
+              {{ r.productName }}
+              <span class="sku ds-meta ds-meta--caption">{{ r.productCode }}</span>
             </td>
             <td class="num ds-num">{{ r.quantity }} u</td>
             <td class="num ds-num">{{ formatMoney(r.unitCost) }}</td>
@@ -137,7 +138,8 @@ watch(
    Ningún `<th>` lleva `.num` aquí, así que la cifra es sólo cosa de las celdas
    de datos: son `.ds-num` (primitives.css) y de la regla local sólo sobrevive
    el `white-space`, que la primitiva no declara. */
-.num {
+.num,
+.date {
   white-space: nowrap;
 }
 .total {
@@ -146,11 +148,12 @@ watch(
 }
 .date {
   color: var(--warm-600);
-  white-space: nowrap;
 }
+
+/* El par color+tamaño del SKU es `.ds-meta ds-meta--caption` (primitives.css:
+   warm-500 + 11px). Va sobre el `<span>`, no sobre el `<td>`, así que
+   `.ds-table--dense td` no compite. Sólo queda la fuente mono. */
 .sku {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--warm-500);
 }
 </style>

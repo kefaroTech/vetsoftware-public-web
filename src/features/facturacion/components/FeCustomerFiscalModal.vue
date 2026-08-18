@@ -188,7 +188,10 @@ function save() {
         :class="{ on: draft.withholdingAgent }"
         @click="draft.withholdingAgent = !draft.withholdingAgent"
       >
-        <span class="agentbox">
+        <span
+          class="agentbox"
+          :class="draft.withholdingAgent ? 'ds-tone--accent-solid' : 'agentbox-off'"
+        >
           <Check v-if="draft.withholdingAgent" :size="12" :stroke-width="2.6" />
         </span>
         <span>
@@ -323,11 +326,15 @@ function save() {
   border-color: var(--amatista-400);
 }
 
+/* El tono de la casilla llega desde el template (`.ds-tone--accent-solid` cuando
+   está activa, `.agentbox-off` en reposo). Fijar aquí `background`/`border-color`
+   pesaría (0,2,0) por el `[data-v-…]` del scope y ganaría a la primitiva. */
 .agentbox {
   width: 18px;
   height: 18px;
   border-radius: 5px;
-  border: 1.5px solid var(--warm-300);
+  border-width: 1.5px;
+  border-style: solid;
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -335,9 +342,8 @@ function save() {
   color: white;
 }
 
-.agenttoggle.on .agentbox {
-  background: var(--amatista-600);
-  border-color: var(--amatista-600);
+.agentbox-off {
+  border-color: var(--warm-300);
 }
 
 .agenttoggle strong {

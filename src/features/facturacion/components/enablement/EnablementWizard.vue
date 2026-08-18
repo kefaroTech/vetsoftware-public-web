@@ -33,7 +33,7 @@ function go(n: number) {
 <template>
   <div class="wizard ds-stack">
     <header class="wiz-top">
-      <button type="button" class="wiz-exit" @click="emit('exit')">
+      <button type="button" class="wiz-exit ds-hover-accent" @click="emit('exit')">
         <ArrowLeft :size="15" :stroke-width="1.8" /> Volver al estado
       </button>
       <span class="wiz-title">Habilitar facturación electrónica</span>
@@ -91,10 +91,12 @@ function go(n: number) {
   border-radius: 8px;
 }
 
-.wiz-exit:hover {
-  background: var(--amatista-50);
-  color: var(--amatista-700);
-}
+/* El hover del "volver" es `.ds-hover-accent` (primitives.css), igual que en
+   `FeDocumentDetail` (`.back`): es la variante de BOTÓN DE TEXTO del trío de
+   acento, no `.ds-tone--accent-soft`, que carece de forma `:hover` y en reposo
+   perdería contra `.wiz-exit[data-v-…]`. Con (0,3,0) gana a ese (0,2,0), y su
+   `border-color: amatista-300` es inerte porque el botón declara `border:
+   none`. */
 
 .wiz-title {
   font-family: var(--font-serif);

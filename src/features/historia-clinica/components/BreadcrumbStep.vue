@@ -20,7 +20,7 @@ function handleClick(disabled: boolean | undefined) {
   <button
     type="button"
     class="crumb ds-flex-row"
-    :class="{ active, done, disabled }"
+    :class="[{ active, done, disabled }, active ? 'ds-tone--accent-soft' : 'crumb-idle']"
     :disabled="disabled"
     @click="handleClick(disabled)"
   >
@@ -34,24 +34,29 @@ function handleClick(disabled: boolean | undefined) {
 </template>
 
 <style scoped>
+/* La base se queda con la GEOMETRÍA. El tono viaja en una clase aplicada desde la
+   plantilla — `.ds-tone--accent-soft` cuando el paso está activo, `.crumb-idle`
+   en reposo — y las dos son mutuamente excluyentes. Si el tono de reposo viviera
+   aquí, su `[data-v]` lo dejaría en (0,2,0) y la primitiva (0,1,0) no podría
+   ganarle nunca, que es justo lo que bloqueaba la migración. */
 .crumb {
   padding: var(--space-6) var(--space-10);
   border-radius: 7px;
   border: none;
-  background: transparent;
   font-family: inherit;
   font-size: 13px;
-  color: var(--warm-500);
   cursor: pointer;
 }
 
-.crumb.done {
-  color: var(--warm-700);
+.crumb-idle {
+  background: transparent;
+  color: var(--warm-500);
 }
 
-.crumb.active {
-  background: var(--amatista-50);
-  color: var(--amatista-700);
+/* `done` y `active` nunca coinciden (`done = paso > n`, `active = paso === n`),
+   así que este (0,3,0) no compite con la primitiva del estado activo. */
+.crumb.done {
+  color: var(--warm-700);
 }
 
 .crumb.disabled {

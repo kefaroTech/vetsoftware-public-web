@@ -10,7 +10,7 @@ defineEmits<{ open: [] }>()
 
 <template>
   <button type="button" class="card ds-stack" @click="$emit('open')">
-    <div class="top">
+    <div class="top ds-block-head">
       <!-- TODO backend: Hospitalization no expone status clínico; default ESTABLE -->
       <HospStatusPill status="ESTABLE" />
       <span class="day ds-hint">Día {{ daysSince(patient.startDate) }}</span>
@@ -48,10 +48,10 @@ defineEmits<{ open: [] }>()
   box-shadow: 0 6px 18px -10px rgb(20 15 30 / 25%);
 }
 
+/* Resto sobre `.ds-block-head`: aquí el hueco lo pone el `gap` de `.ds-stack` de
+   la tarjeta, así que se anula el `margin-bottom` de la primitiva. */
 .top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  margin-bottom: 0;
 }
 
 .day {

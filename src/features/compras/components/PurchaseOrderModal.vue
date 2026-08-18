@@ -15,6 +15,7 @@ import { purchaseOrdersApi } from '../api/purchaseOrders.api'
 import { formatMoney } from '@/features/tienda/composables/pricing'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import type { PurchaseOrder } from '../types/compras'
+import ComprasIconButton from './ComprasIconButton.vue'
 
 const props = defineProps<{ open: boolean; order: PurchaseOrder | null }>()
 const emit = defineEmits<{ close: []; saved: [] }>()
@@ -188,9 +189,9 @@ async function submit() {
           <span class="ds-num ds-meta-dark ds-meta-dark--sm">{{
             formatMoney((Number(l.quantity) || 0) * (Number(l.unitCost) || 0))
           }}</span>
-          <button type="button" class="icon-btn danger" @click="removeLine(l.uid)">
+          <ComprasIconButton tone="danger" @click="removeLine(l.uid)">
             <Trash2 :size="14" />
-          </button>
+          </ComprasIconButton>
         </div>
       </div>
 
@@ -278,20 +279,6 @@ async function submit() {
 
 .total-row strong {
   color: var(--warm-900);
-}
-
-.icon-btn {
-  border: none;
-  background: var(--warm-100);
-  color: var(--warm-600);
-  border-radius: 7px;
-  padding: 8px;
-  cursor: pointer;
-}
-
-.icon-btn.danger:hover {
-  background: var(--danger-200);
-  color: oklch(50% 0.2 25deg);
 }
 
 /* caja/compras usan un amatista un punto más claro que el resto. */

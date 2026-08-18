@@ -5,18 +5,14 @@ import PageHeader from '@/components/ui/PageHeader.vue'
 import { useInfiniteList } from '@/composables/useInfiniteList'
 import OpenAccountModal from '../components/OpenAccountModal.vue'
 import AccountDetail from '../components/AccountDetail.vue'
+import AccountCard from '../components/AccountCard.vue'
 import { useCuentas } from '../composables/useCuentas'
 import { formatMoney } from '@/features/tienda/composables/pricing'
-import { initials, formatDateShort } from '@/composables/format'
 import { animalApi } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
-import {
-  OPEN_ACCOUNT_STATUS_LABEL,
-  type OpenAccountResponse,
-  type OpenAccountStatus,
-} from '../types/cuentas'
+import type { OpenAccountResponse, OpenAccountStatus } from '../types/cuentas'
 
 const store = useCuentas()
 const branchStore = useBranchStore()
@@ -31,13 +27,6 @@ const selected = ref<OpenAccountResponse | null>(null)
 const ownerPets = ref<{ id: number; name: string }[]>([])
 
 const openAccountOpen = ref(false)
-
-/** Clase de tono para el pill de estado según el estado de la cuenta. */
-const STATUS_TONE: Record<OpenAccountStatus, string> = {
-  OPEN: 'open',
-  CLOSE: 'closed',
-  CANCEL: 'cancelled',
-}
 
 // Activas = cuentas abiertas (OPEN); Cerradas = cobradas (CLOSE) o canceladas (CANCEL).
 // La pestaña es un filtro del servidor, no un `filter` sobre el array: con la lista paginada
@@ -99,23 +88,6 @@ const isSearching = computed(() => query.value.trim().length > 0)
 // el total de lo que se ha scrolleado, no el de la empresa.
 const summary = store.summary
 const totalPending = computed(() => summary.value.totalOutstanding)
-
-/** Etiqueta del pill de estado en la tarjeta (CLOSE se muestra como "Pagada"). */
-function cardStatusLabel(acc: OpenAccountResponse): string {
-  return acc.status === 'CLOSE' ? 'Pagada' : OPEN_ACCOUNT_STATUS_LABEL[acc.status]
-}
-
-/** Etiqueta de la fila inferior: Saldo (abierta) / Cobrado (pagada) / Anulado (cancelada). */
-function saldoLabel(acc: OpenAccountResponse): string {
-  if (acc.status === 'CLOSE') return 'Cobrado'
-  if (acc.status === 'CANCEL') return 'Anulado'
-  return 'Saldo'
-}
-
-/** Monto de la fila inferior: total cobrado en cuentas pagadas, saldo pendiente en el resto. */
-function saldoValue(acc: OpenAccountResponse): number {
-  return acc.status === 'CLOSE' ? acc.totalAmount : acc.outstandingAmount
-}
 
 async function selectAccount(acc: OpenAccountResponse) {
   selected.value = acc
@@ -186,21 +158,23 @@ async function onAccountCreated(account: OpenAccountResponse) {
           type="button"
           role="tab"
           :aria-selected="tab === 'activas'"
-          :class="{ active: tab === 'activas' }"
+          :class="tab === 'activas' ? 'ds-tab--active' : 'tab-off'"
           @click="tab = 'activas'"
         >
           <Receipt :size="15" :stroke-width="1.7" /> <span>Activas</span>
-          <span v-if="summary.openCount > 0" class="tab-badge">{{ summary.openCount }}</span>
+          <span v-if="summary.openCount > 0" class="tab-badge tab-badge--accent">{{
+            summary.openCount
+          }}</span>
         </button>
         <button
           type="button"
           role="tab"
           :aria-selected="tab === 'cerradas'"
-          :class="{ active: tab === 'cerradas' }"
+          :class="tab === 'cerradas' ? 'ds-tab--active' : 'tab-off'"
           @click="tab = 'cerradas'"
         >
           <Check :size="15" :stroke-width="1.7" /> <span>Cerradas</span>
-          <span class="tab-badge muted">{{ summary.closedCount }}</span>
+          <span class="tab-badge ds-tone--neutral">{{ summary.closedCount }}</span>
         </button>
       </div>
 
@@ -242,44 +216,12 @@ async function onAccountCreated(account: OpenAccountResponse) {
         </p>
       </div>
       <div v-else class="cards">
-        <button
+        <AccountCard
           v-for="acc in accounts"
           :key="acc.id"
-          type="button"
-          class="acct-card ds-stack"
+          :account="acc"
           @click="selectAccount(acc)"
-        >
-          <div class="acct-top">
-            <div class="who">
-              <span class="avatar">{{ initials(acc.owner.name) }}</span>
-              <div class="who-text">
-                <div class="name">{{ acc.owner.name }}</div>
-                <div class="doc">{{ acc.owner.document }}</div>
-              </div>
-            </div>
-            <span class="status-pill" :class="STATUS_TONE[acc.status]">{{
-              cardStatusLabel(acc)
-            }}</span>
-          </div>
-          <div class="acct-meta">
-            <MapPin :size="13" :stroke-width="1.8" /> {{ acc.branch.name }}
-            <span>· Cuenta desde {{ formatDateShort(acc.createdDate) }}</span>
-          </div>
-          <div class="acct-totals ds-stack">
-            <div class="row ds-meta-dark ds-meta-dark--sm">
-              <span>Acumulado</span><strong>{{ formatMoney(acc.totalAmount) }}</strong>
-            </div>
-            <div v-if="acc.paidAmount > 0" class="row ds-meta-dark ds-meta-dark--sm">
-              <span>Abonado</span><strong>{{ formatMoney(acc.paidAmount) }}</strong>
-            </div>
-            <div class="row saldo ds-meta-dark ds-meta-dark--sm">
-              <span>{{ saldoLabel(acc) }}</span>
-              <strong :class="{ zero: saldoValue(acc) <= 0 }">{{
-                formatMoney(saldoValue(acc))
-              }}</strong>
-            </div>
-          </div>
-        </button>
+        />
       </div>
 
       <!-- Centinela del scroll infinito: al entrar en viewport pide la página siguiente. -->
@@ -331,6 +273,12 @@ async function onAccountCreated(account: OpenAccountResponse) {
   margin-bottom: 16px;
 }
 
+/* El estado activo lo pinta `.ds-tab--active` (primitives.css) y el de reposo
+   su pareja `.tab-off`, las dos enganchadas con `:class`. La base no declara
+   `color` ni `border-bottom-color` a propósito: con el `[data-v-…]` del scope
+   pesarían (0,2,1) y la primitiva (0,1,0) nunca ganaría. El `border-width` en
+   forma larga evita el `border-color: currentcolor` que arrastra el atajo
+   `border: none`. */
 .tabs button {
   display: inline-flex;
   align-items: center;
@@ -338,10 +286,9 @@ async function onAccountCreated(account: OpenAccountResponse) {
   font-family: inherit;
   font-size: 13.5px;
   font-weight: 500;
-  color: var(--warm-600);
   background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
+  border-width: 0 0 2px;
+  border-style: solid;
   padding: 10px 16px;
   margin-bottom: -1px;
   cursor: pointer;
@@ -349,30 +296,39 @@ async function onAccountCreated(account: OpenAccountResponse) {
     color 0.12s ease,
     border-color 0.12s ease;
 }
-.tabs button:hover {
-  color: var(--warm-900);
-}
-.tabs button.active {
-  color: var(--amatista-700);
-  border-bottom-color: var(--amatista-600);
+.tab-off {
+  border-bottom-color: transparent;
+  color: var(--warm-600);
 }
 
+/* El hover se acota al reposo: la pestaña activa ya no compite con él y
+   conserva su amatista-700, como cuando ganaba por orden de aparición. */
+.tab-off:hover {
+  color: var(--warm-900);
+}
+
+/* Mismo reparto que en `.tabs button` / `.tab-off` de arriba: la base se queda
+   sólo con la caja y NO declara `background` ni `color`, porque con el
+   `[data-v-…]` del scope pesarían (0,2,0) y `.ds-tone--neutral` (0,1,0) nunca
+   ganaría. Cada badge engancha su tono en el template: la primitiva para el
+   apagado (warm-200/warm-600 exactos) y `.tab-badge--accent` para el contador
+   de cuentas activas, que sigue siendo local — amatista-600 sobre blanco no
+   tiene primitiva (`.ds-tone--accent-solid` es fondo + borde, no fondo +
+   texto). */
 .tab-badge {
   min-width: 20px;
   height: 20px;
   padding: 0 7px;
   border-radius: 10px;
-  background: var(--amatista-600);
-  color: white;
   font-size: 11px;
   font-weight: 600;
   display: grid;
   place-items: center;
   font-variant-numeric: tabular-nums;
 }
-.tab-badge.muted {
-  background: var(--warm-200);
-  color: var(--warm-600);
+.tab-badge--accent {
+  background: var(--amatista-600);
+  color: white;
 }
 
 /* Estado vacío por tab */
@@ -456,67 +412,7 @@ async function onAccountCreated(account: OpenAccountResponse) {
   gap: 14px;
 }
 
-.acct-card {
-  text-align: left;
-  font-family: inherit;
-  cursor: pointer;
-  padding: 16px;
-  border-radius: 14px;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  gap: 11px;
-  transition:
-    border-color 0.12s,
-    box-shadow 0.12s;
-}
-.acct-card:hover {
-  border-color: var(--amatista-300);
-  box-shadow: 0 4px 14px -8px rgb(20 15 30 / 18%);
-}
-.acct-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-}
-.who-text {
-  min-width: 0;
-}
-.acct-meta {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: wrap;
-  font-size: 12px;
-  color: var(--warm-500);
-}
-.acct-totals {
-  gap: 4px;
-  padding-top: 11px;
-  border-top: 1px solid var(--warm-150);
-}
-.acct-totals .row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.acct-totals .row strong {
-  color: var(--warm-900);
-  font-variant-numeric: tabular-nums;
-}
-.acct-totals .row.saldo {
-  font-size: 14px;
-  padding-top: 5px;
-  margin-top: 2px;
-  border-top: 1px dashed var(--warm-200);
-}
-.acct-totals .row.saldo strong {
-  color: oklch(45% 0.13 70deg);
-  font-size: 15px;
-}
-.acct-totals .row.saldo strong.zero {
-  color: var(--success-fg);
-}
+/* La tarjeta de cuenta y sus 11 reglas viven en `AccountCard.vue`. */
 
 /* Detalle */
 .back {

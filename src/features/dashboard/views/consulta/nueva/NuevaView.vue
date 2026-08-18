@@ -199,14 +199,14 @@ onUnmounted(() => {
 <template>
   <div class="wizard ds-stack">
     <header class="topbar">
-      <button type="button" class="back" @click="goHome">
+      <button type="button" class="back ds-hover-neutral" @click="goHome">
         <ArrowLeft :size="15" :stroke-width="1.7" />
         <span>Volver a inicio</span>
       </button>
       <span class="divider" />
       <h1 class="brand">Nueva consulta</h1>
       <span class="badge ds-tone--accent">Borrador</span>
-      <button type="button" class="cancel" @click="attemptCancel">
+      <button type="button" class="cancel ds-hover-neutral" @click="attemptCancel">
         <X :size="14" :stroke-width="1.7" />
         <span>Cancelar</span>
       </button>
@@ -234,7 +234,7 @@ onUnmounted(() => {
         <button
           v-if="step === 1 && draft.state.ownerCreating"
           type="button"
-          class="discard-extra"
+          class="discard-extra ds-hover-neutral"
           @click="draft.cancelCreatingOwner()"
         >
           Descartar
@@ -242,7 +242,7 @@ onUnmounted(() => {
         <button
           v-if="step === 1 && draft.state.petCreating"
           type="button"
-          class="discard-extra"
+          class="discard-extra ds-hover-neutral"
           @click="draft.cancelCreatingPet()"
         >
           Descartar
@@ -302,11 +302,6 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-.back:hover {
-  background: var(--warm-100);
-  color: var(--warm-900);
-}
-
 .divider {
   width: 1px;
   height: 22px;
@@ -348,11 +343,6 @@ onUnmounted(() => {
   border-radius: 6px;
 }
 
-.cancel:hover {
-  background: var(--warm-100);
-  color: var(--warm-900);
-}
-
 @media (width <= 720px) {
   .topbar .brand {
     font-size: 18px;
@@ -387,10 +377,5 @@ onUnmounted(() => {
   cursor: pointer;
   padding: 9px 10px;
   border-radius: 8px;
-}
-
-.discard-extra:hover {
-  background: var(--warm-100);
-  color: var(--warm-900);
 }
 </style>

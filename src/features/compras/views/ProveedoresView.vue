@@ -6,6 +6,8 @@ import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useToast } from '@/composables/useToast'
 import { PERMISSIONS } from '@/constants/permissions'
 import SupplierModal from '../components/SupplierModal.vue'
+import ComprasIconButton from '../components/ComprasIconButton.vue'
+import ComprasTable from '../components/ComprasTable.vue'
 import type { Supplier } from '../types/compras'
 
 const { items, total, loading, error, search, remove } = useSuppliers()
@@ -88,7 +90,7 @@ onMounted(refresh)
 
     <p v-if="error" class="ds-server-error">{{ error }}</p>
 
-    <table class="grid-table">
+    <ComprasTable>
       <thead>
         <tr>
           <th>Nombre</th>
@@ -114,28 +116,22 @@ onMounted(refresh)
             {{ s.paymentTermsDays != null ? s.paymentTermsDays + ' días' : '—' }}
           </td>
           <td class="ds-actions">
-            <button
-              v-if="canUpdate"
-              type="button"
-              class="icon-btn"
-              title="Editar"
-              @click="openEdit(s)"
-            >
+            <ComprasIconButton v-if="canUpdate" title="Editar" row @click="openEdit(s)">
               <Pencil :size="15" :stroke-width="1.7" />
-            </button>
-            <button
+            </ComprasIconButton>
+            <ComprasIconButton
               v-if="canDelete"
-              type="button"
-              class="icon-btn danger"
               title="Eliminar"
+              row
+              tone="danger"
               @click="onDelete(s)"
             >
               <Trash2 :size="15" :stroke-width="1.7" />
-            </button>
+            </ComprasIconButton>
           </td>
         </tr>
       </tbody>
-    </table>
+    </ComprasTable>
     <p class="count ds-meta">{{ total }} proveedor(es)</p>
 
     <SupplierModal
@@ -177,49 +173,11 @@ onMounted(refresh)
   outline: none;
 }
 
-.grid-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.grid-table th {
-  text-align: left;
-  color: var(--warm-500);
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 8px;
-  border-bottom: 1px solid var(--warm-200);
-}
-
-.grid-table td {
-  padding: 9px 8px;
-  border-bottom: 1px solid var(--warm-100);
-  color: var(--warm-700);
-}
+/* La tabla y su cabecera/celda viven en `ComprasTable.vue`, compartida por las
+   tres vistas de la feature. */
 
 .actions-col {
   width: 90px;
-}
-
-.icon-btn {
-  border: none;
-  background: var(--warm-100);
-  color: var(--warm-600);
-  border-radius: 7px;
-  padding: 6px;
-  cursor: pointer;
-  display: inline-flex;
-}
-
-.icon-btn:hover {
-  background: var(--warm-200);
-}
-
-.icon-btn.danger:hover {
-  background: var(--danger-200);
-  color: oklch(50% 0.2 25deg);
 }
 
 .count {

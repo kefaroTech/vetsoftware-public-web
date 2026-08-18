@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { ChevronDown, Plus, Search } from 'lucide-vue-next'
 
 interface Option {
@@ -42,10 +42,9 @@ const panelStyle = ref<Record<string, string>>({})
 const open = ref(false)
 
 /**
- * Posiciona el panel (teletransportado a <body>) en coordenadas fijas respecto al
- * trigger: se abre hacia abajo, o hacia arriba si no hay espacio suficiente abajo,
- * y acota su alto al espacio disponible. Así nunca lo recorta el modal aunque el
- * campo quede al fondo. Se recalcula en scroll/resize mientras está abierto.
+ * Posiciona el panel (teletransportado a <body>) en coordenadas fijas respecto
+ * al trigger: abre hacia abajo, o hacia arriba si no cabe, y acota su alto al
+ * espacio disponible. Se recalcula en scroll/resize mientras está abierto.
  */
 function updatePosition() {
   const t = trigger.value
@@ -83,6 +82,15 @@ const filtered = computed(() => {
 })
 
 const showCreate = computed(() => !!props.onCreate && !creating.value)
+
+// Tono del disparador: los tres estados son EXCLUYENTES y viajan como clase
+// desde el marcado, para que ninguna regla scoped compita con las primitivas
+// `.ds-field-*` (0,1,0). Ver el bloque <style>.
+const toneClass = computed(() => {
+  if (props.invalid) return ['tone-text', 'ds-field-invalid']
+  if (props.disabled) return ['tone-border', 'ds-field-disabled']
+  return ['tone-border', 'tone-bg', 'tone-text']
+})
 
 function toggle() {
   if (props.disabled) return
@@ -136,11 +144,10 @@ async function confirmCreate() {
       name,
       description: newHint.value.trim(),
     })
+    // Si `onCreate` no retorna `value`, el consumidor se encarga de
+    // re-seleccionar tras su propio refresco.
     if (created && typeof created === 'object' && 'value' in created) {
       emit('update:modelValue', created.value)
-    } else {
-      // Fallback: si onCreate no retorna value, intentar buscar por nombre en options
-      // tras refresh externo. El consumidor debe encargarse de re-seleccionar si hace falta.
     }
     close()
     emit('blur')
@@ -171,13 +178,6 @@ function onDocClick(e: MouseEvent) {
   emit('blur')
 }
 
-watch(
-  () => props.modelValue,
-  () => {
-    // Mantener cerrado al cambiar externamente
-  },
-)
-
 onMounted(() => document.addEventListener('mousedown', onDocClick))
 onBeforeUnmount(() => {
   document.removeEventListener('mousedown', onDocClick)
@@ -192,7 +192,7 @@ onBeforeUnmount(() => {
       ref="trigger"
       type="button"
       class="trigger ds-flex-row"
-      :class="{ 'ds-field-shake': invalid }"
+      :class="toneClass"
       :disabled="disabled"
       :aria-expanded="open"
       :aria-invalid="invalid || undefined"
@@ -297,19 +297,39 @@ onBeforeUnmount(() => {
   font-family: var(--font-sans);
 }
 
+/* La base se queda con la GEOMETRÍA: scoped pesa (0,2,0) y le ganaría a las
+   primitivas `.ds-field-*` (0,1,0). El color viaja en las clases de tono. */
 .trigger {
   width: 100%;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border-width: 1px;
+  border-style: solid;
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 13.5px;
   font-family: inherit;
-  color: var(--warm-800);
-  cursor: pointer;
   transition:
     border-color 0.15s,
     box-shadow 0.15s;
+}
+
+/* Excluye el deshabilitado en vez de competir con `.ds-field-disabled`. */
+.trigger:not(:disabled) {
+  cursor: pointer;
+}
+
+/* Tono en reposo en tres piezas: cada estado sustituye un subconjunto distinto
+   (deshabilitado conserva el borde; inválido conserva el texto). Mantienen el
+   peso y la posición del trío que declaraba `.trigger`. */
+.tone-border {
+  border-color: var(--warm-200);
+}
+
+.tone-bg {
+  background: var(--warm-50);
+}
+
+.tone-text {
+  color: var(--warm-800);
 }
 
 .ss.open .trigger,
@@ -319,19 +339,12 @@ onBeforeUnmount(() => {
   box-shadow: 0 0 0 3px color-mix(in oklch, var(--amatista-500) 18%, transparent);
 }
 
-.ss.disabled .trigger {
-  background: var(--warm-100);
-  color: var(--warm-500);
-  cursor: not-allowed;
-}
-
-/* El temblor lo pone `.ds-field-shake` desde el template. Borde+fondo se
-   quedan aquí: la base `.trigger` ya declara `background`/`border` y en CSS
-   scoped pesa (0,2,0), por encima de `.ds-field-invalid` (0,1,0). Igual para
-   `.ds-field-disabled` en `.ss.disabled .trigger`. */
-.ss.invalid .trigger {
+/* `.ds-field-invalid` (0,1,0) no le gana al anillo amatista de arriba: el borde
+   inválido se reafirma para los dos estados en que ese anillo aparece, igual
+   que hacía la regla `.ss.invalid .trigger` retirada. */
+.ss.invalid.open .trigger,
+.ss.invalid .trigger:focus-visible {
   border-color: oklch(60% 0.2 25deg);
-  background: oklch(98.5% 0.02 25deg);
 }
 
 .ss.invalid.open .trigger {

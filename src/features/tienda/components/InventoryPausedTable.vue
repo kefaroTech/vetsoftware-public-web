@@ -43,7 +43,7 @@ const emit = defineEmits<{ reactivate: [product: ProductResponse] }>()
         <td colspan="5" class="ds-empty ds-empty--lg">No hay productos pausados.</td>
       </tr>
       <tr v-for="p in products" v-else :key="p.id">
-        <td class="tname">{{ p.name }}</td>
+        <td class="tname ds-text-strong">{{ p.name }}</td>
         <td>
           <CategoryPill
             :tone="productCategoryTone(p.productCategory)"
@@ -74,10 +74,11 @@ const emit = defineEmits<{ reactivate: [product: ProductResponse] }>()
    `.ds-empty ds-empty--lg` del `<td colspan>` vacío lo resuelve la excepción
    `.ds-table td.ds-empty--lg` de `primitives.css` (0,2,1), que le gana a
    `.ds-table td` (0,1,1). */
-.tname {
-  font-weight: 500;
-  color: var(--warm-900);
-}
+
+/* El `font-weight` Y el `color` los pone `.ds-text-strong` (primitives.css):
+   el `color` le llega vía la excepción `.ds-table td.ds-text-strong`
+   (auditoría FE-08 fase final), que le gana a `.ds-table td` (0,1,1) por
+   nombre; ya no queda CSS local para esta celda. */
 .tsku {
   font-family: var(--font-mono);
   font-size: 12px;

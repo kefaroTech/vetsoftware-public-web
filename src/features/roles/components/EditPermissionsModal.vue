@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { Shield, X, Search, Lock } from 'lucide-vue-next'
-import SwitchToggle from './SwitchToggle.vue'
-import RolePill from './RolePill.vue'
-import SubModuleAccordion from './SubModuleAccordion.vue'
-import { ROLE_COLORS } from '../constants/roleColors'
+import { Lock } from 'lucide-vue-next'
+import EditRoleHeader from './EditRoleHeader.vue'
+import PermissionToolbar from './PermissionToolbar.vue'
+import PermissionTree from './PermissionTree.vue'
 import { usePermissionsCatalog } from '../composables/usePermissionsCatalog'
 import { useSubModulesCatalog } from '../composables/useSubModulesCatalog'
 import { useModulesCatalog } from '../composables/useModulesCatalog'
 import { useRoles } from '../composables/useRoles'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import type { RoleColor, RoleResponse } from '../types'
+import type { PermissionModuleGroup, PermissionSubGroup } from '../types/permission-tree.types'
 
 const props = defineProps<{
   open: boolean
@@ -42,7 +42,6 @@ const nameError = computed(() =>
 
 const isCreate = computed(() => props.role === null)
 const color = computed<RoleColor>(() => props.color ?? 'amatista')
-const tokens = computed(() => ROLE_COLORS[color.value])
 
 const totalCatalogPermissions = computed(() => permissionsCatalog.list.value.length)
 
@@ -61,28 +60,16 @@ const usedSubModulesByModule = computed<Map<number, number[]>>(() => {
   return map
 })
 
-interface SubGroup {
-  subModuleId: number
-  subModuleName: string
-  permissionIds: number[]
-}
-
-interface ModuleGroup {
-  moduleId: number
-  moduleName: string
-  subModules: SubGroup[]
-}
-
-const groups = computed<ModuleGroup[]>(() => {
+const groups = computed<PermissionModuleGroup[]>(() => {
   const q = search.value.trim().toLocaleLowerCase()
-  const result: ModuleGroup[] = []
+  const result: PermissionModuleGroup[] = []
 
   for (const mod of modulesCatalog.list.value) {
     const subIds = usedSubModulesByModule.value.get(mod.id)
     if (!subIds || subIds.length === 0) continue
     const moduleMatches = q && mod.name.toLocaleLowerCase().includes(q)
 
-    const subGroups: SubGroup[] = []
+    const subGroups: PermissionSubGroup[] = []
     for (const subId of subIds) {
       const sub = subModulesCatalog.byId.value.get(subId)
       if (!sub) continue
@@ -270,48 +257,16 @@ async function save() {
     <Transition name="modal-fade">
       <div v-if="open" class="overlay" role="dialog" aria-modal="true">
         <div class="card ds-stack">
-          <header class="head" :style="{ background: tokens.headerGradient }">
-            <button
-              type="button"
-              class="close"
-              aria-label="Cerrar"
-              :disabled="saving"
-              @click="emit('close')"
-            >
-              <X :size="18" :stroke-width="1.7" />
-            </button>
-            <div class="head-body">
-              <div class="avatar" :style="{ background: tokens.avatarBg, color: tokens.avatarFg }">
-                <Shield :size="22" :stroke-width="1.7" />
-              </div>
-              <div class="ds-flex-fill">
-                <div class="kicker ds-kicker">
-                  {{ readOnly ? 'Ver rol' : isCreate ? 'Crear rol' : 'Editar rol' }}
-                  <span v-if="!readOnly" class="req" title="Campo obligatorio">*</span>
-                </div>
-                <input
-                  v-model="draftName"
-                  type="text"
-                  class="name-input"
-                  :class="{ invalid: attempted && !!nameError }"
-                  placeholder="Nombre del rol"
-                  spellcheck="false"
-                  autocomplete="off"
-                  :readonly="readOnly"
-                />
-                <div class="head-meta">
-                  <RolePill :label="draftName || 'Sin nombre'" :color="color" size="lg" />
-                  <span class="sep" />
-                  <SwitchToggle
-                    v-model="draftActive"
-                    :disabled="readOnly"
-                    :aria-label="draftActive ? 'Desactivar rol' : 'Activar rol'"
-                  />
-                  <span class="active-text">{{ draftActive ? 'Activo' : 'Inactivo' }}</span>
-                </div>
-              </div>
-            </div>
-          </header>
+          <EditRoleHeader
+            v-model:name="draftName"
+            v-model:active="draftActive"
+            :color="color"
+            :is-create="isCreate"
+            :name-invalid="attempted && !!nameError"
+            :read-only="readOnly"
+            :saving="saving"
+            @close="emit('close')"
+          />
 
           <div v-if="readOnly" class="readonly-banner">
             <Lock :size="14" :stroke-width="1.8" />
@@ -321,60 +276,27 @@ async function save() {
             </span>
           </div>
 
-          <div class="toolbar">
-            <div class="search ds-flex-row">
-              <Search :size="14" :stroke-width="1.7" class="ds-icon-muted" />
-              <input
-                v-model="search"
-                type="text"
-                class="search-input"
-                placeholder="Buscar permiso o sub-módulo…"
-                spellcheck="false"
-              />
-            </div>
-            <button type="button" class="ghost ds-hover-neutral" @click="expandAll">
-              Expandir todo
-            </button>
-            <button type="button" class="ghost ds-hover-neutral" @click="collapseAll">
-              Colapsar todo
-            </button>
-            <span class="bar" />
-            <span class="counter ds-tone--accent">
-              {{ selectedCount }} de {{ totalCatalogPermissions }} permisos
-            </span>
-          </div>
+          <PermissionToolbar
+            v-model:search="search"
+            :selected-count="selectedCount"
+            :total-count="totalCatalogPermissions"
+            @expand-all="expandAll"
+            @collapse-all="collapseAll"
+          />
 
-          <div class="body ds-stack ds-stack--18">
-            <div v-if="groups.length === 0" class="empty ds-empty">
-              {{
-                permissionsCatalog.loading.value
-                  ? 'Cargando permisos…'
-                  : 'No se encontraron permisos para los filtros aplicados.'
-              }}
-            </div>
-            <div v-for="g in groups" :key="g.moduleId" class="ds-stack ds-stack--8">
-              <div class="module-label">{{ g.moduleName }}</div>
-              <div class="subs ds-stack">
-                <SubModuleAccordion
-                  v-for="s in g.subModules"
-                  :key="s.subModuleId"
-                  :sub-module="subModulesCatalog.byId.value.get(s.subModuleId)!"
-                  :permissions="
-                    s.permissionIds
-                      .map((id) => permissionsCatalog.byId.value.get(id))
-                      .filter((p): p is NonNullable<typeof p> => Boolean(p))
-                  "
-                  :selected="draftPermissionIds"
-                  :expanded="expandedSubModules.has(s.subModuleId)"
-                  :highlight="search.trim() || undefined"
-                  :read-only="readOnly"
-                  @toggle-expand="toggleExpand(s.subModuleId)"
-                  @toggle-sub="toggleSub(s.subModuleId)"
-                  @toggle-permission="togglePermission"
-                />
-              </div>
-            </div>
-          </div>
+          <PermissionTree
+            :groups="groups"
+            :sub-modules-by-id="subModulesCatalog.byId.value"
+            :permissions-by-id="permissionsCatalog.byId.value"
+            :selected="draftPermissionIds"
+            :expanded="expandedSubModules"
+            :highlight="search.trim() || undefined"
+            :read-only="readOnly"
+            :loading="permissionsCatalog.loading.value"
+            @toggle-expand="toggleExpand"
+            @toggle-sub="toggleSub"
+            @toggle-permission="togglePermission"
+          />
 
           <footer class="foot ds-flex-row ds-flex-row--12">
             <div class="foot-left">
@@ -444,95 +366,9 @@ async function save() {
   overflow: hidden;
 }
 
-/* HEADER */
-.head {
-  position: relative;
-  padding: 22px 26px 18px;
-  border-bottom: 1px solid var(--warm-200);
-}
-
-.close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 32px;
-  height: 32px;
-  background: transparent;
-  border: none;
-  color: var(--warm-700);
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: background 0.12s ease;
-}
-
-.close:hover:not(:disabled) {
-  background: rgb(255 255 255 / 60%);
-}
-
-.close:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.head-body {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-
-.kicker {
-  margin-bottom: 4px;
-}
-
-.name-input {
-  width: 100%;
-  font-family: var(--font-serif);
-  font-size: 28px;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  color: var(--warm-900);
-  background: transparent;
-  border: none;
-  border-bottom: 1.5px dashed transparent;
-  padding: 2px 0;
-  outline: none;
-  line-height: 1.1;
-}
-
-.kicker .req {
-  color: var(--danger-500);
-  margin-left: 3px;
-  font-weight: 600;
-}
-
-.name-input:focus {
-  border-bottom-color: var(--amatista-300);
-}
-
-.name-input.invalid {
-  border-bottom-style: solid;
-  border-bottom-color: var(--danger-500);
-}
-
-.name-input::placeholder {
-  color: var(--warm-400);
-}
-
-.name-input:read-only {
-  cursor: default;
-}
-
+/* La cabecera (avatar, nombre editable, píldora e interruptor) vive en
+   `EditRoleHeader.vue`; la barra de búsqueda en `PermissionToolbar.vue` y el
+   árbol de permisos en `PermissionTree.vue`, cada uno con su propio CSS. */
 .readonly-banner {
   display: flex;
   align-items: center;
@@ -547,119 +383,6 @@ async function save() {
 .readonly-banner :deep(svg) {
   flex-shrink: 0;
   color: var(--warm-600);
-}
-
-.head-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-  flex-wrap: wrap;
-}
-
-.sep {
-  width: 1px;
-  height: 18px;
-  background: var(--warm-300);
-}
-
-.active-text {
-  font-size: 12.5px;
-  color: var(--warm-700);
-  font-weight: 500;
-}
-
-/* TOOLBAR */
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 26px;
-  border-bottom: 1px solid var(--warm-200);
-  background: var(--warm-50);
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-.search {
-  flex: 1;
-  padding: 6px 12px;
-  background: var(--warm-100);
-  border: 1px solid var(--warm-200);
-  border-radius: 7px;
-  min-width: 180px;
-}
-
-.search-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-family: inherit;
-  font-size: 13px;
-  color: var(--warm-900);
-}
-
-.search-input::placeholder {
-  color: var(--warm-500);
-}
-
-.ghost {
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--warm-700);
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  padding: 6px 10px;
-  border-radius: 7px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition:
-    background 0.12s ease,
-    color 0.12s ease;
-}
-
-/* El hover del fantasma es `.ds-hover-neutral` y el icono de búsqueda
-   `.ds-icon-muted`. `.close:disabled` NO migra a `.ds-is-disabled`: `.close`
-   declara `cursor:pointer` a (0,2,0) y la primitiva pesa (0,1,0). */
-.bar {
-  width: 1px;
-  height: 22px;
-  background: var(--warm-200);
-}
-
-.counter {
-  font-size: 12px;
-  font-weight: 500;
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  white-space: nowrap;
-}
-
-/* BODY */
-.body {
-  flex: 1;
-  overflow: auto;
-  padding: 18px 26px;
-}
-
-.empty {
-  padding: 32px 0;
-  font-size: 13px;
-}
-
-.module-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--warm-500);
-  font-weight: 600;
-}
-
-.subs {
-  gap: 6px;
 }
 
 /* FOOTER */
@@ -707,37 +430,6 @@ async function save() {
     width: 100vw;
     height: 100vh;
     border-radius: 0;
-  }
-
-  .head {
-    padding: 18px 18px 16px;
-  }
-
-  .name-input {
-    font-size: 24px;
-  }
-
-  .avatar {
-    width: 48px;
-    height: 48px;
-  }
-
-  .toolbar {
-    flex-wrap: wrap;
-    padding: 10px 18px;
-  }
-
-  .search {
-    flex-basis: 100%;
-    order: -1;
-  }
-
-  .bar {
-    display: none;
-  }
-
-  .body {
-    padding: 14px 18px;
   }
 
   .foot {

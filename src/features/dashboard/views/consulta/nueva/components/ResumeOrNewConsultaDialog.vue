@@ -63,10 +63,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
           <p class="ds-dialog-body desc">
             Estás registrando una consulta
             <template v-if="ownerName">
-              para <strong>{{ ownerName }}</strong>
+              para <strong class="ds-text-strong">{{ ownerName }}</strong>
             </template>
             <template v-if="petName">
-              y su mascota <strong>{{ petName }}</strong> </template
+              y su mascota <strong class="ds-text-strong">{{ petName }}</strong> </template
             >. ¿Quieres retomarla donde la dejaste o empezar una nueva desde cero?
           </p>
           <div class="step-chip ds-tone--accent">{{ stepLabel }}</div>
@@ -124,11 +124,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 /* Residuo sobre `.ds-dialog-body`: éste usa 14px de margen, los otros tres 22. */
 .desc {
   margin: 0 0 14px;
-}
-
-.desc strong {
-  color: var(--warm-900);
-  font-weight: 500;
 }
 
 /* No es `.ds-pill`: su padding es 3/9 y añade `gap`/`white-space`. Sólo el par

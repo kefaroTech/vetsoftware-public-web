@@ -16,6 +16,15 @@ import {
 export type FormMode = 'create' | 'edit' | 'reschedule'
 
 /**
+ * Lo que devuelve `useAppointmentForm`. Existe para que las secciones del
+ * formulario (`AppointmentWhenFields`, `AppointmentSubjectFields`) reciban el
+ * borrador entero como una sola prop en vez de una decena de `v-model`: son las
+ * MISMAS refs, así que la extracción no cambia ni la reactividad ni el momento en
+ * que se escriben.
+ */
+export type AppointmentForm = ReturnType<typeof useAppointmentForm>
+
+/**
  * Estado, validación y armado del payload del formulario de citas.
  *
  * Sale de `AppointmentFormModal` porque eran ~200 de sus líneas: 16 refs, los

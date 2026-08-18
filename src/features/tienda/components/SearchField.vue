@@ -10,10 +10,11 @@ import { Search } from 'lucide-vue-next'
  * `:focus-within`, mismo icono `warm-500` que no encoge y mismo input sin borde.
  * Solo variaban dos métricas, que aquí son los modificadores.
  *
- * El `:focus-within` NO usa `.ds-focus-ring`: la regla base de este componente
- * declara `border`, que en CSS scoped pesa lo mismo (0,2,0) que la primitiva, y
- * el desempate lo decide el orden del bundle. Con la regla local (0,3,0) el
- * borde amatista gana siempre.
+ * El `:focus-within` usa `.ds-focus-ring` (primitives.css) para el `box-shadow`,
+ * pero conserva el `border-color` en una regla local de una sola declaración:
+ * la regla base de este componente declara el atajo `border`, que en CSS scoped
+ * pesa lo mismo (0,2,0) que la primitiva, y ese empate lo decidiría el orden del
+ * bundle. Con la regla local (0,3,0) el borde amatista gana siempre.
  */
 withDefaults(
   defineProps<{
@@ -30,7 +31,7 @@ const model = defineModel<string>({ required: true })
 </script>
 
 <template>
-  <div class="search" :class="[`search--${size}`, { 'search--fill': fill }]">
+  <div class="search ds-focus-ring" :class="[`search--${size}`, { 'search--fill': fill }]">
     <Search :size="15" :stroke-width="1.7" class="ds-icon-muted" />
     <input v-model="model" type="search" :placeholder="placeholder" class="ds-flex-fill" />
   </div>
@@ -60,9 +61,11 @@ const model = defineModel<string>({ required: true })
 .search--sm.search--fill {
   max-width: 320px;
 }
+
+/* El `box-shadow` lo pone `.ds-focus-ring` (primitives.css); aquí sólo queda el
+   `border-color`, por el empate de peso que explica la cabecera del archivo. */
 .search:focus-within {
   border-color: var(--amatista-500);
-  box-shadow: var(--ring);
 }
 .search input {
   border: none;

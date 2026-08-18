@@ -19,7 +19,7 @@ function toggle() {
   <button
     type="button"
     class="switch"
-    :class="{ on: modelValue, disabled }"
+    :class="{ on: modelValue, disabled, 'ds-is-disabled': disabled }"
     role="switch"
     :aria-checked="modelValue"
     :aria-label="ariaLabel"
@@ -38,19 +38,22 @@ function toggle() {
   border: none;
   background: var(--warm-300);
   padding: 2px;
-  cursor: pointer;
   position: relative;
   transition: background 0.15s ease;
   flex-shrink: 0;
 }
 
-.switch.on {
-  background: var(--amatista-600);
+/* El cursor por defecto se declara excluyendo el estado deshabilitado en vez de
+   competir con él: `.ds-is-disabled` (primitives.css) pesa (0,1,0) y perdería
+   contra un `.switch { cursor: pointer }` scoped, que pesa (0,2,0). Con el
+   `:not(:disabled)` los dos son mutuamente excluyentes y no hay cascada que
+   resolver. */
+.switch:not(:disabled) {
+  cursor: pointer;
 }
 
-.switch.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.switch.on {
+  background: var(--amatista-600);
 }
 
 .dot {

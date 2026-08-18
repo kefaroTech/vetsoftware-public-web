@@ -14,6 +14,7 @@ import ModalShell from '@/components/ui/ModalShell.vue'
 import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import AppointmentStatusPill from './AppointmentStatusPill.vue'
 import AppointmentVetBadge from './AppointmentVetBadge.vue'
+import AppointmentNoticeBanner from './AppointmentNoticeBanner.vue'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import {
@@ -134,13 +135,12 @@ const notesCancellation = computed(() =>
           </div>
           <div class="hero-duration">{{ durationLabel }}</div>
 
-          <div v-if="clashIds.length > 0" class="banner warn">
-            <AlertTriangle :size="16" :stroke-width="1.7" class="banner-ic" />
+          <AppointmentNoticeBanner v-if="clashIds.length > 0" tone="warn" :icon="AlertTriangle">
             <span>
               <b>Choque de horario:</b> el hueco {{ timeRange }} se cruza con
               {{ clashIds.map((id) => '#' + id).join(', ') }}.
             </span>
-          </div>
+          </AppointmentNoticeBanner>
 
           <div class="dfield ds-stack">
             <div class="dlabel">Veterinario/a</div>
@@ -185,10 +185,14 @@ const notesCancellation = computed(() =>
             <div class="dvalue">{{ appointment.notes }}</div>
           </div>
 
-          <div v-if="notesCancellation" class="banner neutral">
-            <Ban :size="15" :stroke-width="1.7" class="banner-ic" />
+          <AppointmentNoticeBanner
+            v-if="notesCancellation"
+            tone="neutral"
+            :icon="Ban"
+            :icon-size="15"
+          >
             <span><b>Motivo de cancelación:</b> {{ notesCancellation }}</span>
-          </div>
+          </AppointmentNoticeBanner>
         </div>
 
         <!-- Acciones de estado -->
@@ -438,35 +442,7 @@ const notesCancellation = computed(() =>
   gap: 8px;
 }
 
-.banner {
-  display: flex;
-  gap: 9px;
-  padding: 10px 12px;
-  border-radius: 9px;
-  font-size: 12.5px;
-  line-height: 1.5;
-}
-
-.banner-ic {
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.banner.warn {
-  background: oklch(95% 0.07 80deg);
-  color: oklch(42% 0.13 60deg);
-  border: 1px solid var(--warning-200);
-}
-
-.banner.neutral {
-  background: var(--warm-100);
-  color: var(--warm-700);
-  border: 1px solid var(--warm-200);
-}
-
-.banner b {
-  font-weight: 600;
-}
+/* Los dos avisos en caja de esta pantalla son `AppointmentNoticeBanner`. */
 
 .foot-left-actions {
   display: flex;

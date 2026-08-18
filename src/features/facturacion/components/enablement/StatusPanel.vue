@@ -115,7 +115,7 @@ function alertText(
         v-for="r in reqs"
         :key="r.key"
         type="button"
-        class="checkrow"
+        class="checkrow ds-hover-accent"
         @click="emit('openWizard', r.step)"
       >
         <div class="check-ic" :class="r.ok ? 'ok' : r.attention ? 'att' : 'pend'">
@@ -137,7 +137,7 @@ function alertText(
         /></span>
       </button>
 
-      <button type="button" class="checkrow" @click="emit('openRetenciones')">
+      <button type="button" class="checkrow ds-hover-accent" @click="emit('openRetenciones')">
         <div class="check-ic" :class="withholding ? 'ok' : 'opt'">
           <Check v-if="withholding" :size="16" :stroke-width="2.4" />
           <Receipt v-else :size="15" :stroke-width="1.8" />
@@ -243,10 +243,12 @@ function alertText(
     background 0.14s;
 }
 
-.checkrow:hover {
-  border-color: var(--amatista-300);
-  background: var(--amatista-50);
-}
+/* El hover de la fila es `.ds-hover-accent` (primitives.css). Pesa (0,3,0) y
+   gana al `.checkrow[data-v-…]` de (0,2,0) sin tocar la regla base, así que el
+   `:hover` local desaparece en vez de competir con ella. Su tercera declaración
+   (`color: amatista-700`) no se ve: `.check-ic`, `.check-title`, `.reqbadge`,
+   `.opt-tag`, `.check-sub` y `.check-cta` fijan su propio color, y la fila no
+   tiene texto directo. */
 
 .check-ic {
   width: 38px;

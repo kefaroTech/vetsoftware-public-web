@@ -44,7 +44,7 @@ defineEmits<{
     <div v-if="canManage" class="foot">
       <button
         type="button"
-        class="act toggle"
+        class="act toggle ds-tone--neutral-soft"
         :class="{ danger: branch.active }"
         :title="branch.active ? 'Desactivar sede' : 'Activar sede'"
         @click="$emit('toggle-active', branch)"
@@ -173,11 +173,11 @@ defineEmits<{
     color 0.12s ease;
 }
 
-.act.toggle:hover {
-  background: var(--warm-100);
-  border-color: var(--warm-300);
-}
-
+/* El hover neutro del toggle es `.ds-tone--neutral-soft:hover:not(:disabled)`
+   desde el marcado: el botón no se deshabilita nunca, así que el guardián de la
+   primitiva no cambia su comportamiento. La forma plana (0,1,0) no tiñe el
+   reposo porque `.act` scoped pesa (0,2,0), y la variante danger de abajo
+   (0,5,0) le sigue ganando a la primitiva (0,3,0) igual que antes. */
 .act.toggle.danger:hover {
   background: oklch(95% 0.04 25deg);
   border-color: oklch(75% 0.12 25deg);

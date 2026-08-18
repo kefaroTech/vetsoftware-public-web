@@ -87,10 +87,12 @@ function onShellClose() {
           <button
             type="button"
             class="destopt"
-            :class="{ active: motivo === 'COBRADA' }"
+            :class="motivo === 'COBRADA' ? 'ds-tone--accent-outline' : 'destopt-off'"
             @click="motivo = 'COBRADA'"
           >
-            <span class="do-check"
+            <span
+              class="do-check"
+              :class="motivo === 'COBRADA' ? 'ds-tone--accent-solid' : 'do-check-off'"
               ><Check v-if="motivo === 'COBRADA'" :size="13" :stroke-width="3"
             /></span>
             <span class="do-text ds-stack">
@@ -101,10 +103,12 @@ function onShellClose() {
           <button
             type="button"
             class="destopt"
-            :class="{ active: motivo === 'CANCELADA' }"
+            :class="motivo === 'CANCELADA' ? 'ds-tone--accent-outline' : 'destopt-off'"
             @click="motivo = 'CANCELADA'"
           >
-            <span class="do-check"
+            <span
+              class="do-check"
+              :class="motivo === 'CANCELADA' ? 'ds-tone--accent-solid' : 'do-check-off'"
               ><Check v-if="motivo === 'CANCELADA'" :size="13" :stroke-width="3"
             /></span>
             <span class="do-text">
@@ -116,24 +120,28 @@ function onShellClose() {
 
         <!-- Desglose fiscal de la cuenta -->
         <div class="desglose ds-stack">
-          <div class="ds-meta-dark dg-row">
+          <div class="ds-meta-dark ds-flex-row dg-row">
             <span>Base gravable + exenta</span><span>{{ formatMoney(breakdown.base) }}</span>
           </div>
-          <div v-for="r in breakdown.taxRows" :key="r.name" class="ds-meta-dark dg-row dg-tax">
+          <div
+            v-for="r in breakdown.taxRows"
+            :key="r.name"
+            class="ds-meta-dark ds-flex-row dg-row dg-tax"
+          >
             <span>{{ r.name }}</span
             ><span>{{ formatMoney(r.tax) }}</span>
           </div>
-          <div v-if="breakdown.taxRows.length === 0" class="ds-meta-dark dg-row dg-tax">
+          <div v-if="breakdown.taxRows.length === 0" class="ds-meta-dark ds-flex-row dg-row dg-tax">
             <span>Impuestos</span><span>Sin impuestos</span>
           </div>
-          <div class="ds-meta-dark dg-row dg-total">
+          <div class="ds-meta-dark ds-flex-row dg-row dg-total">
             <span class="ds-strong">Total cuenta</span
             ><span class="ds-strong">{{ formatMoney(breakdown.total) }}</span>
           </div>
-          <div v-if="(account?.paidAmount ?? 0) > 0" class="ds-meta-dark dg-row">
+          <div v-if="(account?.paidAmount ?? 0) > 0" class="ds-meta-dark ds-flex-row dg-row">
             <span>Ya abonado</span><span>− {{ formatMoney(account?.paidAmount ?? 0) }}</span>
           </div>
-          <div class="ds-meta-dark dg-row dg-saldo">
+          <div class="ds-meta-dark ds-flex-row dg-row dg-saldo">
             <span>{{ motivo === 'CANCELADA' ? 'Saldo a anular' : 'Saldo a cobrar' }}</span>
             <span>{{ formatMoney(outstanding) }}</span>
           </div>
@@ -198,8 +206,20 @@ function onShellClose() {
         Saldo <strong>{{ formatMoney(outstanding) }}</strong>
       </span>
       <div v-else-if="step === 'recibo'" class="w-seg" role="group" aria-label="Ancho del tiquete">
-        <button type="button" :class="{ on: width === '80' }" @click="setWidth('80')">80mm</button>
-        <button type="button" :class="{ on: width === '58' }" @click="setWidth('58')">58mm</button>
+        <button
+          type="button"
+          :class="width === '80' ? 'on ds-text-strong' : 'w-seg-off'"
+          @click="setWidth('80')"
+        >
+          80mm
+        </button>
+        <button
+          type="button"
+          :class="width === '58' ? 'on ds-text-strong' : 'w-seg-off'"
+          @click="setWidth('58')"
+        >
+          58mm
+        </button>
       </div>
     </template>
     <template #footer-actions>
@@ -236,8 +256,13 @@ function onShellClose() {
 </template>
 
 <style scoped>
-/* Layout via primitivas: .ds-stack(--16), .ds-strong, .ds-hint y
-   .ds-meta-dark(--sm). */
+/* Layout via primitivas: .ds-stack(--16), .ds-flex-row (filas del desglose),
+   .ds-strong, .ds-hint, .ds-text-strong y .ds-meta-dark(--sm).
+
+   Los TONOS de estado (opción de motivo, su casilla, y el ancho de tiquete
+   elegido) vienen de las primitivas enganchadas con `:class`; la regla base se
+   queda con la geometría. Declararlos aquí pesaría (0,2,0) por el `[data-v-…]`
+   del scope y le ganaría siempre a la primitiva (0,1,0). */
 .w-seg {
   display: inline-flex;
   border: 1px solid var(--warm-300);
@@ -254,11 +279,15 @@ function onShellClose() {
   cursor: pointer;
   border: none;
   background: transparent;
+}
+
+/* El color del botón elegido lo pone `.ds-text-strong` (warm-900 + peso 500,
+   el mismo peso que ya tenía la base); aquí sólo queda su fondo. */
+.w-seg-off {
   color: var(--warm-600);
 }
 .w-seg button.on {
   background: var(--warm-100);
-  color: var(--warm-900);
 }
 .field-lab {
   font-size: 12.5px;
@@ -289,18 +318,21 @@ function onShellClose() {
   cursor: pointer;
   padding: 13px;
   border-radius: 12px;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border-width: 1px;
+  border-style: solid;
   transition:
     border-color 0.12s,
     background 0.12s;
 }
-.destopt:hover {
-  border-color: var(--amatista-300);
+.destopt-off {
+  background: var(--warm-50);
+  border-color: var(--warm-200);
 }
-.destopt.active {
-  border-color: var(--amatista-500);
-  background: var(--amatista-50);
+
+/* El `:hover` se acota al reposo: la opción activa ya no compite con él y
+   conserva su amatista-500, igual que cuando ganaba por orden de aparición. */
+.destopt-off:hover {
+  border-color: var(--amatista-300);
 }
 .do-check {
   width: 18px;
@@ -310,13 +342,13 @@ function onShellClose() {
   margin-top: 1px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--warm-300);
-  background: var(--warm-50);
+  border-width: 1px;
+  border-style: solid;
   color: white;
 }
-.destopt.active .do-check {
-  background: var(--amatista-600);
-  border-color: var(--amatista-600);
+.do-check-off {
+  background: var(--warm-50);
+  border-color: var(--warm-300);
 }
 .do-text {
   gap: 3px;
@@ -342,9 +374,11 @@ function onShellClose() {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
 }
+
+/* `display:flex` + `align-items:center` los pone `.ds-flex-row`; su gap de 8px
+   se anula porque estas filas nunca lo tuvieron (dos hijos a `space-between`). */
 .dg-row {
-  display: flex;
-  align-items: center;
+  gap: 0;
   justify-content: space-between;
 }
 .dg-row span:last-child {

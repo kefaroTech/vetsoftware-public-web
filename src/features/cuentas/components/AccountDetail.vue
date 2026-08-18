@@ -70,8 +70,15 @@ const detailMeta = computed(() => {
   return `${verbo} el ${fecha}${quien}${motivo}`
 })
 
+/**
+ * Clase de tono del pill de estado. `OPEN` usa la primitiva `.ds-tone--success`
+ * (primitives.css) porque su par bg+fg es exactamente el suyo; los otros dos
+ * siguen siendo clases locales, sus valores no coinciden con ninguna primitiva.
+ * Mapa PROPIO de este componente: `AccountCard` tiene el suyo, con las tres
+ * clases locales y sin reglas que las pinten — no tocarlo desde aquí.
+ */
 const STATUS_TONE: Record<OpenAccountStatus, string> = {
-  OPEN: 'open',
+  OPEN: 'ds-tone--success',
   CLOSE: 'closed',
   CANCEL: 'cancelled',
 }
@@ -161,7 +168,7 @@ async function onChargeVoided() {
   </div>
 
   <div v-if="isReadOnly" class="readonly-note">
-    <Lock :size="15" :stroke-width="1.8" />
+    <Lock :size="15" :stroke-width="1.8" class="ds-icon-muted" />
     <span v-if="account.status === 'OPEN'">
       Esta cuenta pertenece a {{ account.branch.name }}. Selecciona esa sede para administrarla.
     </span>
@@ -255,10 +262,10 @@ async function onChargeVoided() {
   color: var(--warm-600);
 }
 
-.readonly-note svg {
-  color: var(--warm-500);
-  flex-shrink: 0;
-}
+/* El candado del aviso lleva `.ds-icon-muted` (primitives.css) en el template.
+   Nada scoped apunta ya a ese `<svg>`, así que la primitiva de (0,1,0) pinta
+   sin competencia — el `color` del contenedor sólo se hereda, y la clase gana
+   a la herencia. */
 
 .status-pill {
   display: inline-flex;
@@ -270,10 +277,9 @@ async function onChargeVoided() {
   white-space: nowrap;
 }
 
-.status-pill.open {
-  background: var(--success-bg);
-  color: var(--success-fg);
-}
+/* El tono de `OPEN` lo pinta `.ds-tone--success` (primitives.css), enganchada
+   por `STATUS_TONE`. La base `.status-pill` no declara `background` ni `color`,
+   así que la primitiva de (0,1,0) no compite con nada. */
 
 .status-pill.closed {
   background: var(--warm-150);

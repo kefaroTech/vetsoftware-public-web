@@ -35,7 +35,10 @@ const CHARGE_ICON: Record<ChargeKind, typeof Package> = {
     <div v-for="group in store.chargesByPet.value" v-else :key="group.key" class="group">
       <div class="group-head">
         <span class="group-id">
-          <span class="pet-avatar ds-tone--accent" :class="{ general: group.key === 'general' }">
+          <span
+            class="pet-avatar"
+            :class="group.key === 'general' ? 'ds-tone--neutral' : 'ds-tone--accent'"
+          >
             <Package v-if="group.key === 'general'" :size="13" :stroke-width="1.8" />
             <template v-else>{{ group.name.slice(0, 2).toUpperCase() }}</template>
           </span>
@@ -165,10 +168,10 @@ const CHARGE_ICON: Record<ChargeKind, typeof Package> = {
   font-weight: 700;
 }
 
-.pet-avatar.general {
-  background: var(--warm-200);
-  color: var(--warm-600);
-}
+/* El grupo "general" ya no lleva una variante local: los dos tonos del avatar
+   se enganchan con `:class` (`.ds-tone--neutral` / `.ds-tone--accent`,
+   primitives.css). La base `.pet-avatar` no declara `background` ni `color`,
+   así que las primitivas de (0,1,0) pintan sin competencia. */
 
 .group-name {
   font-size: 13.5px;
