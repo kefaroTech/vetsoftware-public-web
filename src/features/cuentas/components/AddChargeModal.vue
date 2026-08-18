@@ -224,7 +224,11 @@ async function addGeneral() {
           <input v-model="query" type="text" class="s-input ds-focus-ring" placeholder="Buscar…" />
         </div>
         <ul class="catalog ds-list-reset ds-stack">
-          <li v-for="it in catalog" :key="it.id" class="cat-row ds-flex-row ds-flex-row--12">
+          <li
+            v-for="it in catalog"
+            :key="it.id"
+            class="cat-row ds-flex-row ds-flex-row--12 ds-hover-accent"
+          >
             <span class="cat-name">{{ it.name }}</span>
             <span class="ds-num ds-meta-dark">
               {{ formatMoney(it.price) }}
@@ -412,10 +416,13 @@ async function addGeneral() {
     border-color 0.12s,
     background 0.12s;
 }
-.cat-row:hover {
-  border-color: var(--amatista-300);
-  background: var(--amatista-50);
-}
+
+/* El hover de la fila es `.ds-hover-accent` (primitives.css). Pesa (0,3,0) y
+   gana al `.cat-row[data-v-…]` de (0,2,0) sin tocar la regla base, así que el
+   `:hover` local se borra en vez de dejarlo compitiendo. Su tercera declaración
+   (`color: amatista-700`) no se ve: `.cat-name`, `.ds-meta-dark`, `.cat-sub`,
+   `.qty-input` y `.add-btn` fijan su propio color y la fila no tiene texto
+   directo. */
 
 /* `flex: 1` a secas, sin el `min-width: 0` de `.ds-flex-fill`: el nombre del
    ítem no lleva elipsis y no debe encoger por debajo de su contenido. */

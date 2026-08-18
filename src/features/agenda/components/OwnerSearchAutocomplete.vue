@@ -26,10 +26,22 @@ const emit = defineEmits<{
 const query = ref('')
 const { results, loading } = useOwnerSearch(query)
 const open = ref(false)
+/**
+ * El único elemento enfocable dentro del recuadro es el `<input>`, así que esto es
+ * equivalente al `:focus-within` que había en CSS. Se sube al script porque el
+ * estado «inválido y con el foco dentro» se pinta ahora con la primitiva
+ * `.ds-field-invalid-focus`, que se aplica desde la plantilla.
+ */
+const focused = ref(false)
 const box = ref<HTMLElement | null>(null)
 const selectedOwner = ref<Owner | null>(null)
 
 // Nombre a mostrar en la tarjeta seleccionada (Owner elegido o seed de edición).
+function onFocus() {
+  open.value = true
+  focused.value = true
+}
+
 const selectedName = computed(() => selectedOwner.value?.name ?? props.initialName ?? '')
 
 const hasSelection = computed(() => !!props.modelValue)
@@ -72,14 +84,29 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   </div>
 
   <div v-else ref="box" class="combo">
-    <div class="combo-input ds-flex-row ds-focus-ring" :class="{ invalid }">
+    <!--
+      Los dos tonos son excluyentes: con el campo válido mandan `.tone-border`/
+      `.tone-bg` + `.ds-focus-ring`; con el campo inválido esas tres clases se
+      retiran para que ninguna regla scoped (0,2,0) le gane al rojo de
+      `.ds-field-invalid` / `.ds-field-invalid-focus` (0,1,0). `.invalid` se
+      conserva porque de ella cuelgan el borde del foco y el icono.
+    -->
+    <div
+      class="combo-input ds-flex-row"
+      :class="
+        invalid
+          ? ['invalid', 'ds-field-invalid', { 'ds-field-invalid-focus': focused }]
+          : ['tone-border', 'tone-bg', 'ds-focus-ring']
+      "
+    >
       <Search :size="15" :stroke-width="1.7" class="combo-icon" />
       <input
         v-model="query"
         type="text"
         placeholder="Buscar por nombre, ID o documento…"
         :aria-invalid="invalid || undefined"
-        @focus="open = true"
+        @focus="onFocus"
+        @blur="focused = false"
       />
     </div>
     <div v-if="open" class="combo-list">
@@ -113,9 +140,13 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   position: relative;
 }
 
+/* La base se queda con la GEOMETRÍA. Ni `background` ni `border-color`: en CSS
+   scoped esta regla pesa (0,2,0) y le ganaría a `.ds-field-invalid` (0,1,0).
+   El color vive en las clases de tono, que el marcado aplica de forma
+   excluyente — mismo reparto que `BaseInput`. */
 .combo-input {
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border-width: 1px;
+  border-style: solid;
   border-radius: 8px;
   padding: 9px 11px;
   transition:
@@ -123,42 +154,27 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
     box-shadow 0.15s ease;
 }
 
-.combo-input.invalid {
-  border-color: oklch(60% 0.2 25deg);
-  background: oklch(98.5% 0.02 25deg);
-  animation: shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+/* Tono en reposo, partido en las dos propiedades que el estado inválido
+   sustituye (`.ds-field-invalid` trae las dos). Conservan el peso (0,2,0) y la
+   posición que tenía el par dentro de `.combo-input`. */
+.tone-border {
+  border-color: var(--warm-200);
 }
 
+.tone-bg {
+  background: var(--warm-50);
+}
+
+/* El fondo+borde rojos y el temblor los pone `.ds-field-invalid`
+   (primitives.css), con su propio `@keyframes shake`. El halo del foco,
+   `.ds-field-invalid-focus`. Sólo queda aquí el `border-color` del foco, que
+   tiene que ganarle al de la primitiva. */
 .combo-input.invalid:focus-within {
   border-color: oklch(55% 0.22 25deg);
-  box-shadow: 0 0 0 3px var(--danger-200);
 }
 
 .combo-input.invalid .combo-icon {
   color: oklch(55% 0.22 25deg);
-}
-
-@keyframes shake {
-  10%,
-  90% {
-    transform: translateX(-1px);
-  }
-
-  20%,
-  80% {
-    transform: translateX(2px);
-  }
-
-  30%,
-  50%,
-  70% {
-    transform: translateX(-3px);
-  }
-
-  40%,
-  60% {
-    transform: translateX(3px);
-  }
 }
 
 .combo-input input {

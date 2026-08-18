@@ -12,6 +12,8 @@ import { formatDateNumeric } from '@/composables/format'
 import { formatMoney } from '@/features/tienda/composables/pricing'
 import PurchaseOrderModal from '../components/PurchaseOrderModal.vue'
 import GoodsReceiptModal from '../components/GoodsReceiptModal.vue'
+import ComprasIconButton from '../components/ComprasIconButton.vue'
+import ComprasTable from '../components/ComprasTable.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import type { GoodsReceiptStatus, PurchaseOrder, PurchaseOrderStatus } from '../types/compras'
 
@@ -43,6 +45,19 @@ const GR_STATUS: Record<GoodsReceiptStatus, string> = {
   DRAFT: 'Borrador',
   CONFIRMED: 'Confirmada',
   CANCELLED: 'Anulada',
+}
+
+/**
+ * El verde de "acción positiva" (`.ds-tone--compras-ok`, primitives.css) va
+ * como clase aparte, no fusionada en el nombre de estado: `PO_STATUS`/
+ * `GR_STATUS` ya usan el propio valor del enum como clase (`.pill.received`,
+ * `.pill.confirmed`), y las dos comparten el mismo tono sin compartir nombre.
+ */
+function poPillClass(status: PurchaseOrderStatus): (string | false)[] {
+  return [status.toLowerCase().replaceAll('_', '-'), status === 'RECEIVED' && 'ds-tone--compras-ok']
+}
+function grPillClass(status: GoodsReceiptStatus): (string | false)[] {
+  return [status.toLowerCase(), status === 'CONFIRMED' && 'ds-tone--compras-ok']
 }
 
 function poTotal(po: PurchaseOrder): number {
@@ -155,10 +170,18 @@ onMounted(refresh)
     </header>
 
     <div class="tabs">
-      <button type="button" :class="{ active: tab === 'ordenes' }" @click="tab = 'ordenes'">
+      <button
+        type="button"
+        :class="tab === 'ordenes' ? 'ds-tab--active' : 'tab-off'"
+        @click="tab = 'ordenes'"
+      >
         Órdenes de compra
       </button>
-      <button type="button" :class="{ active: tab === 'recepciones' }" @click="tab = 'recepciones'">
+      <button
+        type="button"
+        :class="tab === 'recepciones' ? 'ds-tab--active' : 'tab-off'"
+        @click="tab = 'recepciones'"
+      >
         Recepciones
       </button>
     </div>
@@ -166,7 +189,7 @@ onMounted(refresh)
     <p v-if="error" class="ds-server-error">{{ error }}</p>
 
     <!-- Órdenes -->
-    <table v-if="tab === 'ordenes'" class="grid-table">
+    <ComprasTable v-if="tab === 'ordenes'">
       <thead>
         <tr>
           <th>#</th>
@@ -189,54 +212,52 @@ onMounted(refresh)
           <td>{{ formatDateNumeric(po.expectedDate) }}</td>
           <td class="ds-num">{{ formatMoney(poTotal(po)) }}</td>
           <td>
-            <span class="pill" :class="po.status.toLowerCase().replaceAll('_', '-')">
+            <span class="pill" :class="poPillClass(po.status)">
               {{ PO_STATUS[po.status] }}
             </span>
           </td>
           <td class="ds-actions">
-            <button
+            <ComprasIconButton
               v-if="canPoUpdate && po.status === 'DRAFT'"
-              type="button"
-              class="icon-btn"
               title="Editar"
+              row
               @click="openEditPo(po)"
             >
               <Pencil :size="15" />
-            </button>
-            <button
+            </ComprasIconButton>
+            <ComprasIconButton
               v-if="canPoUpdate && po.status === 'DRAFT'"
-              type="button"
-              class="icon-btn go"
               title="Emitir"
+              row
+              tone="success"
               @click="placePo(po)"
             >
               <Send :size="15" />
-            </button>
-            <button
+            </ComprasIconButton>
+            <ComprasIconButton
               v-if="canPoUpdate && (po.status === 'DRAFT' || po.status === 'PLACED')"
-              type="button"
-              class="icon-btn"
               title="Anular"
+              row
               @click="cancelPo(po)"
             >
               <Ban :size="15" />
-            </button>
-            <button
+            </ComprasIconButton>
+            <ComprasIconButton
               v-if="canPoDelete && po.status === 'DRAFT'"
-              type="button"
-              class="icon-btn danger"
               title="Eliminar"
+              row
+              tone="danger"
               @click="deletePo(po)"
             >
               <Trash2 :size="15" />
-            </button>
+            </ComprasIconButton>
           </td>
         </tr>
       </tbody>
-    </table>
+    </ComprasTable>
 
     <!-- Recepciones -->
-    <table v-else class="grid-table">
+    <ComprasTable v-else>
       <thead>
         <tr>
           <th>#</th>
@@ -261,31 +282,30 @@ onMounted(refresh)
           <td>{{ gr.purchaseOrderId ? '#' + gr.purchaseOrderId : '—' }}</td>
           <td class="ds-num">{{ gr.lines.length }}</td>
           <td>
-            <span class="pill" :class="gr.status.toLowerCase()">{{ GR_STATUS[gr.status] }}</span>
+            <span class="pill" :class="grPillClass(gr.status)">{{ GR_STATUS[gr.status] }}</span>
           </td>
           <td class="ds-actions">
-            <button
+            <ComprasIconButton
               v-if="canGrCreate && gr.status === 'DRAFT'"
-              type="button"
-              class="icon-btn go"
               title="Confirmar"
+              row
+              tone="success"
               @click="confirmGr(gr.id)"
             >
               <CheckCircle2 :size="15" />
-            </button>
-            <button
+            </ComprasIconButton>
+            <ComprasIconButton
               v-if="canGrCancel && gr.status === 'CONFIRMED'"
-              type="button"
-              class="icon-btn"
               title="Anular"
+              row
               @click="cancelGr(gr.id)"
             >
               <Ban :size="15" />
-            </button>
+            </ComprasIconButton>
           </td>
         </tr>
       </tbody>
-    </table>
+    </ComprasTable>
 
     <Pagination
       v-if="tab === 'ordenes'"
@@ -327,6 +347,7 @@ onMounted(refresh)
 /* Primitivas: `.ds-flex-row--12 --accent` + `--display--xs` + `--view-subtitle`
    (cabecera), `.ds-num`, `.ds-strong` y `.ds-empty --md` (fila vacía; su
    padding/color los pisa `.grid-table td`, igual que al `.empty-row` anterior). */
+
 .page-head {
   display: flex;
   align-items: center;
@@ -341,72 +362,33 @@ onMounted(refresh)
   border-bottom: 1px solid var(--warm-200);
 }
 
+/* El estado activo lo pinta `.ds-tab--active` y el de reposo `.tab-off`, las dos
+   desde el template. La base no declara `color` ni `border-bottom-color`: con el
+   `[data-v-…]` del scope pesarían (0,2,1) y la primitiva (0,1,0) no ganaría. El
+   `border-width` en forma larga evita el `border-color: currentcolor` que
+   arrastra el atajo `border: none`. */
 .tabs button {
-  border: none;
   background: none;
   padding: 8px 14px;
   font-family: inherit;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--warm-500);
   cursor: pointer;
-  border-bottom: 2px solid transparent;
+  border-width: 0 0 2px;
+  border-style: solid;
   margin-bottom: -1px;
 }
 
-.tabs button.active {
-  color: var(--amatista-700);
-  border-bottom-color: var(--amatista-600);
-}
-
-.grid-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.grid-table th {
-  text-align: left;
+.tab-off {
+  border-bottom-color: transparent;
   color: var(--warm-500);
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 8px;
-  border-bottom: 1px solid var(--warm-200);
 }
 
-.grid-table td {
-  padding: 9px 8px;
-  border-bottom: 1px solid var(--warm-100);
-  color: var(--warm-700);
-}
+/* La tabla y su cabecera/celda viven en `ComprasTable.vue`, compartida por las
+   tres vistas de la feature. */
 
 .actions-col {
   width: 150px;
-}
-
-.icon-btn {
-  border: none;
-  background: var(--warm-100);
-  color: var(--warm-600);
-  border-radius: 7px;
-  padding: 6px;
-  cursor: pointer;
-  display: inline-flex;
-}
-
-.icon-btn:hover {
-  background: var(--warm-200);
-}
-
-.icon-btn.go:hover {
-  background: oklch(92% 0.08 150deg);
-  color: oklch(40% 0.12 150deg);
-}
-
-.icon-btn.danger:hover {
-  background: var(--danger-200);
-  color: oklch(50% 0.2 25deg);
 }
 
 .pill {
@@ -434,11 +416,9 @@ onMounted(refresh)
   color: oklch(45% 0.12 75deg);
 }
 
-.pill.received,
-.pill.confirmed {
-  background: oklch(92% 0.08 150deg);
-  color: oklch(40% 0.12 150deg);
-}
+/* El verde de "recibida"/"confirmada" lo pone `.ds-tone--compras-ok`
+   (primitives.css), añadida desde `poPillClass`/`grPillClass` — ya no queda
+   CSS local para `.pill.received`/`.pill.confirmed`. */
 
 .pill.cancelled {
   background: var(--warm-100);

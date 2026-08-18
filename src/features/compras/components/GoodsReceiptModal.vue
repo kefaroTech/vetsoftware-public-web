@@ -15,6 +15,7 @@ import { usePurchasesStore } from '../stores/purchases.store'
 import { goodsReceiptsApi } from '../api/goodsReceipts.api'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import type { PurchaseOrder } from '../types/compras'
+import ComprasIconButton from './ComprasIconButton.vue'
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: []; saved: [] }>()
@@ -241,9 +242,9 @@ async function submit() {
           <DateInput v-model="l.expireDate" placeholder="—" />
           <BaseInput v-model="l.quantity" placeholder="0" inputmode="numeric" />
           <BaseInput v-model="l.unitCost" placeholder="0" inputmode="decimal" />
-          <button type="button" class="icon-btn danger" @click="removeLine(l.uid)">
+          <ComprasIconButton tone="danger" @click="removeLine(l.uid)">
             <Trash2 :size="14" />
-          </button>
+          </ComprasIconButton>
         </div>
       </div>
 
@@ -318,20 +319,6 @@ async function submit() {
   color: oklch(50% 0.2 25deg);
   font-size: 12.5px;
   margin: 0 0 8px;
-}
-
-.icon-btn {
-  border: none;
-  background: var(--warm-100);
-  color: var(--warm-600);
-  border-radius: 7px;
-  padding: 8px;
-  cursor: pointer;
-}
-
-.icon-btn.danger:hover {
-  background: var(--danger-200);
-  color: oklch(50% 0.2 25deg);
 }
 
 /* caja/compras usan un amatista un punto más claro que el resto. */

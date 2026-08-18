@@ -272,12 +272,14 @@ function save() {
 </template>
 
 <style scoped>
-/* Añadidos sobre `.ds-grid-2`: gap simétrico y el hueco hacia el bloque siguiente. */
+/* Único añadido sobre `.ds-grid-2`: el gap simétrico (la primitiva usa 14/16). */
 .grid-2 {
   gap: 14px;
-  margin-bottom: 14px;
 }
 
+/* Una sola regla de separación entre bloques: la rejilla ya no lleva
+   `margin-bottom` propio, el hueco lo pone siempre el hermano siguiente. */
+.grid-2 + .field,
 .field + .field {
   margin-top: 14px;
 }

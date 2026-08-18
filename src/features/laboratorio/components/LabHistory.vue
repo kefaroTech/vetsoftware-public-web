@@ -95,7 +95,11 @@ onMounted(() => history.fetch())
         />
       </div>
 
-      <select v-model="local.prioridad" class="select" @change="apply">
+      <select
+        v-model="local.prioridad"
+        class="select ds-focus-ring ds-focus-ring--no-outline"
+        @change="apply"
+      >
         <option value="">Toda prioridad</option>
         <option value="NORMAL">Rutina</option>
         <option value="URGENTE">Urgente</option>
@@ -195,9 +199,10 @@ onMounted(() => history.fetch())
   font-size: var(--text-sm);
 }
 
+/* El fondo del hover ya lo pone `.ds-btn--ghost:hover:not(:disabled)` con el mismo
+   valor (`--surface-muted` es `--warm-100`), así que aquí sólo queda el borde. */
 .filter-btn:hover,
 .clear:hover {
-  background: var(--warm-100);
   border-color: var(--warm-300);
 }
 
@@ -239,10 +244,12 @@ onMounted(() => history.fetch())
   cursor: pointer;
 }
 
+/* El anillo (`box-shadow`) y el `outline: none` los ponen `.ds-focus-ring` y
+   `.ds-focus-ring--no-outline`. El `border-color` se queda local porque la
+   primitiva (0,2,0) empata con el `border` de `.select` (0,2,0) y el desempate lo
+   decide el orden del bundle; con este (0,3,0) el borde de foco es determinista. */
 .select:focus {
-  outline: none;
   border-color: var(--amatista-500);
-  box-shadow: var(--ring);
 }
 
 .table-wrap {

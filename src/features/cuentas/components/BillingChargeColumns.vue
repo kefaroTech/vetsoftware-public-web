@@ -75,7 +75,7 @@ const emit = defineEmits<{
           v-for="it in catalog"
           :key="it.id"
           class="catrow ds-flex-row ds-flex-row--12"
-          :class="{ 'ds-is-disabled--60': it.soldOut }"
+          :class="it.soldOut ? 'ds-is-disabled--60' : 'ds-hover-accent'"
         >
           <span class="cr-name">{{ it.name }}</span>
           <span v-if="it.soldOut" class="badge-out">Agotado</span>
@@ -83,6 +83,7 @@ const emit = defineEmits<{
           <button
             type="button"
             class="cr-add"
+            :class="{ 'ds-is-disabled--40': it.soldOut || busy }"
             :disabled="it.soldOut || busy"
             @click="emit('add', it)"
           >
@@ -128,7 +129,11 @@ const emit = defineEmits<{
             >
           </span>
           <span class="stepper">
-            <button type="button" class="st-btn" @click="emit('setQty', line, line.qty - 1)">
+            <button
+              type="button"
+              class="st-btn ds-tone--accent-border"
+              @click="emit('setQty', line, line.qty - 1)"
+            >
               <Minus :size="12" :stroke-width="2.2" />
             </button>
             <input
@@ -138,7 +143,11 @@ const emit = defineEmits<{
               :value="line.qty"
               @input="emit('setQty', line, Number(($event.target as HTMLInputElement).value))"
             />
-            <button type="button" class="st-btn" @click="emit('setQty', line, line.qty + 1)">
+            <button
+              type="button"
+              class="st-btn ds-tone--accent-border"
+              @click="emit('setQty', line, line.qty + 1)"
+            >
               <Plus :size="12" :stroke-width="2.2" />
             </button>
           </span>
@@ -217,10 +226,13 @@ const emit = defineEmits<{
     border-color 0.12s,
     background 0.12s;
 }
-.catrow:hover:not(.ds-is-disabled--60) {
-  border-color: var(--amatista-300);
-  background: var(--amatista-50);
-}
+
+/* El hover de la fila es `.ds-hover-accent` (primitives.css), enganchada con
+   `:class` sólo cuando el ítem NO está agotado — sustituye al
+   `:not(.ds-is-disabled--60)` del selector local. Pesa (0,3,0) y gana al
+   `.catrow[data-v-…]` de (0,2,0) sin tocar la base. Su tercera declaración
+   (`color: amatista-700`) no se ve: `.cr-name`, `.badge-out`, `.ds-meta-dark` y
+   `.cr-add` fijan su propio color y la fila no tiene texto directo. */
 
 /* `flex: 1` a secas, sin el `min-width: 0` de `.ds-flex-fill`: el nombre del
    ítem no debe encogerse por debajo de su contenido (no lleva elipsis). */
@@ -254,8 +266,11 @@ const emit = defineEmits<{
 .cr-add:hover:not(:disabled) {
   background: var(--amatista-100);
 }
+
+/* La opacidad la pone `.ds-is-disabled--40` (primitives.css), enganchada con
+   `:class` en el template; aquí sólo queda el cursor, que la primitiva no
+   podría fijar sin ganarle al `cursor: pointer` de `.cr-add`. */
 .cr-add:disabled {
-  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -342,10 +357,14 @@ const emit = defineEmits<{
   background: var(--warm-50);
   color: var(--warm-700);
 }
-.st-btn:hover {
-  border-color: var(--amatista-300);
-  color: var(--amatista-700);
-}
+
+/* El hover del stepper es `.ds-tone--accent-border` (primitives.css), enganchada
+   en el template — el mismo cambio que en `AccountCartPanel`, que tiene el
+   stepper gemelo. Su forma `:hover:not(:disabled)` pesa (0,3,0) y gana al
+   `.st-btn[data-v-…]` de (0,2,0); la base (0,1,0) pierde contra ese mismo
+   selector, así que el reposo sigue siendo warm-200/warm-700. El guardián
+   `:not(:disabled)` es inerte: estos botones nunca se deshabilitan (el único
+   `:disabled` de la columna es `.cr-add`). */
 .st-input {
   width: 30px;
   text-align: center;

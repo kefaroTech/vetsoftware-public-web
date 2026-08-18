@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { nextRowUid } from '@/composables/rowUid'
 import { computed, reactive, ref, watch } from 'vue'
-import { Beaker, Plus, Trash2, AlertTriangle } from 'lucide-vue-next'
+import { Beaker, Plus, Trash2 } from 'lucide-vue-next'
 import ModalShell from '@/components/ui/ModalShell.vue'
 import ExistingItemsSection from '../components/ExistingItemsSection.vue'
+import BranchConfirmNotice from '../components/BranchConfirmNotice.vue'
 import BaseField from '@/components/ui/BaseField.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
@@ -231,19 +232,11 @@ function doSave() {
     @close="emit('close')"
   >
     <template #body>
-      <div v-if="confirmingBranch" class="branch-confirm">
-        <AlertTriangle :size="22" :stroke-width="1.7" class="bc-ic" />
-        <div>
-          <p class="bc-title">Sede distinta a la del menú</p>
-          <p class="bc-text">
-            Vas a registrar esta solicitud en <b>{{ branchName(branchId) }}</b
-            >, que es <b>diferente</b> a la sede por defecto (<b>{{
-              branchName(defaultBranchId)
-            }}</b
-            >). ¿Seguro que quieres usar esa sede?
-          </p>
-        </div>
-      </div>
+      <BranchConfirmNotice
+        v-if="confirmingBranch"
+        :branch-name="branchName(branchId)"
+        :default-branch-name="branchName(defaultBranchId)"
+      />
       <template v-else>
         <div v-if="typesError" class="ds-catalog-error">{{ typesError }}</div>
 
@@ -365,39 +358,6 @@ function doSave() {
 .branch-field {
   margin-bottom: 16px;
   max-width: 380px;
-}
-
-.branch-confirm {
-  display: flex;
-  gap: 12px;
-  padding: 16px 18px;
-  border-radius: 11px;
-  background: oklch(96% 0.05 80deg);
-  border: 1px solid var(--warning-200);
-}
-
-.bc-ic {
-  flex-shrink: 0;
-  color: oklch(55% 0.14 60deg);
-  margin-top: 2px;
-}
-
-.bc-title {
-  margin: 0 0 4px;
-  font-size: 14px;
-  font-weight: 600;
-  color: oklch(38% 0.13 60deg);
-}
-
-.bc-text {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--warm-700);
-}
-
-.bc-text b {
-  font-weight: 600;
 }
 
 .test-card {

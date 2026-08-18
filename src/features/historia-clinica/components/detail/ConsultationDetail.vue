@@ -143,7 +143,7 @@ const childrenCountLabel = computed(() =>
           <button
             type="button"
             class="child"
-            :class="{ navigable: isNavigable(c) }"
+            :class="isNavigable(c) ? 'navigable ds-hover-accent' : null"
             :disabled="!isNavigable(c)"
             @click="openChild(c)"
           >
@@ -200,10 +200,11 @@ const childrenCountLabel = computed(() =>
   cursor: pointer;
 }
 
-.child.navigable:hover {
-  border-color: var(--amatista-300);
-  background: var(--amatista-50);
-}
+/* El hover de acento lo pone `.ds-hover-accent` (0,3,0), aplicada desde la
+   plantilla sólo cuando la fila es navegable; gana al `background`/`border` de
+   `.child` (0,2,0). Su tercera declaración, `color`, es inerte aquí: el botón no
+   tiene texto suelto y sus hijos llevan color propio; `.child-icon` es un emoji
+   de presentación en color, que no toma el `color` heredado. */
 
 .child-chev {
   color: var(--warm-400);

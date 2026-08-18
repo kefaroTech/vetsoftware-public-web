@@ -18,7 +18,7 @@ const emit = defineEmits<{
 }>()
 </script>
 <template>
-  <div class="cart">
+  <div class="ds-frame">
     <div class="cart-head">Cargos a registrar</div>
     <ul v-if="lines.length" class="cart-list ds-list-reset ds-stack">
       <li v-for="line in lines" :key="line.uid" class="cart-row">
@@ -29,7 +29,11 @@ const emit = defineEmits<{
           >
         </span>
         <span class="stepper">
-          <button type="button" class="st-btn" @click="emit('setQty', line, line.qty - 1)">
+          <button
+            type="button"
+            class="st-btn ds-tone--accent-border"
+            @click="emit('setQty', line, line.qty - 1)"
+          >
             <Minus :size="12" :stroke-width="2.2" />
           </button>
           <input
@@ -39,7 +43,11 @@ const emit = defineEmits<{
             :value="line.qty"
             @input="emit('setQty', line, Number(($event.target as HTMLInputElement).value))"
           />
-          <button type="button" class="st-btn" @click="emit('setQty', line, line.qty + 1)">
+          <button
+            type="button"
+            class="st-btn ds-tone--accent-border"
+            @click="emit('setQty', line, line.qty + 1)"
+          >
             <Plus :size="12" :stroke-width="2.2" />
           </button>
         </span>
@@ -58,16 +66,12 @@ const emit = defineEmits<{
 <style scoped>
 /* Layout via primitivas: .ds-stack, .ds-list-reset, .ds-flex-fill, .ds-truncate,
    .ds-item-label, .ds-num, .ds-meta(--caption).
-   La caja vivía en el CSS scoped de `OpenAccountModal` y llegaba hasta aquí
-   porque el scoped del padre sí alcanza el elemento raíz del hijo. Se trae a
-   su propio componente, que es donde se usa. */
-.cart {
-  border: 1px solid var(--warm-200);
-  border-radius: 12px;
-  background: var(--warm-50);
-  overflow: hidden;
-}
-
+   La caja es `.ds-frame` (marco que recorta su contenido): sus cuatro valores
+   —`--surface` = `--warm-50`, `--border` = `--warm-200`, `--radius-lg` = 12px y
+   `overflow: hidden`— son los mismos que declaraba el `.cart` local, así que la
+   migración no cambia el aspecto. Vivía en el CSS scoped de `OpenAccountModal`
+   y llegaba hasta aquí porque el scoped del padre sí alcanza el elemento raíz
+   del hijo. */
 .cart-head {
   font-size: 11px;
   text-transform: uppercase;
@@ -120,10 +124,12 @@ const emit = defineEmits<{
   color: var(--warm-700);
 }
 
-.st-btn:hover {
-  border-color: var(--amatista-300);
-  color: var(--amatista-700);
-}
+/* El hover del stepper es `.ds-tone--accent-border` (primitives.css), enganchada
+   en el template. Su forma `:hover:not(:disabled)` pesa (0,3,0) y gana al
+   `.st-btn[data-v-…]` de (0,2,0); la base (0,1,0) pierde contra ese mismo
+   selector, así que el reposo sigue siendo warm-200/warm-700 sin tocar nada.
+   El guardián `:not(:disabled)` es inerte aquí: estos dos botones nunca se
+   deshabilitan. */
 
 .st-input {
   width: 30px;

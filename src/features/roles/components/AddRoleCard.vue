@@ -5,7 +5,11 @@ defineEmits<{ click: [] }>()
 </script>
 
 <template>
-  <button type="button" class="add ds-stack ds-stack--10" @click="$emit('click')">
+  <button
+    type="button"
+    class="add ds-stack ds-stack--10 ds-tone--accent-outline"
+    @click="$emit('click')"
+  >
     <div class="icon ds-tone--accent">
       <Plus :size="22" :stroke-width="1.6" />
     </div>
@@ -32,10 +36,8 @@ defineEmits<{ click: [] }>()
     background 0.15s ease;
 }
 
-.add:hover {
-  border-color: var(--amatista-500);
-  background: var(--amatista-50);
-}
+/* El estado `:hover` lo pinta `.ds-tone--accent-outline:hover:not(:disabled)`
+   (primitives.css) — aplicada desde el marcado, ver arriba. */
 
 /* El tono es `.ds-tone--accent`. */
 .icon {

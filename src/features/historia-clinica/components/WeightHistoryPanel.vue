@@ -6,6 +6,7 @@ import BaseField from '@/components/ui/BaseField.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import DateInput from '@/components/ui/DateInput.vue'
+import WeightTrendChart from './WeightTrendChart.vue'
 import { weightRecordApi } from '@/features/dashboard/views/consulta/nueva/api/weightRecord.api'
 import type {
   WeightRecordResponse,
@@ -42,11 +43,16 @@ const SOURCE_LABEL: Record<WeightSource, string> = {
   CONSULTATION: 'Consulta',
   HOSPITALIZATION: 'Hospitalización',
 }
-
-function toKg(value: number, unit: WeightUnit): number {
-  if (unit === 'GRAMS') return value / 1000
-  if (unit === 'POUNDS') return value * 0.453592
-  return value
+/**
+ * Tono de la insignia de origen. Los tres son EXCLUYENTES y viajan como clase
+ * desde el marcado: `.wp-src` se queda sólo con la forma, así que la primitiva
+ * `.ds-tone--accent` (0,1,0) no compite con ninguna regla scoped del
+ * componente, que pesaría (0,2,0) y le ganaría.
+ */
+const SOURCE_TONE: Record<WeightSource, string> = {
+  MANUAL: 'src-manual',
+  CONSULTATION: 'ds-tone--accent',
+  HOSPITALIZATION: 'src-hospitalization',
 }
 
 async function load() {
@@ -71,62 +77,6 @@ const ascending = computed(() =>
     return d !== 0 ? d : a.id - b.id
   }),
 )
-
-const CHART_W = 560
-const CHART_H = 150
-const PAD_X = 14
-const PAD_Y = 18
-
-// Todos los puntos se normalizan a kg para que la tendencia sea comparable aunque haya
-// registros en unidades distintas. En la lista se conserva la unidad original.
-const chart = computed(() => {
-  const pts = ascending.value.map((r) => ({
-    kg: toKg(r.value, r.unit),
-    record: r,
-  }))
-  if (pts.length === 0) return null
-  const values = pts.map((p) => p.kg)
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  const span = max - min || 1
-  const n = pts.length
-  const xFor = (i: number) =>
-    n === 1 ? CHART_W / 2 : PAD_X + (i * (CHART_W - 2 * PAD_X)) / (n - 1)
-  const yFor = (kg: number) => CHART_H - PAD_Y - ((kg - min) / span) * (CHART_H - 2 * PAD_Y)
-  const coords = pts.map((p, i) => ({
-    x: xFor(i),
-    y: yFor(p.kg),
-    record: p.record,
-    kg: p.kg,
-  }))
-  const line = coords
-    .map((c, i) => `${i === 0 ? 'M' : 'L'}${c.x.toFixed(1)},${c.y.toFixed(1)}`)
-    .join(' ')
-  // `pts` ya se comprobó no vacío arriba y `coords` sale de mapearlo, así que
-  // los extremos existen; se nombran para que el compilador lo vea igual que
-  // lo ve quien lee, en vez de repetir el indexado dentro de la plantilla.
-  const first = coords[0]
-  const last = coords[coords.length - 1]
-  if (!first || !last) return null
-  const area =
-    `M${first.x.toFixed(1)},${(CHART_H - PAD_Y).toFixed(1)} ` +
-    coords.map((c) => `L${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ') +
-    ` L${last.x.toFixed(1)},${(CHART_H - PAD_Y).toFixed(1)} Z`
-  return { coords, line, area, min, max }
-})
-
-// Variación respecto al registro anterior (en kg normalizado), para el resumen superior.
-const trend = computed(() => {
-  const asc = ascending.value
-  const lastRec = asc[asc.length - 1]
-  const prevRec = asc[asc.length - 2]
-  if (!lastRec || !prevRec) return null
-  const last = toKg(lastRec.value, lastRec.unit)
-  const prev = toKg(prevRec.value, prevRec.unit)
-  const diff = last - prev
-  const pct = prev !== 0 ? (diff / prev) * 100 : 0
-  return { diff, pct }
-})
 
 const descending = computed(() => [...ascending.value].reverse())
 
@@ -285,52 +235,7 @@ async function remove(id: number) {
 
       <template v-else>
         <!-- Resumen + gráfico de tendencia -->
-        <div v-if="chart" class="wp-chart-wrap">
-          <div v-if="trend" class="wp-trend" :class="trend.diff >= 0 ? 'up' : 'down'">
-            {{ trend.diff >= 0 ? '▲' : '▼' }}
-            {{ Math.abs(trend.diff).toFixed(2) }} kg
-            <span class="wp-trend-pct"
-              >({{ trend.pct >= 0 ? '+' : '' }}{{ trend.pct.toFixed(1) }}%)</span
-            >
-            <span class="wp-trend-cap">vs. registro anterior</span>
-          </div>
-          <svg
-            class="wp-chart"
-            :viewBox="`0 0 ${CHART_W} ${CHART_H}`"
-            preserveAspectRatio="none"
-            role="img"
-            aria-label="Tendencia de peso"
-          >
-            <defs>
-              <linearGradient id="wpGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="var(--amatista-400)" stop-opacity="0.28" />
-                <stop offset="100%" stop-color="var(--amatista-400)" stop-opacity="0" />
-              </linearGradient>
-            </defs>
-            <path :d="chart.area" fill="url(#wpGrad)" />
-            <path
-              :d="chart.line"
-              fill="none"
-              stroke="var(--amatista-600)"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              vector-effect="non-scaling-stroke"
-            />
-            <circle
-              v-for="(c, i) in chart.coords"
-              :key="i"
-              :cx="c.x"
-              :cy="c.y"
-              r="3"
-              fill="var(--amatista-700)"
-            />
-          </svg>
-          <div class="wp-chart-axis ds-meta ds-meta--caption">
-            <span>máx {{ chart.max.toFixed(2) }} kg</span>
-            <span>mín {{ chart.min.toFixed(2) }} kg</span>
-          </div>
-        </div>
+        <WeightTrendChart :records="ascending" />
 
         <!-- Lista de registros (más reciente primero) -->
         <ul class="wp-list ds-list-reset ds-stack">
@@ -340,7 +245,7 @@ async function remove(id: number) {
               <span class="ds-meta">{{ formatDateShort(r.measuredAt) }}</span>
             </div>
             <div class="wp-item-meta ds-flex-fill ds-flex-row">
-              <span class="wp-src" :class="`src-${r.source.toLowerCase()}`">
+              <span class="wp-src" :class="SOURCE_TONE[r.source]">
                 {{ SOURCE_LABEL[r.source] }}
               </span>
               <span v-if="r.note" class="wp-item-note ds-truncate">{{ r.note }}</span>
@@ -476,49 +381,7 @@ async function remove(id: number) {
   font-size: var(--text-body);
 }
 
-.wp-chart-wrap {
-  margin-bottom: 14px;
-}
-
-.wp-trend {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.wp-trend.up {
-  color: oklch(52% 0.16 150deg);
-}
-
-.wp-trend.down {
-  color: var(--danger-500);
-}
-
-.wp-trend-pct {
-  font-weight: 500;
-}
-
-.wp-trend-cap {
-  font-size: 11.5px;
-  font-weight: 400;
-  color: var(--warm-500);
-}
-
-.wp-chart {
-  width: 100%;
-  height: 150px;
-  display: block;
-}
-
-/* Resto sobre `.ds-meta --caption`: reparto de los dos extremos del eje. */
-.wp-chart-axis {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 2px;
-}
+/* El gráfico de tendencia y su resumen viven en `WeightTrendChart.vue`. */
 
 .wp-list {
   gap: var(--space-2);
@@ -549,21 +412,25 @@ async function remove(id: number) {
   gap: var(--space-10);
 }
 
+/* La base se queda con la FORMA. El par fondo+texto vive en las clases de
+   tono, que el marcado aplica de forma excluyente (`SOURCE_TONE`): el origen
+   CONSULTATION lo pinta la primitiva `.ds-tone--accent`, y si `.wp-src`
+   siguiera fijando aquí el par neutro le ganaría (0,2,0 scoped frente a
+   0,1,0). */
 .wp-src {
   font-size: 11px;
   font-weight: 500;
   padding: 2px 8px;
   border-radius: var(--radius-pill);
+}
+
+/* Tono neutro (origen MANUAL) — el que antes estaba dentro de `.wp-src`. */
+.src-manual {
   background: var(--warm-200);
   color: var(--warm-700);
 }
 
-.wp-src.src-consultation {
-  background: var(--amatista-100);
-  color: var(--amatista-700);
-}
-
-.wp-src.src-hospitalization {
+.src-hospitalization {
   background: oklch(93% 0.05 250deg);
   color: oklch(45% 0.15 250deg);
 }

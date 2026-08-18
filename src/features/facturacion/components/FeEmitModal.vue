@@ -103,7 +103,10 @@ async function submit() {
           :class="{ on: selected?.id === a.id }"
           @click="selected = a"
         >
-          <div class="acc-check">
+          <div
+            class="acc-check"
+            :class="selected?.id === a.id ? 'ds-tone--accent-solid' : 'acc-check-off'"
+          >
             <Check v-if="selected?.id === a.id" :size="13" :stroke-width="2.6" />
           </div>
           <div class="ds-flex-fill">
@@ -130,7 +133,10 @@ async function submit() {
             :class="{ on: finalConsumer }"
             @click="finalConsumer = !finalConsumer"
           >
-            <span class="toggle-box">
+            <span
+              class="toggle-box"
+              :class="finalConsumer ? 'ds-tone--accent-solid' : 'toggle-box-off'"
+            >
               <Check v-if="finalConsumer" :size="12" :stroke-width="2.6" />
             </span>
             Consumidor final
@@ -208,20 +214,24 @@ async function submit() {
   background: var(--amatista-50);
 }
 
+/* Las dos casillas de este modal reciben su tono desde el template
+   (`.ds-tone--accent-solid` marcadas, `*-off` en reposo). Con `background` o
+   `border-color` en la regla base, el `[data-v-…]` del scope las subiría a
+   (0,2,0) y la primitiva (0,1,0) nunca ganaría. */
 .acc-check {
   width: 20px;
   height: 20px;
   border-radius: 6px;
-  border: 1px solid var(--warm-300);
+  border-width: 1px;
+  border-style: solid;
   display: grid;
   place-items: center;
   flex-shrink: 0;
   color: #fff;
 }
 
-.accrow.on .acc-check {
-  background: var(--amatista-600);
-  border-color: var(--amatista-600);
+.acc-check-off {
+  border-color: var(--warm-300);
 }
 
 .acc-name {
@@ -267,15 +277,15 @@ async function submit() {
   width: 18px;
   height: 18px;
   border-radius: 5px;
-  border: 1px solid var(--warm-300);
+  border-width: 1px;
+  border-style: solid;
   display: grid;
   place-items: center;
   color: #fff;
 }
 
-.toggle.on .toggle-box {
-  background: var(--amatista-600);
-  border-color: var(--amatista-600);
+.toggle-box-off {
+  border-color: var(--warm-300);
 }
 
 .clientwarn {

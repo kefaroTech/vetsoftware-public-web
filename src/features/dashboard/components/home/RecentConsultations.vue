@@ -15,7 +15,7 @@ defineProps<{
       <a href="#" class="link">Ver todas →</a>
     </header>
 
-    <div class="list">
+    <div class="ds-frame">
       <article
         v-for="(c, idx) in consultations"
         :key="c.id"
@@ -59,13 +59,6 @@ defineProps<{
 
 .link:hover {
   text-decoration: underline;
-}
-
-.list {
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 12px;
-  overflow: hidden;
 }
 
 .row {

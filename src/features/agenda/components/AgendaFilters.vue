@@ -93,6 +93,7 @@ function select(value: ClinicalEventType | 'ALL') {
     color 0.12s ease;
 }
 
+/* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- La forma `:hover` existe (`.ds-tone--neutral-soft:hover:not(:disabled)`) pero no es adoptable: el guardián de estos chips es `.active`, no `:disabled` —nunca se deshabilitan— así que la primitiva teñiría también el chip activo, que es justo lo que `:not(.active)` evita; y aplicarla condicionalmente tampoco vale, porque la clase arrastra además la regla plana `.ds-tone--neutral-soft`, que pintaría warm-100/warm-300 en reposo sobre un chip transparente. Es el hueco que documenta primitives.css para estos tres consumidores. */
 .chip:hover:not(.active) {
   background: var(--warm-100);
   border-color: var(--warm-300);

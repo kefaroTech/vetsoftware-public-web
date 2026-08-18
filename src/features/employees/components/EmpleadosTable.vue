@@ -38,7 +38,7 @@ const emit = defineEmits<{
       </div>
     </div>
 
-    <div class="table ds-stack">
+    <div class="table ds-stack ds-frame">
       <div class="head">
         <div class="cell avatar-cell" />
         <div class="cell name-cell">Empleado</div>
@@ -114,13 +114,10 @@ const emit = defineEmits<{
   color: var(--warm-500);
 }
 
-.table {
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 12px;
-  overflow: hidden;
-}
-
+/* El marco (fondo + borde + radio + recorte) es `.ds-frame` (primitives.css):
+   `--surface`/`--border`/`--radius-lg` valen exactamente warm-50 / warm-200 /
+   12px, así que la sustitución es byte a byte. La clase `.table` se conserva en
+   el marcado como gancho semántico, ya sin regla propia. */
 .head {
   display: flex;
   align-items: center;

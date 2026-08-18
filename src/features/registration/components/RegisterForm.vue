@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, toRefs, watch } from 'vue'
 import { locationsApi } from '../api/locations.api'
 import { registrationApi } from '../api/registration.api'
 import type { City, Country, RegisterUserRequest, State } from '../types'
@@ -17,36 +17,21 @@ import {
 import { useRecaptcha } from '../composables/useRecaptcha'
 import PrimaryButton from '@/components/public/PrimaryButton.vue'
 import AuthBanner from '@/components/public/AuthBanner.vue'
-import AuthField from '@/components/public/AuthField.vue'
-import AuthInput from '@/components/public/AuthInput.vue'
-import AuthSelect from '@/components/public/AuthSelect.vue'
-import SectionHead from '@/components/public/SectionHead.vue'
-
-interface Opt {
-  value: string
-  label: string
-}
+import RegisterCompanySection from './RegisterCompanySection.vue'
+import RegisterAdminSection from './RegisterAdminSection.vue'
+import type {
+  RegisterFieldKey as FieldKey,
+  RegisterFormState,
+  RegisterOption as Opt,
+} from '../types/register-form.types'
 
 const emit = defineEmits<(e: 'success', email: string) => void>()
 
-type FieldKey =
-  | 'companyIdentifier'
-  | 'companyName'
-  | 'taxRegime'
-  | 'fiscalEmail'
-  | 'companyContactNumber'
-  | 'countryId'
-  | 'stateId'
-  | 'cityId'
-  | 'employeeName'
-  | 'employeeEmail'
-  | 'password'
-
-const form = reactive({
-  documentType: 'NIT' as string,
+const form = reactive<RegisterFormState>({
+  documentType: 'NIT',
   companyIdentifier: '',
   companyName: '',
-  taxRegime: '' as string,
+  taxRegime: '',
   fiscalEmail: '',
   companyAddress: '',
   companyContactNumber: '',
@@ -57,6 +42,10 @@ const form = reactive({
   employeeEmail: '',
   password: '',
 })
+
+// Las dos secciones extraídas escriben en el mismo borrador a través de estas
+// refs (patrón de `AppointmentWhenFields`): no copian estado ni lo replican.
+const formRefs = toRefs(form)
 
 const touched = reactive<Record<FieldKey, boolean>>({
   companyIdentifier: false,
@@ -312,206 +301,26 @@ async function submit() {
         <AuthBanner tone="error" @close="globalError = null">{{ globalError }}</AuthBanner>
       </div>
 
-      <!-- Sección Empresa -->
-      <section class="reg-section">
-        <SectionHead
-          icon="mdi-office-building-outline"
-          title="Empresa"
-          desc="Datos fiscales y ubicación del centro veterinario."
-        />
-        <div class="reg-fields ds-stack">
-          <div class="reg-grid-2">
-            <AuthField label="Tipo de documento" required>
-              <AuthSelect v-model="form.documentType" :options="docTypeOptions" />
-            </AuthField>
-            <AuthField
-              label="Número de documento"
-              required
-              :hint="docHint"
-              :error="err('companyIdentifier')"
-              :counter="`${form.companyIdentifier.length}/20`"
-            >
-              <AuthInput
-                :model-value="form.companyIdentifier"
-                :placeholder="isNit ? '900123456' : 'ABC12345'"
-                :maxlength="20"
-                :inputmode="isNit ? 'numeric' : 'text'"
-                icon="mdi-file-document-outline"
-                :invalid="!!err('companyIdentifier')"
-                @update:model-value="sanitizeIdentifier"
-                @blur="markTouched('companyIdentifier')"
-              />
-            </AuthField>
-          </div>
-
-          <AuthField
-            label="Razón social"
-            required
-            :error="err('companyName')"
-            :counter="`${form.companyName.length}/100`"
-          >
-            <AuthInput
-              v-model="form.companyName"
-              placeholder="Clínica Veterinaria Patitas S.A.S."
-              :maxlength="100"
-              icon="mdi-office-building-outline"
-              :invalid="!!err('companyName')"
-              @blur="markTouched('companyName')"
-            />
-          </AuthField>
-
-          <div class="reg-grid-2">
-            <AuthField label="Régimen tributario" required :error="err('taxRegime')">
-              <AuthSelect
-                v-model="form.taxRegime"
-                :options="regimeOptions"
-                placeholder="Selecciona…"
-                :invalid="!!err('taxRegime')"
-                @blur="markTouched('taxRegime')"
-              />
-            </AuthField>
-            <AuthField
-              label="Correo fiscal"
-              required
-              :error="err('fiscalEmail')"
-              hint="Correo donde llegan las facturas y documentos electrónicos."
-            >
-              <AuthInput
-                v-model="form.fiscalEmail"
-                type="email"
-                placeholder="facturacion@clinica.com"
-                :maxlength="255"
-                icon="mdi-receipt-text-outline"
-                :invalid="!!err('fiscalEmail')"
-                @blur="markTouched('fiscalEmail')"
-              />
-            </AuthField>
-          </div>
-
-          <div class="reg-grid-2">
-            <AuthField label="Dirección" hint="Opcional">
-              <AuthInput
-                v-model="form.companyAddress"
-                placeholder="Cra 12 # 34-56"
-                :maxlength="200"
-                icon="mdi-map-marker-outline"
-              />
-            </AuthField>
-            <AuthField
-              label="Teléfono de contacto"
-              hint="Opcional"
-              :error="err('companyContactNumber')"
-            >
-              <AuthInput
-                :model-value="form.companyContactNumber"
-                type="tel"
-                placeholder="+57 601 234 5678"
-                :maxlength="30"
-                icon="mdi-phone-outline"
-                :invalid="!!err('companyContactNumber')"
-                @update:model-value="sanitizePhone"
-                @blur="markTouched('companyContactNumber')"
-              />
-            </AuthField>
-          </div>
-
-          <div class="reg-grid-3">
-            <AuthField label="País" required :error="err('countryId')">
-              <AuthSelect
-                v-model="form.countryId"
-                :options="countryOptions"
-                placeholder="Selecciona…"
-                :invalid="!!err('countryId')"
-                @blur="markTouched('countryId')"
-              />
-            </AuthField>
-            <AuthField label="Departamento" required :error="err('stateId')">
-              <AuthSelect
-                v-model="form.stateId"
-                :options="stateOptions"
-                placeholder="Selecciona…"
-                :disabled="!form.countryId"
-                :loading="loadingStates"
-                :invalid="!!err('stateId')"
-                @blur="markTouched('stateId')"
-              />
-            </AuthField>
-            <AuthField label="Ciudad" required :error="err('cityId')">
-              <AuthSelect
-                v-model="form.cityId"
-                :options="cityOptions"
-                placeholder="Selecciona…"
-                :disabled="!form.stateId"
-                :loading="loadingCities"
-                :invalid="!!err('cityId')"
-                @blur="markTouched('cityId')"
-              />
-            </AuthField>
-          </div>
-        </div>
-      </section>
+      <RegisterCompanySection
+        :form="formRefs"
+        :err="err"
+        :mark-touched="markTouched"
+        :sanitize-identifier="sanitizeIdentifier"
+        :sanitize-phone="sanitizePhone"
+        :is-nit="isNit"
+        :doc-hint="docHint"
+        :doc-type-options="docTypeOptions"
+        :regime-options="regimeOptions"
+        :country-options="countryOptions"
+        :state-options="stateOptions"
+        :city-options="cityOptions"
+        :loading-states="loadingStates"
+        :loading-cities="loadingCities"
+      />
 
       <div class="reg-divider" />
 
-      <!-- Sección Usuario administrador -->
-      <section>
-        <SectionHead
-          icon="mdi-account-plus-outline"
-          title="Usuario administrador"
-          desc="La persona que gestionará la cuenta."
-        />
-        <div class="reg-fields ds-stack">
-          <AuthField
-            label="Nombre completo"
-            required
-            :error="err('employeeName')"
-            :counter="`${form.employeeName.length}/100`"
-          >
-            <AuthInput
-              v-model="form.employeeName"
-              placeholder="Dr. Ana Martínez"
-              :maxlength="100"
-              icon="mdi-account-multiple"
-              :invalid="!!err('employeeName')"
-              @blur="markTouched('employeeName')"
-            />
-          </AuthField>
-          <div class="reg-grid-2">
-            <AuthField
-              label="Email"
-              required
-              :error="err('employeeEmail')"
-              hint="A este correo llega el enlace de verificación."
-            >
-              <AuthInput
-                v-model="form.employeeEmail"
-                type="email"
-                placeholder="ana@clinica.com"
-                :maxlength="100"
-                icon="mdi-email-outline"
-                :invalid="!!err('employeeEmail')"
-                @blur="markTouched('employeeEmail')"
-              />
-            </AuthField>
-            <AuthField
-              label="Contraseña"
-              required
-              :error="err('password')"
-              hint="Mínimo 8 caracteres."
-            >
-              <AuthInput
-                v-model="form.password"
-                type="password"
-                placeholder="••••••••"
-                :maxlength="100"
-                icon="mdi-lock-outline"
-                :invalid="!!err('password')"
-                @blur="markTouched('password')"
-              />
-            </AuthField>
-          </div>
-        </div>
-      </section>
+      <RegisterAdminSection :form="formRefs" :err="err" :mark-touched="markTouched" />
 
       <!-- reCAPTCHA -->
       <div class="reg-recaptcha">
@@ -587,15 +396,8 @@ async function submit() {
   margin-top: 20px;
 }
 
-.reg-section {
-  margin-top: 28px;
-}
-
-.reg-fields {
-  gap: 15px;
-  margin-top: 18px;
-}
-
+/* Las dos secciones del formulario (`RegisterCompanySection`,
+   `RegisterAdminSection`) llevan su propio CSS. */
 .reg-divider {
   height: 1px;
   background: var(--pub-line-2);

@@ -49,7 +49,7 @@ watch(query, (q) => {
 
     <ul v-if="results.length" class="results ds-stack">
       <li v-for="o in results" :key="o.id">
-        <button type="button" class="result" @click="emit('select', o)">
+        <button type="button" class="result ds-hover-accent" @click="emit('select', o)">
           <span class="avatar ds-tone--accent"><User :size="15" :stroke-width="1.7" /></span>
           <span class="info">
             <span class="name ds-text-strong ds-text-strong--md">{{ o.name }}</span>
@@ -66,7 +66,14 @@ watch(query, (q) => {
 
 <style scoped>
 /* Layout via primitivas: .ds-stack, .ds-focus-ring, .ds-meta,
-   .ds-text-strong(--md) y .ds-tone--accent. */
+   .ds-text-strong(--md) y .ds-tone--accent.
+
+   El hover de la fila es `.ds-hover-accent` (primitives.css). Pesa (0,3,0) —
+   `.ds-hover-accent:hover:not(:disabled)`— así que gana al `.result[data-v-…]`
+   de (0,2,0) sin tocar la regla base, y por eso el `:hover` local se borra en
+   vez de dejarlo compitiendo. Su tercera declaración (`color: amatista-700`) no
+   se ve: cada hijo de la fila fija su propio color (`.ds-tone--accent`,
+   `.ds-text-strong`, `.ds-meta`) y la fila no tiene texto directo. */
 .owner-picker {
   font-family: var(--font-sans);
 }
@@ -117,10 +124,6 @@ watch(query, (q) => {
   border-radius: 10px;
   cursor: pointer;
   font-family: inherit;
-}
-.result:hover {
-  border-color: var(--amatista-300);
-  background: var(--amatista-50);
 }
 .avatar {
   width: 30px;

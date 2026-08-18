@@ -199,7 +199,8 @@ function confirmImpact() {
   >
     <template #body>
       <div v-if="hasApplied" class="applied-banner">
-        <Lock :size="15" :stroke-width="1.8" />
+        <!-- El anclado del icono lo pone `.ds-banner-icon` (primitives.css). -->
+        <Lock :size="15" :stroke-width="1.8" class="ds-banner-icon" />
         <span>
           Tiene <strong>{{ appliedCount }}</strong>
           {{
@@ -337,10 +338,6 @@ function confirmImpact() {
   background: oklch(96% 0.04 80deg);
   border-left: 3px solid oklch(70% 0.13 75deg);
   border-radius: 0 8px 8px 0;
-}
-.applied-banner svg {
-  flex-shrink: 0;
-  margin-top: 1px;
 }
 
 .pauta-help {

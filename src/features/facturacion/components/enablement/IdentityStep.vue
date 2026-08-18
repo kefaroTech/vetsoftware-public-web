@@ -245,7 +245,12 @@ async function save() {
             :class="{ on: draft.responsibilities.includes(opt.code) }"
             @click="toggleResponsibility(opt.code)"
           >
-            <span class="respbox">
+            <span
+              class="respbox"
+              :class="
+                draft.responsibilities.includes(opt.code) ? 'ds-tone--accent-solid' : 'respbox-off'
+              "
+            >
               <Check
                 v-if="draft.responsibilities.includes(opt.code)"
                 :size="11"
@@ -401,20 +406,23 @@ async function save() {
   background: linear-gradient(135deg, var(--amatista-50), var(--warm-50));
 }
 
+/* El tono de la casilla llega desde el template (`.ds-tone--accent-solid` cuando
+   está marcada, `.respbox-off` en reposo). Fijar aquí `background`/`border-color`
+   pesaría (0,2,0) por el `[data-v-…]` del scope y ganaría a la primitiva. */
 .respbox {
   width: 18px;
   height: 18px;
   border-radius: 5px;
-  border: 1px solid var(--warm-300);
+  border-width: 1px;
+  border-style: solid;
   display: grid;
   place-items: center;
   flex-shrink: 0;
   color: #fff;
 }
 
-.respitem.on .respbox {
-  background: var(--amatista-600);
-  border-color: var(--amatista-600);
+.respbox-off {
+  border-color: var(--warm-300);
 }
 
 .resp-err {

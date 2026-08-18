@@ -53,10 +53,20 @@ function selectView(v: ViewMode) {
   <div class="toolbar">
     <div class="left ds-flex-row">
       <button type="button" class="today-btn" @click="today">Hoy</button>
-      <button type="button" class="arrow-btn" aria-label="Anterior" @click="step(-1)">
+      <button
+        type="button"
+        class="arrow-btn ds-hover-neutral"
+        aria-label="Anterior"
+        @click="step(-1)"
+      >
         <ChevronLeft :size="16" :stroke-width="1.8" />
       </button>
-      <button type="button" class="arrow-btn" aria-label="Siguiente" @click="step(1)">
+      <button
+        type="button"
+        class="arrow-btn ds-hover-neutral"
+        aria-label="Siguiente"
+        @click="step(1)"
+      >
         <ChevronRight :size="16" :stroke-width="1.8" />
       </button>
       <div class="cursor-label">{{ cursorLabel }}</div>
@@ -93,16 +103,29 @@ function selectView(v: ViewMode) {
 </template>
 
 <style scoped>
+/* Mobile-first a propósito: la barra apila en columna por defecto y sólo pasa a
+   fila centrada a partir de 760px. Antes era al revés (fila centrada en la base y
+   `align-items: stretch; flex-direction: column` dentro de la media query) — ese
+   par tenía que DESHACER el `align-items: center` de la base y por eso se repetía
+   idéntico en cuatro componentes. Invertir la consulta lo elimina en origen: la
+   base ya no fija `align-items`, así que el móvil hereda el valor inicial. */
 .toolbar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   gap: 12px;
   padding: 12px 14px;
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 12px;
   margin-top: 16px;
+}
+
+@media (width > 760px) {
+  .toolbar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
 }
 
 .today-btn {
@@ -133,10 +156,8 @@ function selectView(v: ViewMode) {
   cursor: pointer;
 }
 
-.arrow-btn:hover {
-  background: var(--warm-100);
-  color: var(--warm-900);
-}
+/* El hover neutro (warm-100 + warm-900) lo pone `.ds-hover-neutral`, que gana a
+   esta base por especificidad (0,3,0 frente a 0,2,0). */
 
 .cursor-label {
   margin-left: 8px;
@@ -174,11 +195,6 @@ function selectView(v: ViewMode) {
 }
 
 @media (width <= 760px) {
-  .toolbar {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
   .left {
     flex-wrap: wrap;
   }

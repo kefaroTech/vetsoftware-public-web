@@ -1,28 +1,21 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
-import { ArrowRight, MapPin, PawPrint, Plus, Wallet } from 'lucide-vue-next'
+import { computed, ref, watch } from 'vue'
+import { ArrowRight, MapPin, Plus, Wallet } from 'lucide-vue-next'
 import ModalShell from '@/components/ui/ModalShell.vue'
 import AccountCartPanel from './AccountCartPanel.vue'
 import AccountCatalogPanel from './AccountCatalogPanel.vue'
-import BaseField from '@/components/ui/BaseField.vue'
-import BaseInput from '@/components/ui/BaseInput.vue'
-import BaseSelect from '@/components/ui/BaseSelect.vue'
-import PetForm from '@/features/dashboard/views/consulta/nueva/components/PetForm.vue'
+import GeneralChargeForm from './GeneralChargeForm.vue'
+import OpenAccountPetForm from './OpenAccountPetForm.vue'
 import FeCustomerPicker from '@/features/facturacion/components/FeCustomerPicker.vue'
 import { useTienda } from '@/features/tienda/composables/useTienda'
-import { useAuth } from '@/features/auth/composables/useAuth'
 import { useCuentas } from '../composables/useCuentas'
 import { useOpenAccountCart } from '../composables/useOpenAccountCart'
 import { formatMoney } from '@/features/tienda/composables/pricing'
 import { initials } from '@/composables/format'
 import { animalApi } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
-import { buildCreateAnimalRequest } from '@/features/dashboard/views/consulta/nueva/api/animal.mapper'
-import { getProblemDetailMessage } from '@/services/http/http.client'
-import { useToast } from '@/composables/useToast'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
 import type { OpenAccountResponse } from '../types/cuentas'
 import type { OwnerResponse } from '@/features/dashboard/views/consulta/nueva/types/owner.types'
-import type { PetDraft } from '@/features/dashboard/views/consulta/nueva/stores/nuevaConsultaDraft.store'
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: []; created: [account: OpenAccountResponse] }>()
@@ -43,11 +36,7 @@ const {
   reset: resetCart,
   confirm: confirmCart,
 } = useOpenAccountCart()
-const toast = useToast()
 const branchStore = useBranchStore()
-const { companyId } = useAuth()
-
-// ── Carrito de cargos a registrar ────────────────────────────────────────────
 
 type PetSel = number | 'general'
 
@@ -68,28 +57,6 @@ function selectTab(nextTab: 'service' | 'product') {
 // La cuenta se crea una sola vez y cada cargo (un POST por unidad) se marca al
 // persistirse; tras un fallo parcial, reintentar continúa sin duplicar nada.
 
-// Cargo general (mini-form)
-const general = reactive({ name: '', unitAmount: '', quantity: '1', taxId: '' })
-
-// COP en enteros: se descartan no-dígitos (incl. separador de miles) en el valor unitario y se fuerza la
-// cantidad a un entero. Evita `Number("50.000") === 50` y fracciones/cantidades inválidas que antes pasaban
-// vía `Number(x.replace(',', '.'))`.
-const unitAmountDigits = computed(() => general.unitAmount.replace(/\D/g, ''))
-const unitAmountNum = computed(() => Number(unitAmountDigits.value) || 0)
-const unitAmountDisplay = computed({
-  get: () => (general.unitAmount === '' ? '' : formatMoney(unitAmountNum.value)),
-  set: (v: string) => {
-    general.unitAmount = v.replace(/\D/g, '')
-  },
-})
-const quantityNum = computed(() => Number(general.quantity.replace(/\D/g, '')) || 0)
-const quantityDisplay = computed({
-  get: () => general.quantity,
-  set: (v: string) => {
-    general.quantity = v.replace(/\D/g, '')
-  },
-})
-
 watch(
   () => props.open,
   (open) => {
@@ -103,9 +70,6 @@ watch(
     tab.value = 'service'
     query.value = ''
     petCreating.value = false
-    petError.value = null
-    petDraft.value = defaultPetDraft()
-    Object.assign(general, { name: '', unitAmount: '', quantity: '1', taxId: '' })
   },
 )
 
@@ -132,81 +96,25 @@ function changeOwner() {
   ownerPets.value = []
   dupAccount.value = null
   petCreating.value = false
-  petError.value = null
   // Si hubo creación parcial para el dueño anterior, su cuenta persiste en el servidor
   // (aparecerá en la lista); el modal arranca limpio para el nuevo dueño.
   resetCart()
 }
 
 // ── Registrar mascota nueva dentro del modal (opcional) ──────────────────────
-function defaultPetDraft(): PetDraft {
-  return {
-    name: '',
-    chipNumber: '',
-    specieId: '',
-    breedId: '',
-    gender: '',
-    colorId: '',
-    bod: '',
-    animalType: 'NONE',
-    weight: '',
-    weightType: 'KILOGRAMS',
-    size: '',
-    reproductiveState: '',
-  }
-}
+// El formulario vive en `OpenAccountPetForm`, montado con `v-if`: su borrador
+// arranca limpio en cada apertura sin resetearlo desde aquí.
 const petCreating = ref(false)
-const petDraft = ref<PetDraft>(defaultPetDraft())
-const petFormRef = ref<{ validate: () => boolean } | null>(null)
-const petBusy = ref(false)
-const petError = ref<string | null>(null)
 
 function startCreatePet() {
-  petDraft.value = defaultPetDraft()
-  petError.value = null
   petCreating.value = true
 }
-function cancelCreatePet() {
-  petCreating.value = false
-  petError.value = null
-}
-async function submitPet() {
-  const owner = pickedOwner.value
-  if (!owner || petBusy.value) return
-  if (petFormRef.value && !petFormRef.value.validate()) {
-    petError.value = 'Revisa los campos marcados antes de continuar.'
-    return
-  }
-  if (companyId.value == null) {
-    petError.value = 'No se pudo identificar la empresa. Vuelve a iniciar sesión.'
-    return
-  }
-  petBusy.value = true
-  petError.value = null
-  try {
-    const payload = buildCreateAnimalRequest(petDraft.value, String(owner.id))
-    const created = await animalApi.create(payload)
-    ownerPets.value = [...ownerPets.value, { id: created.id, name: created.name }]
-    selectedPet.value = created.id
-    petCreating.value = false
-    toast.success('Mascota registrada', `${created.name} quedó registrada y seleccionada.`)
-  } catch (e) {
-    petError.value = getProblemDetailMessage(
-      e,
-      'No se pudo registrar la mascota. Intenta nuevamente.',
-    )
-  } finally {
-    petBusy.value = false
-  }
-}
 
-const taxOptions = computed(() => [
-  { value: '', label: 'Sin impuesto' },
-  ...tienda.taxes.value.map((t) => ({
-    value: String(t.id),
-    label: `${t.name} (${t.percentage}%)`,
-  })),
-])
+function onPetCreated(pet: { id: number; name: string }) {
+  ownerPets.value = [...ownerPets.value, pet]
+  selectedPet.value = pet.id
+  petCreating.value = false
+}
 
 const isGeneral = computed(() => selectedPet.value === 'general')
 
@@ -245,24 +153,6 @@ function addCatalogItem(item: { id: number; name: string; price: number; soldOut
   const animalId = selectedPet.value as number
   const animalName = ownerPets.value.find((pet) => pet.id === animalId)?.name ?? null
   pushCatalogItem(item, tab.value, animalId, animalName)
-}
-
-// Monto libre por diseño (sin catálogo): se permite 0, pero exige un valor
-// explícito; la cantidad debe ser entera >= 1.
-const canAddGeneral = computed(
-  () => general.name.trim().length >= 2 && unitAmountDigits.value !== '' && quantityNum.value >= 1,
-)
-
-function addGeneralToCart() {
-  if (!canAddGeneral.value) return
-  addGeneral({
-    name: general.name.trim(),
-    unitPrice: unitAmountNum.value,
-    qty: quantityNum.value || 1,
-    taxId: general.taxId ? Number(general.taxId) : null,
-    hasTax: general.taxId !== '',
-  })
-  Object.assign(general, { name: '', unitAmount: '', quantity: '1', taxId: '' })
 }
 
 async function confirm() {
@@ -357,28 +247,12 @@ function goToExistingAccount(): void {
           </div>
 
           <!-- Registrar mascota nueva (form completo) -->
-          <div v-if="petCreating" class="ds-stack ds-stack--14">
-            <PetForm ref="petFormRef" :model-value="petDraft" />
-            <p v-if="petError" class="pet-err">{{ petError }}</p>
-            <div class="petcreate-actions">
-              <button
-                type="button"
-                class="ds-btn ds-btn--ghost ds-btn--lg"
-                @click="cancelCreatePet"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                class="ds-btn ds-btn--primary ds-btn--lg"
-                :disabled="petBusy"
-                @click="submitPet"
-              >
-                <PawPrint :size="15" :stroke-width="1.9" />
-                {{ petBusy ? 'Registrando…' : 'Registrar mascota' }}
-              </button>
-            </div>
-          </div>
+          <OpenAccountPetForm
+            v-if="petCreating"
+            :owner-id="pickedOwner.id"
+            @created="onPetCreated"
+            @cancel="petCreating = false"
+          />
 
           <template v-else>
             <!-- Catálogo servicios/productos -->
@@ -394,54 +268,7 @@ function goToExistingAccount(): void {
             </template>
 
             <!-- Cargo general -->
-            <div v-else class="general-form ds-stack ds-stack--14">
-              <BaseField label="Concepto" required>
-                <template #default="{ id }">
-                  <BaseInput :id="id" v-model="general.name" placeholder="Ej. Insumo, recargo…" />
-                </template>
-              </BaseField>
-              <div class="grid">
-                <BaseField label="Valor unitario" required>
-                  <template #default="{ id }">
-                    <BaseInput
-                      :id="id"
-                      v-model="unitAmountDisplay"
-                      inputmode="numeric"
-                      placeholder="0"
-                    />
-                  </template>
-                </BaseField>
-                <BaseField label="Cantidad" required>
-                  <template #default="{ id }">
-                    <BaseInput
-                      :id="id"
-                      v-model="quantityDisplay"
-                      inputmode="numeric"
-                      placeholder="1"
-                    />
-                  </template>
-                </BaseField>
-                <BaseField label="Impuesto">
-                  <template #default="{ id }">
-                    <BaseSelect
-                      :id="id"
-                      v-model="general.taxId"
-                      :options="taxOptions"
-                      placeholder="Sin impuesto"
-                    />
-                  </template>
-                </BaseField>
-              </div>
-              <button
-                type="button"
-                class="add-btn solid ds-tone--accent-soft"
-                :class="{ 'ds-is-disabled': !canAddGeneral }"
-                :disabled="!canAddGeneral"
-                @click="addGeneralToCart"
-              >
-                <Plus :size="14" :stroke-width="1.9" /> Agregar al carrito
-              </button>
-            </div>
+            <GeneralChargeForm v-else @add="addGeneral" />
 
             <!-- Panel carrito -->
             <AccountCartPanel
@@ -588,35 +415,8 @@ function goToExistingAccount(): void {
   background: var(--amatista-100);
 }
 
-/* Registrar mascota nueva */
-.petcreate-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding-top: 4px;
-}
-.pet-err {
-  margin: 0;
-  padding: 10px 12px;
-  border-radius: 9px;
-  font-size: 12.5px;
-  background: var(--danger-100);
-  border: 1px solid var(--danger-300);
-  color: oklch(48% 0.16 25deg);
-}
-
-/* Cargo general */
-.general-form {
-  margin-bottom: 16px;
-}
-
-/* `.grid` sigue local: rejilla intrínseca de mínimo 220px, que ninguna
-   primitiva replica. */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-}
+/* El alta de mascota vive en `OpenAccountPetForm.vue` y el cargo libre en
+   `GeneralChargeForm.vue`, cada uno con su propio CSS. */
 
 /* Footer */
 .foottotal strong {
@@ -626,36 +426,5 @@ function goToExistingAccount(): void {
   margin-left: 4px;
 }
 
-/* Los botones del footer y del alta de mascota usan `.ds-btn` (primitives.css). */
-
-/* El mismo botón que usa AccountCatalogPanel; aquí lo lleva el cargo general
-   con el modificador . Se duplica porque el CSS scoped no cruza
-   fronteras de componente. */
-.add-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  font-size: 12.5px;
-  font-weight: 500;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: inherit;
-  border: 1px solid var(--amatista-200);
-}
-
-.add-btn:hover:not(:disabled) {
-  background: var(--amatista-100);
-}
-
-/* El estado apagado lo pone `.ds-is-disabled` (primitives.css), enganchado
-   con `:class` en el template — la primitiva no sustituye al atributo nativo. */
-.add-btn.solid {
-  background: var(--gradient-primary);
-  color: white;
-  border: none;
-  padding: 9px 16px;
-  font-size: 13px;
-  align-self: flex-start;
-}
+/* Los botones del footer usan `.ds-btn` (primitives.css). */
 </style>

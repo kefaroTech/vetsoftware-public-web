@@ -129,13 +129,17 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
               <span v-if="consumo(resolutionByType[dt]!).low" class="warn"> · por agotarse</span>
             </div>
           </div>
-          <button type="button" class="rescard-btn" @click="openEdit(resolutionByType[dt]!)">
+          <button
+            type="button"
+            class="rescard-btn rescard-btn-off"
+            @click="openEdit(resolutionByType[dt]!)"
+          >
             <Pencil :size="13" :stroke-width="1.8" /> Editar
           </button>
         </template>
         <template v-else>
           <div class="rescard-empty">Sin resolución activa para este tipo.</div>
-          <button type="button" class="rescard-btn add" @click="openAdd(dt)">
+          <button type="button" class="rescard-btn ds-tone--accent-border" @click="openAdd(dt)">
             <Plus :size="13" :stroke-width="2" /> Agregar
           </button>
         </template>
@@ -267,6 +271,10 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
   font-weight: 600;
 }
 
+/* El borde y el texto del botón "Agregar" los pone `.ds-tone--accent-border`
+   desde el template, y los del botón "Editar" su pareja `.rescard-btn-off`. Si
+   la base declarara `border-color`/`color` pesaría (0,2,0) por el `[data-v-…]`
+   del scope y la primitiva (0,1,0) no llegaría nunca a pintar. */
 .rescard-btn {
   align-self: flex-start;
   margin-top: 4px;
@@ -275,21 +283,21 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
   gap: 6px;
   padding: 7px 12px;
   border-radius: 8px;
-  border: 1px solid var(--warm-200);
+  border-width: 1px;
+  border-style: solid;
   background: var(--warm-50);
   font-size: 12.5px;
   font-weight: 500;
-  color: var(--warm-700);
   cursor: pointer;
+}
+
+.rescard-btn-off {
+  border-color: var(--warm-200);
+  color: var(--warm-700);
 }
 
 .rescard-btn:hover {
   background: var(--warm-100);
-}
-
-.rescard-btn.add {
-  border-color: var(--amatista-300);
-  color: var(--amatista-700);
 }
 
 .help {

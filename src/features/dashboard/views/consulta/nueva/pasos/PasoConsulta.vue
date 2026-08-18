@@ -1,13 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
-import {
-  Stethoscope,
-  ClipboardList,
-  TriangleAlert,
-  Calendar,
-  Sparkles,
-  Activity,
-} from 'lucide-vue-next'
+import { Stethoscope, ClipboardList, TriangleAlert, Calendar, Activity } from 'lucide-vue-next'
 import ContentWrap from '../components/ContentWrap.vue'
 import PageHeading from '../components/PageHeading.vue'
 import ContextHeader from '../components/ContextHeader.vue'
@@ -17,84 +10,15 @@ import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import DateInput from '@/components/ui/DateInput.vue'
-import QuickActionsCard from '../components/QuickActionsCard.vue'
+import QuickActionsPanel from '../components/QuickActionsPanel.vue'
 import { scrollToFirstError } from '@/composables/scrollToError'
 import { useConsultationTypes } from '@/features/consultation-types/composables/useConsultationTypes'
 import { weightUnitLabel } from '@/composables/domainLabels'
-import { useNuevaConsultaDraft, type ActionKind } from '../composables/useNuevaConsultaDraft'
-import RecetaModal from '../modals/RecetaModal.vue'
-import LabTestModal from '../modals/LabTestModal.vue'
-import ImagingModal from '../modals/ImagingModal.vue'
-import VaccinationModal from '../modals/VaccinationModal.vue'
-import HospitalizationModal from '../modals/HospitalizationModal.vue'
-import DewormingModal from '../modals/DewormingModal.vue'
-import SurgeryModal from '../modals/SurgeryModal.vue'
-import type {
-  Deworming,
-  DiagnosticImaging,
-  Hospitalization,
-  LaboratoryTest,
-  Prescription,
-  Surgery,
-  Vaccination,
-} from '@/types/domain'
+import { useNuevaConsultaDraft } from '../composables/useNuevaConsultaDraft'
 
 const draft = useNuevaConsultaDraft()
 const c = computed(() => draft.state.consultation)
 const pet = computed(() => draft.state.pet)
-
-const open = reactive<Record<ActionKind, boolean>>({
-  receta: false,
-  lab: false,
-  imaging: false,
-  vaccination: false,
-  hospitalization: false,
-  deworming: false,
-  surgery: false,
-})
-
-const counts = computed<Record<ActionKind, number>>(() => ({
-  receta: draft.state.prescriptions.length,
-  lab: draft.state.laboratoryTests.length,
-  imaging: draft.state.diagnosticImagings.length,
-  vaccination: draft.state.vaccinations.length,
-  hospitalization: draft.state.hospitalizations.length,
-  deworming: draft.state.dewormings.length,
-  surgery: draft.state.surgeries.length,
-}))
-
-function onSelectAction(kind: ActionKind) {
-  open[kind] = true
-}
-
-function onSavePrescription(p: Prescription) {
-  draft.addPrescription(p)
-  open.receta = false
-}
-function onSaveLabTests(items: LaboratoryTest[]) {
-  items.forEach((t) => draft.addLaboratoryTest(t))
-  open.lab = false
-}
-function onSaveImaging(item: DiagnosticImaging) {
-  draft.addDiagnosticImaging(item)
-  open.imaging = false
-}
-function onSaveVaccinations(items: Vaccination[]) {
-  items.forEach((v) => draft.addVaccination(v))
-  open.vaccination = false
-}
-function onSaveHospitalization(item: Hospitalization) {
-  draft.addHospitalization(item)
-  open.hospitalization = false
-}
-function onSaveDeworming(item: Deworming) {
-  draft.addDeworming(item)
-  open.deworming = false
-}
-function onSaveSurgery(item: Surgery) {
-  draft.addSurgery(item)
-  open.surgery = false
-}
 
 const {
   list: consultationTypesList,
@@ -436,84 +360,9 @@ watch(
         </div>
       </SectionCard>
 
-      <QuickActionsCard :counts="counts" @select="onSelectAction" />
-
-      <div v-if="draft.actionsCount.value > 0" class="actions-banner ds-flex-row">
-        <Sparkles :size="14" :stroke-width="1.7" />
-        <span>
-          <strong>{{ draft.actionsCount.value }}</strong> acción{{
-            draft.actionsCount.value === 1 ? '' : 'es'
-          }}
-          generada{{ draft.actionsCount.value === 1 ? '' : 's' }} · se guardarán al confirmar la
-          consulta.
-        </span>
-      </div>
+      <QuickActionsPanel />
     </div>
   </ContentWrap>
-
-  <RecetaModal
-    :open="open.receta"
-    :pet="draft.state.pet"
-    :existing="draft.state.prescriptions"
-    @save="onSavePrescription"
-    @remove-existing="draft.removePrescription"
-    @update-existing="draft.updatePrescription"
-    @close="open.receta = false"
-  />
-  <LabTestModal
-    :open="open.lab"
-    :pet="draft.state.pet"
-    :existing="draft.state.laboratoryTests"
-    @save="onSaveLabTests"
-    @remove-existing="draft.removeLaboratoryTest"
-    @update-existing="draft.updateLaboratoryTest"
-    @close="open.lab = false"
-  />
-  <ImagingModal
-    :open="open.imaging"
-    :pet="draft.state.pet"
-    :existing="draft.state.diagnosticImagings"
-    @save="onSaveImaging"
-    @remove-existing="draft.removeDiagnosticImaging"
-    @update-existing="draft.updateDiagnosticImaging"
-    @close="open.imaging = false"
-  />
-  <VaccinationModal
-    :open="open.vaccination"
-    :pet="draft.state.pet"
-    :existing="draft.state.vaccinations"
-    @save="onSaveVaccinations"
-    @remove-existing="draft.removeVaccination"
-    @update-existing="draft.updateVaccination"
-    @close="open.vaccination = false"
-  />
-  <HospitalizationModal
-    :open="open.hospitalization"
-    :pet="draft.state.pet"
-    :existing="draft.state.hospitalizations"
-    @save="onSaveHospitalization"
-    @remove-existing="draft.removeHospitalization"
-    @update-existing="draft.updateHospitalization"
-    @close="open.hospitalization = false"
-  />
-  <DewormingModal
-    :open="open.deworming"
-    :pet="draft.state.pet"
-    :existing="draft.state.dewormings"
-    @save="onSaveDeworming"
-    @remove-existing="draft.removeDeworming"
-    @update-existing="draft.updateDeworming"
-    @close="open.deworming = false"
-  />
-  <SurgeryModal
-    :open="open.surgery"
-    :pet="draft.state.pet"
-    :existing="draft.state.surgeries"
-    @save="onSaveSurgery"
-    @remove-existing="draft.removeSurgery"
-    @update-existing="draft.updateSurgery"
-    @close="open.surgery = false"
-  />
 </template>
 
 <style scoped>
@@ -562,20 +411,6 @@ watch(
   .vitals-grid {
     grid-template-columns: 1fr;
   }
-}
-
-.actions-banner {
-  padding: 10px 14px;
-  background: var(--amatista-50);
-  border: 1px solid var(--amatista-200);
-  color: var(--amatista-700);
-  border-radius: 10px;
-  font-size: 12.5px;
-  margin-top: 4px;
-}
-
-.actions-banner strong {
-  font-weight: 600;
 }
 
 .field-error {

@@ -26,10 +26,12 @@ const emit = defineEmits<{ 'update:modelValue': [destino: BillingDestino] }>()
       v-if="hasAccount"
       type="button"
       class="destopt"
-      :class="{ active: modelValue === 'existing' }"
+      :class="modelValue === 'existing' ? 'ds-tone--accent-outline' : 'destopt-off'"
       @click="emit('update:modelValue', 'existing')"
     >
-      <span class="do-check"
+      <span
+        class="do-check"
+        :class="modelValue === 'existing' ? 'ds-tone--accent-solid' : 'do-check-off'"
         ><Check v-if="modelValue === 'existing'" :size="13" :stroke-width="3"
       /></span>
       <span class="do-text ds-stack">
@@ -42,10 +44,12 @@ const emit = defineEmits<{ 'update:modelValue': [destino: BillingDestino] }>()
       v-else
       type="button"
       class="destopt"
-      :class="{ active: modelValue === 'new' }"
+      :class="modelValue === 'new' ? 'ds-tone--accent-outline' : 'destopt-off'"
       @click="emit('update:modelValue', 'new')"
     >
-      <span class="do-check"
+      <span
+        class="do-check"
+        :class="modelValue === 'new' ? 'ds-tone--accent-solid' : 'do-check-off'"
         ><Check v-if="modelValue === 'new'" :size="13" :stroke-width="3"
       /></span>
       <span class="do-text ds-stack">
@@ -57,10 +61,12 @@ const emit = defineEmits<{ 'update:modelValue': [destino: BillingDestino] }>()
     <button
       type="button"
       class="destopt"
-      :class="{ active: modelValue === 'nada' }"
+      :class="modelValue === 'nada' ? 'ds-tone--accent-outline' : 'destopt-off'"
       @click="emit('update:modelValue', 'nada')"
     >
-      <span class="do-check"
+      <span
+        class="do-check"
+        :class="modelValue === 'nada' ? 'ds-tone--accent-solid' : 'do-check-off'"
         ><Check v-if="modelValue === 'nada'" :size="13" :stroke-width="3"
       /></span>
       <span class="do-text ds-stack">
@@ -73,7 +79,13 @@ const emit = defineEmits<{ 'update:modelValue': [destino: BillingDestino] }>()
 
 <style scoped>
 /* Layout via primitivas: .ds-grid-2 (dos columnas + colapso en 640px, el mismo
-   breakpoint que tenía esta rejilla), .ds-stack, .ds-strong, .ds-hint. */
+   breakpoint que tenía esta rejilla), .ds-stack, .ds-strong, .ds-hint.
+
+   El TONO (fondo + color de borde) de la opción y de su casilla NO vive aquí:
+   lo ponen `.ds-tone--accent-outline` / `.ds-tone--accent-solid` desde el
+   template, y el estado de reposo lo pone su pareja `-off`. La regla base sólo
+   deja la geometría: si declarara `background`/`border-color` pesaría (0,2,0)
+   con el `[data-v-…]` del scope y le ganaría siempre a la primitiva (0,1,0). */
 .dest {
   gap: 12px;
   margin-bottom: 18px;
@@ -88,18 +100,22 @@ const emit = defineEmits<{ 'update:modelValue': [destino: BillingDestino] }>()
   cursor: pointer;
   padding: 13px;
   border-radius: 12px;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border-width: 1px;
+  border-style: solid;
   transition:
     border-color 0.12s,
     background 0.12s;
 }
-.destopt:hover {
-  border-color: var(--amatista-300);
+.destopt-off {
+  background: var(--warm-50);
+  border-color: var(--warm-200);
 }
-.destopt.active {
-  border-color: var(--amatista-500);
-  background: var(--amatista-50);
+
+/* El `:hover` se acota al estado de reposo: la opción activa ya no tiene regla
+   de hover con la que competir, así que conserva su borde amatista-500 como
+   antes (cuando ganaba por orden de aparición). */
+.destopt-off:hover {
+  border-color: var(--amatista-300);
 }
 .do-check {
   width: 18px;
@@ -109,13 +125,13 @@ const emit = defineEmits<{ 'update:modelValue': [destino: BillingDestino] }>()
   margin-top: 1px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--warm-300);
-  background: var(--warm-50);
+  border-width: 1px;
+  border-style: solid;
   color: white;
 }
-.destopt.active .do-check {
-  background: var(--amatista-600);
-  border-color: var(--amatista-600);
+.do-check-off {
+  background: var(--warm-50);
+  border-color: var(--warm-300);
 }
 .do-text {
   gap: 3px;

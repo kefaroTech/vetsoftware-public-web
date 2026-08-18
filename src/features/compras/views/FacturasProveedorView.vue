@@ -11,6 +11,8 @@ import { formatMoney } from '@/features/tienda/composables/pricing'
 import { invoiceStatusLabel } from '../composables/comprasLabels'
 import SupplierInvoiceModal from '../components/SupplierInvoiceModal.vue'
 import SupplierPaymentModal from '../components/SupplierPaymentModal.vue'
+import ComprasIconButton from '../components/ComprasIconButton.vue'
+import ComprasTable from '../components/ComprasTable.vue'
 import type { SupplierInvoice, SupplierInvoiceStatus } from '../types/compras'
 
 const { items, total, loading, error, aging, agingLoading, search, loadAging, cancel, remove } =
@@ -55,14 +57,21 @@ watch(tab, (t) => {
   if (t === 'cxp') void loadAging()
 })
 
-function statusClass(s: SupplierInvoiceStatus): string {
-  return s === 'PAID'
-    ? 'paid'
-    : s === 'CANCELLED'
-      ? 'cancelled'
-      : s === 'PARTIAL'
-        ? 'partial'
-        : 'pending'
+/* El verde de "acción positiva" (`.ds-tone--compras-ok`, primitives.css) va
+   como clase aparte de `paid`: la primera decide el tono, la segunda sigue
+   siendo el nombre de estado que usa `.pill.paid` para lo que no comparte con
+   el resto (ver más abajo). */
+function statusClass(s: SupplierInvoiceStatus): (string | false)[] {
+  return [
+    s === 'PAID'
+      ? 'paid'
+      : s === 'CANCELLED'
+        ? 'cancelled'
+        : s === 'PARTIAL'
+          ? 'partial'
+          : 'pending',
+    s === 'PAID' && 'ds-tone--compras-ok',
+  ]
 }
 
 function openCreate() {
@@ -125,10 +134,18 @@ onMounted(refresh)
     </header>
 
     <div class="tabs">
-      <button type="button" :class="{ active: tab === 'facturas' }" @click="tab = 'facturas'">
+      <button
+        type="button"
+        :class="tab === 'facturas' ? 'ds-tab--active' : 'tab-off'"
+        @click="tab = 'facturas'"
+      >
         Facturas
       </button>
-      <button type="button" :class="{ active: tab === 'cxp' }" @click="tab = 'cxp'">
+      <button
+        type="button"
+        :class="tab === 'cxp' ? 'ds-tab--active' : 'tab-off'"
+        @click="tab = 'cxp'"
+      >
         Cuentas por pagar
       </button>
     </div>
@@ -144,7 +161,7 @@ onMounted(refresh)
         </select>
       </div>
 
-      <table class="grid-table">
+      <ComprasTable>
         <thead>
           <tr>
             <th>Factura</th>
@@ -174,46 +191,44 @@ onMounted(refresh)
               }}</span>
             </td>
             <td class="ds-actions">
-              <button
+              <ComprasIconButton
                 v-if="canUpdate && (inv.status === 'PENDING' || inv.status === 'PARTIAL')"
-                type="button"
-                class="icon-btn pay"
                 title="Registrar abono"
+                row
+                tone="success"
                 @click="openPay(inv)"
               >
                 <Banknote :size="15" :stroke-width="1.7" />
-              </button>
-              <button
+              </ComprasIconButton>
+              <ComprasIconButton
                 v-if="canUpdate && inv.status === 'PENDING'"
-                type="button"
-                class="icon-btn"
                 title="Editar"
+                row
                 @click="openEdit(inv)"
               >
                 <Pencil :size="15" :stroke-width="1.7" />
-              </button>
-              <button
+              </ComprasIconButton>
+              <ComprasIconButton
                 v-if="canUpdate && inv.status === 'PENDING'"
-                type="button"
-                class="icon-btn"
                 title="Anular"
+                row
                 @click="onCancel(inv)"
               >
                 <Ban :size="15" :stroke-width="1.7" />
-              </button>
-              <button
+              </ComprasIconButton>
+              <ComprasIconButton
                 v-if="canDelete"
-                type="button"
-                class="icon-btn danger"
                 title="Eliminar"
+                row
+                tone="danger"
                 @click="onDelete(inv)"
               >
                 <Trash2 :size="15" :stroke-width="1.7" />
-              </button>
+              </ComprasIconButton>
             </td>
           </tr>
         </tbody>
-      </table>
+      </ComprasTable>
       <p class="count ds-meta">{{ total }} factura(s)</p>
     </template>
 
@@ -222,7 +237,7 @@ onMounted(refresh)
       <p v-if="aging" class="aging-asof">
         Antigüedad de saldos al {{ formatDateNumeric(aging.asOf) }}
       </p>
-      <table class="grid-table">
+      <ComprasTable>
         <thead>
           <tr>
             <th>Proveedor</th>
@@ -261,7 +276,7 @@ onMounted(refresh)
             <td class="ds-num ds-strong">{{ formatMoney(aging.totals.total) }}</td>
           </tr>
         </tfoot>
-      </table>
+      </ComprasTable>
     </template>
 
     <SupplierInvoiceModal
@@ -290,6 +305,7 @@ onMounted(refresh)
    `.ds-amount--neg`, `.ds-meta`, `.ds-empty --md` (fila vacía; su padding/color
    los pisa `.grid-table td` a (0,2,1), igual que pisaba al `.empty-row` que
    sustituye — mismo resultado en pantalla). */
+
 .page-head {
   display: flex;
   align-items: center;
@@ -304,22 +320,26 @@ onMounted(refresh)
   border-bottom: 1px solid var(--warm-200);
 }
 
+/* El estado activo lo pinta `.ds-tab--active` y el de reposo `.tab-off`, las dos
+   desde el template. La base no declara `color` ni `border-bottom-color`: con el
+   `[data-v-…]` del scope pesarían (0,2,1) y la primitiva (0,1,0) no ganaría. El
+   `border-width` en forma larga evita el `border-color: currentcolor` que
+   arrastra el atajo `border: none`. */
 .tabs button {
-  border: none;
   background: none;
   padding: 8px 14px;
   font-family: inherit;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--warm-500);
   cursor: pointer;
-  border-bottom: 2px solid transparent;
+  border-width: 0 0 2px;
+  border-style: solid;
   margin-bottom: -1px;
 }
 
-.tabs button.active {
-  color: var(--amatista-700);
-  border-bottom-color: var(--amatista-600);
+.tab-off {
+  border-bottom-color: transparent;
+  color: var(--warm-500);
 }
 
 .filter-row {
@@ -336,27 +356,8 @@ onMounted(refresh)
   color: var(--warm-900);
 }
 
-.grid-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.grid-table th {
-  text-align: left;
-  color: var(--warm-500);
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 8px;
-  border-bottom: 1px solid var(--warm-200);
-}
-
-.grid-table td {
-  padding: 9px 8px;
-  border-bottom: 1px solid var(--warm-100);
-  color: var(--warm-700);
-}
+/* La tabla y su cabecera/celda viven en `ComprasTable.vue`, compartida por las
+   tres vistas de la feature. */
 
 .grid-table tfoot td {
   border-top: 2px solid var(--warm-300);
@@ -366,30 +367,6 @@ onMounted(refresh)
 
 .actions-col {
   width: 140px;
-}
-
-.icon-btn {
-  border: none;
-  background: var(--warm-100);
-  color: var(--warm-600);
-  border-radius: 7px;
-  padding: 6px;
-  cursor: pointer;
-  display: inline-flex;
-}
-
-.icon-btn:hover {
-  background: var(--warm-200);
-}
-
-.icon-btn.pay:hover {
-  background: oklch(92% 0.08 150deg);
-  color: oklch(40% 0.12 150deg);
-}
-
-.icon-btn.danger:hover {
-  background: var(--danger-200);
-  color: oklch(50% 0.2 25deg);
 }
 
 .pill {
@@ -410,10 +387,8 @@ onMounted(refresh)
   color: oklch(45% 0.14 250deg);
 }
 
-.pill.paid {
-  background: oklch(92% 0.08 150deg);
-  color: oklch(40% 0.12 150deg);
-}
+/* El verde de "pagada" lo pone `.ds-tone--compras-ok` (primitives.css),
+   añadida desde `statusClass` — ya no queda CSS local para `.pill.paid`. */
 
 .pill.cancelled {
   background: var(--warm-100);
