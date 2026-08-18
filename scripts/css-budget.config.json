@@ -1,8 +1,8 @@
 {
-  "_comentario": "Techos del presupuesto de CSS (FE-08) del front operativo. Trinquete: se bajan cuando una tanda de retirada los mejora, NUNCA se suben. El script que los lee, css-budget.mjs, es gemelo TR-02 entre los dos fronts; solo estos numeros difieren. Punto de partida medido por este mismo script sobre el tip de develop (6f904b1): distancia +3298, 70 grupos duplicados, 19 SFC grandes. La ficha FE-08 de la auditoria cita +3406 para ese mismo arbol porque su conteo manual incluia lineas que este script no cuenta; la serie historica del informe y la de este gate no son intercambiables. maxStyleMinusScript esta en 0 porque el objetivo literal del hallazgo -que la logica supere al CSS- ya se cumple con 142 lineas de margen. Los otros dos techos son lo alcanzado y no la meta: la meta es 0 duplicados y 0 SFC grandes.",
+  "_comentario": "Techos del presupuesto de CSS (FE-08) del front operativo. Trinquete: se bajan cuando una tanda de retirada los mejora, NUNCA se suben. El script que los lee, css-budget.mjs, es gemelo TR-02 entre los dos fronts; solo estos numeros difieren. Punto de partida medido por este mismo script sobre el tip de develop (6f904b1): distancia +3298, 70 grupos duplicados, 19 SFC grandes. La ficha FE-08 de la auditoria cita +3406 para ese mismo arbol porque su conteo manual incluia lineas que este script no cuenta; la serie historica del informe y la de este gate no son intercambiables. FE-08 (fase final): cinco tandas de retirada dejaron el arbol en 0/0/0 sobre estos mismos techos, igualando al repo admin; los tres bajan a la meta literal del hallazgo (CSS que no supera a la logica, cero cuerpos repetidos, cero SFC de mas de 500 lineas). Ya no queda margen que gastar: cualquier regresion futura la debe atajar `vetsoftware/no-duplicate-primitive` (stylelint) antes de que el agregado vuelva a subir.",
   "maxStyleMinusScript": 0,
   "maxDuplicateBodies": 3,
-  "maxDuplicateGroups": 21,
+  "maxDuplicateGroups": 0,
   "maxSfcLines": 500,
-  "maxOversizedSfc": 14
+  "maxOversizedSfc": 0
 }
