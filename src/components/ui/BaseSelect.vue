@@ -38,6 +38,21 @@ const panelStyle = ref<Record<string, string>>({})
 const selected = computed(() => props.options.find((o) => o.value === props.modelValue))
 const selectedIndex = computed(() => props.options.findIndex((o) => o.value === props.modelValue))
 
+/**
+ * Tono del disparador: los tres estados son EXCLUYENTES y viajan como clase
+ * desde el marcado. La regla base `.trigger` se queda con la geometría para que
+ * no compita con `.ds-field-invalid` / `.ds-field-disabled`, que pesan (0,1,0)
+ * y perderían contra cualquier `.select.estado .trigger` scoped. El anillo de
+ * foco y el de foco-inválido siguen siendo reglas scoped propias porque el
+ * disparador usa `:focus-visible` (y el estado `open`), que las primitivas
+ * `.ds-focus-ring*` no distinguen.
+ */
+const toneClass = computed(() => {
+  if (props.invalid) return ['tone-text', 'ds-field-invalid']
+  if (props.disabled) return ['tone-border', 'ds-field-disabled']
+  return ['tone-border', 'tone-bg', 'tone-text']
+})
+
 function updatePosition() {
   const t = trigger.value
   if (!t) return
@@ -202,7 +217,7 @@ onBeforeUnmount(() => {
       ref="trigger"
       type="button"
       class="trigger ds-flex-row"
-      :class="{ 'ds-field-shake': invalid }"
+      :class="toneClass"
       role="combobox"
       aria-haspopup="listbox"
       :aria-expanded="open"
@@ -228,7 +243,11 @@ onBeforeUnmount(() => {
           :id="`${controlId}-opt-${i}`"
           :key="o.value"
           class="item"
-          :class="{ active: i === highlighted, selected: o.value === modelValue }"
+          :class="{
+            active: i === highlighted,
+            'ds-tone--accent-soft': i === highlighted,
+            selected: o.value === modelValue,
+          }"
           role="option"
           :aria-selected="o.value === modelValue"
           :data-idx="i"
@@ -249,20 +268,44 @@ onBeforeUnmount(() => {
   font-family: var(--font-sans);
 }
 
+/* La base se queda con la GEOMETRÍA: ni `background`, ni `border-color`, ni
+   `color`. Scoped pesa (0,2,0) y le ganaría a las primitivas `.ds-field-*`
+   (0,1,0). El color viaja en las clases de tono, excluyentes entre sí. */
 .trigger {
   width: 100%;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border-width: 1px;
+  border-style: solid;
   border-radius: 8px;
   padding: 10px 14px;
   font-family: inherit;
   font-size: 13.5px;
-  color: var(--warm-900);
-  cursor: pointer;
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease,
     background-color 0.15s ease;
+}
+
+/* El cursor por defecto excluye el deshabilitado en vez de competir con el
+   `cursor: not-allowed` que trae `.ds-field-disabled`. */
+.trigger:not(:disabled) {
+  cursor: pointer;
+}
+
+/* Tono en reposo, en tres piezas porque cada estado sustituye un subconjunto
+   distinto: deshabilitado cambia fondo y texto pero conserva el borde neutro;
+   inválido cambia fondo y borde pero conserva el texto. Mantienen el peso
+   (0,2,0) y la posición que tenía el trío dentro de `.trigger`, así que su
+   resolución frente a `.trigger:focus-visible` (más abajo) no cambia. */
+.tone-border {
+  border-color: var(--warm-200);
+}
+
+.tone-bg {
+  background: var(--warm-50);
+}
+
+.tone-text {
+  color: var(--warm-900);
 }
 
 .select:not(.open, .disabled, .invalid) .trigger:hover {
@@ -276,21 +319,7 @@ onBeforeUnmount(() => {
   box-shadow: var(--ring);
 }
 
-.select.disabled .trigger {
-  background: var(--warm-100);
-  color: var(--warm-500);
-  cursor: not-allowed;
-}
-
-/* El temblor lo pone `.ds-field-shake` desde el template. Borde+fondo se
-   quedan aquí: la regla base `.trigger` ya declara `background`/`border` y en
-   CSS scoped pesa (0,2,0), así que `.ds-field-invalid` (0,1,0) no le ganaría.
-   Igual para `.ds-field-invalid-focus` y `.ds-field-disabled`. */
-.select.invalid .trigger {
-  border-color: oklch(60% 0.2 25deg);
-  background: oklch(98.5% 0.02 25deg);
-}
-
+/* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- `.ds-field-invalid-focus` pesa (0,1,0) y `.select.open .trigger` (0,3,0) le gana: el anillo de foco inválido tiene que reafirmarse aquí, a (0,3,0), para desempatar contra el estado `open`. Además la segunda mitad del selector es `:focus-visible`, un pseudo-estado que ninguna clase aplicada desde el marcado puede reproducir. */
 .select.invalid.open .trigger,
 .select.invalid .trigger:focus-visible {
   border-color: oklch(55% 0.22 25deg);
@@ -354,8 +383,15 @@ onBeforeUnmount(() => {
   padding: 9px 11px;
   border-radius: 8px;
   font-size: 13.5px;
-  color: var(--warm-800);
   cursor: pointer;
+}
+
+/* El color de reposo se declara excluyendo los dos estados que lo sustituyen
+   (`.active` lo pone `.ds-tone--accent-soft` desde el marcado; `.selected`, la
+   regla de abajo). Si viviera en la regla base pesaría (0,2,1) y la primitiva,
+   que pesa (0,1,0), no podría teñir la opción resaltada. */
+.panel[role='listbox'] .item:not(.active, .selected) {
+  color: var(--warm-800);
 }
 
 .panel[role='listbox'] .item + .item {
@@ -365,11 +401,6 @@ onBeforeUnmount(() => {
 .panel[role='listbox'] .item .item-check {
   flex-shrink: 0;
   color: var(--amatista-600);
-}
-
-.panel[role='listbox'] .item.active {
-  background: var(--amatista-50);
-  color: var(--amatista-700);
 }
 
 .panel[role='listbox'] .item.selected {

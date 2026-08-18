@@ -156,6 +156,7 @@ function onUpdate(value: string | null) {
   border-color: var(--warm-300);
 }
 
+/* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- `.mx-input` lo renderiza `vue-datepicker-next` dentro de su propio árbol: no hay marcado nuestro donde colgarle `.ds-focus-ring`, y el único gancho de la librería (`input-class`) reemplaza la clase `mx-input` en vez de añadirse, lo que tumbaría sus estilos base. */
 .date-wrap .mx-input:focus {
   border-color: var(--amatista-500);
   box-shadow: var(--ring);
@@ -181,6 +182,7 @@ function onUpdate(value: string | null) {
   background: oklch(98.5% 0.02 25deg);
 }
 
+/* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- mismo motivo que el `:focus` neutro: `.ds-field-invalid-focus` habría que colgarla de `.mx-input`, un nodo de `vue-datepicker-next` que no pasa por nuestro marcado. El estado inválido vive en el wrapper `.date-wrap`, y una clase en el wrapper no tiñe el input de dentro. */
 .date-wrap.invalid .mx-input:focus {
   border-color: oklch(55% 0.22 25deg);
   box-shadow: 0 0 0 3px var(--danger-200);
@@ -246,6 +248,7 @@ function onUpdate(value: string | null) {
   border-radius: 8px;
 }
 
+/* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- las celdas del calendario las genera `vue-datepicker-next` en un panel teletransportado a `<body>`; no hay slot por celda al que añadir `.ds-tone--accent-soft`, y la primitiva es plana: teñiría también el reposo, no sólo el `:hover`. */
 .mx-datepicker-main .mx-table-date .cell:hover {
   background: var(--amatista-50);
   color: var(--amatista-700);
