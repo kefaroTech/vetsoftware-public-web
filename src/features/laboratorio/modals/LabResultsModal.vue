@@ -5,6 +5,7 @@ import ModalShell from '@/components/ui/ModalShell.vue'
 import { laboratoryTestFileApi } from '../api/laboratoryTestFile.api'
 import { labCode } from '../types/lab'
 import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
+import { getProblemDetailMessage } from '@/services/http/http.client'
 
 const props = defineProps<{ open: boolean; test: LaboratoryTestResponse | null }>()
 const emit = defineEmits<{ close: []; uploaded: [] }>()
@@ -55,7 +56,7 @@ async function submit() {
     }
     emit('uploaded')
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'No se pudieron subir los archivos'
+    error.value = getProblemDetailMessage(e, 'No se pudieron subir los archivos')
   } finally {
     busy.value = false
   }

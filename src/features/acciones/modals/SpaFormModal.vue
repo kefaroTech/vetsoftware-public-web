@@ -16,6 +16,7 @@ import { spaApi } from '@/features/dashboard/views/consulta/nueva/api/spa.api'
 import type { SpaResponse } from '@/features/dashboard/views/consulta/nueva/types/spa.types'
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import { scrollToFirstError } from '@/composables/scrollToError'
+import { getProblemDetailMessage } from '@/services/http/http.client'
 
 const props = defineProps<{
   open: boolean
@@ -136,7 +137,7 @@ async function save() {
     emit('saved', result)
     emit('close')
   } catch (e) {
-    saveError.value = e instanceof Error ? e.message : 'No se pudo guardar el servicio'
+    saveError.value = getProblemDetailMessage(e, 'No se pudo guardar el servicio')
   } finally {
     saving.value = false
   }

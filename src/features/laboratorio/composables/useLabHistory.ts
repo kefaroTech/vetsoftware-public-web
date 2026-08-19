@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { laboratorioInternoApi } from '../api/laboratorioInterno.api'
 import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 import type { LaboratoryTestPriority } from '@/types/domain'
+import { getProblemDetailMessage } from '@/services/http/http.client'
 
 const PAGE_SIZE = 12
 
@@ -47,7 +48,7 @@ export function useLabHistory() {
       totalElements.value = res.totalElements
       totalPages.value = res.totalPages
     } catch (e) {
-      error.value = e instanceof Error ? e.message : 'No se pudo cargar el histórico'
+      error.value = getProblemDetailMessage(e, 'No se pudo cargar el histórico')
     } finally {
       loading.value = false
     }

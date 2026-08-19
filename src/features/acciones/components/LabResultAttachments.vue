@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { Download, Eye, FileText } from 'lucide-vue-next'
 import { laboratoryTestFileApi } from '@/features/laboratorio/api/laboratoryTestFile.api'
 import type { LaboratoryTestFileResponse } from '@/features/laboratorio/types/laboratoryTestFile.types'
+import { getProblemDetailMessage } from '@/services/http/http.client'
 
 /**
  * Adjuntos de resultado de una solicitud de laboratorio. Se usa dentro del
@@ -24,7 +25,7 @@ async function load() {
   try {
     attachments.value = await laboratoryTestFileApi.listByTest(props.testId)
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'No se pudieron cargar los adjuntos'
+    error.value = getProblemDetailMessage(e, 'No se pudieron cargar los adjuntos')
   } finally {
     loading.value = false
   }

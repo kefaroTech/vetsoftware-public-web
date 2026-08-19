@@ -27,6 +27,7 @@ import { todayISO } from '@/composables/format'
 import { scheduleToDoseSlot } from './mar'
 import type { DoseSlot, MedOrderVM, OrderVM, ProcOrderVM } from '../types/hospital'
 import type { ReasonLeaving } from '@/types/domain'
+import { getProblemDetailMessage } from '@/services/http/http.client'
 
 /** El calendario de medicación se persiste en backend (tabla medication_schedules). */
 function toMedVM(r: HospitalizationMedicationResponse, slots: DoseSlot[]): MedOrderVM {
@@ -57,7 +58,7 @@ export function useHospitalizacion() {
       const all = await hospitalizationApi.listByCompany()
       board.value = all.filter((h) => h.enabled && h.type === 'HOSPITALIZATION' && !h.endDate)
     } catch (e) {
-      boardError.value = e instanceof Error ? e.message : 'No se pudo cargar el tablero'
+      boardError.value = getProblemDetailMessage(e, 'No se pudo cargar el tablero')
     } finally {
       boardLoading.value = false
     }
@@ -104,7 +105,7 @@ export function useHospitalizacion() {
       observations.value = o
       notes.value = n
     } catch (e) {
-      detailError.value = e instanceof Error ? e.message : 'No se pudo cargar el paciente'
+      detailError.value = getProblemDetailMessage(e, 'No se pudo cargar el paciente')
     } finally {
       detailLoading.value = false
     }

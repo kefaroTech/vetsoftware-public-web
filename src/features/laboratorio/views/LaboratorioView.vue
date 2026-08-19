@@ -51,10 +51,7 @@ async function handleAction(item: LaboratoryTestResponse, kind: LabActionKind) {
     }
     if (viewing.value?.id === item.id) viewing.value = null
   } catch (e) {
-    toast.error(
-      'Ocurrió un error',
-      e instanceof Error ? e.message : 'No se pudo actualizar la muestra.',
-    )
+    toast.errorFrom('Ocurrió un error', e, 'No se pudo actualizar la muestra.')
   }
 }
 
@@ -67,7 +64,7 @@ async function confirmCollect() {
     toast.success('Muestra recolectada', 'La muestra pasó a En cola.')
     collectFor.value = null
   } catch (e) {
-    toast.error('Ocurrió un error', e instanceof Error ? e.message : 'No se pudo tomar la muestra.')
+    toast.errorFrom('Ocurrió un error', e, 'No se pudo tomar la muestra.')
   } finally {
     collecting.value = false
   }
@@ -80,10 +77,7 @@ async function onResultsUploaded() {
     await queue.transition(item, 'PENDING_VALIDATION')
     toast.success('Resultados cargados', 'La muestra pasó a Por validar.')
   } catch (e) {
-    toast.error(
-      'Ocurrió un error',
-      e instanceof Error ? e.message : 'No se pudo enviar a validación.',
-    )
+    toast.errorFrom('Ocurrió un error', e, 'No se pudo enviar a validación.')
   } finally {
     resultsFor.value = null
   }

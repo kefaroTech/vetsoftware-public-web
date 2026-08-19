@@ -3,6 +3,7 @@ import { laboratorioInternoApi } from '../api/laboratorioInterno.api'
 import { BOARD_STATUSES } from '../types/lab'
 import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 import type { LaboratoryTestStatus } from '@/types/domain'
+import { getProblemDetailMessage } from '@/services/http/http.client'
 
 /** Estado del tablero activo (Bandeja de muestras) + transiciones de estado. */
 export function useLabQueue() {
@@ -21,7 +22,7 @@ export function useLabQueue() {
       })
       items.value = page.content
     } catch (e) {
-      error.value = e instanceof Error ? e.message : 'No se pudo cargar la bandeja'
+      error.value = getProblemDetailMessage(e, 'No se pudo cargar la bandeja')
     } finally {
       loading.value = false
     }
