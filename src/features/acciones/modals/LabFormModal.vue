@@ -22,6 +22,7 @@ import { laboratoryTestApi } from '@/features/dashboard/views/consulta/nueva/api
 import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import { scrollToFirstError } from '@/composables/scrollToError'
+import { getProblemDetailMessage } from '@/services/http/http.client'
 
 const props = defineProps<{
   open: boolean
@@ -269,7 +270,7 @@ async function doSave() {
     }
     emit('close')
   } catch (e) {
-    saveError.value = e instanceof Error ? e.message : 'No se pudo guardar la solicitud'
+    saveError.value = getProblemDetailMessage(e, 'No se pudo guardar la solicitud')
   } finally {
     saving.value = false
   }

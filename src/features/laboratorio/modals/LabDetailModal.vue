@@ -11,6 +11,7 @@ import type { LaboratoryTestFileResponse } from '../types/laboratoryTestFile.typ
 import { labCode } from '../types/lab'
 import { formatDateShort } from '@/composables/format'
 import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
+import { getProblemDetailMessage } from '@/services/http/http.client'
 
 const props = defineProps<{ open: boolean; test: LaboratoryTestResponse | null }>()
 const emit = defineEmits<{ close: []; action: [kind: LabActionKind] }>()
@@ -34,7 +35,7 @@ async function loadFiles(testId: number) {
   try {
     attachments.value = await laboratoryTestFileApi.listByTest(testId)
   } catch (e) {
-    filesError.value = e instanceof Error ? e.message : 'No se pudieron cargar los adjuntos'
+    filesError.value = getProblemDetailMessage(e, 'No se pudieron cargar los adjuntos')
   } finally {
     loadingFiles.value = false
   }

@@ -166,7 +166,7 @@ async function handleSubmit(data: EmployeeFormData) {
     }
     formOpen.value = false
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'No se pudo guardar el empleado'
+    const msg = getProblemDetailMessage(e, 'No se pudo guardar el empleado')
     submitError.value = msg
     toast.error('Ocurrió un error', msg)
   } finally {

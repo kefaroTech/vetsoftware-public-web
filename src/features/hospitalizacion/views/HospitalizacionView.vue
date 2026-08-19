@@ -62,7 +62,7 @@ async function onAdd(kind: OrderKind, payload: OrderPayload) {
       `${payload.name} se agregó al plan.`,
     )
   } catch (e) {
-    toast.error('No se pudo guardar', e instanceof Error ? e.message : 'Intenta de nuevo.')
+    toast.errorFrom('No se pudo guardar', e, 'Intenta de nuevo.')
   }
 }
 
@@ -72,7 +72,7 @@ async function onEdit(kind: OrderKind, id: number, payload: OrderPayload) {
     else await updateProcedure(id, payload)
     toast.success('Plan actualizado', `${payload.name} se modificó.`)
   } catch (e) {
-    toast.error('No se pudo actualizar', e instanceof Error ? e.message : 'Intenta de nuevo.')
+    toast.errorFrom('No se pudo actualizar', e, 'Intenta de nuevo.')
   }
 }
 
@@ -85,7 +85,7 @@ async function onSuspend(kind: OrderKind, id: number) {
       'Se conservaron las dosis aplicadas; se retiraron las pendientes.',
     )
   } catch (e) {
-    toast.error('No se pudo suspender', e instanceof Error ? e.message : 'Intenta de nuevo.')
+    toast.errorFrom('No se pudo suspender', e, 'Intenta de nuevo.')
   }
 }
 
@@ -94,7 +94,7 @@ async function onApply(order: OrderVM, slotId: string) {
     await applyDose(order, slotId)
     toast.success('Dosis registrada', `${order.name} marcada como aplicada.`)
   } catch (e) {
-    toast.error('No se pudo registrar', e instanceof Error ? e.message : 'Intenta de nuevo.')
+    toast.errorFrom('No se pudo registrar', e, 'Intenta de nuevo.')
   }
 }
 
@@ -112,7 +112,7 @@ async function onMove(
       m === 'cascade' ? 'Se recalcularon las tomas siguientes.' : 'Se movió esta toma.',
     )
   } catch (e) {
-    toast.error('No se pudo reprogramar', e instanceof Error ? e.message : 'Intenta de nuevo.')
+    toast.errorFrom('No se pudo reprogramar', e, 'Intenta de nuevo.')
   }
 }
 
@@ -121,7 +121,7 @@ async function onAddObservation(text: string) {
     await addObservation(text)
     toast.success('Observación guardada')
   } catch (e) {
-    toast.error('No se pudo guardar', e instanceof Error ? e.message : 'Intenta de nuevo.')
+    toast.errorFrom('No se pudo guardar', e, 'Intenta de nuevo.')
   }
 }
 
@@ -130,7 +130,7 @@ async function onAddNote(text: string) {
     await addProgressNote(text)
     toast.success('Nota evolutiva guardada')
   } catch (e) {
-    toast.error('No se pudo guardar', e instanceof Error ? e.message : 'Intenta de nuevo.')
+    toast.errorFrom('No se pudo guardar', e, 'Intenta de nuevo.')
   }
 }
 
@@ -141,7 +141,7 @@ async function onDischarge(reason: ReasonLeaving) {
     backToBoard()
     toast.success('Paciente dado de alta', `${name} salió del tablero.`)
   } catch (e) {
-    toast.error('No se pudo dar de alta', e instanceof Error ? e.message : 'Intenta de nuevo.')
+    toast.errorFrom('No se pudo dar de alta', e, 'Intenta de nuevo.')
   }
 }
 </script>

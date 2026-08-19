@@ -4,6 +4,7 @@ import type { Employee } from '@/types/domain'
 import { employeeApi } from '../api/employee.api'
 import type { CreateEmployeeRequest, UpdateEmployeeRequest } from '../types/employee.types'
 import { mapEmployeeResponse } from '../api/employee.mapper'
+import { getProblemDetailMessage } from '@/services/http/http.client'
 
 const DEFAULT_PAGE_SIZE = 15
 
@@ -43,7 +44,7 @@ export const useEmployeesStore = defineStore('employees', () => {
       }
     } catch (e) {
       if (seq !== reqSeq) return
-      error.value = e instanceof Error ? e.message : 'Error al cargar empleados'
+      error.value = getProblemDetailMessage(e, 'Error al cargar empleados')
       throw e
     } finally {
       if (seq === reqSeq) loading.value = false

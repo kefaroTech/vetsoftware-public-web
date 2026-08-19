@@ -19,6 +19,7 @@ import type { HospitalizationResponse } from '@/features/dashboard/views/consult
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import type { Owner } from '@/types/domain'
 import { formatDateShort } from '@/composables/format'
+import { getProblemDetailMessage } from '@/services/http/http.client'
 const { can } = useAuthorization()
 const toast = useToast()
 const canCreate = can(PERMISSIONS.HOSPITALIZATION_CREATE)
@@ -122,7 +123,7 @@ async function onConfirmDelete() {
     deleting.value = null
     toast.info('Registro eliminado', 'El registro fue removido.')
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'No se pudo eliminar'
+    const msg = getProblemDetailMessage(e, 'No se pudo eliminar')
     error.value = msg
     toast.error('Ocurrió un error', msg)
   } finally {
