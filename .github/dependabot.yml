@@ -1,0 +1,94 @@
+# BE-27 / TR-04. Los 111 `uses:` de los cuatro repositorios estan clavados por
+# SHA de 40 hex --eso ya estaba bien-- pero nadie los renovaba: una fortaleza
+# con reloj. Y ninguna dependencia npm se actualizaba salvo a mano.
+#
+# Dos decisiones que no son negociables aqui:
+#
+#   1. `target-branch: develop`. GitFlow: main solo recibe releases, asi que un
+#      PR de Dependabot contra main romperia la politica y ademas fallaria el
+#      job `branch-naming` de `gitflow-guard.yml`.
+#   2. Agrupacion. Sin `groups` esto abre un PR por dependencia y por semana:
+#      41 paquetes + 8 actions. Se agrupa lo rutinario (minor y patch) en un
+#      PR por bloque y se dejan los `major` sueltos, que son los que hay que
+#      leer uno a uno.
+#
+# `gitflow-guard.yml` admite las ramas `dependabot/**` SOLO cuando el autor del
+# pull request es `dependabot[bot]`; si se toca este fichero, revisar aquel.
+#
+# Fichero espejo del de VetSoftwareFront: mismos grupos, mismo horario y mismos
+# prefijos de commit. Si cambia uno, cambia el otro.
+version: 2
+
+updates:
+  # ---------------------------------------------------------------------------
+  # npm: lo que se despliega (dependencies) y el tooling (devDependencies).
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: npm
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: America/Bogota
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    labels:
+      - dependencies
+      - npm
+    commit-message:
+      # Gitmoji, como el resto de la historia del repositorio
+      # (`commitlint-config-gitmoji`). Con `include: scope` sale
+      # ":arrow_up: chore(deps): bump ..." y "(deps-dev)" para las de tooling.
+      prefix: ':arrow_up: chore'
+      include: scope
+    groups:
+      npm-produccion:
+        applies-to: version-updates
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      npm-desarrollo:
+        applies-to: version-updates
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      # Los `major` quedan a proposito fuera de los grupos: un PR por cada uno,
+      # que es lo unico que permite leer su CHANGELOG antes de mezclar.
+      #
+      # Un parche de seguridad no espera a la cola de version updates, pero
+      # tampoco necesita un PR por CVE.
+      npm-seguridad:
+        applies-to: security-updates
+        patterns:
+          - '*'
+
+  # ---------------------------------------------------------------------------
+  # GitHub Actions: renueva el SHA clavado y actualiza el comentario `# vX.Y.Z`
+  # de al lado, que es justo lo que nadie estaba haciendo.
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: America/Bogota
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: ':arrow_up: ci'
+      include: scope
+    groups:
+      github-actions:
+        applies-to: version-updates
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch

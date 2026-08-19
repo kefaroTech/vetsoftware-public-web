@@ -130,8 +130,11 @@ jobs:
             exit 1
           fi
 
+      # Sin condicion, a diferencia de los pasos de build: cuando la imagen ya
+      # existe (`push == false`, re-ejecucion del workflow) hay que poder leer
+      # de todas formas su SBOM y su procedencia del registro para adjuntarlos a
+      # la release. Iniciar sesion es idempotente y no publica nada.
       - name: Log in to Amazon ECR
-        if: steps.image.outputs.push == 'true'
         id: ecr
         uses: aws-actions/amazon-ecr-login@d539f0932e70871a027e9d5a9d8fc38589180a64 # v2
 
@@ -165,6 +168,56 @@ jobs:
           cache-from: type=gha,scope=public-front
           cache-to: type=gha,mode=max,scope=public-front
 
+      # BE-27 / TR-04: «SBOM producido y tirado». `provenance: mode=max` y
+      # `sbom: true` ya generaban las dos atestaciones y buildx las empujaba
+      # adjuntas a la imagen, donde solo son legibles con credenciales de ECR y
+      # nadie las miraba jamas. Aqui se bajan a fichero para que sobrevivan al
+      # runner: artefacto del workflow y, mas abajo, activo de la release.
+      #
+      # Son imagenes multiplataforma, asi que cada fichero es un objeto indexado
+      # por plataforma (`linux/amd64`, `linux/arm64`).
+      #
+      # ALCANCE, para que nadie lea de mas en este fichero: el escaner de SBOM
+      # de BuildKit inventaria la etapa FINAL de la imagen, y la etapa final de
+      # este `Dockerfile` es nginx sobre Alpine mas `/usr/share/nginx/html`. El
+      # arbol npm vive en la etapa `build`, que no se escanea, y `dist` es
+      # JavaScript empaquetado sin metadatos de paquete. Es decir: este SBOM
+      # cubre los paquetes de Alpine y nginx, NO axios, vue ni vuetify. Para
+      # esas hace falta `ARG BUILDKIT_SBOM_SCAN_STAGE=true` en la etapa `build`
+      # del Dockerfile; seguimiento en el issue del repositorio.
+      - name: Retain the SBOM and the provenance of the release image
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ steps.release.outputs.version }}"
+          image="${{ steps.ecr.outputs.registry }}/$ECR_REPOSITORY:$version"
+
+          mkdir -p release-attestations
+          sbom="release-attestations/sbom.json"
+          provenance="release-attestations/provenance.json"
+
+          docker buildx imagetools inspect "$image" --format '{{ json .SBOM }}' > "$sbom"
+          docker buildx imagetools inspect "$image" --format '{{ json .Provenance }}' > "$provenance"
+
+          # Un fichero vacio o `null` significa que la imagen se publico sin
+          # atestacion. Retener un fichero vacio seria repetir el defecto con
+          # mas pasos, asi que esto es una puerta y no un aviso.
+          for fichero in "$sbom" "$provenance"; do
+            if [[ ! -s "$fichero" ]] || ! jq -e 'select(. != null and . != {})' "$fichero" >/dev/null; then
+              echo "$fichero no contiene atestacion: revisa provenance/sbom en el build de la imagen." >&2
+              exit 1
+            fi
+            echo "$fichero -> $(wc -c < "$fichero") bytes"
+          done
+
+      - name: Upload the SBOM and the provenance as a workflow artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-attestations-${{ steps.release.outputs.version }}
+          path: release-attestations/
+          if-no-files-found: error
+          retention-days: 90
+
       - name: Create immutable version tag
         shell: bash
         run: |
@@ -192,3 +245,10 @@ jobs:
             --verify-tag \
             --generate-notes \
             --title "VetSoftware Public Front ${{ steps.release.outputs.version }}"
+
+          # El artefacto del workflow caduca a los 90 dias; la release no. Es el
+          # unico sitio donde el SBOM sigue estando el dia que haya que
+          # responder "esta version que lleva un ano en produccion, incluye el
+          # paquete del CVE de esta manana?".
+          # `--clobber` para que una re-ejecucion reemplace en vez de fallar.
+          gh release upload "$tag" release-attestations/* --clobber
