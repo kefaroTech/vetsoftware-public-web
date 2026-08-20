@@ -6,12 +6,16 @@ import TreatmentScreen from '../components/TreatmentScreen.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { useHospitalizacion } from '../composables/useHospitalizacion'
 import { useToast } from '@/composables/useToast'
+import { isConcurrencyConflict } from '@/services/http/http.client'
 import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/types/hospitalization.types'
 import type { OrderKind, OrderVM } from '../types/hospital'
 import type { ReasonLeaving } from '@/types/domain'
 import type { CreateHospitalizationMedicationPayload } from '../types/hospitalizationMedication.types'
 
 type OrderPayload = Omit<CreateHospitalizationMedicationPayload, 'hospitalizationId'>
+
+const CONFLICT_MESSAGE =
+  'El registro fue modificado por otra operación; se recargó la información. Revisa y reintenta.'
 
 const toast = useToast()
 const {
@@ -53,6 +57,64 @@ function backToBoard() {
   mode.value = 'board'
 }
 
+/**
+ * Trae de nuevo el plan completo del paciente abierto (medicaciones,
+ * procedimientos, calendarios, observaciones y notas). `patient` puede ser null
+ * si el conflicto llegó con el detalle ya cerrado: entonces no hay nada que
+ * recargar y el aviso basta.
+ */
+async function reloadDetail() {
+  const p = patient.value
+  if (p) await loadDetail(p)
+}
+
+/**
+ * Tras un conflicto al dar de alta, el paciente NO salió del tablero: la
+ * operación se rechazó entera. Recargar solo el detalle no serviría, porque el
+ * payload del alta se arma a partir de `patient` y es justo esa copia la que
+ * quedó desfasada; `loadDetail` la reutiliza tal cual y el reintento volvería a
+ * chocar. Por eso se recarga el tablero y se reabre el detalle con la fila
+ * fresca. Si ya no está en el tablero es que otro la dio de alta mientras tanto:
+ * el detalle ya no tiene sentido y se vuelve al listado.
+ */
+async function reloadAfterDischarge() {
+  const id = patient.value?.id
+  await loadBoard()
+  const fresh = id == null ? undefined : board.value.find((h) => h.id === id)
+  if (fresh) await loadDetail(fresh)
+  else backToBoard()
+}
+
+/**
+ * Manejador único de los `catch` de la pantalla (mismo precedente que
+ * `AgendaView.handleError`).
+ *
+ * Desde que el backend versiona también los UPDATE en bloque de
+ * `medication_schedules` y `procedure_schedules`, cualquier operación de esta
+ * pantalla puede volver con 409 `CONCURRENT_MODIFICATION` porque otra persona
+ * —o la otra pestaña del mismo usuario— tocó la fila mientras esta la tenía
+ * abierta. Tratarlo como error fatal dejaba al usuario con el estado viejo en
+ * pantalla: al reintentar mandaba otra vez la misma versión caducada y el 409 se
+ * repetía en bucle, sin salida salvo recargar a mano. Por eso el conflicto
+ * recarga datos frescos y avisa con `warn` y no con `error`: no se perdió nada,
+ * solo hay que revisar lo que hay ahora y reintentar.
+ *
+ * El resto de errores conservan `errorFrom`, que es el único camino que rescata
+ * el `X-Trace-Id` de la respuesta.
+ */
+async function handleError(
+  e: unknown,
+  title: string,
+  reload: () => Promise<void> = reloadDetail,
+): Promise<void> {
+  if (isConcurrencyConflict(e)) {
+    await reload()
+    toast.warn('Conflicto de concurrencia', CONFLICT_MESSAGE)
+    return
+  }
+  toast.errorFrom(title, e, 'Intenta de nuevo.')
+}
+
 async function onAdd(kind: OrderKind, payload: OrderPayload) {
   try {
     if (kind === 'med') await addMedication(payload)
@@ -62,7 +124,7 @@ async function onAdd(kind: OrderKind, payload: OrderPayload) {
       `${payload.name} se agregó al plan.`,
     )
   } catch (e) {
-    toast.errorFrom('No se pudo guardar', e, 'Intenta de nuevo.')
+    await handleError(e, 'No se pudo guardar')
   }
 }
 
@@ -72,7 +134,7 @@ async function onEdit(kind: OrderKind, id: number, payload: OrderPayload) {
     else await updateProcedure(id, payload)
     toast.success('Plan actualizado', `${payload.name} se modificó.`)
   } catch (e) {
-    toast.errorFrom('No se pudo actualizar', e, 'Intenta de nuevo.')
+    await handleError(e, 'No se pudo actualizar')
   }
 }
 
@@ -85,7 +147,7 @@ async function onSuspend(kind: OrderKind, id: number) {
       'Se conservaron las dosis aplicadas; se retiraron las pendientes.',
     )
   } catch (e) {
-    toast.errorFrom('No se pudo suspender', e, 'Intenta de nuevo.')
+    await handleError(e, 'No se pudo suspender')
   }
 }
 
@@ -94,7 +156,7 @@ async function onApply(order: OrderVM, slotId: string) {
     await applyDose(order, slotId)
     toast.success('Dosis registrada', `${order.name} marcada como aplicada.`)
   } catch (e) {
-    toast.errorFrom('No se pudo registrar', e, 'Intenta de nuevo.')
+    await handleError(e, 'No se pudo registrar')
   }
 }
 
@@ -112,7 +174,7 @@ async function onMove(
       m === 'cascade' ? 'Se recalcularon las tomas siguientes.' : 'Se movió esta toma.',
     )
   } catch (e) {
-    toast.errorFrom('No se pudo reprogramar', e, 'Intenta de nuevo.')
+    await handleError(e, 'No se pudo reprogramar')
   }
 }
 
@@ -121,7 +183,7 @@ async function onAddObservation(text: string) {
     await addObservation(text)
     toast.success('Observación guardada')
   } catch (e) {
-    toast.errorFrom('No se pudo guardar', e, 'Intenta de nuevo.')
+    await handleError(e, 'No se pudo guardar')
   }
 }
 
@@ -130,7 +192,7 @@ async function onAddNote(text: string) {
     await addProgressNote(text)
     toast.success('Nota evolutiva guardada')
   } catch (e) {
-    toast.errorFrom('No se pudo guardar', e, 'Intenta de nuevo.')
+    await handleError(e, 'No se pudo guardar')
   }
 }
 
@@ -141,7 +203,7 @@ async function onDischarge(reason: ReasonLeaving) {
     backToBoard()
     toast.success('Paciente dado de alta', `${name} salió del tablero.`)
   } catch (e) {
-    toast.errorFrom('No se pudo dar de alta', e, 'Intenta de nuevo.')
+    await handleError(e, 'No se pudo dar de alta', reloadAfterDischarge)
   }
 }
 </script>
