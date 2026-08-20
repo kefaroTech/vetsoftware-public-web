@@ -309,7 +309,7 @@ router.beforeEach(async (to, from) => {
   // hace popLoader) no dispara para ella → el push de arriba quedaría huérfano y el
   // loader global se queda pegado. Balanceamos el push de ESTA invocación antes de
   // redirigir; la navegación redirigida vuelve a pasar por beforeEach/afterEach normal.
-  const redirect = (loc: { name: string }) => {
+  const redirect = (loc: { name: string; query?: Record<string, string> }) => {
     if (pushed) popLoader()
     return loc
   }
@@ -344,7 +344,11 @@ router.beforeEach(async (to, from) => {
   }
 
   if (to.meta.requiresAuth && !isAuthenticated.value) {
-    return redirect({ name: 'login' })
+    // Conserva el destino para volver ahí tras autenticar, en vez de mandar
+    // siempre al home. `to` nunca es la propia ruta de login: `login` no lleva
+    // `requiresAuth`, así que `fullPath` siempre es la ruta protegida a la que
+    // el usuario quería llegar, nunca un `/login` anidado.
+    return redirect({ name: 'login', query: { redirect: to.fullPath } })
   }
   if (to.meta.guestOnly && isAuthenticated.value) {
     return redirect({ name: 'home' })

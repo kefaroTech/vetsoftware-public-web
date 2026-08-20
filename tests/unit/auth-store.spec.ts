@@ -27,9 +27,11 @@ vi.mock('@/features/auth/api/auth.api', () => ({
 }))
 
 const setRefreshHandler = vi.fn()
+const setSessionClearHandler = vi.fn()
 vi.mock('@/services/http/http.client', () => ({
   AUTH_STORAGE_KEY: 'vetsoft.auth',
   setRefreshHandler: (h: unknown) => setRefreshHandler(h),
+  setSessionClearHandler: (h: unknown) => setSessionClearHandler(h),
 }))
 
 const AUTH_STORAGE_KEY = 'vetsoft.auth'
@@ -84,6 +86,8 @@ beforeEach(() => {
   refresh.mockReset()
   me.mockReset()
   logoutApi.mockReset()
+  setRefreshHandler.mockReset()
+  setSessionClearHandler.mockReset()
   storage = memoryStorage()
   vi.stubGlobal('localStorage', storage)
   vi.stubGlobal('atob', (s: string) => Buffer.from(s, 'base64').toString('binary'))
@@ -177,6 +181,22 @@ describe('refresco de sesión: single-flight', () => {
     await loadStore()
 
     expect(setRefreshHandler).toHaveBeenCalledWith(expect.any(Function))
+  })
+
+  it('registra clearSession como handler de limpieza del interceptor', async () => {
+    // Simétrico al de refresh: sin este registro, un 401 sin refresh posible
+    // limpia el storage pero deja `session`/`me` del store como estaban, con
+    // `isAuthenticated` en `true` pese a un token que el backend ya rechazó.
+    storage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ token: jwt({ sub: '1' }), type: 'Bearer' }))
+    const store = await loadStore()
+    expect(store.isAuthenticated).toBe(true)
+
+    expect(setSessionClearHandler).toHaveBeenCalledWith(expect.any(Function))
+    const handler = setSessionClearHandler.mock.calls.at(-1)?.[0] as () => void
+    handler()
+
+    expect(store.isAuthenticated).toBe(false)
+    expect(storage.getItem(AUTH_STORAGE_KEY)).toBeNull()
   })
 })
 

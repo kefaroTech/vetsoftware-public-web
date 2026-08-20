@@ -16,6 +16,7 @@ import {
   isConcurrencyConflict,
   isAppointmentOverlap,
   setRefreshHandler,
+  setSessionClearHandler,
 } from '@/services/http/http.client'
 import { storageService } from '@/services/storage/storage.service'
 import { useLoaderStore } from '@/stores/loader.store'
@@ -283,6 +284,7 @@ describe('401 y renovación de sesión', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     setRefreshHandler(async () => null)
+    setSessionClearHandler(() => {})
     localStorage.clear()
     sessionStorage.clear()
   })
@@ -323,7 +325,7 @@ describe('401 y renovación de sesión', () => {
     await expect(http.get('/medicaments')).rejects.toThrow()
 
     expect(refresh).toHaveBeenCalledTimes(1)
-    expect(location.href).toBe('/login')
+    expect(location.href).toBe('/login?redirect=%2Ftienda')
     expect(loader.pending).toBe(0)
   })
 
@@ -338,7 +340,41 @@ describe('401 y renovación de sesión', () => {
 
     expect(refresh).not.toHaveBeenCalled()
     expect(storageService.getToken()).toBeNull()
-    expect(location.href).toBe('/login')
+    expect(location.href).toBe('/login?redirect=%2Ftienda')
+  })
+
+  it('conserva query string en el destino recordado, no solo el pathname', async () => {
+    vi.stubGlobal('location', { pathname: '/tienda', search: '?tab=historia', href: '' })
+    useAdapter(async (config) => {
+      throw httpError(config, 401, { code: 'TOKEN_INVALID' })
+    })
+
+    await expect(http.get('/medicaments')).rejects.toThrow()
+
+    expect(location.href).toBe('/login?redirect=%2Ftienda%3Ftab%3Dhistoria')
+  })
+
+  it('limpia el store ANTES de la limpieza de almacenamiento, incluso sin recarga', async () => {
+    // Es el defecto del issue: sin este handler los refs del store sobreviven al
+    // 401 y `isAuthenticated` se queda en `true` con un token ya rechazado. Se
+    // comprueba también estando ya en `/login`, donde no hay recarga dura que lo
+    // corrija por su cuenta.
+    vi.stubGlobal('location', { pathname: '/login', href: '' })
+    const orden: string[] = []
+    setSessionClearHandler(() => orden.push('store'))
+    const originalClearVolatile = storageService.clearVolatile.bind(storageService)
+    const clearVolatile = vi.spyOn(storageService, 'clearVolatile').mockImplementation(() => {
+      orden.push('storage')
+      originalClearVolatile()
+    })
+    useAdapter(async (config) => {
+      throw httpError(config, 401, { code: 'TOKEN_INVALID' })
+    })
+
+    await expect(http.get('/medicaments')).rejects.toThrow()
+
+    expect(orden).toEqual(['store', 'storage'])
+    clearVolatile.mockRestore()
   })
 
   it('no recarga si el 401 llega estando ya en el login', async () => {
@@ -365,7 +401,7 @@ describe('401 y renovación de sesión', () => {
     expect(storageService.takeSessionReplacedNotice()).toBe(
       'Tu cuenta se inició en otro dispositivo.',
     )
-    expect(location.href).toBe('/login')
+    expect(location.href).toBe('/login?redirect=%2Ftienda')
   })
 
   it('deja pasar el 401 de las llamadas de auth sin tocar la sesión', async () => {
@@ -382,6 +418,25 @@ describe('401 y renovación de sesión', () => {
     expect(refresh).not.toHaveBeenCalled()
     expect(storageService.getToken()).toBe('access-viejo')
     expect(location.href).toBe('')
+  })
+
+  it('integración: el 401 real deja al store de auth sin sesión, no solo al storage', async () => {
+    // Defecto del issue: `redirectToLogin()` limpiaba el storage pero nunca el
+    // store, así que `isAuthenticated` seguía en `true` con un token que el
+    // backend ya rechazó. Se usa el store real (no un doble) para probar el
+    // cableado end-to-end: `auth.store` registra `setSessionClearHandler` con su
+    // propio `clearSession`.
+    const { useAuthStore } = await import('@/features/auth/stores/auth.store')
+    const store = useAuthStore()
+    expect(store.isAuthenticated).toBe(true)
+    useAdapter(async (config) => {
+      throw httpError(config, 401, { code: 'TOKEN_INVALID' })
+    })
+
+    await expect(http.get('/medicaments')).rejects.toThrow()
+
+    expect(store.isAuthenticated).toBe(false)
+    expect(store.session).toBeNull()
   })
 })
 

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { authApi } from '../api/auth.api'
-import { useAuth } from '../composables/useAuth'
+import { sanitizeRedirect, useAuth } from '../composables/useAuth'
 import type { LoginEmployeeRequest } from '../types'
 import {
   getProblemDetailCode,
@@ -16,6 +16,7 @@ import AuthField from '@/components/public/AuthField.vue'
 import AuthInput from '@/components/public/AuthInput.vue'
 
 const router = useRouter()
+const route = useRoute()
 const { login } = useAuth()
 
 const form = reactive({ employeeCode: '', password: '' })
@@ -52,7 +53,11 @@ async function submit() {
     // El refresh token no viene en la respuesta: el backend lo deja en una cookie HttpOnly.
     const { token, type } = await authApi.loginEmployee(payload)
     await login({ token, type })
-    router.push({ name: 'home' })
+    // El guard del router deja el destino original en `?redirect=` al mandar a
+    // login; se sanea antes de usarlo (ver `sanitizeRedirect`) para no abrir un
+    // redirect hacia fuera de la SPA, y se cae al home si no hay ninguno válido.
+    const redirect = sanitizeRedirect(route.query.redirect)
+    router.push(redirect ?? { name: 'home' })
   } catch (e) {
     serverErrors.value = getProblemDetailFieldErrors(e)
     submitTraceId.value = getTraceId(e)
