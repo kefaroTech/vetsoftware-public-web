@@ -1,0 +1,107 @@
+name: CodeQL
+
+# BE-27. Hasta ahora este repositorio no tenia SAST: cero analisis estatico de
+# seguridad sobre `src/`. `npm audit` mira las dependencias; esto mira el codigo
+# que escribimos nosotros --XSS por `v-html`, inyeccion en la construccion de
+# URLs, redirecciones abiertas, secretos incrustados, `postMessage` sin validar
+# origen--, que es lo que ninguna otra puerta del pipeline cubre.
+#
+# ESTE WORKFLOW NO SE EJECUTA TODAVIA, Y NO ES UN DESCUIDO. Comprobado contra la API
+# el 2026-08-19:
+#
+#   GET /repos/kefaroTech/vetsoftware-public-web  -> "code_security": {"status": "disabled"}
+#   GET /repos/kefaroTech/vetsoftware-public-web/code-scanning/alerts
+#       403 "Code Security must be enabled for this repository to use code scanning."
+#   GET /orgs/kefaroTech -> plan "team",
+#                           advanced_security_enabled_for_new_repositories: false
+#
+# El repositorio es privado, y en repositorios privados el code scanning exige GitHub
+# Code Security, que no esta contratado. Sin el, codeql-action falla al subir el SARIF
+# con ese mismo 403. Por eso el trabajo esta condicionado a la variable de repositorio
+# CODE_SECURITY_ENABLED y hoy queda SIN EJECUTAR (visible como "skipped"), no en
+# verde: taparlo con continue-on-error lo pintaria de verde mintiendo, y dejarlo
+# corriendo lo dejaria en rojo permanente en cada pull request, que es como se enseña
+# a un equipo a ignorar los checks rojos.
+#
+# QUE HAY QUE HACER PARA ACTIVARLO (dos pasos, ningun cambio de codigo):
+#   1. Contratar y habilitar GitHub Code Security en kefaroTech/vetsoftware-public-web.
+#   2. Crear la variable de repositorio CODE_SECURITY_ENABLED = true
+#      (Settings > Secrets and variables > Actions > Variables).
+# Ese dia, este workflow entra en servicio tal cual esta.
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
+  push:
+    branches:
+      - develop
+  # Una base de codigo que no cambia no deja de tener vulnerabilidades: las
+  # consultas de CodeQL se actualizan aunque `src/` no se toque. Mismo hueco
+  # semanal que `secret-scan.yml`.
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-frontend-codeql-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (javascript-typescript)
+    # Los PR abiertos por Dependabot reciben un GITHUB_TOKEN de solo lectura,
+    # independientemente del bloque `permissions:` de abajo. `analyze` no podria
+    # subir el SARIF y el check naceria en rojo por una razon que no es el
+    # codigo. El analisis de esas ramas ya ocurre en el push a develop tras el
+    # merge.
+    #
+    # El interruptor descrito arriba. Mientras no exista la variable, el trabajo no
+    # arranca; el dia que exista, corre completo sin tocar este fichero.
+    if: github.actor != 'dependabot[bot]' && vars.CODE_SECURITY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      # Publicar las alertas en la pestana Security.
+      security-events: write
+      # CodeQL consulta la API de Actions para correlacionar el analisis con su
+      # ejecucion; en repositorio privado es obligatorio.
+      actions: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Un solo lenguaje: el repositorio es TypeScript y SFC de Vue, y el
+      # extractor de JavaScript/TypeScript lee los bloques `<script>` de los
+      # `.vue`. No hay matriz porque no hay un segundo lenguaje que analizar.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd # v4.37.7
+        with:
+          languages: javascript-typescript
+          # Interpretado, no compilado: no hay nada que construir para extraer.
+          # Y no hay `npm ci` a proposito: un build no aporta nada al analisis y
+          # ejecutaria scripts de terceros dentro de un job que tiene
+          # `security-events: write`.
+          build-mode: none
+          # Por encima del conjunto por defecto: `security-extended` anade las
+          # consultas de precision media, que en front son justo las que cazan
+          # el XSS por `v-html` y las redirecciones abiertas.
+          queries: security-extended
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd # v4.37.7
+        with:
+          category: '/language:javascript-typescript'
