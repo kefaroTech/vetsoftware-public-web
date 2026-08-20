@@ -21,7 +21,7 @@ import { ref } from 'vue'
  */
 
 /** Llave de TEST pública de Google (siempre aprueba). Exclusiva de desarrollo. */
-const DEV_TEST_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
+const DEV_TEST_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI' // gitleaks:allow llave de TEST publica de Google, publicada en su documentacion: no protege ningun recurso
 
 /** Mensaje de un build publicado sin `VITE_RECAPTCHA_SITE_KEY`: no es un problema del usuario. */
 export const RECAPTCHA_MISSING_KEY_MESSAGE =

@@ -6,7 +6,7 @@ import {
   useRecaptcha,
 } from '@/features/registration/composables/useRecaptcha'
 
-const DEV_TEST_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
+const DEV_TEST_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI' // gitleaks:allow misma llave de TEST publica de Google, duplicada aqui a proposito para fijar la constante
 
 describe('resolveSiteKey', () => {
   it('cae a la llave de test de Google solo en desarrollo', () => {
