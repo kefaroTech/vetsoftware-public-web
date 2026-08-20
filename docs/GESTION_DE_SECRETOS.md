@@ -7,3 +7,4 @@ Los valores `VITE_*` terminan en el navegador y nunca deben considerarse secreto
 - El pre-commit ejecuta Gitleaks sobre el contenido staged y bloquea el commit si Docker no está disponible o aparece un hallazgo.
 - El workflow `Secret history scan` revisa el historial en cada push y pull request.
 - Configure `Secret history scan` como required check y habilite Secret scanning/Push protection en GitHub.
+- Qué secretos y variables tiene cada environment de Actions, y cuáles faltan por configurar en `production`: [`.github/ENVIRONMENTS.md`](../.github/ENVIRONMENTS.md).

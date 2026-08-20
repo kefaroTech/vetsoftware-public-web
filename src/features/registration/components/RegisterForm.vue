@@ -162,6 +162,10 @@ const recaptchaTouched = ref(false)
 const recaptchaMissing = computed(
   () => recaptchaTouched.value && recaptcha.ready.value && !recaptcha.getToken(),
 )
+// Sin widget no hay token, y sin token el backend rechaza el registro. Antes eso no impedía
+// enviar (`captchaMissing` solo mira el caso `ready`), así que el usuario recibía un error
+// genérico del servidor en vez de saber que la verificación no está disponible.
+const recaptchaUnavailable = computed(() => recaptcha.failed.value)
 
 // --- Cascada geográfica (endpoints reales) ---
 const countries = ref<Country[]>([])
@@ -247,8 +251,11 @@ async function submit() {
   const captchaToken = recaptcha.getToken()
   const captchaMissing = recaptcha.ready.value && !captchaToken
 
-  if (hasErrors || captchaMissing) {
+  if (hasErrors || captchaMissing || recaptchaUnavailable.value) {
     if (hasErrors) globalError.value = 'Revisa los campos marcados en rojo antes de continuar.'
+    else if (recaptchaUnavailable.value)
+      globalError.value =
+        'No se puede crear la cuenta: la verificación anti-bots no está disponible.'
     cardRef.value?.scrollTo({ top: 0, behavior: 'smooth' })
     return
   }
@@ -329,9 +336,9 @@ async function submit() {
           <v-icon size="12">mdi-alert-circle-outline</v-icon>
           Completa la verificación para continuar.
         </p>
-        <div v-if="recaptcha.failed.value" class="reg-recaptcha-warn">
-          <AuthBanner tone="warning" :closable="false">
-            No se pudo cargar el reCAPTCHA. Verifica tu conexión y recarga la página.
+        <div v-if="recaptchaUnavailable" class="reg-recaptcha-warn">
+          <AuthBanner tone="error" :closable="false">
+            {{ recaptcha.failureMessage.value }}
           </AuthBanner>
         </div>
       </div>
