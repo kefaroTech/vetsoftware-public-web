@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import { useNuevaConsultaDraftStore } from '@/features/dashboard/views/consulta/nueva/stores/nuevaConsultaDraft.store'
+import { useAuthStore } from '@/features/auth/stores/auth.store'
 import type { LaboratoryTest, MedicamentPrescription, Prescription } from '@/types/domain'
 
 /**
@@ -19,6 +20,39 @@ import type { LaboratoryTest, MedicamentPrescription, Prescription } from '@/typ
  */
 
 const STORAGE_KEY = 'vetrina:nueva-consulta-draft'
+const AUTH_STORAGE_KEY = 'vetsoft.auth'
+
+/** JWT sin firmar con el payload dado, en base64url como los del backend. */
+function jwt(payload: Record<string, unknown>): string {
+  const encode = (value: object) =>
+    Buffer.from(new TextEncoder().encode(JSON.stringify(value)))
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '')
+  return `${encode({ alg: 'HS256' })}.${encode(payload)}.firma-no-verificada`
+}
+
+/** Deja en el storage la sesión de un empleado, como la dejaría un login. */
+function seedSession(subjectId: number, companyId: number | null = 1) {
+  storage.setItem(
+    AUTH_STORAGE_KEY,
+    JSON.stringify({
+      token: jwt({ sub: String(subjectId), type: 'EMPLOYEE', companyId, iat: 0, exp: 0 }),
+      type: 'EMPLOYEE',
+    }),
+  )
+}
+
+/** Deja un borrador guardado y sellado por el dueño indicado (por defecto, el de la sesión). */
+function seedDraft(draft: Record<string, unknown>, sealedBy = { companyId: 1, subjectId: 1 }) {
+  storage.setItem(STORAGE_KEY, JSON.stringify({ sealedBy, draft }))
+}
+
+/** El borrador tal y como quedó en disco, sin el sello. */
+function readPersisted(): { sealedBy?: unknown; draft?: { consultation: { anamnesis: string } } } {
+  return JSON.parse(storage.getItem(STORAGE_KEY) ?? 'null') ?? {}
+}
 
 /** localStorage en memoria: el entorno de estas pruebas es node, sin DOM. */
 function memoryStorage(): Storage {
@@ -99,6 +133,9 @@ beforeEach(() => {
   vi.stubGlobal('localStorage', storage)
   // El store lee `window.localStorage` directamente para persistir.
   vi.stubGlobal('window', { localStorage: storage })
+  // Hay sesión: el borrador solo se lee y se escribe sellado con su dueño, así que
+  // sin esto ninguna prueba de persistencia probaría lo que dice probar.
+  seedSession(1)
   setActivePinia(createPinia())
 })
 
@@ -423,8 +460,7 @@ describe('reset', () => {
     s.state.consultation.anamnesis = 'Consulta nueva'
     await flushPersist()
 
-    const guardado = JSON.parse(storage.getItem(STORAGE_KEY) ?? 'null')
-    expect(guardado?.consultation.anamnesis).toBe('Consulta nueva')
+    expect(readPersisted().draft?.consultation.anamnesis).toBe('Consulta nueva')
   })
 
   it('resetKeepingOwner conserva el propietario pero NO los marcadores', () => {
@@ -498,8 +534,7 @@ describe('persistencia y borradores viejos', () => {
     s.state.consultation.anamnesis = 'Vómito'
     await flushPersist()
 
-    const guardado = JSON.parse(storage.getItem(STORAGE_KEY) ?? 'null')
-    expect(guardado.consultation.anamnesis).toBe('Vómito')
+    expect(readPersisted().draft?.consultation.anamnesis).toBe('Vómito')
   })
 
   it('no serializa en cada pulsación: agrupa las escrituras', async () => {
@@ -518,8 +553,7 @@ describe('persistencia y borradores viejos', () => {
     await flushPersist()
     expect(escrituras).toHaveBeenCalledTimes(1)
 
-    const guardado = JSON.parse(storage.getItem(STORAGE_KEY) ?? 'null')
-    expect(guardado.consultation.anamnesis).toBe('Vómito')
+    expect(readPersisted().draft?.consultation.anamnesis).toBe('Vómito')
   })
 
   it('un borrador corrupto no impide abrir la pantalla', () => {
@@ -535,10 +569,7 @@ describe('persistencia y borradores viejos', () => {
   it('completa los campos que un borrador antiguo no traía', () => {
     // Los borradores previos a la fase 3 no tienen examen físico. Sin relleno,
     // esos campos llegan `undefined` y rompen los v-model del formulario.
-    storage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ consultation: { anamnesis: 'Viejo', typeId: '3' } }),
-    )
+    seedDraft({ consultation: { anamnesis: 'Viejo', typeId: '3' } })
     setActivePinia(createPinia())
 
     const s = store()
@@ -556,7 +587,7 @@ describe('persistencia y borradores viejos', () => {
     ['un borrador legado del paso 4 colapsa a 2', 4, 2],
     ['sin paso arranca en 1', undefined, 1],
   ])('%s', (_caso, guardado, esperado) => {
-    storage.setItem(STORAGE_KEY, JSON.stringify({ step: guardado }))
+    seedDraft({ step: guardado })
     setActivePinia(createPinia())
 
     expect(store().state.step).toBe(esperado)
@@ -565,13 +596,10 @@ describe('persistencia y borradores viejos', () => {
   it('un borrador guardado con marcadores los recupera al recargar la página', () => {
     // Es el escenario real del fallo a medias: se cae la red, el usuario recarga
     // y tiene que poder reintentar SIN duplicar lo ya creado.
-    storage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        consultationCreatedId: 77,
-        laboratoryTests: [{ date: '2026-08-08', savedId: 500 }],
-      }),
-    )
+    seedDraft({
+      consultationCreatedId: 77,
+      laboratoryTests: [{ date: '2026-08-08', savedId: 500 }],
+    })
     setActivePinia(createPinia())
 
     const s = store()
@@ -579,5 +607,128 @@ describe('persistencia y borradores viejos', () => {
     expect(s.state.consultationCreatedId).toBe(77)
     expect(s.state.laboratoryTests[0].savedId).toBe(500)
     expect(s.hasPartialSave).toBe(true)
+  })
+})
+
+/**
+ * El sello de dueño (issue #68). El escenario que cierra no es un ataque: es el
+ * PC de la recepción de una clínica, compartido por todo el turno. La veterinaria
+ * A empieza una consulta, no la guarda, cierra sesión; entra el auxiliar B y el
+ * formulario le aparece con el paciente, el propietario y el examen físico de A.
+ * Si B no se da cuenta y guarda, esos datos clínicos entran en la historia con SU
+ * autoría, y nadie tiene forma de saber que ocurrió.
+ *
+ * Borrar la clave al cerrar sesión no basta por sí solo: depende de que todos los
+ * caminos de salida se acuerden de hacerlo. El sello no depende de que nadie se
+ * acuerde de nada — si el borrador no es tuyo, no se aplica.
+ */
+describe('sello de dueño del borrador', () => {
+  it('el borrador propio se recupera igual que siempre', () => {
+    seedDraft({ consultation: { anamnesis: 'Mío' } }, { companyId: 1, subjectId: 1 })
+    setActivePinia(createPinia())
+
+    expect(store().state.consultation.anamnesis).toBe('Mío')
+  })
+
+  it('el de otro usuario de la misma empresa no se aplica, y su clave se borra', () => {
+    // El turno siguiente en el mismo mostrador.
+    seedDraft(
+      { consultation: { anamnesis: 'Datos clínicos de A' } },
+      { companyId: 1, subjectId: 2 },
+    )
+    setActivePinia(createPinia())
+
+    const s = store()
+
+    expect(s.state.consultation.anamnesis).toBe('')
+    expect(s.isEmpty).toBe(true)
+    // Se borra, no solo se ignora: dejarlo ahí aplazaría la fuga al siguiente arranque.
+    expect(storage.getItem(STORAGE_KEY)).toBeNull()
+  })
+
+  it('el de otra empresa no se aplica aunque coincida el id de usuario', () => {
+    // Dos tenants en el mismo equipo: los ids de empleado son independientes entre
+    // empresas, así que comparar solo el sujeto los daría por la misma persona.
+    seedDraft(
+      { consultation: { anamnesis: 'Paciente de otro tenant' } },
+      { companyId: 9, subjectId: 1 },
+    )
+    setActivePinia(createPinia())
+
+    expect(store().isEmpty).toBe(true)
+    expect(storage.getItem(STORAGE_KEY)).toBeNull()
+  })
+
+  it('un borrador sin sello se trata como ajeno', () => {
+    // Los que ya existen en equipos reales, escritos antes de este arreglo. No se
+    // puede saber de quién son, así que no son de nadie.
+    storage.setItem(STORAGE_KEY, JSON.stringify({ consultation: { anamnesis: 'Legado' } }))
+    setActivePinia(createPinia())
+
+    expect(store().isEmpty).toBe(true)
+    expect(storage.getItem(STORAGE_KEY)).toBeNull()
+  })
+
+  it('un sello con la forma equivocada también se trata como ajeno', () => {
+    // El sello llega de `JSON.parse`, así que su forma no la garantiza el tipo.
+    storage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ sealedBy: 'admin', draft: { consultation: { anamnesis: 'X' } } }),
+    )
+    setActivePinia(createPinia())
+
+    expect(store().isEmpty).toBe(true)
+  })
+
+  it('lo que se guarda queda sellado con la sesión que lo escribió', async () => {
+    const s = store()
+
+    s.state.consultation.anamnesis = 'Decaído desde ayer'
+    await flushPersist()
+
+    expect(readPersisted().sealedBy).toEqual({ companyId: 1, subjectId: 1 })
+  })
+
+  it('al perder la sesión sin recargar la página, el borrador en memoria se vacía', async () => {
+    // El sello cubre el disco; esto cubre la memoria. Cuando `/auth/me` falla, el
+    // store de auth limpia la sesión y el guard del router hace `push` a /login sin
+    // recargar: este store sobrevive con el paciente del turno anterior dentro, y el
+    // siguiente usuario entra en esa misma pestaña.
+    const s = store()
+    s.setOwner({ id: 5, name: 'Ana' } as never)
+    s.state.consultation.anamnesis = 'Decaído desde ayer'
+
+    useAuthStore().clearSession()
+    await nextTick()
+
+    expect(s.isEmpty).toBe(true)
+    expect(storage.getItem(STORAGE_KEY)).toBeNull()
+  })
+
+  describe('sin sesión', () => {
+    it('no aplica el borrador guardado', () => {
+      // La pantalla de login, o una pestaña a la que ya expulsó el interceptor.
+      seedDraft({ consultation: { anamnesis: 'Datos clínicos de A' } })
+      storage.removeItem(AUTH_STORAGE_KEY)
+      setActivePinia(createPinia())
+
+      expect(store().isEmpty).toBe(true)
+    })
+
+    it('no borra el borrador ajeno: puede ser del que está a punto de volver', async () => {
+      // Expulsión por token expirado a mitad de una consulta. Borrarlo aquí sería
+      // tirar el trabajo del veterinario que solo tiene que volver a entrar.
+      seedDraft({ consultation: { anamnesis: 'A medio escribir' } })
+      storage.removeItem(AUTH_STORAGE_KEY)
+      setActivePinia(createPinia())
+
+      const s = store()
+      // Y el estado vacío que hay en memoria tampoco puede pisarlo: sin sesión no
+      // hay sello, y sin sello no se escribe.
+      s.state.consultation.anamnesis = 'Escrito sin sesión'
+      await flushPersist()
+
+      expect(readPersisted().draft?.consultation.anamnesis).toBe('A medio escribir')
+    })
   })
 })

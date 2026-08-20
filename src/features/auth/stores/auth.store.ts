@@ -57,8 +57,19 @@ export const useAuthStore = defineStore('auth', () => {
 
   /** Limpia sesión y storage sin redirigir (útil para expiración proactiva vía router). */
   function clearSession() {
-    // Conserva preferencias y el aviso SESSION_REPLACED; solo elimina credenciales de auth.
-    storageService.clearSession()
+    // `clearVolatile()` y no `clearSession()`: borra las credenciales Y todo lo que
+    // cada app haya registrado como propio de la sesión (el borrador de «Nueva
+    // consulta», la sede activa). Conserva las preferencias del dispositivo —el ancho
+    // del rollo de la impresora— y el aviso SESSION_REPLACED.
+    //
+    // Cubre los tres caminos por los que se pierde la sesión, no solo el logout
+    // explícito: un `/auth/refresh` fallido y un `/auth/me` fallido acaban aquí, y el
+    // segundo termina en un `router.push` a /login SIN recarga de página. Si esos dos
+    // solo borrasen `AUTH_STORAGE_KEY`, el defecto de #68 seguiría vivo por la puerta
+    // de atrás: el siguiente usuario entraría en la misma pestaña y se encontraría el
+    // borrador del anterior. Es la misma decisión que ya toma `redirectToLogin()` en
+    // el cliente HTTP.
+    storageService.clearVolatile()
     session.value = null
     me.value = null
   }

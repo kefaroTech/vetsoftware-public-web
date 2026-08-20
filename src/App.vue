@@ -6,14 +6,23 @@ import ToastStack from '@/components/feedback/ToastStack.vue'
 import ResumeOrNewConsultaDialog from '@/features/dashboard/views/consulta/nueva/components/ResumeOrNewConsultaDialog.vue'
 import BillingPromptHost from '@/features/cuentas/components/BillingPromptHost.vue'
 import { useConsultaResumeGuard } from '@/composables/useConsultaResumeGuard'
+import { useAuthStore } from '@/features/auth/stores/auth.store'
 
 const guard = useConsultaResumeGuard()
+const auth = useAuthStore()
 </script>
 
 <template>
   <v-app>
     <RouterView />
-    <ConsultaActiveBanner />
+    <!--
+      El banner vive FUERA del RouterView, así que se pinta también sobre /login.
+      Sin este `v-if` anunciaba «Consulta en curso — {mascota} · {propietario}» con
+      los datos del turno anterior a quien todavía no había iniciado sesión. Es un
+      `v-if` y no un `v-show` a propósito: así el store del borrador ni siquiera se
+      construye mientras no hay sesión, y nada puede leer ni pisar lo guardado.
+    -->
+    <ConsultaActiveBanner v-if="auth.isAuthenticated" />
     <PageLoader />
     <ToastStack />
     <BillingPromptHost />
