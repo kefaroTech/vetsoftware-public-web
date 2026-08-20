@@ -11,6 +11,7 @@ import type {
   UpdateHospitalizationMedicationPayload,
 } from '../types/hospitalizationMedication.types'
 import { medicationScheduleApi } from '../api/medicationSchedule.api'
+import type { CascadeSkipReason } from '../types/medicationSchedule.types'
 import { hospitalizationProcedureApi } from '../api/hospitalizationProcedure.api'
 import type {
   HospitalizationProcedureResponse,
@@ -28,6 +29,15 @@ import { scheduleToDoseSlot } from './mar'
 import type { DoseSlot, MedOrderVM, OrderVM, ProcOrderVM } from '../types/hospital'
 import type { ReasonLeaving } from '@/types/domain'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+
+/**
+ * Desenlace de la cascada al reprogramar, tal y como lo cuenta el servidor.
+ *
+ * <p>`null` significa «este endpoint no lo informa», que hoy es el caso de los procedimientos.
+ * Es deliberadamente distinto de `{ applied: false }`, que significa «se pidió la cascada y el
+ * servidor no la aplicó».
+ */
+export type CascadeOutcome = { applied: boolean; skippedReason?: CascadeSkipReason } | null
 
 /** El calendario de medicación se persiste en backend (tabla medication_schedules). */
 function toMedVM(r: HospitalizationMedicationResponse, slots: DoseSlot[]): MedOrderVM {
@@ -245,21 +255,33 @@ export function useHospitalizacion() {
     replaceSchedule(order, slots.map(scheduleToDoseSlot))
   }
 
-  /** Reprograma una toma (mode one|cascade); el backend persiste y recalcula. */
+  /**
+   * Reprograma una toma (mode one|cascade); el backend persiste y recalcula.
+   *
+   * <p>Devuelve el desenlace de la cascada para que quien llame pueda decir la verdad. Solo el
+   * endpoint de medicación lo informa (#134): el de procedimientos sigue devolviendo el array
+   * pelado, y por eso su desenlace es `null` en vez de un `false` inventado. Las dos cosas se
+   * pintan distinto y confundirlas sería repetir el defecto que esto arregla.
+   */
   async function moveDose(
     order: OrderVM,
     slotId: string,
     newDate: string,
     newTime: string,
     mode: 'one' | 'cascade',
-  ) {
+  ): Promise<CascadeOutcome> {
     const id = Number(slotId)
     const newDateTime = `${newDate}T${newTime}:00`
-    const slots =
-      order.kind === 'med'
-        ? await medicationScheduleApi.reschedule(id, newDateTime, mode)
-        : await procedureScheduleApi.reschedule(id, newDateTime, mode)
+
+    if (order.kind === 'med') {
+      const result = await medicationScheduleApi.reschedule(id, newDateTime, mode)
+      replaceSchedule(order, result.schedules.map(scheduleToDoseSlot))
+      return { applied: result.cascadeApplied, skippedReason: result.cascadeSkippedReason }
+    }
+
+    const slots = await procedureScheduleApi.reschedule(id, newDateTime, mode)
     replaceSchedule(order, slots.map(scheduleToDoseSlot))
+    return null
   }
 
   return {

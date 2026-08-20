@@ -319,6 +319,68 @@ describe('HospitalizacionView — 409 de concurrencia', () => {
       )
       expect(hoisted.hosp.loadDetail).not.toHaveBeenCalled()
     })
+
+    // #134: pedir la cascada no es aplicarla. Mientras el endpoint devolvió un array pelado la
+    // pantalla no tenía con qué distinguirlo y afirmaba el recálculo siempre. El contrato trae
+    // ahora `cascadeApplied` y `cascadeSkippedReason` (esquema
+    // `RescheduleMedicationScheduleResponse`) justo para que estos tres casos se cuenten distinto.
+    it('si la cascada se pidió y el servidor la aplicó, lo afirma', async () => {
+      hoisted.hosp.moveDose.mockResolvedValueOnce({ applied: true })
+
+      const wrapper = montar()
+      await abrirTratamiento(wrapper)
+
+      const treatment = wrapper.findComponent(TreatmentStub)
+      treatment.vm.$emit('move', orden, '77', '2026-08-20', '14:00', 'cascade')
+      await flushPromises()
+
+      expect(hoisted.toast.success).toHaveBeenCalledWith(
+        'Toma reprogramada',
+        'Se recalcularon las tomas siguientes.',
+      )
+      expect(hoisted.toast.warn).not.toHaveBeenCalled()
+    })
+
+    it('si la cascada se pidió y NO se aplicó, lo dice en vez de dar el movimiento por bueno', async () => {
+      hoisted.hosp.moveDose.mockResolvedValueOnce({
+        applied: false,
+        skippedReason: 'GUIDELINE_NOT_INTERVAL',
+      })
+
+      const wrapper = montar()
+      await abrirTratamiento(wrapper)
+
+      const treatment = wrapper.findComponent(TreatmentStub)
+      treatment.vm.$emit('move', orden, '77', '2026-08-20', '14:00', 'cascade')
+      await flushPromises()
+
+      // Lo que se afirma no es el texto exacto, sino que NO se anuncia un recálculo que no ocurrió.
+      expect(hoisted.toast.success).not.toHaveBeenCalled()
+      expect(hoisted.toast.warn).toHaveBeenCalledWith(
+        'Se movió solo esta toma',
+        expect.stringContaining('pauta por intervalo'),
+      )
+    })
+
+    // El endpoint de procedimientos sigue devolviendo el array pelado y no informa del desenlace,
+    // así que su `null` se lee como «no lo sé», no como «no se aplicó»: tratarlo igual que
+    // `{ applied: false }` pondría un aviso de cascada fallida en cada arrastre de procedimiento.
+    it('un endpoint que no informa del desenlace conserva el mensaje de siempre', async () => {
+      hoisted.hosp.moveDose.mockResolvedValueOnce(null)
+
+      const wrapper = montar()
+      await abrirTratamiento(wrapper)
+
+      const treatment = wrapper.findComponent(TreatmentStub)
+      treatment.vm.$emit('move', orden, '77', '2026-08-20', '14:00', 'cascade')
+      await flushPromises()
+
+      expect(hoisted.toast.warn).not.toHaveBeenCalled()
+      expect(hoisted.toast.success).toHaveBeenCalledWith(
+        'Toma reprogramada',
+        'Se recalcularon las tomas siguientes.',
+      )
+    })
   })
 
   describe('onDischarge (alta) — recarga especial', () => {
