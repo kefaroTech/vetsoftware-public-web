@@ -194,7 +194,10 @@ import type {
   HospitalizationProcedureResponse,
 } from '../features/hospitalizacion/types/hospitalizationProcedure.types'
 import type { HospitalizationProgressNoteResponse } from '../features/hospitalizacion/types/hospitalizationProgressNote.types'
-import type { MedicationScheduleResponse } from '../features/hospitalizacion/types/medicationSchedule.types'
+import type {
+  MedicationScheduleResponse,
+  RescheduleMedicationScheduleResponse,
+} from '../features/hospitalizacion/types/medicationSchedule.types'
 import type { ProcedureScheduleResponse } from '../features/hospitalizacion/types/procedureSchedule.types'
 import type { LaboratoryTestFileResponse } from '../features/laboratorio/types/laboratoryTestFile.types'
 import type {
@@ -459,6 +462,9 @@ export type ContractAssertions = [
   Expect<MatchesContract<RegisterUserRequest, 'RegisterUserRequest'>>,
   Expect<MatchesContract<RegistrationResponse, 'RegistrationResponse'>>,
   Expect<MatchesContract<RescheduleAppointmentRequest, 'RescheduleAppointmentRequest'>>,
+  Expect<
+    MatchesContract<RescheduleMedicationScheduleResponse, 'RescheduleMedicationScheduleResponse'>
+  >,
   Expect<MatchesContract<RolePermissionResponse, 'RolePermissionResponse'>>,
   Expect<MatchesContract<RoleResponse, 'RoleResponse'>>,
   Expect<MatchesContract<ServiceResponse, 'ServiceResponse'>>,

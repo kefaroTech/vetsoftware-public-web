@@ -11,6 +11,7 @@ import type { HospitalizationResponse } from '@/features/dashboard/views/consult
 import type { OrderKind, OrderVM } from '../types/hospital'
 import type { ReasonLeaving } from '@/types/domain'
 import type { CreateHospitalizationMedicationPayload } from '../types/hospitalizationMedication.types'
+import type { CascadeSkipReason } from '../types/medicationSchedule.types'
 
 type OrderPayload = Omit<CreateHospitalizationMedicationPayload, 'hospitalizationId'>
 
@@ -160,6 +161,21 @@ async function onApply(order: OrderVM, slotId: string) {
   }
 }
 
+/**
+ * Por qué el servidor no aplicó la cascada que se le pidió.
+ *
+ * `MEDICATION_ORDER_NOT_FOUND` no se traduce a una causa clínica porque no la tiene: es un
+ * camino que solo alcanza el backend sin empresa en contexto, y decirle al veterinario algo
+ * sobre la pauta sería inventar. Se queda en el genérico.
+ */
+const CASCADE_SKIP_TEXT: Record<CascadeSkipReason, string> = {
+  GUIDELINE_NOT_INTERVAL:
+    'La orden no usa pauta por intervalo: sus horas son de reloj, así que las tomas siguientes no se desplazan.',
+  FREQUENCY_NOT_DISCRETE:
+    'La frecuencia de la orden no es discreta, así que no hay intervalo que propagar a las tomas siguientes.',
+  MEDICATION_ORDER_NOT_FOUND: 'No se pudo resolver la orden para recalcular las tomas siguientes.',
+}
+
 async function onMove(
   order: OrderVM,
   slotId: string,
@@ -168,7 +184,20 @@ async function onMove(
   m: 'one' | 'cascade',
 ) {
   try {
-    await moveDose(order, slotId, newDate, newTime, m)
+    const cascade = await moveDose(order, slotId, newDate, newTime, m)
+
+    // Pedir la cascada no es aplicarla. Mientras la respuesta fue un array esto no se podía
+    // distinguir y la pantalla afirmaba el recálculo siempre; ese es el defecto de #134.
+    if (m === 'cascade' && cascade && !cascade.applied) {
+      toast.warn(
+        'Se movió solo esta toma',
+        cascade.skippedReason
+          ? CASCADE_SKIP_TEXT[cascade.skippedReason]
+          : 'Las tomas siguientes no se recalcularon.',
+      )
+      return
+    }
+
     toast.success(
       'Toma reprogramada',
       m === 'cascade' ? 'Se recalcularon las tomas siguientes.' : 'Se movió esta toma.',
