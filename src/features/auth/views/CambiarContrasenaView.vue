@@ -42,7 +42,13 @@ async function submit() {
   submitting.value = true
   try {
     await authApi.changePassword(form.password)
-    await refreshMe()
+    // `force` OBLIGATORIO: el perfil que hay en memoria es el de antes de cambiar la
+    // contraseña, con `mustChangePassword: true`, y `refreshMe()` tiene un TTL de un
+    // minuto. Sin forzar, el guard de `router/index.ts` volvería a leer ese
+    // `mustChangePassword === true` y rebotaría a /cambiar-contrasena el `push` de
+    // aquí abajo — y también el siguiente, y el siguiente: bucle hasta que expire el
+    // TTL. Es exactamente lo que el backend acaba de cambiar, así que aquí se pide.
+    await refreshMe(true)
     router.push({ name: 'home' })
   } catch (e) {
     submitError.value = getProblemDetailMessage(e, 'No se pudo cambiar la contraseña')

@@ -340,3 +340,137 @@ describe('sesión persistida', () => {
     expect(storage.getItem(AUTH_STORAGE_KEY)).toBeNull()
   })
 })
+
+/**
+ * El guard del router llama a `refreshMe()` en cada navegación autenticada, y hay 36
+ * rutas bajo /dashboard. Sin TTL, cada clic del menú costaba un `GET /auth/me`
+ * bloqueante: `bootInFlight` deduplica las concurrentes, no las consecutivas (#56).
+ *
+ * Lo que estas pruebas fijan no es el ahorro, sino sus dos bordes peligrosos: que un
+ * perfil que NO llegó nunca se dé por fresco, y que la frescura no cruce de un usuario
+ * al siguiente en la misma pestaña.
+ */
+describe('frescura de /auth/me (TTL)', () => {
+  const TTL_MS = 60_000
+  const perfil = { id: 1, companyId: 3, permissions: [] }
+
+  function conSesion(sub = '1') {
+    storage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ token: jwt({ sub }), type: 'Bearer' }))
+  }
+
+  beforeEach(() => {
+    // Reloj falso: el TTL no puede depender del tiempo real de ejecución del test.
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-19T09:00:00Z'))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('dos navegaciones seguidas dentro del TTL producen un solo /auth/me', async () => {
+    me.mockResolvedValue(perfil)
+    conSesion()
+    const store = await loadStore()
+
+    await store.refreshMe()
+    vi.advanceTimersByTime(TTL_MS - 1)
+    await store.refreshMe()
+
+    expect(me).toHaveBeenCalledTimes(1)
+  })
+
+  it('pasado el TTL vuelve a pedir el perfil', async () => {
+    // El perfil no es inmutable: permisos y sede cambian desde la consola de
+    // plataforma, y el usuario no tiene por qué recargar la página para enterarse.
+    me.mockResolvedValue(perfil)
+    conSesion()
+    const store = await loadStore()
+
+    await store.refreshMe()
+    vi.advanceTimersByTime(TTL_MS + 1)
+    await store.refreshMe()
+
+    expect(me).toHaveBeenCalledTimes(2)
+  })
+
+  it('force ignora el TTL', async () => {
+    // Es lo que usa CambiarContrasenaView: sin esto el guard seguiría viendo
+    // `mustChangePassword: true` y rebotaría al usuario a esa misma pantalla.
+    me.mockResolvedValue(perfil)
+    conSesion()
+    const store = await loadStore()
+
+    await store.refreshMe()
+    await store.refreshMe(true)
+
+    expect(me).toHaveBeenCalledTimes(2)
+  })
+
+  it('un /auth/me caído no marca frescura: la siguiente llamada reintenta', async () => {
+    // Vía login, que es el único camino que sobrevive a un `/me` fallido sin cerrar
+    // la sesión. Si el sello se pusiera en el `finally`, este usuario navegaría hasta
+    // un minuto con `me` a null: sin permisos y sin nombre.
+    me.mockRejectedValueOnce(new Error('500'))
+    const store = await loadStore()
+
+    await store.login({ token: jwt({ sub: '1' }), type: 'Bearer' })
+    expect(store.isAuthenticated).toBe(true)
+
+    me.mockResolvedValue(perfil)
+    await store.refreshMe()
+
+    expect(me).toHaveBeenCalledTimes(2)
+    expect(store.me).toEqual(perfil)
+  })
+
+  it('clearSession resetea la frescura: el usuario siguiente no hereda el perfil', async () => {
+    // Puesto compartido: sale un turno y entra otro en la misma pestaña. Heredar el
+    // sello serviría de caché el perfil —y los permisos— del anterior.
+    me.mockResolvedValue(perfil)
+    conSesion('1')
+    const store = await loadStore()
+    await store.refreshMe()
+
+    store.clearSession()
+    // Sesión nueva sin pasar por `login()`, que traería el perfil por su cuenta: así
+    // lo único que puede evitar el segundo `/auth/me` es una frescura heredada.
+    refresh.mockResolvedValue({ token: jwt({ sub: '2' }), type: 'Bearer' })
+    await refreshHandler()()
+
+    const otroPerfil = { id: 2, companyId: 3, permissions: [] }
+    me.mockResolvedValue(otroPerfil)
+    await store.refreshMe()
+
+    expect(me).toHaveBeenCalledTimes(2)
+    expect(store.me).toEqual(otroPerfil)
+  })
+
+  it('tras recargar la página, la primera navegación sí pide el perfil', async () => {
+    // La hidratación inicial no necesita `force`: el sello arranca en 0 —«nunca
+    // cargado»— y la guarda de caché lo exige distinto de 0. Con el reloj pegado al
+    // epoch, un TTL escrito solo como resta daría el perfil por fresco y el guard
+    // leería `mustChangePassword` de un `me` que todavía es null.
+    vi.setSystemTime(new Date(TTL_MS / 2))
+    me.mockResolvedValue(perfil)
+    conSesion()
+    const store = await loadStore()
+
+    await store.refreshMe()
+
+    expect(me).toHaveBeenCalledTimes(1)
+    expect(store.me).toEqual(perfil)
+  })
+
+  it('el login sella la frescura: el guard no dispara un segundo /auth/me', async () => {
+    // El ahorro que motiva #56 empieza aquí: `login()` ya trae el perfil, y el
+    // `refreshMe()` del guard corre inmediatamente después al navegar a `home`.
+    me.mockResolvedValue(perfil)
+    const store = await loadStore()
+
+    await store.login({ token: jwt({ sub: '1' }), type: 'Bearer' })
+    await store.refreshMe()
+
+    expect(me).toHaveBeenCalledTimes(1)
+  })
+})

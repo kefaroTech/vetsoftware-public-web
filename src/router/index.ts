@@ -324,6 +324,12 @@ router.beforeEach(async (to, from) => {
   //
   // Antes esta decisión se tomaba leyendo el refresh token de localStorage. Ese
   // era exactamente el valor que un XSS podía llevarse, y duraba 30 días.
+  //
+  // El `await` se queda: la línea de abajo lee `me.value?.mustChangePassword`, así que
+  // sin esperar, en la primera navegación tras recargar la página `me` sería null, la
+  // bandera saldría `false` y un empleado con contraseña temporal entraría al
+  // dashboard. Lo que dejó de ser caro es la llamada, no la espera: `refreshMe()` tiene
+  // TTL (ver `auth.store.ts`) y en la inmensa mayoría de las navegaciones no toca red.
   if (isAuthenticated.value) {
     await refreshMe()
   }

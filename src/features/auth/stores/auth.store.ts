@@ -11,6 +11,16 @@ export const useAuthStore = defineStore('auth', () => {
   const me = ref<MeResponse | null>(null)
   const bootLoading = ref(false)
   let bootInFlight: Promise<void> | null = null
+  /**
+   * Ventana de frescura de `/auth/me`. El guard del router llama a `refreshMe()` en
+   * CADA navegación autenticada (36 rutas bajo /dashboard), y sin TTL eso era un GET
+   * bloqueante por navegación: `bootInFlight` solo deduplica las concurrentes, no las
+   * consecutivas. La política de frescura vive aquí y no en el guard para que exista
+   * en un único sitio: quien necesite el dato recién traído pide `refreshMe(true)`.
+   */
+  const ME_TTL_MS = 60_000
+  /** Epoch del último `/auth/me` que respondió OK. 0 = nunca cargado o sesión limpiada. */
+  let meFetchedAt = 0
 
   const claims = computed(() => (session.value ? decodeJwt(session.value.token) : null))
 
@@ -44,11 +54,25 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  /**
+   * `fetchMe()` sellando la frescura, y SOLO en el camino de éxito: si `/auth/me`
+   * falla, `me` queda a null y el sello no se mueve, así que la siguiente llamada
+   * reintenta en vez de servir de caché un perfil que nunca llegó.
+   */
+  async function fetchMeAndSeal(): Promise<void> {
+    await fetchMe()
+    meFetchedAt = Date.now()
+  }
+
   async function login(next: AuthSession) {
     storageService.setSession(next)
     session.value = next
     try {
-      await fetchMe()
+      // Este es el punto real donde el perfil se trae «justo después del login»: la
+      // vista de login no llama a `refreshMe()`, llama aquí. Sellar la frescura en
+      // este camino evita que el `refreshMe()` del guard —que corre acto seguido, al
+      // navegar a `home`— dispare un segundo `/auth/me` redundante.
+      await fetchMeAndSeal()
     } catch {
       // si falla /me con un token recién emitido, dejamos al user navegar — el
       // interceptor de 401 lo sacará si el token resulta inválido.
@@ -72,6 +96,11 @@ export const useAuthStore = defineStore('auth', () => {
     storageService.clearVolatile()
     session.value = null
     me.value = null
+    // Sin este reset, la frescura de la sesión que se acaba de cerrar sobreviviría:
+    // si OTRO usuario entra en la misma pestaña dentro de ME_TTL_MS, el `refreshMe()`
+    // del guard se serviría de caché y el nuevo turno vería el perfil —y los
+    // permisos— del anterior hasta un minuto.
+    meFetchedAt = 0
   }
 
   async function logout() {
@@ -124,11 +153,29 @@ export const useAuthStore = defineStore('auth', () => {
   // El interceptor de axios usa este handler para refrescar ante un 401 TOKEN_EXPIRED.
   setRefreshHandler(refreshSession)
 
-  async function refreshMe(): Promise<void> {
+  /**
+   * Hidrata `me` desde `/auth/me`, como mucho una vez cada `ME_TTL_MS`.
+   *
+   * @param force ignora el TTL. Úsalo cuando la decisión que viene a continuación
+   * depende de un cambio que ACABA de hacerse en el backend y un perfil de hasta un
+   * minuto de antigüedad la tomaría al revés — hoy, el cambio de contraseña
+   * obligatorio (ver `CambiarContrasenaView.vue`).
+   *
+   * El arranque en frío no necesita `force`: tras recargar la página no hay sello y
+   * la guarda de caché no aplica, así que la primera navegación siempre pide el
+   * perfil. Eso es justo lo que hace obligatorio el `await` del guard en
+   * `router/index.ts` — ver el comentario allí.
+   */
+  async function refreshMe(force = false): Promise<void> {
     if (!session.value) return
     if (bootInFlight) return bootInFlight
+    // `meFetchedAt !== 0` explícito y no solo la resta: 0 es «nunca cargado», no un
+    // instante del que se pueda restar. Como el sello solo se pone tras un `/auth/me`
+    // que respondió, «hay sello» equivale a «hay perfil en memoria», y eso cubre el
+    // arranque en frío: tras recargar la página no hay sello y esta guarda no aplica.
+    if (!force && meFetchedAt !== 0 && Date.now() - meFetchedAt < ME_TTL_MS) return
     bootLoading.value = true
-    bootInFlight = fetchMe()
+    bootInFlight = fetchMeAndSeal()
       .catch(() => {
         clearSession()
       })
