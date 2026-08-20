@@ -1,0 +1,9 @@
+# Huellas de hallazgos del escaneo de historial ya revisados y descartados.
+# Cada linea silencia UNA aparicion concreta: commit + archivo + regla + linea.
+# No relaja ninguna regla ni ningun patron. El mismo valor en otra linea, en otro
+# archivo o en otro commit vuelve a romper el gate, que es justo lo que se quiere.
+
+# Llave de TEST publica de reCAPTCHA de Google, la que publica Google en su documentacion y es identica para todo el mundo: aprueba siempre y no protege ningun recurso. Su valor ya vivia en el repositorio desde 88c43bd repartido en dos lineas; 4d4c08d solo cambio su formato al juntarlo con DEV_TEST_SITE_KEY en una sola, y esa forma es la que casa generic-api-key.
+4d4c08d33b9e1943e501ebc58cb2d00407005e87:src/features/registration/composables/useRecaptcha.ts:generic-api-key:24
+# La misma llave de TEST publica de Google, duplicada a proposito en la prueba para fijar la constante del composable: mismo commit, mismo valor inofensivo.
+4d4c08d33b9e1943e501ebc58cb2d00407005e87:tests/unit/recaptcha-site-key.spec.ts:generic-api-key:9
