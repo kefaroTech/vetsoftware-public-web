@@ -1,11 +1,10 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { branchApi } from '../api/branch.api'
 import type { BranchResponse, SaveBranchRequest } from '../types/branch.types'
 import { getProblemDetailMessage } from '@/services/http/http.client'
-
-/** Sede operativa seleccionada (contexto multi-sucursal). null = "Todas las sedes". */
-const SELECTED_BRANCH_KEY = 'vetsoft.branch'
+import { SELECTED_BRANCH_KEY } from '@/constants/storageKeys'
+import { useAuthStore } from '@/features/auth/stores/auth.store'
 
 function loadSelected(): number | null {
   const raw = localStorage.getItem(SELECTED_BRANCH_KEY)
@@ -87,12 +86,36 @@ export const useBranchStore = defineStore('branch', () => {
     else localStorage.setItem(SELECTED_BRANCH_KEY, String(id))
   }
 
-  /** Limpia la cache (no la selección persistida) — usar al cerrar sesión. */
+  /**
+   * Limpia TODO el contexto de sede: la cache, la selección en memoria y la clave
+   * persistida.
+   *
+   * Antes solo vaciaba la cache —pese a que su comentario decía «usar al cerrar
+   * sesión»— y encima no la llamaba nadie. Las dos mitades del defecto: la sede
+   * elegida por el turno anterior sobrevivía en `localStorage`, y también en
+   * memoria, así que el siguiente usuario empezaba a facturar y a descontar stock
+   * en una sucursal que no había elegido.
+   */
   function clear(): void {
     branches.value = []
     loaded.value = false
     error.value = null
+    setSelectedBranch(null)
   }
+
+  // La sede es contexto de SESIÓN, no del dispositivo, así que muere con ella.
+  // Hace falta el watcher además del borrado de la clave volátil porque hay un
+  // camino de salida que NO recarga la página: `refreshMe()` falla, el store de
+  // auth limpia la sesión y el guard del router hace `push` a /login dentro de la
+  // misma pestaña. Ahí `localStorage` ya está limpio pero el `ref` seguiría en
+  // memoria, y quien entre después heredaría la sucursal del anterior.
+  const auth = useAuthStore()
+  watch(
+    () => auth.isAuthenticated,
+    (authenticated) => {
+      if (!authenticated) clear()
+    },
+  )
 
   return {
     branches,

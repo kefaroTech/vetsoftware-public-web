@@ -14,6 +14,13 @@ import type {
   Surgery,
   Vaccination,
 } from '@/types/domain'
+import { NUEVA_CONSULTA_DRAFT_KEY } from '@/constants/storageKeys'
+import { useAuthStore } from '@/features/auth/stores/auth.store'
+import {
+  isSameSessionOwner,
+  readSessionOwner,
+  type SessionOwner,
+} from '@/features/auth/utils/sessionOwner'
 
 export type WizardStep = 1 | 2
 
@@ -105,7 +112,28 @@ export interface NuevaConsultaDraft {
 export type ActionKind =
   'receta' | 'lab' | 'imaging' | 'vaccination' | 'hospitalization' | 'deworming' | 'surgery'
 
-const STORAGE_KEY = 'vetrina:nueva-consulta-draft'
+const STORAGE_KEY = NUEVA_CONSULTA_DRAFT_KEY
+
+/**
+ * Lo que de verdad se escribe en `localStorage`: el borrador **sellado** con la
+ * sesión que lo escribió.
+ *
+ * El sello no es redundante con borrar la clave al cerrar sesión, es lo que
+ * cierra el agujero: el borrado depende de que todos los caminos de salida se
+ * acuerden de llamar a `clearVolatile()`, y basta con que uno falle —o con que
+ * mañana aparezca otra forma de terminar una sesión— para que el borrador
+ * clínico del turno anterior le aparezca prellenado al siguiente usuario del
+ * mismo equipo (issue #68). El sello no depende de que nadie se acuerde de nada:
+ * si el borrador no es tuyo, no se aplica.
+ *
+ * El sello se llama `sealedBy` y no `owner` porque en este borrador `owner` ya
+ * es el propietario de la mascota; dos significados de "dueño" en el mismo
+ * objeto se confunden solos.
+ */
+interface PersistedDraft {
+  sealedBy: SessionOwner
+  draft: NuevaConsultaDraft
+}
 
 function todayISO(): string {
   const d = new Date()
@@ -158,35 +186,94 @@ function defaultDraft(): NuevaConsultaDraft {
   }
 }
 
+/** Borra el borrador guardado. Un storage lleno o bloqueado no puede tirar la pantalla. */
+function discardPersisted(): void {
+  try {
+    window.localStorage.removeItem(STORAGE_KEY)
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Vuelca sobre el borrador por defecto lo que traiga uno guardado, tolerando las
+ * formas antiguas. Solo se llama con un borrador ya verificado como propio.
+ */
+function mergeSaved(parsed: Partial<NuevaConsultaDraft>): NuevaConsultaDraft {
+  const merged = { ...defaultDraft(), ...parsed }
+  // Deep-merge de la consulta: drafts LEGACY no traen los campos de examen físico /
+  // pronóstico (Fase 3); sin esto quedarían `undefined` y romperían los v-model.
+  merged.consultation = { ...emptyConsultation(), ...(parsed.consultation ?? {}) }
+  // El paciente se persiste como `Animal` completo. Drafts LEGACY se guardaron antes de
+  // que `Animal` declarara `enabled` (baja lógica): sin default el campo llega
+  // `undefined` —falsy— y un paciente activo se leería como dado de baja.
+  const legacyPet = parsed.pet as
+    (Omit<Animal, 'enabled'> & { enabled?: boolean }) | null | undefined
+  if (legacyPet) merged.pet = { ...legacyPet, enabled: legacyPet.enabled ?? true }
+  // Paso persistido del wizard actual (1 o 2), preservado tal cual. Además,
+  // drafts LEGACY de 4 pasos (3/4) colapsan al paso 2. `>= 2` cubre ambos:
+  // conserva el paso 2 ACTUAL (antes se perdía) y mapea los antiguos 3/4.
+  const rawStep = Number((parsed as { step?: number }).step ?? 1)
+  merged.step = rawStep >= 2 ? 2 : 1
+  return merged
+}
+
 function load(): NuevaConsultaDraft {
   if (typeof window === 'undefined') return defaultDraft()
+  let raw: string | null
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return defaultDraft()
-    const parsed = JSON.parse(raw) as Partial<NuevaConsultaDraft>
-    const merged = { ...defaultDraft(), ...parsed }
-    // Deep-merge de la consulta: drafts LEGACY no traen los campos de examen físico /
-    // pronóstico (Fase 3); sin esto quedarían `undefined` y romperían los v-model.
-    merged.consultation = { ...emptyConsultation(), ...(parsed.consultation ?? {}) }
-    // El paciente se persiste como `Animal` completo. Drafts LEGACY se guardaron antes de
-    // que `Animal` declarara `enabled` (baja lógica): sin default el campo llega
-    // `undefined` —falsy— y un paciente activo se leería como dado de baja.
-    const legacyPet = parsed.pet as
-      (Omit<Animal, 'enabled'> & { enabled?: boolean }) | null | undefined
-    if (legacyPet) merged.pet = { ...legacyPet, enabled: legacyPet.enabled ?? true }
-    // Paso persistido del wizard actual (1 o 2), preservado tal cual. Además,
-    // drafts LEGACY de 4 pasos (3/4) colapsan al paso 2. `>= 2` cubre ambos:
-    // conserva el paso 2 ACTUAL (antes se perdía) y mapea los antiguos 3/4.
-    const rawStep = Number((parsed as { step?: number }).step ?? 1)
-    merged.step = rawStep >= 2 ? 2 : 1
-    return merged
+    raw = window.localStorage.getItem(STORAGE_KEY)
   } catch {
+    return defaultDraft()
+  }
+  if (!raw) return defaultDraft()
+
+  // Orden de inicialización: esto corre al CREAR el store, que puede ser antes de
+  // que `/auth/me` haya contestado — de ahí que el dueño se resuelva del JWT ya
+  // persistido y no de `useAuthStore().companyId`, que espera a la red.
+  const current = readSessionOwner()
+  if (!current) {
+    // Sin sesión legible no hay a quién atribuir el borrador, así que no se aplica.
+    // Tampoco se borra: una expulsión por token expirado deja la pestaña justo
+    // aquí, y quien vuelva a entrar en este navegador puede ser su dueño. El
+    // estado vacío que devolvemos no puede pisarlo, porque `persistNow()` tampoco
+    // escribe mientras no haya sesión que sellar.
+    return defaultDraft()
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<PersistedDraft>
+    if (!parsed?.draft || !isSameSessionOwner(parsed.sealedBy, current)) {
+      // Ajeno, o sin sello —los borradores escritos antes de #68 no lo llevan, y
+      // hay equipos reales con uno guardado ahora mismo—. Se descarta y se borra
+      // la clave: dejarla ahí solo aplazaría la fuga al siguiente arranque.
+      discardPersisted()
+      return defaultDraft()
+    }
+    return mergeSaved(parsed.draft)
+  } catch {
+    discardPersisted()
     return defaultDraft()
   }
 }
 
 export const useNuevaConsultaDraftStore = defineStore('nuevaConsultaDraft', () => {
   const state = reactive<NuevaConsultaDraft>(load())
+
+  // El sello protege lo que hay en DISCO; esto protege lo que hay en MEMORIA, y hace
+  // falta porque se puede perder la sesión sin recargar la página: `refreshMe()`
+  // falla, el store de auth la limpia y el guard del router hace `push` a /login en
+  // la misma pestaña. Ahí `clearVolatile()` ya se llevó la clave, pero este store
+  // sigue vivo con el paciente y el examen físico del turno anterior — el siguiente
+  // usuario los vería, y al teclear encima los persistiría sellados con SU nombre,
+  // que es justo la mala atribución que hace invisible el defecto.
+  const auth = useAuthStore()
+  watch(
+    () => auth.isAuthenticated,
+    (authenticated) => {
+      if (!authenticated) reset()
+    },
+  )
 
   /**
    * Persistencia del borrador. Antes serializaba en CADA pulsación: un
@@ -218,8 +305,15 @@ export const useNuevaConsultaDraftStore = defineStore('nuevaConsultaDraft', () =
   function persistNow() {
     cancelPendingPersist()
     if (typeof window === 'undefined') return
+    // Sin sesión no hay sello, y sin sello no se escribe: un borrador anónimo es
+    // exactamente el que el siguiente usuario acabaría viendo. Esto además protege
+    // al dueño legítimo — si la pestaña se queda en /login tras expirar el token,
+    // el estado vacío que hay en memoria no puede sobrescribir su borrador.
+    const sealedBy = readSessionOwner()
+    if (!sealedBy) return
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+      const payload: PersistedDraft = { sealedBy, draft: state }
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
     } catch {
       // ignore quota errors
     }
@@ -323,13 +417,7 @@ export const useNuevaConsultaDraftStore = defineStore('nuevaConsultaDraft', () =
     persistSuspended = true
     Object.assign(state, defaultDraft())
     cancelPendingPersist()
-    if (typeof window !== 'undefined') {
-      try {
-        window.localStorage.removeItem(STORAGE_KEY)
-      } catch {
-        // ignore
-      }
-    }
+    if (typeof window !== 'undefined') discardPersisted()
     // Se reanuda tras el flush del watcher, no antes: la siguiente edición del
     // usuario vuelve a persistir con normalidad.
     void nextTick(() => {
