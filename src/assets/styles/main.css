@@ -51,3 +51,42 @@ select:focus {
 
   color: var(--amatista-500);
 }
+
+/* ===========================================================================
+   MOVIMIENTO REDUCIDO (#111) — guarda GLOBAL.
+
+   Hasta aquí la app del tenant no tenía ninguna: la cobertura efectiva eran
+   `PawLoader` y las tres clases de `public-auth.css`, y los 328 SFC con
+   transiciones y animaciones propias quedaban fuera. Una guarda por componente
+   no cierra eso: hay que apagarlo desde arriba, una vez.
+
+   No se copia el bloque de la consola (`VetSoftwareFront/src/assets/styles/
+   main.css:222`) porque NO es global — sólo apaga la transición y el shake de
+   tres selectores de formulario, así que no resolvía este problema.
+
+   `0.01ms` y no `none` a propósito: la animación/transición se sigue
+   disparando y `transitionend` / `animationend` siguen llegando, así que
+   ningún componente que espere ese evento para limpiar estado se queda colgado.
+   `animation-iteration-count: 1` es lo que corta los giros `infinite`.
+
+   El `!important` es el punto entero de la regla: tiene que ganarle a CUALQUIER
+   declaración de autor, incluidos los `<style scoped>` de los 328 SFC, cuya
+   especificidad (atributo de scope) es siempre mayor que la de este selector
+   universal. Sin `!important` la guarda no apaga nada.
+   =========================================================================== */
+
+/* stylelint-disable declaration-no-important -- DS-08: guardián de exclusión no
+   intercambiable (FE-08); el motivo completo está en el comentario de arriba. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+/* stylelint-enable */
