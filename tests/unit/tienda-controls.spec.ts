@@ -177,4 +177,47 @@ describe('PagerBar', () => {
       expect(boton.attributes('type')).toBe('button')
     }
   })
+
+  /**
+   * Las dos flechas son el mismo `<button>` con el mismo tamaño y un chevron
+   * dentro: sin etiqueta accesible, un lector de pantalla anuncia «botón,
+   * botón» al final de cinco tablas distintas y no hay forma de saber cuál
+   * avanza.
+   *
+   * Los asertos van POR la etiqueta y comprueban el efecto, no el texto. Un
+   * `aria-label` correcto en el botón equivocado —el error que de verdad se
+   * comete al copiar el marcado— pasaría una comprobación de texto y falla
+   * aquí, porque «Página siguiente» emitiría `prev`.
+   */
+  it('la flecha etiquetada «Página anterior» es la que retrocede', async () => {
+    const wrapper = mount(PagerBar, { props: BASE })
+
+    await wrapper.find('[aria-label="Página anterior"]').trigger('click')
+
+    expect(wrapper.emitted('prev')).toHaveLength(1)
+    expect(wrapper.emitted('next')).toBeUndefined()
+  })
+
+  it('la flecha etiquetada «Página siguiente» es la que avanza', async () => {
+    const wrapper = mount(PagerBar, { props: BASE })
+
+    await wrapper.find('[aria-label="Página siguiente"]').trigger('click')
+
+    expect(wrapper.emitted('next')).toHaveLength(1)
+    expect(wrapper.emitted('prev')).toBeUndefined()
+  })
+
+  it('la etiqueta acompaña al estado: en la primera página, «Página anterior» está apagada', () => {
+    // El apagado y la etiqueta tienen que describir al MISMO botón. Si se
+    // separaran, el lector anunciaría «Página anterior, no disponible» sobre la
+    // flecha que sí funciona.
+    const primeraPagina = mount(PagerBar, { props: { ...BASE, prevDisabled: true } })
+
+    expect(
+      primeraPagina.find('[aria-label="Página anterior"]').attributes('disabled'),
+    ).toBeDefined()
+    expect(
+      primeraPagina.find('[aria-label="Página siguiente"]').attributes('disabled'),
+    ).toBeUndefined()
+  })
 })

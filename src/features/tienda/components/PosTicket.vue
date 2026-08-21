@@ -66,11 +66,19 @@ const emit = defineEmits<{
           </div>
         </div>
         <div class="qty">
-          <button type="button" @click="emit('dec', l)">
+          <button
+            type="button"
+            :aria-label="`Quitar una unidad de ${l.name}`"
+            @click="emit('dec', l)"
+          >
             <Minus :size="13" :stroke-width="2" />
           </button>
           <span>{{ l.qty }}</span>
-          <button type="button" @click="emit('inc', l)">
+          <button
+            type="button"
+            :aria-label="`Añadir una unidad de ${l.name}`"
+            @click="emit('inc', l)"
+          >
             <Plus :size="13" :stroke-width="2" />
           </button>
         </div>
