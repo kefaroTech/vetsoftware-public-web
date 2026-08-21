@@ -71,13 +71,15 @@ import type {
   Supplier,
   SupplierInvoice,
   SupplierInvoicePayment,
+  SupplierInvoiceSupplierSummary,
   SupplierRequest,
   SupplierSummary,
 } from '../features/compras/types/compras'
 import type {
   AnimalSummary,
   CompanySummary,
-  EmployeeSummary,
+  OpenAccountBranchSummary,
+  OpenAccountEmployeeSummary,
   OpenAccountResponse,
   OwnerSummary,
   TaxSummary,
@@ -86,7 +88,6 @@ import type {
   AnimalColorSummary,
   AnimalResponse,
   CreateAnimalRequest,
-  UpdateAnimalRequest,
 } from '../features/dashboard/views/consulta/nueva/types/animal.types'
 import type { AnimalColorResponse } from '../features/animal-colors/types/animal-colors.types'
 import type { BreedResponse } from '../features/breeds/types/breeds.types'
@@ -149,6 +150,7 @@ import type {
 import type {
   CreateEmployeeRequest,
   EmployeeResponse,
+  EmployeeRoleSummary,
   UpdateEmployeeRequest,
 } from '../features/employees/types/employee.types'
 import type {
@@ -212,6 +214,7 @@ import type {
   ModuleResponse,
   PermissionResponse,
   RolePermissionResponse,
+  RolePermissionSummary,
   RoleResponse,
   SubModuleResponse,
   SyncRolePermissionsRequest,
@@ -362,7 +365,7 @@ export type ContractAssertions = [
   Expect<MatchesContract<ClinicalEvent, 'ClinicalEventResponse'>>,
   Expect<MatchesContract<CashTerminal, 'CashTerminalDto'>>,
   Expect<
-    MatchesContract<CreateMedicamentPrescriptionPayload, 'UpdateMedicamentPrescriptionRequest'>
+    MatchesContract<CreateMedicamentPrescriptionPayload, 'CreateMedicamentPrescriptionRequest'>
   >,
   Expect<MatchesContract<IssuerSnapshot, 'IssuerDto'>>,
   Expect<MatchesContract<SalesBookResponse, 'SalesBookDto'>>,
@@ -419,7 +422,7 @@ export type ContractAssertions = [
   Expect<MatchesContract<EmployeeBranchesResponse, 'EmployeeBranchesResponse'>>,
   Expect<MatchesContract<EmployeeResponse, 'EmployeeResponse'>>,
   Expect<MatchesContract<EmployeeRoleResponse, 'EmployeeRoleResponse'>>,
-  Expect<MatchesContract<EmployeeSummary, 'EmployeeSummary'>>,
+  Expect<MatchesContract<EmployeeRoleSummary, 'EmployeeRoleSummary'>>,
   Expect<MatchesContract<ExpiringLotView, 'ExpiringLotView'>>,
   Expect<MatchesContract<GoodsReceiptLineRequest, 'GoodsReceiptLineRequest'>>,
   Expect<MatchesContract<HospitalizationMedicationResponse, 'HospitalizationMedicationResponse'>>,
@@ -443,6 +446,8 @@ export type ContractAssertions = [
   Expect<MatchesContract<MedicationScheduleResponse, 'MedicationScheduleResponse'>>,
   Expect<MatchesContract<ModuleResponse, 'ModuleResponse'>>,
   Expect<MatchesContract<NumberingResolutionResponse, 'NumberingResolutionResponse'>>,
+  Expect<MatchesContract<OpenAccountBranchSummary, 'OpenAccountBranchSummary'>>,
+  Expect<MatchesContract<OpenAccountEmployeeSummary, 'OpenAccountEmployeeSummary'>>,
   Expect<MatchesContract<OpenAccountResponse, 'OpenAccountResponse'>>,
   Expect<MatchesContract<OpenCashSessionRequest, 'OpenCashSessionRequest'>>,
   Expect<MatchesContract<OwnerResponse, 'OwnerResponse'>>,
@@ -479,7 +484,9 @@ export type ContractAssertions = [
   Expect<MatchesContract<StockLotView, 'StockLotView'>>,
   Expect<MatchesContract<StockMovementView, 'StockMovementView'>>,
   Expect<MatchesContract<StockView, 'StockView'>>,
+  Expect<MatchesContract<RolePermissionSummary, 'RolePermissionSummary'>>,
   Expect<MatchesContract<SubModuleResponse, 'SubModuleResponse'>>,
+  Expect<MatchesContract<SupplierInvoiceSupplierSummary, 'SupplierInvoiceSupplierSummary'>>,
   Expect<MatchesContract<SupplierSummary, 'SupplierSummary'>>,
   Expect<MatchesContract<SurgeryResponse, 'SurgeryResponse'>>,
   Expect<MatchesContract<SurgeryTypeResponse, 'SurgeryTypeResponse'>>,
@@ -488,7 +495,6 @@ export type ContractAssertions = [
   Expect<MatchesContract<TaxResponse, 'TaxResponse'>>,
   Expect<MatchesContract<TaxSummary, 'TaxSummary'>>,
   Expect<MatchesContract<TokenResponse, 'TokenResponse'>>,
-  Expect<MatchesContract<UpdateAnimalRequest, 'UpdateAnimalRequest'>>,
   Expect<MatchesContract<UpdateAppointmentRequest, 'UpdateAppointmentRequest'>>,
   Expect<MatchesContract<UpdateEmployeeRequest, 'UpdateEmployeeRequest'>>,
   Expect<MatchesContract<UpdateOwnerRequest, 'UpdateOwnerRequest'>>,
