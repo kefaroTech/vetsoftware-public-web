@@ -732,3 +732,79 @@ describe('sello de dueño del borrador', () => {
     })
   })
 })
+
+/**
+ * VUE-09 — el borrador se sella con `pagehide`, NUNCA con `beforeunload`.
+ *
+ * Registrar `beforeunload`, aunque sea sin `preventDefault` y aunque el
+ * manejador no haga nada, **descalifica a la página entera del back/forward
+ * cache** en Chrome y Firefox. Eso no es un detalle del wizard de consulta: es
+ * cada «atrás» de toda la aplicación, que pasa de restaurar la pantalla al
+ * instante a rehacer el arranque, la sesión y las peticiones. El coste lo paga
+ * el producto completo y el beneficio era cero, porque `pagehide` se dispara en
+ * la misma descarga y además cubre el caso que `beforeunload` NO cubre: en
+ * móvil e iOS el navegador puede congelar la pestaña sin dispararlo jamás.
+ *
+ * Volver a añadirlo es una línea y no rompe nada visible. De ahí estas pruebas.
+ */
+describe('sellado al descargar la pestaña (VUE-09)', () => {
+  let escuchas: string[]
+  let manejadores: Map<string, () => void>
+
+  beforeEach(() => {
+    escuchas = []
+    manejadores = new Map()
+    // El espía se instala ANTES de instanciar el store: los `addEventListener`
+    // ocurren en el cuerpo del setup store, en la primera llamada al composable.
+    // Instalarlo después no vería ninguno.
+    const addEventListener = vi.fn((tipo: string, manejador: () => void) => {
+      escuchas.push(tipo)
+      manejadores.set(tipo, manejador)
+    })
+    vi.stubGlobal('window', { localStorage: storage, addEventListener })
+    setActivePinia(createPinia())
+  })
+
+  it('registra «pagehide»', () => {
+    store()
+
+    expect(escuchas).toContain('pagehide')
+  })
+
+  it('NO registra ningún «beforeunload»', () => {
+    store()
+
+    expect(escuchas).not.toContain('beforeunload')
+  })
+
+  it('el «pagehide» sella el borrador sin esperar al retardo de 400 ms', async () => {
+    // Lo que el arreglo no debía romper. La persistencia normal va con retardo
+    // (FE-17) para no escribir en cada tecla; el sellado de descarga tiene que
+    // saltarse ese temporizador, porque cuando la pestaña se va no hay 400 ms
+    // que esperar. Si `pagehide` llamara al camino con retardo en vez de a
+    // `persistNow`, el borrador se perdería y nada más fallaría.
+    const s = store()
+    s.state.consultation.anamnesis = 'Decaído desde ayer, no come'
+    await nextTick()
+
+    // El temporizador está armado pero no ha vencido: en disco no hay nada.
+    expect(storage.getItem(STORAGE_KEY)).toBeNull()
+
+    manejadores.get('pagehide')!()
+
+    expect(readPersisted().draft?.consultation.anamnesis).toBe('Decaído desde ayer, no come')
+  })
+
+  it('el borrador sellado en «pagehide» sigue llevando el sello de su dueño', async () => {
+    // Sin sello no se lee de vuelta, así que un `persistNow` que escribiera el
+    // borrador «pelado» equivaldría a perderlo — y peor: dejaría un borrador
+    // anónimo que el siguiente usuario del equipo podría ver.
+    const s = store()
+    s.state.consultation.anamnesis = 'A medio escribir'
+    await nextTick()
+
+    manejadores.get('pagehide')!()
+
+    expect(readPersisted().sealedBy).toEqual({ companyId: 1, subjectId: 1 })
+  })
+})

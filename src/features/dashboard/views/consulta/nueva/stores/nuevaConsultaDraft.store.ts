@@ -330,12 +330,16 @@ export const useNuevaConsultaDraftStore = defineStore('nuevaConsultaDraft', () =
       { deep: true },
     )
 
-    // `pagehide` y no solo `beforeunload`: en móvil e iOS el navegador puede
-    // congelar la pestaña sin disparar nunca el segundo. `visibilitychange`
-    // cubre el cambio de app o de pestaña, que es lo más frecuente de los tres.
+    // `pagehide` y NO `beforeunload` (VUE-09): en móvil e iOS el navegador puede
+    // congelar la pestaña sin disparar nunca el segundo, así que `pagehide` ya
+    // era el que cubría el caso ancho; `visibilitychange` cubre el cambio de app
+    // o de pestaña, que es lo más frecuente de los tres. Registrar
+    // `beforeunload` —aunque sea sin `preventDefault`— descalifica a la página
+    // entera del back/forward cache en Chrome y Firefox, y eso penaliza cada
+    // «atrás» de toda la app para no ganar nada aquí: `pagehide` se dispara en
+    // la misma descarga y antes de que la pestaña entre en bfcache.
     if (typeof window.addEventListener === 'function') {
       window.addEventListener('pagehide', persistNow)
-      window.addEventListener('beforeunload', persistNow)
     }
     if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
       document.addEventListener('visibilitychange', () => {
