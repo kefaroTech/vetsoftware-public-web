@@ -41,15 +41,20 @@ export function resolveSiteKey(configured: string | undefined, isDev: boolean): 
   return isDev ? DEV_TEST_SITE_KEY : ''
 }
 
-const CALLBACK_NAME = '__vetRecaptchaOnLoad'
+/**
+ * `as const` para que el tipo sea el literal y no `string`: así
+ * `window[CALLBACK_NAME]` resuelve contra la clave declarada en
+ * `src/types/grecaptcha.d.ts` y el compilador comprueba que los dos lados hablan
+ * del mismo identificador, en vez de indexar a ciegas un `Record<string, unknown>`.
+ */
+const CALLBACK_NAME = '__vetRecaptchaOnLoad' as const
 let scriptPromise: Promise<void> | null = null
 
 function loadScript(): Promise<void> {
-  const g = (window as unknown as { grecaptcha?: { render?: unknown } }).grecaptcha
-  if (g && typeof g.render === 'function') return Promise.resolve()
+  if (typeof window.grecaptcha?.render === 'function') return Promise.resolve()
   if (scriptPromise) return scriptPromise
   scriptPromise = new Promise<void>((resolve, reject) => {
-    ;(window as unknown as Record<string, unknown>)[CALLBACK_NAME] = () => resolve()
+    window[CALLBACK_NAME] = () => resolve()
     const script = document.createElement('script')
     script.src = `https://www.google.com/recaptcha/api.js?onload=${CALLBACK_NAME}&render=explicit`
     script.async = true
@@ -60,7 +65,6 @@ function loadScript(): Promise<void> {
   return scriptPromise
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export function useRecaptcha() {
   const ready = ref(false)
   const failed = ref(false)
@@ -86,7 +90,11 @@ export function useRecaptcha() {
 
     try {
       await loadScript()
-      const grecaptcha = (window as any).grecaptcha
+      const { grecaptcha } = window
+      // El script resolvió pero el objeto no está: el `catch` de abajo lo trata como
+      // el fallo de carga que es. Antes este caso reventaba con un TypeError suelto,
+      // porque el `any` daba por hecho que `grecaptcha` existía.
+      if (!grecaptcha) throw new Error('reCAPTCHA cargó sin exponer window.grecaptcha')
       widgetId = grecaptcha.render(el, { sitekey: siteKey })
       ready.value = true
     } catch {
@@ -97,13 +105,12 @@ export function useRecaptcha() {
 
   function getToken(): string {
     if (widgetId === null) return ''
-    return (window as any).grecaptcha?.getResponse(widgetId) ?? ''
+    return window.grecaptcha?.getResponse(widgetId) ?? ''
   }
 
   function reset(): void {
-    if (widgetId !== null) (window as any).grecaptcha?.reset(widgetId)
+    if (widgetId !== null) window.grecaptcha?.reset(widgetId)
   }
 
   return { ready, failed, failureMessage, render, getToken, reset }
 }
-/* eslint-enable @typescript-eslint/no-explicit-any */
