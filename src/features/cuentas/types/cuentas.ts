@@ -29,7 +29,7 @@ export interface AnimalSummary {
  * así que valía `undefined` siempre. Nadie lo leía; si alguien lo hubiera pintado, habría salido
  * un hueco en la tarjeta de la cuenta sin ningún error que lo delatara.
  */
-export interface EmployeeSummary {
+export interface OpenAccountEmployeeSummary {
   id: number
   name: string
 }
@@ -40,7 +40,7 @@ export interface CompanySummary {
   identifier: string
 }
 
-export interface BranchSummary {
+export interface OpenAccountBranchSummary {
   id: number
   name: string
   code: string
@@ -71,12 +71,12 @@ export interface OpenAccountResponse {
   outstandingAmount: number
   status: OpenAccountStatus
   company: CompanySummary
-  branch: BranchSummary
-  createdBy: EmployeeSummary
+  branch: OpenAccountBranchSummary
+  createdBy: OpenAccountEmployeeSummary
   createdDate: string
   enabled: boolean
   /** Trazabilidad de cierre (presentes cuando status !== OPEN). */
-  closedBy?: EmployeeSummary | null
+  closedBy?: OpenAccountEmployeeSummary | null
   closedAt?: string | null
   closeReason?: string | null
   /**
@@ -123,7 +123,7 @@ export interface ChargeAccountRef {
 export interface ChargeVoidInfo {
   /** El cargo anulado sigue enabled=true pero voided=true (queda visible tachado). */
   voided: boolean
-  voidedBy?: EmployeeSummary | null
+  voidedBy?: OpenAccountEmployeeSummary | null
   voidedAt?: string | null
   voidReason?: string | null
 }
@@ -138,7 +138,7 @@ export interface ProductChargeResponse extends ChargeVoidInfo {
   /** Unidades cobradas (>= 1). El total de la línea es `unitPrice * quantity`. */
   quantity: number
   openAccount: ChargeAccountRef
-  createdBy: EmployeeSummary
+  createdBy: OpenAccountEmployeeSummary
   createdDate: string
   enabled: boolean
 }
@@ -151,7 +151,7 @@ export interface ServiceChargeResponse extends ChargeVoidInfo {
   /** Precio unitario congelado al crear el cargo (snapshot del backend). */
   unitPrice: number
   openAccount: ChargeAccountRef
-  createdBy: EmployeeSummary
+  createdBy: OpenAccountEmployeeSummary
   createdDate: string
   enabled: boolean
 }
@@ -166,7 +166,7 @@ export interface GeneralChargeResponse extends ChargeVoidInfo {
   /** Porcentaje de impuesto congelado al crear el cargo; null si no aplica. */
   taxPercentage?: number | null
   openAccount: ChargeAccountRef
-  createdBy: EmployeeSummary
+  createdBy: OpenAccountEmployeeSummary
   createdDate: string
   enabled: boolean
 }
@@ -222,12 +222,12 @@ export interface DebtResponse {
   amount: number
   paymentMethod: PaymentMethod
   openAccount: ChargeAccountRef
-  createdBy: EmployeeSummary
+  createdBy: OpenAccountEmployeeSummary
   createdDate: string
   enabled: boolean
   /** Trazabilidad de anulación. El abono anulado sigue enabled=true pero voided=true. */
   voided: boolean
-  voidedBy?: EmployeeSummary | null
+  voidedBy?: OpenAccountEmployeeSummary | null
   voidedAt?: string | null
   voidReason?: string | null
 }

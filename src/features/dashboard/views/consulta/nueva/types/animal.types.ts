@@ -74,5 +74,3 @@ export interface CreateAnimalRequest {
   deceased: boolean
   deceasedDate: string | null
 }
-
-export type UpdateAnimalRequest = CreateAnimalRequest

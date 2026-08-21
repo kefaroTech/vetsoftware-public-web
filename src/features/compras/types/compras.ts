@@ -31,9 +31,19 @@ export interface SupplierRequest {
 export type SupplierInvoiceStatus = 'PENDING' | 'PARTIAL' | 'PAID' | 'CANCELLED'
 export type SupplierPaymentMethod = 'CASH' | 'CARD' | 'TRANSFER' | 'OTHER'
 
+/** Proveedor tal y como lo resumen las órdenes de compra y las entradas de mercancía. */
 export interface SupplierSummary {
   id: number
   name: string
+}
+
+/**
+ * El resumen de proveedor de la factura de compra es el único de los tres que trae `taxId`
+ * (`supplierinvoice.SupplierInvoiceSupplierSummary`). Se declaraba uno solo con `taxId` para
+ * los tres, así que en una orden de compra o en una entrada el campo valía `undefined` sin que
+ * nada lo delatara: el contrato colapsaba los tres records en un único esquema por nombre simple.
+ */
+export interface SupplierInvoiceSupplierSummary extends SupplierSummary {
   taxId: string | null
 }
 export interface BranchSummary {
@@ -56,7 +66,7 @@ export interface SupplierInvoicePayment {
 export interface SupplierInvoice {
   id: number
   branch: BranchSummary
-  supplier: SupplierSummary
+  supplier: SupplierInvoiceSupplierSummary
   purchaseOrderId: number | null
   goodsReceiptId: number | null
   invoiceNumber: string
