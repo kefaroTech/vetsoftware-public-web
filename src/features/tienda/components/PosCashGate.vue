@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { AlertTriangle, LockKeyhole, RefreshCw } from 'lucide-vue-next'
+import PawLoader from '@/components/feedback/PawLoader.vue'
 
 /**
  * Pantalla de bloqueo del punto de venta: el POS no deja vender sin una caja
@@ -30,7 +31,9 @@ const emit = defineEmits<{ retry: []; goToCash: []; useCashBranch: [] }>()
 <template>
   <section v-if="checking" class="cash-gate checking" aria-live="polite">
     <div class="cash-gate-card ds-stack">
-      <span class="cash-lock-icon"><RefreshCw :size="26" class="spin" /></span>
+      <span class="cash-lock-icon">
+        <PawLoader :size="26" :glow="false" :speed="900" label="Validando caja" />
+      </span>
       <span class="cash-gate-kicker">Validando caja</span>
       <h2>Estamos comprobando tu sesión</h2>
       <p>Espera un momento antes de comenzar a vender.</p>
@@ -190,13 +193,8 @@ const emit = defineEmits<{ retry: []; goToCash: []; useCashBranch: [] }>()
   box-shadow: none;
 }
 
-.spin {
-  animation: cash-spin 0.9s linear infinite;
-}
-
-@keyframes cash-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+/* El giro local (`.spin` + `@keyframes cash-spin`, 0,9 s linear infinite) se
+   retiró en EST-11: la huella latiendo es el único loader del proyecto y,
+   además, aquella animación no tenía guarda de `prefers-reduced-motion`
+   —`main.css` no declara ninguna— mientras que `PawLoader` sí la trae. */
 </style>
