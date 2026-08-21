@@ -156,7 +156,14 @@ const emit = defineEmits<{
             </button>
           </span>
           <span class="sel-total ds-num">{{ formatMoney(line.unitPrice * line.qty) }}</span>
-          <button type="button" class="sel-remove" title="Quitar" @click="emit('remove', line)">
+          <!-- `aria-label` y no `title`, con el sujeto: es la lista de cargos nuevos y
+               todas sus filas se anunciaban «Quitar». -->
+          <button
+            type="button"
+            class="sel-remove"
+            :aria-label="`Quitar ${line.name} de los cargos nuevos`"
+            @click="emit('remove', line)"
+          >
             <X :size="13" :stroke-width="1.9" />
           </button>
         </li>

@@ -57,7 +57,14 @@ const emit = defineEmits<{
         <span class="cl-total ds-item-label ds-num">{{
           formatMoney(line.unitPrice * line.qty)
         }}</span>
-        <button type="button" class="cl-remove" title="Quitar" @click="emit('remove', line)">
+        <!-- `aria-label` y no `title`: el mismo mecanismo que los dos botones del stepper
+             de arriba, y con el sujeto dentro para que las filas no se anuncien iguales. -->
+        <button
+          type="button"
+          class="cl-remove"
+          :aria-label="`Quitar ${line.name} de los cargos a registrar`"
+          @click="emit('remove', line)"
+        >
           <X :size="13" :stroke-width="1.9" />
         </button>
       </li>

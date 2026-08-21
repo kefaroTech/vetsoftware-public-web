@@ -83,7 +83,14 @@ const emit = defineEmits<{
           </button>
         </div>
         <div class="line-total ds-strong">{{ formatMoney(l.unitPrice * l.qty) }}</div>
-        <button type="button" class="line-x" aria-label="Quitar" @click="emit('remove', l)">
+        <!-- El nombre accesible lleva el sujeto: con «Quitar» a secas las N filas del
+             ticket se anuncian idénticas y el lector no distingue qué se está borrando. -->
+        <button
+          type="button"
+          class="line-x"
+          :aria-label="`Quitar ${l.name} del ticket`"
+          @click="emit('remove', l)"
+        >
           <Trash2 :size="13" :stroke-width="1.7" />
         </button>
       </div>
