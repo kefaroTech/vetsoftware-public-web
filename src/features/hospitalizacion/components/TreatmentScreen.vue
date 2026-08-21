@@ -151,12 +151,12 @@ function onSuspendConfirm() {
         <h2 class="title ds-display ds-display--xs">{{ patientName }}</h2>
       </div>
       <div class="ds-flex-row">
-        <button type="button" class="nav" @click="shiftWeek(-1)">
+        <button type="button" class="nav" aria-label="Semana anterior" @click="shiftWeek(-1)">
           <ChevronLeft :size="16" :stroke-width="1.8" />
         </button>
         <button type="button" class="today" @click="goThisWeek">Hoy</button>
         <span class="weeklabel">{{ weekLabel }}</span>
-        <button type="button" class="nav" @click="shiftWeek(1)">
+        <button type="button" class="nav" aria-label="Semana siguiente" @click="shiftWeek(1)">
           <ChevronRight :size="16" :stroke-width="1.8" />
         </button>
       </div>

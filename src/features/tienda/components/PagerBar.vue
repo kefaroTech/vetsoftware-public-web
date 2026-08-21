@@ -31,6 +31,7 @@ const emit = defineEmits<{ prev: []; next: [] }>()
         type="button"
         :class="{ 'ds-is-disabled ds-is-disabled--40': prevDisabled }"
         :disabled="prevDisabled"
+        aria-label="Página anterior"
         @click="emit('prev')"
       >
         <ChevronLeft :size="14" />
@@ -39,6 +40,7 @@ const emit = defineEmits<{ prev: []; next: [] }>()
         type="button"
         :class="{ 'ds-is-disabled ds-is-disabled--40': nextDisabled }"
         :disabled="nextDisabled"
+        aria-label="Página siguiente"
         @click="emit('next')"
       >
         <ChevronRight :size="14" />

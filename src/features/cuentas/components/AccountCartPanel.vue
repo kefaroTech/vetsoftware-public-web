@@ -32,6 +32,7 @@ const emit = defineEmits<{
           <button
             type="button"
             class="st-btn ds-tone--accent-border"
+            :aria-label="`Quitar una unidad de ${line.name}`"
             @click="emit('setQty', line, line.qty - 1)"
           >
             <Minus :size="12" :stroke-width="2.2" />
@@ -41,11 +42,13 @@ const emit = defineEmits<{
             type="text"
             inputmode="numeric"
             :value="line.qty"
+            :aria-label="`Cantidad de ${line.name}`"
             @input="emit('setQty', line, Number(($event.target as HTMLInputElement).value))"
           />
           <button
             type="button"
             class="st-btn ds-tone--accent-border"
+            :aria-label="`Añadir una unidad de ${line.name}`"
             @click="emit('setQty', line, line.qty + 1)"
           >
             <Plus :size="12" :stroke-width="2.2" />
