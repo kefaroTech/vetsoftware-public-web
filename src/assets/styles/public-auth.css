@@ -132,10 +132,14 @@
   animation: pub-drift 18s ease-in-out infinite;
 }
 
+/* Sin `!important` a propósito: estos selectores tienen la misma especificidad
+   que los de arriba y van después en el mismo fichero, así que la cascada ya
+   gana. Los `style="animation-delay: …"` inline de la landing solo pisan ese
+   longhand, nunca `animation-name`, que es el que apaga el movimiento. */
 @media (prefers-reduced-motion: reduce) {
   .pub-reveal,
   .pub-drift {
-    animation: none !important;
+    animation: none;
   }
 }
 

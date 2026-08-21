@@ -428,17 +428,26 @@ const subtitleText = computed(() =>
 </template>
 
 <style scoped>
+/* La trampa de especificidad de AGENTS.md, en su forma más tonta: `.confirm p`
+   pesa (0,2,1) con el atributo del scoped y `.confirm-note` solo (0,2,0), así
+   que la nota perdía el tono y el tamaño contra la regla de arriba y alguien lo
+   resolvió con tres `!important`. Se retiran excluyendo la nota de la regla
+   base en vez de ganarle por fuerza bruta: la descendencia se queda con lo que
+   comparten los dos párrafos y el resto viaja por clase. */
 .confirm p {
+  line-height: 1.55;
+}
+
+.confirm p:not(.confirm-note) {
   margin: 0;
   font-size: 13.5px;
-  line-height: 1.55;
   color: var(--warm-700);
 }
 
 .confirm-note {
-  margin-top: 10px !important;
-  color: var(--warm-500) !important;
-  font-size: 12.5px !important;
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: var(--warm-500);
 }
 
 /* `.ds-grid-2` ya trae las 2 columnas y el colapso a 640px; aquí solo el gap,
