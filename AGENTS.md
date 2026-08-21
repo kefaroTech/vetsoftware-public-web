@@ -128,9 +128,10 @@ superficie donde cae (WCAG 2.2 §2.4.7 _Focus Visible_, AA, exige que exista
 indicador; §1.4.11 _Non-text Contrast_, AA, exige que ese indicador alcance
 3:1) es un defecto de nivel AA, no un detalle visual — así estuvo `--ring`
 (`0 0 0 3px var(--amatista-50)`) dando 1,06:1 sobre `--warm-50`, invisible en
-los 985 usos de `.ds-btn` sin que ningún gate lo detectara, porque hoy no hay
-puerta de contraste automática (ver "Puertas de accesibilidad hoy: 0" en la
-auditoría). No confundir con §2.4.11 _Focus Not Obscured (Minimum)_ (AA, el
+los 985 usos de `.ds-btn` sumando los dos fronts (152 en la consola de
+plataforma + 833 en el front tenant) sin que ningún gate lo detectara, porque
+hoy no hay puerta de contraste automática (ver "Puertas de accesibilidad hoy:
+0" en la auditoría). No confundir con §2.4.11 _Focus Not Obscured (Minimum)_ (AA, el
 foco no debe quedar tapado por contenido superpuesto — no trata contraste) ni
 con §2.4.13 _Focus Appearance_ (AAA, aspiracional, no exigible aquí): los tres
 mencionan "foco" pero solo §2.4.7 + §1.4.11 sustentan esta regla.
@@ -144,6 +145,6 @@ mencionan "foco" pero solo §2.4.7 + §1.4.11 sustentan esta regla.
   luminancia relativa de WCAG 2.x contra las superficies reales donde se va a
   ver (`--warm-50` y blanco, no un fondo teórico). Un cálculo de memoria no
   vale — la cifra original de `--ring` fue exactamente ese error.
-- El patrón que hoy cumple es un anillo de dos capas — la primera separa el
-  color del borde del control y la segunda es la que aporta el contraste:
-  `0 0 0 2px var(--warm-50), 0 0 0 4px var(--amatista-500)`.
+- El patrón que hoy cumple: anillo de dos capas, `0 0 0 2px var(--warm-50), 0 0
+0 4px var(--amatista-500)` — la primera capa separa el color del borde del
+  control, la segunda es la que aporta el contraste.

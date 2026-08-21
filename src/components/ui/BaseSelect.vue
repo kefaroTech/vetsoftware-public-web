@@ -323,7 +323,7 @@ onBeforeUnmount(() => {
 .select.invalid.open .trigger,
 .select.invalid .trigger:focus-visible {
   border-color: oklch(55% 0.22 25deg);
-  box-shadow: 0 0 0 3px var(--danger-200);
+  box-shadow: var(--ring-danger);
 }
 
 .select.invalid .chev {

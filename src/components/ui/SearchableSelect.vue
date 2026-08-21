@@ -323,7 +323,7 @@ function cancelCreate() {
 }
 
 .ss.invalid.open .trigger {
-  box-shadow: 0 0 0 3px var(--danger-200);
+  box-shadow: var(--ring-danger);
 }
 
 .value {

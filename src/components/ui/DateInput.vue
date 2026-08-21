@@ -203,7 +203,7 @@ function onUpdate(value: string | null) {
 /* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- mismo motivo que el `:focus` neutro: `.ds-field-invalid-focus` habría que colgarla de `.mx-input`, un nodo de `vue-datepicker-next` que no pasa por nuestro marcado. El estado inválido vive en el wrapper `.date-wrap`, y una clase en el wrapper no tiñe el input de dentro. */
 .date-wrap.invalid .mx-input:focus {
   border-color: oklch(55% 0.22 25deg);
-  box-shadow: 0 0 0 3px var(--danger-200);
+  box-shadow: var(--ring-danger);
 }
 
 .date-wrap.invalid .mx-icon-calendar {
