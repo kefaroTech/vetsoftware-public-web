@@ -21,3 +21,29 @@ let seq = 0
 export function nextRowUid(): number {
   return ++seq
 }
+
+/**
+ * El mismo identificador, pero para filas que YA existen y que este componente no
+ * creó — el caso de una lista que llega por props y sobre la que solo se puede
+ * leer (`ExistingItemsSection` recibe `readonly T[]`).
+ *
+ * No se puede escribir un `uid` dentro de la fila, así que la asociación vive
+ * fuera, en un `WeakMap`: la primera vez que se pregunta por un objeto se le
+ * asigna un número y a partir de ahí siempre devuelve el mismo. Al ser débil, no
+ * retiene nada — cuando la fila desaparece del borrador, su entrada se recolecta
+ * sola.
+ *
+ * Requiere identidad de objeto estable: sirve para filas que se pasan tal cual
+ * (`:items="props.existing"`), no para las que un `computed` reconstruye en cada
+ * render, donde cada pasada crearía objetos nuevos y por tanto claves nuevas.
+ */
+const uidByRow = new WeakMap<object, number>()
+
+export function rowUidOf(row: object): number {
+  let uid = uidByRow.get(row)
+  if (uid === undefined) {
+    uid = nextRowUid()
+    uidByRow.set(row, uid)
+  }
+  return uid
+}

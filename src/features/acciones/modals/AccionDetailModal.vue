@@ -33,8 +33,8 @@ const emit = defineEmits<{ close: []; edit: [] }>()
     <template #body>
       <div class="detail-grid ds-detail-grid">
         <DetailField
-          v-for="(f, idx) in fields"
-          :key="idx"
+          v-for="f in fields"
+          :key="f.label"
           :label="f.label"
           :value="f.value"
           :span="f.span"
