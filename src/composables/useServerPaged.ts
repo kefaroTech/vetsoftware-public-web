@@ -1,6 +1,7 @@
 import { ref, computed, onUnmounted, watch, type Ref } from 'vue'
 import axios from 'axios'
 import { DEFAULT_PAGE_SIZE, type PageResponse } from '@/types/pagination'
+import { getProblemDetailMessage, getTraceId } from '@/services/http/http.client'
 
 /**
  * Carga una página del servidor. `page` es 0-based, como el backend.
@@ -38,6 +39,13 @@ export function useServerPaged<T>(
   const pageCount = ref(1)
   const loading = ref(false)
   const error = ref<string | null>(null)
+  /**
+   * Identificador de traza del último fallo (`X-Trace-Id`), para que la pantalla
+   * lo pueda mostrar junto al mensaje. Mismo criterio que `errorFrom` en
+   * `useToast`: sin esto el usuario reporta «no se pudo cargar el listado» y no
+   * hay forma de encontrar su petición en Grafana.
+   */
+  const errorTraceId = ref<string | null>(null)
 
   const isEmpty = computed(() => !loading.value && total.value === 0)
 
@@ -50,6 +58,7 @@ export function useServerPaged<T>(
     inflight = ctrl
     loading.value = true
     error.value = null
+    errorTraceId.value = null
     try {
       const result = await loader(
         Math.max(oneBasedPage - 1, 0),
@@ -67,7 +76,11 @@ export function useServerPaged<T>(
       items.value = []
       total.value = 0
       pageCount.value = 1
-      error.value = 'No se pudo cargar el listado'
+      // El mensaje sale del `ProblemDetail` del backend (un 403 dice que no
+      // tienes permiso, un 500 dice otra cosa); el literal es solo el suelo
+      // cuando no hay cuerpo — un timeout, por ejemplo.
+      error.value = getProblemDetailMessage(e, 'No se pudo cargar el listado')
+      errorTraceId.value = getTraceId(e) ?? null
     } finally {
       if (!ctrl.signal.aborted) loading.value = false
     }
@@ -91,6 +104,7 @@ export function useServerPaged<T>(
     pageCount.value = 1
     loading.value = false
     error.value = null
+    errorTraceId.value = null
   }
 
   // Buscar reinicia a la primera pagina: mantener la 5 al cambiar de termino
@@ -107,5 +121,18 @@ export function useServerPaged<T>(
     if (timer) clearTimeout(timer)
   })
 
-  return { items, page, total, pageCount, pageSize, loading, error, isEmpty, reload, goTo, reset }
+  return {
+    items,
+    page,
+    total,
+    pageCount,
+    pageSize,
+    loading,
+    error,
+    errorTraceId,
+    isEmpty,
+    reload,
+    goTo,
+    reset,
+  }
 }
