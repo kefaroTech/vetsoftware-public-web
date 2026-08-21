@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { ChevronDown, Plus, Search } from 'lucide-vue-next'
+import { useAnchoredPanel } from '@/composables/useAnchoredPanel'
 
 interface Option {
   value: string
@@ -33,39 +34,25 @@ const emit = defineEmits<{
 }>()
 
 const root = ref<HTMLElement | null>(null)
-const trigger = ref<HTMLButtonElement | null>(null)
+const trigger = ref<HTMLElement | null>(null)
 const panel = ref<HTMLElement | null>(null)
 const searchInput = ref<HTMLInputElement | null>(null)
 const newNameInput = ref<HTMLInputElement | null>(null)
-const panelStyle = ref<Record<string, string>>({})
 
 const open = ref(false)
 
-/**
- * Posiciona el panel (teletransportado a <body>) en coordenadas fijas respecto
- * al trigger: abre hacia abajo, o hacia arriba si no cabe, y acota su alto al
- * espacio disponible. Se recalcula en scroll/resize mientras está abierto.
- */
-function updatePosition() {
-  const t = trigger.value
-  if (!t) return
-  const r = t.getBoundingClientRect()
-  const spaceBelow = window.innerHeight - r.bottom
-  const spaceAbove = r.top
-  const openUp = spaceBelow < 300 && spaceAbove > spaceBelow
-  panelStyle.value = {
-    position: 'fixed',
-    left: `${Math.round(r.left)}px`,
-    width: `${Math.round(r.width)}px`,
-    maxHeight: `${Math.max(200, Math.round((openUp ? spaceAbove : spaceBelow) - 12))}px`,
-    ...(openUp
-      ? { bottom: `${Math.round(window.innerHeight - r.top + 4)}px` }
-      : { top: `${Math.round(r.bottom + 4)}px` }),
-  }
-}
-function onScrollResize() {
-  if (open.value) updatePosition()
-}
+// Posición anclada al disparador, clic fuera (el panel viaja a <body>, así que
+// no basta con `root`) y retorno del foco de A11Y-03. `close` está declarada
+// más abajo como `function`: hoisting.
+const {
+  style: panelStyle,
+  reposition,
+  focusTrigger,
+} = useAnchoredPanel(open, { root, trigger, panel }, () => {
+  close()
+  emit('blur')
+})
+
 const q = ref('')
 const creating = ref(false)
 const newName = ref('')
@@ -100,9 +87,6 @@ function toggle() {
 function openPanel() {
   if (props.disabled) return
   open.value = true
-  updatePosition()
-  window.addEventListener('scroll', onScrollResize, true)
-  window.addEventListener('resize', onScrollResize)
   nextTick(() => searchInput.value?.focus())
 }
 
@@ -113,24 +97,20 @@ function close() {
   newName.value = ''
   newHint.value = ''
   createError.value = null
-  window.removeEventListener('scroll', onScrollResize, true)
-  window.removeEventListener('resize', onScrollResize)
 }
 
 function pick(opt: Option) {
   emit('update:modelValue', opt.value)
   close()
-  // El panel se desmonta al cerrar: sin esto el foco cae a <body> y quien
-  // navega con teclado pierde el sitio. Vuelve al disparador, que es el
-  // elemento que representa el valor recién elegido.
-  nextTick(() => trigger.value?.focus())
+  // El disparador es el elemento que representa el valor recién elegido.
+  focusTrigger()
   emit('blur')
 }
 
 /** Escape: cierra y devuelve el foco al disparador (no solo cierra). */
 function closeToTrigger() {
   close()
-  nextTick(() => trigger.value?.focus())
+  focusTrigger()
   emit('blur')
 }
 
@@ -141,7 +121,7 @@ function startCreate() {
   creating.value = true
   nextTick(() => {
     newNameInput.value?.focus()
-    updatePosition()
+    reposition()
   })
 }
 
@@ -176,25 +156,9 @@ function cancelCreate() {
   createError.value = null
   nextTick(() => {
     searchInput.value?.focus()
-    updatePosition()
+    reposition()
   })
 }
-
-function onDocClick(e: MouseEvent) {
-  if (!open.value) return
-  const target = e.target as Node
-  // El panel está teletransportado a <body>: hay que excluirlo del click-outside.
-  if (root.value?.contains(target) || panel.value?.contains(target)) return
-  close()
-  emit('blur')
-}
-
-onMounted(() => document.addEventListener('mousedown', onDocClick))
-onBeforeUnmount(() => {
-  document.removeEventListener('mousedown', onDocClick)
-  window.removeEventListener('scroll', onScrollResize, true)
-  window.removeEventListener('resize', onScrollResize)
-})
 </script>
 
 <template>
