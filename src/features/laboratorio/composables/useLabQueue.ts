@@ -28,10 +28,6 @@ export function useLabQueue() {
     }
   }
 
-  function byStatus(status: LaboratoryTestStatus): LaboratoryTestResponse[] {
-    return items.value.filter((i) => i.status === status)
-  }
-
   /** Cambia el estado de una muestra y reconcilia la lista local. */
   async function transition(
     item: LaboratoryTestResponse,
@@ -49,5 +45,5 @@ export function useLabQueue() {
     return updated
   }
 
-  return { items, loading, error, load, byStatus, transition }
+  return { items, loading, error, load, transition }
 }
