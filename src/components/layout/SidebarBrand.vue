@@ -1,7 +1,12 @@
 <script setup lang="ts">
 defineProps<{
   appName: string
-  clinic: string
+  /**
+   * Opcional: hoy no hay ninguna fuente de sesión que entregue el nombre de la
+   * empresa sin gastar un permiso que la mayoría de empleados no tiene, así que
+   * la línea se omite en vez de rellenarse con un dato inventado (EST-12).
+   */
+  clinic?: string
 }>()
 </script>
 
@@ -10,7 +15,7 @@ defineProps<{
     <div class="mark">V</div>
     <div class="text ds-stack">
       <div class="name">{{ appName }}</div>
-      <div class="clinic">{{ clinic }}</div>
+      <div v-if="clinic" class="clinic">{{ clinic }}</div>
     </div>
   </div>
 </template>
