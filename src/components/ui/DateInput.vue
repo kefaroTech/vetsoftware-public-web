@@ -76,6 +76,21 @@ const inputAttr = computed(() => ({
   ...(props.invalid ? { 'aria-invalid': 'true' } : {}),
 }))
 
+/**
+ * `editable` está en `true` a propósito (A11Y-02): con `false` la librería pinta
+ * el input en `readonly` y la fecha queda inalcanzable con teclado en los ~54
+ * consumidores de este componente — WCAG 2.2 §2.1.1.
+ *
+ * NO hace falta validar aquí el formato tecleado: `PickerInput.handleChange` de
+ * `vue-datepicker-next` ya parsea el texto con el `format` declarado arriba
+ * (`DD MMM YYYY`, con el `lang` español de este fichero), y solo llama a
+ * `onChange` si `isValidValue(date) && !isDisabledValue(date)` — es decir, si
+ * parsea Y además pasa `disabled-date`, que es donde viven `min`/`max`. Un texto
+ * que no case («2026-08-20», «20/08/2026», «tururu») no emite nada: la librería
+ * descarta el borrador y el input revierte al valor formateado. Así que este
+ * `emit` sigue recibiendo únicamente `YYYY-MM-DD` válido o `null`, y el contrato
+ * del `v-model` no cambia.
+ */
 function onUpdate(value: string | null) {
   emit('update:modelValue', value ?? '')
 }
@@ -91,7 +106,7 @@ function onUpdate(value: string | null) {
       value-type="YYYY-MM-DD"
       format="DD MMM YYYY"
       :lang="lang"
-      :editable="false"
+      :editable="true"
       :clearable="false"
       :append-to-body="true"
       :disabled="disabled"
@@ -145,7 +160,10 @@ function onUpdate(value: string | null) {
   font-size: 13.5px;
   color: var(--warm-900);
   box-shadow: none;
-  cursor: pointer;
+
+  /* `text` y no `pointer`: desde A11Y-02 el input es escribible (`editable`),
+     y un cursor de mano sobre un campo que acepta tecleo miente. */
+  cursor: text;
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease,
