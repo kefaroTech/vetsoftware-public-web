@@ -1,6 +1,7 @@
 <script setup lang="ts" generic="T extends { savedId?: number }">
 import { computed } from 'vue'
 import { Pencil, X } from 'lucide-vue-next'
+import { rowUidOf } from '@/composables/rowUid'
 
 /**
  * La lista de «ya agregadas» de los siete modales de acciones clínicas.
@@ -41,6 +42,20 @@ const removeDisabled = computed(() => props.editingIndex !== null)
 function disabledClass(disabled: boolean): string | undefined {
   return disabled ? 'ds-is-disabled ds-is-disabled--40' : undefined
 }
+
+/**
+ * VUE-08: clave estable por fila, no el índice.
+ *
+ * Estas listas se editan y se borran por el medio (`@remove` manda el índice al
+ * borrador, que hace `splice`). Con el índice como clave, al quitar la fila 2 la
+ * 3 pasa a ser la «2» y hereda su nodo: se queda con el `<slot>` renderizado de
+ * la que se acaba de eliminar, así que la lista muestra un elemento que ya no
+ * está y esconde otro que sí. El `as object` es solo para el compilador: la
+ * restricción del genérico ya garantiza que cada fila es un objeto.
+ */
+function keyOf(item: T): number {
+  return rowUidOf(item as object)
+}
 </script>
 
 <template>
@@ -49,7 +64,7 @@ function disabledClass(disabled: boolean): string | undefined {
     <ul class="ds-list-reset ds-stack ds-stack--8">
       <li
         v-for="(item, idx) in props.items"
-        :key="idx"
+        :key="keyOf(item)"
         class="existing-card ds-flex-row ds-flex-row--12"
       >
         <div class="ds-flex-fill">

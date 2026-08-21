@@ -6,11 +6,27 @@ import { laboratoryTestFileApi } from '../api/laboratoryTestFile.api'
 import { labCode } from '../types/lab'
 import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { nextRowUid } from '@/composables/rowUid'
 
 const props = defineProps<{ open: boolean; test: LaboratoryTestResponse | null }>()
 const emit = defineEmits<{ close: []; uploaded: [] }>()
 
-const files = ref<File[]>([])
+/**
+ * VUE-08: cada adjunto lleva su propio identificador y no se identifica por su
+ * posición. La lista se muta por el medio (`removeAt` hace `splice`) y con el
+ * índice como clave, quitar el segundo archivo dejaba el nodo de ese archivo en
+ * pie y hacía desaparecer el tercero de la lista: el usuario creía haber borrado
+ * el que no era y subía el equivocado.
+ *
+ * El identificador no puede salir del propio `File` —dos adjuntos pueden llamarse
+ * igual y pesar lo mismo, y siguen siendo dos adjuntos—, así que se envuelve.
+ */
+interface PickedFile {
+  uid: number
+  file: File
+}
+
+const files = ref<PickedFile[]>([])
 const busy = ref(false)
 const error = ref<string | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -29,13 +45,16 @@ watch(
 function pick() {
   fileInput.value?.click()
 }
+function wrap(list: FileList): PickedFile[] {
+  return Array.from(list).map((file) => ({ uid: nextRowUid(), file }))
+}
 function onFiles(e: Event) {
   const list = (e.target as HTMLInputElement).files
-  if (list) files.value.push(...Array.from(list))
+  if (list) files.value.push(...wrap(list))
   ;(e.target as HTMLInputElement).value = ''
 }
 function onDrop(e: DragEvent) {
-  if (e.dataTransfer?.files) files.value.push(...Array.from(e.dataTransfer.files))
+  if (e.dataTransfer?.files) files.value.push(...wrap(e.dataTransfer.files))
 }
 function removeAt(i: number) {
   files.value.splice(i, 1)
@@ -51,8 +70,8 @@ async function submit() {
   busy.value = true
   error.value = null
   try {
-    for (const f of files.value) {
-      await laboratoryTestFileApi.upload(props.test.id, f)
+    for (const { file } of files.value) {
+      await laboratoryTestFileApi.upload(props.test.id, file)
     }
     emit('uploaded')
   } catch (e) {
@@ -91,11 +110,17 @@ async function submit() {
       />
 
       <ul v-if="files.length" class="files ds-list-reset ds-stack">
-        <li v-for="(f, i) in files" :key="i" class="file ds-flex-row">
+        <li v-for="(f, i) in files" :key="f.uid" class="file ds-flex-row">
           <FileText :size="15" :stroke-width="1.7" />
-          <span class="ds-flex-fill ds-truncate">{{ f.name }}</span>
-          <span class="ds-hint">{{ prettySize(f.size) }}</span>
-          <button type="button" class="rm" aria-label="Quitar" @click="removeAt(i)">
+          <span class="ds-flex-fill ds-truncate">{{ f.file.name }}</span>
+          <span class="ds-hint">{{ prettySize(f.file.size) }}</span>
+          <!-- Con el sujeto dentro: «Quitar» a secas se anunciaba igual en todos los adjuntos. -->
+          <button
+            type="button"
+            class="rm"
+            :aria-label="`Quitar el adjunto ${f.file.name}`"
+            @click="removeAt(i)"
+          >
             <X :size="13" :stroke-width="1.9" />
           </button>
         </li>
