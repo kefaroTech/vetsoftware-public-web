@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   BarChart3,
@@ -23,7 +23,7 @@ import SidebarNavItem from './SidebarNavItem.vue'
 import SidebarSubItem from './SidebarSubItem.vue'
 import SidebarUserCard from './SidebarUserCard.vue'
 import BranchSelector from '@/features/branches/components/BranchSelector.vue'
-import { mockUser } from '@/features/dashboard/data/mock'
+import { useAuth } from '@/features/auth/composables/useAuth'
 import { useNuevaConsultaDraft } from '@/features/dashboard/views/consulta/nueva/composables/useNuevaConsultaDraft'
 import { showResumeOrNewDialog } from '@/composables/useConsultaResumeGuard'
 import { useToast } from '@/composables/useToast'
@@ -91,6 +91,23 @@ function goNuevaConsulta() {
   router.push({ name: 'consulta-nueva' })
 }
 
+/**
+ * EST-12: la tarjeta de usuario del sidebar salía de `mockUser` —«Mariana Rojas,
+ * Veterinaria, Clínica Norte»— en producción, así que cada empleado veía el
+ * nombre de otra persona sobre su propio botón de cerrar sesión.
+ *
+ * Ahora sale de la sesión real. `MeResponse` trae `name` en una sola cadena, así
+ * que se parte por el primer y el último token: es lo que necesita la tarjeta para
+ * las iniciales y no inventa nada — un nombre de una sola palabra se queda con una
+ * inicial, que es la verdad.
+ */
+const { me } = useAuth()
+const nameParts = computed(() => me.value?.name.trim().split(/\s+/).filter(Boolean) ?? [])
+const firstName = computed(() => nameParts.value[0] ?? '')
+const lastName = computed(() =>
+  nameParts.value.length > 1 ? (nameParts.value[nameParts.value.length - 1] ?? '') : '',
+)
+
 const toast = useToast()
 const notificationCount = ref(0)
 
@@ -101,7 +118,12 @@ function onNotifications() {
 
 <template>
   <aside class="sidebar ds-stack">
-    <SidebarBrand app-name="Vetrina" :clinic="mockUser.clinic" />
+    <!-- Sin `clinic`: el nombre de la empresa no viaja en `/auth/me`, y el único sitio
+         de donde sale (`GET /companies/{id}`) exige el permiso `company.read`, que la
+         mayoría de empleados no tiene. Antes esto decía «Clínica Norte» para todo el
+         mundo. El hueco es honesto y la sede real ya la muestra el `BranchSelector`
+         justo debajo. -->
+    <SidebarBrand app-name="Vetrina" />
 
     <BranchSelector />
 
@@ -302,11 +324,9 @@ function onNotifications() {
       <span v-if="notificationCount > 0" class="notif-badge">{{ notificationCount }}</span>
     </button>
 
-    <SidebarUserCard
-      :first-name="mockUser.firstName"
-      :last-name="mockUser.lastName"
-      :role="mockUser.role"
-    />
+    <!-- Sin `role`: `MeResponse` entrega `permissions`, no el nombre del rol. Antes
+         decía «Veterinaria» a todo el mundo, auxiliares y administradores incluidos. -->
+    <SidebarUserCard :first-name="firstName" :last-name="lastName" />
   </aside>
 </template>
 

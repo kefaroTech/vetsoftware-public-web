@@ -6,7 +6,11 @@ import { useAuth } from '@/features/auth/composables/useAuth'
 const props = defineProps<{
   firstName: string
   lastName: string
-  role: string
+  /**
+   * Opcional: `/auth/me` entrega la lista de permisos, no el nombre del rol. Sin
+   * dato real la línea no se pinta, en vez de mostrar uno inventado (EST-12).
+   */
+  role?: string
 }>()
 
 const { logout } = useAuth()
@@ -14,7 +18,13 @@ const { logout } = useAuth()
 const initials = computed(() =>
   `${props.firstName.charAt(0)}${props.lastName.charAt(0)}`.toUpperCase(),
 )
-const fullName = computed(() => `${props.firstName} ${props.lastName}`)
+/**
+ * El nombre visible es también el nombre accesible del botón que abre el menú de
+ * cuenta. Mientras `/auth/me` no ha respondido llega vacío, y un botón sin texto
+ * es un botón sin nombre para el lector de pantalla: de ahí el rótulo genérico
+ * del control, que no finge ser el nombre de nadie.
+ */
+const fullName = computed(() => `${props.firstName} ${props.lastName}`.trim() || 'Mi cuenta')
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
@@ -73,7 +83,7 @@ onBeforeUnmount(() => {
       <div class="avatar">{{ initials }}</div>
       <div class="info ds-stack ds-flex-fill">
         <div class="name ds-truncate">{{ fullName }}</div>
-        <div class="role">{{ role }}</div>
+        <div v-if="role" class="role">{{ role }}</div>
       </div>
       <ChevronRight :size="14" :stroke-width="1.5" class="chev" />
     </button>
