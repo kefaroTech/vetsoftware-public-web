@@ -110,3 +110,100 @@ describe('anillo de foco — contraste (A11Y-01)', () => {
     expect(antes).toBeLessThan(MINIMO_WCAG)
   })
 })
+
+/**
+ * GUARDA DE A11Y-02 — el texto secundario se lee.
+ *
+ * `--text-subtle` cuelga de `--warm-500`, y de él cuelgan a su vez `.ds-hint`,
+ * `.ds-meta`, `.ds-icon-muted` y las decenas de `<span>` de apoyo que la
+ * auditoría FE-08 unificó. Es decir: NO es un token decorativo, es el color de
+ * casi todo el texto de apoyo del producto — la unidad de una dosis, la fecha de
+ * una vacuna, el nombre del archivo adjunto.
+ *
+ * A 58 % de luminosidad daba 4,17:1 sobre `--warm-50`, por debajo del 4,5:1 que
+ * WCAG 2.2 §1.4.3 Contrast (Minimum) (AA) exige para texto normal — y este texto
+ * es de 12-13 px, es decir, nunca «texto grande». Bajarlo a 55 % lo cruza.
+ *
+ * Igual que la guarda del anillo, esta NO fija el nombre ni el valor del token:
+ * fija la propiedad. Cualquier tono que cumpla pasa; volver a subirlo falla.
+ */
+
+const PRIMITIVES_CSS = resolve(import.meta.dirname, '../../src/assets/styles/primitives.css')
+const primitives = readFileSync(PRIMITIVES_CSS, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+
+const MINIMO_TEXTO_WCAG = 4.5
+
+describe('texto secundario — contraste (A11Y-02)', () => {
+  const superficie = color('--warm-50')
+  const subtle = color('--text-subtle')
+
+  it(`--text-subtle contrasta ≥ ${MINIMO_TEXTO_WCAG}:1 contra --warm-50`, () => {
+    const ratio = contrastRatio(subtle, superficie)
+    expect(
+      Number(ratio.toFixed(3)),
+      `--text-subtle da ${ratio.toFixed(3)}:1 sobre --warm-50. WCAG 2.2 §1.4.3 (AA) exige ` +
+        `${MINIMO_TEXTO_WCAG}:1 para texto normal, y todo lo que cuelga de este token ` +
+        `(.ds-hint, .ds-meta, .ds-meta--caption) se pinta a 11-13 px: nunca es «texto grande». ` +
+        `Oscurece --warm-500.`,
+    ).toBeGreaterThanOrEqual(MINIMO_TEXTO_WCAG)
+  })
+
+  it(`--text-subtle contrasta ≥ ${MINIMO_TEXTO_WCAG}:1 contra blanco`, () => {
+    const ratio = contrastRatio(subtle, WHITE)
+    expect(
+      Number(ratio.toFixed(3)),
+      `--text-subtle da ${ratio.toFixed(3)}:1 sobre blanco (#fff). Los modales y las tarjetas ` +
+        `no pintan --warm-50, pintan blanco, y ahí vive la mitad de este texto.`,
+    ).toBeGreaterThanOrEqual(MINIMO_TEXTO_WCAG)
+  })
+
+  it('--text-subtle sigue derivando de --warm-500, que es lo que le da el alcance', () => {
+    // Si alguien lo desengancha y le pone un color propio, las dos aserciones de
+    // arriba seguirían pasando pero `.ds-hint`/`.ds-meta` —que leen `--warm-500`
+    // directamente— se quedarían sin guarda. Esto lo detecta.
+    expect(props.get('--text-subtle')).toBe('var(--warm-500)')
+    expect(contrastRatio(color('--warm-500'), superficie)).toBeGreaterThanOrEqual(MINIMO_TEXTO_WCAG)
+  })
+
+  it('la guarda mide de verdad: el 58 % anterior a la auditoría no la pasaría', () => {
+    // Mismo croma y mismo tono, solo la luminosidad de antes. Sin esto, un error en
+    // la conversión OKLCH → sRGB dejaría la prueba verde para cualquier entrada.
+    const antes = oklchToSrgb({ l: 0.58, c: 0.012, h: 60 })
+    const ratio = contrastRatio(antes, superficie)
+    expect(Number(ratio.toFixed(2))).toBe(4.17)
+    expect(ratio).toBeLessThan(MINIMO_TEXTO_WCAG)
+  })
+})
+
+/**
+ * `.ds-field-invalid-focus` es el foco sobre un campo en error — cinco copias
+ * (BaseInput, BaseSelect, BaseTextarea, OwnerSearchAutocomplete, DateInput).
+ * Tenía su propio `box-shadow: 0 0 0 3px var(--danger-200)` escrito a mano:
+ * 1,29:1, el mismo defecto que A11Y-01 corrigió en `--ring-danger`, pero por la
+ * puerta de al lado y sin guarda. Ahora hereda el token, y esto lo sujeta: si
+ * alguien vuelve a escribir el anillo a mano aquí, la prueba lo dice.
+ */
+describe('.ds-field-invalid-focus — hereda el anillo de peligro (A11Y-02)', () => {
+  const regla = /\.ds-field-invalid-focus\s*\{([^}]*)\}/.exec(primitives)?.[1] ?? ''
+
+  it('existe y define su foco con box-shadow', () => {
+    expect(regla, 'primitives.css ya no declara .ds-field-invalid-focus').not.toBe('')
+    expect(regla).toMatch(/box-shadow\s*:/)
+  })
+
+  it('su box-shadow es el token --ring-danger y no un valor escrito a mano', () => {
+    const boxShadow = /box-shadow\s*:\s*([^;]+);/.exec(regla)?.[1]?.trim()
+    expect(
+      boxShadow,
+      `.ds-field-invalid-focus declara «${boxShadow}». Debe consumir var(--ring-danger): un ` +
+        `anillo escrito a mano aquí queda fuera de la guarda de A11Y-01 y puede volver a ` +
+        `caer por debajo de 3:1 sin que nada lo note.`,
+    ).toBe('var(--ring-danger)')
+  })
+
+  it(`el anillo que hereda mantiene ≥ ${MINIMO_WCAG}:1 sobre --warm-50 y sobre blanco`, () => {
+    const anillo = colorDelAnillo('--ring-danger')
+    expect(contrastRatio(anillo.srgb, color('--warm-50'))).toBeGreaterThanOrEqual(MINIMO_WCAG)
+    expect(contrastRatio(anillo.srgb, WHITE)).toBeGreaterThanOrEqual(MINIMO_WCAG)
+  })
+})
