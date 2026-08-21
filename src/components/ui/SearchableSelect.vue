@@ -120,6 +120,17 @@ function close() {
 function pick(opt: Option) {
   emit('update:modelValue', opt.value)
   close()
+  // El panel se desmonta al cerrar: sin esto el foco cae a <body> y quien
+  // navega con teclado pierde el sitio. Vuelve al disparador, que es el
+  // elemento que representa el valor recién elegido.
+  nextTick(() => trigger.value?.focus())
+  emit('blur')
+}
+
+/** Escape: cierra y devuelve el foco al disparador (no solo cierra). */
+function closeToTrigger() {
+  close()
+  nextTick(() => trigger.value?.focus())
   emit('blur')
 }
 
@@ -215,7 +226,7 @@ onBeforeUnmount(() => {
               type="text"
               class="search-input"
               placeholder="Buscar…"
-              @keydown.escape.prevent="close"
+              @keydown.escape.prevent="closeToTrigger"
             />
           </div>
           <div class="list">
@@ -226,7 +237,7 @@ onBeforeUnmount(() => {
               type="button"
               class="item ds-stack"
               :class="{ selected: o.value === modelValue }"
-              @mousedown.prevent="pick(o)"
+              @click="pick(o)"
             >
               <span class="ds-item-label">{{ o.label }}</span>
               <span v-if="o.hint" class="ds-hint">{{ o.hint }}</span>
