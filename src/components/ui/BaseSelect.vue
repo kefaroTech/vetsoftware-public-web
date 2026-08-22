@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
+import { computed, inject, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
+import { FieldKey } from './fieldContext'
 import { Check, ChevronDown } from 'lucide-vue-next'
 
 interface Option {
@@ -15,6 +16,7 @@ const props = withDefaults(
     id?: string
     disabled?: boolean
     invalid?: boolean
+    readonly?: boolean
   }>(),
   { placeholder: 'Selecciona una opción' },
 )
@@ -24,8 +26,19 @@ const emit = defineEmits<{
   blur: []
 }>()
 
+const field = inject(FieldKey, null)
+
 const uid = useId()
-const controlId = computed(() => props.id ?? uid)
+
+/**
+ * A11Y-04 · FORM-01 · FORM-04 — el id, la descripción y la obligatoriedad se
+ * toman del `BaseField` que envuelve al campo cuando el consumidor no los pasa.
+ * La prop explícita va primero: fuera de un `BaseField` el componente sigue
+ * comportándose igual que antes.
+ */
+const controlId = computed(() => props.id ?? field?.controlId ?? uid)
+const describedBy = computed(() => field?.describedBy.value)
+const isRequired = computed(() => field?.required.value ?? false)
 
 const root = ref<HTMLElement | null>(null)
 const trigger = ref<HTMLButtonElement | null>(null)
@@ -50,6 +63,11 @@ const selectedIndex = computed(() => props.options.findIndex((o) => o.value === 
 const toneClass = computed(() => {
   if (props.invalid) return ['tone-text', 'ds-field-invalid']
   if (props.disabled) return ['tone-border', 'ds-field-disabled']
+  // Solo lectura NO es deshabilitado: el disparador conserva el foco —es la
+  // única forma de que un lector lea el valor— y el v-model sigue viajando. Lo
+  // único que se apaga es abrir el panel. Sin `tone-*`: los tres los trae
+  // `.ds-field-readonly`.
+  if (props.readonly) return ['ds-field-readonly']
   return ['tone-border', 'tone-bg', 'tone-text']
 })
 
@@ -76,7 +94,7 @@ function onScrollResize() {
 }
 
 function openPanel() {
-  if (props.disabled || open.value) return
+  if (props.disabled || props.readonly || open.value) return
   open.value = true
   highlighted.value = selectedIndex.value >= 0 ? selectedIndex.value : 0
   updatePosition()
@@ -131,7 +149,10 @@ function onType(char: string) {
 }
 
 function onKeydown(e: KeyboardEvent) {
-  if (props.disabled) return
+  // `<select>` no tiene `readonly` nativo: aquí se reproduce cerrando las dos
+  // vías que cambian el valor —abrir el panel y las teclas— sin tocar el
+  // `tabindex`, para que el control siga siendo enfocable y anunciable.
+  if (props.disabled || props.readonly) return
   switch (e.key) {
     case 'ArrowDown':
       e.preventDefault()
@@ -211,7 +232,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="root" class="select" :class="{ disabled, invalid, open }">
+  <div ref="root" class="select" :class="{ disabled, invalid, open, readonly }">
     <button
       :id="controlId"
       ref="trigger"
@@ -222,6 +243,9 @@ onBeforeUnmount(() => {
       aria-haspopup="listbox"
       :aria-expanded="open"
       :aria-invalid="invalid || undefined"
+      :aria-readonly="readonly || undefined"
+      :aria-required="isRequired || undefined"
+      :aria-describedby="describedBy"
       :aria-activedescendant="
         open && highlighted >= 0 ? `${controlId}-opt-${highlighted}` : undefined
       "
@@ -287,7 +311,7 @@ onBeforeUnmount(() => {
 
 /* El cursor por defecto excluye el deshabilitado en vez de competir con el
    `cursor: not-allowed` que trae `.ds-field-disabled`. */
-.trigger:not(:disabled) {
+.trigger:not(:disabled, .ds-field-readonly) {
   cursor: pointer;
 }
 
@@ -296,8 +320,13 @@ onBeforeUnmount(() => {
    inválido cambia fondo y borde pero conserva el texto. Mantienen el peso
    (0,2,0) y la posición que tenía el trío dentro de `.trigger`, así que su
    resolución frente a `.trigger:focus-visible` (más abajo) no cambia. */
+
+/* A11Y-09 · WCAG 2.2 §1.4.11 (AA): --warm-200 medía 1,23:1 sobre --warm-50 y
+   el límite del campo era invisible con poca luz. --warm-450 da 3,55:1. Es el
+   escalón que tokens.css reserva para bordes de control e icono; --warm-200 se
+   queda para separadores y divisores, que §1.4.11 exime por decorativos. */
 .tone-border {
-  border-color: var(--warm-200);
+  border-color: var(--warm-450);
 }
 
 .tone-bg {
@@ -308,8 +337,10 @@ onBeforeUnmount(() => {
   color: var(--warm-900);
 }
 
-.select:not(.open, .disabled, .invalid) .trigger:hover {
-  border-color: var(--warm-300);
+/* --warm-500 (5,36:1): con el reposo en --warm-450, --warm-300 (1,49:1) dejaba
+   el hover más claro que el reposo. */
+.select:not(.open, .disabled, .readonly, .invalid) .trigger:hover {
+  border-color: var(--warm-500);
 }
 
 .select.open .trigger,
@@ -354,7 +385,7 @@ onBeforeUnmount(() => {
 <style>
 /* El panel se teletransporta a <body>: estilos globales acotados por la clase. */
 .panel[role='listbox'] {
-  z-index: 2100;
+  z-index: var(--z-popover);
   padding: 5px;
   overflow-y: auto;
   background: var(--warm-50);

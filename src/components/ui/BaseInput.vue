@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, type Component } from 'vue'
+import { computed, inject, ref, type Component } from 'vue'
+import { FieldKey } from './fieldContext'
 import { Eye, EyeOff } from 'lucide-vue-next'
 
 const props = withDefaults(
@@ -11,6 +12,7 @@ const props = withDefaults(
     type?: string
     id?: string
     disabled?: boolean
+    readonly?: boolean
     autocomplete?: string
     invalid?: boolean
     inputmode?: 'text' | 'numeric' | 'tel' | 'email' | 'url' | 'decimal' | 'search' | 'none'
@@ -22,6 +24,18 @@ defineEmits<{
   'update:modelValue': [value: string]
   blur: [event: FocusEvent]
 }>()
+
+const field = inject(FieldKey, null)
+
+/**
+ * A11Y-04 · FORM-01 · FORM-04 — el id, la descripción y la obligatoriedad se
+ * toman del `BaseField` que envuelve al campo cuando el consumidor no los pasa.
+ * La prop explícita va primero: fuera de un `BaseField` el componente sigue
+ * comportándose igual que antes.
+ */
+const controlId = computed(() => props.id ?? field?.controlId)
+const describedBy = computed(() => field?.describedBy.value)
+const isRequired = computed(() => field?.required.value ?? false)
 
 // Los inputs de contraseña muestran un ojo para ver/ocultar el texto en claro.
 const show = ref(false)
@@ -46,6 +60,11 @@ const toneClass = computed(() => {
     return ['ds-field-invalid', focused.value ? 'ds-field-invalid-focus' : null]
   }
   if (props.disabled) return ['tone-border', 'ds-field-disabled', 'ds-focus-ring']
+  // Solo lectura NO es deshabilitado: el campo sigue siendo operable (recibe
+  // foco, se selecciona, se copia) y su valor SÍ se envía, así que conserva el
+  // texto a contraste pleno y el anillo de foco. Sin `tone-*`: la primitiva
+  // `.ds-field-readonly` ya trae borde, fondo y color.
+  if (props.readonly) return ['ds-field-readonly', 'ds-focus-ring']
   return ['tone-border', 'tone-bg', 'ds-focus-ring']
 })
 </script>
@@ -53,21 +72,24 @@ const toneClass = computed(() => {
 <template>
   <label
     class="input ds-flex-row"
-    :class="[toneClass, { disabled, invalid }]"
+    :class="[toneClass, { disabled, invalid, readonly }]"
     @focusin="focused = true"
     @focusout="focused = false"
   >
     <component :is="icon" v-if="icon" :size="14" :stroke-width="1.6" class="icon ds-icon-muted" />
     <input
-      :id="id"
+      :id="controlId"
       class="ds-flex-fill"
       :type="effectiveType"
       :value="modelValue ?? ''"
-      :placeholder="placeholder"
+      :placeholder="readonly ? undefined : placeholder"
       :disabled="disabled"
+      :readonly="readonly || undefined"
       :autocomplete="autocomplete"
       :inputmode="inputmode"
       :aria-invalid="invalid || undefined"
+      :aria-required="isRequired || undefined"
+      :aria-describedby="describedBy"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       @blur="$emit('blur', $event)"
     />
@@ -104,7 +126,7 @@ const toneClass = computed(() => {
 
 /* Mismo motivo con el cursor: `.ds-field-disabled` trae `cursor: not-allowed`
    y se excluye aquí en vez de competir. */
-.input:not(.disabled) {
+.input:not(.disabled, .readonly) {
   cursor: text;
 }
 
@@ -114,16 +136,24 @@ const toneClass = computed(() => {
    `.ds-field-invalid`). Conservan el peso (0,2,0) y la posición que tenía el
    par dentro de `.input`, así que la resolución frente a
    `.ds-focus-ring:focus-within` no cambia. */
+
+/* A11Y-09 · WCAG 2.2 §1.4.11 (AA): --warm-200 medía 1,23:1 sobre --warm-50 y
+   el límite del campo era invisible con poca luz. --warm-450 da 3,55:1. Es el
+   escalón que tokens.css reserva para bordes de control e icono; --warm-200 se
+   queda para separadores y divisores, que §1.4.11 exime por decorativos. */
 .tone-border {
-  border-color: var(--warm-200);
+  border-color: var(--warm-450);
 }
 
 .tone-bg {
   background: var(--warm-50);
 }
 
-.input:hover:not(.disabled, .invalid, :focus-within) {
-  border-color: var(--warm-300);
+/* --warm-500 (5,36:1) y no --warm-300 (1,49:1): con el reposo ya en --warm-450
+   el tono viejo de hover era MÁS CLARO que el de reposo, así que pasar el ratón
+   aclaraba el borde en vez de reforzarlo. */
+.input:hover:not(.disabled, .readonly, .invalid, :focus-within) {
+  border-color: var(--warm-500);
 }
 
 .input:focus-within .icon {

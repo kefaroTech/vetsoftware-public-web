@@ -254,11 +254,14 @@ function onNotifications() {
 
     <template v-if="showFacturacionSection">
       <div class="section-label">FACTURACIÓN</div>
+      <!-- El detalle de una cuenta es ahora una ruta hija (EST-08): sin la
+           segunda comparación, entrar al detalle apagaba este elemento del menú
+           y la sección dejaba de indicar dónde está el usuario. -->
       <SidebarNavItem
         v-if="canAccounts"
         label="Cuentas abiertas"
         :icon="Wallet"
-        :active="route.name === 'cuentas'"
+        :active="route.name === 'cuentas' || route.name === 'cuentas-detalle'"
         @click="router.push({ name: 'cuentas' })"
       />
       <SidebarNavItem
