@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { History, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-vue-next'
+import {
+  BarChart3,
+  Check,
+  History,
+  PawPrint,
+  Pencil,
+  Plus,
+  Receipt,
+  RotateCcw,
+  ShieldCheck,
+  Trash2,
+} from 'lucide-vue-next'
 import ExistingItemsSection from '../src/features/dashboard/views/consulta/nueva/components/ExistingItemsSection.vue'
 
 // ── Los 16 componentes que FE-08 extrajo ──────────────────────────────────
@@ -26,6 +37,35 @@ import TonePill from '../src/features/tienda/components/TonePill.vue'
 import ExportBar from '../src/features/tienda/components/ExportBar.vue'
 import DiffCell from '../src/features/tienda/components/DiffCell.vue'
 import LinkButton from '../src/features/tienda/components/LinkButton.vue'
+
+// ── La superficie de formulario (A11Y-09 / A11Y-10) ───────────────────────
+// Se montan los componentes REALES y no marcado con clases `ds-*`: en esta
+// familia el color vive en las primitivas (`.ds-field-invalid`,
+// `.ds-field-disabled`, `.ds-focus-ring`) pero la GEOMETRÍA —borde, radio,
+// padding— vive en el CSS scoped de cada SFC. Un campo dibujado a mano en la
+// galería tendría los colores buenos y ninguna forma, y la línea base
+// retrataría algo que la aplicación no pinta en ninguna pantalla.
+import BaseField from '../src/components/ui/BaseField.vue'
+import BaseInput from '../src/components/ui/BaseInput.vue'
+import BaseSelect from '../src/components/ui/BaseSelect.vue'
+import BaseTextarea from '../src/components/ui/BaseTextarea.vue'
+
+// ── La tira de pestañas (issue #198) ──────────────────────────────────────
+// `BaseTabs` gobierna caja, cuentas y reportes: un cambio suyo repinta tres
+// pantallas a la vez y hasta ahora ningún gate lo veía. Mismo motivo por el que
+// entraron los campos y el texto tenue — una primitiva compartida sin captura
+// es una primitiva sin red.
+// ── El resumen de errores y los cuatro `.ds-dialog-*` ──────────────────
+// Los dos huecos que quedaban de la tanda de modales de hoy. `ErrorSummary`
+// es gemelo TR-02 y su color lo hereda de `.ds-banner--error`, así que un
+// retoque de ese banner lo repinta sin tocarlo; los `.ds-dialog-*` los
+// comparten TODOS los diálogos desde que se retiraron los siete a medida, y sus
+// dos únicos consumidores vivos teleportan a `body`, fuera del alcance de
+// cualquier captura recortada por `data-shot`.
+import ErrorSummary from '../src/components/feedback/ErrorSummary.vue'
+import type { ErrorSummaryItem } from '../src/components/feedback/ErrorSummary.vue'
+import BaseTabs from '../src/components/ui/BaseTabs.vue'
+import type { TabItem } from '../src/components/ui/tabs'
 import { productCategoryTone } from '../src/features/tienda/composables/categoryTone'
 import type { AnimalResponse } from '../src/features/dashboard/views/consulta/nueva/types/animal.types'
 import type { CashSessionStatus, MethodTotal } from '../src/features/caja/types/caja'
@@ -90,6 +130,75 @@ const totales: MethodTotal[] = [
 const sesiones: { id: number; sede: string; terminal: string; estado: CashSessionStatus }[] = [
   { id: 12, sede: 'Sede Norte', terminal: 'Caja 1', estado: 'OPEN' },
   { id: 11, sede: 'Sede Centro', terminal: 'Caja 2', estado: 'CLOSED' },
+]
+
+// ── Valores de los campos ─────────────────────────────────────────────────
+// Escritos, no vacíos, salvo donde el estado que se retrata ES el hueco: un
+// campo con texto y uno con placeholder pintan colores distintos y los dos
+// tienen que entrar en la misma imagen.
+const campoTexto = ref('Kira')
+const campoVacio = ref('')
+const campoPeso = ref('12.4')
+const campoInvalido = ref('ana.restrepo')
+const campoBloqueado = ref('A-0007')
+const campoNotas = ref('Paciente estable; sin hallazgos relevantes en la exploración.')
+const campoEspecie = ref('canino')
+
+const ESPECIES = [
+  { value: 'canino', label: 'Canino' },
+  { value: 'felino', label: 'Felino' },
+]
+
+// ── Las cuatro tiras de pestañas ──────────────────────────────────────────
+// Una por firma real, porque lo que distingue a estas tiras no es la pestaña
+// suelta sino el CONJUNTO: contador contra punto de estado, con icono contra sin
+// icono, y el desbordamiento horizontal, que es la única propiedad de la
+// primitiva que solo se ve cuando la tira no cabe.
+//
+// El raíl inferior y los márgenes NO se pintan aquí a propósito: son chrome del
+// anfitrión (`.cash-tabs` en `CajaView`, `.tabs` en `CuentasListaView`) y en
+// `ReportesView` ni siquiera existen. Dibujarlos en la galería sería fotografiar
+// una decisión que la primitiva no toma.
+type TabCaja = 'mine' | 'open' | 'history'
+const tabCaja = ref<TabCaja>('open')
+const TABS_CAJA: TabItem<TabCaja>[] = [
+  { value: 'mine', label: 'Mi caja abierta', dot: true },
+  { value: 'open', label: 'Cajas abiertas', badge: 2 },
+  { value: 'history', label: 'Historial', badge: 128 },
+]
+
+type TabCuentas = 'activas' | 'cerradas'
+const tabCuentas = ref<TabCuentas>('activas')
+const TABS_CUENTAS: TabItem<TabCuentas>[] = [
+  { value: 'activas', label: 'Activas', icon: Receipt, badge: 3 },
+  { value: 'cerradas', label: 'Cerradas', icon: Check, badge: 41 },
+]
+
+type TabReportes = 'libro' | 'concil'
+const tabReportes = ref<TabReportes>('libro')
+const TABS_REPORTES: TabItem<TabReportes>[] = [
+  { value: 'libro', label: 'Libro de ventas', icon: BarChart3 },
+  { value: 'concil', label: 'Conciliación DIAN', icon: ShieldCheck },
+]
+
+/** Más pestañas de las que caben en 860 px: retrata el desbordamiento. */
+const tabLarga = ref('a')
+// Dos resúmenes y no uno: el encabezado se declina en singular y plural, y esa
+// rama sólo se ve con un item frente a varios.
+const ERRORES: ErrorSummaryItem[] = [
+  { id: 'g-err-nombre', text: 'El nombre es obligatorio' },
+  { id: 'g-err-doc', text: 'El documento debe tener entre 6 y 15 dígitos' },
+  { id: 'g-err-correo', text: 'El correo no tiene un formato válido' },
+]
+const ERROR_UNICO: ErrorSummaryItem[] = [{ id: 'g-err-nombre', text: 'El nombre es obligatorio' }]
+
+const TABS_LARGA: TabItem<string>[] = [
+  { value: 'a', label: 'Libro de ventas' },
+  { value: 'b', label: 'Conciliación DIAN' },
+  { value: 'c', label: 'Documentos emitidos', badge: 1204 },
+  { value: 'd', label: 'Notas crédito', badge: 12 },
+  { value: 'e', label: 'Resoluciones vigentes' },
+  { value: 'f', label: 'Contingencia' },
 ]
 </script>
 
@@ -191,6 +300,119 @@ const sesiones: { id: number; sede: string; terminal: string; estado: CashSessio
         <dt>Documento</dt>
         <dd>1017254398</dd>
       </dl>
+    </section>
+
+    <!-- ── Campos de formulario ───────────────────────────────────────── -->
+    <!--
+      A11Y-09 / A11Y-10. Hasta aquí la galería no fotografiaba NI UN campo:
+      cubría botones, avisos, tarjetas, tipografía, vacíos y rejillas, y la
+      superficie de formulario —siete primitivas por cuatro estados, el borde de
+      control, el texto tenue del placeholder y el anillo de foco— se podía
+      romper entera sin que una sola línea base se moviera.
+
+      Los estados van en UN bloque y no en seis a propósito: lo que hay que
+      poder comparar de un vistazo es el borde de reposo contra el de error
+      contra el deshabilitado. En capturas separadas esa comparación se pierde,
+      y es justo la que decide si un cambio de token es correcto.
+
+      El foco NO cabe aquí porque exige interacción; vive en sus propios casos
+      del spec, igual que el hover del botón de icono.
+    -->
+    <section data-shot="campos">
+      <h2>Campos de formulario</h2>
+
+      <!-- Reposo. Es el PRIMER tabulable del bloque: el caso del anillo de
+           foco del disparador de select parte de aquí y tabula una vez. -->
+      <BaseField v-slot="{ id }" label="Nombre del paciente" required>
+        <BaseInput :id="id" v-model="campoTexto" data-testid="campo-texto" />
+      </BaseField>
+
+      <!-- Disparador de select en reposo: mismo borde, otro control. -->
+      <BaseField v-slot="{ id }" label="Especie">
+        <BaseSelect
+          :id="id"
+          v-model="campoEspecie"
+          :options="ESPECIES"
+          data-testid="campo-select"
+        />
+      </BaseField>
+
+      <!-- Placeholder: texto tenue DENTRO del control (`--warm-500`). -->
+      <BaseField v-slot="{ id }" label="Microchip">
+        <BaseInput :id="id" v-model="campoVacio" placeholder="15 dígitos, sin espacios" />
+      </BaseField>
+
+      <!-- Pista: `.ds-hint`, texto tenue FUERA del control. Va con sufijo
+           porque el sufijo también es `.ds-hint` y comparte el mismo tono. -->
+      <BaseField v-slot="{ id }" label="Peso" hint="En kilogramos, con un decimal.">
+        <BaseInput :id="id" v-model="campoPeso" suffix="kg" />
+      </BaseField>
+
+      <!-- Inválido + mensaje de error: `.ds-field-invalid` (borde y fondo) más
+           el rojo del mensaje. El temblor lo apaga el spec. -->
+      <BaseField v-slot="{ id }" label="Correo" error="Falta el signo @.">
+        <BaseInput :id="id" v-model="campoInvalido" invalid data-testid="campo-invalido" />
+      </BaseField>
+
+      <!-- Deshabilitado: `.ds-field-disabled` cambia fondo y texto pero
+           CONSERVA el borde neutro, así que retrata el token de borde. -->
+      <BaseField v-slot="{ id }" label="Código">
+        <BaseInput :id="id" v-model="campoBloqueado" disabled />
+      </BaseField>
+
+      <!-- Área de texto: la tercera geometría de la familia. -->
+      <BaseField v-slot="{ id }" label="Observaciones">
+        <BaseTextarea :id="id" v-model="campoNotas" :rows="2" />
+      </BaseField>
+    </section>
+
+    <!-- ── Texto tenue por superficie ─────────────────────────────────── -->
+    <!--
+      A11Y-10 se midió sobre blanco y esta aplicación no tiene ni una superficie
+      blanca: el texto tenue se apoya sobre `--warm-50` (página y campo),
+      `--warm-100` (`.ds-panel`), `--warm-150` (hundido) y `--amatista-50`
+      (seleccionado), y el contraste real es distinto en cada una. Ese es el
+      caso que se midió mal, y hasta ahora no había forma de VERLO.
+
+      Las cuatro tarjetas son la MISMA `.ds-panel` y sólo se les sustituye el
+      fondo en línea, así que lo único que varía entre ellas —y por tanto lo
+      único que un diff puede señalar— es la superficie. Aquí sí se usan tokens
+      a propósito: la superficie no es la regla con la que se mide, es lo medido.
+    -->
+    <section data-shot="texto-tenue">
+      <h2>Texto tenue por superficie</h2>
+
+      <div class="ds-panel ds-stack ds-stack--8" style="background: var(--warm-50)">
+        <span>Sobre --warm-50 · superficie de página y de campo</span>
+        <span class="ds-meta">.ds-meta · dato de apoyo bajo un título</span>
+        <span class="ds-hint">.ds-hint · nota de ayuda, el tamaño más pequeño</span>
+        <span class="ds-meta-dark">.ds-meta-dark · un tono más oscuro</span>
+        <span class="ds-label">.ds-label · etiqueta en versalitas</span>
+      </div>
+
+      <div class="ds-panel ds-stack ds-stack--8">
+        <span>Sobre --warm-100 · `.ds-panel` sin sustituir el fondo</span>
+        <span class="ds-meta">.ds-meta · dato de apoyo bajo un título</span>
+        <span class="ds-hint">.ds-hint · nota de ayuda, el tamaño más pequeño</span>
+        <span class="ds-meta-dark">.ds-meta-dark · un tono más oscuro</span>
+        <span class="ds-label">.ds-label · etiqueta en versalitas</span>
+      </div>
+
+      <div class="ds-panel ds-stack ds-stack--8" style="background: var(--warm-150)">
+        <span>Sobre --warm-150 · superficie hundida</span>
+        <span class="ds-meta">.ds-meta · dato de apoyo bajo un título</span>
+        <span class="ds-hint">.ds-hint · nota de ayuda, el tamaño más pequeño</span>
+        <span class="ds-meta-dark">.ds-meta-dark · un tono más oscuro</span>
+        <span class="ds-label">.ds-label · etiqueta en versalitas</span>
+      </div>
+
+      <div class="ds-panel ds-stack ds-stack--8" style="background: var(--amatista-50)">
+        <span>Sobre --amatista-50 · fila y opción seleccionadas</span>
+        <span class="ds-meta">.ds-meta · dato de apoyo bajo un título</span>
+        <span class="ds-hint">.ds-hint · nota de ayuda, el tamaño más pequeño</span>
+        <span class="ds-meta-dark">.ds-meta-dark · un tono más oscuro</span>
+        <span class="ds-label">.ds-label · etiqueta en versalitas</span>
+      </div>
     </section>
 
     <!-- ── Componentes reales ─────────────────────────────────────────── -->
@@ -453,6 +675,156 @@ const sesiones: { id: number; sede: string; terminal: string; estado: CashSessio
         </tbody>
       </table>
     </section>
+
+    <!-- ── Tira de pestañas ───────────────────────────────────────────── -->
+    <!--
+      Issue #198. `BaseTabs` es la primitiva que menos se parece a lo que la
+      galería tenía: no es una clase de `primitives.css` que se pueda dibujar a
+      mano, sino un componente con estado —cuál está activa— del que dependen
+      caja, cuentas y reportes. Cambiar su `padding`, su `border-bottom` o el
+      tono del contador repinta las tres pantallas de golpe y ninguna captura lo
+      veía, porque las tres pantallas piden backend y sesión y por eso no están
+      en la galería.
+
+      Las cuatro tiras cubren, entre todas, lo que la primitiva SÍ decide:
+      tipografía y caja de la pestaña, estado activo (`.ds-tab--active` contra
+      `.tab-off`), contador (`.count` con `.ds-tone--accent` en la activa y
+      `.ds-tone--neutral` en las demás), punto de estado (`.ds-status-dot`),
+      icono delante del rótulo y desbordamiento horizontal con la barra oculta.
+
+      No se monta `BaseTabPanel`: no tiene `<style>` propio —su caja se la pone
+      el anfitrión por `class`— así que no hay un solo píxel suyo que un diff
+      pueda proteger. Cada tira lleva su `name` para que los ids no colisionen
+      entre bloques de esta misma página.
+    -->
+    <section data-shot="tabs">
+      <h2>Tira de pestañas</h2>
+      <div class="ancho">
+        <!-- Firma «caja»: punto de estado en la primera y contadores en las
+             otras dos. Es la única de las tres con `dot`. -->
+        <BaseTabs
+          v-model="tabCaja"
+          :tabs="TABS_CAJA"
+          name="galeria-caja"
+          tablist-label="Secciones de caja"
+        />
+
+        <!-- Firma «cuentas»: icono + rótulo + contador, con la activa en
+             `--accent` y la de reposo en `--neutral`. -->
+        <BaseTabs
+          v-model="tabCuentas"
+          :tabs="TABS_CUENTAS"
+          name="galeria-cuentas"
+          tablist-label="Estado de las cuentas"
+        />
+
+        <!-- Firma «reportes»: icono sin contador. La combinación más escueta,
+             donde se ve el hueco entre icono y rótulo sin nada que lo tape. -->
+        <BaseTabs
+          v-model="tabReportes"
+          :tabs="TABS_REPORTES"
+          name="galeria-reportes"
+          tablist-label="Reportes de facturación electrónica"
+        />
+
+        <!-- Desbordamiento: más pestañas de las que caben en el ancho fijo del
+             bloque. `overflow-x: auto` con `scrollbar-width: none` es propiedad
+             de la primitiva, y sin una tira que no quepa no se retrata nunca. -->
+        <BaseTabs
+          v-model="tabLarga"
+          :tabs="TABS_LARGA"
+          name="galeria-larga"
+          tablist-label="Tira que no cabe"
+        />
+      </div>
+    </section>
+
+    <!-- ── Resumen de errores (FORM-05) ──────────────────────────────── -->
+    <!--
+      Se monta `ErrorSummary.vue` y no marcado con clases sueltas: el
+      componente aplica `.ds-banner`, `.ds-banner--error` y
+      `.ds-error-summary` JUNTAS, y el color de la primitiva del resumen es
+      heredado a propósito del banner. Redibujarlo a mano aquí fotografiaría una
+      herencia que la aplicación no monta así.
+    -->
+    <section data-shot="resumen-de-errores">
+      <h2>Resumen de errores</h2>
+      <div class="ancho-medio">
+        <ErrorSummary :items="ERRORES" />
+        <ErrorSummary :items="ERROR_UNICO" />
+      </div>
+    </section>
+
+    <!-- ── Diálogos ──────────────────────────────────────────────────── -->
+    <!--
+      Las cuatro `.ds-dialog-*` cambiaron en la tanda de modales y ninguna
+      captura las veía. No se montan sus consumidores (`AppConfirmDialog`,
+      `ResumeOrNewConsultaDialog`) porque los dos teleportan a `body`:
+      saldrían del `section` y el recorte por `data-shot` los perdería.
+
+      El escenario NO redeclara nada de la primitiva. `.ds-dialog-overlay` es
+      `position: fixed`, así que se le da un bloque contenedor con
+      `transform: translateZ(0)` — el truco estándar — y el overlay resuelve
+      su `inset: 0` contra la caja del escenario en vez de contra el viewport.
+      Así el fondo translúcido y el `backdrop-filter` que declara la primitiva
+      se retratan tal cual, y por eso el escenario lleva texto detrás: sin algo que
+      desenfocar, un cambio en el desenfoque no movería un solo píxel.
+    -->
+    <section data-shot="dialogos">
+      <h2>Diálogos</h2>
+
+      <!-- Ancho normal (440 px) con icono teñido, cuerpo y par de acciones. -->
+      <div class="dialog-stage">
+        <p class="dialog-fondo">
+          Contenido de la pantalla que queda detrás del velo. Está aquí para que el desenfoque del
+          overlay tenga algo que desenfocar.
+        </p>
+        <div class="ds-dialog-overlay">
+          <div class="ds-dialog-card">
+            <div class="ds-dialog-icon ds-tone--accent">
+              <PawPrint :size="22" :stroke-width="1.8" />
+            </div>
+            <h3 class="ds-title">¿Eliminar la vacuna?</h3>
+            <p class="ds-dialog-body">
+              Se borrará el registro de <strong class="ds-text-strong">Rabia trivalente</strong>
+              del historial de Canela. Esta acción no se puede deshacer.
+            </p>
+            <div class="ds-actions">
+              <button type="button" class="ds-btn ds-btn--ghost">Cancelar</button>
+              <button type="button" class="ds-btn ds-btn--primary">Eliminar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- La variante ancha (480 px). Es la única diferencia declarada entre
+           las dos, así que van seguidas: lo que hay que poder comparar es el
+           salto de ancho, no cada tarjeta por su cuenta. -->
+      <div class="dialog-stage">
+        <p class="dialog-fondo">
+          Contenido de la pantalla que queda detrás del velo. Está aquí para que el desenfoque del
+          overlay tenga algo que desenfocar.
+        </p>
+        <div class="ds-dialog-overlay">
+          <div class="ds-dialog-card ds-dialog-card--wide">
+            <div class="ds-dialog-icon ds-tone--accent">
+              <History :size="22" :stroke-width="1.8" />
+            </div>
+            <h3 class="ds-title">Tienes una consulta en marcha</h3>
+            <p class="ds-dialog-body">
+              Estás registrando una consulta para
+              <strong class="ds-text-strong">Ana Restrepo</strong> y su mascota
+              <strong class="ds-text-strong">Canela</strong>. ¿Quieres retomarla donde la dejaste o
+              empezar una nueva desde cero?
+            </p>
+            <div class="ds-actions">
+              <button type="button" class="ds-btn ds-btn--ghost">Crear una nueva</button>
+              <button type="button" class="ds-btn ds-btn--primary">Retomar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 </template>
 
@@ -519,6 +891,37 @@ section > div:not(.row, .bar, .ancho) {
   align-items: stretch;
   gap: 14px;
   width: 860px;
+}
+
+/* Andamiaje del bloque de diálogos. Sólo caja: ni un color, ni un radio, ni una
+   sombra — todo eso es lo que el bloque mide y tiene que venir de
+   `primitives.css`. El `transform` no es decorativo: es lo que convierte
+   al escenario en bloque contenedor de un descendiente `position: fixed`. */
+.dialog-stage {
+  position: relative;
+  transform: translateZ(0);
+  /* El ancho NO se declara aquí: lo pone la regla común de bloques sueltos
+     (560 px), y la tarjeta ancha mide 480, así que cabe con margen. */
+  height: 340px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.dialog-fondo {
+  margin: 0;
+  padding: 20px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #444;
+}
+
+/* Mismo ancho que el resto de bloques sueltos, en columna para que los dos
+   resúmenes se comparen uno encima del otro. */
+.ancho-medio {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 560px;
 }
 
 /* Lo ÚNICO que la galería le pone a las tablas es un ancho fijo, para que la

@@ -11,9 +11,18 @@ import PawLoader from '@/components/feedback/PawLoader.vue'
  * acuerdo escrito y no una puerta (ahora sí lo es: `loader-guard.spec.ts`).
  *
  * Además de la inconsistencia había un problema real: `cash-spin` no tenía
- * guarda de `prefers-reduced-motion` —`main.css` no declara ninguna global— y
- * `PawLoader` sí la trae. Quien pide reducir movimiento veía girar la única
- * cosa que hay en pantalla mientras espera.
+ * guarda de `prefers-reduced-motion`, y entonces tampoco había ninguna global
+ * que lo cubriera, mientras que `PawLoader` sí traía la suya. Quien pedía
+ * reducir movimiento veía girar la única cosa que hay en pantalla mientras
+ * espera.
+ *
+ * Eso cambió después: `base.css:108-119` (el fichero que antes se llamaba
+ * `main.css`) declara desde #111 una guarda global que cubre todo el proyecto.
+ * Se deja escrito porque este comentario afirmaba lo contrario en presente, y
+ * una prueba que dice algo falso sobre el sistema enseña a no fiarse de las
+ * pruebas. Lo que NO cambió es la conclusión: la guarda global sabe parar el
+ * movimiento, no elegir cómo se ve el elemento parado, así que `<PawLoader>`
+ * sigue siendo la respuesta y no un aro propio con una guarda copiada.
  */
 
 const BASE = {

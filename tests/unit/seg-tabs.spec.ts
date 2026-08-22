@@ -87,10 +87,80 @@ describe('SegTabs', () => {
     expect(enModal.find('.seg').classes()).toContain('seg--md')
   })
 
-  it('se anuncia como lista de pestañas', () => {
+  it('se anuncia como GRUPO, no como lista de pestañas (issue #188)', () => {
+    // Este caso sujetaba el defecto: afirmaba `role="tablist"`, que era
+    // literalmente lo que había que quitar. Se revisó uso a uso y ninguno de los
+    // seis anfitriones conmuta entre paneles hermanos —`ImpuestosView`,
+    // `InventarioView`, `ServiciosView` y `MedicamentosView` filtran el listado
+    // que ya se está mirando; `StockDetailModal` y `AdjustModal` conmutan una
+    // región dentro del cuerpo del modal—, así que el `tablist` prometía un
+    // `tabpanel` que no existe y además incumplía `aria-required-children` de
+    // axe, porque los hijos son `<button>` sin `role="tab"`.
+    //
+    // El marcado correcto es el patrón *Button (Toggle)* del APG: un grupo con
+    // nombre y `aria-pressed` por opción. Si alguien devuelve el `tablist`, esta
+    // aserción es la que se lo dice.
+    const wrapper = mount(SegTabs, {
+      props: { modelValue: 'active', options: OPCIONES, ariaLabel: 'Estado de los impuestos' },
+    })
+
+    expect(wrapper.find('.seg').attributes('role')).toBe('group')
+    // No basta con exigir `group`: se nombra el rol prohibido para que el motivo
+    // del caso siga legible cuando alguien lo lea dentro de dos años.
+    expect(
+      wrapper.findAll('[role="tab"]'),
+      'un juego de pestañas necesita hijos `role="tab"` y un panel; aquí no hay ninguno de los dos',
+    ).toHaveLength(0)
+    expect(wrapper.findAll('[role="tabpanel"]')).toHaveLength(0)
+  })
+
+  it('el grupo lleva nombre accesible cuando el anfitrión dice qué conmuta', () => {
+    // Sin `aria-label`, un `role="group"` es válido pero mudo: el lector anuncia
+    // los botones sueltos y no lo que tienen en común. La prop es opcional a
+    // propósito (hay anfitriones ajenos que aún no la pasan), así que lo que se
+    // fija es que cuando llega, llega al sitio.
+    const conNombre = mount(SegTabs, {
+      props: { modelValue: 'active', options: OPCIONES, ariaLabel: 'Estado de los impuestos' },
+    })
+    expect(conNombre.find('.seg').attributes('aria-label')).toBe('Estado de los impuestos')
+
+    const sinNombre = mount(SegTabs, { props: { modelValue: 'active', options: OPCIONES } })
+    expect(sinNombre.find('.seg').attributes('role')).toBe('group')
+    expect(sinNombre.find('.seg').attributes('aria-label')).toBeUndefined()
+  })
+
+  it('expresa la posición puesta con aria-pressed en CADA opción', () => {
+    // El estado tiene que estar en el árbol de accesibilidad, no solo en la
+    // clase `on`: la clase la ve el ojo y `aria-pressed` es lo único que oye
+    // quien usa lector de pantalla. Las dos opciones lo declaran —también la
+    // apagada—, porque un `aria-pressed` que solo aparece en la activa convierte
+    // a las demás en botones normales y el grupo deja de leerse como un
+    // conmutador.
+    const wrapper = mount(SegTabs, { props: { modelValue: 'paused', options: OPCIONES } })
+    const botones = wrapper.findAll('button')
+
+    expect(botones.map((b) => b.attributes('aria-pressed'))).toEqual(['false', 'true'])
+    // Y nada de `aria-selected`, que es el atributo del patrón que se descartó.
+    expect(botones.every((b) => b.attributes('aria-selected') === undefined)).toBe(true)
+  })
+
+  it('aria-pressed sigue al modelValue del padre, igual que la marca visual', async () => {
+    // Mismo criterio que el caso de la clase `on`: el componente es controlado.
+    // Si el estado accesible se desincronizara del visual, el lector anunciaría
+    // una posición y la pantalla mostraría otra.
     const wrapper = mount(SegTabs, { props: { modelValue: 'active', options: OPCIONES } })
 
-    expect(wrapper.find('.seg').attributes('role')).toBe('tablist')
+    expect(wrapper.findAll('button').map((b) => b.attributes('aria-pressed'))).toEqual([
+      'true',
+      'false',
+    ])
+
+    await wrapper.setProps({ modelValue: 'paused' })
+
+    expect(wrapper.findAll('button').map((b) => b.attributes('aria-pressed'))).toEqual([
+      'false',
+      'true',
+    ])
   })
 
   it('soporta más de dos posiciones sin duplicar claves', () => {

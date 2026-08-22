@@ -1456,8 +1456,18 @@ test.describe('G · Flujo completo y borrador', () => {
     await page.getByLabel(/Nombre completo/).fill(validOwner.name)
     await page.getByRole('button', { name: 'Cancelar' }).click()
     // Con datos sin propietario confirmado, se abre el diálogo de descartar.
-    // OJO: DiscardConsultaDialog usa role="alertdialog" (no "dialog").
-    await expect(page.getByRole('alertdialog')).toBeVisible()
+    //
+    // OJO al rol: `alertdialog`, no `dialog`. El `DiscardConsultaDialog` a
+    // medida ya no existe —descartar y guardar pasan hoy por el ÚNICO diálogo
+    // de confirmación de la aplicación (`useConfirmDialog` → `AppConfirmDialog`
+    // → `ModalShell`)—, pero el rol correcto sigue siendo `alertdialog` y por el
+    // mismo motivo que antes: interrumpe para pedir una decisión con
+    // consecuencia, y su CUERPO —qué se pierde exactamente— tiene que oírse al
+    // abrir. `dialog` solo anuncia el título, así que relajar esto a `dialog`
+    // convertiría la prueba en una que no protege nada (issue #187).
+    const confirm = page.getByRole('alertdialog')
+    await expect(confirm).toBeVisible()
+    await expect(confirm).toContainText(/Descartar esta consulta/)
   })
 
   test('[det] el borrador persiste al recargar la página', async ({ page }) => {
