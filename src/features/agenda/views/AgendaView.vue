@@ -415,7 +415,7 @@ async function onRemove(appt: AppointmentResponse) {
 .back-btn {
   align-self: flex-start;
   padding: var(--space-7) var(--space-14);
-  font-size: var(--text-sm);
+  font-size: var(--text-body);
 }
 
 .body {

@@ -308,7 +308,7 @@ function onSuspendConfirm() {
 .back {
   margin-bottom: var(--space-14);
   padding: var(--space-6) var(--space-10);
-  font-size: var(--text-sm);
+  font-size: var(--text-body);
   font-weight: var(--weight-normal);
 }
 
@@ -327,7 +327,7 @@ function onSuspendConfirm() {
 
 .nav,
 .today {
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   background: var(--warm-50);
   border-radius: 8px;
   cursor: pointer;
@@ -346,9 +346,12 @@ function onSuspendConfirm() {
   font-size: 12.5px;
   font-weight: 500;
 }
+
+/* A11Y-09: `--amatista-300` daba 2,02:1, por debajo del reposo `--warm-450`
+   (3,55:1). `--amatista-450` da 3,77:1. */
 .nav:hover,
 .today:hover {
-  border-color: var(--amatista-300);
+  border-color: var(--amatista-450);
 }
 
 .weeklabel {
@@ -415,7 +418,7 @@ function onSuspendConfirm() {
 }
 
 .row-name {
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
 }
 
 .row-detail {
@@ -427,7 +430,7 @@ function onSuspendConfirm() {
 .icon {
   width: 30px;
   height: 30px;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   background: var(--warm-50);
   border-radius: 8px;
   display: grid;

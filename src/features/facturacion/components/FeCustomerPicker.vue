@@ -136,7 +136,7 @@ function goCreate() {
 .search input {
   width: 100%;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 9px;
   padding: 10px 14px 10px 34px;
   font-family: inherit;
@@ -154,7 +154,11 @@ function goCreate() {
   gap: 6px;
   padding: 0 14px;
   border-radius: 9px;
-  border: 1.5px solid var(--amatista-300);
+
+  /* A11Y-09: `--amatista-300` daba 2,02:1 en reposo y 1,73:1 con el relleno del
+     hover. `--amatista-500` da 4,50:1 y 3,86:1 — el mismo borde en los dos
+     estados, para que el hover no reste contraste al indicador. */
+  border: 1.5px solid var(--amatista-500);
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 600;
@@ -186,7 +190,7 @@ function goCreate() {
   cursor: pointer;
   padding: 11px 14px;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 10px;
   font-family: inherit;
 }

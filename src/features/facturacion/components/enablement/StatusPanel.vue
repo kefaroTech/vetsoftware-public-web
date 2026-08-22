@@ -234,7 +234,7 @@ function alertText(
   gap: 14px;
   padding: 14px 16px;
   border-radius: 12px;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   background: var(--warm-50);
   cursor: pointer;
   text-align: left;

@@ -34,7 +34,7 @@ defineEmits<{ open: [] }>()
   width: 100%;
   padding: 16px;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 14px;
   cursor: pointer;
   font-family: inherit;
@@ -43,8 +43,11 @@ defineEmits<{ open: [] }>()
     box-shadow 0.12s ease;
 }
 
+/* A11Y-09: `--amatista-300` daba 2,02:1, por debajo del reposo `--warm-450`
+   (3,55:1) — el hover apagaba el borde de una tarjeta pulsable.
+   `--amatista-450` da 3,77:1. */
 .card:hover {
-  border-color: var(--amatista-300);
+  border-color: var(--amatista-450);
   box-shadow: 0 6px 18px -10px rgb(20 15 30 / 25%);
 }
 

@@ -292,7 +292,7 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
 }
 
 .rescard-btn-off {
-  border-color: var(--warm-200);
+  border-color: var(--warm-450);
   color: var(--warm-700);
 }
 

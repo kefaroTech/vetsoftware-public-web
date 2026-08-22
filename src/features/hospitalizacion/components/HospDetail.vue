@@ -177,7 +177,7 @@ function fmtStamp(iso: string): string {
 .back {
   margin-bottom: var(--space-14);
   padding: var(--space-6) var(--space-10);
-  font-size: var(--text-sm);
+  font-size: var(--text-body);
   font-weight: var(--weight-normal);
 }
 
@@ -268,15 +268,18 @@ function fmtStamp(iso: string): string {
   width: 100%;
   text-align: left;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 12px;
   padding: 16px;
   cursor: pointer;
   font-family: inherit;
   transition: border-color 0.12s ease;
 }
+
+/* A11Y-09: `--amatista-300` daba 2,02:1, por debajo del reposo `--warm-450`
+   (3,55:1). `--amatista-450` da 3,77:1. */
 .treat-cta:hover {
-  border-color: var(--amatista-300);
+  border-color: var(--amatista-450);
 }
 
 .cta-icon {
@@ -291,7 +294,7 @@ function fmtStamp(iso: string): string {
 }
 
 .cta-title {
-  font-size: var(--text-xl);
+  font-size: var(--text-2xl);
 }
 .cta-sub {
   font-size: 12.5px;

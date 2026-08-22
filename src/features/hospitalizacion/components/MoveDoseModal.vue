@@ -85,7 +85,7 @@ const emit = defineEmits<{
 
 .btn-secondary {
   background: var(--warm-100);
-  border-color: var(--warm-200);
+  border-color: var(--warm-450);
   color: var(--warm-900);
 }
 .btn-secondary:hover {

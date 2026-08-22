@@ -13,8 +13,35 @@ import { formatDateShort } from '@/composables/format'
 import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 
-const props = defineProps<{ open: boolean; test: LaboratoryTestResponse | null }>()
+const props = defineProps<{
+  open: boolean
+  test: LaboratoryTestResponse | null
+  /**
+   * FORM-10 — transición en vuelo, controlada por la vista. Aquí `saving` no
+   * basta: las cinco acciones son transiciones de estado EXCLUYENTES, así que
+   * hay que saber CUÁL está en curso para cambiar solo el texto de su botón.
+   * Poner los cinco en «Guardando…» sería mentira. Opcional: sin pasarlo el
+   * modal se protege igual con su propia bandera (`emitted`).
+   */
+  pendingAction?: LabActionKind | null
+}>()
 const emit = defineEmits<{ close: []; action: [kind: LabActionKind] }>()
+
+/**
+ * FORM-10 — guarda de reenvío. Los cinco botones emitían `action` directamente
+ * desde el marcado y seguían activos hasta que la vista cerrara el modal: dos
+ * pulsaciones son dos transiciones sobre la misma muestra. Deshabilitar los
+ * cinco mientras hay una en curso es correcto —son excluyentes—, pero solo el
+ * de la acción en curso cambia de texto.
+ */
+const emitted = ref<LabActionKind | null>(null)
+const pending = computed<LabActionKind | null>(() => props.pendingAction ?? emitted.value)
+
+function act(kind: LabActionKind) {
+  if (pending.value !== null) return
+  emitted.value = kind
+  emit('action', kind)
+}
 
 const attachments = ref<LaboratoryTestFileResponse[]>([])
 const loadingFiles = ref(false)
@@ -23,6 +50,7 @@ const filesError = ref<string | null>(null)
 watch(
   () => [props.open, props.test?.id],
   () => {
+    emitted.value = null
     if (props.open && props.test) loadFiles(props.test.id)
     else attachments.value = []
   },
@@ -122,40 +150,45 @@ const showAttachments = computed(
           v-if="test.status === 'PENDING_COLLECTION'"
           type="button"
           class="ds-btn ds-btn--solid ds-btn--snug"
-          @click="emit('action', 'collect')"
+          :disabled="pending !== null"
+          @click="act('collect')"
         >
-          Tomar muestra
+          {{ pending === 'collect' ? 'Guardando…' : 'Tomar muestra' }}
         </button>
         <button
           v-else-if="test.status === 'PENDING_PROCESSING'"
           type="button"
           class="ds-btn ds-btn--solid ds-btn--snug"
-          @click="emit('action', 'take')"
+          :disabled="pending !== null"
+          @click="act('take')"
         >
-          Procesar muestra
+          {{ pending === 'take' ? 'Guardando…' : 'Procesar muestra' }}
         </button>
         <button
           v-else-if="test.status === 'IN_PROGRESS'"
           type="button"
           class="ds-btn ds-btn--solid ds-btn--snug"
-          @click="emit('action', 'load')"
+          :disabled="pending !== null"
+          @click="act('load')"
         >
-          Cargar resultados
+          {{ pending === 'load' ? 'Guardando…' : 'Cargar resultados' }}
         </button>
         <template v-else-if="test.status === 'PENDING_VALIDATION'">
           <button
             type="button"
             class="ds-btn ds-btn--ghost ds-btn--snug"
-            @click="emit('action', 'return')"
+            :disabled="pending !== null"
+            @click="act('return')"
           >
-            Devolver
+            {{ pending === 'return' ? 'Devolviendo…' : 'Devolver' }}
           </button>
           <button
             type="button"
             class="ds-btn ds-btn--solid ds-btn--snug"
-            @click="emit('action', 'validate')"
+            :disabled="pending !== null"
+            @click="act('validate')"
           >
-            Validar y firmar
+            {{ pending === 'validate' ? 'Validando…' : 'Validar y firmar' }}
           </button>
         </template>
       </template>

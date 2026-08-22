@@ -85,7 +85,7 @@ const secondary = computed(() => {
   gap: 14px;
   align-items: center;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-left: 4px solid var(--warm-300);
   border-radius: 11px;
   padding: 12px 14px;
@@ -172,7 +172,7 @@ const secondary = computed(() => {
   margin-top: var(--space-3);
   gap: var(--space-7);
   color: var(--warm-600);
-  font-size: var(--text-sm);
+  font-size: var(--text-body);
   flex-wrap: wrap;
 }
 

@@ -9,7 +9,7 @@ import {
 } from '../composables/dateUtils'
 import AgendaEventChip from './AgendaEventChip.vue'
 import AppointmentChip from './AppointmentChip.vue'
-import { itemsOnDay, type AgendaItem } from '../types/agenda'
+import { indexItemsByDay, type AgendaItem } from '../types/agenda'
 import type { AgendaEvent } from '../types/agenda'
 import type { AppointmentResponse } from '../types/appointment'
 
@@ -31,42 +31,62 @@ const days = computed<Date[]>(() => {
   return Array.from({ length: 7 }, (_, i) => addDays(start, i))
 })
 
-function on(day: Date): AgendaItem[] {
-  return itemsOnDay(props.items, isoFromDate(day))
-}
-
 function countLabel(n: number): string {
   return n === 0 ? 'Sin citas' : n === 1 ? '1 cita' : `${n} citas`
 }
+
+const isos = computed<string[]>(() => days.value.map(isoFromDate))
+
+/** Índice único por render. Expande los rangos clínicos: ver `indexItemsByDay`. */
+const byDay = computed(() => indexItemsByDay(props.items, isos.value))
+
+/** Referencia estable para los días sin items: evita crear un array nuevo por columna. */
+const EMPTY: AgendaItem[] = []
+
+/** Una pasada por columna, sin llamadas a función en la plantilla. */
+const cells = computed(() =>
+  days.value.map((day, i) => {
+    const iso = isos.value[i] as string
+    const items = byDay.value.get(iso) ?? EMPTY
+    return {
+      iso,
+      day,
+      weekday: WEEKDAYS_SHORT[i] ?? '',
+      items,
+      countLabel: countLabel(items.length),
+      isToday: sameDay(day, today),
+    }
+  }),
+)
 </script>
 
 <template>
   <div class="week">
     <div class="header-row">
       <button
-        v-for="(day, i) in days"
-        :key="i"
+        v-for="cell in cells"
+        :key="cell.iso"
         type="button"
         class="header-cell ds-stack"
-        :class="{ today: sameDay(day, today) }"
-        @click="emit('day-click', day)"
+        :class="{ today: cell.isToday }"
+        @click="emit('day-click', cell.day)"
       >
-        <div class="weekday">{{ WEEKDAYS_SHORT[i] }}</div>
-        <div class="day-number" :class="{ today: sameDay(day, today) }">
-          {{ day.getDate() }}
+        <div class="weekday">{{ cell.weekday }}</div>
+        <div class="day-number" :class="{ today: cell.isToday }">
+          {{ cell.day.getDate() }}
         </div>
-        <div class="day-count">{{ countLabel(on(day).length) }}</div>
+        <div class="day-count">{{ cell.countLabel }}</div>
       </button>
     </div>
     <div class="grid">
       <div
-        v-for="(day, i) in days"
-        :key="i"
+        v-for="cell in cells"
+        :key="cell.iso"
         class="col ds-stack"
-        :class="{ today: sameDay(day, today) }"
+        :class="{ today: cell.isToday }"
       >
         <div class="events ds-stack">
-          <template v-for="it in on(day)" :key="it.id">
+          <template v-for="it in cell.items" :key="it.id">
             <AppointmentChip
               v-if="it.kind === 'appointment'"
               :appt="it.appt"
@@ -80,7 +100,7 @@ function countLabel(n: number): string {
               @click="emit('event-click', it.event)"
             />
           </template>
-          <div v-if="on(day).length === 0" class="empty">—</div>
+          <div v-if="cell.items.length === 0" class="empty">—</div>
         </div>
       </div>
     </div>

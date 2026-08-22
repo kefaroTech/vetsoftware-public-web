@@ -95,7 +95,12 @@ async function submit() {
       <div v-if="error" class="ds-banner ds-banner--sm ds-banner--error">{{ error }}</div>
 
       <label class="label ds-label">Archivos de resultado</label>
-      <div class="dropzone ds-stack" @click="pick" @dragover.prevent @drop.prevent="onDrop">
+      <div
+        class="dropzone ds-stack ds-tone--accent-outline"
+        @click="pick"
+        @dragover.prevent
+        @drop.prevent="onDrop"
+      >
         <UploadCloud :size="22" :stroke-width="1.6" />
         <span>Haz clic para adjuntar o arrastra archivos aquí</span>
         <small>PDF o imágenes</small>
@@ -163,7 +168,14 @@ async function submit() {
   align-items: center;
   gap: var(--space-6);
   padding: var(--space-26);
-  border: 1.5px dashed var(--warm-300);
+
+  /* A11Y-09 · la zona de soltar archivos es pulsable y su borde discontinuo es
+     toda su frontera: `--warm-300` daba 1,49:1. `--warm-450` da 3,55:1. */
+  border: 1.5px dashed var(--warm-450);
+
+  /* El reposo se declara aquí a (0,2,0) para ganarle a la forma plana de
+     `.ds-tone--accent-outline`; su forma `:hover` (0,3,0) es la que tiñe. */
+  background: transparent;
   border-radius: 12px;
   color: var(--warm-600);
   cursor: pointer;
@@ -172,11 +184,6 @@ async function submit() {
   transition:
     border-color 0.15s ease,
     background 0.12s ease;
-}
-
-.dropzone:hover {
-  border-color: var(--amatista-400);
-  background: var(--amatista-50);
 }
 
 .dropzone small {

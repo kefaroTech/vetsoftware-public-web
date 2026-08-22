@@ -81,7 +81,11 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
         <div class="clinical-title">Eventos clínicos del día</div>
         <ul class="ds-list-reset ds-stack ds-stack--8">
           <li v-for="ev in clinicalEvents" :key="ev.id" class="clinical-row">
-            <button type="button" class="clinical-btn" @click="emit('event-click', ev)">
+            <button
+              type="button"
+              class="clinical-btn ds-tone--accent-selected"
+              @click="emit('event-click', ev)"
+            >
               <span
                 class="dot"
                 :style="{ background: TYPE_COLORS[EVENT_TYPES[ev.type].color].dot }"
@@ -180,7 +184,7 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
   width: 100%;
   text-align: left;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 10px;
   padding: 12px 14px;
   cursor: pointer;
@@ -190,10 +194,10 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
     border-color 0.12s ease;
 }
 
-.clinical-btn:hover {
-  background: var(--amatista-50);
-  border-color: var(--amatista-200);
-}
+/* El estado `:hover` lo pinta `.ds-tone--accent-selected:hover:not(:disabled)`
+   (primitives.css) — aplicada desde el marcado, ver arriba. Su forma plana
+   (0,1,0) no toca el reposo: `.clinical-btn` scoped es (0,2,0) y conserva
+   `--warm-50` + `border: 1px solid var(--warm-450)`. */
 
 .dot {
   width: 8px;

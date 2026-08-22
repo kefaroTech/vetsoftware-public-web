@@ -82,6 +82,7 @@ function resetDraft() {
     notes: '',
   })
   submitted.value = false
+  emitted.value = false
 }
 
 watch(
@@ -144,6 +145,14 @@ const guidelineHelp = computed(() =>
 
 const impactOpen = ref(false)
 
+/**
+ * FORM-10 — guarda de reenvío. `save()` emite y devuelve el control de
+ * inmediato; hasta que el padre cierre el modal el botón sigue activo, y dos
+ * pulsaciones son dos órdenes de medicación sobre el mismo paciente. La bandera
+ * baja al reabrir (en `resetDraft`, que corre desde el `watch` de `open`).
+ */
+const emitted = ref(false)
+
 function buildPayload(): OrderPayload {
   return {
     name: draft.name.trim(),
@@ -159,9 +168,10 @@ function buildPayload(): OrderPayload {
 }
 
 function save() {
+  if (emitted.value) return
   submitted.value = true
   if (!valid.value) {
-    scrollToFirstError()
+    void scrollToFirstError()
     return
   }
   // Si hay aplicadas, confirmar el impacto antes de persistir.
@@ -169,11 +179,14 @@ function save() {
     impactOpen.value = true
     return
   }
+  emitted.value = true
   emit('save', buildPayload())
 }
 
 function confirmImpact() {
+  if (emitted.value) return
   impactOpen.value = false
+  emitted.value = true
   emit('save', buildPayload())
 }
 </script>
@@ -267,20 +280,36 @@ function confirmImpact() {
             />
           </template>
         </BaseField>
+        <!-- SOLO LECTURA, no deshabilitado: el inicio de un tratamiento con dosis
+             ya aplicadas es un registro histórico que hay que poder LEER, enfocar
+             y copiar, y que además sigue viajando en el envío. Con `disabled` el
+             campo salía del orden de tabulación —el auxiliar con teclado no podía
+             llegar a él— y la falta de señal visual se compensaba metiendo un
+             emoji de candado DENTRO del texto de la etiqueta, que entra en el
+             nombre accesible: un lector en español lo verbaliza «candado
+             cerrado». El candado lo pinta ahora `BaseField` con `aria-hidden`. -->
         <BaseField
-          :label="hasApplied ? 'Fecha de inicio 🔒' : 'Fecha de inicio'"
-          :hint="hasApplied ? 'Bloqueada: inicio histórico' : undefined"
+          label="Fecha de inicio"
+          :readonly="hasApplied"
+          :hint="hasApplied ? 'Bloqueada: el tratamiento ya tiene dosis aplicadas.' : undefined"
         >
           <template #default>
-            <DateInput v-model="draft.startDate" :disabled="hasApplied" />
+            <DateInput v-model="draft.startDate" :readonly="hasApplied" />
           </template>
         </BaseField>
         <BaseField
-          :label="hasApplied ? 'Hora de inicio 🔒' : 'Hora de inicio'"
-          :hint="hasApplied ? 'Bloqueada: inicio histórico' : undefined"
+          label="Hora de inicio"
+          :readonly="hasApplied"
+          :hint="hasApplied ? 'Bloqueada: el tratamiento ya tiene dosis aplicadas.' : undefined"
         >
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.startTime" type="time" :disabled="hasApplied" />
+            <BaseInput
+              :id="id"
+              v-model="draft.startTime"
+              type="time"
+              placeholder="08:30"
+              :readonly="hasApplied"
+            />
           </template>
         </BaseField>
       </div>
@@ -303,8 +332,8 @@ function confirmImpact() {
 
     <template #footer-actions>
       <button type="button" class="ds-btn ds-btn--ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="ds-btn ds-btn--solid" @click="save">
-        {{ isEdit ? 'Guardar cambios' : 'Añadir al plan' }}
+      <button type="button" class="ds-btn ds-btn--solid" :disabled="emitted" @click="save">
+        {{ emitted ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Añadir al plan' }}
       </button>
     </template>
   </ModalShell>

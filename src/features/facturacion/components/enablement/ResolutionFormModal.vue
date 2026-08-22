@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, useId, watch } from 'vue'
 import { FileText } from 'lucide-vue-next'
+import ErrorSummary from '@/components/feedback/ErrorSummary.vue'
 import ModalShell from '@/components/ui/ModalShell.vue'
 import BaseField from '@/components/ui/BaseField.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -19,6 +20,11 @@ const props = defineProps<{
   open: boolean
   initial: NumberingResolutionResponse | null
   presetType?: ElectronicDocumentType
+  /**
+   * FORM-10 — lo controla el padre mientras el guardado está en vuelo. Opcional:
+   * sin pasarlo el modal se protege igual con su propia bandera (`emitted`).
+   */
+  saving?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -66,6 +72,17 @@ function emptyDraft(): Draft {
 const draft = reactive<Draft>(emptyDraft())
 const submitted = ref(false)
 
+/**
+ * FORM-10 — guarda de reenvío. `submit()` emite y devuelve el control; hasta que
+ * el padre cierre el modal el botón sigue activo, y dos pulsaciones son dos
+ * resoluciones DIAN con el mismo rango de numeración. La bandera baja al reabrir.
+ */
+const emitted = ref(false)
+const busy = computed(() => props.saving === true || emitted.value)
+
+/** FORM-05 — el resumen recibe el foco tras una validación fallida (WCAG §2.4.3). */
+const summary = ref<{ focus: () => void } | null>(null)
+
 const docTypeOptions = (Object.keys(DOC_TYPE_LABEL) as ElectronicDocumentType[]).map((k) => ({
   value: k,
   label: DOC_TYPE_LABEL[k],
@@ -73,11 +90,15 @@ const docTypeOptions = (Object.keys(DOC_TYPE_LABEL) as ElectronicDocumentType[])
 
 const isInvoice = computed(() => draft.documentType === 'FE_VENTA')
 
+/** Tipo fijado por el contexto de apertura: solo lectura, no deshabilitado. */
+const typeReadonly = computed(() => !!props.presetType && !props.initial)
+
 watch(
   () => props.open,
   (open) => {
     if (!open) return
     submitted.value = false
+    emitted.value = false
     const init = props.initial
     if (init) {
       Object.assign(draft, {
@@ -124,12 +145,43 @@ function err(field: ErrorKey): string | undefined {
   return submitted.value ? (errors.value[field] ?? undefined) : undefined
 }
 
+/** FORM-05 — items del resumen, en el orden VISUAL del formulario (WCAG §2.4.3). */
+const FIELD_LABEL = {
+  resolutionNumber: 'Número de resolución',
+  rangeFrom: 'Rango desde',
+  rangeTo: 'Rango hasta',
+  validFrom: 'Vigente desde',
+  validTo: 'Vigente hasta',
+} as const
+/**
+ * ids de los CONTROLES a los que enlaza el resumen: el padre no puede adivinar
+ * el `useId()` que `BaseField` genera dentro, así que se los pasa él (prop
+ * `id`). `useId()` aquí evita que dos instancias del modal choquen.
+ */
+const uid = useId()
+const ID = Object.fromEntries(
+  (Object.keys(FIELD_LABEL) as (keyof typeof FIELD_LABEL)[]).map((k) => [k, `${uid}-${k}`]),
+) as Record<keyof typeof FIELD_LABEL, string>
+const summaryItems = computed(() =>
+  (Object.keys(FIELD_LABEL) as (keyof typeof FIELD_LABEL)[]).flatMap((k) => {
+    const text = err(k)
+    // La etiqueta va DELANTE del texto literal del error. Aquí es lo que
+    // sostiene el enlace: en línea los mensajes son «Requerido» y «Debe ser
+    // ≥ 1», y cuatro enlaces que dicen «Requerido» no se distinguen entre sí
+    // fuera de su campo (WCAG §2.4.4).
+    return text ? [{ id: ID[k], text: `${FIELD_LABEL[k]}: ${text}` }] : []
+  }),
+)
+
 function submit() {
+  if (busy.value) return
   submitted.value = true
   if (!isValid.value) {
-    scrollToFirstError()
+    void nextTick().then(() => summary.value?.focus())
+    void scrollToFirstError()
     return
   }
+  emitted.value = true
   const body: SaveNumberingResolutionRequest = {
     documentType: draft.documentType,
     branchId: draft.branchId === ALL_BRANCHES ? null : Number(draft.branchId),
@@ -157,6 +209,12 @@ function submit() {
     @close="emit('close')"
   >
     <template #body>
+      <!-- FORM-05 · `role="alert"`, `tabindex="-1"` y `data-error-anchor` los
+           pone ya la primitiva; lo nuevo es que cada problema ENLAZA con su
+           campo, imposible con la lista a mano sin conocer los ids de antemano.
+           El encabezado pasa al de la primitiva («…en este formulario»): es su
+           dueña y ese matiz de copia no vale una prop. -->
+      <ErrorSummary ref="summary" :items="summaryItems" />
       <div class="grid ds-grid-2">
         <div v-if="hasMultipleBranches" class="ds-grid-span">
           <BaseField
@@ -168,13 +226,22 @@ function submit() {
             </template>
           </BaseField>
         </div>
-        <BaseField label="Tipo de documento" required>
+        <!-- SOLO LECTURA, no deshabilitado: el tipo lo fija quien abre el modal y
+             VIAJA en el envío (`draft.documentType` es parte del payload). No es
+             «no disponible», es «ya decidido», y el usuario tiene que poder
+             enfocarlo y leerlo para saber qué está creando. -->
+        <BaseField
+          label="Tipo de documento"
+          :required="!typeReadonly"
+          :readonly="typeReadonly"
+          :hint="typeReadonly ? 'El tipo lo fija el documento desde el que se abrió.' : undefined"
+        >
           <template #default="{ id }">
             <BaseSelect
               :id="id"
               v-model="draft.documentType"
               :options="docTypeOptions"
-              :disabled="!!presetType && !initial"
+              :readonly="typeReadonly"
             />
           </template>
         </BaseField>
@@ -190,7 +257,12 @@ function submit() {
           </template>
         </BaseField>
         <div class="ds-grid-span">
-          <BaseField label="Número de resolución" required :error="err('resolutionNumber')">
+          <BaseField
+            :id="ID.resolutionNumber"
+            label="Número de resolución"
+            required
+            :error="err('resolutionNumber')"
+          >
             <template #default="{ id }">
               <BaseInput
                 :id="id"
@@ -207,7 +279,7 @@ function submit() {
           </template>
         </BaseField>
         <div />
-        <BaseField label="Rango desde" required :error="err('rangeFrom')">
+        <BaseField :id="ID.rangeFrom" label="Rango desde" required :error="err('rangeFrom')">
           <template #default="{ id }">
             <BaseInput
               :id="id"
@@ -218,7 +290,7 @@ function submit() {
             />
           </template>
         </BaseField>
-        <BaseField label="Rango hasta" required :error="err('rangeTo')">
+        <BaseField :id="ID.rangeTo" label="Rango hasta" required :error="err('rangeTo')">
           <template #default="{ id }">
             <BaseInput
               :id="id"
@@ -229,12 +301,12 @@ function submit() {
             />
           </template>
         </BaseField>
-        <BaseField label="Vigente desde" required :error="err('validFrom')">
+        <BaseField :id="ID.validFrom" label="Vigente desde" required :error="err('validFrom')">
           <template #default="{ id }">
             <DateInput :id="id" v-model="draft.validFrom" :invalid="!!err('validFrom')" />
           </template>
         </BaseField>
-        <BaseField label="Vigente hasta" required :error="err('validTo')">
+        <BaseField :id="ID.validTo" label="Vigente hasta" required :error="err('validTo')">
           <template #default="{ id }">
             <DateInput :id="id" v-model="draft.validTo" :invalid="!!err('validTo')" />
           </template>
@@ -258,8 +330,13 @@ function submit() {
 
     <template #footer-actions>
       <button type="button" class="ds-btn ds-btn--ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="ds-btn ds-btn--primary ds-btn--strong" @click="submit">
-        {{ initial ? 'Guardar' : 'Crear' }}
+      <button
+        type="button"
+        class="ds-btn ds-btn--primary ds-btn--strong"
+        :disabled="busy"
+        @click="submit"
+      >
+        {{ busy ? 'Guardando…' : initial ? 'Guardar' : 'Crear' }}
       </button>
     </template>
   </ModalShell>

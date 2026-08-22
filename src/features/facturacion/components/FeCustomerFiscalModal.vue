@@ -185,7 +185,7 @@ function save() {
       <button
         type="button"
         class="agenttoggle"
-        :class="{ on: draft.withholdingAgent }"
+        :class="draft.withholdingAgent ? 'ds-tone--accent-outline' : 'ds-field-rest'"
         @click="draft.withholdingAgent = !draft.withholdingAgent"
       >
         <span
@@ -306,6 +306,11 @@ function save() {
   color: var(--warm-500);
 }
 
+/* Mismo criterio que `.agentbox`: el tono llega del template
+   (`.ds-tone--accent-outline` cuando es agente retenedor, `.ds-field-rest` en
+   reposo). Antes `.agenttoggle.on` reescribía el cuerpo de la primitiva de
+   acento, así que el retoque A11Y-09 de `--amatista-500` había que copiarlo
+   aquí a mano; ahora lo hereda. */
 .agenttoggle {
   display: flex;
   align-items: flex-start;
@@ -313,17 +318,11 @@ function save() {
   margin-top: 16px;
   padding: 12px 14px;
   border-radius: 11px;
-  background: var(--warm-50);
-  border: 1.5px solid var(--warm-200);
+  border: 1.5px solid;
   cursor: pointer;
   font-family: inherit;
   text-align: left;
   width: 100%;
-}
-
-.agenttoggle.on {
-  background: var(--amatista-50);
-  border-color: var(--amatista-400);
 }
 
 /* El tono de la casilla llega desde el template (`.ds-tone--accent-solid` cuando

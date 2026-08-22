@@ -23,7 +23,6 @@ import { hospitalizationObservationApi } from '../api/hospitalizationObservation
 import type { HospitalizationObservationResponse } from '../types/hospitalizationObservation.types'
 import { hospitalizationProgressNoteApi } from '../api/hospitalizationProgressNote.api'
 import type { HospitalizationProgressNoteResponse } from '../types/hospitalizationProgressNote.types'
-import { useAuth } from '@/features/auth/composables/useAuth'
 import { todayISO } from '@/composables/format'
 import { scheduleToDoseSlot } from './mar'
 import type { DoseSlot, MedOrderVM, OrderVM, ProcOrderVM } from '../types/hospital'
@@ -54,8 +53,6 @@ function toProcVM(r: HospitalizationProcedureResponse, slots: DoseSlot[]): ProcO
  * paciente (planes, observaciones, notas) + motor MAR client-side (volátil).
  */
 export function useHospitalizacion() {
-  const auth = useAuth()
-
   // ── Tablero ──
   const board = ref<HospitalizationResponse[]>([])
   const boardLoading = ref(false)
@@ -232,7 +229,6 @@ export function useHospitalizacion() {
       observations: h.observations,
       animalId: h.animal.id,
       consultationId: h.consultation?.id ?? null,
-      companyId: auth.companyId.value ?? h.company.id,
     }
     await hospitalizationApi.update(h.id, payload)
     board.value = board.value.filter((b) => b.id !== h.id)

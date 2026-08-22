@@ -42,6 +42,11 @@ const props = defineProps<{
    * donde ofrecer «Agendar de todos modos» sería mentir: reintentar igual volvería a fallar.
    */
   saveErrorOverlap: boolean
+  /**
+   * FORM-10 — lo controla la vista mientras el POST/PUT está en vuelo. Opcional:
+   * sin pasarlo el modal se protege igual con su propia bandera (`emitted`).
+   */
+  saving?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -91,11 +96,27 @@ const branchId = ref<number | null>(null)
 const defaultBranchId = ref<number | null>(null)
 const confirmingBranch = ref(false)
 
+/**
+ * FORM-10 — guarda de reenvío. Este modal es fire-and-forget: `emit('submit')`
+ * devuelve el control de inmediato y la vista es quien llama a la API, así que
+ * el modal no puede saber cuándo termina; lo que sí sabe es que YA emitió. La
+ * bandera se levanta en `doEmit()` —el único punto por el que salen los tres
+ * caminos de envío— y baja al reabrir y cuando la vista informa de un fallo
+ * (`saveError`), que es la señal de que el intento terminó y hay que reintentar.
+ *
+ * Sin esto, el botón «Sí, agendar en esta sede» del paso de confirmación de
+ * sede llamaba `doEmit()` directo y sin guarda: era la ruta abierta a la cita
+ * duplicada EN OTRA SEDE, la más cara de las dos.
+ */
+const emitted = ref(false)
+const busy = computed(() => props.saving === true || emitted.value)
+
 const pets = ref<Animal[]>([])
 const petsLoading = ref(false)
 
 function resetFromProps() {
   confirmingBranch.value = false
+  emitted.value = false
   // Sede por defecto: la del menú si está entre las asignadas del usuario; si no, su primera sede asignada.
   defaultBranchId.value = resolveDefaultBranch()
   branchId.value = defaultBranchId.value
@@ -128,7 +149,11 @@ watch(
 watch(
   () => props.saveError,
   (message) => {
-    if (message) void scrollToFirstError()
+    if (message) {
+      // El intento terminó (mal): se vuelve a permitir enviar.
+      emitted.value = false
+      void scrollToFirstError()
+    }
   },
 )
 
@@ -211,6 +236,7 @@ watch(availableVets, (list) => {
   }
 })
 function submit() {
+  if (busy.value) return
   submitted.value = true
   if (!valid.value || employeeId.value == null) {
     // Igual que el resto de formularios: centra el scroll (con shake) sobre el primer campo faltante.
@@ -230,13 +256,18 @@ function submit() {
  * cambia: si la sede ya se confirmó, no se vuelve a preguntar.
  */
 function forceSubmit() {
-  if (!valid.value || employeeId.value == null) return
+  if (busy.value || !valid.value || employeeId.value == null) return
   doEmit(true)
 }
 
 function doEmit(forceOverlap = false) {
+  // La guarda va AQUÍ y no solo en los llamadores: por esta función pasan los
+  // tres caminos de envío, incluido el botón «Sí, agendar en esta sede», que
+  // la llama directamente desde el marcado.
+  if (busy.value) return
   confirmingBranch.value = false
   if (employeeId.value == null) return
+  emitted.value = true
 
   if (isReschedule.value && props.appointment) {
     emit('submit', {
@@ -275,11 +306,14 @@ function doEmit(forceOverlap = false) {
       />
       <div v-else class="ds-stack ds-stack--18">
         <!-- Motivo del último guardado fallido (p. ej. el 409 de solape). -->
+        <!-- Sin `role` escrito aquí: `AppointmentNoticeBanner` lo deriva de su tono,
+             y al ser fallthrough sobre raíz única un `role` de fuera lo REEMPLAZA
+             en vez de anidarse. Hoy coincidían por casualidad; escrito así, el día
+             que este sitio use un tono informativo seguiría interrumpiendo. -->
         <AppointmentNoticeBanner
           v-if="saveError"
           tone="err"
           :icon="AlertTriangle"
-          role="alert"
           data-error-anchor
         >
           <div class="banner-body ds-stack ds-stack--8">
@@ -289,6 +323,7 @@ function doEmit(forceOverlap = false) {
               v-if="saveErrorOverlap && canForceOverlap"
               type="button"
               class="ds-btn ds-btn--ghost force-btn"
+              :disabled="busy"
               @click="forceSubmit"
             >
               <Zap :size="15" :stroke-width="1.8" /> Agendar de todos modos
@@ -333,14 +368,15 @@ function doEmit(forceOverlap = false) {
         <button type="button" class="ds-btn ds-btn--ghost" @click="confirmingBranch = false">
           Volver
         </button>
-        <button type="button" class="ds-btn ds-btn--solid" @click="doEmit()">
-          <Check :size="16" :stroke-width="1.8" /> Sí, agendar en esta sede
+        <button type="button" class="ds-btn ds-btn--solid" :disabled="busy" @click="doEmit()">
+          <Check :size="16" :stroke-width="1.8" />
+          {{ busy ? 'Guardando…' : 'Sí, agendar en esta sede' }}
         </button>
       </template>
       <template v-else>
         <button type="button" class="ds-btn ds-btn--ghost" @click="emit('close')">Cancelar</button>
-        <button type="button" class="ds-btn ds-btn--solid" @click="submit">
-          <Check :size="16" :stroke-width="1.8" /> {{ submitLabel }}
+        <button type="button" class="ds-btn ds-btn--solid" :disabled="busy" @click="submit">
+          <Check :size="16" :stroke-width="1.8" /> {{ busy ? 'Guardando…' : submitLabel }}
         </button>
       </template>
     </template>

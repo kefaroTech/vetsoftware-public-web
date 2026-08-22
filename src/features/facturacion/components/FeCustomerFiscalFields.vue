@@ -81,7 +81,7 @@ const regimeOptions = (Object.keys(TAX_REGIME_LABEL) as TaxRegime[]).map((k) => 
     <button
       type="button"
       class="agenttoggle"
-      :class="{ on: withholdingAgent }"
+      :class="withholdingAgent ? 'ds-tone--accent-outline' : 'ds-field-rest'"
       @click="withholdingAgent = !withholdingAgent"
     >
       <span class="agentbox" :class="withholdingAgent ? 'ds-tone--accent-solid' : 'agentbox-off'">
@@ -177,6 +177,11 @@ const regimeOptions = (Object.keys(TAX_REGIME_LABEL) as TaxRegime[]).map((k) => 
   box-shadow: 0 1px 2px rgb(20 15 30 / 8%);
 }
 
+/* Mismo criterio que `.agentbox`: el tono llega del template
+   (`.ds-tone--accent-outline` cuando es agente retenedor, `.ds-field-rest` en
+   reposo). Antes `.agenttoggle.on` reescribía el cuerpo de la primitiva de
+   acento, así que el retoque A11Y-09 de `--amatista-500` había que copiarlo
+   aquí a mano; ahora lo hereda. */
 .agenttoggle {
   display: flex;
   align-items: flex-start;
@@ -184,16 +189,11 @@ const regimeOptions = (Object.keys(TAX_REGIME_LABEL) as TaxRegime[]).map((k) => 
   margin-top: 12px;
   padding: 12px 14px;
   border-radius: 11px;
-  background: var(--warm-50);
-  border: 1.5px solid var(--warm-200);
+  border: 1.5px solid;
   cursor: pointer;
   font-family: inherit;
   text-align: left;
   width: 100%;
-}
-.agenttoggle.on {
-  background: var(--amatista-50);
-  border-color: var(--amatista-400);
 }
 
 /* El tono de la casilla llega desde el template (`.ds-tone--accent-solid` cuando

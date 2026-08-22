@@ -135,6 +135,17 @@ function shortId(cufe: string | null, cude: string | null): string {
           </tr>
         </thead>
         <tbody>
+          <!-- EST-05: durante la primera carga la tabla se quedaba en blanco —
+               ni filas, ni estado vacío (`isEmpty` es falso mientras carga)—.
+               El esqueleto reserva el hueco conservando cabecera y filtros.
+               `aria-hidden` porque no dice nada: el anuncio va abajo. -->
+          <template v-if="loading && rows.length === 0">
+            <tr v-for="n in 5" :key="`sk-${n}`" aria-hidden="true">
+              <td v-for="c in 8" :key="c">
+                <span class="ds-skeleton ds-skeleton--text sk-cell" />
+              </td>
+            </tr>
+          </template>
           <tr v-for="d in rows" :key="d.id" class="ds-row-clickable" @click="selectedId = d.id">
             <td>
               <span class="num">{{ d.prefix }}-{{ d.consecutive }}</span>
@@ -160,6 +171,9 @@ function shortId(cufe: string | null, cude: string | null): string {
         </tbody>
       </table>
     </div>
+
+    <!-- WCAG 2.2 §4.1.3: el cambio de estado se anuncia sin mover el foco. -->
+    <p class="ds-sr-only" role="status">{{ loading ? 'Cargando documentos…' : '' }}</p>
 
     <!-- Centinela del scroll infinito: al entrar en viewport pide la página siguiente. -->
     <div v-if="!isEmpty" ref="sentinel" class="sentinel" aria-hidden="true">
@@ -191,6 +205,12 @@ function shortId(cufe: string | null, cude: string | null): string {
   gap: 24px;
 }
 
+/* Ancho del hueco de celda durante la primera carga (`.ds-skeleton`). */
+.sk-cell {
+  display: block;
+  width: 84%;
+}
+
 .listhead {
   display: flex;
   align-items: center;
@@ -207,7 +227,7 @@ function shortId(cufe: string | null, cude: string | null): string {
 .filter-select {
   appearance: none;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 8px;
   padding: 10px 30px 10px 14px;
   font-size: 13.5px;
