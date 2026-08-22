@@ -113,7 +113,15 @@ describe('timeout', () => {
 
     await llamada()
 
-    expect(adapter.mock.calls[0][0].timeout).toBe(DIAN_TIMEOUT_MS)
+    // Issue #215 · «venta de POS» pasa por `withBranchBody`, y con la sede sin
+    // resolver (Pinia se recrea en cada test, sin sesión ni sede cargadas) el
+    // interceptor espera de verdad: `ensureSelectedBranch()` dispara `/auth/me`
+    // y el listado de sedes ANTES de dejar salir esta escritura. Esas dos
+    // peticiones anidadas pasan por el mismo adapter espiado y quedan
+    // registradas primero — la llamada bajo prueba es siempre la ÚLTIMA, nunca
+    // la primera. En los otros cinco casos (sin `withBranchBody`) no hay
+    // llamadas anidadas, así que la última y la primera son la misma.
+    expect(adapter.mock.calls.at(-1)?.[0].timeout).toBe(DIAN_TIMEOUT_MS)
   })
 
   it.each([

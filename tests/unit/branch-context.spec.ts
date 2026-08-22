@@ -77,10 +77,22 @@ describe('withBranchBody', () => {
     expect(withBranchBody({ total: 1_000 })).toEqual({ total: 1_000, branchId: 7 })
   })
 
-  it('con "Todas las sedes" deja que el backend elija la Principal', () => {
+  it('con "Todas las sedes" deja que el backend elija la Principal', async () => {
     getSelectedBranchId.mockReturnValue(null)
 
-    expect(withBranchBody({ total: 1_000 })).toEqual({ total: 1_000 })
+    const cuerpo = withBranchBody({ total: 1_000 })
+
+    // Issue #215 · sin sede resuelta, `withBranchBody` llama a
+    // `markPendingBranchBody`, que marca el cuerpo con un símbolo para que el
+    // interceptor de `http.client.ts` sepa esperar — y ese símbolo se retira
+    // solo, en el microtask siguiente (nunca llega al cable ni sobrevive en el
+    // objeto que ve el llamador). Aquí no hay ninguna petición de por medio que
+    // deje pasar ese microtask, así que se espera uno explícito antes de
+    // comprobar que el cuerpo queda limpio.
+    await Promise.resolve()
+
+    expect(cuerpo).toEqual({ total: 1_000 })
+    expect(Object.getOwnPropertySymbols(cuerpo)).toEqual([])
   })
 
   it('respeta el branchId explícito del formulario', () => {
