@@ -20,6 +20,17 @@ export interface PosSalePaymentRequest {
 
 export interface RegisterPosSaleRequest {
   documentType: ElectronicDocumentType
+  /**
+   * Sede que emite la venta y de cuyo saldo se descuenta el stock.
+   *
+   * No estaba declarado, así que el POS dependía en exclusiva de la inyección de
+   * `withBranchBody` y el contrato lo llevaba escrito como hueco conocido. Sin
+   * `branchId` el backend cae a la sede «Principal»
+   * (`PosSaleDocumentBuilder.java:104-106`) mientras esta misma pantalla consulta
+   * las existencias filtrando por la sede activa: la venta descuenta en una sede y
+   * el cajero mira otra. Issue #191.
+   */
+  branchId?: number | null
   finalConsumer: boolean
   /** null o finalConsumer=true ⇒ consumidor final anónimo. */
   customerOwnerId?: number | null

@@ -75,6 +75,12 @@ export interface StockSearchCriteria {
   branchId?: number | null
   q?: string | null
   lowStock?: boolean
+  /**
+   * Saldo SOLO de estos productos. Evita recorrer el inventario entero de la sede
+   * cuando quien pregunta pinta un puñado de líneas (el punto de venta).
+   * El backend acepta como máximo 200 por petición: más devuelve 400.
+   */
+  productIds?: number[] | null
   page?: number
   pageSize?: number
 }

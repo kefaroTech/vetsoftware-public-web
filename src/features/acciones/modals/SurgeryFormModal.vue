@@ -8,7 +8,6 @@ import DateInput from '@/components/ui/DateInput.vue'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import PatientFixedCard from '../components/PatientFixedCard.vue'
-import { useAuth } from '@/features/auth/composables/useAuth'
 import { useSurgeryTypes } from '@/features/surgery-types/composables/useSurgeryTypes'
 import { todayISO } from '@/composables/format'
 import { surgeryApi } from '@/features/dashboard/views/consulta/nueva/api/surgery.api'
@@ -27,7 +26,6 @@ const emit = defineEmits<{
   saved: [item: SurgeryResponse]
 }>()
 
-const { companyId } = useAuth()
 const {
   options: typeOptions,
   loading: loadingTypes,
@@ -108,9 +106,8 @@ async function save() {
     scrollToFirstError()
     return
   }
-  const cid = companyId.value
   const pid = patientId.value
-  if (cid == null || pid == null) {
+  if (pid == null) {
     saveError.value = 'Faltan datos para guardar.'
     return
   }
@@ -125,7 +122,6 @@ async function save() {
     complications: draft.complications.trim(),
     animalId: pid,
     consultationId: props.initial?.consultation?.id ?? null,
-    companyId: cid,
   }
   try {
     const result = props.initial
@@ -189,16 +185,38 @@ async function save() {
           :error="err('description')"
           class="ds-grid-span"
         >
-          <BaseTextarea v-model="draft.description" :rows="2" :invalid="!!err('description')" />
+          <BaseTextarea
+            v-model="draft.description"
+            :rows="2"
+            :invalid="!!err('description')"
+            placeholder="Detalle del procedimiento, técnica, abordaje…"
+          />
         </BaseField>
-        <BaseField label="Medicamentos" class="ds-grid-span">
-          <BaseTextarea v-model="draft.medicament" :rows="2" />
+        <BaseField label="Medicamentos" hint="Protocolo y dosis" class="ds-grid-span">
+          <BaseTextarea
+            v-model="draft.medicament"
+            :rows="2"
+            placeholder="Ej. Acepromacina 0,05 mg/kg + Propofol"
+          />
         </BaseField>
         <BaseField label="Observaciones" class="ds-grid-span">
-          <BaseTextarea v-model="draft.observations" :rows="2" />
+          <BaseTextarea
+            v-model="draft.observations"
+            :rows="2"
+            placeholder="Cuidados pre/postoperatorios, antibiótico…"
+          />
         </BaseField>
-        <BaseField label="Complicaciones" class="ds-grid-span">
-          <BaseTextarea v-model="draft.complications" :rows="2" />
+        <!-- La instrucción va al `hint`, que persiste mientras se escribe (R16.5). -->
+        <BaseField
+          label="Complicaciones"
+          hint="Si hubo complicaciones intra o post-operatorias"
+          class="ds-grid-span"
+        >
+          <BaseTextarea
+            v-model="draft.complications"
+            :rows="2"
+            placeholder="Sangrado, reacción anestésica, dehiscencia…"
+          />
         </BaseField>
       </div>
     </template>

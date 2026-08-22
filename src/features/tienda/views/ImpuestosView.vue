@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { PauseCircle, Pencil, Plus, RotateCcw } from 'lucide-vue-next'
-import ConfirmDeleteDialog from '@/components/feedback/ConfirmDeleteDialog.vue'
 import TaxFormModal from '../components/TaxFormModal.vue'
 import AccentButton from '../components/AccentButton.vue'
 import SegTabs from '../components/SegTabs.vue'
 import { useTienda } from '../composables/useTienda'
 import { formatMoney } from '../composables/pricing'
 import { useToast } from '@/composables/useToast'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import { getProblemDetailMessage } from '@/services/http/http.client'
@@ -15,6 +15,7 @@ import type { TaxResponse } from '../types/tienda'
 
 const store = useTienda()
 const toast = useToast()
+const { confirm } = useConfirmDialog()
 const { can } = useAuthorization()
 const canCreate = can(PERMISSIONS.TAX_CREATE)
 const canUpdate = can(PERMISSIONS.TAX_UPDATE)
@@ -25,8 +26,6 @@ const mode = ref<'active' | 'paused'>('active')
 
 const modalOpen = ref(false)
 const editing = ref<TaxResponse | null>(null)
-const pausing = ref<TaxResponse | null>(null)
-const pausingBusy = ref(false)
 const pausedLoading = ref(false)
 
 onMounted(() => store.reload())
@@ -76,8 +75,13 @@ function onFormClose() {
   editing.value = null
 }
 
-/** Solo se puede pausar un impuesto que NO esté en uso (el back lo bloquea con 409; aquí lo prevenimos). */
-function requestPause(t: TaxResponse) {
+/**
+ * Solo se puede pausar un impuesto que NO esté en uso (el back lo bloquea con
+ * 409; aquí lo prevenimos). Si pasa el filtro, la confirmación es la única de la
+ * app y lleva dentro la acción: mientras el DELETE vuela el diálogo sigue
+ * abierto con los botones inertes, así que la fila no puede dispararlo dos veces.
+ */
+async function requestPause(t: TaxResponse) {
   if (usageOf(t.id) > 0) {
     toast.warn(
       'Impuesto en uso',
@@ -85,22 +89,19 @@ function requestPause(t: TaxResponse) {
     )
     return
   }
-  pausing.value = t
-}
-
-/** Pausar = soft-delete (DELETE → enabled=false). Recuperable desde "Pausados". */
-async function onConfirmPause() {
-  const target = pausing.value
-  if (!target) return
-  pausingBusy.value = true
   try {
-    await store.removeTax(target.id)
-    toast.info('Impuesto pausado', `${target.name} dejó de estar disponible.`)
-    pausing.value = null
+    const ok = await confirm({
+      title: 'Pausar impuesto',
+      message: `${t.name} dejará de estar disponible para asignar.`,
+      consequence: 'Podrás reactivarlo desde la pestaña “Pausados”.',
+      confirmLabel: 'Pausar',
+      busyLabel: 'Pausando…',
+      action: () => store.removeTax(t.id),
+    })
+    if (!ok) return
+    toast.info('Impuesto pausado', `${t.name} dejó de estar disponible.`)
   } catch (e) {
     toast.errorFrom('Ocurrió un error', e, 'No se pudo pausar')
-  } finally {
-    pausingBusy.value = false
   }
 }
 
@@ -127,6 +128,7 @@ function ivaContenido(percentage: number): string {
       </div>
       <div class="head-actions ds-flex-row">
         <SegTabs
+          aria-label="Estado de los impuestos"
           :model-value="mode"
           :options="[
             { value: 'active', label: 'Activos' },
@@ -249,20 +251,6 @@ function ivaContenido(percentage: number): string {
       :initial="editing"
       @close="onFormClose"
       @saved="onSaved"
-    />
-
-    <ConfirmDeleteDialog
-      :open="pausing !== null"
-      title="Pausar impuesto"
-      action-label="Pausar"
-      :message="
-        pausing
-          ? `${pausing.name} dejará de estar disponible para asignar. Podrás reactivarlo desde la pestaña “Pausados”.`
-          : ''
-      "
-      :busy="pausingBusy"
-      @cancel="pausing = null"
-      @confirm="onConfirmPause"
     />
   </div>
 </template>

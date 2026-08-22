@@ -266,7 +266,7 @@ watch(
 .input {
   width: 100%;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 9px;
   padding: 9px 12px 9px 34px;
   font-family: inherit;
@@ -451,7 +451,7 @@ watch(
   gap: 10px;
   padding: 10px 12px;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 10px;
   font-family: inherit;
   text-align: left;
@@ -461,9 +461,19 @@ watch(
     background 0.12s;
 }
 
-/* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- `.ds-tone--accent-selected` sólo existe en forma plana y aquí el par es EXCLUSIVO del `:hover`: la ficha en reposo es warm-50/warm-200 y su estado real de selección es otro par (`.animal-card.selected`, amatista-100/amatista-500), así que llevar la clase en el marcado dejaría todas las fichas con aspecto de preseleccionadas. */
+/* A11Y-09: `--amatista-300` daba 1,90:1 sobre el `--amatista-50` que el propio
+   hover pinta, por debajo del reposo `--warm-450` (3,55:1). `--amatista-450` da
+   3,55:1 y deja `.selected` (`--amatista-500`, 4,24:1) como estado más fuerte. */
+
+/* No adopta `.ds-tone--accent-selected` desde el marcado, como sí hace
+   `.clinical-btn` (`AgendaDayView.vue`): aquí reposo (warm-50/warm-450) y
+   selección (`.animal-card.selected`, amatista-100/amatista-500) son pares
+   distintos, y allí no hay `.selected`. Ya no lo impide la falta de forma
+   `:hover` (A11Y-09 la añadió) ni la preselección ((0,1,0) < scoped (0,2,0)):
+   ese `:hover` empata a (0,3,0) con `.selected` y desempata el orden del bundle. */
+/* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- duplica el cuerpo de `.ds-tone--accent-selected` a propósito: adoptar la clase empataría en (0,3,0) con `.animal-card.selected` y dejaría el estado «seleccionado» a merced del orden de las hojas del bundle (ver arriba). */
 .animal-card:hover {
-  border-color: var(--amatista-300);
+  border-color: var(--amatista-450);
   background: var(--amatista-50);
 }
 

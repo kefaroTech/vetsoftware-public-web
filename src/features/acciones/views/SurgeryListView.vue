@@ -7,9 +7,9 @@ import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import OwnerAnimalBreadcrumb from '../components/OwnerAnimalBreadcrumb.vue'
 import SurgeryFormModal from '../modals/SurgeryFormModal.vue'
 import AccionDetailModal, { type DetailFieldDef } from '../modals/AccionDetailModal.vue'
-import ConfirmDeleteDialog from '@/components/feedback/ConfirmDeleteDialog.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { useToast } from '@/composables/useToast'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { openBilling } from '@/features/cuentas/composables/useBillingPrompt'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
@@ -21,6 +21,7 @@ import { formatDateShort } from '@/composables/format'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 const { can } = useAuthorization()
 const toast = useToast()
+const { confirm } = useConfirmDialog()
 const canCreate = can(PERMISSIONS.SURGERY_CREATE)
 const canUpdate = can(PERMISSIONS.SURGERY_UPDATE)
 const canDelete = can(PERMISSIONS.SURGERY_DELETE)
@@ -31,8 +32,6 @@ const listBody = useTemplateRef<{ reload: () => Promise<void> }>('listBody')
 const error = ref<string | null>(null)
 const modalOpen = ref(false)
 const editing = ref<SurgeryResponse | null>(null)
-const deleting = ref<SurgeryResponse | null>(null)
-const deletingBusy = ref(false)
 const viewing = ref<SurgeryResponse | null>(null)
 
 function detailFields(item: SurgeryResponse): DetailFieldDef[] {
@@ -106,22 +105,31 @@ function onFormClose() {
   editing.value = null
 }
 
-async function onConfirmDelete() {
-  const target = deleting.value
-  if (!target) return
-  deletingBusy.value = true
+/**
+ * El diálogo de confirmación es el único de la app (`AppConfirmDialog`, montado
+ * en `App.vue`): se pide con `confirm()` y la acción viaja dentro. Mientras el
+ * DELETE está en vuelo el diálogo sigue abierto y con los botones inertes, así
+ * que ni el doble clic ni una segunda pulsación en la fila lo repiten —que es
+ * lo que antes sostenía el `:busy` de `ConfirmDeleteDialog`.
+ */
+async function requestDelete(target: SurgeryResponse) {
   error.value = null
   try {
-    await surgeryApi.remove(target.id)
+    const ok = await confirm({
+      title: 'Eliminar cirugía',
+      message: `Se eliminará el registro de ${target.surgeryType.name}.`,
+      consequence: 'Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar',
+      busyLabel: 'Eliminando…',
+      action: () => surgeryApi.remove(target.id),
+    })
+    if (!ok) return
     void listBody.value?.reload()
-    deleting.value = null
     toast.info('Registro eliminado', 'El registro fue removido.')
   } catch (e) {
     const msg = getProblemDetailMessage(e, 'No se pudo eliminar')
     error.value = msg
     toast.error('Ocurrió un error', msg)
-  } finally {
-    deletingBusy.value = false
   }
 }
 </script>
@@ -188,7 +196,7 @@ async function onConfirmDelete() {
                 type="button"
                 class="ds-icon-btn ds-icon-btn--danger"
                 title="Eliminar"
-                @click.stop="deleting = item"
+                @click.stop="requestDelete(item)"
               >
                 <Trash2 :size="15" :stroke-width="1.7" />
               </button>
@@ -204,19 +212,6 @@ async function onConfirmDelete() {
       :initial="editing"
       @close="onFormClose"
       @saved="onSaved"
-    />
-
-    <ConfirmDeleteDialog
-      :open="deleting !== null"
-      title="Eliminar cirugía"
-      :message="
-        deleting
-          ? `Se eliminará el registro de ${deleting.surgeryType.name}. Esta acción no se puede deshacer.`
-          : ''
-      "
-      :busy="deletingBusy"
-      @cancel="deleting = null"
-      @confirm="onConfirmDelete"
     />
 
     <AccionDetailModal

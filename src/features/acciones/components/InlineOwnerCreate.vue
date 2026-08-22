@@ -13,7 +13,6 @@ import OwnerForm from '@/features/dashboard/views/consulta/nueva/components/Owne
 import { ownerApi } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
 import { mapOwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.mapper'
 import type { OwnerDraft } from '@/features/dashboard/views/consulta/nueva/composables/useNuevaConsultaDraft'
-import { useAuth } from '@/features/auth/composables/useAuth'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import type { OwnerDocumentType } from '@/features/facturacion/composables/feFiscalChecklist'
 import type { PersonType } from '@/features/facturacion/types/facturacion'
@@ -28,8 +27,6 @@ const emit = defineEmits<{
   created: [owner: Owner]
   cancel: []
 }>()
-
-const { companyId } = useAuth()
 
 /** Espejo de `nuevaConsultaDraft.store`: el picker no persiste su borrador. */
 function emptyOwnerDraft(prefill?: Partial<OwnerDraft>): OwnerDraft {
@@ -56,10 +53,6 @@ const saving = ref(false)
 async function save() {
   if (formRef.value && !formRef.value.validate()) {
     submitError.value = 'Revisa los campos marcados antes de continuar.'
-    return
-  }
-  if (companyId.value == null) {
-    submitError.value = 'No se pudo identificar la empresa actual. Vuelve a iniciar sesión.'
     return
   }
   const o = draft.value

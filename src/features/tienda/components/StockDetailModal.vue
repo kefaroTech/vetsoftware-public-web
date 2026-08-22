@@ -147,6 +147,7 @@ watch(
   >
     <template #body>
       <SegTabs
+        aria-label="Vista del inventario del producto"
         :model-value="tab"
         size="md"
         :options="[

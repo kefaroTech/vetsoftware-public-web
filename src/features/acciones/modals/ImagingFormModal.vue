@@ -9,7 +9,6 @@ import DateInput from '@/components/ui/DateInput.vue'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import PatientFixedCard from '../components/PatientFixedCard.vue'
-import { useAuth } from '@/features/auth/composables/useAuth'
 import { useDiagnosticImagingTypes } from '@/features/diagnostic-imaging-types/composables/useDiagnosticImagingTypes'
 import { todayISO } from '@/composables/format'
 import { diagnosticImagingApi } from '@/features/dashboard/views/consulta/nueva/api/diagnosticImaging.api'
@@ -28,7 +27,6 @@ const emit = defineEmits<{
   saved: [item: DiagnosticImagingResponse]
 }>()
 
-const { companyId } = useAuth()
 const {
   options: typeOptions,
   loading: loadingTypes,
@@ -116,9 +114,8 @@ async function save() {
     scrollToFirstError()
     return
   }
-  const cid = companyId.value
   const pid = patientId.value
-  if (cid == null || pid == null) {
+  if (pid == null) {
     saveError.value = 'Faltan datos para guardar.'
     return
   }
@@ -133,7 +130,6 @@ async function save() {
     observations: draft.observations.trim(),
     animalId: pid,
     consultationId: props.initial?.consultation?.id ?? null,
-    companyId: cid,
   }
   try {
     const result = props.initial
@@ -196,9 +192,12 @@ async function save() {
             placeholder="Ej. tórax lateral"
           />
         </BaseField>
+        <!-- La instrucción va al `hint`, que persiste; el placeholder se queda con
+             el ejemplo, que desaparece con la primera tecla (R16.5). -->
         <BaseField
           label="Signos clínicos"
           required
+          hint="Razón clínica del estudio"
           :error="err('clinicalSigns')"
           class="ds-grid-span"
         >
@@ -206,14 +205,27 @@ async function save() {
             v-model="draft.clinicalSigns"
             :rows="2"
             :invalid="!!err('clinicalSigns')"
-            placeholder="Razón clínica del estudio"
+            placeholder="Tos productiva 5 días, taquipnea, fiebre…"
           />
         </BaseField>
         <BaseField label="Diagnóstico" required :error="err('diagnosis')" class="ds-grid-span">
-          <BaseTextarea v-model="draft.diagnosis" :rows="2" :invalid="!!err('diagnosis')" />
+          <BaseTextarea
+            v-model="draft.diagnosis"
+            :rows="2"
+            :invalid="!!err('diagnosis')"
+            placeholder="Neumonía bacteriana, masa mediastínica…"
+          />
         </BaseField>
-        <BaseField label="Observaciones" class="ds-grid-span">
-          <BaseTextarea v-model="draft.observations" :rows="2" />
+        <BaseField
+          label="Observaciones"
+          hint="Indicaciones adicionales para el técnico"
+          class="ds-grid-span"
+        >
+          <BaseTextarea
+            v-model="draft.observations"
+            :rows="2"
+            placeholder="Ayuno previo, sedación, proyecciones extra…"
+          />
         </BaseField>
       </div>
     </template>

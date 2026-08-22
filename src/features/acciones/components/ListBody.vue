@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, useId, watch } from 'vue'
 import { AlertTriangle, Check, Copy, RefreshCw, Search } from 'lucide-vue-next'
 import { usePaged } from '../composables/usePaged'
 import { useServerPaged, type ServerPageLoader } from '@/composables/useServerPaged'
@@ -33,6 +33,20 @@ const props = withDefaults(
 const query = ref('')
 const isServer = computed(() => typeof props.fetchPage === 'function')
 
+/** Ata la etiqueta invisible al campo (§3.3.2, nivel A): el placeholder no es etiqueta. */
+const searchId = useId()
+
+/**
+ * Vacío de búsqueda ≠ vacío de verdad (`docs/ux/patron-de-busqueda-en-listado.md` §4).
+ *
+ * Hermano exacto del defecto que cerró EST-01, en el mismo `v-if`: la rama de cero
+ * filas decía «No hay registros aún» hubiera o no término escrito. En las siete
+ * pantallas clínicas que montan este componente eso le dice al veterinario que el
+ * paciente no tiene vacunas, cuando lo cierto es que ninguna coincide con lo que
+ * buscó.
+ */
+const searchTerm = computed(() => query.value.trim())
+
 /**
  * Última página PEDIDA al servidor (1-based), que no es lo mismo que la última
  * página SERVIDA: `server.page` solo avanza en el camino de éxito, así que tras un
@@ -60,7 +74,7 @@ const filtered = computed(() => {
   if (!q || !searchFn) return props.items
   return props.items.filter((it) => searchFn(it, q))
 })
-const client = usePaged(filtered, props.pageSize)
+const client = usePaged(filtered, props.pageSize, query)
 
 const slice = computed(() => (isServer.value ? server.items.value : client.slice.value))
 const page = computed({
@@ -128,8 +142,15 @@ defineExpose({
   <div class="list-body">
     <div class="search-row ds-flex-row ds-flex-row--12">
       <div class="search">
-        <Search :size="14" :stroke-width="1.7" class="icon" />
-        <input v-model="query" type="text" :placeholder="placeholder" class="input" />
+        <label :for="searchId" class="ds-sr-only">{{ placeholder }}</label>
+        <Search :size="14" :stroke-width="1.7" class="icon" aria-hidden="true" />
+        <input
+          :id="searchId"
+          v-model="query"
+          type="text"
+          :placeholder="placeholder"
+          class="input"
+        />
       </div>
       <slot name="actions" />
     </div>
@@ -157,6 +178,20 @@ defineExpose({
         Reintentar
       </button>
     </div>
+    <!-- Vacío de BÚSQUEDA: se cita el término tal cual para que el usuario vea qué
+         buscó de verdad (ahí se descubren el espacio de más y el pegado con salto). -->
+    <div v-else-if="total === 0 && searchTerm" class="state empty ds-stack ds-stack--8">
+      <p class="ds-strong">Sin resultados para “{{ searchTerm }}”</p>
+      <p>Revisa la escritura o prueba con menos palabras.</p>
+      <button
+        type="button"
+        class="ds-btn ds-btn--neutral ds-btn--snug empty-clear"
+        @click="query = ''"
+      >
+        Limpiar búsqueda
+      </button>
+    </div>
+    <!-- Vacío de VERDAD: no hay término, la lista está vacía de por sí. -->
     <div v-else-if="total === 0" class="state empty">{{ emptyText }}</div>
     <div v-else class="ds-table-scroll">
       <table class="table">
@@ -208,7 +243,7 @@ defineExpose({
 .input {
   width: 100%;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 9px;
   padding: 9px 12px 9px 34px;
   font-family: inherit;
@@ -233,6 +268,16 @@ defineExpose({
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 12px;
+}
+
+/* Vacío de búsqueda: título y descripción son párrafos sin margen propio (el
+   hueco lo pone `.ds-stack--8`) y el botón no se estira al ancho de la caja. */
+.state p {
+  margin: 0;
+}
+
+.empty-clear {
+  align-self: center;
 }
 
 /* Banner de fallo (EST-01). El aspecto lo pone `.ds-banner--error`; aquí solo va

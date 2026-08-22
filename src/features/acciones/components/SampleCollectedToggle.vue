@@ -36,7 +36,7 @@ const model = defineModel<boolean>({ required: true })
   gap: 12px;
   padding: 14px 16px;
   background: var(--warm-100);
-  border: 1.5px solid var(--warm-200);
+  border: 1.5px solid var(--warm-450);
   border-radius: 10px;
   cursor: pointer;
   margin-top: 12px;
@@ -46,8 +46,11 @@ const model = defineModel<boolean>({ required: true })
     background 0.12s ease;
 }
 
+/* A11Y-09: `--amatista-300` daba 1,90:1 sobre el relleno `--warm-100` de este
+   control, por debajo del reposo `--warm-450` (3,35:1 sobre ese mismo relleno).
+   `--amatista-450` da 3,56:1. */
 .sample-collected:hover {
-  border-color: var(--amatista-300);
+  border-color: var(--amatista-450);
 }
 
 .sample-collected.checked {
@@ -55,11 +58,14 @@ const model = defineModel<boolean>({ required: true })
   border-color: oklch(70% 0.13 75deg);
 }
 
+/* A11Y-09 · una casilla es el caso de manual de §1.4.11: sin marcar, su borde
+   ES el control entero. `--warm-300` daba 1,49:1 sobre su relleno `--warm-50`;
+   `--warm-450` da 3,55:1. */
 .cb-box {
   width: 18px;
   height: 18px;
   border-radius: 5px;
-  border: 1.5px solid var(--warm-300);
+  border: 1.5px solid var(--warm-450);
   background: var(--warm-50);
   display: grid;
   place-items: center;
@@ -71,8 +77,10 @@ const model = defineModel<boolean>({ required: true })
     border-color 0.12s ease;
 }
 
+/* `--amatista-400` da 2,97:1: incumple por sí solo y además queda por debajo
+   del reposo de la casilla, ya en 3,55:1. `--amatista-450` da 3,77:1. */
 .sample-collected:hover .cb-box:not(.checked) {
-  border-color: var(--amatista-400);
+  border-color: var(--amatista-450);
 }
 
 .cb-box.checked {

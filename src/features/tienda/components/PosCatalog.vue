@@ -211,11 +211,14 @@ const emit = defineEmits<{
   gap: 6px;
 }
 
+/* A11Y-09 · píldora de categoría pulsable: `--warm-200` daba 1,23:1, así que el
+   control no tenía frontera. `--warm-450` da 3,55:1. La tanda anterior de
+   A11Y-09 buscó por token y no llegó aquí. */
 .cat {
   padding: 6px 13px;
   border-radius: var(--radius-pill);
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   font-family: inherit;
   font-size: 12.5px;
   color: var(--warm-700);
@@ -225,7 +228,7 @@ const emit = defineEmits<{
 /* NO es `.ds-hover-accent`: esa primitiva tiñe fondo, borde y texto a la vez, y
    aquí la píldora de categoría sólo oscurece el contorno. */
 .cat:hover {
-  border-color: var(--amatista-300);
+  border-color: var(--amatista-450);
 }
 
 .cat.active {
@@ -253,10 +256,12 @@ const emit = defineEmits<{
   font-size: 13px;
 }
 
+/* A11Y-09 · la tarjeta de producto es pulsable: `--warm-200` daba 1,23:1.
+   `--warm-450` da 3,55:1. */
 .pcard {
   position: relative;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 12px;
   padding: 12px;
   cursor: pointer;
@@ -271,7 +276,7 @@ const emit = defineEmits<{
    píldora de stock, nunca bloquea el clic. La regla `.pcard.disabled` y el
    `:not(.disabled)` de este hover no llegaban a aplicarse nunca. */
 .pcard:hover {
-  border-color: var(--amatista-300);
+  border-color: var(--amatista-450);
   box-shadow: var(--shadow-sm);
 }
 
