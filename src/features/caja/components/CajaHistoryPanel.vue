@@ -229,7 +229,7 @@ const to = defineModel<string>('to', { required: true })
   width: 100%;
   height: 38px;
   padding: 0 32px 0 11px;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 8px;
   outline: none;
   background: var(--warm-50);

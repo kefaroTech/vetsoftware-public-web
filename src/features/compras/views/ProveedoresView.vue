@@ -4,6 +4,7 @@ import { Truck, Plus, Pencil, Trash2, Search } from 'lucide-vue-next'
 import { useSuppliers } from '../composables/useSuppliers'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useToast } from '@/composables/useToast'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { PERMISSIONS } from '@/constants/permissions'
 import SupplierModal from '../components/SupplierModal.vue'
 import ComprasIconButton from '../components/ComprasIconButton.vue'
@@ -13,6 +14,7 @@ import type { Supplier } from '../types/compras'
 const { items, total, loading, error, search, remove } = useSuppliers()
 const { can } = useAuthorization()
 const toast = useToast()
+const { confirm } = useConfirmDialog()
 
 const canCreate = can(PERMISSIONS.SUPPLIER_CREATE)
 const canUpdate = can(PERMISSIONS.SUPPLIER_UPDATE)
@@ -44,10 +46,22 @@ function openEdit(s: Supplier) {
   modalOpen.value = true
 }
 
+/**
+ * El `window.confirm()` nativo que había aquí no tenía foco gobernado, ni
+ * estilo, ni rótulos en español, ni guarda de doble clic. Ahora pasa por el
+ * único diálogo de la app, con la acción dentro.
+ */
 async function onDelete(s: Supplier) {
-  if (!window.confirm(`¿Eliminar el proveedor "${s.name}"?`)) return
   try {
-    await remove(s.id)
+    const ok = await confirm({
+      title: 'Eliminar proveedor',
+      message: `Se eliminará el proveedor ${s.name}.`,
+      consequence: 'Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar proveedor',
+      busyLabel: 'Eliminando…',
+      action: () => remove(s.id),
+    })
+    if (!ok) return
     toast.success('Proveedor eliminado')
     refresh()
   } catch (e) {
@@ -157,7 +171,7 @@ onMounted(refresh)
 .search-bar {
   padding: 9px 14px;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 10px;
   margin-bottom: 16px;
   color: var(--warm-500);

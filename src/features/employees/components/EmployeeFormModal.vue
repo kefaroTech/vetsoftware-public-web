@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, useId, watch } from 'vue'
 import { UserPlus, Pencil } from 'lucide-vue-next'
 import type { Employee, EmployeeStatus } from '@/types/domain'
 import { useRoles } from '@/features/roles/composables/useRoles'
 import { useBranches } from '@/features/branches/composables/useBranches'
+import ErrorSummary from '@/components/feedback/ErrorSummary.vue'
 import ModalShell from '@/components/ui/ModalShell.vue'
 import BaseField from '@/components/ui/BaseField.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -62,8 +63,18 @@ let applyingSuggestion = false
 let suggestTimer: ReturnType<typeof setTimeout> | undefined
 let availTimer: ReturnType<typeof setTimeout> | undefined
 
-// En edición el código NO se puede modificar; en alta se bloquea mientras no haya nombre.
-const codeDisabled = computed(() => isEditing.value || !draft.value.name.trim())
+/**
+ * Dos semánticas distintas que antes vivían colapsadas en un solo booleano
+ * (`isEditing || !name.trim()`) y en el mismo píxel:
+ *
+ * - **En edición** el código ya existe y es INMUTABLE. Eso es solo lectura: el
+ *   usuario tiene que poder enfocarlo, leerlo y copiarlo, y el valor sigue
+ *   viajando en el envío. Lo dice el propio `hint`.
+ * - **En alta sin nombre** el código todavía no se puede generar. Eso sí es
+ *   deshabilitado: es temporal y se resuelve escribiendo el nombre.
+ */
+const codeReadonly = computed(() => isEditing.value)
+const codeDisabled = computed(() => !isEditing.value && !draft.value.name.trim())
 const codeHint = computed<string | undefined>(() => {
   if (isEditing.value) return 'El código no se puede modificar una vez creado el empleado.'
   if (codeDisabled.value)
@@ -73,47 +84,43 @@ const codeHint = computed<string | undefined>(() => {
   return 'Puedes editarlo.'
 })
 
-const touched = reactive<Record<FieldKey, boolean>>({
-  employeeCode: false,
-  name: false,
-  email: false,
-  password: false,
-  roles: false,
-  branches: false,
-})
+/**
+ * FORM-05 — orden VISUAL, etiqueta e id del CONTROL de cada campo. El id lo pasa
+ * el padre (prop `id` de `BaseField`) porque no puede adivinar el `useId()` que
+ * la primitiva genera dentro, y sin él el resumen no tiene a dónde enlazar.
+ */
+const uid = useId()
+const FIELDS: readonly (readonly [FieldKey, string])[] = [
+  ['name', 'Nombre completo'],
+  ['employeeCode', 'Código de empleado'],
+  ['email', 'Correo'],
+  ['password', 'Contraseña inicial'],
+  ['roles', 'Roles'],
+  ['branches', 'Sedes'],
+]
+const fid = (k: FieldKey) => `${uid}-${k}`
+
+// Las claves salen de `FIELDS` para que orden, etiqueta, id y `touched` no
+// puedan desincronizarse: antes eran dos listas escritas a mano.
+const touched = reactive(
+  Object.fromEntries(FIELDS.map(([k]) => [k, false])) as Record<FieldKey, boolean>,
+)
 
 function reset() {
-  if (props.initial) {
-    draft.value = {
-      employeeCode: props.initial.employeeCode,
-      name: props.initial.name,
-      email: props.initial.email,
-      status: props.initial.enabled ? 'ACTIVE' : 'INACTIVE',
-      password: '',
-      roleIds: [],
-      branchIds: [],
-    }
-    selectedRoleIds.value = new Set()
-    selectedBranchIds.value = new Set()
-  } else {
-    draft.value = {
-      employeeCode: '',
-      name: '',
-      email: '',
-      status: 'ACTIVE',
-      password: '',
-      roleIds: [],
-      branchIds: [],
-    }
-    selectedRoleIds.value = new Set()
-    selectedBranchIds.value = new Set()
+  // Las dos ramas solo diferían en cuatro valores; el resto estaba duplicado.
+  const it = props.initial
+  draft.value = {
+    employeeCode: it?.employeeCode ?? '',
+    name: it?.name ?? '',
+    email: it?.email ?? '',
+    status: it && !it.enabled ? 'INACTIVE' : 'ACTIVE',
+    password: '',
+    roleIds: [],
+    branchIds: [],
   }
-  touched.employeeCode = false
-  touched.name = false
-  touched.email = false
-  touched.password = false
-  touched.roles = false
-  touched.branches = false
+  selectedRoleIds.value = new Set()
+  selectedBranchIds.value = new Set()
+  ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = false))
   banner.value = false
   confirming.value = false
   codeStatus.value = 'idle'
@@ -226,13 +233,26 @@ function markTouched(field: FieldKey) {
 
 const banner = ref(false)
 const confirming = ref(false)
+/** FORM-05 — el resumen recibe el foco tras una validación fallida (WCAG §2.4.3). */
+const summary = ref<{ focus: () => void } | null>(null)
+
+/** La etiqueta va delante del texto literal del error: en línea son «Requerido»
+ *  o «Mínimo 8 caracteres», que solos no dicen de qué campo hablan (§2.4.4). */
+const summaryItems = computed(() =>
+  FIELDS.flatMap(([k, label]) => {
+    const text = err(k)
+    return text ? [{ id: fid(k), text: `${label}: ${text}` }] : []
+  }),
+)
 
 function submit() {
+  if (props.busy) return
   ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = true))
   const ok = Object.keys(errors.value).length === 0
   if (!ok) {
-    scrollToFirstError()
     banner.value = true
+    void nextTick().then(() => summary.value?.focus())
+    void scrollToFirstError()
     return
   }
   banner.value = false
@@ -245,6 +265,9 @@ function submit() {
 }
 
 function doSubmit() {
+  // La guarda va también AQUÍ: el botón «Confirmar y crear» llama a esta función
+  // directamente, sin pasar por `submit()`.
+  if (props.busy) return
   confirming.value = false
   emit('submit', {
     ...draft.value,
@@ -296,14 +319,15 @@ const subtitleText = computed(() =>
       </div>
 
       <template v-else>
-        <div v-if="banner" class="ds-banner ds-banner--sm ds-banner--error">
-          Revisa los campos marcados antes de continuar.
-        </div>
+        <!-- FORM-05 · donde había un «Revisa los campos marcados» sin enlaces
+             hay ahora uno por problema, que lleva el foco a su control.
+             `v-if="banner"`: solo tras pulsar Guardar, no al primer `@blur`. -->
+        <ErrorSummary v-if="banner" ref="summary" :items="summaryItems" />
         <div class="ds-stack ds-stack--14">
-          <BaseField label="Nombre completo" required :error="err('name')">
+          <BaseField :id="fid('name')" label="Nombre completo" required :error="err('name')">
             <BaseInput
               v-model="draft.name"
-              placeholder="Mariana Soto Quispe"
+              placeholder="Ej. Camilo Ríos Vargas"
               :invalid="!!err('name')"
               autocomplete="name"
               @blur="markTouched('name')"
@@ -311,26 +335,32 @@ const subtitleText = computed(() =>
           </BaseField>
 
           <div class="grid-2 ds-grid-2">
+            <!-- §5.4: `required` y `readonly` no conviven (MDN: el atributo no está
+                 permitido junto a `readonly`) y un campo que no se edita no puede
+                 fallar una validación. -->
             <BaseField
+              :id="fid('employeeCode')"
               label="Código de empleado"
-              required
+              :required="!codeReadonly"
+              :readonly="codeReadonly"
               :error="err('employeeCode')"
               :hint="codeHint"
             >
               <BaseInput
                 v-model="draft.employeeCode"
                 placeholder="VET-001"
+                :readonly="codeReadonly"
                 :disabled="codeDisabled"
                 :invalid="!!err('employeeCode')"
                 @blur="markTouched('employeeCode')"
               />
             </BaseField>
 
-            <BaseField label="Correo" required :error="err('email')">
+            <BaseField :id="fid('email')" label="Correo" required :error="err('email')">
               <BaseInput
                 v-model="draft.email"
                 type="email"
-                placeholder="mariana.soto@vetrina.com"
+                placeholder="nombre@clinica.com"
                 :invalid="!!err('email')"
                 autocomplete="email"
                 @blur="markTouched('email')"
@@ -340,15 +370,19 @@ const subtitleText = computed(() =>
 
           <BaseField
             v-if="!isEditing"
+            :id="fid('password')"
             label="Contraseña inicial"
             required
             hint="Mínimo 8 caracteres."
             :error="err('password')"
           >
+            <!-- Sin placeholder: ocho puntos en un `type="password"` con etiqueta,
+                 candado y ojo SIMULAN un campo ya relleno, y quien lleva prisa
+                 pulsa Enter creyendo que ya está. La política de contraseña va en
+                 el `hint`, que es donde se lee de verdad. -->
             <BaseInput
               v-model="draft.password"
               type="password"
-              placeholder="••••••••"
               :invalid="!!err('password')"
               autocomplete="new-password"
               @blur="markTouched('password')"
@@ -362,7 +396,11 @@ const subtitleText = computed(() =>
             hint="Un empleado puede tener varios roles. Debe tener al menos uno."
             :error="err('roles')"
           >
+            <!-- id y `tabindex` caen por fallthrough en la raíz: son el ancla del
+                 enlace del resumen, que aquí apunta a la lista, no a un control. -->
             <RoleSelectorGrid
+              :id="fid('roles')"
+              tabindex="-1"
               :available-roles="roles"
               :selected-ids="selectedRoleIds"
               @update:selected-ids="onSelectedIdsUpdate"
@@ -377,6 +415,8 @@ const subtitleText = computed(() =>
             :error="err('branches')"
           >
             <BranchSelectorGrid
+              :id="fid('branches')"
+              tabindex="-1"
               :available-branches="visibleBranches"
               :selected-ids="selectedBranchIds"
               @update:selected-ids="onSelectedBranchIdsUpdate"
@@ -402,7 +442,7 @@ const subtitleText = computed(() =>
           :disabled="busy"
           @click="doSubmit"
         >
-          Confirmar y crear
+          {{ busy ? 'Guardando…' : 'Confirmar y crear' }}
         </button>
       </template>
       <template v-else>
@@ -420,7 +460,7 @@ const subtitleText = computed(() =>
           :disabled="busy"
           @click="submit"
         >
-          {{ isEditing ? 'Guardar cambios' : 'Crear empleado' }}
+          {{ busy ? 'Guardando…' : isEditing ? 'Guardar cambios' : 'Crear empleado' }}
         </button>
       </template>
     </template>

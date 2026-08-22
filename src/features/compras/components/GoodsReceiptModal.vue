@@ -75,15 +75,34 @@ const orderOptions = computed(() => {
   ]
 })
 
+/**
+ * Mismo defecto que en `PurchaseOrderModal`: los importes se teclean en es-CO
+ * con COMA decimal (`1500,50`) y `Number()` a secas da `NaN`; el costo vacío
+ * pasaba por `Number('') === 0` y la recepción entraba a inventario con costo
+ * cero sin ningún aviso. `null` = no se pudo leer, que NO es lo mismo que cero.
+ */
+function parseAmount(raw: string): number | null {
+  const t = raw.trim().replace(/\s/g, '').replace(',', '.')
+  if (t === '') return null
+  const n = Number(t)
+  return Number.isFinite(n) ? n : null
+}
+
 const linesValid = computed(
   () =>
     lines.value.length > 0 &&
-    lines.value.every((l) => l.productId && Number(l.quantity) > 0 && Number(l.unitCost) >= 0),
+    lines.value.every((l) => {
+      const qty = parseAmount(l.quantity)
+      const cost = parseAmount(l.unitCost)
+      return !!l.productId && qty !== null && qty > 0 && cost !== null && cost >= 0
+    }),
 )
 const errors = computed(() => ({
   supplierId: form.supplierId ? null : 'Selecciona el proveedor.',
   receiptDate: form.receiptDate ? null : 'Fecha de recepción obligatoria.',
-  lines: linesValid.value ? null : 'Agrega al menos una línea válida (producto, cantidad y costo).',
+  lines: linesValid.value
+    ? null
+    : 'Cada línea necesita producto, cantidad mayor a 0 y costo unitario. Los decimales van con coma: 1500,50.',
 }))
 const hasErrors = computed(() => Object.values(errors.value).some((e) => e !== null))
 function err(k: keyof typeof errors.value) {
@@ -171,8 +190,9 @@ async function submit() {
         purchaseOrderLineId: l.purchaseOrderLineId,
         lotNumber: l.lotNumber.trim() || null,
         expireDate: l.expireDate || null,
-        quantityReceived: Number(l.quantity),
-        unitCost: Number(l.unitCost),
+        // `linesValid` ya garantizó que ninguno de los dos es `null` aquí.
+        quantityReceived: parseAmount(l.quantity) ?? 0,
+        unitCost: parseAmount(l.unitCost) ?? 0,
       })),
     })
     emit('saved')

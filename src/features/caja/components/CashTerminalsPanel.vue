@@ -344,7 +344,7 @@ button:disabled {
   align-items: center;
   gap: 5px;
   padding: 5px 9px;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 7px;
   background: transparent;
   color: var(--warm-700);

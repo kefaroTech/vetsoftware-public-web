@@ -349,19 +349,24 @@ function goNuevaConsulta() {
 .weight-toggle {
   gap: var(--space-8);
   padding: var(--space-9) var(--space-14);
-  border-color: var(--wt-border, var(--warm-200));
+  border-color: var(--wt-border, var(--warm-450));
   border-radius: var(--radius-panel);
   background: var(--warm-50);
   color: var(--wt-fg, var(--warm-700));
 }
 
+/* A11Y-09 · los dos estados bajaban del reposo: `--amatista-300` da 2,02:1
+   sobre `--warm-50` y 1,90:1 sobre el `--amatista-50` que pinta `.open`, contra
+   los 3,55:1 del reposo `--warm-450`. Y el peor era `.open`, que es el estado
+   activo: se veía menos que el botón sin abrir. La jerarquía queda
+   reposo (3,55:1) < hover (3,77:1) < abierto (4,24:1). */
 .weight-toggle:hover {
-  --wt-border: var(--amatista-300);
+  --wt-border: var(--amatista-450);
   --wt-fg: var(--amatista-700);
 }
 
 .weight-toggle.open {
-  --wt-border: var(--amatista-300);
+  --wt-border: var(--amatista-500);
   --wt-fg: var(--amatista-700);
 
   background: var(--amatista-50);
@@ -389,7 +394,7 @@ function goNuevaConsulta() {
 
 .chip {
   padding: var(--space-5) var(--space-11);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   background: var(--warm-50);
   color: var(--warm-700);
   font-size: var(--text-xs);
@@ -401,8 +406,10 @@ function goNuevaConsulta() {
     color 0.12s ease;
 }
 
+/* A11Y-09: `--amatista-300` daba 2,02:1, por debajo del reposo `--warm-450`
+   (3,55:1). `--amatista-450` da 3,77:1. */
 .chip:hover {
-  border-color: var(--amatista-300);
+  border-color: var(--amatista-450);
 }
 
 .chip.active {
@@ -420,7 +427,7 @@ function goNuevaConsulta() {
   padding: var(--space-10) var(--space-12);
   margin-bottom: 18px;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 10px;
 }
 

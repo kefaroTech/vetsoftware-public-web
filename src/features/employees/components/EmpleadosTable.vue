@@ -90,10 +90,15 @@ const emit = defineEmits<{
   border-radius: 10px;
 }
 
+/* A11Y-09 · WCAG 2.2 §1.4.11 (issue #206). Este campo no tenía borde: su única
+   frontera era el relleno `--warm-100` contra la barra `--warm-50`, 1,06:1, así
+   que un campo de texto no se distinguía del fondo. El borde `--warm-450` da
+   3,35:1 contra su propio relleno y 3,55:1 contra la barra. */
 .search {
   flex: 1;
   padding: 6px 12px;
   background: var(--warm-100);
+  border: 1px solid var(--warm-450);
   border-radius: 7px;
 }
 

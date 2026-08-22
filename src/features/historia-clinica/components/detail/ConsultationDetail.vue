@@ -187,7 +187,7 @@ const childrenCountLabel = computed(() =>
   text-align: left;
   font-family: inherit;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 10px;
   padding: 10px 14px;
   cursor: default;

@@ -42,7 +42,7 @@ defineProps<{ minWidth: number }>()
   padding: var(--space-6) var(--space-8);
   border-bottom: 1px solid var(--warm-200);
   color: var(--warm-500);
-  font-size: var(--text-2xs);
+  font-size: var(--text-caption);
   letter-spacing: 0.04em;
   text-align: left;
   text-transform: uppercase;

@@ -14,6 +14,9 @@ import CajaHistoryPanel from '../components/CajaHistoryPanel.vue'
 import CajaOpenSessionsPanel from '../components/CajaOpenSessionsPanel.vue'
 import MyCashPanel from '../components/MyCashPanel.vue'
 import CashSessionDetailModal from '../components/CashSessionDetailModal.vue'
+import BaseTabs from '@/components/ui/BaseTabs.vue'
+import BaseTabPanel from '@/components/ui/BaseTabPanel.vue'
+import type { TabItem } from '@/components/ui/tabs'
 import { cashSessionApi } from '../api/cashSession.api'
 import { employeeApi } from '@/features/employees/api/employee.api'
 import type { EmployeeResponse } from '@/features/employees/types/employee.types'
@@ -101,6 +104,33 @@ function showMyCash(): void {
   } else if (current.value?.id !== session.id) {
     void loadCurrent(true)
   }
+}
+
+/**
+ * La tira ENCOGE: «Mi caja abierta» solo existe mientras el usuario tenga una
+ * sesión OPEN, e «Historial» solo con permiso de lectura. El punto de «Mi caja
+ * abierta» no es un contador —dice que hay caja abierta, no cuántas—, y por eso
+ * viaja como `dot` y no como `badge`.
+ */
+const cashTabs = computed<TabItem<CashTab>[]>(() => [
+  ...(myOpenSession.value ? [{ value: 'mine' as const, label: 'Mi caja abierta', dot: true }] : []),
+  { value: 'open', label: 'Cajas abiertas', badge: openSessions.value.length },
+  ...(canReadHistory.value
+    ? [{ value: 'history' as const, label: 'Historial', badge: historyTotal.value }]
+    : []),
+])
+
+/**
+ * Ir a «Mi caja abierta» no es solo cambiar de pestaña: sincroniza la sede y
+ * recarga la sesión (`showMyCash`). Por eso la tira se escucha con
+ * `@update:model-value` y no con un `v-model` que escribiría el valor a secas.
+ */
+function selectTab(value: CashTab): void {
+  if (value === 'mine') {
+    showMyCash()
+    return
+  }
+  activeTab.value = value
 }
 
 function openCashSession(session: CashSessionView): void {
@@ -265,83 +295,57 @@ watch(
       </div>
     </header>
 
-    <nav class="cash-tabs" role="tablist" aria-label="Secciones de caja">
-      <button
-        v-if="myOpenSession"
-        type="button"
-        role="tab"
-        class="cash-tab"
-        :class="{ active: activeTab === 'mine' }"
-        :aria-selected="activeTab === 'mine'"
-        @click="showMyCash"
-      >
-        Mi caja abierta
-        <span class="tab-status" aria-hidden="true"></span>
-      </button>
-      <button
-        type="button"
-        role="tab"
-        class="cash-tab"
-        :class="{ active: activeTab === 'open' }"
-        :aria-selected="activeTab === 'open'"
-        @click="activeTab = 'open'"
-      >
-        Cajas abiertas
-        <span class="tab-count">{{ openSessions.length }}</span>
-      </button>
-      <button
-        v-if="canReadHistory"
-        type="button"
-        role="tab"
-        class="cash-tab"
-        :class="{ active: activeTab === 'history' }"
-        :aria-selected="activeTab === 'history'"
-        @click="activeTab = 'history'"
-      >
-        Historial
-        <span class="tab-count">{{ historyTotal }}</span>
-      </button>
-    </nav>
-
-    <CajaOpenSessionsPanel
-      v-if="activeTab === 'open'"
-      :sessions="openSessions"
-      :loading="openSessionsLoading"
-      :my-open-session-id="myOpenSession?.id ?? null"
-      @open="openCashSession"
+    <BaseTabs
+      :model-value="activeTab"
+      :tabs="cashTabs"
+      name="caja"
+      tablist-label="Secciones de caja"
+      class="cash-tabs"
+      @update:model-value="selectTab"
     />
+
+    <BaseTabPanel v-if="activeTab === 'open'" name="caja" value="open">
+      <CajaOpenSessionsPanel
+        :sessions="openSessions"
+        :loading="openSessionsLoading"
+        :my-open-session-id="myOpenSession?.id ?? null"
+        @open="openCashSession"
+      />
+    </BaseTabPanel>
 
     <!-- Solo existe cuando el usuario autenticado tiene una caja OPEN. -->
-    <MyCashPanel
-      v-if="myOpenSession && activeTab === 'mine'"
-      :session="myOpenSession"
-      :detail="myCashDetail"
-      :can-operate="canOperate"
-      :can-close="canCloseCurrentSession"
-      @movement="movementModal = true"
-      @close="closeModal = true"
-    />
+    <BaseTabPanel v-if="myOpenSession && activeTab === 'mine'" name="caja" value="mine">
+      <MyCashPanel
+        :session="myOpenSession"
+        :detail="myCashDetail"
+        :can-operate="canOperate"
+        :can-close="canCloseCurrentSession"
+        @movement="movementModal = true"
+        @close="closeModal = true"
+      />
+    </BaseTabPanel>
 
-    <CajaHistoryPanel
-      v-if="canReadHistory && activeTab === 'history'"
-      v-model:branch-id="historyBranchId"
-      v-model:employee-id="historyEmployeeId"
-      v-model:from="historyFrom"
-      v-model:to="historyTo"
-      :rows="history"
-      :total="historyTotal"
-      :page="historyPage"
-      :page-count="historyTotalPages"
-      :page-size="historyPageSize"
-      :loading="historyLoading"
-      :employees-loading="historyEmployeesLoading"
-      :branch-options="historyBranchOptions"
-      :employee-options="historyEmployeeOptions"
-      @apply="applyHistoryFilters"
-      @clear="clearHistoryFilters"
-      @export="exportArqueo"
-      @update:page="setHistoryPage"
-    />
+    <BaseTabPanel v-if="canReadHistory && activeTab === 'history'" name="caja" value="history">
+      <CajaHistoryPanel
+        v-model:branch-id="historyBranchId"
+        v-model:employee-id="historyEmployeeId"
+        v-model:from="historyFrom"
+        v-model:to="historyTo"
+        :rows="history"
+        :total="historyTotal"
+        :page="historyPage"
+        :page-count="historyTotalPages"
+        :page-size="historyPageSize"
+        :loading="historyLoading"
+        :employees-loading="historyEmployeesLoading"
+        :branch-options="historyBranchOptions"
+        :employee-options="historyEmployeeOptions"
+        @apply="applyHistoryFilters"
+        @clear="clearHistoryFilters"
+        @export="exportArqueo"
+        @update:page="setHistoryPage"
+      />
+    </BaseTabPanel>
 
     <OpenCashModal :open="openModal" @close="closeOpenModal" @saved="handleOpenCashSaved" />
     <CashMovementModal
@@ -391,82 +395,13 @@ watch(
   color: var(--warm-500);
 }
 
+/* La pestaña —tipografía, estado activo, contador y el punto de «caja
+   abierta»— la pinta `BaseTabs`. Aquí queda solo la caja de la tira, que es de
+   esta pantalla: el raíl inferior y su separación del panel. Sobre la raíz del
+   hijo, que conserva el `data-v-…` de esta vista. */
 .cash-tabs {
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
   margin-bottom: 20px;
   border-bottom: 1px solid var(--warm-200);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.cash-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.cash-tab {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex: 0 0 auto;
-  margin: 0;
-  padding: 11px 16px 12px;
-  border: 0;
-  background: transparent;
-  color: var(--warm-500);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.cash-tab::after {
-  position: absolute;
-  right: 10px;
-  bottom: -1px;
-  left: 10px;
-  height: 2px;
-  border-radius: var(--radius-pill) 999px 0 0;
-  background: transparent;
-  content: '';
-}
-
-.cash-tab:hover {
-  color: var(--warm-800);
-}
-
-.cash-tab.active {
-  color: var(--amatista-700);
-}
-
-.cash-tab.active::after {
-  background: var(--amatista-600);
-}
-
-.tab-count {
-  min-width: 20px;
-  padding: 1px 6px;
-  border-radius: var(--radius-pill);
-  background: var(--warm-100);
-  color: var(--warm-600);
-  font-size: 10.5px;
-  line-height: 18px;
-  text-align: center;
-}
-
-.cash-tab.active .tab-count {
-  background: var(--amatista-100, #efe6f7);
-  color: var(--amatista-700);
-}
-
-.tab-status {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #2f9d62;
-  box-shadow: 0 0 0 3px rgb(47 157 98 / 12%);
 }
 
 @media (width <= 720px) {

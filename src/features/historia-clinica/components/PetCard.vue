@@ -44,7 +44,7 @@ const weightLabel = computed(() => {
   align-items: flex-start;
   padding: 16px 18px;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 14px;
   cursor: pointer;
   font-family: inherit;

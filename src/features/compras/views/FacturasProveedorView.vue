@@ -5,6 +5,7 @@ import { useSupplierInvoices } from '../composables/useSupplierInvoices'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
 import { useToast } from '@/composables/useToast'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { PERMISSIONS } from '@/constants/permissions'
 import { formatDateNumeric } from '@/composables/format'
 import { formatMoney } from '@/features/tienda/composables/pricing'
@@ -20,6 +21,7 @@ const { items, total, loading, error, aging, agingLoading, search, loadAging, ca
 const { can } = useAuthorization()
 const branchStore = useBranchStore()
 const toast = useToast()
+const { confirm } = useConfirmDialog()
 
 const canCreate = can(PERMISSIONS.SUPPLIER_INVOICE_CREATE)
 const canUpdate = can(PERMISSIONS.SUPPLIER_INVOICE_UPDATE)
@@ -87,20 +89,41 @@ function openPay(inv: SupplierInvoice) {
   paymentModal.value = true
 }
 
+/**
+ * Los `window.confirm()` nativos que había aquí eran la peor implementación
+ * posible del concepto: rótulos en el idioma del navegador («OK»/«Cancel»), sin
+ * foco gobernado, sin estilo y sin guarda de doble clic. Ahora pasan por el
+ * único diálogo de la app, con la consecuencia escrita y la acción dentro.
+ */
 async function onCancel(inv: SupplierInvoice) {
-  if (!window.confirm(`¿Anular la factura ${inv.invoiceNumber}?`)) return
   try {
-    await cancel(inv.id)
+    const ok = await confirm({
+      title: 'Anular factura',
+      message: `Se anulará la factura ${inv.invoiceNumber}.`,
+      consequence: 'La factura deja de contar como cuenta por pagar. No se puede reactivar.',
+      confirmLabel: 'Anular factura',
+      busyLabel: 'Anulando…',
+      action: () => cancel(inv.id),
+    })
+    if (!ok) return
     toast.success('Factura anulada')
     refresh()
   } catch (e) {
     toast.errorFrom('No se pudo anular', e, 'Error al anular')
   }
 }
+
 async function onDelete(inv: SupplierInvoice) {
-  if (!window.confirm(`¿Eliminar la factura ${inv.invoiceNumber}?`)) return
   try {
-    await remove(inv.id)
+    const ok = await confirm({
+      title: 'Eliminar factura',
+      message: `Se eliminará la factura ${inv.invoiceNumber}.`,
+      consequence: 'Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar factura',
+      busyLabel: 'Eliminando…',
+      action: () => remove(inv.id),
+    })
+    if (!ok) return
     toast.success('Factura eliminada')
     refresh()
   } catch (e) {
@@ -348,7 +371,7 @@ onMounted(refresh)
 
 .mini-select {
   padding: 7px 10px;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 8px;
   background: var(--warm-50);
   font-family: inherit;

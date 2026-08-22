@@ -248,7 +248,7 @@ async function remove(id: number) {
               <span class="wp-src" :class="SOURCE_TONE[r.source]">
                 {{ SOURCE_LABEL[r.source] }}
               </span>
-              <span v-if="r.note" class="wp-item-note ds-truncate">{{ r.note }}</span>
+              <span v-if="r.note" class="ds-meta-dark ds-truncate">{{ r.note }}</span>
             </div>
             <button
               v-if="canEdit"
@@ -404,7 +404,7 @@ async function remove(id: number) {
 }
 
 .wp-item-value {
-  font-size: var(--text-xl);
+  font-size: var(--text-2xl);
 }
 
 /* Resto sobre `.ds-flex-fill` + `.ds-flex-row`: gap propio (10px). */
@@ -433,11 +433,6 @@ async function remove(id: number) {
 .src-hospitalization {
   background: oklch(93% 0.05 250deg);
   color: oklch(45% 0.15 250deg);
-}
-
-.wp-item-note {
-  color: var(--warm-600);
-  font-size: var(--text-sm);
 }
 
 .wp-del {

@@ -110,7 +110,7 @@ onBeforeUnmount(() => observer?.disconnect())
 .search-box {
   gap: var(--space-10);
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 12px;
   padding: 12px 14px;
 }
@@ -176,7 +176,7 @@ onBeforeUnmount(() => observer?.disconnect())
 
 .name {
   color: var(--warm-900);
-  font-size: var(--text-xl);
+  font-size: var(--text-2xl);
   font-weight: var(--weight-medium);
 }
 
@@ -228,7 +228,7 @@ onBeforeUnmount(() => observer?.disconnect())
 
 .hint {
   padding: var(--space-28) var(--space-20);
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
   background: var(--warm-50);
   border: 1px dashed var(--warm-200);
   border-radius: 12px;

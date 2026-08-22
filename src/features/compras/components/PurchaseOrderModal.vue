@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import { nextRowUid } from '@/composables/rowUid'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, useId, watch } from 'vue'
 import { ClipboardList, Plus, Trash2 } from 'lucide-vue-next'
+import ErrorSummary from '@/components/feedback/ErrorSummary.vue'
 import ModalShell from '@/components/ui/ModalShell.vue'
 import BaseField from '@/components/ui/BaseField.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -14,6 +15,7 @@ import { useTienda } from '@/features/tienda/composables/useTienda'
 import { purchaseOrdersApi } from '../api/purchaseOrders.api'
 import { formatMoney } from '@/features/tienda/composables/pricing'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { scrollToFirstError } from '@/composables/scrollToError'
 import type { PurchaseOrder } from '../types/compras'
 import ComprasIconButton from './ComprasIconButton.vue'
 
@@ -61,23 +63,89 @@ const productOptions = computed(() =>
   tienda.products.value.map((p) => ({ value: String(p.id), label: `${p.name} (${p.code})` })),
 )
 
-const total = computed(() =>
-  lines.value.reduce((acc, l) => acc + (Number(l.quantity) || 0) * (Number(l.unitCost) || 0), 0),
-)
+/**
+ * Los importes y las cantidades se teclean en es-CO, con COMA decimal
+ * (`1500,50`). `Number()` a secas devuelve `NaN` sobre eso, y el `|| 0` que
+ * había detrás lo convertía en **cero**: una orden de compra se guardaba con
+ * costo cero sin un solo aviso, porque `unitCost` era el ÚNICO de los diez
+ * campos de importe del tenant al que le faltaba el `.replace(',', '.')`.
+ *
+ * Devuelve `null` —y no 0— cuando el texto no es un número: cero es un importe
+ * legítimo y confundirlo con «no se pudo leer» es justo el defecto que esto
+ * cierra. Quien necesite pintar usa `?? 0`; quien valide comprueba el `null`.
+ */
+function parseAmount(raw: string): number | null {
+  const t = raw.trim().replace(/\s/g, '').replace(',', '.')
+  if (t === '') return null
+  const n = Number(t)
+  return Number.isFinite(n) ? n : null
+}
+
+/** Subtotal de una línea, ya con la coma decimal resuelta. */
+function lineTotal(l: LineRow): number {
+  return (parseAmount(l.quantity) ?? 0) * (parseAmount(l.unitCost) ?? 0)
+}
+
+const total = computed(() => lines.value.reduce((acc, l) => acc + lineTotal(l), 0))
 
 const linesValid = computed(
   () =>
     lines.value.length > 0 &&
-    lines.value.every((l) => l.productId && Number(l.quantity) > 0 && Number(l.unitCost) >= 0),
+    lines.value.every((l) => {
+      const qty = parseAmount(l.quantity)
+      const cost = parseAmount(l.unitCost)
+      // El costo tiene que estar ESCRITO: dejarlo vacío pasaba por `Number('') === 0`
+      // y la orden se guardaba a cero. Ahora hay que teclearlo, aunque sea `0`.
+      return !!l.productId && qty !== null && qty > 0 && cost !== null && cost >= 0
+    }),
 )
 const errors = computed(() => ({
   supplierId: form.supplierId ? null : 'Selecciona el proveedor.',
   orderDate: form.orderDate ? null : 'Fecha de orden obligatoria.',
-  lines: linesValid.value ? null : 'Agrega al menos una línea válida (producto, cantidad y costo).',
+  lines: linesValid.value
+    ? null
+    : 'Cada línea necesita producto, cantidad mayor a 0 y costo unitario. Los decimales van con coma: 1500,50.',
 }))
 const hasErrors = computed(() => Object.values(errors.value).some((e) => e !== null))
 function err(k: keyof typeof errors.value) {
   return submitted.value ? (errors.value[k] ?? undefined) : undefined
+}
+
+/** FORM-05 — resumen de errores, en el orden VISUAL del formulario (WCAG §2.4.3). */
+const FIELD_LABEL = {
+  supplierId: 'Proveedor',
+  orderDate: 'Fecha de orden',
+  lines: 'Líneas',
+} as const
+/**
+ * ids de los CONTROLES a los que enlaza el resumen. El padre no puede adivinar
+ * el `useId()` que `BaseField` genera dentro, así que se los pasa él (prop
+ * `id`); `useId()` aquí evita choques entre instancias. `lines` NO es un
+ * control: es el grupo de filas, y su ancla es el mensaje de error del grupo,
+ * que sí es un elemento único y enfocable (`tabindex="-1"`).
+ */
+const uid = useId()
+const ID = Object.fromEntries(
+  (Object.keys(FIELD_LABEL) as (keyof typeof FIELD_LABEL)[]).map((k) => [k, `${uid}-${k}`]),
+) as Record<keyof typeof FIELD_LABEL, string>
+const summaryItems = computed(() =>
+  (Object.keys(FIELD_LABEL) as (keyof typeof FIELD_LABEL)[]).flatMap((k) => {
+    const text = err(k)
+    // La etiqueta va DELANTE del texto literal: «Fecha de orden obligatoria.»
+    // se lee solo, pero el resto no, y un enlace tiene que decir a dónde lleva.
+    return text ? [{ id: ID[k], text: `${FIELD_LABEL[k]}: ${text}` }] : []
+  }),
+)
+const summary = ref<{ focus: () => void } | null>(null)
+
+/**
+ * El desplazamiento sin foco deja al usuario de teclado donde estaba (WCAG
+ * §2.4.3): la pantalla se mueve y él no. El resumen lleva `tabindex="-1"` justo
+ * para poder recibirlo.
+ */
+async function focusSummary() {
+  await nextTick()
+  summary.value?.focus()
 }
 
 function addLine() {
@@ -111,9 +179,14 @@ watch(
 )
 
 async function submit() {
+  if (saving.value) return
   submitted.value = true
   serverError.value = null
-  if (hasErrors.value) return
+  if (hasErrors.value) {
+    void focusSummary()
+    void scrollToFirstError()
+    return
+  }
   saving.value = true
   try {
     const payload = {
@@ -123,8 +196,9 @@ async function submit() {
       notes: form.notes.trim() || null,
       lines: lines.value.map((l) => ({
         productId: Number(l.productId),
-        quantityOrdered: Number(l.quantity),
-        unitCost: Number(l.unitCost),
+        // `linesValid` ya garantizó que ninguno de los dos es `null` aquí.
+        quantityOrdered: parseAmount(l.quantity) ?? 0,
+        unitCost: parseAmount(l.unitCost) ?? 0,
       })),
     }
     if (isEdit.value && props.order) {
@@ -152,9 +226,18 @@ async function submit() {
     @close="emit('close')"
   >
     <template #body>
-      <p v-if="serverError" class="ds-server-error">{{ serverError }}</p>
+      <!-- FORM-05 · resumen de errores. `role="alert"`, `tabindex="-1"` y
+           `data-error-anchor` los pone ya la primitiva; lo nuevo es que cada
+           problema ENLAZA con su campo, que es lo que la lista a mano no podía
+           hacer sin conocer los ids de antemano. El encabezado por defecto
+           («…en este formulario») sustituye al «…en esta orden» que decía aquí:
+           la primitiva es la dueña del texto, y ese matiz no vale una prop. -->
+      <ErrorSummary ref="summary" :items="summaryItems" />
+      <p v-if="serverError" class="ds-server-error" role="alert" data-error-anchor>
+        {{ serverError }}
+      </p>
       <div class="head-grid">
-        <BaseField label="Proveedor" required :error="err('supplierId')">
+        <BaseField :id="ID.supplierId" label="Proveedor" required :error="err('supplierId')">
           <BaseSelect
             v-model="form.supplierId"
             :options="supplierOptions"
@@ -162,7 +245,7 @@ async function submit() {
             :invalid="!!err('supplierId')"
           />
         </BaseField>
-        <BaseField label="Fecha de orden" required :error="err('orderDate')">
+        <BaseField :id="ID.orderDate" label="Fecha de orden" required :error="err('orderDate')">
           <DateInput v-model="form.orderDate" :invalid="!!err('orderDate')" />
         </BaseField>
         <BaseField label="Fecha esperada" hint="Opcional">
@@ -181,14 +264,24 @@ async function submit() {
             <Plus :size="14" /> Agregar
           </button>
         </div>
-        <p v-if="err('lines')" class="line-error">{{ err('lines') }}</p>
+        <!-- Ancla del ítem «Líneas» del resumen: el error es del GRUPO de filas,
+             no de un control, así que el enlace trae aquí el foco y no a una
+             celda cualquiera de la rejilla. -->
+        <p v-if="err('lines')" :id="ID.lines" class="line-error" tabindex="-1">
+          {{ err('lines') }}
+        </p>
+        <!-- Esta rejilla NO tiene fila de encabezados: el placeholder es hoy el
+             ÚNICO nombre de cada columna, así que NO se toca su texto todavía
+             (cubo B de la spec de placeholders). Primero hace falta el nombre
+             accesible, y no se puede poner desde aquí: un `aria-label` suelto cae
+             por fallthrough en la raíz de las primitivas —`<label>` en BaseInput,
+             `<div>` en BaseSelect—, no en el control real. Ver issue de nombres
+             accesibles en las rejillas de compras. -->
         <div v-for="l in lines" :key="l.uid" class="line-row">
           <BaseSelect v-model="l.productId" :options="productOptions" placeholder="Producto" />
           <BaseInput v-model="l.quantity" placeholder="Cant." inputmode="numeric" />
           <BaseInput v-model="l.unitCost" placeholder="Costo unit." inputmode="decimal" />
-          <span class="ds-num ds-meta-dark ds-meta-dark--sm">{{
-            formatMoney((Number(l.quantity) || 0) * (Number(l.unitCost) || 0))
-          }}</span>
+          <span class="ds-num ds-meta-dark ds-meta-dark--sm">{{ formatMoney(lineTotal(l)) }}</span>
           <ComprasIconButton tone="danger" @click="removeLine(l.uid)">
             <Trash2 :size="14" />
           </ComprasIconButton>
@@ -204,7 +297,12 @@ async function submit() {
       </div>
     </template>
     <template #footer-actions>
-      <button type="button" class="ds-btn ds-btn--neutral ds-btn--strong" @click="emit('close')">
+      <button
+        type="button"
+        class="ds-btn ds-btn--neutral ds-btn--strong"
+        :disabled="saving"
+        @click="emit('close')"
+      >
         Cancelar
       </button>
       <button

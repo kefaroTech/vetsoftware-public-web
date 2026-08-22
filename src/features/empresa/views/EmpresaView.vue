@@ -378,7 +378,10 @@ onMounted(() => {
   margin-top: 4px;
   padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid var(--amatista-300);
+
+  /* A11Y-09: `--amatista-300` daba 1,90:1 sobre el `--amatista-50` que pone
+     `.ds-tone--accent-soft`. `--amatista-500` da 4,24:1. */
+  border: 1px solid var(--amatista-500);
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 600;

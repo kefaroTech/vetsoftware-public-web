@@ -82,7 +82,7 @@ function handleClick() {
   width: 100%;
   text-align: left;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 11px;
   padding: 12px 16px;
   font-family: inherit;
