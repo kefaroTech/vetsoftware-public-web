@@ -6,8 +6,9 @@ import { startTelemetry } from './services/telemetry/telemetry'
 import { registerVolatileStorageKeys } from './constants/storageKeys'
 import vuetify from './plugins/vuetify'
 import './assets/styles/tokens.css'
+import './assets/styles/base.css'
 import './assets/styles/primitives.css'
-import './assets/styles/main.css'
+import './assets/styles/app.css'
 import './assets/styles/public-auth.css'
 
 // Antes de montar: el registro de claves volatiles vive en memoria del modulo de

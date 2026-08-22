@@ -1,0 +1,12 @@
+/**
+ * APP — propio de este repo (DS-06). NO es gemelo TR-02: `base.css` y
+ * `tokens.css`/`primitives.css` sí lo son; esto es lo que le queda a cada
+ * app después de sacar lo común.
+ *
+ * Tenant: tema de Vuetify, solo aplica a las 16 pantallas públicas.
+ */
+.v-field--focused .v-field__outline {
+  --v-field-border-opacity: 1;
+
+  color: var(--amatista-500);
+}

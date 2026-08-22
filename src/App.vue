@@ -3,6 +3,7 @@ import { RouterView } from 'vue-router'
 import PageLoader from '@/components/feedback/PageLoader.vue'
 import ConsultaActiveBanner from '@/components/feedback/ConsultaActiveBanner.vue'
 import ToastStack from '@/components/feedback/ToastStack.vue'
+import AppConfirmDialog from '@/components/feedback/AppConfirmDialog.vue'
 import ResumeOrNewConsultaDialog from '@/features/dashboard/views/consulta/nueva/components/ResumeOrNewConsultaDialog.vue'
 import BillingPromptHost from '@/features/cuentas/components/BillingPromptHost.vue'
 import { useConsultaResumeGuard } from '@/composables/useConsultaResumeGuard'
@@ -26,6 +27,9 @@ const auth = useAuthStore()
     <PageLoader />
     <ToastStack />
     <BillingPromptHost />
+    <!-- Único diálogo de confirmación de la app: lo abre cualquier vista con
+         `useConfirmDialog().confirm(...)` y solo existe esta instancia. -->
+    <AppConfirmDialog />
     <ResumeOrNewConsultaDialog
       :open="guard.state.open"
       :owner-name="guard.state.ownerName"
