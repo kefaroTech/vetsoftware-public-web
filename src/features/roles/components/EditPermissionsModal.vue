@@ -341,7 +341,7 @@ async function save() {
   backdrop-filter: blur(3px);
   display: grid;
   place-items: center;
-  z-index: 1500;
+  z-index: var(--z-modal);
   font-family: var(--font-sans);
   padding: 24px;
 }

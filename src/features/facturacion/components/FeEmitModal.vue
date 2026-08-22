@@ -195,7 +195,7 @@ async function submit() {
 
 .accrow {
   padding: 11px 14px;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 10px;
   background: var(--warm-50);
   cursor: pointer;
@@ -205,8 +205,11 @@ async function submit() {
     background 0.14s;
 }
 
+/* A11Y-09: `--amatista-300` daba 2,02:1, por debajo del reposo `--warm-450`
+   (3,55:1). `--amatista-450` da 3,77:1 y sigue por debajo del `--amatista-600`
+   de `.on`. */
 .accrow:hover {
-  border-color: var(--amatista-300);
+  border-color: var(--amatista-450);
 }
 
 .accrow.on {
@@ -260,7 +263,7 @@ async function submit() {
   gap: 8px;
   padding: 10px 14px;
   border-radius: 8px;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   background: var(--warm-50);
   font-size: 13px;
   color: var(--warm-800);

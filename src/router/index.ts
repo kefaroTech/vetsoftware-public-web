@@ -1,11 +1,66 @@
+import { nextTick } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { popLoader, pushLoader } from '@/composables/useGlobalLoader'
+import { useScrollMemoryStore } from '@/stores/scrollMemory.store'
 import { PERMISSIONS } from '@/constants/permissions'
+
+/**
+ * El contenedor real de scroll. **No es la ventana**: es el `<main>` de
+ * `AppLayout.vue`, un div con `overflow: auto` dentro de un shell con
+ * `overflow: hidden`. Por eso `scrollBehavior` no puede limitarse a devolver
+ * `savedPosition`: el navegador no restaura el scroll de un div.
+ */
+function contentEl(): HTMLElement | null {
+  return document.querySelector<HTMLElement>('.app-content')
+}
+
+/**
+ * Intentos de restauración. La ruta destino es `lazy`: cuando `scrollBehavior`
+ * corre, el componente todavía no ha pintado y `scrollHeight` es 0, así que
+ * poner `scrollTop` no haría nada. Se reintenta un par de ticks, con cota: sin
+ * ella, una ruta que nunca crece dejaría un bucle vivo.
+ */
+const RESTORE_ATTEMPTS = 3
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  // El tipo de retorno va ANOTADO, y no inferido: sin anotacion, el `return
+  // false` de una funcion `async` se ensancha a `Promise<boolean>` (el
+  // contexto `Awaitable<false | void | ScrollPosition>` es una union con
+  // `Promise<...>` dentro y no llega a fijar el literal), y `true` no es un
+  // valor que `RouterScrollBehavior` acepte. Todas las salidas devuelven
+  // `false`: quien mueve el scroll es `.app-content`, nunca el router.
+  async scrollBehavior(to, from, savedPosition): Promise<false> {
+    // Mismo camino, otra query: es un cambio de filtro (`useQuerySync`) o el
+    // `popstate` de la entrada de historial de un modal (`useModalHistory`, que
+    // hace `pushState` SIN cambiar la URL). Ninguno de los dos es una
+    // navegación de pantalla: mover el scroll aquí arrancaría la lista de
+    // debajo del dedo mientras se teclea en el buscador.
+    if (to.path === from.path) return false
+
+    if (!savedPosition) {
+      // Pantalla nueva: arriba del todo, y del contenedor que de verdad rueda.
+      contentEl()?.scrollTo({ top: 0, behavior: 'auto' })
+      return false
+    }
+
+    const top = useScrollMemoryStore().recall(to.fullPath)
+    for (let i = 0; i < RESTORE_ATTEMPTS; i++) {
+      await nextTick()
+      const el = contentEl()
+      if (el && el.scrollHeight > el.clientHeight) {
+        // Instantáneo a propósito: un desplazamiento suave de 4.000 px al pulsar
+        // «atrás» desorienta más que ayudar. Como nunca anima, no depende de
+        // `prefers-reduced-motion`.
+        el.scrollTo({ top, behavior: 'auto' })
+        break
+      }
+    }
+    // El router no debe mover además la ventana: quien rueda es `.app-content`.
+    return false
+  },
   routes: [
     {
       path: '/',
@@ -238,10 +293,28 @@ const router = createRouter({
           meta: { permission: PERMISSIONS.PURCHASE_REPORT_READ },
         },
         {
+          // Maestro-detalle en la RUTA, no en un `ref` de la vista (EST-08).
+          // Antes la cuenta seleccionada vivía en `selected`, así que «atrás» no
+          // volvía al listado: salía de Cuentas entero, F5 en mitad de un cobro
+          // devolvía al tablero y el enlace no se podía pasar a un compañero.
+          // Copia del patrón de `consulta/historial` (:88-111), que ya lo hace
+          // bien. `meta` se hereda: `to.meta` fusiona los registros coincidentes.
           path: 'cuentas',
-          name: 'cuentas',
           component: () => import('@/features/cuentas/views/CuentasView.vue'),
           meta: { permission: PERMISSIONS.OPEN_ACCOUNT_READ },
+          children: [
+            {
+              path: '',
+              name: 'cuentas',
+              component: () => import('@/features/cuentas/views/CuentasListaView.vue'),
+            },
+            {
+              path: ':accountId',
+              name: 'cuentas-detalle',
+              component: () => import('@/features/cuentas/views/CuentasDetalleView.vue'),
+              props: true,
+            },
+          ],
         },
         {
           path: 'facturacion/documentos',
@@ -304,6 +377,14 @@ const router = createRouter({
 router.beforeEach(async (to, from) => {
   const pushed = to.fullPath !== from.fullPath
   if (pushed) pushLoader()
+
+  // Se anota la posición de la pantalla que se abandona, para poder devolverla
+  // al pulsar «atrás». Va aquí y no en `afterEach` porque para entonces el
+  // componente saliente ya se desmontó y `scrollTop` vale 0.
+  if (from.name && to.path !== from.path) {
+    const el = contentEl()
+    if (el) useScrollMemoryStore().remember(from.fullPath, el.scrollTop)
+  }
 
   // Cuando el guard REDIRIGE, Vue Router aborta esta navegación y `afterEach` (que
   // hace popLoader) no dispara para ella → el push de arriba quedaría huérfano y el

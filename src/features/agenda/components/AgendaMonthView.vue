@@ -10,7 +10,7 @@ import {
 } from '../composables/dateUtils'
 import AgendaEventChip from './AgendaEventChip.vue'
 import AppointmentChip from './AppointmentChip.vue'
-import { itemsOnDay, type AgendaItem } from '../types/agenda'
+import { indexItemsByDay, type AgendaItem } from '../types/agenda'
 import type { AgendaEvent } from '../types/agenda'
 import type { AppointmentResponse } from '../types/appointment'
 
@@ -34,11 +34,36 @@ const days = computed<Date[]>(() => {
 
 const cursorMonth = computed(() => props.cursor.getMonth())
 
-function on(day: Date): AgendaItem[] {
-  return itemsOnDay(props.items, isoFromDate(day))
-}
-
 const MAX_VISIBLE = 3
+
+const isos = computed<string[]>(() => days.value.map(isoFromDate))
+
+/** Índice único por render. Expande los rangos clínicos: ver `indexItemsByDay`. */
+const byDay = computed(() => indexItemsByDay(props.items, isos.value))
+
+/** Referencia estable para los días sin items: evita crear un array nuevo por celda. */
+const EMPTY: AgendaItem[] = []
+
+/**
+ * Todo lo que la plantilla necesita, resuelto una vez por celda.
+ * La plantilla no llama a ninguna función: una función en plantilla se reevalúa en
+ * cada render y no se cachea; este `computed` sí.
+ */
+const cells = computed(() =>
+  days.value.map((day, i) => {
+    const iso = isos.value[i] as string
+    const items = byDay.value.get(iso) ?? EMPTY
+    return {
+      iso,
+      day,
+      count: items.length,
+      visible: items.slice(0, MAX_VISIBLE),
+      overflow: items.length - MAX_VISIBLE,
+      otherMonth: day.getMonth() !== cursorMonth.value,
+      isToday: sameDay(day, today),
+    }
+  }),
+)
 </script>
 
 <template>
@@ -48,22 +73,19 @@ const MAX_VISIBLE = 3
     </div>
     <div class="grid">
       <button
-        v-for="(day, i) in days"
-        :key="i"
+        v-for="cell in cells"
+        :key="cell.iso"
         type="button"
-        class="cell ds-stack"
-        :class="{
-          'other-month': day.getMonth() !== cursorMonth,
-          today: sameDay(day, today),
-        }"
-        @click="emit('day-click', day)"
+        class="cell ds-stack ds-tone--neutral-soft"
+        :class="{ 'other-month': cell.otherMonth, today: cell.isToday }"
+        @click="emit('day-click', cell.day)"
       >
         <div class="day-num">
-          <span :class="{ 'today-marker': sameDay(day, today) }">{{ day.getDate() }}</span>
-          <span v-if="on(day).length > 0" class="day-count">{{ on(day).length }}</span>
+          <span :class="{ 'today-marker': cell.isToday }">{{ cell.day.getDate() }}</span>
+          <span v-if="cell.count > 0" class="day-count">{{ cell.count }}</span>
         </div>
         <div class="events ds-stack">
-          <template v-for="it in on(day).slice(0, MAX_VISIBLE)" :key="it.id">
+          <template v-for="it in cell.visible" :key="it.id">
             <AppointmentChip
               v-if="it.kind === 'appointment'"
               :appt="it.appt"
@@ -77,9 +99,7 @@ const MAX_VISIBLE = 3
               @click="emit('event-click', it.event)"
             />
           </template>
-          <div v-if="on(day).length > MAX_VISIBLE" class="more">
-            +{{ on(day).length - MAX_VISIBLE }} más
-          </div>
+          <div v-if="cell.overflow > 0" class="more">+{{ cell.overflow }} más</div>
         </div>
       </button>
     </div>
@@ -87,9 +107,14 @@ const MAX_VISIBLE = 3
 </template>
 
 <style scoped>
+/* A11Y-09 · WCAG 2.2 §1.4.11. Las 42 celdas de esta reja son `<button>`: la reja
+   NO es un separador decorativo, es la frontera entre 42 controles pulsables, y
+   por tanto le aplica el mínimo de 3:1. Este marco exterior cierra la última
+   columna y la última fila, que no tienen borde propio (`nth-child(7n)` lo
+   quita), así que también es frontera de control: era `--warm-200` (1,23:1). */
 .month {
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 12px;
   overflow: auto hidden;
   -webkit-overflow-scrolling: touch;
@@ -100,7 +125,9 @@ const MAX_VISIBLE = 3
   grid-template-columns: repeat(7, 1fr);
   min-width: 640px;
   background: var(--warm-100);
-  border-bottom: 1px solid var(--warm-200);
+
+  /* Borde superior de la primera fila de celdas pulsables, no un separador. */
+  border-bottom: 1px solid var(--warm-450);
 }
 
 .weekday {
@@ -120,14 +147,23 @@ const MAX_VISIBLE = 3
   grid-auto-rows: minmax(110px, auto);
 }
 
+/* El tono de reposo se declara aquí a (0,2,0) para ganarle a la forma plana
+   de `.ds-tone--neutral-soft`; el hover lo pone su forma `:hover` (0,3,0), que
+   sube el borde a `--warm-500`. Un estado de interacción no puede bajar el
+   contraste del control, y dejarlo en `--warm-450` lo bajaba de 3,55:1 a
+   3,35:1 al oscurecer el relleno. */
 .cell {
   align-items: stretch;
   gap: var(--space-4);
   padding: 8px 8px 10px;
   background: var(--warm-50);
   border: none;
-  border-right: 1px solid var(--warm-150);
-  border-bottom: 1px solid var(--warm-150);
+
+  /* A11Y-09 (issue #204): era `--warm-150`, 1,13:1 sobre el relleno de la celda
+     y 1,06:1 sobre el de las celdas de otro mes y la de hoy. `--warm-450` da
+     3,55:1 / 3,35:1 / 3,34:1 respectivamente. */
+  border-right: 1px solid var(--warm-450);
+  border-bottom: 1px solid var(--warm-450);
   text-align: left;
   cursor: pointer;
   font-family: inherit;
@@ -135,17 +171,25 @@ const MAX_VISIBLE = 3
   transition: background 0.12s ease;
 }
 
-.cell:hover {
-  background: var(--warm-100);
-}
-
 .cell:nth-child(7n) {
   border-right: none;
 }
 
+/* El `opacity: 0.55` que había aquí se retira, y no por estética: la opacidad
+   se aplica al elemento entero, borde incluido, así que atenuaba la reja de
+   estas celdas contra el fondo del calendario. Con ella puesta NINGÚN token la
+   salva — medido sobre `--warm-50`, la reja se queda en 1,81:1 con
+   `--warm-450`, 2,17:1 con `--warm-500` y 2,46:1 con `--warm-600`, todos por
+   debajo del mínimo. El "mes vecino" se marca ahora con lo que ya lo marcaba
+   —el relleno `--warm-100`— más el número de día atenuado por color, que sí
+   deja el borde a contraste pleno. De paso, los chips de estas celdas dejan de
+   renderizarse al 55% y recuperan su propio contraste de texto. */
 .cell.other-month {
   background: var(--warm-100);
-  opacity: 0.55;
+}
+
+.cell.other-month .day-num {
+  color: var(--warm-500);
 }
 
 .cell.today {

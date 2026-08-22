@@ -7,7 +7,6 @@ export interface CreateDiagnosticImagingPayload {
   observations: string
   animalId: number
   consultationId: number | null
-  companyId: number
 }
 
 export interface DiagnosticImagingTypeSummary {

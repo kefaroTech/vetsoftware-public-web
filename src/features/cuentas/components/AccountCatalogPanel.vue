@@ -128,7 +128,7 @@ const emit = defineEmits<{
 .s-input {
   width: 100%;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 10px;
   padding: 10px 14px 10px 38px;
   font-family: inherit;
@@ -174,7 +174,7 @@ const emit = defineEmits<{
 }
 
 .badge-out {
-  font-size: var(--text-2xs);
+  font-size: var(--text-caption);
   font-weight: var(--weight-semibold);
   color: var(--danger-700);
   background: var(--danger-100);

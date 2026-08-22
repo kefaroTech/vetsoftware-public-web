@@ -261,7 +261,7 @@ const CHARGE_ICON: Record<ChargeKind, typeof Package> = {
 .c-void-btn {
   width: 24px;
   height: 24px;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   background: transparent;
   color: var(--warm-500);
   cursor: pointer;

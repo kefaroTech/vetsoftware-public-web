@@ -120,7 +120,7 @@ function handleEnter() {
 
 .btn-create {
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   padding: 9px 16px;
   border-radius: 8px;
   font-family: inherit;
@@ -139,7 +139,7 @@ function handleEnter() {
 
 .not-found {
   border: none;
-  border-top: 1px solid var(--warm-200);
+  border-top: 1px solid var(--warm-450);
   padding: 14px 18px;
   background: var(--warm-150);
   font-family: inherit;

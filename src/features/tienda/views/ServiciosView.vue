@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { Package, PauseCircle, Pencil, Plus, RotateCcw } from 'lucide-vue-next'
-import ConfirmDeleteDialog from '@/components/feedback/ConfirmDeleteDialog.vue'
 import ServiceFormModal from '../components/ServiceFormModal.vue'
 import CategoryManagerModal from '../components/CategoryManagerModal.vue'
 import AccentButton from '../components/AccentButton.vue'
@@ -13,6 +12,7 @@ import { useTienda } from '../composables/useTienda'
 import { formatMoney } from '../composables/pricing'
 import { serviceCategoryTone } from '../composables/categoryTone'
 import { useToast } from '@/composables/useToast'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
@@ -23,6 +23,7 @@ const CONFLICT_MESSAGE =
 
 const store = useTienda()
 const toast = useToast()
+const { confirm } = useConfirmDialog()
 const { can, canAny } = useAuthorization()
 const canCreate = can(PERMISSIONS.SERVICE_CREATE)
 const canUpdate = can(PERMISSIONS.SERVICE_UPDATE)
@@ -43,8 +44,6 @@ const query = ref('')
 const cat = ref('')
 const modalOpen = ref(false)
 const editing = ref<ServiceResponse | null>(null)
-const pausing = ref<ServiceResponse | null>(null)
-const pausingBusy = ref(false)
 const pausedLoading = ref(false)
 const categoriesOpen = ref(false)
 
@@ -118,19 +117,26 @@ function onFormClose() {
   editing.value = null
 }
 
-/** Pausar = soft-delete (DELETE → enabled=false). Recuperable desde "Pausados". */
-async function onConfirmPause() {
-  const target = pausing.value
-  if (!target) return
-  pausingBusy.value = true
+/**
+ * Pausar = soft-delete (DELETE → enabled=false). Recuperable desde "Pausados".
+ * La confirmación es la única de la app y lleva la acción dentro: mientras el
+ * DELETE vuela el diálogo sigue abierto con los botones inertes.
+ */
+async function requestPause(s: ServiceResponse) {
   try {
-    await store.removeService(target.id)
-    toast.info('Servicio pausado', `${target.name} dejó de aparecer en el punto de venta.`)
-    pausing.value = null
+    const ok = await confirm({
+      title: 'Pausar servicio',
+      message: `${s.name} dejará de aparecer en el punto de venta.`,
+      consequence:
+        'Podrás reactivarlo desde la pestaña “Pausados”. Las ventas ya registradas no se modifican.',
+      confirmLabel: 'Pausar',
+      busyLabel: 'Pausando…',
+      action: () => store.removeService(s.id),
+    })
+    if (!ok) return
+    toast.info('Servicio pausado', `${s.name} dejó de aparecer en el punto de venta.`)
   } catch (e) {
     toast.errorFrom('Ocurrió un error', e, 'No se pudo pausar')
-  } finally {
-    pausingBusy.value = false
   }
 }
 
@@ -181,6 +187,7 @@ async function onCategoryRemove(id: number) {
       </div>
       <div class="head-actions ds-flex-row ds-stack-mobile">
         <SegTabs
+          aria-label="Estado de los servicios"
           :model-value="mode"
           :options="[
             { value: 'active', label: 'Activos' },
@@ -253,7 +260,7 @@ async function onCategoryRemove(id: number) {
                 type="button"
                 class="ds-icon-btn"
                 title="Pausar"
-                @click="pausing = s"
+                @click="requestPause(s)"
               >
                 <PauseCircle :size="14" :stroke-width="1.7" />
               </button>
@@ -306,19 +313,6 @@ async function onCategoryRemove(id: number) {
       @upsert="onCategoryUpsert"
       @remove="onCategoryRemove"
     />
-    <ConfirmDeleteDialog
-      :open="pausing !== null"
-      title="Pausar servicio"
-      action-label="Pausar"
-      :message="
-        pausing
-          ? `${pausing.name} dejará de aparecer en el punto de venta. Podrás reactivarlo desde la pestaña “Pausados”. Las ventas ya registradas no se modifican.`
-          : ''
-      "
-      :busy="pausingBusy"
-      @cancel="pausing = null"
-      @confirm="onConfirmPause"
-    />
   </div>
 </template>
 
@@ -365,20 +359,27 @@ async function onCategoryRemove(id: number) {
   align-items: center;
   gap: 14px;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+
+  /* A11Y-09 · la fila lleva `@click`: es un control, y `--warm-200` daba
+     1,23:1. `--warm-450` da 3,55:1; el hover pasa de `--amatista-300` (2,02:1,
+     por debajo del reposo) a `--amatista-450` (3,77:1). */
+  border: 1px solid var(--warm-450);
   border-radius: 11px;
   padding: 12px 14px;
   cursor: pointer;
   transition: border-color 0.12s ease;
 }
 .svc-row:hover {
-  border-color: var(--amatista-300);
+  border-color: var(--amatista-450);
 }
 .svc-row.static {
   cursor: default;
 }
+
+/* La fila pausada no es pulsable: su `:hover` sólo tiene que NO reaccionar, así
+   que repite el borde de reposo en vez del `--warm-200` de antes. */
 .svc-row.static:hover {
-  border-color: var(--warm-200);
+  border-color: var(--warm-450);
 }
 
 /* `.svc-name` desapareció entera: el nombre del servicio es

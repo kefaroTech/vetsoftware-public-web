@@ -76,7 +76,7 @@ const tokens = computed(() => TYPE_COLORS[meta.value.color])
 }
 
 .subtitle {
-  font-size: var(--text-label);
+  font-size: var(--text-xs);
   font-weight: var(--weight-normal);
   opacity: 0.85;
 }

@@ -12,6 +12,8 @@ import {
   type OwnerDocumentType,
 } from '@/features/facturacion/composables/feFiscalChecklist'
 import type { OwnerDraft } from '../composables/useNuevaConsultaDraft'
+// Un solo sanitizador de teléfono para todo el tenant: ver `composables/phone.ts`.
+import { sanitizePhone, PHONE_PLACEHOLDER_MOBILE } from '@/composables/phone'
 
 const props = defineProps<{ modelValue: OwnerDraft }>()
 
@@ -137,9 +139,6 @@ function markTouched(field: FieldKey) {
 function sanitizeDocument(v: string): string {
   return v.replace(/[^A-Za-z0-9]/g, '')
 }
-function sanitizePhone(v: string): string {
-  return v.replace(/\D/g, '')
-}
 
 const documentModel = computed({
   get: () => draft.value.document,
@@ -176,7 +175,7 @@ defineExpose({ validate })
             <BaseInput
               :id="id"
               v-model="draft.name"
-              placeholder="Ej. Carla Mendoza Ríos"
+              placeholder="Ej. Ana Restrepo Gómez"
               :icon="User"
               autocomplete="name"
               :invalid="!!err('name')"
@@ -189,7 +188,7 @@ defineExpose({ validate })
             <BaseInput
               :id="id"
               v-model="documentModel"
-              placeholder="DNI / RUC / Pasaporte"
+              placeholder="1020345678"
               :icon="IdCard"
               inputmode="text"
               :invalid="!!err('document')"
@@ -202,7 +201,7 @@ defineExpose({ validate })
             <BaseInput
               :id="id"
               v-model="phoneModel"
-              placeholder="Ej. 3001234567"
+              :placeholder="PHONE_PLACEHOLDER_MOBILE"
               :icon="Phone"
               autocomplete="tel"
               type="tel"
@@ -218,7 +217,7 @@ defineExpose({ validate })
               :id="id"
               v-model="draft.email"
               type="email"
-              placeholder="correo@ejemplo.com"
+              placeholder="nombre@correo.com"
               :icon="Mail"
               autocomplete="email"
               inputmode="email"
@@ -233,7 +232,7 @@ defineExpose({ validate })
               :id="id"
               v-model="draft.documentType"
               :options="docTypeOptions"
-              placeholder="Selecciona tipo"
+              placeholder="Selecciona tipo de documento"
               :invalid="!!err('documentType')"
               @blur="markTouched('documentType')"
             />
@@ -294,7 +293,7 @@ defineExpose({ validate })
                   ? 'Cargando…'
                   : draft.stateId
                     ? 'Selecciona ciudad'
-                    : 'Primero elige un estado'
+                    : 'Primero elige un departamento'
               "
               :disabled="!draft.stateId || loadingCities"
               :invalid="!!err('cityId')"
@@ -306,11 +305,7 @@ defineExpose({ validate })
       <div class="full-row">
         <BaseField label="Dirección" hint="Calle, número, departamento, referencia">
           <template #default="{ id }">
-            <BaseInput
-              :id="id"
-              v-model="draft.address"
-              placeholder="Ej. Av. Salaverry 2580, Dpto 502"
-            />
+            <BaseInput :id="id" v-model="draft.address" placeholder="Cra 7 # 45-12" />
           </template>
         </BaseField>
       </div>

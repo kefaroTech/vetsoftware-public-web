@@ -74,7 +74,7 @@ defineEmits<{ reset: [] }>()
   align-items: center;
   gap: 4px;
   background: transparent;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 7px;
   padding: 4px 8px;
   font-family: inherit;
@@ -88,7 +88,11 @@ defineEmits<{ reset: [] }>()
 
 .reset:hover {
   background: var(--warm-50);
-  border-color: var(--warm-300);
+
+  /* A11Y-09: era --warm-300 (1,54:1). Con el reposo ya en --warm-450 (3,55:1)
+     el hover BORRABA el borde en vez de reforzarlo; --warm-500 lo mantiene un
+     escalón por encima del reposo, igual que en las primitivas. */
+  border-color: var(--warm-500);
   color: var(--warm-900);
 }
 </style>

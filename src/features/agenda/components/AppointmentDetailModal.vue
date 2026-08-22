@@ -396,14 +396,17 @@ const notesCancellation = computed(() =>
   padding: 11px 13px;
   border-radius: 10px;
   cursor: pointer;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   background: var(--warm-50);
   color: var(--warm-800);
   transition: all 0.1s;
 }
 
+/* A11Y-09: `--amatista-400` daba 2,80:1 sobre el `--amatista-50` que el propio
+   hover pinta — incumple, y por debajo del reposo `--warm-450` (3,55:1).
+   `--amatista-500` da 4,24:1 y el hover pasa a reforzar el borde. */
 .trans-btn:hover:not(:disabled) {
-  border-color: var(--amatista-400);
+  border-color: var(--amatista-500);
   background: var(--amatista-50);
   color: var(--amatista-700);
 }

@@ -203,7 +203,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   inset: 0;
   background: oklch(20% 0.05 var(--hue) / 35%);
   backdrop-filter: blur(2px);
-  z-index: 1400;
+  z-index: var(--z-drawer);
   font-family: var(--font-sans);
 }
 
@@ -253,7 +253,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   height: 30px;
   border-radius: 8px;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -329,9 +329,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   border: 1px solid transparent;
 }
 
-/* Fondo y color son `.ds-tone--accent-soft`; el peso ya lo pone `.ds-btn`. */
+/* Fondo y color son `.ds-tone--accent-soft`; el peso ya lo pone `.ds-btn`.
+   A11Y-09: `--amatista-200` daba 1,34:1 sobre ese fondo `--amatista-50` y
+   1,21:1 con el `--amatista-100` del hover — el botón no tenía frontera.
+   `--amatista-500` da 4,24:1 y 3,86:1. */
 .accent {
-  border-color: var(--amatista-200, oklch(88% 0.05 300deg));
+  border-color: var(--amatista-500, oklch(58% 0.18 300deg));
 }
 
 .accent:hover:not(:disabled) {

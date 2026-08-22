@@ -14,7 +14,6 @@ import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import PatientFixedCard from '../components/PatientFixedCard.vue'
 import BranchConfirmNotice from '@/features/dashboard/views/consulta/nueva/components/BranchConfirmNotice.vue'
 import SampleCollectedToggle from '../components/SampleCollectedToggle.vue'
-import { useAuth } from '@/features/auth/composables/useAuth'
 import { useBranches } from '@/features/branches/composables/useBranches'
 import { useTestTypes } from '@/features/laboratory-test-types/composables/useLaboratoryTestTypes'
 import { todayISO } from '@/composables/format'
@@ -34,7 +33,6 @@ const emit = defineEmits<{
   saved: [item: LaboratoryTestResponse]
 }>()
 
-const { companyId } = useAuth()
 // Desplegable de sede: solo las sedes ASIGNADAS al usuario (aunque sea admin).
 const { assignedBranches, selectedBranchId } = useBranches()
 const {
@@ -204,7 +202,7 @@ function save() {
     scrollToFirstError()
     return
   }
-  if (companyId.value == null || patientId.value == null) {
+  if (patientId.value == null) {
     saveError.value = 'Faltan datos para guardar.'
     return
   }
@@ -218,9 +216,8 @@ function save() {
 
 async function doSave() {
   confirmingBranch.value = false
-  const cid = companyId.value
   const pid = patientId.value
-  if (cid == null || pid == null) {
+  if (pid == null) {
     saveError.value = 'Faltan datos para guardar.'
     return
   }
@@ -240,7 +237,6 @@ async function doSave() {
         diagnosis: r.diagnosis.trim(),
         animalId: pid,
         consultationId: props.initial.consultation?.id ?? null,
-        companyId: cid,
       })
       // Si el checkbox aplica y cambió respecto al status actual, dispara el
       // cambio via PATCH /status (el PUT no acepta status en este endpoint).
@@ -262,7 +258,6 @@ async function doSave() {
           status,
           animalId: pid,
           consultationId: null,
-          companyId: cid,
           branchId: branchId.value,
         })
         emit('saved', created)
@@ -457,7 +452,7 @@ async function doSave() {
 
 .remove {
   background: transparent;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   width: 26px;
   height: 26px;
   border-radius: 7px;

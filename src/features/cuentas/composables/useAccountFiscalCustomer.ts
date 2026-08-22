@@ -1,6 +1,5 @@
 import { ref, type Ref } from 'vue'
 import { useToast } from '@/composables/useToast'
-import { getProblemDetailMessage } from '@/services/http/http.client'
 import { ownerApi } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
 import type {
   OwnerResponse,
@@ -100,10 +99,9 @@ export function useAccountFiscalCustomer(ownerId: Ref<number | null | undefined>
         o = await ownerApi.findById(id)
         ownerFull.value = o
       } catch (e) {
-        toast.error(
-          'No se pudo guardar',
-          getProblemDetailMessage(e, 'No se pudo cargar el cliente.'),
-        )
+        // `errorFrom` y no `error(...)` a mano: conserva el `X-Trace-Id` de la respuesta, que
+        // es lo que permite a soporte cruzar el aviso con la traza del backend (EST-02).
+        toast.errorFrom('No se pudo guardar', e, 'No se pudo cargar el cliente.')
         return
       }
     }

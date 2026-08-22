@@ -23,5 +23,5 @@
     // cero en los dos repos: es un trinquete gratis, puesto para que siga en cero.
     "noImplicitReturns": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "visual/**/*.ts", "visual/**/*.vue"]
 }

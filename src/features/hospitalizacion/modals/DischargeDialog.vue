@@ -1,12 +1,20 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { LogOut } from 'lucide-vue-next'
 import ModalShell from '@/components/ui/ModalShell.vue'
 import BaseField from '@/components/ui/BaseField.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import type { ReasonLeaving } from '@/types/domain'
 
-const props = defineProps<{ open: boolean; patientName: string }>()
+const props = defineProps<{
+  open: boolean
+  patientName: string
+  /**
+   * FORM-10 — lo controla el padre mientras la mutación está en vuelo. Opcional:
+   * sin pasarlo el diálogo se protege igual con su propia bandera (`emitted`).
+   */
+  saving?: boolean
+}>()
 const emit = defineEmits<{ confirm: [reason: ReasonLeaving]; close: [] }>()
 
 const reasonOptions = [
@@ -21,12 +29,30 @@ const reasonOptions = [
 
 const reason = ref<ReasonLeaving>('MEDICAL_DISCHARGE')
 
+/**
+ * FORM-10 — guarda de reenvío. El botón emitía `confirm` directamente en el
+ * marcado y seguía activo hasta que el padre cerrara el diálogo: dos
+ * pulsaciones son dos altas sobre la misma hospitalización. La bandera baja al
+ * reabrir.
+ */
+const emitted = ref(false)
+const busy = computed(() => props.saving === true || emitted.value)
+
 watch(
   () => props.open,
   (open) => {
-    if (open) reason.value = 'MEDICAL_DISCHARGE'
+    if (open) {
+      reason.value = 'MEDICAL_DISCHARGE'
+      emitted.value = false
+    }
   },
 )
+
+function confirm() {
+  if (busy.value) return
+  emitted.value = true
+  emit('confirm', reason.value)
+}
 </script>
 
 <template>
@@ -52,8 +78,8 @@ watch(
 
     <template #footer-actions>
       <button type="button" class="ds-btn ds-btn--ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="ds-btn ds-btn--solid" @click="emit('confirm', reason)">
-        Confirmar alta
+      <button type="button" class="ds-btn ds-btn--solid" :disabled="busy" @click="confirm">
+        {{ busy ? 'Dando de alta…' : 'Confirmar alta' }}
       </button>
     </template>
   </ModalShell>

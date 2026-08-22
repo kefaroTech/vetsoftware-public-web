@@ -1,4 +1,4 @@
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useBranchStore } from '../stores/branch.store'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
@@ -49,20 +49,11 @@ export function useBranches() {
   // Multi-sede real (≥2 sedes visibles): p.ej. para decidir si mostrar el selector de sede en formularios.
   const hasMultipleBranches = computed(() => visibleBranches.value.length > 1)
 
-  // Nunca dejar "Todas" (null) ni una sede fuera del alcance explícito. Cae a la primera sede asignada.
-  watch(
-    visibleBranches,
-    () => {
-      const ids = visibleBranches.value.map((b) => b.id)
-      const firstId = ids[0]
-      if (firstId == null) return
-      if (selectedBranchId.value == null || !ids.includes(selectedBranchId.value)) {
-        store.setSelectedBranch(firstId)
-      }
-    },
-    { immediate: true },
-  )
-
+  // El invariante "nunca sin sede concreta, nunca una fuera del alcance" ya NO vive aquí: lo
+  // garantiza el store (`resolveSelectedBranch`), que además lo dispara al abrirse la sesión.
+  // Mientras estuvo en este `watch` solo se cumplía a partir del montaje de este composable, y
+  // hasta entonces `selectedBranchId` era null de verdad: las escrituras de esa ventana salían
+  // sin `branchId` y volvían como 400 (issue #201).
   onMounted(() => {
     void store.fetchAll()
   })

@@ -1,5 +1,14 @@
 <script setup lang="ts">
-/** Banner cerrable error/warning (handoff reg-fields `Banner`). */
+/**
+ * Banner cerrable error/warning (handoff reg-fields `Banner`).
+ *
+ * El `role` sigue al `tone`. Estaba fijo en `alert` para los dos, y en las 16
+ * pantallas públicas un «Revisa tu correo para confirmar la cuenta» cortaba la
+ * locución en curso igual que un fallo de contraseña: es el mecanismo exacto por
+ * el que alguien que usa lector de pantalla aprende a ignorar las alertas.
+ * `assertive` se reserva a lo que hace perder trabajo
+ * (`docs/ux/patron-de-mensajes.md` §4.2b); el aviso es `status` (polite).
+ */
 withDefaults(
   defineProps<{
     tone?: 'error' | 'warning'
@@ -11,7 +20,12 @@ const emit = defineEmits<(e: 'close') => void>()
 </script>
 
 <template>
-  <div class="pub-banner" :class="`pub-banner--${tone}`" role="alert">
+  <div
+    class="pub-banner"
+    :class="`pub-banner--${tone}`"
+    :role="tone === 'error' ? 'alert' : 'status'"
+    :aria-live="tone === 'error' ? undefined : 'polite'"
+  >
     <v-icon size="17" class="ds-banner-icon">
       {{ tone === 'warning' ? 'mdi-alert-outline' : 'mdi-alert-circle-outline' }}
     </v-icon>

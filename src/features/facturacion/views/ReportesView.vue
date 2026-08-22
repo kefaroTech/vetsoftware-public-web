@@ -17,12 +17,21 @@ import {
 import FeStatusPill from '../components/FeStatusPill.vue'
 import FeUpsell from '../components/FeUpsell.vue'
 import DateInput from '@/components/ui/DateInput.vue'
+import BaseTabs from '@/components/ui/BaseTabs.vue'
+import BaseTabPanel from '@/components/ui/BaseTabPanel.vue'
+import type { TabItem } from '@/components/ui/tabs'
 
 const { hasModule } = useFacturacionAccess()
 const { selectedBranchId } = useBranches()
 
 type Tab = 'libro' | 'concil'
 const tab = ref<Tab>('libro')
+
+/** Los iconos son parte de la pestaña y viajan en el descriptor (issue #185). */
+const tabs: TabItem<Tab>[] = [
+  { value: 'libro', label: 'Libro de ventas', icon: BarChart3 },
+  { value: 'concil', label: 'Conciliación DIAN', icon: ShieldCheck },
+]
 
 function firstOfMonth(): string {
   const d = new Date()
@@ -86,26 +95,13 @@ onMounted(() => {
     </header>
 
     <div class="repfilters">
-      <div class="tabs" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          class="tab"
-          :class="tab === 'libro' ? 'ds-tab--active' : 'tab-off'"
-          @click="setTab('libro')"
-        >
-          <BarChart3 :size="15" :stroke-width="1.7" /> Libro de ventas
-        </button>
-        <button
-          type="button"
-          role="tab"
-          class="tab"
-          :class="tab === 'concil' ? 'ds-tab--active' : 'tab-off'"
-          @click="setTab('concil')"
-        >
-          <ShieldCheck :size="15" :stroke-width="1.7" /> Conciliación DIAN
-        </button>
-      </div>
+      <BaseTabs
+        :model-value="tab"
+        :tabs="tabs"
+        name="reportes"
+        tablist-label="Reportes de facturación electrónica"
+        @update:model-value="setTab"
+      />
       <div class="daterange ds-flex-row">
         <DateInput v-model="from" :max="to" @update:model-value="load" />
         <span class="ds-icon-muted--dim">→</span>
@@ -113,165 +109,167 @@ onMounted(() => {
       </div>
     </div>
 
-    <p v-if="error" class="error-banner">{{ error }}</p>
-    <div v-if="loading" class="loading">Cargando reporte…</div>
+    <BaseTabPanel name="reportes" :value="tab" class="ds-stack ds-stack--18">
+      <p v-if="error" class="error-banner">{{ error }}</p>
+      <div v-if="loading" class="loading">Cargando reporte…</div>
 
-    <!-- Libro de ventas -->
-    <template v-else-if="tab === 'libro' && book">
-      <div class="cards">
-        <div class="rep-card ds-stack">
-          <span>Documentos</span><strong>{{ book.totals.documentCount }}</strong>
+      <!-- Libro de ventas -->
+      <template v-else-if="tab === 'libro' && book">
+        <div class="cards">
+          <div class="rep-card ds-stack">
+            <span>Documentos</span><strong>{{ book.totals.documentCount }}</strong>
+          </div>
+          <div class="rep-card ds-stack">
+            <span>Base</span><strong>{{ feMoney(book.totals.base) }}</strong>
+          </div>
+          <div class="rep-card ds-stack">
+            <span>IVA</span><strong>{{ feMoney(book.totals.iva) }}</strong>
+          </div>
+          <div class="rep-card hl ds-stack">
+            <span>Total</span><strong>{{ feMoney(book.totals.total) }}</strong>
+          </div>
         </div>
-        <div class="rep-card ds-stack">
-          <span>Base</span><strong>{{ feMoney(book.totals.base) }}</strong>
-        </div>
-        <div class="rep-card ds-stack">
-          <span>IVA</span><strong>{{ feMoney(book.totals.iva) }}</strong>
-        </div>
-        <div class="rep-card hl ds-stack">
-          <span>Total</span><strong>{{ feMoney(book.totals.total) }}</strong>
-        </div>
-      </div>
 
-      <div class="cols">
+        <div class="cols">
+          <div class="ds-card">
+            <div class="card-title">Impuestos por tarifa</div>
+            <div class="ds-table-scroll">
+              <table class="minitable">
+                <thead>
+                  <tr>
+                    <th>Esquema</th>
+                    <th>Tarifa</th>
+                    <th style="text-align: right">Base</th>
+                    <th style="text-align: right">Impuesto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(r, i) in book.taxByRate" :key="i">
+                    <td>{{ r.taxScheme }}</td>
+                    <td>{{ r.taxRate }}%</td>
+                    <td style="text-align: right">{{ feMoney(r.taxableAmount) }}</td>
+                    <td style="text-align: right">{{ feMoney(r.taxAmount) }}</td>
+                  </tr>
+                  <tr v-if="book.taxByRate.length === 0">
+                    <td colspan="4" class="ds-empty">Sin datos</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="ds-card">
+            <div class="card-title">Recaudo por medio de pago</div>
+            <div class="ds-table-scroll">
+              <table class="minitable">
+                <thead>
+                  <tr>
+                    <th>Medio</th>
+                    <th style="text-align: right">Monto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(r, i) in book.recaudoByMeans" :key="i">
+                    <td>{{ meansLabel(r.paymentMeans) }}</td>
+                    <td style="text-align: right">{{ feMoney(r.amount) }}</td>
+                  </tr>
+                  <tr v-if="book.recaudoByMeans.length === 0">
+                    <td colspan="2" class="ds-empty">Sin datos</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <div class="ds-card">
-          <div class="card-title">Impuestos por tarifa</div>
+          <div class="card-title">Documentos del periodo</div>
           <div class="ds-table-scroll">
             <table class="minitable">
               <thead>
                 <tr>
-                  <th>Esquema</th>
-                  <th>Tarifa</th>
+                  <th>Número</th>
+                  <th>Tipo</th>
+                  <th>Fecha</th>
+                  <th>Cliente</th>
                   <th style="text-align: right">Base</th>
-                  <th style="text-align: right">Impuesto</th>
+                  <th style="text-align: right">IVA</th>
+                  <th style="text-align: right">Total</th>
+                  <th>Estado</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(r, i) in book.taxByRate" :key="i">
-                  <td>{{ r.taxScheme }}</td>
-                  <td>{{ r.taxRate }}%</td>
-                  <td style="text-align: right">{{ feMoney(r.taxableAmount) }}</td>
-                  <td style="text-align: right">{{ feMoney(r.taxAmount) }}</td>
+                <tr v-for="e in book.entries" :key="e.id">
+                  <td>
+                    <span class="num">{{ e.prefix }}-{{ e.consecutive }}</span>
+                  </td>
+                  <td>{{ docTypeLabel(e.documentType) }}</td>
+                  <td class="date">{{ e.issueDate }}</td>
+                  <td>{{ e.customerName || '—' }}</td>
+                  <td style="text-align: right">{{ feMoney(e.base) }}</td>
+                  <td style="text-align: right">{{ feMoney(e.iva) }}</td>
+                  <td style="text-align: right; font-weight: 600">{{ feMoney(e.total) }}</td>
+                  <td><FeStatusPill :status="e.dianStatus" /></td>
                 </tr>
-                <tr v-if="book.taxByRate.length === 0">
-                  <td colspan="4" class="ds-empty">Sin datos</td>
+                <tr v-if="book.entries.length === 0">
+                  <td colspan="8" class="ds-empty">Sin documentos en el rango.</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
+      </template>
+
+      <!-- Conciliación -->
+      <template v-else-if="tab === 'concil' && recon">
+        <div class="cards">
+          <div class="rep-card ds-stack">
+            <span>Validados</span
+            ><strong style="color: oklch(50% 0.15 150deg)">{{ recon.validados }}</strong>
+          </div>
+          <div class="rep-card ds-stack">
+            <span>Pendientes</span
+            ><strong style="color: oklch(50% 0.16 240deg)">{{ recon.pendientes }}</strong>
+          </div>
+          <div class="rep-card ds-stack">
+            <span>En contingencia</span
+            ><strong style="color: oklch(58% 0.14 75deg)">{{ recon.contingencia }}</strong>
+          </div>
+          <div class="rep-card ds-stack">
+            <span>Rechazados</span
+            ><strong style="color: oklch(55% 0.2 25deg)">{{ recon.rechazados }}</strong>
+          </div>
+        </div>
+
         <div class="ds-card">
-          <div class="card-title">Recaudo por medio de pago</div>
-          <div class="ds-table-scroll">
+          <div class="card-title">Requieren atención ({{ recon.needsAttention.length }})</div>
+          <div v-if="recon.needsAttention.length === 0" class="ds-empty pad">
+            Todos los documentos del periodo están validados.
+          </div>
+          <div v-else class="ds-table-scroll">
             <table class="minitable">
               <thead>
                 <tr>
-                  <th>Medio</th>
-                  <th style="text-align: right">Monto</th>
+                  <th>Número</th>
+                  <th>Tipo</th>
+                  <th>Fecha</th>
+                  <th>Estado</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(r, i) in book.recaudoByMeans" :key="i">
-                  <td>{{ meansLabel(r.paymentMeans) }}</td>
-                  <td style="text-align: right">{{ feMoney(r.amount) }}</td>
-                </tr>
-                <tr v-if="book.recaudoByMeans.length === 0">
-                  <td colspan="2" class="ds-empty">Sin datos</td>
+                <tr v-for="d in recon.needsAttention" :key="d.id">
+                  <td>
+                    <span class="num">{{ d.prefix }}-{{ d.consecutive }}</span>
+                  </td>
+                  <td>{{ docTypeLabel(d.documentType) }}</td>
+                  <td class="date">{{ d.issueDate }}</td>
+                  <td><FeStatusPill :status="d.dianStatus" /></td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
-      </div>
-
-      <div class="ds-card">
-        <div class="card-title">Documentos del periodo</div>
-        <div class="ds-table-scroll">
-          <table class="minitable">
-            <thead>
-              <tr>
-                <th>Número</th>
-                <th>Tipo</th>
-                <th>Fecha</th>
-                <th>Cliente</th>
-                <th style="text-align: right">Base</th>
-                <th style="text-align: right">IVA</th>
-                <th style="text-align: right">Total</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="e in book.entries" :key="e.id">
-                <td>
-                  <span class="num">{{ e.prefix }}-{{ e.consecutive }}</span>
-                </td>
-                <td>{{ docTypeLabel(e.documentType) }}</td>
-                <td class="date">{{ e.issueDate }}</td>
-                <td>{{ e.customerName || '—' }}</td>
-                <td style="text-align: right">{{ feMoney(e.base) }}</td>
-                <td style="text-align: right">{{ feMoney(e.iva) }}</td>
-                <td style="text-align: right; font-weight: 600">{{ feMoney(e.total) }}</td>
-                <td><FeStatusPill :status="e.dianStatus" /></td>
-              </tr>
-              <tr v-if="book.entries.length === 0">
-                <td colspan="8" class="ds-empty">Sin documentos en el rango.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </template>
-
-    <!-- Conciliación -->
-    <template v-else-if="tab === 'concil' && recon">
-      <div class="cards">
-        <div class="rep-card ds-stack">
-          <span>Validados</span
-          ><strong style="color: oklch(50% 0.15 150deg)">{{ recon.validados }}</strong>
-        </div>
-        <div class="rep-card ds-stack">
-          <span>Pendientes</span
-          ><strong style="color: oklch(50% 0.16 240deg)">{{ recon.pendientes }}</strong>
-        </div>
-        <div class="rep-card ds-stack">
-          <span>En contingencia</span
-          ><strong style="color: oklch(58% 0.14 75deg)">{{ recon.contingencia }}</strong>
-        </div>
-        <div class="rep-card ds-stack">
-          <span>Rechazados</span
-          ><strong style="color: oklch(55% 0.2 25deg)">{{ recon.rechazados }}</strong>
-        </div>
-      </div>
-
-      <div class="ds-card">
-        <div class="card-title">Requieren atención ({{ recon.needsAttention.length }})</div>
-        <div v-if="recon.needsAttention.length === 0" class="ds-empty pad">
-          Todos los documentos del periodo están validados.
-        </div>
-        <div v-else class="ds-table-scroll">
-          <table class="minitable">
-            <thead>
-              <tr>
-                <th>Número</th>
-                <th>Tipo</th>
-                <th>Fecha</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="d in recon.needsAttention" :key="d.id">
-                <td>
-                  <span class="num">{{ d.prefix }}-{{ d.consecutive }}</span>
-                </td>
-                <td>{{ docTypeLabel(d.documentType) }}</td>
-                <td class="date">{{ d.issueDate }}</td>
-                <td><FeStatusPill :status="d.dianStatus" /></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </template>
+      </template>
+    </BaseTabPanel>
   </div>
 </template>
 
@@ -315,33 +313,11 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
-.tabs {
-  display: flex;
-  gap: 4px;
-}
-
-/* El estado activo lo pinta `.ds-tab--active` y el de reposo `.tab-off`, las dos
-   desde el template. La base no declara `color` ni `border-bottom-color`: con el
-   `[data-v-…]` del scope pesarían (0,2,0) y la primitiva (0,1,0) no ganaría. El
-   `border-width` en forma larga evita el `border-color: currentcolor` que
-   arrastra el atajo `border: none`. */
-.tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 14px;
-  background: transparent;
-  border-width: 0 0 2px;
-  border-style: solid;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.tab-off {
-  border-bottom-color: transparent;
-  color: var(--warm-500);
-}
+/* La tira de pestañas es `BaseTabs` y no lleva caja propia aquí: va DENTRO de
+   `.repfilters`, como un elemento más de la fila de filtros, y por eso —a
+   diferencia de caja y cuentas— no se le cuelga ni raíl ni margen. El panel es
+   su hermano `BaseTabPanel`, fuera de la fila, que es exactamente lo que el
+   slot `panel` de la primitiva no permitía expresar. */
 
 .daterange :deep(.date-wrap) {
   width: 170px;

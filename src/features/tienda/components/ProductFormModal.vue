@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, useId, watch } from 'vue'
 import { Package } from 'lucide-vue-next'
+import ErrorSummary from '@/components/feedback/ErrorSummary.vue'
 import ModalShell from '@/components/ui/ModalShell.vue'
 import BaseField from '@/components/ui/BaseField.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
+import { useServerFieldErrors } from '@/composables/useServerFieldErrors'
+import { useConcurrencyConflict } from '@/composables/useConcurrencyConflict'
 import { useToast } from '@/composables/useToast'
 import { useTienda } from '../composables/useTienda'
 import { useSuppliers } from '@/features/compras/composables/useSuppliers'
@@ -22,9 +25,6 @@ const emit = defineEmits<{
   close: []
   saved: [item: ProductResponse]
 }>()
-
-const CONFLICT_MESSAGE =
-  'El registro fue modificado por otra operación; se recargó la información. Revisa y reintenta.'
 
 const TAX_TREATMENT_OPTIONS: { value: TaxTreatment; label: string }[] = [
   { value: 'GRAVADO', label: 'Gravado' },
@@ -101,6 +101,26 @@ function hydrate(it: ProductResponse) {
 const draft = reactive<Draft>(emptyDraft())
 
 type FieldKey = 'name' | 'code' | 'salePrice' | 'productCategoryId' | 'taxId'
+/** Orden VISUAL del formulario. El resumen de errores lo respeta (WCAG §2.4.3). */
+const FIELD_ORDER = ['name', 'code', 'productCategoryId', 'salePrice', 'taxId'] as const
+const FIELD_LABEL: Record<FieldKey, string> = {
+  name: 'Nombre',
+  code: 'Código / SKU',
+  productCategoryId: 'Categoría',
+  salePrice: 'Precio de venta',
+  taxId: 'Tarifa de impuesto',
+}
+/**
+ * FORM-05 — ids de los CONTROLES, conocidos ANTES de renderizar: el resumen
+ * enlaza cada problema con su campo y el padre no puede adivinar el `useId()`
+ * que `BaseField` genera dentro, así que se los pasa él (prop `id`). El
+ * `useId()` de aquí evita que dos instancias del modal choquen entre sí.
+ */
+const uid = useId()
+const ID = Object.fromEntries(FIELD_ORDER.map((k) => [k, `${uid}-${k}`])) as Record<
+  FieldKey,
+  string
+>
 const touched = reactive<Record<FieldKey, boolean>>({
   name: false,
   code: false,
@@ -117,6 +137,32 @@ function markTouched(field: FieldKey) {
 
 const busy = ref(false)
 const saveError = ref<string | null>(null)
+/** FORM-05: recibe el foco tras un `validate()` fallido. El banner del 409 y el
+ *  resumen son ramas EXCLUYENTES y comparten el `ref`; los dos exponen `focus()`. */
+const summary = ref<{ focus: () => void } | null>(null)
+
+// FORM-11 — errores por campo del servidor, junto al campo y no en un toast.
+const fieldErrors = useServerFieldErrors<FieldKey>(FIELD_ORDER)
+// Al editar CUALQUIER campo, lo que el servidor rechazó deja de ser cierto. Se
+// limpia en bloque y no campo a campo: cinco `@update:model-value` en el marcado
+// no caben en el presupuesto de líneas del SFC y no compran precisión útil.
+watch(draft, () => fieldErrors.clear(), { deep: true })
+
+// FORM-11 — el 409 no escribe en el borrador: la copia del servidor se guarda
+// aparte y el usuario elige. La política vive en el composable.
+const {
+  serverCopy,
+  message: conflictMessage,
+  capture: captureConflict,
+  resolveKeepMine,
+  resolveUseTheirs,
+  clear: clearConflict,
+} = useConcurrencyConflict<ProductResponse>({
+  refresh: () => store.refresh(),
+  find: () => store.products.value.find((p) => p.id === props.initial?.id) ?? null,
+  keepMine: (server) => (draft.version = server.version),
+  useTheirs: (server) => hydrate(server),
+})
 
 const categoryOptions = computed(() =>
   store.productCategories.value.map((c) => ({ value: String(c.id), label: c.name })),
@@ -154,6 +200,8 @@ watch(
   (open) => {
     if (!open) return
     resetTouched()
+    fieldErrors.clear()
+    clearConflict()
     saveError.value = null
     void loadSuppliers(true)
     if (props.initial) hydrate(props.initial)
@@ -176,10 +224,27 @@ const errors = computed(() => ({
 }))
 
 function err(field: FieldKey): string | undefined {
+  // El del servidor manda: es el único que conoce unicidad y reglas de negocio.
+  const fromServer = fieldErrors.serverErrors.value[field]
+  if (fromServer) return fromServer
   return touched[field] ? (errors.value[field] ?? undefined) : undefined
 }
 
 const isValid = computed(() => Object.values(errors.value).every((e) => e === null))
+
+/**
+ * FORM-05 — items del resumen, en el orden VISUAL del formulario y con el
+ * mismo texto EXACTO que se pinta junto al campo (GOV.UK lo exige literal).
+ * La etiqueta va DELANTE, no en vez de él: en línea los mensajes son
+ * «Requerido» / «Número ≥ 0», y dos enlaces que dicen «Requerido» no se
+ * distinguen uno de otro fuera de contexto (WCAG §2.4.4).
+ */
+const summaryItems = computed(() =>
+  FIELD_ORDER.flatMap((k) => {
+    const text = err(k)
+    return text ? [{ id: ID[k], text: `${FIELD_LABEL[k]}: ${text}` }] : []
+  }),
+)
 
 /** Valida marcando todos los campos como tocados; expuesto para el patrón `defineExpose(validate)`. */
 function validate(): boolean {
@@ -188,10 +253,22 @@ function validate(): boolean {
 }
 defineExpose({ validate })
 
+/**
+ * FORM-05 — el desplazamiento sin foco deja al usuario de teclado donde estaba
+ * (WCAG §2.4.3): la pantalla se mueve y él no. El resumen lleva `tabindex="-1"`
+ * justo para poder recibirlo.
+ */
+async function focusSummary() {
+  await nextTick()
+  summary.value?.focus()
+}
+
 async function submit() {
-  if (busy.value) return
+  // Con un conflicto abierto no se guarda: sería el tercer 409 en cadena.
+  if (busy.value || serverCopy.value !== null) return
   if (!validate()) {
-    scrollToFirstError()
+    void focusSummary()
+    void scrollToFirstError()
     return
   }
   busy.value = true
@@ -209,7 +286,6 @@ async function submit() {
   }
   // En edición reenviamos la versión leída (@Version) para que el backend detecte conflictos.
   if (props.initial && draft.version != null) payload.version = draft.version
-  const initialId = props.initial?.id
   try {
     const saved = props.initial
       ? await store.updateProduct(props.initial.id, payload)
@@ -218,13 +294,17 @@ async function submit() {
     emit('close')
   } catch (e) {
     if (isConcurrencyConflict(e)) {
-      // Recargamos el catálogo para obtener la versión fresca y re-hidratamos el form para reintentar.
-      await store.refresh()
-      const fresh =
-        initialId == null ? null : store.products.value.find((product) => product.id === initialId)
-      if (fresh) hydrate(fresh)
-      saveError.value = CONFLICT_MESSAGE
-      toast.warn('Conflicto de concurrencia', CONFLICT_MESSAGE)
+      // NO se llama a `hydrate()`: el borrador se queda exactamente como está.
+      await captureConflict()
+      saveError.value = null
+      toast.warn('Conflicto de concurrencia', conflictMessage)
+      void focusSummary()
+    } else if (fieldErrors.capture(e)) {
+      // El servidor señaló campos concretos: se pintan junto a ellos y NO se
+      // saca toast, o el mismo fallo se anunciaría dos veces.
+      saveError.value = 'Revisa los campos marcados.'
+      void focusSummary()
+      void scrollToFirstError()
     } else {
       saveError.value = getProblemDetailMessage(e, 'No se pudo guardar el producto')
     }
@@ -244,9 +324,35 @@ async function submit() {
     @close="emit('close')"
   >
     <template #body>
-      <div v-if="saveError" class="ds-banner ds-banner--error">{{ saveError }}</div>
+      <!-- FORM-11 · conflicto 409. Lo tecleado NO se ha tocado; el usuario elige. -->
+      <div
+        v-if="serverCopy"
+        ref="summary"
+        class="ds-banner ds-banner--warning"
+        role="alert"
+        tabindex="-1"
+        data-error-anchor
+      >
+        <p class="ds-error-summary__title">{{ conflictMessage }}</p>
+        <div class="ds-flex-row">
+          <button type="button" class="ds-btn ds-btn--ghost ds-btn--sm" @click="resolveKeepMine">
+            Mantener lo mío
+          </button>
+          <button type="button" class="ds-btn ds-btn--ghost ds-btn--sm" @click="resolveUseTheirs">
+            Usar la del servidor
+          </button>
+        </div>
+      </div>
+      <!-- FORM-05 · resumen de errores. `role="alert"`, `tabindex="-1"` y
+           `data-error-anchor` los pone ya la primitiva; lo que aquí SÍ es nuevo
+           es que cada problema enlaza con su campo, que es lo que la lista a
+           mano no podía hacer sin conocer los ids de antemano. -->
+      <ErrorSummary v-else-if="summaryItems.length > 0" ref="summary" :items="summaryItems" />
+      <div v-else-if="saveError" class="ds-banner ds-banner--error" role="alert" data-error-anchor>
+        {{ saveError }}
+      </div>
       <div class="grid ds-grid-2">
-        <BaseField label="Nombre" required :error="err('name')" class="ds-grid-span">
+        <BaseField :id="ID.name" label="Nombre" required :error="err('name')" class="ds-grid-span">
           <template #default="{ id }">
             <BaseInput
               :id="id"
@@ -257,7 +363,7 @@ async function submit() {
             />
           </template>
         </BaseField>
-        <BaseField label="Código / SKU" required :error="err('code')">
+        <BaseField :id="ID.code" label="Código / SKU" required :error="err('code')">
           <template #default="{ id }">
             <BaseInput
               :id="id"
@@ -268,19 +374,29 @@ async function submit() {
             />
           </template>
         </BaseField>
-        <BaseField label="Categoría" required :error="err('productCategoryId')">
+        <BaseField
+          :id="ID.productCategoryId"
+          label="Categoría"
+          required
+          :error="err('productCategoryId')"
+        >
           <template #default="{ id }">
             <BaseSelect
               :id="id"
               v-model="draft.productCategoryId"
               :options="categoryOptions"
               :invalid="!!err('productCategoryId')"
-              placeholder="Selecciona…"
+              placeholder="Selecciona categoría"
               @blur="markTouched('productCategoryId')"
             />
           </template>
         </BaseField>
-        <BaseField label="Precio de venta (IVA incl.)" required :error="err('salePrice')">
+        <BaseField
+          :id="ID.salePrice"
+          label="Precio de venta (IVA incl.)"
+          required
+          :error="err('salePrice')"
+        >
           <template #default="{ id }">
             <BaseInput
               :id="id"
@@ -304,7 +420,7 @@ async function submit() {
         </BaseField>
         <BaseField label="Proveedor (texto libre)" hint="Opcional · referencia rápida">
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.provider" placeholder="Opcional" />
+            <BaseInput :id="id" v-model="draft.provider" placeholder="Ej. Distribuidora Andina" />
           </template>
         </BaseField>
         <BaseField label="Tratamiento de IVA" required>
@@ -312,21 +428,32 @@ async function submit() {
             <BaseSelect :id="id" v-model="draft.taxTreatment" :options="TAX_TREATMENT_OPTIONS" />
           </template>
         </BaseField>
-        <BaseField v-if="showTaxRate" label="Tarifa de impuesto" required :error="err('taxId')">
+        <BaseField
+          v-if="showTaxRate"
+          :id="ID.taxId"
+          label="Tarifa de impuesto"
+          required
+          :error="err('taxId')"
+        >
           <template #default="{ id }">
             <BaseSelect
               :id="id"
               v-model="draft.taxId"
               :options="taxOptions"
               :invalid="!!err('taxId')"
-              placeholder="Selecciona tarifa…"
+              placeholder="Selecciona tarifa"
               @blur="markTouched('taxId')"
             />
           </template>
         </BaseField>
-        <BaseField label="Notas" class="ds-grid-span">
+        <BaseField label="Notas (opcional)" class="ds-grid-span">
           <template #default="{ id }">
-            <BaseTextarea :id="id" v-model="draft.notes" :rows="2" placeholder="Opcional" />
+            <BaseTextarea
+              :id="id"
+              v-model="draft.notes"
+              :rows="2"
+              placeholder="Presentación, conservación, uso…"
+            />
           </template>
         </BaseField>
       </div>

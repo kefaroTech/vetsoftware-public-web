@@ -175,8 +175,13 @@ function confirm() {
           No se pudieron cargar los parámetros fiscales (UVT). No es posible determinar si esta
           venta requiere factura electrónica; reintenta en un momento para cobrar este monto.
         </div>
+        <!-- FUERA del `v-if`: `FeThresholdBanner` es una región viva, y una región
+             que NACE con su texto dentro no se anuncia — solo se anuncia lo que
+             cambia DESPUÉS de que la región exista. Montado siempre, el lector sí
+             lee el aviso cuando el total cruza el umbral. El componente decide él
+             mismo si se pinta, así que el `v-if` de fuera era redundante. -->
+        <FeThresholdBanner :total="total" />
         <template v-if="overUvt">
-          <FeThresholdBanner :total="total" />
           <div class="doctypesel">
             <div class="doctype on">
               <FileText :size="15" :stroke-width="1.8" /> Factura electrónica

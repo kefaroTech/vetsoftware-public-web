@@ -9,7 +9,6 @@ import DateInput from '@/components/ui/DateInput.vue'
 import SegmentedRadio from '@/components/ui/SegmentedRadio.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import PatientFixedCard from '../components/PatientFixedCard.vue'
-import { useAuth } from '@/features/auth/composables/useAuth'
 import { todayISO } from '@/composables/format'
 import { hospitalizationApi } from '@/features/dashboard/views/consulta/nueva/api/hospitalization.api'
 import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/types/hospitalization.types'
@@ -27,8 +26,6 @@ const emit = defineEmits<{
   close: []
   saved: [item: HospitalizationResponse]
 }>()
-
-const { companyId } = useAuth()
 
 const typeOptions = [
   { value: 'HOSPITALIZATION', label: 'Hospitalización' },
@@ -108,9 +105,8 @@ async function save() {
     scrollToFirstError()
     return
   }
-  const cid = companyId.value
   const pid = patientId.value
-  if (cid == null || pid == null) {
+  if (pid == null) {
     saveError.value = 'Faltan datos para guardar.'
     return
   }
@@ -126,7 +122,6 @@ async function save() {
     observations: draft.observations.trim(),
     animalId: pid,
     consultationId: props.initial?.consultation?.id ?? null,
-    companyId: cid,
   }
   try {
     const result = props.initial
@@ -189,10 +184,19 @@ async function save() {
           />
         </BaseField>
         <BaseField label="Razón de ingreso" required :error="err('reason')" class="ds-grid-span">
-          <BaseTextarea v-model="draft.reason" :rows="2" :invalid="!!err('reason')" />
+          <BaseTextarea
+            v-model="draft.reason"
+            :rows="2"
+            :invalid="!!err('reason')"
+            placeholder="Ej. Gastroenteritis hemorrágica con deshidratación severa"
+          />
         </BaseField>
         <BaseField label="Observaciones" class="ds-grid-span">
-          <BaseTextarea v-model="draft.observations" :rows="2" />
+          <BaseTextarea
+            v-model="draft.observations"
+            :rows="2"
+            placeholder="Plan terapéutico, monitoreo, indicaciones…"
+          />
         </BaseField>
       </div>
     </template>

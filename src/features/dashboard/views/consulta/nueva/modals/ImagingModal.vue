@@ -246,13 +246,15 @@ function save() {
         </template>
       </BaseField>
 
-      <BaseField label="Observaciones">
+      <!-- La instrucción va al `hint`, que persiste; el placeholder desaparece con
+           la primera tecla y no puede llevarla (R16.5). -->
+      <BaseField label="Observaciones" hint="Indicaciones adicionales para el técnico">
         <template #default="{ id }">
           <BaseTextarea
             :id="id"
             v-model="draft.observations"
             :rows="2"
-            placeholder="Indicaciones adicionales para el técnico"
+            placeholder="Ayuno previo, sedación, proyecciones extra…"
           />
         </template>
       </BaseField>

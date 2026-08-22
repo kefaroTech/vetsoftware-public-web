@@ -134,6 +134,6 @@ const columns = computed(() =>
 
 .empty {
   padding: var(--space-16) 0;
-  font-size: var(--text-sm);
+  font-size: var(--text-body);
 }
 </style>

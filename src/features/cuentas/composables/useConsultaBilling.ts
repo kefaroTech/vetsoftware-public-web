@@ -3,7 +3,6 @@ import { useTienda } from '@/features/tienda/composables/useTienda'
 import { useCuentas } from './useCuentas'
 import { useToast } from '@/composables/useToast'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
-import { getProblemDetailMessage } from '@/services/http/http.client'
 import type { OpenAccountResponse, UnifiedCharge } from '../types/cuentas'
 
 export type BillingDestino = 'existing' | 'new' | 'nada'
@@ -264,10 +263,10 @@ export function useConsultaBilling(options: {
     } catch (e) {
       // Los marcadores (createdAccount + ops.done) persisten → el reintento salta
       // lo ya guardado.
-      toast.error(
-        'Ocurrió un error',
-        getProblemDetailMessage(e, 'No se pudo completar la facturación'),
-      )
+      //
+      // `errorFrom` y no `error(...)` a mano: mantiene el `X-Trace-Id` de la respuesta, sin el
+      // cual soporte no puede cruzar este aviso con la traza del backend (EST-02).
+      toast.errorFrom('Ocurrió un error', e, 'No se pudo completar la facturación')
       return false
     } finally {
       busy.value = false

@@ -10,14 +10,13 @@ import OwnerSummaryCard from '../components/OwnerSummaryCard.vue'
 import OwnerForm from '../components/OwnerForm.vue'
 import PetCard from '../components/PetCard.vue'
 import PetForm from '../components/PetForm.vue'
-import DeceasedConfirmDialog from '../components/DeceasedConfirmDialog.vue'
 import { useAnimalsByOwner } from '../composables/useAnimalsByOwner'
 import { ownerApi } from '../api/owner.api'
 import { mapOwnerResponse } from '../api/owner.mapper'
 import { animalApi } from '../api/animal.api'
 import { buildCreateAnimalRequest, mapAnimalResponse } from '../api/animal.mapper'
 import { useNuevaConsultaDraft } from '../composables/useNuevaConsultaDraft'
-import { useAuth } from '@/features/auth/composables/useAuth'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { scrollToFirstError } from '@/composables/scrollToError'
 import type { OwnerDocumentType } from '@/features/facturacion/composables/feFiscalChecklist'
@@ -25,7 +24,7 @@ import type { PersonType } from '@/features/facturacion/types/facturacion'
 import type { Animal, Owner } from '@/types/domain'
 
 const draft = useNuevaConsultaDraft()
-const { companyId } = useAuth()
+const { confirm } = useConfirmDialog()
 
 // ── Propietario ──────────────────────────────────────────────────────────────
 type OwnerMode = 'search' | 'selected' | 'creating'
@@ -50,16 +49,15 @@ function changeOwner() {
   draft.setOwner(null)
 }
 
+// Ni `POST /owners` ni `POST /animals` llevan la empresa en el cuerpo: el backend la deriva del
+// JWT. Una guarda previa sobre ella no evitaba ningún 400 — solo cortaba el paso pidiendo «vuelve
+// a iniciar sesión» mientras la sesión aún resolvía, y con ello se perdía el borrador escrito.
 async function submitOwner(): Promise<boolean> {
   const o = draft.state.ownerCreating
   if (!o) return true
   if (ownerFormRef.value && !ownerFormRef.value.validate()) {
     ownerSubmitError.value = 'Revisa los campos marcados antes de continuar.'
     scrollToFirstError()
-    return false
-  }
-  if (companyId.value == null) {
-    ownerSubmitError.value = 'No se pudo identificar la empresa actual. Vuelve a iniciar sesión.'
     return false
   }
   const cityIdNum = Number(o.cityId)
@@ -107,21 +105,31 @@ const petMode = computed<PetMode>(() => {
 
 const petSubmitError = ref<string | null>(null)
 const petFormRef = ref<{ validate: () => boolean } | null>(null)
-const deceasedPending = ref<Animal | null>(null)
 
 function selectedPetId(p: Animal): boolean {
   return draft.state.pet?.id === p.id
 }
-function handleSelectPet(p: Animal) {
-  if (p.deceased) {
-    deceasedPending.value = p
+/**
+ * Elegir una mascota fallecida pide confirmación.
+ *
+ * El acento es `warn` (ámbar) y NO `danger`: registrar el fallecimiento de un
+ * paciente no es un gesto peligroso ni destruye nada; teñirlo de rojo lo
+ * convertiría en una amenaza. Era el tono que ya tenía este diálogo cuando era
+ * un componente propio y se conserva tal cual en el canónico.
+ */
+async function handleSelectPet(p: Animal) {
+  if (!p.deceased) {
+    draft.setPet(p)
     return
   }
+  const ok = await confirm({
+    title: '¿Crear consulta para una mascota fallecida?',
+    message: `${p.name} aparece marcada como fallecida. Esta consulta quedará registrada como necropsia o registro post-mortem.`,
+    accent: 'warn',
+    confirmLabel: 'Continuar',
+  })
+  if (!ok) return
   draft.setPet(p)
-}
-function confirmDeceased() {
-  if (deceasedPending.value) draft.setPet(deceasedPending.value)
-  deceasedPending.value = null
 }
 function startCreatePet() {
   draft.startCreatingPet()
@@ -139,10 +147,6 @@ async function submitPet(): Promise<boolean> {
   if (petFormRef.value && !petFormRef.value.validate()) {
     petSubmitError.value = 'Revisa los campos marcados antes de continuar.'
     scrollToFirstError()
-    return false
-  }
-  if (companyId.value == null) {
-    petSubmitError.value = 'No se pudo identificar la empresa actual. Vuelve a iniciar sesión.'
     return false
   }
   petSubmitError.value = null
@@ -339,13 +343,6 @@ function clearBanner() {
         </div>
       </template>
     </template>
-
-    <DeceasedConfirmDialog
-      :open="!!deceasedPending"
-      :pet-name="deceasedPending?.name ?? ''"
-      @cancel="deceasedPending = null"
-      @confirm="confirmDeceased"
-    />
   </ContentWrap>
 </template>
 

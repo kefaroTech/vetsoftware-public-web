@@ -41,6 +41,15 @@ export const openAccountApi = {
   async search(
     criteria: OpenAccountSearchCriteria,
     signal?: AbortSignal,
+    /**
+     * Lectura de fondo: no dispara el velo global. Es lo que quiere el listado,
+     * que pinta su propio esqueleto y conserva cabecera, pestañas y buscador
+     * mientras carga — tapar la pantalla entera para refrescar ocho tarjetas
+     * destruye el contexto justo cuando el usuario lo necesita. Por defecto
+     * `false`: quien pide esto de forma bloqueante (el get-or-create de una
+     * cuenta) sí quiere el velo.
+     */
+    background = false,
   ): Promise<PageResponse<OpenAccountResponse>> {
     const params: Record<string, string | number | boolean | string[]> = {
       page: criteria.page ?? 0,
@@ -53,14 +62,19 @@ export const openAccountApi = {
     const { data } = await http.get<PageResponse<OpenAccountResponse>>('/open-accounts/search', {
       params: withBranchParam(params),
       signal,
+      skipGlobalLoader: background,
     })
     return data
   },
 
-  /** Contadores de las pestañas y saldo pendiente acumulado de la empresa/sede (BE-06). */
-  async summary(): Promise<OpenAccountsSummary> {
+  /**
+   * Contadores de las pestañas y saldo pendiente acumulado de la empresa/sede (BE-06).
+   * Acompaña siempre al listado, así que comparte su política de velo.
+   */
+  async summary(background = false): Promise<OpenAccountsSummary> {
     const { data } = await http.get<OpenAccountsSummary>('/open-accounts/summary', {
       params: withBranchParam({}),
+      skipGlobalLoader: background,
     })
     return data
   },

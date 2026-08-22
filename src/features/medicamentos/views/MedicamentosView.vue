@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { Globe, PauseCircle, Pencil, Plus, RotateCcw } from 'lucide-vue-next'
-import ConfirmDeleteDialog from '@/components/feedback/ConfirmDeleteDialog.vue'
 import MedicamentFormModal from '../components/MedicamentFormModal.vue'
+import SegTabs from '@/features/tienda/components/SegTabs.vue'
 import { useMedicamentCatalog } from '../composables/useMedicamentCatalog'
 import { useToast } from '@/composables/useToast'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import { getProblemDetailMessage } from '@/services/http/http.client'
@@ -12,6 +13,7 @@ import type { MedicamentResponse } from '@/features/dashboard/views/consulta/nue
 
 const store = useMedicamentCatalog()
 const toast = useToast()
+const { confirm } = useConfirmDialog()
 const { can } = useAuthorization()
 const canCreate = can(PERMISSIONS.PRESCRIPTION_CREATE)
 const canUpdate = can(PERMISSIONS.PRESCRIPTION_UPDATE)
@@ -22,8 +24,6 @@ const mode = ref<'active' | 'paused'>('active')
 
 const modalOpen = ref(false)
 const editing = ref<MedicamentResponse | null>(null)
-const pausing = ref<MedicamentResponse | null>(null)
-const pausingBusy = ref(false)
 const pausedLoading = ref(false)
 
 onMounted(() => store.reload())
@@ -68,22 +68,25 @@ function onFormClose() {
   editing.value = null
 }
 
-function requestPause(m: MedicamentResponse) {
-  pausing.value = m
-}
-
-async function onConfirmPause() {
-  const target = pausing.value
-  if (!target) return
-  pausingBusy.value = true
+/**
+ * Pausar pasa por el único diálogo de confirmación de la app: la acción viaja
+ * dentro de `confirm()`, así que mientras el DELETE está en vuelo el diálogo
+ * sigue abierto con los botones inertes y la fila no puede volver a dispararlo.
+ */
+async function requestPause(m: MedicamentResponse) {
   try {
-    await store.remove(target.id)
-    toast.info('Medicamento pausado', `${target.name} dejó de estar disponible.`)
-    pausing.value = null
+    const ok = await confirm({
+      title: 'Pausar medicamento',
+      message: `${m.name} dejará de estar disponible al recetar.`,
+      consequence: 'Podrás reactivarlo desde la pestaña “Pausados”.',
+      confirmLabel: 'Pausar',
+      busyLabel: 'Pausando…',
+      action: () => store.remove(m.id),
+    })
+    if (!ok) return
+    toast.info('Medicamento pausado', `${m.name} dejó de estar disponible.`)
   } catch (e) {
     toast.errorFrom('Ocurrió un error', e, 'No se pudo pausar')
-  } finally {
-    pausingBusy.value = false
   }
 }
 
@@ -107,14 +110,15 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
         <h1 class="ds-display">Catálogo de medicamentos</h1>
       </div>
       <div class="head-actions ds-flex-row">
-        <div class="seg" role="tablist">
-          <button type="button" :class="{ on: mode === 'active' }" @click="switchMode('active')">
-            Disponibles
-          </button>
-          <button type="button" :class="{ on: mode === 'paused' }" @click="switchMode('paused')">
-            Pausados
-          </button>
-        </div>
+        <SegTabs
+          aria-label="Estado de los medicamentos"
+          :model-value="mode"
+          :options="[
+            { value: 'active', label: 'Disponibles' },
+            { value: 'paused', label: 'Pausados' },
+          ]"
+          @update:model-value="switchMode"
+        />
         <button
           v-if="canCreate && mode === 'active'"
           type="button"
@@ -225,20 +229,6 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
       @close="onFormClose"
       @saved="onSaved"
     />
-
-    <ConfirmDeleteDialog
-      :open="pausing !== null"
-      title="Pausar medicamento"
-      action-label="Pausar"
-      :message="
-        pausing
-          ? `${pausing.name} dejará de estar disponible al recetar. Podrás reactivarlo desde la pestaña “Pausados”.`
-          : ''
-      "
-      :busy="pausingBusy"
-      @cancel="pausing = null"
-      @confirm="onConfirmPause"
-    />
   </div>
 </template>
 
@@ -248,29 +238,13 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
 .head-actions {
   flex-shrink: 0;
 }
-.seg {
-  display: inline-flex;
-  background: var(--warm-100);
-  border: 1px solid var(--warm-200);
-  border-radius: 9px;
-  padding: 2px;
-}
-.seg button {
-  border: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--warm-600);
-  padding: 6px 12px;
-  border-radius: 7px;
-  cursor: pointer;
-}
-.seg button.on {
-  background: var(--warm-50);
-  color: var(--amatista-700);
-  box-shadow: 0 1px 2px rgb(50 20 80 / 8%);
-}
+
+/* El conmutador «Disponibles/Pausados» es `SegTabs` (issue #161). Aquí había una
+   sexta copia de su cuerpo CSS —idéntica salvo el `box-shadow`, que literalizaba
+   el valor de `--shadow-xs`— sobre un `role="tablist"` cuyos botones no eran
+   `role="tab"`. Mismo gesto que el de `ImpuestosView`, que ya se clasificó como
+   filtro: dos conmutadores iguales en pantalla no pueden anunciarse distinto
+   según la vista en la que estén. No devolver el CSS local: el componente lo trae. */
 
 /* Los dos contenedores con scroll usan `.ds-table-scroll` y la fila con hover
    `.ds-row-hover` (primitives.css). `.tname` migra por completo a

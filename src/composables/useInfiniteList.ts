@@ -1,4 +1,4 @@
-import { ref, computed, onUnmounted, type Ref } from 'vue'
+import { ref, computed, onUnmounted, shallowRef } from 'vue'
 import axios from 'axios'
 import { DEFAULT_PAGE_SIZE, type PageResponse } from '@/types/pagination'
 
@@ -38,7 +38,21 @@ export function useInfiniteList<T>(loader: PageLoader<T>, options: UseInfiniteLi
   const pageSize = options.pageSize ?? DEFAULT_PAGE_SIZE
   const rootMargin = options.rootMargin ?? '200px'
 
-  const items = ref([]) as Ref<T[]>
+  /**
+   * `shallowRef` y no `ref`: en el historial de un paciente crónico esta lista
+   * acumula miles de DTO, y `ref` los haría reactivos en profundidad — un
+   * `Proxy` por objeto y por campo anidado, en cada página que se concatena.
+   * Aquí no hace falta: el array se **sustituye entero** (`:81`, `:130`) y
+   * ningún consumidor muta un item en su sitio.
+   *
+   * Eso último es la condición para que esto sea correcto, y está comprobada en
+   * los tres consumidores (`CuentasListaView`, `DocumentosView`, `useClinicalHistory`):
+   * los tres solo leen —`v-for`, `.find`, `.length`—. **Si algún día alguien
+   * escribe `items.value[i].campo = x`, la pantalla dejará de repintarse sin dar
+   * ningún error.** La forma correcta de actualizar un elemento es sustituirlo:
+   * `items.value = items.value.map((x) => (x.id === id ? { ...x, campo } : x))`.
+   */
+  const items = shallowRef<T[]>([])
   const page = ref(0)
   const totalElements = ref(0)
   const totalPages = ref(0)

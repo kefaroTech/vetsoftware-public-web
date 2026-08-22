@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
+import { FieldKey } from './fieldContext'
 
 const props = withDefaults(
   defineProps<{
@@ -9,6 +10,7 @@ const props = withDefaults(
     id?: string
     invalid?: boolean
     disabled?: boolean
+    readonly?: boolean
   }>(),
   { rows: 4 },
 )
@@ -17,6 +19,18 @@ const emit = defineEmits<{
   'update:modelValue': [value: string]
   blur: [event: FocusEvent]
 }>()
+
+const field = inject(FieldKey, null)
+
+/**
+ * A11Y-04 · FORM-01 · FORM-04 — el id, la descripción y la obligatoriedad se
+ * toman del `BaseField` que envuelve al campo cuando el consumidor no los pasa.
+ * La prop explícita va primero: fuera de un `BaseField` el componente sigue
+ * comportándose igual que antes.
+ */
+const controlId = computed(() => props.id ?? field?.controlId)
+const describedBy = computed(() => field?.describedBy.value)
+const isRequired = computed(() => field?.required.value ?? false)
 
 // El foco se refleja en una bandera porque `.ds-field-invalid-focus`
 // (primitives.css) es una clase plana, no una regla `:focus`.
@@ -34,6 +48,11 @@ const toneClass = computed(() => {
     return ['tone-text', 'ds-field-invalid', focused.value ? 'ds-field-invalid-focus' : null]
   }
   if (props.disabled) return ['tone-border', 'ds-field-disabled', 'ds-focus-ring']
+  // Solo lectura NO es deshabilitado: el control sigue siendo operable y su
+  // valor SÍ se envía. Sin `tone-*`: `.ds-field-readonly` trae borde, fondo y
+  // color, y el color es el CANAL que lo separa de deshabilitado (--warm-900,
+  // 16,76:1, frente al --warm-500 atenuado del otro estado).
+  if (props.readonly) return ['ds-field-readonly', 'ds-focus-ring']
   return ['tone-border', 'tone-bg', 'tone-text', 'ds-focus-ring']
 })
 
@@ -45,14 +64,17 @@ function onBlur(event: FocusEvent) {
 
 <template>
   <textarea
-    :id="id"
+    :id="controlId"
     class="textarea ds-focus-ring--no-outline"
-    :class="[toneClass, { invalid }]"
+    :class="[toneClass, { invalid, readonly }]"
     :rows="rows"
     :value="modelValue ?? ''"
-    :placeholder="placeholder"
+    :placeholder="readonly ? undefined : placeholder"
     :disabled="disabled"
+    :readonly="readonly || undefined"
     :aria-invalid="invalid || undefined"
+    :aria-required="isRequired || undefined"
+    :aria-describedby="describedBy"
     @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
     @focus="focused = true"
     @blur="onBlur"
@@ -86,8 +108,13 @@ function onBlur(event: FocusEvent) {
    inválido cambia fondo y borde pero conserva el texto. Mantienen el peso
    (0,2,0) y la posición que tenía el trío dentro de `.textarea`, así que su
    resolución frente a `.ds-focus-ring:focus` no cambia. */
+
+/* A11Y-09 · WCAG 2.2 §1.4.11 (AA): --warm-200 medía 1,23:1 sobre --warm-50 y
+   el límite del campo era invisible con poca luz. --warm-450 da 3,55:1. Es el
+   escalón que tokens.css reserva para bordes de control e icono; --warm-200 se
+   queda para separadores y divisores, que §1.4.11 exime por decorativos. */
 .tone-border {
-  border-color: var(--warm-200);
+  border-color: var(--warm-450);
 }
 
 .tone-bg {
@@ -98,8 +125,10 @@ function onBlur(event: FocusEvent) {
   color: var(--warm-900);
 }
 
-.textarea:hover:not(:focus, :disabled, .invalid) {
-  border-color: var(--warm-300);
+/* --warm-500 (5,36:1): con el reposo en --warm-450, --warm-300 (1,49:1) dejaba
+   el hover más claro que el reposo. */
+.textarea:hover:not(:focus, :disabled, .readonly, .invalid) {
+  border-color: var(--warm-500);
 }
 
 .textarea::placeholder {

@@ -1,4 +1,5 @@
 import type { PageResponse } from '@/types/pagination'
+import axios from 'axios'
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { openAccountApi } from '../api/openAccount.api'
@@ -19,6 +20,21 @@ import type {
   PaymentMethod,
   UnifiedCharge,
 } from '../types/cuentas'
+
+/**
+ * Una unidad a cobrar en `addChargesBatch`, con SU clave de idempotencia ya decidida.
+ *
+ * La clave es parte del dato y no un extra opcional a propósito: así no se puede añadir una
+ * unidad al lote sin decir a qué intento del usuario pertenece, que es justo lo que se perdía
+ * cuando el lote las fabricaba por su cuenta en cada pasada (#203).
+ */
+export interface BatchChargeUnit {
+  kind: 'service' | 'product'
+  /** id del servicio o del producto del catálogo. */
+  refId: number
+  /** UUID generado UNA vez por el intento lógico del usuario y reusado en sus reintentos. */
+  clientRequestId: string
+}
 
 /**
  * Store de Cuentas abiertas (por propietario y sede). El total/saldo proviene del
@@ -76,14 +92,16 @@ export const useCuentasStore = defineStore('cuentas', () => {
     criteria: OpenAccountSearchCriteria,
     signal?: AbortSignal,
   ): Promise<PageResponse<OpenAccountResponse>> {
-    return openAccountApi.search({ enabled: true, ...criteria }, signal)
+    // Lectura de fondo: la pantalla pinta su propio esqueleto (EST-05) y no
+    // quiere el velo global encima.
+    return openAccountApi.search({ enabled: true, ...criteria }, signal, true)
   }
 
   /** Contadores de las pestañas y saldo pendiente acumulado, calculados en el servidor. */
   async function loadSummary(): Promise<void> {
     const turno = summaryTurn.begin()
     try {
-      const fresh = await openAccountApi.summary()
+      const fresh = await openAccountApi.summary(true)
       if (!turno()) return
       summary.value = fresh
     } catch (e) {
@@ -243,7 +261,11 @@ export const useCuentasStore = defineStore('cuentas', () => {
   })
 
   async function findOpenAccountByOwner(ownerId: number): Promise<OpenAccountResponse | null> {
-    if (useBranchStore().selectedBranchId == null) {
+    // `ensureSelectedBranch()` y no leer `selectedBranchId` a secas: la sede se resuelve en el
+    // store de sedes, pero es una petición, y quien entra aquí lo bastante pronto (enlace
+    // directo, F5 sobre el detalle) la pillaba todavía en null y se comía este error sin que
+    // faltara sede ninguna (issue #201). Si tras resolver sigue sin haberla, el mensaje es real.
+    if ((await useBranchStore().ensureSelectedBranch()) == null) {
       throw new Error('Selecciona una sede para consultar la cuenta abierta del propietario.')
     }
     // "Cuenta abierta" = status === 'OPEN'. Una cuenta cerrada/cancelada sigue
@@ -271,7 +293,9 @@ export const useCuentasStore = defineStore('cuentas', () => {
    * cuenta vive en el modal (aviso de duplicado al elegir propietario), no aquí.
    */
   async function openAccount(ownerId: number): Promise<OpenAccountResponse> {
-    if (useBranchStore().selectedBranchId == null) {
+    // Misma razón que en `findOpenAccountByOwner`: se espera a que la sede esté resuelta antes
+    // de declarar que no hay.
+    if ((await useBranchStore().ensureSelectedBranch()) == null) {
       throw new Error('Selecciona una sede antes de abrir una cuenta.')
     }
     const existing = await findOpenAccountByOwner(ownerId)
@@ -282,6 +306,32 @@ export const useCuentasStore = defineStore('cuentas', () => {
     const created = await openAccountApi.create(ownerId)
     upsertAccount(created)
     return created
+  }
+
+  /**
+   * Resuelve una cuenta por id, para entrar al detalle por URL.
+   *
+   * Con el detalle en la ruta (EST-08) un `accountId` puede llegar de un enlace
+   * pegado, de un marcador viejo o de un F5 sobre una cuenta que entretanto se
+   * borró o es de otra empresa. Eso antes era imposible —siempre se llegaba
+   * pinchando una tarjeta que ya estaba en pantalla— y ahora es un camino
+   * normal, así que «no existe» tiene que ser un resultado, no una excepción que
+   * deje la pantalla en blanco.
+   *
+   * @returns la cuenta, o `null` si el servidor dice que no existe o no es
+   *          visible para este usuario (404/403). Cualquier otro fallo se
+   *          propaga: un 500 o una caída de red no son «no existe».
+   */
+  async function fetchAccount(accountId: number): Promise<OpenAccountResponse | null> {
+    try {
+      const fresh = await openAccountApi.findById(accountId)
+      upsertAccount(fresh)
+      return fresh
+    } catch (e) {
+      const status = axios.isAxiosError(e) ? e.response?.status : undefined
+      if (status === 404 || status === 403) return null
+      throw e
+    }
   }
 
   async function refreshAccount(accountId: number) {
@@ -365,33 +415,25 @@ export const useCuentasStore = defineStore('cuentas', () => {
   }
 
   /**
-   * Agrega varios cargos de producto/servicio a una cuenta en una sola pasada
-   * (un cargo por unidad de `qty`) y refresca la cuenta una sola vez al final.
+   * Agrega varios cargos de producto/servicio a una cuenta en una sola pasada (un cargo por
+   * unidad, ya aplanada) y refresca la cuenta una sola vez al final.
+   *
+   * Las claves de idempotencia NO se generan aquí: llegan con cada unidad. Generarlas dentro
+   * del bucle era el defecto #203 — el store no sabe cuándo empieza un intento lógico del
+   * usuario (eso solo lo sabe quien lo orquesta), así que cada reintento estrenaba clave, el
+   * backend veía peticiones nuevas y volvía a crear los cargos que ya existían: la red fallaba
+   * a mitad, el usuario reintentaba y la cuenta acababa con los productos cobrados dos veces.
+   * El llamador aplana su carrito UNA vez con una clave por unidad y reintenta con las mismas
+   * (patrón `buildOps` de `useOpenAccountCart` y `useConsultaBilling`); reenviar una clave ya
+   * usada devuelve el cargo existente en vez de crear otro.
    */
   async function addChargesBatch(
     accountId: number,
     animalId: number,
-    items: { kind: 'service' | 'product'; id: number; qty: number }[],
+    units: BatchChargeUnit[],
   ): Promise<void> {
-    for (const it of items) {
-      for (let i = 0; i < it.qty; i++) {
-        // Idempotency key por unidad: protege reintentos de transporte de duplicar el cargo en el backend.
-        if (it.kind === 'service') {
-          await serviceChargeApi.create({
-            animalId,
-            serviceId: it.id,
-            openAccountId: accountId,
-            clientRequestId: crypto.randomUUID(),
-          })
-        } else {
-          await productChargeApi.create({
-            animalId,
-            productId: it.id,
-            openAccountId: accountId,
-            clientRequestId: crypto.randomUUID(),
-          })
-        }
-      }
+    for (const unit of units) {
+      await addChargeUnit(accountId, animalId, unit.kind, unit.refId, unit.clientRequestId)
     }
     await refreshAccount(accountId)
   }
@@ -497,6 +539,7 @@ export const useCuentasStore = defineStore('cuentas', () => {
     searchPage,
     loadSummary,
     loadDetail,
+    fetchAccount,
     refreshAccount,
     findOpenAccountByOwner,
     openAccount,

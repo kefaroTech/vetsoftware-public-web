@@ -9,6 +9,7 @@ import type { ReceiptLine, ReceiptTotalRow } from '@/composables/useReceiptPrint
 import { buildDocumentReceiptTicket } from '@/composables/buildDocumentReceipt'
 import { useReceiptSettings } from '@/composables/useReceiptSettings'
 import FeStatusPill from '@/features/facturacion/components/FeStatusPill.vue'
+import FeDianResultBanner from '@/features/facturacion/components/FeDianResultBanner.vue'
 import type { ElectronicDocumentResponse } from '@/features/facturacion/types/facturacion'
 
 const props = defineProps<{
@@ -110,10 +111,14 @@ function onPrint() {
             <FeStatusPill :status="document.dianStatus" />
           </div>
           <div v-if="docNumber" class="fe-doc-num ds-strong">N.º {{ docNumber }}</div>
-          <p v-else-if="document.dianStatus === 'PENDIENTE'" class="fe-doc-hint">
-            Datos guardados. La emisión a la DIAN queda pendiente (módulo de facturación no
-            habilitado).
-          </p>
+          <!-- El resultado de la DIAN, en el comprobante: es lo que el cajero mira
+               y a veces imprime. Hasta ahora un documento RECHAZADO se veía igual
+               que uno correcto salvo por el color de una pastilla. El componente
+               decide solo si se pinta y con qué tono: `VALIDADO` no pinta nada
+               —el éxito ya lo dice el propio recibo—, `PENDIENTE` es aviso y
+               cualquier otro estado es error, con el `dianStatus` crudo a la vista
+               para que soporte pueda identificar el documento. -->
+          <FeDianResultBanner :status="document.dianStatus" />
         </div>
         <ul class="lines ds-stack ds-stack--8">
           <li v-for="l in lines" :key="`${l.kind}-${l.id}`" class="line">
@@ -199,12 +204,6 @@ function onPrint() {
 }
 .fe-doc-num {
   font-size: 13px;
-}
-.fe-doc-hint {
-  margin: 0;
-  font-size: 11.5px;
-  color: var(--warm-600);
-  line-height: 1.4;
 }
 
 /* La columna es `.ds-stack ds-stack--8`. NO lleva `.ds-list-reset`: esa

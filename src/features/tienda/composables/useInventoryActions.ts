@@ -1,6 +1,7 @@
 import { ref, type Ref } from 'vue'
 import { useTienda } from './useTienda'
 import { useToast } from '@/composables/useToast'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import type { ProductResponse } from '../types/tienda'
 import type { ReceiveDraft } from '../components/RestockModal.vue'
 import type { AdjustDraft } from '../components/AdjustModal.vue'
@@ -28,14 +29,13 @@ export function useInventoryActions(ctx: {
 }) {
   const store = useTienda()
   const toast = useToast()
+  const { confirm } = useConfirmDialog()
 
   const restockFor = ref<ProductResponse | null>(null)
   const adjustFor = ref<ProductResponse | null>(null)
   const transferFor = ref<ProductResponse | null>(null)
   const consumeFor = ref<ProductResponse | null>(null)
   const countOpen = ref(false)
-  const pausing = ref<ProductResponse | null>(null)
-  const pausingBusy = ref(false)
 
   const fail = (e: unknown, msg: string) => toast.errorFrom('Ocurrió un error', e, msg)
 
@@ -154,22 +154,32 @@ export function useInventoryActions(ctx: {
     }
   }
 
-  /** Pausar = soft-delete (DELETE → enabled=false). Recuperable desde "Pausados". */
-  async function onConfirmPause() {
-    const t = pausing.value
-    if (!t) return
-    pausingBusy.value = true
+  /**
+   * Pausar = soft-delete (DELETE → enabled=false). Recuperable desde "Pausados".
+   *
+   * La confirmación es el único diálogo de la app (`AppConfirmDialog`) y la
+   * acción viaja dentro de `confirm()`: mientras el DELETE está en vuelo el
+   * diálogo sigue abierto con los dos botones inertes, así que ni el doble clic
+   * ni la fila de la tabla pueden pausar dos veces el mismo producto. Eso es lo
+   * que antes sostenía el `:busy` de `ConfirmDeleteDialog`, que ya no existe.
+   */
+  async function requestPause(p: ProductResponse) {
     try {
-      await store.removeProduct(t.id)
+      const ok = await confirm({
+        title: 'Pausar producto',
+        message: `${p.name} dejará de aparecer en el punto de venta.`,
+        consequence: 'Podrás reactivarlo desde la pestaña “Pausados” cuando quieras.',
+        confirmLabel: 'Pausar',
+        busyLabel: 'Pausando…',
+        action: () => store.removeProduct(p.id),
+      })
+      if (!ok) return
       toast.info(
         'Producto pausado',
-        `${t.name} dejó de aparecer en el punto de venta. Puedes reactivarlo cuando quieras.`,
+        `${p.name} dejó de aparecer en el punto de venta. Puedes reactivarlo cuando quieras.`,
       )
-      pausing.value = null
     } catch (e) {
       fail(e, 'No se pudo pausar el producto')
-    } finally {
-      pausingBusy.value = false
     }
   }
 
@@ -212,8 +222,6 @@ export function useInventoryActions(ctx: {
     transferFor,
     consumeFor,
     countOpen,
-    pausing,
-    pausingBusy,
     onReceive,
     onAdjust,
     onTransfer,
@@ -221,7 +229,7 @@ export function useInventoryActions(ctx: {
     onRecordCount,
     onConsume,
     onMinStockCommit,
-    onConfirmPause,
+    requestPause,
     onReactivate,
     onCategoryUpsert,
     onCategoryRemove,

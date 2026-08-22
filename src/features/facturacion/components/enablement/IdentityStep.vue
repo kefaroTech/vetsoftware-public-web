@@ -385,7 +385,7 @@ async function save() {
   align-items: center;
   gap: 10px;
   padding: 11px 14px;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 10px;
   background: var(--warm-50);
   font-size: 13px;
@@ -397,8 +397,11 @@ async function save() {
     background 0.14s;
 }
 
+/* A11Y-09: `--amatista-300` daba 2,02:1, por debajo del reposo `--warm-450`
+   (3,55:1). `--amatista-450` da 3,77:1 y sigue por debajo del `--amatista-600`
+   de `.on`. */
 .respitem:hover {
-  border-color: var(--amatista-300);
+  border-color: var(--amatista-450);
 }
 
 .respitem.on {

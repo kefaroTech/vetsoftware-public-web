@@ -78,7 +78,7 @@ const rangeLabel = computed(() => {
 /* Resto sobre `.ds-pill`: esta insignia va un punto más grande y con más aire. */
 .badge {
   padding: var(--space-5) var(--space-12);
-  font-size: var(--text-sm);
+  font-size: var(--text-body);
 }
 
 .fields {

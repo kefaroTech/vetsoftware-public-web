@@ -10,7 +10,6 @@ export interface CreateHospitalizationPayload {
   observations: string
   animalId: number
   consultationId: number | null
-  companyId: number
   // Peso opcional al ingreso → historial de peso del animal.
   weight?: number | null
   weightUnit?: string | null

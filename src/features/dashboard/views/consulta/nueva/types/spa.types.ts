@@ -5,7 +5,6 @@ export interface CreateSpaPayload {
   details: string
   observations: string
   animalId: number
-  companyId: number
 }
 
 export interface SpaTypeSummary {

@@ -440,7 +440,7 @@ function copyId() {
   gap: 5px;
   padding: 5px 10px;
   border-radius: 7px;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   background: var(--warm-50);
   font-size: 11.5px;
   color: var(--warm-700);

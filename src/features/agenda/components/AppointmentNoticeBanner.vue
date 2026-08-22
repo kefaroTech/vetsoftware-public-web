@@ -12,6 +12,15 @@ import type { Component } from 'vue'
  * `primitives.css` (`.ds-banner`) porque sus valores no coinciden con los de esa
  * primitiva —radio 9 en vez de 8, 12,5px en vez de 13, sin `margin-bottom` ni
  * `align-items`— y unificarlos cambiaría el aspecto de las dos pantallas.
+ *
+ * El `role` sale del `tone` que ya trae la prop, y no es decoración: los cuatro
+ * usos aparecen TRAS una interacción, así que sin región viva no se anuncia
+ * ninguno. Un solape de citas invisible es una consulta doble en la sala de
+ * espera. `err` es `alert` porque hace perder trabajo; `warn` y `neutral` son
+ * `status` (polite), que espera a que el lector termine la frase en vez de
+ * cortarle el punto de lectura — `assertive` está reservado a lo que lo
+ * requiere (`docs/ux/patron-de-mensajes.md` §4.2b). El `aria-live` de `alert`
+ * es implícito y NO se escribe.
  */
 withDefaults(
   defineProps<{
@@ -25,7 +34,12 @@ withDefaults(
 </script>
 
 <template>
-  <div class="banner" :class="tone">
+  <div
+    class="banner"
+    :class="tone"
+    :role="tone === 'err' ? 'alert' : 'status'"
+    :aria-live="tone === 'err' ? undefined : 'polite'"
+  >
     <component :is="icon" :size="iconSize" :stroke-width="1.7" class="ds-banner-icon" />
     <slot />
   </div>

@@ -11,7 +11,6 @@ import ChangeRolesModal, { type ChangeRolesConfirm } from '../components/ChangeR
 import ChangeBranchesModal, {
   type ChangeBranchesConfirm,
 } from '../components/ChangeBranchesModal.vue'
-import ConfirmDeactivateDialog from '../components/ConfirmDeactivateDialog.vue'
 import ResendInvitationModal from '../components/ResendInvitationModal.vue'
 import { employeeRolesApi } from '../api/employeeRoles.api'
 import { employeeBranchesApi } from '../api/employeeBranches.api'
@@ -20,6 +19,7 @@ import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { useToast } from '@/composables/useToast'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 
 const ADMIN_ROLE_CODE = 'ADMIN'
@@ -51,6 +51,7 @@ const { list: availableRoles } = useRoles()
 const { visibleBranches } = useBranches()
 const { can } = useAuthorization()
 const toast = useToast()
+const { confirm } = useConfirmDialog()
 const canCreate = can(PERMISSIONS.EMPLOYEE_CREATE)
 const canUpdate = can(PERMISSIONS.EMPLOYEE_UPDATE)
 
@@ -71,7 +72,6 @@ onUnmounted(() => {
 const selectedId = ref<number | null>(null)
 const formOpen = ref(false)
 const formInitial = ref<Employee | null>(null)
-const deactivateTarget = ref<Employee | null>(null)
 const changingRolesTarget = ref<Employee | null>(null)
 const changingBranchesTarget = ref<Employee | null>(null)
 const resendTarget = ref<Employee | null>(null)
@@ -174,31 +174,41 @@ async function handleSubmit(data: EmployeeFormData) {
   }
 }
 
-function askDeactivate(employee: Employee) {
+/**
+ * La confirmación es el único diálogo de la app y lleva la acción dentro: el
+ * `busy` de la vista sigue gobernando el resto de modales, y el diálogo se
+ * mantiene abierto e inerte mientras el PATCH está en vuelo.
+ */
+async function askDeactivate(employee: Employee) {
   if (hasAdminRole(employee)) {
     toast.error('No se puede desactivar', 'Los empleados con rol ADMIN no pueden ser desactivados.')
     return
   }
-  deactivateTarget.value = employee
-}
-
-async function confirmDeactivate() {
-  const target = deactivateTarget.value
-  if (!target || busy.value) return
-  busy.value = true
+  if (busy.value) return
   try {
-    await deactivate(target.id)
-    deactivateTarget.value = null
+    const ok = await confirm({
+      title: `¿Desactivar a ${employee.name.split(' ')[0]}?`,
+      message:
+        'No podrá iniciar sesión hasta que vuelvas a activar su cuenta. Sus consultas y registros previos se mantienen intactos.',
+      confirmLabel: 'Desactivar',
+      busyLabel: 'Desactivando…',
+      action: async () => {
+        busy.value = true
+        try {
+          await deactivate(employee.id)
+        } finally {
+          busy.value = false
+        }
+      },
+    })
+    if (!ok) return
     toast.info('Empleado desactivado', 'No podrá iniciar sesión hasta reactivarlo.')
   } catch (e) {
     const msg = getProblemDetailMessage(e, 'No se pudo desactivar al empleado')
     submitError.value = msg
     toast.error('Ocurrió un error', msg)
     // Estado del front posiblemente desincronizado (empleado ya inexistente/desactivado): resincronizamos.
-    deactivateTarget.value = null
     await refresh().catch(() => undefined)
-  } finally {
-    busy.value = false
   }
 }
 
@@ -371,14 +381,6 @@ async function onConfirmChangeBranches(data: ChangeBranchesConfirm) {
       :busy="busy"
       @close="changingBranchesTarget = null"
       @confirm="onConfirmChangeBranches"
-    />
-
-    <ConfirmDeactivateDialog
-      :open="deactivateTarget !== null"
-      :employee="deactivateTarget"
-      :busy="busy"
-      @cancel="deactivateTarget = null"
-      @confirm="confirmDeactivate"
     />
 
     <ResendInvitationModal

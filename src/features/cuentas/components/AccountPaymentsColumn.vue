@@ -148,7 +148,7 @@ const store = useCuentas()
   font-size: 12px;
   font-weight: 500;
   background: transparent;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   color: var(--warm-600);
   border-radius: 7px;
   padding: 5px 9px;

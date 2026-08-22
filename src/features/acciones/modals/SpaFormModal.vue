@@ -9,7 +9,6 @@ import DateInput from '@/components/ui/DateInput.vue'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import PatientFixedCard from '../components/PatientFixedCard.vue'
-import { useAuth } from '@/features/auth/composables/useAuth'
 import { useSpaTypes } from '@/features/spa-types/composables/useSpaTypes'
 import { todayISO } from '@/composables/format'
 import { spaApi } from '@/features/dashboard/views/consulta/nueva/api/spa.api'
@@ -28,7 +27,6 @@ const emit = defineEmits<{
   saved: [item: SpaResponse]
 }>()
 
-const { companyId } = useAuth()
 const {
   options: typeOptions,
   loading: loadingTypes,
@@ -113,9 +111,8 @@ async function save() {
     scrollToFirstError()
     return
   }
-  const cid = companyId.value
   const pid = patientId.value
-  if (cid == null || pid == null) {
+  if (pid == null) {
     saveError.value = 'Faltan datos para guardar.'
     return
   }
@@ -128,7 +125,6 @@ async function save() {
     details: draft.details.trim(),
     observations: draft.observations.trim(),
     animalId: pid,
-    companyId: cid,
   }
   try {
     const result = props.initial
@@ -200,7 +196,12 @@ async function save() {
           />
         </BaseField>
         <BaseField label="Observaciones" required :error="err('observations')" class="ds-grid-span">
-          <BaseTextarea v-model="draft.observations" :rows="2" :invalid="!!err('observations')" />
+          <BaseTextarea
+            v-model="draft.observations"
+            :rows="2"
+            :invalid="!!err('observations')"
+            placeholder="Comportamiento del paciente, hallazgos en piel y oídos…"
+          />
         </BaseField>
       </div>
     </template>

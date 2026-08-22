@@ -29,52 +29,66 @@ const finalConsumer = defineModel<boolean>('finalConsumer', { required: true })
 </script>
 
 <template>
-  <!-- FE OBLIGATORIA por superar 5 UVT -->
-  <div v-if="overUvt" class="fe-block uvt ds-stack ds-stack--10">
+  <!--
+    Un solo contenedor para las dos formas, en vez de dos `div` excluyentes: el
+    aviso de umbral tiene que sobrevivir al cambio de rama. `FeThresholdBanner`
+    sostiene la región viva de una obligación legal y, si naciera con el `v-if`,
+    quien no mire esa zona de la pantalla no se entera de que la venta pasó de
+    Documento POS a Factura electrónica (`docs/ux/patron-de-mensajes.md` §4.2c).
+    Las clases de cada estado son las mismas de antes, así que el aspecto no se
+    mueve.
+  -->
+  <div class="fe-block ds-stack ds-stack--10" :class="{ uvt: overUvt }">
     <FeThresholdBanner :total="totalAmount" />
-    <div class="doctypesel">
-      <div class="doctype on"><FileText :size="15" :stroke-width="1.8" /> Factura electrónica</div>
-      <div class="doctype off" title="No disponible por encima de 5 UVT">
-        <ShieldCheck :size="14" :stroke-width="1.8" style="opacity: 0.5" /> Documento POS
-        <span class="lock"><X :size="11" :stroke-width="2.4" /></span>
-      </div>
-    </div>
-    <FeFiscalCustomerCard :customer="customer" @complete="emit('completeCustomer')" />
-    <p v-if="loading" class="fe-loading ds-meta ds-meta--sm">
-      Cargando datos fiscales del cliente…
-    </p>
-    <div v-else-if="loadError" class="fe-loaderr">
-      <span>No se pudieron cargar los datos fiscales del titular.</span>
-      <button type="button" @click="emit('retryLoad')">Reintentar</button>
-    </div>
-    <p v-else class="fe-preloadhint">
-      <User :size="12" :stroke-width="1.9" />
-      La factura electrónica se emite a nombre del titular de la cuenta.
-    </p>
-  </div>
 
-  <!-- Caso normal (≤ 5 UVT): tipo de documento + consumidor final -->
-  <div v-else class="fe-block ds-stack ds-stack--10">
-    <div class="field-lab">Facturación electrónica</div>
-    <BaseField label="Tipo de documento">
-      <template #default="{ id }">
-        <BaseSelect :id="id" v-model="docType" :options="CLOSE_DOC_TYPE_OPTIONS" />
-      </template>
-    </BaseField>
-    <button
-      type="button"
-      class="fc-toggle"
-      :class="{ on: finalConsumer }"
-      @click="finalConsumer = !finalConsumer"
-    >
-      <span class="fc-box" :class="finalConsumer ? 'ds-tone--accent-solid' : 'fc-box-off'"
-        ><Check v-if="finalConsumer" :size="12" :stroke-width="2.6"
-      /></span>
-      Consumidor final
-    </button>
-    <p class="fe-hint ds-hint">
-      Se emite a la DIAN al cerrar la venta. La validación es asíncrona.
-    </p>
+    <!-- FE OBLIGATORIA por superar 5 UVT -->
+    <template v-if="overUvt">
+      <div class="doctypesel">
+        <div class="doctype on">
+          <FileText :size="15" :stroke-width="1.8" /> Factura electrónica
+        </div>
+        <div class="doctype off" title="No disponible por encima de 5 UVT">
+          <ShieldCheck :size="14" :stroke-width="1.8" style="opacity: 0.5" /> Documento POS
+          <span class="lock"><X :size="11" :stroke-width="2.4" /></span>
+        </div>
+      </div>
+      <FeFiscalCustomerCard :customer="customer" @complete="emit('completeCustomer')" />
+      <p v-if="loading" class="fe-loading ds-meta ds-meta--sm">
+        Cargando datos fiscales del cliente…
+      </p>
+      <div v-else-if="loadError" class="fe-loaderr">
+        <span>No se pudieron cargar los datos fiscales del titular.</span>
+        <button type="button" @click="emit('retryLoad')">Reintentar</button>
+      </div>
+      <p v-else class="fe-preloadhint">
+        <User :size="12" :stroke-width="1.9" />
+        La factura electrónica se emite a nombre del titular de la cuenta.
+      </p>
+    </template>
+
+    <!-- Caso normal (≤ 5 UVT): tipo de documento + consumidor final -->
+    <template v-else>
+      <div class="field-lab">Facturación electrónica</div>
+      <BaseField label="Tipo de documento">
+        <template #default="{ id }">
+          <BaseSelect :id="id" v-model="docType" :options="CLOSE_DOC_TYPE_OPTIONS" />
+        </template>
+      </BaseField>
+      <button
+        type="button"
+        class="fc-toggle"
+        :class="{ on: finalConsumer }"
+        @click="finalConsumer = !finalConsumer"
+      >
+        <span class="fc-box" :class="finalConsumer ? 'ds-tone--accent-solid' : 'fc-box-off'"
+          ><Check v-if="finalConsumer" :size="12" :stroke-width="2.6"
+        /></span>
+        Consumidor final
+      </button>
+      <p class="fe-hint ds-hint">
+        Se emite a la DIAN al cerrar la venta. La validación es asíncrona.
+      </p>
+    </template>
   </div>
 </template>
 
@@ -109,7 +123,7 @@ const finalConsumer = defineModel<boolean>('finalConsumer', { required: true })
   padding: 8px 12px;
   border-radius: 9px;
   background: white;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   color: var(--warm-800);
 }
 .fc-toggle.on {
@@ -153,9 +167,14 @@ const finalConsumer = defineModel<boolean>('finalConsumer', { required: true })
   font-weight: 600;
   position: relative;
 }
+
+/* A11Y-09 · el tipo de documento ELEGIDO se marcaba con `--amatista-400`:
+   2,80:1 sobre su propio relleno, por debajo del mínimo. `--amatista-500` da
+   4,24:1. (`.doctype.off` conserva `--warm-200`: es `cursor: not-allowed`, y
+   §1.4.11 exime a los componentes inactivos.) */
 .doctype.on {
   background: var(--amatista-50);
-  border: 1.5px solid var(--amatista-400);
+  border: 1.5px solid var(--amatista-500);
   color: var(--amatista-700);
 }
 .doctype.off {

@@ -9,7 +9,6 @@ import DateInput from '@/components/ui/DateInput.vue'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import PatientFixedCard from '../components/PatientFixedCard.vue'
-import { useAuth } from '@/features/auth/composables/useAuth'
 import { useVaccinationTypes } from '@/features/vaccination-types/composables/useVaccinationTypes'
 import { todayISO } from '@/composables/format'
 import { vaccinationApi } from '@/features/dashboard/views/consulta/nueva/api/vaccination.api'
@@ -28,7 +27,6 @@ const emit = defineEmits<{
   saved: [item: VaccinationResponse]
 }>()
 
-const { companyId } = useAuth()
 const {
   options: typeOptions,
   loading: loadingTypes,
@@ -112,9 +110,8 @@ async function save() {
     scrollToFirstError()
     return
   }
-  const cid = companyId.value
   const pid = patientId.value
-  if (cid == null || pid == null) {
+  if (pid == null) {
     saveError.value = 'Faltan datos para guardar.'
     return
   }
@@ -128,7 +125,6 @@ async function save() {
     nextVaccination: draft.nextVaccination || null,
     animalId: pid,
     consultationId: props.initial?.consultation?.id ?? null,
-    companyId: cid,
   }
   try {
     const result = props.initial
@@ -193,7 +189,11 @@ async function save() {
           <DateInput v-model="draft.nextVaccination" />
         </BaseField>
         <BaseField label="Notas" class="ds-grid-span">
-          <BaseTextarea v-model="draft.notes" :rows="2" />
+          <BaseTextarea
+            v-model="draft.notes"
+            :rows="2"
+            placeholder="Reacciones, vía de aplicación, indicaciones…"
+          />
         </BaseField>
       </div>
     </template>

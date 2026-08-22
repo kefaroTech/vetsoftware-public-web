@@ -6,7 +6,6 @@ import { animalApi } from '@/features/dashboard/views/consulta/nueva/api/animal.
 import { buildCreateAnimalRequest } from '@/features/dashboard/views/consulta/nueva/api/animal.mapper'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
-import { useAuth } from '@/features/auth/composables/useAuth'
 import type { PetDraft } from '@/features/dashboard/views/consulta/nueva/stores/nuevaConsultaDraft.store'
 
 /**
@@ -20,7 +19,6 @@ const props = defineProps<{ ownerId: number }>()
 const emit = defineEmits<{ created: [pet: { id: number; name: string }]; cancel: [] }>()
 
 const toast = useToast()
-const { companyId } = useAuth()
 
 function defaultPetDraft(): PetDraft {
   return {
@@ -48,10 +46,6 @@ async function submit() {
   if (busy.value) return
   if (petFormRef.value && !petFormRef.value.validate()) {
     error.value = 'Revisa los campos marcados antes de continuar.'
-    return
-  }
-  if (companyId.value == null) {
-    error.value = 'No se pudo identificar la empresa. Vuelve a iniciar sesión.'
     return
   }
   busy.value = true

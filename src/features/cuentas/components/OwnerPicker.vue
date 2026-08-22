@@ -95,7 +95,7 @@ watch(query, (q) => {
 .input {
   width: 100%;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 10px;
   padding: 10px 14px 10px 38px;
   font-family: inherit;
@@ -120,7 +120,7 @@ watch(query, (q) => {
   text-align: left;
   padding: 11px 14px;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 10px;
   cursor: pointer;
   font-family: inherit;

@@ -10,7 +10,6 @@ export interface CreateDewormingPayload {
   observations: string
   animalId: number
   consultationId: number | null
-  companyId: number
 }
 
 export interface DewormingAnimalSummary {

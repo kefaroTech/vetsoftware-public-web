@@ -16,7 +16,8 @@ import { test, expect, type Locator, type Page } from '@playwright/test'
  * La pantalla de login es pública: no necesita backend, ni sesión, ni datos, así
  * que la prueba no depende de que haya credenciales en el entorno. Y carga las
  * mismas tres hojas que el resto de la aplicación (`tokens`, `primitives`,
- * `main`) más `public-auth.css`, que es donde viven `.pub-spin` y `.pub-reveal`.
+ * `base`) más `public-auth.css`, donde viven `.pub-spin` y `.pub-reveal`; el
+ * esqueleto (`.ds-skeleton`) vive en `primitives`, que también carga ahí.
  *
  * Las dos sondas se INYECTAN con las clases reales del producto porque ninguna
  * plantilla escribe `class="pub-spin"` a pelo (los cinco spinners la copian en su
@@ -24,7 +25,8 @@ import { test, expect, type Locator, type Page } from '@playwright/test'
  * `public-auth.css`: el elemento la recibe de la cascada como cualquier otro.
  *
  * ── La decisión que esta prueba NO debe romper ─────────────────────────────
- * El bloque de `main.css:80` usa `0.01ms`, NO `none`. Es deliberado: con `none`
+ * El bloque de `base.css:108-119` (antes `main.css`, renombrado en DS-06) usa
+ * `0.01ms`, NO `none`. Es deliberado: con `none`
  * la animación no se dispara y `animationend` / `transitionend` no llegan nunca,
  * así que cualquier componente que espere ese evento para limpiar estado se
  * queda colgado — el movimiento desaparecería y con él la funcionalidad. Por eso
@@ -69,18 +71,30 @@ function estilosDe(locator: Locator): Promise<Estilos> {
 }
 
 /**
- * Deja en la página dos sondas con las clases reales de `public-auth.css`, cada
- * una con su `data-testid` para poder localizarlas sin selector de clase.
+ * Deja en la página tres sondas con clases reales del producto, cada una con su
+ * `data-testid` para poder localizarlas sin selector de clase.
+ *
+ * `.ds-skeleton` se añadió en #230: es la animación en bucle más nueva del
+ * producto (EST-05, la primitiva de esqueleto de carga) y estuvo fuera de esta
+ * red desde que se creó. La única prueba que mide la cascada de verdad no
+ * alcanzaba precisamente a la animación recién introducida, que es el momento
+ * en que una regresión es más probable.
  */
 async function sembrarSondas(page: Page) {
   await page.evaluate(() => {
-    for (const [clase, testid] of [
+    // El tipo de tupla no es adorno: sin él TypeScript infiere `string[]` y la
+    // desestructuración da `string | undefined`, que es lo que obligaba a los
+    // dos `!` que el lint rechaza.
+    const sondas: readonly (readonly [clase: string, testid: string])[] = [
       ['pub-spin', 'sonda-spin'],
       ['pub-reveal', 'sonda-reveal'],
-    ]) {
+      ['ds-skeleton', 'sonda-skeleton'],
+    ]
+
+    for (const [clase, testid] of sondas) {
       const el = document.createElement('div')
-      el.className = clase!
-      el.setAttribute('data-testid', testid!)
+      el.className = clase
+      el.setAttribute('data-testid', testid)
       el.style.width = '16px'
       el.style.height = '16px'
       document.body.appendChild(el)
@@ -113,7 +127,7 @@ test.describe('prefers-reduced-motion: reduce', () => {
     expect(
       estilos.animationName,
       'la animación no se anula (`none`), solo se acorta: anularla dejaría sin `animationend` a ' +
-        'quien lo espere. Ver el comentario de main.css:66.',
+        'quien lo espere. Ver el comentario de base.css:95-97.',
     ).not.toBe('none')
 
     for (const d of segundos(estilos.animationDuration)) {
@@ -126,19 +140,24 @@ test.describe('prefers-reduced-motion: reduce', () => {
   /**
    * EXCEPCIÓN CONOCIDA, fijada aquí a propósito.
    *
-   * `public-auth.css:138-143` trae su PROPIO bloque de `prefers-reduced-motion`,
+   * `public-auth.css:139-143` trae su PROPIO bloque de `prefers-reduced-motion`,
    * anterior a la guarda global, y ahí `.pub-reveal` y `.pub-drift` se apagan con
-   * `animation: none`. El bloque global de `main.css` declara longhands
+   * `animation: none`. El bloque global de `base.css:108-119` declara longhands
    * (`animation-duration`, `animation-iteration-count`) pero NO `animation-name`,
-   * así que su `!important` no alcanza al `none` local: para estas dos clases la
+   * así que su `!important` no alcanza al `none` local: para esas clases la
    * animación no se dispara y `animationend` no llega nunca.
    *
-   * Hoy no rompe nada —ninguna de las dos tiene oyentes; son la entrada de la
-   * tarjeta y la deriva del fondo—, pero contradice el motivo por el que la guarda
-   * global eligió `0.01ms` en vez de `none`, y el día que alguien cuelgue un
-   * `animationend` de un `.pub-reveal` se colgará en silencio. Se fija el estado
-   * REAL para que cambiarlo sea una decisión visible; queda reportado como hallazgo
-   * de esta tanda.
+   * Son TRES, no dos: `.ds-skeleton` (`primitives.css:1657-1662`) hace lo mismo
+   * desde EST-05. Este comentario decía dos y se quedó corto, que es como una
+   * lista de excepciones deja de contar la verdad.
+   *
+   * Hoy no rompe nada —ninguna de las tres tiene oyentes: son la entrada de la
+   * tarjeta, la deriva del fondo y el destello del esqueleto—, pero contradice el
+   * motivo por el que la guarda global eligió `0.01ms` en vez de `none`, y el día
+   * que alguien encadene un `animationend` al final del destello para pintar las
+   * filas reales, se colgará en silencio y solo para quien pidió reducir
+   * movimiento. Se fija el estado REAL para que cambiarlo sea una decisión
+   * visible; el cambio de fondo está reportado en #230.
    */
   test('.pub-reveal se apaga con `none` por su guarda local, no con la global', async ({
     page,
@@ -148,7 +167,7 @@ test.describe('prefers-reduced-motion: reduce', () => {
     expect(
       estilos.animationName,
       'si esto deja de ser «none», la guarda local de public-auth.css se retiró (bien) o se ' +
-        'movió: revisa que .pub-reveal pase entonces por la guarda global de main.css.',
+        'movió: revisa que .pub-reveal pase entonces por la guarda global de base.css.',
     ).toBe('none')
 
     // Lo que la guarda global SÍ le impone: los longhands que sí declara ganan.
@@ -157,6 +176,49 @@ test.describe('prefers-reduced-motion: reduce', () => {
       expect(d).toBeGreaterThan(0)
       expect(d).toBeLessThan(CASI_CERO_S)
     }
+  })
+
+  /**
+   * `.ds-skeleton` — la primitiva de esqueleto de carga (EST-05), añadida a esta
+   * red en #230.
+   *
+   * Es el caso que más importa comprobar aquí de los tres, porque es el único
+   * cuyo destello está midiendo algo: el esqueleto se pinta mientras llega la
+   * primera página de una tabla, y quien pidió reducir movimiento tiene que ver
+   * un bloque quieto y con un aspecto deliberado, no un degradado congelado a
+   * mitad de recorrido. Por eso su guarda local no se limita a parar la
+   * animación: también fija `background` (`primitives.css:1657-1662`).
+   *
+   * Se afirma el estado REAL, incluido el `none` que contradice la decisión de
+   * la guarda global. Ver el comentario de la prueba de `.pub-reveal`.
+   */
+  test('el destello del esqueleto se para y deja un fondo plano', async ({ page }) => {
+    const sonda = page.getByTestId('sonda-skeleton')
+    const estilos = await estilosDe(sonda)
+
+    expect(
+      estilos.animationName,
+      '`.ds-skeleton` debe dejar de destellar con movimiento reducido: si esto ya no es ' +
+        '«none», su guarda local de primitives.css se retiró o dejó de nombrar la clase',
+    ).toBe('none')
+
+    // Igual que `.pub-reveal`: el `none` local gana en `animation-name`, pero los
+    // longhands `!important` de la guarda global siguen imponiéndose.
+    expect(estilos.animationIterationCount).toBe('1')
+    for (const d of segundos(estilos.animationDuration)) {
+      expect(d).toBeGreaterThan(0)
+      expect(d).toBeLessThan(CASI_CERO_S)
+    }
+
+    // Lo que la guarda global NO puede hacer por él: elegir el reposo. Sin esto,
+    // parar la animación dejaría el degradado de tres paradas congelado donde
+    // pillara, y el hueco de la fila se vería como un defecto de pintado.
+    const fondo = await sonda.evaluate((el) => getComputedStyle(el).backgroundImage)
+    expect(
+      fondo,
+      'el esqueleto parado sigue mostrando su degradado: la guarda local ya no repone un ' +
+        'fondo plano (primitives.css) y el reposo dejó de ser deliberado',
+    ).toBe('none')
   })
 
   test('una transición declarada en un <style scoped> queda acortada', async ({ page }) => {
@@ -210,7 +272,7 @@ test.describe('prefers-reduced-motion: reduce', () => {
     expect(
       llego,
       'no llegó `transitionend` con movimiento reducido. La guarda debe acortar la transición ' +
-        'a 0.01ms, no anularla: ver main.css:66.',
+        'a 0.01ms, no anularla: ver base.css:95-97.',
     ).toBe(true)
   })
 })
@@ -227,6 +289,13 @@ test.describe('sin prefers-reduced-motion (control)', () => {
     const spin = await estilosDe(page.getByTestId('sonda-spin'))
     expect(spin.animationIterationCount).toBe('infinite')
     expect(segundos(spin.animationDuration)[0]).toBeGreaterThan(CASI_CERO_S)
+
+    // El esqueleto, igual: sin la preferencia activada tiene que destellar de
+    // verdad. Sin este control, la prueba de arriba pasaría con la primitiva
+    // borrada entera — `none` y `none` son iguales.
+    const skeleton = await estilosDe(page.getByTestId('sonda-skeleton'))
+    expect(skeleton.animationName).toBe('ds-skeleton-shimmer')
+    expect(skeleton.animationIterationCount).toBe('infinite')
 
     const boton = await estilosDe(page.getByRole('button', { name: /iniciar sesi/i }))
     expect(segundos(boton.transitionDuration).some((d) => d > CASI_CERO_S)).toBe(true)

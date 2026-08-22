@@ -133,7 +133,7 @@ function selectView(v: ViewMode) {
   font-size: 12.5px;
   font-weight: 500;
   padding: 6px 14px;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   background: var(--warm-50);
   color: var(--warm-800);
   border-radius: 8px;
@@ -148,7 +148,7 @@ function selectView(v: ViewMode) {
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   background: var(--warm-50);
   color: var(--warm-600);
   display: grid;
@@ -168,29 +168,39 @@ function selectView(v: ViewMode) {
   letter-spacing: -0.01em;
 }
 
+/* A11Y-09 · mismo defecto que el conmutador de sujeto de la cita (issue #208),
+   aquí en el selector Mes/Semana/Día. Además le faltaba la frontera del grupo
+   entero: la pista `--warm-150` mide 1,13:1 contra la página, así que ni el
+   conjunto se leía como control. `--warm-450` da 3,55:1. */
 .view-toggle {
   display: inline-flex;
   background: var(--warm-150);
+  border: 1px solid var(--warm-450);
   border-radius: 9px;
   padding: 3px;
   gap: 2px;
 }
 
+/* Borde transparente: reserva el sitio del que marca el segmento elegido. */
 .view-btn {
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 500;
   padding: 6px 14px;
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   color: var(--warm-700);
   border-radius: 7px;
   cursor: pointer;
 }
 
+/* El segmento elegido se marcaba con relleno `--warm-50` sobre `--warm-150`:
+   1,13:1. `--amatista-500` da 4,50:1 contra su relleno y 4,00:1 contra la
+   pista. */
 .view-btn.active {
   background: var(--warm-50);
   color: var(--warm-900);
+  border-color: var(--amatista-500);
   box-shadow: 0 1px 2px rgb(20 15 30 / 8%);
 }
 

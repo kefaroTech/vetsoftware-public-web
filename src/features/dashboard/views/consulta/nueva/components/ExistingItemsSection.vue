@@ -150,7 +150,7 @@ function keyOf(item: T): number {
 .edit-existing,
 .remove-existing {
   background: transparent;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   width: 32px;
   height: 32px;
   border-radius: 8px;

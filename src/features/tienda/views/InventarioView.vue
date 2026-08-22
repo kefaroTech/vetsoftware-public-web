@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { BookText, ClipboardList, Package, Plus } from 'lucide-vue-next'
-import ConfirmDeleteDialog from '@/components/feedback/ConfirmDeleteDialog.vue'
 import ProductFormModal from '../components/ProductFormModal.vue'
 import RestockModal from '../components/RestockModal.vue'
 import AdjustModal from '../components/AdjustModal.vue'
@@ -70,8 +69,6 @@ const {
   transferFor,
   consumeFor,
   countOpen,
-  pausing,
-  pausingBusy,
   onReceive,
   onAdjust,
   onTransfer,
@@ -79,7 +76,7 @@ const {
   onRecordCount,
   onConsume,
   onMinStockCommit,
-  onConfirmPause,
+  requestPause,
   onReactivate,
   onCategoryUpsert,
   onCategoryRemove,
@@ -208,6 +205,7 @@ function onFormClose() {
           </option>
         </FilterSelect>
         <SegTabs
+          aria-label="Estado de los productos"
           :model-value="mode"
           :options="[
             { value: 'active', label: 'Activos' },
@@ -252,6 +250,13 @@ function onFormClose() {
 
     <div v-if="store.error.value" class="ds-banner ds-banner--error">{{ store.error.value }}</div>
 
+    <!-- El barrido del saldo tiene cota (20 páginas × 200 = 4.000 SKU). Cuando la
+         toca, el mapa está incompleto y la tabla enseñaría ceros de productos
+         cuyo saldo no llegó a pedirse: se dice, en vez de callarlo. -->
+    <div v-if="store.stockTruncated.value" class="ds-banner ds-banner--warning" role="status">
+      Se cargó el saldo de los primeros 4.000 productos. Usa el buscador para el resto.
+    </div>
+
     <InventoryAlerts
       v-if="mode === 'active'"
       :has-branch="hasBranch"
@@ -285,7 +290,7 @@ function onFormClose() {
       @adjust="adjustFor = $event"
       @transfer="transferFor = $event"
       @consume="consumeFor = $event"
-      @pause="pausing = $event"
+      @pause="requestPause($event)"
       @min-stock-commit="onMinStockCommit"
     />
 
@@ -377,19 +382,6 @@ function onFormClose() {
       @upsert="onCategoryUpsert"
       @remove="onCategoryRemove"
     />
-    <ConfirmDeleteDialog
-      :open="pausing !== null"
-      title="Pausar producto"
-      action-label="Pausar"
-      :message="
-        pausing
-          ? `${pausing.name} dejará de aparecer en el punto de venta. Podrás reactivarlo desde la pestaña “Pausados” cuando quieras.`
-          : ''
-      "
-      :busy="pausingBusy"
-      @cancel="pausing = null"
-      @confirm="onConfirmPause"
-    />
   </div>
 </template>
 
@@ -410,9 +402,14 @@ function onFormClose() {
    El `:focus` se repite aquí a propósito. `.fsel.branch` pesa lo mismo que el
    `:focus` del componente y el desempate lo decidiría el orden del bundle; con
    las dos reglas en este archivo, el borde de foco gana siempre por orden. */
+
+/* A11Y-09: el tinte dejaba el borde del selector en `--amatista-200`, 1,34:1
+   sobre su propio relleno `--amatista-50` — un `select` sin frontera.
+   `--amatista-450` da 3,55:1 y se queda por debajo del `--amatista-500` del
+   `:focus` de abajo (4,24:1), que sigue siendo el estado más marcado. */
 .fsel.branch {
   color: var(--amatista-700);
-  border-color: var(--amatista-200);
+  border-color: var(--amatista-450);
   background-color: var(--amatista-50);
   font-weight: 500;
 }

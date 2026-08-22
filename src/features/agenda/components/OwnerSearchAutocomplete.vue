@@ -158,7 +158,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
    sustituye (`.ds-field-invalid` trae las dos). Conservan el peso (0,2,0) y la
    posición que tenía el par dentro de `.combo-input`. */
 .tone-border {
-  border-color: var(--warm-200);
+  border-color: var(--warm-450);
 }
 
 .tone-bg {
@@ -257,7 +257,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
 
 .owner-name {
   color: var(--warm-900);
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
   font-weight: var(--weight-medium);
 }
 
@@ -273,7 +273,11 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   font-weight: 500;
   color: var(--amatista-700);
   background: var(--amatista-50);
-  border: 1px solid var(--amatista-200);
+
+  /* A11Y-09: `--amatista-200` daba 1,34:1 en reposo y 1,21:1 con el relleno del
+     hover — el botón «cambiar» no tenía frontera. `--amatista-500` da 4,24:1 y
+     3,86:1. */
+  border: 1px solid var(--amatista-500);
   border-radius: 7px;
   padding: 6px 11px;
   cursor: pointer;

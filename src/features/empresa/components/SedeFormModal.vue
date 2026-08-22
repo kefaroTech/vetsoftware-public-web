@@ -7,6 +7,8 @@ import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import { useGeoCascade } from '@/features/dashboard/views/consulta/nueva/composables/useGeoCascade'
 import { scrollToFirstError } from '@/composables/scrollToError'
+// Un solo sanitizador de teléfono para todo el tenant: ver `composables/phone.ts`.
+import { sanitizePhone, PHONE_PLACEHOLDER_LANDLINE } from '@/composables/phone'
 import type { BranchResponse, SaveBranchRequest } from '@/features/branches/types/branch.types'
 
 const props = defineProps<{
@@ -159,18 +161,18 @@ function submit() {
               <BaseSelect
                 v-model="countryId"
                 :options="countryOptions"
-                :placeholder="loadingCountries ? 'Cargando…' : 'País'"
+                :placeholder="loadingCountries ? 'Cargando…' : 'Selecciona país'"
               />
               <BaseSelect
                 v-model="stateId"
                 :options="stateOptions"
-                :placeholder="loadingStates ? 'Cargando…' : 'Departamento'"
+                :placeholder="loadingStates ? 'Cargando…' : 'Selecciona departamento'"
                 :disabled="!countryId"
               />
               <BaseSelect
                 v-model="cityId"
                 :options="cityOptions"
-                :placeholder="loadingCities ? 'Cargando…' : 'Ciudad'"
+                :placeholder="loadingCities ? 'Cargando…' : 'Selecciona ciudad'"
                 :disabled="!stateId"
               />
             </div>
@@ -179,7 +181,7 @@ function submit() {
 
         <BaseField label="Dirección">
           <template #default="{ id }">
-            <BaseInput :id="id" v-model="draft.address" placeholder="Cra 00 # 00-00" />
+            <BaseInput :id="id" v-model="draft.address" placeholder="Cra 7 # 45-12" />
           </template>
         </BaseField>
 
@@ -188,9 +190,9 @@ function submit() {
             <BaseInput
               :id="id"
               v-model="draft.phone"
-              placeholder="+57 601 000 0000"
+              :placeholder="PHONE_PLACEHOLDER_LANDLINE"
               inputmode="tel"
-              @update:model-value="draft.phone = String($event).replace(/[^+\d\s\-()]/g, '')"
+              @update:model-value="draft.phone = sanitizePhone(String($event))"
             />
           </template>
         </BaseField>

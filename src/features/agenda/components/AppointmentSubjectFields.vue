@@ -186,14 +186,16 @@ const petOptions = computed(() => [
 .subject-toggle {
   display: inline-flex;
   background: var(--warm-150);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 8px;
   padding: 3px;
   gap: 2px;
 }
 
+/* El borde transparente reserva el sitio del que pinta el segmento elegido, para
+   que marcarlo no desplace el conmutador 1px. */
 .subject-toggle button {
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
   font-family: var(--font-sans);
@@ -204,9 +206,15 @@ const petOptions = computed(() => [
   border-radius: 6px;
 }
 
+/* A11Y-09 (issue #208) · el segmento elegido se marcaba sólo con relleno
+   `--warm-50` sobre la pista `--warm-150`: 1,13:1. La sombra tampoco lo
+   rescataba (negro al 5%). El borde `--amatista-500` da 4,50:1 contra el propio
+   relleno del segmento y 4,00:1 contra la pista, y deja el estado elegido por
+   encima del marco del conmutador en reposo (`--warm-450`, 3,55:1). */
 .subject-toggle button.active {
   background: var(--warm-50);
   color: var(--warm-900);
+  border-color: var(--amatista-500);
   box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
 }
 </style>

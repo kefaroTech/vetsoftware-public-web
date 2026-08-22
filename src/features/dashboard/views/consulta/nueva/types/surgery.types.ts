@@ -7,7 +7,6 @@ export interface CreateSurgeryPayload {
   complications: string
   animalId: number
   consultationId: number | null
-  companyId: number
 }
 
 export interface SurgeryTypeSummary {

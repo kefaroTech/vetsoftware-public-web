@@ -109,7 +109,7 @@ const currentId = computed(() => props.currentCode.trim().toLowerCase())
   font-size: 13px;
   background: transparent;
   color: var(--warm-600);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 7px;
   cursor: pointer;
   font-family: inherit;

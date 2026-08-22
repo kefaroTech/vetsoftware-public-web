@@ -129,7 +129,7 @@ const emit = defineEmits<{
   place-items: center;
   border-radius: 6px;
   cursor: pointer;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   background: var(--warm-50);
   color: var(--warm-700);
 }
@@ -148,7 +148,7 @@ const emit = defineEmits<{
   font-size: 12.5px;
   font-weight: 600;
   color: var(--warm-800);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 6px;
   padding: 3px 0;
   outline: none;

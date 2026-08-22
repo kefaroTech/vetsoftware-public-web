@@ -9,7 +9,6 @@ import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import DateInput from '@/components/ui/DateInput.vue'
 import PatientCascadePicker from '../components/PatientCascadePicker.vue'
 import PatientFixedCard from '../components/PatientFixedCard.vue'
-import { useAuth } from '@/features/auth/composables/useAuth'
 import { todayISO } from '@/composables/format'
 import { dewormingApi } from '@/features/dashboard/views/consulta/nueva/api/deworming.api'
 import type { DewormingResponse } from '@/features/dashboard/views/consulta/nueva/types/deworming.types'
@@ -27,8 +26,6 @@ const emit = defineEmits<{
   close: []
   saved: [item: DewormingResponse]
 }>()
-
-const { companyId } = useAuth()
 
 const typeOptions = [
   { value: 'INTERNAL', label: 'Interna' },
@@ -102,9 +99,8 @@ async function save() {
     scrollToFirstError()
     return
   }
-  const cid = companyId.value
   const pid = patientId.value
-  if (cid == null || pid == null) {
+  if (pid == null) {
     saveError.value = 'Faltan datos para guardar.'
     return
   }
@@ -120,7 +116,6 @@ async function save() {
     observations: draft.observations.trim(),
     animalId: pid,
     consultationId: props.initial?.consultation?.id ?? null,
-    companyId: cid,
   }
   try {
     const result = props.initial
@@ -186,7 +181,11 @@ async function save() {
           <DateInput v-model="draft.nextControl" />
         </BaseField>
         <BaseField label="Observaciones" class="ds-grid-span">
-          <BaseTextarea v-model="draft.observations" :rows="2" />
+          <BaseTextarea
+            v-model="draft.observations"
+            :rows="2"
+            placeholder="Vía, indicaciones para el dueño…"
+          />
         </BaseField>
       </div>
     </template>

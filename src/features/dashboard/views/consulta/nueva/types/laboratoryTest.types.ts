@@ -9,7 +9,6 @@ export interface CreateLaboratoryTestPayload {
   prioridad?: LaboratoryTestPriority
   animalId: number
   consultationId: number | null
-  companyId: number
   // Sede de la muestra. Si no viene explícita, se inyecta la sede del menú principal (contexto multi-sucursal).
   branchId?: number | null
 }

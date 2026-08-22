@@ -160,7 +160,7 @@ defineEmits<{
   gap: 6px;
   padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   background: transparent;
   color: var(--warm-700);
   font-family: inherit;
@@ -177,7 +177,14 @@ defineEmits<{
    desde el marcado: el botón no se deshabilita nunca, así que el guardián de la
    primitiva no cambia su comportamiento. La forma plana (0,1,0) no tiñe el
    reposo porque `.act` scoped pesa (0,2,0), y la variante danger de abajo
-   (0,5,0) le sigue ganando a la primitiva (0,3,0) igual que antes. */
+   (0,5,0) le sigue ganando a la primitiva (0,3,0) igual que antes.
+
+   A11Y-09: el override local de `.act.toggle:hover` que había aquí se retira.
+   Existía porque la primitiva pintaba el hover con `--warm-300` (1,54:1) y
+   apagaba el borde de reposo, ya migrado a `--warm-450` (3,55:1). La causa está
+   corregida en `primitives.css`: `.ds-tone--neutral-soft` es hoy `--warm-450`
+   en reposo y `--warm-500` en hover (5,36:1), así que la primitiva ya refuerza
+   el borde y el parche sobraba. */
 .act.toggle.danger:hover {
   background: oklch(95% 0.04 25deg);
   border-color: oklch(75% 0.12 25deg);

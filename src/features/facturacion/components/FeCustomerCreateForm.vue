@@ -6,7 +6,6 @@ import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import FeCustomerFiscalFields from './FeCustomerFiscalFields.vue'
 import { useToast } from '@/composables/useToast'
-import { useAuth } from '@/features/auth/composables/useAuth'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useGeoCascade } from '@/features/dashboard/views/consulta/nueva/composables/useGeoCascade'
 import { ownerApi } from '@/features/dashboard/views/consulta/nueva/api/owner.api'
@@ -17,6 +16,8 @@ import type {
 import { calcVerificationDigit } from '../composables/feFormat'
 import type { OwnerDocumentType } from '../composables/feFiscalChecklist'
 import type { PersonType, TaxRegime } from '../types/facturacion'
+// Un solo sanitizador de teléfono para todo el tenant: ver `composables/phone.ts`.
+import { sanitizePhone, PHONE_PLACEHOLDER_MOBILE } from '@/composables/phone'
 
 /**
  * Alta de cliente in-situ: la rama `create` que vivía dentro de
@@ -33,7 +34,6 @@ const emit = defineEmits<{ pick: [owner: OwnerResponse]; back: [] }>()
 
 const fiscal = computed(() => props.mode === 'fiscal')
 const toast = useToast()
-const { companyId } = useAuth()
 
 const draft = reactive({
   name: '',
@@ -88,7 +88,7 @@ const phoneValid = computed(() => {
 })
 const phoneModel = computed({
   get: () => draft.phone,
-  set: (v: string) => (draft.phone = v.replace(/[^+\d\s\-()]/g, '')),
+  set: (v: string) => (draft.phone = sanitizePhone(v)),
 })
 
 type FieldKey = 'name' | 'documentId' | 'phone' | 'email' | 'cityId' | 'legalName'
@@ -127,10 +127,6 @@ function markTouched(field: FieldKey) {
 async function submit() {
   ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = true))
   if (!isValid.value || submitting.value) return
-  if (companyId.value == null) {
-    submitError.value = 'No se pudo determinar la empresa. Vuelve a iniciar sesión.'
-    return
-  }
   submitting.value = true
   submitError.value = null
   const payload: CreateOwnerRequest = {
@@ -194,7 +190,7 @@ async function submit() {
           <BaseInput
             :id="id"
             v-model="phoneModel"
-            placeholder="+57 …"
+            :placeholder="PHONE_PLACEHOLDER_MOBILE"
             inputmode="tel"
             :invalid="!!err('phone')"
             @blur="markTouched('phone')"

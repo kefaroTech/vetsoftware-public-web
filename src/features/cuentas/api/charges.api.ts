@@ -1,8 +1,9 @@
 import { http } from '@/services/http/http.client'
+import { withBranchBody } from '@/features/branches/api/branchContext'
 import type {
   CreateGeneralChargePayload,
-  CreateProductChargePayload,
-  CreateServiceChargePayload,
+  CreateProductChargeOpenAccountRequest,
+  CreateServiceChargeOpenAccountRequest,
   GeneralChargeResponse,
   ProductChargeResponse,
   ServiceChargeResponse,
@@ -15,10 +16,22 @@ export const productChargeApi = {
     )
     return data
   },
-  async create(payload: CreateProductChargePayload): Promise<ProductChargeResponse> {
+  /**
+   * Cobra un producto contra una cuenta abierta. El cuerpo pasa por `withBranchBody`, que le
+   * añade la sede activa (`useBranchStore().selectedBranchId`) cuando el llamador no fija una.
+   *
+   * Era el único cliente de escritura con sede que no pasaba por la envoltura, y el cargo
+   * viajaba sin `branchId`: el backend solo la deduce si el empleado tiene UNA sede, y con dos
+   * o más responde 400 `branchId is required` (`Authz.resolveAccessibleBranch`). Va aquí y no
+   * en cada llamada del store porque `productChargeApi.create` es el único punto por el que
+   * pasan los tres caminos que crean cargos de producto (`addProductCharge`, `addChargeUnit` y
+   * `addChargesBatch`), y un cuarto llamador futuro queda cubierto sin acordarse de nada.
+   * Issue #193.
+   */
+  async create(payload: CreateProductChargeOpenAccountRequest): Promise<ProductChargeResponse> {
     const { data } = await http.post<ProductChargeResponse>(
       '/product-charge-open-accounts',
-      payload,
+      withBranchBody(payload),
     )
     return data
   },
@@ -43,7 +56,13 @@ export const serviceChargeApi = {
     )
     return data
   },
-  async create(payload: CreateServiceChargePayload): Promise<ServiceChargeResponse> {
+  /**
+   * El cargo de servicio NO declara sede y no debe hacerlo: el esquema del contrato
+   * (`CreateServiceChargeOpenAccountRequest`) no la trae y `ServiceChargeOpenAccountController`
+   * no llama a `resolveAccessibleBranch` — un servicio no mueve inventario, así que no hay nada
+   * que localizar en una sede. Mismo caso en el cargo general y en el abono.
+   */
+  async create(payload: CreateServiceChargeOpenAccountRequest): Promise<ServiceChargeResponse> {
     const { data } = await http.post<ServiceChargeResponse>(
       '/service-charge-open-accounts',
       payload,

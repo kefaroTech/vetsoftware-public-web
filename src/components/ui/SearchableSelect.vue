@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, inject, nextTick, ref } from 'vue'
 import { ChevronDown, Plus, Search } from 'lucide-vue-next'
 import { useAnchoredPanel } from '@/composables/useAnchoredPanel'
+import { FieldKey } from './fieldContext'
 
 interface Option {
   value: string
@@ -15,6 +16,7 @@ const props = withDefaults(
   defineProps<{
     modelValue?: string | null
     options: Option[]
+    id?: string
     placeholder?: string
     disabled?: boolean
     loading?: boolean
@@ -23,7 +25,9 @@ const props = withDefaults(
     createLabel?: string
   }>(),
   {
-    placeholder: 'Selecciona una opción',
+    // El control TIENE buscador y el texto por defecto no lo decía: se escribe
+    // para filtrar, no solo se elige de una lista.
+    placeholder: 'Busca o selecciona',
     createLabel: 'Crear nuevo',
   },
 )
@@ -32,6 +36,17 @@ const emit = defineEmits<{
   'update:modelValue': [value: string]
   blur: []
 }>()
+
+const field = inject(FieldKey, null)
+
+/**
+ * A11Y-04 · FORM-01 · FORM-04 — el disparador no tenía id de ningún tipo, así
+ * que el `<label for>` de `BaseField` nunca resolvió contra este control. La
+ * prop explícita va primero para que siga funcionando fuera de `BaseField`.
+ */
+const controlId = computed(() => props.id ?? field?.controlId)
+const describedBy = computed(() => field?.describedBy.value)
+const isRequired = computed(() => field?.required.value ?? false)
 
 const root = ref<HTMLElement | null>(null)
 const trigger = ref<HTMLElement | null>(null)
@@ -164,6 +179,7 @@ function cancelCreate() {
 <template>
   <div ref="root" class="ss" :class="{ disabled, invalid, open }">
     <button
+      :id="controlId"
       ref="trigger"
       type="button"
       class="trigger ds-flex-row"
@@ -171,6 +187,8 @@ function cancelCreate() {
       :disabled="disabled"
       :aria-expanded="open"
       :aria-invalid="invalid || undefined"
+      :aria-required="isRequired || undefined"
+      :aria-describedby="describedBy"
       @click="toggle"
     >
       <span :class="['value', 'ds-truncate', { placeholder: !selected }]">
@@ -295,8 +313,13 @@ function cancelCreate() {
 /* Tono en reposo en tres piezas: cada estado sustituye un subconjunto distinto
    (deshabilitado conserva el borde; inválido conserva el texto). Mantienen el
    peso y la posición del trío que declaraba `.trigger`. */
+
+/* A11Y-09 · WCAG 2.2 §1.4.11 (AA): --warm-200 medía 1,23:1 sobre --warm-50 y
+   el límite del campo era invisible con poca luz. --warm-450 da 3,55:1. Es el
+   escalón que tokens.css reserva para bordes de control e icono; --warm-200 se
+   queda para separadores y divisores, que §1.4.11 exime por decorativos. */
 .tone-border {
-  border-color: var(--warm-200);
+  border-color: var(--warm-450);
 }
 
 .tone-bg {
@@ -343,7 +366,7 @@ function cancelCreate() {
   border: 1px solid var(--warm-200);
   border-radius: 10px;
   box-shadow: 0 12px 32px rgb(40 20 80 / 14%);
-  z-index: 2100;
+  z-index: var(--z-popover);
   overflow: hidden;
 }
 
@@ -441,7 +464,9 @@ function cancelCreate() {
 
 .form-input {
   background: var(--warm-100);
-  border: 1px solid var(--warm-200);
+
+  /* A11Y-09: es un control, no un separador — mismo criterio que `.tone-border`. */
+  border: 1px solid var(--warm-450);
   border-radius: 8px;
   padding: 8px 10px;
   font-family: inherit;

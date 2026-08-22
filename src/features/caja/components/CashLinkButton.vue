@@ -21,7 +21,7 @@
   border: none;
   background: none;
   color: var(--amatista-700);
-  font-size: var(--text-sm);
+  font-size: var(--text-body);
   font-weight: var(--weight-semibold);
   cursor: pointer;
 }

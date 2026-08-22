@@ -7,6 +7,7 @@ import { purchaseOrdersApi } from '../api/purchaseOrders.api'
 import { goodsReceiptsApi } from '../api/goodsReceipts.api'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useToast } from '@/composables/useToast'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { PERMISSIONS } from '@/constants/permissions'
 import { formatDateNumeric } from '@/composables/format'
 import { formatMoney } from '@/features/tienda/composables/pricing'
@@ -22,6 +23,7 @@ const { orders, receipts, ordersPage, ordersTotal, receiptsPage, receiptsTotal, 
   storeToRefs(purchases)
 const { can } = useAuthorization()
 const toast = useToast()
+const { confirm } = useConfirmDialog()
 
 const canPoCreate = can(PERMISSIONS.PURCHASE_ORDER_CREATE)
 const canPoUpdate = can(PERMISSIONS.PURCHASE_ORDER_UPDATE)
@@ -87,10 +89,25 @@ async function placePo(po: PurchaseOrder) {
     toast.errorFrom('No se pudo emitir', e, 'Error al emitir')
   }
 }
+/**
+ * Los cuatro `window.confirm()` nativos que había en esta vista eran la peor
+ * implementación posible del concepto: rótulos en el idioma del navegador, sin
+ * foco gobernado, sin estilo y sin guarda de doble clic — y DOS de ellos mueven
+ * inventario. Ahora pasan por el único diálogo de la app, con la consecuencia
+ * escrita y la acción dentro, así que el diálogo se queda abierto e inerte
+ * mientras el POST está en vuelo.
+ */
 async function cancelPo(po: PurchaseOrder) {
-  if (!window.confirm(`¿Anular la orden #${po.id}?`)) return
   try {
-    await purchaseOrdersApi.cancel(po.id)
+    const ok = await confirm({
+      title: 'Anular orden de compra',
+      message: `Se anulará la orden #${po.id}.`,
+      consequence: 'La orden queda anulada y ya no podrá recibirse.',
+      confirmLabel: 'Anular orden',
+      busyLabel: 'Anulando…',
+      action: () => purchaseOrdersApi.cancel(po.id),
+    })
+    if (!ok) return
     toast.success('Orden anulada')
     refresh()
   } catch (e) {
@@ -98,9 +115,16 @@ async function cancelPo(po: PurchaseOrder) {
   }
 }
 async function deletePo(po: PurchaseOrder) {
-  if (!window.confirm(`¿Eliminar la orden #${po.id}?`)) return
   try {
-    await purchaseOrdersApi.remove(po.id)
+    const ok = await confirm({
+      title: 'Eliminar orden de compra',
+      message: `Se eliminará la orden #${po.id}.`,
+      consequence: 'Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar orden',
+      busyLabel: 'Eliminando…',
+      action: () => purchaseOrdersApi.remove(po.id),
+    })
+    if (!ok) return
     toast.success('Orden eliminada')
     refresh()
   } catch (e) {
@@ -109,9 +133,16 @@ async function deletePo(po: PurchaseOrder) {
 }
 
 async function confirmGr(id: number) {
-  if (!window.confirm('¿Confirmar la recepción? Esto ingresa el stock al inventario.')) return
   try {
-    await goodsReceiptsApi.confirm(id)
+    const ok = await confirm({
+      title: 'Confirmar recepción',
+      message: `Se confirmará la recepción #${id}.`,
+      consequence: 'Esto ingresa el stock al inventario de la sede y queda disponible para vender.',
+      confirmLabel: 'Confirmar recepción',
+      busyLabel: 'Confirmando…',
+      action: () => goodsReceiptsApi.confirm(id),
+    })
+    if (!ok) return
     toast.success('Recepción confirmada · inventario actualizado')
     refresh()
   } catch (e) {
@@ -119,9 +150,16 @@ async function confirmGr(id: number) {
   }
 }
 async function cancelGr(id: number) {
-  if (!window.confirm('¿Anular la recepción? Se revertirá el stock ingresado.')) return
   try {
-    await goodsReceiptsApi.cancel(id)
+    const ok = await confirm({
+      title: 'Anular recepción',
+      message: `Se anulará la recepción #${id}.`,
+      consequence: 'Se revertirá el stock que esta recepción ingresó al inventario.',
+      confirmLabel: 'Anular recepción',
+      busyLabel: 'Anulando…',
+      action: () => goodsReceiptsApi.cancel(id),
+    })
+    if (!ok) return
     toast.success('Recepción anulada')
     refresh()
   } catch (e) {

@@ -58,7 +58,7 @@ function select(value: ClinicalEventType | 'ALL') {
           ? {
               background: TYPE_COLORS[EVENT_TYPES[type].color].bg,
               color: TYPE_COLORS[EVENT_TYPES[type].color].fg,
-              borderColor: 'transparent',
+              borderColor: TYPE_COLORS[EVENT_TYPES[type].color].fg,
             }
           : {}
       "
@@ -85,7 +85,7 @@ function select(value: ClinicalEventType | 'ALL') {
   font-size: var(--text-xs);
   background: transparent;
   color: var(--warm-700);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   cursor: pointer;
   transition:
     background 0.12s ease,
@@ -96,13 +96,27 @@ function select(value: ClinicalEventType | 'ALL') {
 /* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- La forma `:hover` existe (`.ds-tone--neutral-soft:hover:not(:disabled)`) pero no es adoptable: el guardián de estos chips es `.active`, no `:disabled` —nunca se deshabilitan— así que la primitiva teñiría también el chip activo, que es justo lo que `:not(.active)` evita; y aplicarla condicionalmente tampoco vale, porque la clase arrastra además la regla plana `.ds-tone--neutral-soft`, que pintaría warm-100/warm-300 en reposo sobre un chip transparente. Es el hueco que documenta primitives.css para estos tres consumidores. */
 .chip:hover:not(.active) {
   background: var(--warm-100);
-  border-color: var(--warm-300);
+
+  /* A11Y-09: era --warm-300 (1,54:1), por debajo del reposo ya migrado a
+     --warm-450 (3,55:1) — el hover apagaba el borde del chip. */
+  border-color: var(--warm-500);
 }
 
+/* A11Y-09 (issue #207) · el estado activo tiene que ser el MÁS evidente, y aquí
+   era el menos: el chip en reposo lleva borde `--warm-450` (3,55:1) y el activo
+   se quedaba en `transparent`, con su relleno `--amatista-100` a 1,17:1 contra
+   la página. La jerarquía se invierte a favor del seleccionado —no se sube a
+   los dos—: `--amatista-600` da 5,44:1 contra su relleno y 6,36:1 contra la
+   página, por encima del reposo (3,55:1) y del hover (5,06:1).
+
+   Los 9 chips por tipo NO pasan por aquí: su `borderColor` va en el `:style` en
+   línea de la plantilla, que gana a cualquier regla, y también valía
+   `transparent`. Allí el borde toma el `fg` del propio tipo (`TYPE_COLORS`),
+   que mide entre 5,76:1 (rojo) y 7,61:1 (amatista) contra su propio relleno. */
 .chip.active {
   background: var(--amatista-100);
   color: var(--amatista-700);
-  border-color: transparent;
+  border-color: var(--amatista-600);
 }
 
 .all-chip.active {

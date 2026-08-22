@@ -22,7 +22,7 @@ defineProps<{ status: CashSessionStatus }>()
   display: inline-block;
   padding: var(--space-2) var(--space-10);
   border-radius: var(--radius-pill);
-  font-size: var(--text-label);
+  font-size: var(--text-xs);
   font-weight: var(--weight-semibold);
 }
 

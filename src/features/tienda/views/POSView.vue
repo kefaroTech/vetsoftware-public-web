@@ -84,7 +84,8 @@ function activatePos(): void {
     store.reload()
     void checkTaxProfile()
   }
-  void store.loadStock(branches.selectedBranchId.value)
+  // El saldo lo trae el watcher de `stockScopeKey`: depende de la sede y de lo
+  // que el catálogo esté pintando, no del momento de activar el POS.
 }
 
 async function checkCashAccess(): Promise<void> {
@@ -110,6 +111,9 @@ function useMyCashBranch(): void {
 /** Stock del producto en la sede activa (informativo: el POS no bloquea la venta, solo avisa). */
 function stockCountOf(productId: number): number | null {
   if (branches.selectedBranchId.value == null) return null
+  // Con carga por `productIds`, «no está en el mapa» ya no es «tiene cero»: puede
+  // ser un saldo aún sin pedir. Devolver 0 pintaría agotado un producto que hay.
+  if (!store.isStockKnown(productId)) return null
   return store.stockByProduct.value[productId]?.quantity ?? 0
 }
 function stockMinOf(productId: number): number {
@@ -171,38 +175,73 @@ const categories = computed(() =>
       : [],
 )
 
+/**
+ * Los productos que el catálogo pinta, filtrados y ANTES de resolverles precio y
+ * stock. Se separa de `catalog` porque es la entrada de la carga de saldo, y
+ * `catalog` depende del stock: no puede ser además quien decida qué pedir.
+ */
+const visibleProducts = computed(() => {
+  if (mode.value !== 'producto') return []
+  const q = query.value.trim().toLowerCase()
+  return store.products.value
+    .filter((p) => !cat.value || String(p.productCategory.id) === cat.value)
+    .filter((p) => !q || p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q))
+})
+
+/** Sede + ids visibles, como cadena, para no repetir la petición sin cambios. */
+const stockScopeKey = computed(() =>
+  posEnabled.value
+    ? `${branches.selectedBranchId.value ?? ''}|${visibleProducts.value.map((p) => p.id).join(',')}`
+    : '',
+)
+
+/**
+ * Saldo SOLO de lo que se está pintando. Antes se barría el inventario completo
+ * de la sede, página a página, para el estado de stock de unas pocas tarjetas.
+ * `loadStockFor` deduplica los ids ya consultados: teclear en el buscador solo
+ * pide lo que aparece nuevo, y cambiar de sede parte de cero.
+ */
+watch(
+  stockScopeKey,
+  () => {
+    if (!posEnabled.value) return
+    void store.loadStockFor(
+      branches.selectedBranchId.value,
+      visibleProducts.value.map((p) => p.id),
+    )
+  },
+  { immediate: true },
+)
+
 const catalog = computed<CatalogCard[]>(() => {
   const q = query.value.trim().toLowerCase()
   if (mode.value === 'producto') {
-    return store.products.value
-      .filter((p) => !cat.value || String(p.productCategory.id) === cat.value)
-      .filter((p) => !q || p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q))
-      .map((p) => {
-        const stockCount = stockCountOf(p.id)
-        const applied = applyPromo(
-          p,
-          'product',
-          p.salePrice,
-          p.productCategory.id,
-          store.promotions.value,
-          today,
-        )
-        return {
-          id: p.id,
-          name: p.name,
-          basePrice: p.salePrice,
-          price: applied.unitPrice,
-          promoName: applied.promo?.name ?? null,
-          taxTreatment: p.taxTreatment,
-          taxPercentage: appliesIva(p.taxTreatment) ? (p.tax?.percentage ?? 0) : 0,
-          taxName: p.tax?.name,
-          stockState: stockCount == null ? null : stockState(stockCount, stockMinOf(p.id)),
-          stockCount,
-          isService: false,
-          toneBg: productCategoryTone(p.productCategory).bg,
-          toneFg: productCategoryTone(p.productCategory).fg,
-        }
-      })
+    return visibleProducts.value.map((p) => {
+      const stockCount = stockCountOf(p.id)
+      const applied = applyPromo(
+        p,
+        'product',
+        p.salePrice,
+        p.productCategory.id,
+        store.promotions.value,
+        today,
+      )
+      return {
+        id: p.id,
+        name: p.name,
+        basePrice: p.salePrice,
+        price: applied.unitPrice,
+        promoName: applied.promo?.name ?? null,
+        taxTreatment: p.taxTreatment,
+        taxPercentage: appliesIva(p.taxTreatment) ? (p.tax?.percentage ?? 0) : 0,
+        taxName: p.tax?.name,
+        stockState: stockCount == null ? null : stockState(stockCount, stockMinOf(p.id)),
+        stockCount,
+        isService: false,
+        toneBg: productCategoryTone(p.productCategory).bg,
+        toneFg: productCategoryTone(p.productCategory).fg,
+      }
+    })
   }
   if (mode.value === 'servicio') {
     return store.services.value

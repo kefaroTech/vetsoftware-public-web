@@ -2,6 +2,7 @@ import { computed, ref, watch } from 'vue'
 import { useToast } from '@/composables/useToast'
 import { useFeUvt } from '@/features/facturacion/composables/useFeUvt'
 import { posSaleApi } from '../api/posSale.api'
+import { useBranchStore } from '@/features/branches/stores/branch.store'
 import type { PosSaleLineKind } from '../types/posSale.types'
 import { appliesIva, lineGross, taxByRate, type TotalsBreakdown } from './pricing'
 import { scaled as scaledMoney, sum as sumMoney } from './money'
@@ -12,6 +13,13 @@ import type {
   ElectronicDocumentResponse,
   PaymentMeans,
 } from '@/features/facturacion/types/facturacion'
+
+/**
+ * Un rechazo de la DIAN no cabe en los tres segundos del aviso por defecto: hay que
+ * anotar el documento y avisar a administración. Mismo criterio (y mismo valor) que
+ * `ERROR_DURATION` en `useToast.ts:10`, que no se exporta.
+ */
+const DIAN_REJECTED_TOAST_MS = 9000
 
 /** Método de pago del POS → medio de pago DIAN. */
 const MEANS_BY_METHOD: Record<string, PaymentMeans> = {
@@ -37,10 +45,15 @@ export interface PosReceipt {
  * - `saleRequestId` se genera una vez al abrir el cobro y se reusa en los
  *   reintentos, porque el modal queda abierto tras un fallo. Así un reintento
  *   tras perder la respuesta no registra una segunda venta.
+ * - La venta declara **su sede**: la misma `selectedBranchId` del store con la
+ *   que `POSView` pide el saldo del catálogo. Que el documento se emita donde el
+ *   cajero está mirando el stock no puede depender de que la capa de API se
+ *   acuerde de inyectarla.
  */
 export function usePosSale() {
   const toast = useToast()
   const { isOverThreshold } = useFeUvt()
+  const branchStore = useBranchStore()
 
   const lines = ref<SaleLine[]>([])
   const customer = ref<OwnerResponse | null>(null)
@@ -145,6 +158,10 @@ export function usePosSale() {
       const electronic = isOverThreshold(totalNow)
       const document = await posSaleApi.register({
         documentType: electronic ? 'FE_VENTA' : 'DOC_EQUIV_POS',
+        // Sede activa del turno. `POSView` ya exige que coincida con la de la caja
+        // abierta del cajero para habilitar el cobro (`cashBranchMismatch`), así que
+        // aquí siempre viaja una sede concreta y el backend no cae a «Principal».
+        branchId: branchStore.selectedBranchId,
         finalConsumer: electronic ? false : !customer.value,
         customerOwnerId: customer.value?.id ?? null,
         lines: saleLines,
@@ -162,12 +179,30 @@ export function usePosSale() {
       receiptOpen.value = true
       lines.value = []
       customer.value = null
+      // Tres estados de la DIAN, tres tonos. La rama `else` tragaba TODO lo que no
+      // fuera validado ni pendiente —el RECHAZADO incluido— y lo sacaba con el mismo
+      // verde y las mismas tres palabras que el éxito: el cajero cerraba turno
+      // creyendo que había facturado y el problema aparecía semanas después, cuando
+      // ya no hay forma de reconstruir qué venta fue. Textos literales de
+      // `docs/ux/patron-de-mensajes.md` §6.
+      //
+      // El estado presente lo pinta `FeDianResultBanner` dentro del comprobante
+      // (banner, no toast: sigue siendo verdad treinta segundos después). El aviso
+      // efímero de aquí solo abre la puerta, y nunca vuelve a decir «Venta
+      // registrada» a secas cuando el documento no es válido.
+      //
+      // `PENDIENTE` ya NO saca toast: con `FeDianResultBanner` montado en el
+      // comprobante, el aviso efímero repetía palabra por palabra un banner que
+      // el cajero tiene delante y que además persiste. El de RECHAZADO sí se
+      // queda: eso tiene que interrumpir.
       if (document.dianStatus === 'VALIDADO') {
         toast.success('Venta registrada', 'Factura validada por la DIAN.')
-      } else if (document.dianStatus === 'PENDIENTE') {
-        toast.success('Venta registrada', 'Documento guardado · emisión a la DIAN pendiente.')
-      } else {
-        toast.success('Venta registrada', 'Documento generado.')
+      } else if (document.dianStatus !== 'PENDIENTE') {
+        toast.error(
+          'La DIAN rechazó la factura',
+          'La venta está registrada pero el documento no es válido. Anótalo y avisa a administración.',
+          DIAN_REJECTED_TOAST_MS,
+        )
       }
     } catch (e) {
       // Se mantiene el ticket y el modal de cobro abiertos para reintentar.

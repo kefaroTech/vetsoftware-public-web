@@ -22,15 +22,22 @@ export const inventoryApi = {
     criteria: StockSearchCriteria,
     signal?: AbortSignal,
   ): Promise<PageResponse<StockView>> {
-    const params: Record<string, string | number | boolean> = {
+    const params: Record<string, string | number | boolean | number[]> = {
       page: criteria.page ?? 0,
       pageSize: criteria.pageSize ?? 20,
     }
     if (criteria.branchId != null) params.branchId = criteria.branchId
     if (criteria.q) params.q = criteria.q
     if (criteria.lowStock) params.lowStock = true
+    // `productIds` se repite (productIds=1&productIds=2), que es lo que espera el
+    // backend para un @RequestParam List<Integer>. El tope de 200 lo impone el
+    // llamador troceando: aquí un array más largo se enviaría tal cual y daría 400.
+    if (criteria.productIds && criteria.productIds.length > 0) {
+      params.productIds = criteria.productIds
+    }
     const { data } = await http.get<PageResponse<StockView>>('/inventory/stock', {
       params,
+      paramsSerializer: { indexes: null },
       signal,
     })
     return data

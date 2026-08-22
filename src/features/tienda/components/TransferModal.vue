@@ -7,6 +7,7 @@ import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import type { ProductResponse } from '../types/tienda'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 export interface TransferDraft {
   toBranchId: number
@@ -21,11 +22,24 @@ const props = defineProps<{
   current?: number
   /** Sedes destino (todas las de la empresa menos la de origen), como opciones de BaseSelect. */
   branchOptions: { value: string; label: string }[]
+  /**
+   * FORM-10 — lo controla el padre mientras la mutación está en vuelo. Opcional:
+   * sin pasarlo el modal se protege igual con su propia bandera (`emitted`).
+   */
+  saving?: boolean
 }>()
 const emit = defineEmits<{ close: []; confirm: [draft: TransferDraft] }>()
 
 const form = reactive({ toBranchId: '', qty: '', reason: '' })
 const submitted = ref(false)
+
+/**
+ * FORM-10 — guarda de reenvío. `submit()` es síncrono y el modal sigue clicable
+ * hasta que el padre lo cierre: dos pulsaciones serían dos transferencias entre
+ * sedes. La bandera se levanta al emitir y baja al reabrir.
+ */
+const emitted = ref(false)
+const busy = computed(() => props.saving === true || emitted.value)
 
 watch(
   () => props.open,
@@ -33,6 +47,7 @@ watch(
     if (open) {
       Object.assign(form, { toBranchId: '', qty: '', reason: '' })
       submitted.value = false
+      emitted.value = false
     }
   },
 )
@@ -48,9 +63,17 @@ const qtyError = computed(() =>
 )
 
 function submit() {
+  if (busy.value) return
   submitted.value = true
-  if (!form.toBranchId || qtyN.value <= 0 || (props.current != null && qtyN.value > props.current))
+  if (
+    !form.toBranchId ||
+    qtyN.value <= 0 ||
+    (props.current != null && qtyN.value > props.current)
+  ) {
+    void scrollToFirstError()
     return
+  }
+  emitted.value = true
   emit('confirm', {
     toBranchId: Number(form.toBranchId),
     quantity: qtyN.value,
@@ -81,7 +104,7 @@ function submit() {
               v-model="form.toBranchId"
               :options="branchOptions"
               :invalid="!!destError"
-              placeholder="Selecciona…"
+              placeholder="Selecciona sede destino"
             />
           </template>
         </BaseField>
@@ -96,9 +119,15 @@ function submit() {
             />
           </template>
         </BaseField>
-        <BaseField label="Motivo">
+        <!-- La opcionalidad va en la etiqueta, que no desaparece al escribir (R16.5). -->
+        <BaseField label="Motivo (opcional)">
           <template #default="{ id }">
-            <BaseTextarea :id="id" v-model="form.reason" :rows="2" placeholder="Opcional" />
+            <BaseTextarea
+              :id="id"
+              v-model="form.reason"
+              :rows="2"
+              placeholder="Reposición, préstamo entre sedes…"
+            />
           </template>
         </BaseField>
       </div>
@@ -108,8 +137,13 @@ function submit() {
       <button type="button" class="ds-btn ds-btn--ghost ds-btn--lg" @click="emit('close')">
         Cancelar
       </button>
-      <button type="button" class="ds-btn ds-btn--primary ds-btn--lg" @click="submit">
-        Transferir
+      <button
+        type="button"
+        class="ds-btn ds-btn--primary ds-btn--lg"
+        :disabled="busy"
+        @click="submit"
+      >
+        {{ busy ? 'Guardando…' : 'Transferir' }}
       </button>
     </template>
   </ModalShell>

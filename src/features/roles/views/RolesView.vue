@@ -4,7 +4,6 @@ import { Plus } from 'lucide-vue-next'
 import RoleCard from '../components/RoleCard.vue'
 import AddRoleCard from '../components/AddRoleCard.vue'
 import EditPermissionsModal from '../components/EditPermissionsModal.vue'
-import ConfirmDeactivateRoleDialog from '../components/ConfirmDeactivateRoleDialog.vue'
 import { useRoles } from '../composables/useRoles'
 import { usePermissionsCatalog } from '../composables/usePermissionsCatalog'
 import { useSubModulesCatalog } from '../composables/useSubModulesCatalog'
@@ -15,6 +14,7 @@ import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { useToast } from '@/composables/useToast'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 
 useModulesCatalog()
@@ -23,12 +23,12 @@ const permissionsCatalog = usePermissionsCatalog()
 const roles = useRoles()
 const { can } = useAuthorization()
 const toast = useToast()
+const { confirm } = useConfirmDialog()
 const canCreateRole = can(PERMISSIONS.ROLE_PERMISSIONS_CREATE)
 const canUpdateRole = can(PERMISSIONS.ROLE_PERMISSIONS_UPDATE)
 
 const modalOpen = ref(false)
 const editingRole = ref<RoleResponse | null>(null)
-const deactivateTarget = ref<RoleResponse | null>(null)
 const busy = ref(false)
 
 function isSystemRole(role: RoleResponse): boolean {
@@ -70,7 +70,7 @@ function onSaved() {
 async function onToggleActive(role: RoleResponse, active: boolean) {
   if (isSystemRole(role) || !canUpdateRole.value) return
   if (!active) {
-    deactivateTarget.value = role
+    void askDeactivate(role)
     return
   }
   try {
@@ -82,19 +82,35 @@ async function onToggleActive(role: RoleResponse, active: boolean) {
   }
 }
 
-async function confirmDeactivate() {
-  const target = deactivateTarget.value
-  if (!target || busy.value) return
-  busy.value = true
+/**
+ * Desactivar pasa por el único diálogo de confirmación de la app; la acción
+ * viaja dentro, así que el diálogo se queda abierto e inerte mientras el PATCH
+ * está en vuelo y el `busy` de la vista sigue gobernando el resto de la pantalla.
+ */
+async function askDeactivate(role: RoleResponse) {
+  if (busy.value) return
   try {
-    await roles.setActive(target.id, false)
-    toast.info('Rol desactivado', `${target.name} dejó de estar disponible.`)
-    deactivateTarget.value = null
+    const ok = await confirm({
+      title: `¿Desactivar ${role.name}?`,
+      message:
+        'Los empleados con este rol dejarán de tener los permisos asociados hasta que vuelvas a activarlo. La configuración del rol y sus permisos se mantienen intactos.',
+      confirmLabel: 'Desactivar',
+      busyLabel: 'Desactivando…',
+      width: 460,
+      action: async () => {
+        busy.value = true
+        try {
+          await roles.setActive(role.id, false)
+        } finally {
+          busy.value = false
+        }
+      },
+    })
+    if (!ok) return
+    toast.info('Rol desactivado', `${role.name} dejó de estar disponible.`)
   } catch (e) {
     const msg = getProblemDetailMessage(e, 'No se pudo desactivar el rol')
     toast.error('Ocurrió un error', msg)
-  } finally {
-    busy.value = false
   }
 }
 
@@ -169,14 +185,6 @@ const hasError = computed(() => roles.error.value ?? permissionsCatalog.error.va
       :read-only="editingReadOnly"
       @close="close"
       @saved="onSaved"
-    />
-
-    <ConfirmDeactivateRoleDialog
-      :open="deactivateTarget !== null"
-      :role="deactivateTarget"
-      :busy="busy"
-      @cancel="deactivateTarget = null"
-      @confirm="confirmDeactivate"
     />
   </section>
 </template>

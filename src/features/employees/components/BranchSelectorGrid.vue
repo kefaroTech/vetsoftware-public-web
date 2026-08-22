@@ -62,7 +62,7 @@ const orderedBranches = computed(() =>
 <style scoped>
 .option {
   padding: 14px 16px;
-  border: 1.5px solid var(--warm-200);
+  border: 1.5px solid var(--warm-450);
   border-radius: 11px;
   background: var(--warm-50);
   font-family: inherit;
@@ -73,8 +73,12 @@ const orderedBranches = computed(() =>
     background 0.12s ease;
 }
 
+/* A11Y-09: `--amatista-300` daba 2,02:1, por debajo del reposo `--warm-450`
+   (3,55:1) — el hover apagaba el borde de la opción. `--amatista-450` da 3,77:1
+   y se queda por debajo del `--amatista-600` de `.selected` (6,36:1), que sigue
+   siendo el estado más evidente. */
 .option:hover:not(.selected) {
-  border-color: var(--amatista-300);
+  border-color: var(--amatista-450);
 }
 
 .option.selected {
@@ -82,11 +86,13 @@ const orderedBranches = computed(() =>
   background: linear-gradient(135deg, var(--amatista-50) 0%, oklch(98% 0.01 var(--hue)) 100%);
 }
 
+/* A11Y-09 · sin marcar, el borde ES la casilla entera: `--warm-300` daba
+   1,49:1 sobre su relleno `--warm-50`; `--warm-450` da 3,55:1. */
 .checkbox {
   width: 18px;
   height: 18px;
   border-radius: 5px;
-  border: 1.5px solid var(--warm-300);
+  border: 1.5px solid var(--warm-450);
   background: var(--warm-50);
   display: grid;
   place-items: center;

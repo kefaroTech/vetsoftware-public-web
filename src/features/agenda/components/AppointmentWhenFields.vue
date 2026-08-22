@@ -227,7 +227,7 @@ function clashRange(appt: AppointmentResponse): string {
   align-items: center;
   gap: 3px;
   padding: 9px 6px;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 9px;
   background: var(--warm-50);
   cursor: pointer;
@@ -238,8 +238,12 @@ function clashRange(appt: AppointmentResponse): string {
   transition: all 0.1s;
 }
 
+/* A11Y-09: `--amatista-300` daba 2,02:1, por debajo del reposo ya migrado a
+   `--warm-450` (3,55:1) — el hover apagaba el borde. `--amatista-450` da 3,77:1
+   y se queda por debajo del `--amatista-500` de `.sel`, que sigue siendo el
+   estado más evidente. */
 .typebtn:hover {
-  border-color: var(--amatista-300);
+  border-color: var(--amatista-450);
 }
 
 .typebtn.sel {

@@ -1,15 +1,42 @@
 <script setup lang="ts">
+import { computed, ref, watch } from 'vue'
 import { Ban } from 'lucide-vue-next'
 import ModalShell from '@/components/ui/ModalShell.vue'
 import type { OrderKind } from '../types/hospital'
 
-defineProps<{
+const props = defineProps<{
   open: boolean
   kind: OrderKind
   name: string
+  /**
+   * FORM-10 — lo controla el padre mientras la mutación está en vuelo. Opcional:
+   * sin pasarlo el modal se protege igual con su propia bandera (`emitted`).
+   */
+  saving?: boolean
 }>()
 
 const emit = defineEmits<{ confirm: []; close: [] }>()
+
+/**
+ * FORM-10 — guarda de reenvío. El botón emitía `confirm` sin más y seguía
+ * activo hasta que el padre cerrara el modal: dos pulsaciones son dos
+ * suspensiones sobre la misma orden. La bandera baja al reabrir.
+ */
+const emitted = ref(false)
+const busy = computed(() => props.saving === true || emitted.value)
+
+watch(
+  () => props.open,
+  (open) => {
+    if (open) emitted.value = false
+  },
+)
+
+function confirm() {
+  if (busy.value) return
+  emitted.value = true
+  emit('confirm')
+}
 </script>
 
 <template>
@@ -39,7 +66,9 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
 
     <template #footer-actions>
       <button type="button" class="ds-btn ds-btn--ghost" @click="emit('close')">Cancelar</button>
-      <button type="button" class="ds-btn ds-btn--solid" @click="emit('confirm')">Suspender</button>
+      <button type="button" class="ds-btn ds-btn--solid" :disabled="busy" @click="confirm">
+        {{ busy ? 'Suspendiendo…' : 'Suspender' }}
+      </button>
     </template>
   </ModalShell>
 </template>

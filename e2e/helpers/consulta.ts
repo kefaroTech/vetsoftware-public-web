@@ -333,7 +333,16 @@ export function trackApiWrites(page: Page): { assertAllOk: () => void } {
   }
 }
 
-/** Confirma el modal de "¿Guardar la consulta?" que abre el botón "Guardar consulta". */
+/**
+ * Confirma el modal de "¿Guardar la consulta?" que abre el botón "Guardar consulta".
+ *
+ * El selector es `alertdialog` y NO `dialog` (issue #187). El diálogo lo sirve
+ * hoy `AppConfirmDialog` sobre `ModalShell`, que acepta el rol por prop: es el
+ * diálogo que interrumpe para confirmar algo con consecuencia, y su cuerpo hay
+ * que oírlo al abrir. Si esta aserción falla, lo que hay que arreglar es el rol
+ * del componente, no el selector: bajarlo a `dialog` haría pasar el spec y
+ * dejaría de proteger el anuncio del cuerpo, que es lo único que aquí importa.
+ */
 export async function confirmarGuardarConsulta(page: Page): Promise<void> {
   await footerNext(page, 'Guardar consulta').click()
   const confirm = page.getByRole('alertdialog')

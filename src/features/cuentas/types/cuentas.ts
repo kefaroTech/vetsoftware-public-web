@@ -171,19 +171,42 @@ export interface GeneralChargeResponse extends ChargeVoidInfo {
   enabled: boolean
 }
 
-export interface CreateProductChargePayload {
+/**
+ * Nombrado como el esquema del contrato (`CreateProductChargeOpenAccountRequest`) y no
+ * `CreateProductChargePayload`, que es como se llamaba. El nombre no es cosmético: la
+ * comprobación de contrato solo ata tipos **homónimos** de un esquema
+ * (`tests/unit/api-contract.spec.ts`), así que mientras se llamó distinto nada lo vigilaba —y
+ * por eso `branchId` pudo faltar sin que ningún gate lo viera. Issue #193.
+ */
+export interface CreateProductChargeOpenAccountRequest {
   animalId: number
   productId: number
   openAccountId: number
   /** Unidades a cobrar (entero >= 1). Opcional: el backend usa 1 si se omite. */
   quantity?: number
+  /**
+   * Sede desde la que se vende el producto (es la que descuenta inventario).
+   *
+   * No estaba declarado y este era el único cliente de escritura con sede que no pasaba por
+   * `withBranchBody`, así que el cargo viajaba sin sede. Con la sede ausente el backend solo
+   * la deduce si el empleado tiene UNA (`Authz.resolveAccessibleBranch`); con dos o más lanza
+   * `IllegalArgumentException("branchId is required")` → 400. Es decir: todo empleado
+   * multi-sede que agregara un producto a una cuenta abierta recibía un error, y como cada
+   * unidad del carrito es un POST propio la cuenta podía quedar a medias —abierta, con los
+   * servicios cargados y sin los productos—. Issue #193.
+   *
+   * Lo inyecta `withBranchBody` desde `useBranchStore().selectedBranchId`; declararlo aquí
+   * permite además fijarlo explícitamente (la envoltura respeta el valor ya presente).
+   */
+  branchId?: number | null
   /** Idempotency key (UUID) opcional: deduplica reintentos del mismo cargo en el backend. */
   clientRequestId?: string
   /** Versión esperada de la cuenta (opt-in): detección temprana de conflicto de concurrencia. */
   expectedVersion?: number
 }
 
-export interface CreateServiceChargePayload {
+/** Homónimo del esquema a propósito: ver `CreateProductChargeOpenAccountRequest`. */
+export interface CreateServiceChargeOpenAccountRequest {
   animalId: number
   serviceId: number
   openAccountId: number
@@ -232,7 +255,8 @@ export interface DebtResponse {
   voidReason?: string | null
 }
 
-export interface CreateDebtPayload {
+/** Homónimo del esquema a propósito: ver `CreateProductChargeOpenAccountRequest`. */
+export interface CreateDebtOpenAccountRequest {
   amount: number
   paymentMethod: PaymentMethod
   openAccountId: number

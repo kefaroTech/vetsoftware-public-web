@@ -133,7 +133,7 @@ Cada feature vive en `src/features/<feature>/` y agrupa por subcarpetas:
 Las primitivas UI compartidas (`BaseInput`, `BaseField`, `BaseSelect`,
 `BaseTextarea`, `DateInput`, `SegmentedRadio`, `SectionCard`, `BaseChip`,
 `ModalShell`, `SearchableSelect`) viven en
-`src/features/dashboard/components/ui/` y son la base obligatoria para
+`src/components/ui/` y son la base obligatoria para
 formularios y modales.
 
 - **`ModalShell`** — base para modales con header (icono+título+subtítulo+✕),
@@ -144,7 +144,7 @@ formularios y modales.
   `onCreate` async que retorna `{value, label, hint?}` y auto-selecciona).
   Es la base obligatoria para dropdowns con catálogos creables (tipos de
   examen/vacuna/imagen/cirugía).
-- **`DateInput`** — wrapper de `@vuepic/vue-datepicker` con locale `es` y
+- **`DateInput`** — wrapper de `vue-datepicker-next` con locale `es` y
   formato `dd MMM yyyy`. La API pública (`v-model`, `:invalid`, `placeholder`,
   `min`, `max`) se mantuvo idéntica al DateInput nativo anterior.
 
@@ -281,17 +281,23 @@ componentes.
   (`useAnimalColorsBySpecie`). Cascadeados a la especie seleccionada igual que las
   razas — al cambiar especie se resetea `colorId` y se recarga el catálogo.
 - **Tipos de consulta**: cargados desde `GET /api/v1/consultation-types`
-  (`useConsultationTypes`). Catálogo global, cache module-scoped. Usado en
-  el paso 3 del wizard (`PasoConsulta`) — al cambiar el `typeId` el watch
-  hidrata `state.consultationType` con `{id, name}` resolviendo contra la
-  lista cargada (también re-resuelve cuando la lista llega tarde).
+  (`useConsultationTypes`). Catálogo global. **No es una caché**: el
+  `inFlight` module-scoped solo deduplica llamadas concurrentes (si dos
+  componentes se montan a la vez sale una sola petición) y se anula en
+  cuanto la petición resuelve, así que cada `refresh()` vuelve a preguntar
+  al servidor — alineado con "Recargar SIEMPRE al abrir pantalla/modal".
+  Usado en el paso 3 del wizard (`PasoConsulta`) — al cambiar el `typeId` el
+  watch hidrata `state.consultationType` con `{id, name}` resolviendo contra
+  la lista cargada (también re-resuelve cuando la lista llega tarde).
 - **Catálogos creables del paso 3** (consumidos por modales de acciones
   rápidas): `useLaboratoryTestTypes` (`/laboratory-test-types`), `useDiagnosticImagingTypes`
   (`/diagnostic-imaging-types/available`), `useVaccinationTypes` (`/vaccination-types/available`),
   `useSurgeryTypes` (`/surgery-types/available`). Todos generados por el factory
-  `createCatalog<T>` en `composables/useCatalog.ts` — cada uno cachea
-  module-scoped y soporta `create({name, description})` que pushea al cache
-  y permite la auto-selección desde `SearchableSelect`.
+  `createCatalog<T>` en `composables/useCatalog.ts` — mismo dedup module-scoped
+  que `useConsultationTypes`, tampoco es caché (ver el comentario de
+  `createCatalog`, que corrige explícitamente una versión anterior de sí
+  mismo que sí lo llamaba caché), y soporta `create({name, description})` que
+  pushea al `list` local y permite la auto-selección desde `SearchableSelect`.
 - **Países / Estados / Ciudades**: cargados desde el backend (`useGeoCascade`).
 
 ## Modales de acciones rápidas (paso 3)
@@ -326,8 +332,12 @@ diagnosis, therapeuticPlan, diagnosisPlan, nextControl, animalId}` →
    cuando están vacíos en el draft (solo tipo + anamnesis son
    obligatorios, alineado con la UX).
 2. Por cada item del draft, POST a su endpoint con `{...item, animalId,
-consultationId, companyId}`. `companyId` sale del JWT vía
-   `useAuth().companyId`.
+consultationId}`. **El payload nunca lleva `companyId`**: el backend lo
+   deriva server-side de `authz.currentCompanyId()` a partir del `AuthContext`
+   resuelto del JWT, nunca de un campo que el cliente pueda escribir — si el
+   cuerpo aceptara `companyId`, un request manipulado podría crear el item en
+   la empresa de otro tenant. Ver "Autorización" en el `CLAUDE.md` del
+   backend.
 3. Receta es cascada interna: `POST /prescriptions` → con el
    `prescriptionId` retornado, `POST /medicament-prescriptions` por cada
    medicamento.
@@ -426,13 +436,18 @@ sugeridos por contexto en
   desde `PasoPropietario.submit`.
 - **Animal**: `POST /api/v1/animals` (`animalApi.create` +
   `buildCreateAnimalRequest` + `mapAnimalResponse`), desde
-  `PasoMascota.submit`. El payload exige `name`, `code`, `specieId`, `breedId`,
-  `ownerId`, `gender`, `weightType`, `animalType`, `reproductiveState`,
-  `colorId`, `companyId` (todos `@NotNull/@NotBlank`); `bod`, `weight`, `size`
-  son opcionales en el backend pero la UI exige `bod` y `weight`. `weight` y
-  `size` se redondean a `Integer` (Math.round) en el mapper porque el backend
-  los almacena como enteros — pierde decimales para kg, considerado
-  aceptable por ahora.
+  `PasoMascota.submit`. El payload exige `name` (`@NotBlank`), `specieId`,
+  `breedId`, `ownerId`, `gender`, `weightType`, `animalType`,
+  `reproductiveState`, `colorId` (todos `@NotNull`); `code`, `bod`, `weight`,
+  `size` son opcionales en el backend (`weight` `@Positive` si viene, `size`
+  `@PositiveOrZero`) pero la UI exige `bod` y `weight`. **El payload nunca
+  lleva `companyId`**: no es un campo del `record CreateAnimalRequest` del
+  backend — el `AnimalController` lo obtiene de `authz.currentCompanyId()` y
+  lo inyecta en el `CreateAnimalCommand` server-side, precisamente para que
+  un cliente no pueda crear una mascota en la empresa de otro tenant. `size`
+  se redondea a `Integer` (`Math.round`) en el mapper porque el backend lo
+  almacena como entero — pierde decimales; `weight` **no** se redondea, el
+  backend lo guarda como `BigDecimal` y conserva la precisión clínica.
 
 ## Enums del dominio
 
@@ -495,24 +510,28 @@ versiona y evoluciona por su cuenta.
 A cambio, la práctica es la misma en los dos. **Estos archivos se mantienen byte
 a byte idénticos**; si tocas uno, tocas el otro en el mismo PR:
 
-| Archivo                                                                                                       | Qué es                                                              |
-| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `src/services/http/http.client.ts`                                                                            | cliente axios, refresh _single-flight_, lectores de `ProblemDetail` |
-| `src/services/http/api-base-url.ts`                                                                           | resolución de la URL base                                           |
-| `src/services/storage/storage.service.ts`                                                                     | único acceso a `localStorage`/`sessionStorage`                      |
-| `src/services/telemetry/trace.ts`                                                                             | generador de `traceparent` (W3C)                                    |
-| `src/stores/loader.store.ts`                                                                                  | debounce anti-parpadeo del velo                                     |
-| `src/stores/toast.store.ts`                                                                                   | avisos                                                              |
-| `src/composables/useGlobalLoader.ts` · `useToast.ts`                                                          | sus fachadas                                                        |
-| `src/features/auth/utils/jwt.ts`                                                                              | decodificación del JWT                                              |
-| `src/types/api.types.ts`                                                                                      | `ProblemDetail`                                                     |
-| `src/plugins/vuetify.ts` · `vuetify-icon-aliases.ts`                                                          | tema e iconos de Vuetify                                            |
-| `src/assets/styles/tokens.css` · `primitives.css`                                                             | capas 1 y 2 del sistema de diseño                                   |
-| `src/components/feedback/{PawLoader,PageLoader,ToastStack}.vue`                                               | primitivas de feedback                                              |
-| `scripts/check-bundle-budget.mjs` · `ds-audit.mjs` · `css-budget.mjs`                                         | verificadores                                                       |
-| `tests/unit/{setup,storage-service,ui-stores}.spec.ts`                                                        | sus pruebas                                                         |
-| `eslint.config.ts` · `stylelint.config.mjs` · `lint-staged.config.mjs` · `commitlint.config.js` · `AGENTS.md` | tooling                                                             |
-| `stylelint-plugins/no-duplicate-primitive.mjs`                                                                | regla stylelint FE-08: rechaza CSS que reescribe una primitiva      |
+| Archivo                                                                                                       | Qué es                                                                               |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `src/services/http/http.client.ts`                                                                            | cliente axios, refresh _single-flight_, lectores de `ProblemDetail`                  |
+| `src/services/http/api-base-url.ts`                                                                           | resolución de la URL base                                                            |
+| `src/services/storage/storage.service.ts`                                                                     | único acceso a `localStorage`/`sessionStorage`                                       |
+| `src/services/telemetry/telemetry.ts`                                                                         | telemetría de navegador vía Grafana Faro, carga diferida tras el montaje (TR-05)     |
+| `src/stores/loader.store.ts`                                                                                  | debounce anti-parpadeo del velo                                                      |
+| `src/stores/toast.store.ts`                                                                                   | avisos                                                                               |
+| `src/composables/useGlobalLoader.ts` · `useToast.ts`                                                          | sus fachadas                                                                         |
+| `src/features/auth/utils/jwt.ts`                                                                              | decodificación del JWT                                                               |
+| `src/types/api.types.ts`                                                                                      | `ProblemDetail`                                                                      |
+| `src/plugins/vuetify.ts` · `vuetify-icon-aliases.ts`                                                          | tema e iconos de Vuetify                                                             |
+| `src/assets/styles/tokens.css` · `primitives.css` · `base.css`                                                | capas 1, 2 y 0 del sistema de diseño                                                 |
+| `src/components/feedback/{PawLoader,PageLoader,ToastStack,ErrorSummary}.vue`                                  | primitivas de feedback                                                               |
+| `src/components/ui/ModalShell.vue`                                                                            | contenedor de diálogo — byte a byte idéntico, no declarado hasta ahora               |
+| `src/composables/useModalLayer.ts` · `useModalHistory.ts` · `useModalFocus.ts`                                | pila de modales, entrada de historial (EST-09) y trampa/devolución de foco (A11Y-08) |
+| `src/types/pagination.ts`                                                                                     | `PageResponse<T>`, `PageQuery`, `emptyPage()` — el único contrato de paginación      |
+| `src/composables/useServerPaged.ts` · `useQuerySync.ts`                                                       | paginación servida por el backend y filtros sincronizados con la query string        |
+| `scripts/check-bundle-budget.mjs` · `ds-audit.mjs` · `css-budget.mjs`                                         | verificadores                                                                        |
+| `tests/unit/setup.ts` · `storage-service.spec.ts` · `ui-stores.spec.ts`                                       | sus pruebas                                                                          |
+| `eslint.config.ts` · `stylelint.config.mjs` · `lint-staged.config.mjs` · `commitlint.config.js` · `AGENTS.md` | tooling                                                                              |
+| `stylelint-plugins/no-duplicate-primitive.mjs`                                                                | regla stylelint FE-08: rechaza CSS que reescribe una primitiva                       |
 
 **Divergencias permitidas, y solo estas.** Van siempre con un comentario que
 diga por qué:

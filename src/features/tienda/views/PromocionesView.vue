@@ -3,13 +3,13 @@ import { computed, onMounted, ref } from 'vue'
 import { Bell, Check, Pencil, Plus, Trash2 } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import ListBody from '@/features/acciones/components/ListBody.vue'
-import ConfirmDeleteDialog from '@/components/feedback/ConfirmDeleteDialog.vue'
 import PromoStatusPill from '../components/PromoStatusPill.vue'
 import PromoFormModal from '../components/PromoFormModal.vue'
 import { useTienda } from '../composables/useTienda'
 import { formatMoney, promoStatus } from '../composables/pricing'
 import { todayISO } from '@/composables/format'
 import { useToast } from '@/composables/useToast'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import type {
@@ -21,6 +21,7 @@ import type {
 
 const store = useTienda()
 const toast = useToast()
+const { confirm } = useConfirmDialog()
 const { can } = useAuthorization()
 const canCreate = can(PERMISSIONS.PROMOTION_CREATE)
 const canUpdate = can(PERMISSIONS.PROMOTION_UPDATE)
@@ -28,8 +29,6 @@ const canDelete = can(PERMISSIONS.PROMOTION_DELETE)
 
 const modalOpen = ref(false)
 const editing = ref<PromotionResponse | null>(null)
-const deleting = ref<PromotionResponse | null>(null)
-const deletingBusy = ref(false)
 
 const today = todayISO()
 
@@ -123,18 +122,25 @@ function onFormClose() {
   editing.value = null
 }
 
-async function onConfirmDelete() {
-  const target = deleting.value
-  if (!target) return
-  deletingBusy.value = true
+/**
+ * La confirmación es la única de la app y lleva la acción dentro: mientras el
+ * DELETE está en vuelo el diálogo sigue abierto con los botones inertes, así
+ * que la fila no puede volver a dispararlo.
+ */
+async function requestDelete(target: PromotionResponse) {
   try {
-    await store.removePromotion(target.id)
+    const ok = await confirm({
+      title: 'Eliminar promoción',
+      message: `Se eliminará ${target.name}.`,
+      consequence: 'Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar',
+      busyLabel: 'Eliminando…',
+      action: () => store.removePromotion(target.id),
+    })
+    if (!ok) return
     toast.info('Promoción eliminada', 'La promoción fue removida.')
-    deleting.value = null
   } catch (e) {
     toast.errorFrom('Ocurrió un error', e, 'No se pudo eliminar')
-  } finally {
-    deletingBusy.value = false
   }
 }
 </script>
@@ -228,7 +234,7 @@ async function onConfirmDelete() {
               type="button"
               class="ds-icon-btn ds-icon-btn--danger"
               title="Eliminar"
-              @click="deleting = item"
+              @click="requestDelete(item)"
             >
               <Trash2 :size="15" :stroke-width="1.7" />
             </button>
@@ -242,15 +248,6 @@ async function onConfirmDelete() {
       :initial="editing"
       @close="onFormClose"
       @saved="onSaved"
-    />
-
-    <ConfirmDeleteDialog
-      :open="deleting !== null"
-      title="Eliminar promoción"
-      :message="deleting ? `Se eliminará ${deleting.name}. Esta acción no se puede deshacer.` : ''"
-      :busy="deletingBusy"
-      @cancel="deleting = null"
-      @confirm="onConfirmDelete"
     />
   </div>
 </template>

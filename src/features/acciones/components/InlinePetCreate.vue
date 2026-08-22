@@ -12,7 +12,6 @@ import { animalApi } from '@/features/dashboard/views/consulta/nueva/api/animal.
 import { buildCreateAnimalRequest } from '@/features/dashboard/views/consulta/nueva/api/animal.mapper'
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import type { PetDraft } from '@/features/dashboard/views/consulta/nueva/composables/useNuevaConsultaDraft'
-import { useAuth } from '@/features/auth/composables/useAuth'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import type { Owner } from '@/types/domain'
 
@@ -25,8 +24,6 @@ const emit = defineEmits<{
   created: [animal: AnimalResponse]
   cancel: []
 }>()
-
-const { companyId } = useAuth()
 
 /** Espejo de `nuevaConsultaDraft.store`: el picker no persiste su borrador. */
 function emptyPetDraft(): PetDraft {
@@ -54,10 +51,6 @@ const saving = ref(false)
 async function save() {
   if (formRef.value && !formRef.value.validate()) {
     submitError.value = 'Revisa los campos marcados antes de continuar.'
-    return
-  }
-  if (companyId.value == null) {
-    submitError.value = 'No se pudo identificar la empresa actual. Vuelve a iniciar sesión.'
     return
   }
   saving.value = true

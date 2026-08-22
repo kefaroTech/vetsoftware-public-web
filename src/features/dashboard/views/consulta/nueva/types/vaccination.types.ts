@@ -6,7 +6,6 @@ export interface CreateVaccinationPayload {
   nextVaccination: string | null
   animalId: number
   consultationId: number | null
-  companyId: number
 }
 
 export interface VaccinationTypeSummary {
