@@ -225,7 +225,7 @@ function save() {
           <BaseInput
             :id="id"
             v-model="draft.medicament"
-            placeholder="Ej. Acepromacina 0.05 mg/kg + Propofol"
+            placeholder="Ej. Acepromacina 0,05 mg/kg + Propofol"
           />
         </template>
       </BaseField>
@@ -241,13 +241,14 @@ function save() {
             />
           </template>
         </BaseField>
-        <BaseField label="Complicaciones">
+        <!-- La instrucción va al `hint`, que persiste mientras se escribe (R16.5). -->
+        <BaseField label="Complicaciones" hint="Si hubo complicaciones intra o post-operatorias">
           <template #default="{ id }">
             <BaseTextarea
               :id="id"
               v-model="draft.complications"
               :rows="3"
-              placeholder="Si hubo complicaciones intra o post-operatorias"
+              placeholder="Sangrado, reacción anestésica, dehiscencia…"
             />
           </template>
         </BaseField>

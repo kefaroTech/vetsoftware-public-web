@@ -56,7 +56,7 @@ const focused = ref(false)
   align-items: center;
   gap: 10px;
   background: var(--warm-150);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 10px;
   padding: 12px 14px;
   transition:

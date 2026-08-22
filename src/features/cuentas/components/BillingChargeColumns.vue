@@ -187,34 +187,46 @@ const emit = defineEmits<{
 }
 
 /* Catálogo */
+
+/* A11Y-09 · mismo conmutador segmentado que el de la cita (issue #208): la
+   pista medía 1,13:1 contra la página, así que el grupo no se leía como
+   control. `--warm-450` da 3,55:1. */
 .srcseg {
   display: inline-flex;
   background: var(--warm-150);
+  border: 1px solid var(--warm-450);
   border-radius: 9px;
   padding: 3px;
   gap: 3px;
   margin-bottom: 10px;
 }
+
+/* Borde transparente: reserva el sitio del que marca el segmento elegido. */
 .srcbtn {
   padding: 6px 14px;
   font-size: 12.5px;
   font-family: inherit;
   cursor: pointer;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 7px;
   color: var(--warm-600);
   font-weight: 500;
 }
+
+/* El segmento elegido se marcaba con relleno `--warm-50` sobre `--warm-150`:
+   1,13:1. `--amatista-500` da 4,50:1 contra su relleno y 4,00:1 contra la
+   pista. */
 .srcbtn.active {
   background: var(--warm-50);
   color: var(--amatista-700);
+  border-color: var(--amatista-500);
   box-shadow: 0 1px 2px rgb(20 15 30 / 8%);
 }
 .search {
   width: 100%;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 10px;
   padding: 10px 14px;
   font-family: inherit;
@@ -364,7 +376,7 @@ const emit = defineEmits<{
   place-items: center;
   border-radius: 6px;
   cursor: pointer;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   background: var(--warm-50);
   color: var(--warm-700);
 }
@@ -383,7 +395,7 @@ const emit = defineEmits<{
   font-size: 12.5px;
   font-weight: 600;
   color: var(--warm-800);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 6px;
   padding: 3px 0;
   outline: none;

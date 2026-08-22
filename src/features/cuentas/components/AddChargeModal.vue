@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
-import { Plus, Search } from 'lucide-vue-next'
+import { computed, ref, useTemplateRef, watch } from 'vue'
+import { Plus } from 'lucide-vue-next'
 import ModalShell from '@/components/ui/ModalShell.vue'
-import BaseField from '@/components/ui/BaseField.vue'
-import BaseInput from '@/components/ui/BaseInput.vue'
-import BaseSelect from '@/components/ui/BaseSelect.vue'
+import AddChargeCatalogPicker from './AddChargeCatalogPicker.vue'
+import type { CatalogChargeRequest } from './AddChargeCatalogPicker.vue'
+import AddChargeGeneralForm from './AddChargeGeneralForm.vue'
+import type { GeneralChargeDraft } from './AddChargeGeneralForm.vue'
 import { useTienda } from '@/features/tienda/composables/useTienda'
 import { useCuentas } from '../composables/useCuentas'
-import { formatMoney } from '@/features/tienda/composables/pricing'
 import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
+import { useAttemptKeys } from '@/composables/useAttemptKeys'
 import { useToast } from '@/composables/useToast'
 
 const props = defineProps<{
@@ -26,28 +27,23 @@ const toast = useToast()
 
 type PetSel = number | 'general'
 const selectedPet = ref<PetSel>('general')
-const tab = ref<'service' | 'product'>('service')
-const query = ref('')
 const busy = ref(false)
 
-// Cargo general
-const general = reactive({ name: '', unitAmount: '', quantity: '1', taxId: '' })
+const catalogPicker = useTemplateRef<{ clearQty: (id: number) => void }>('catalogPicker')
+const generalForm = useTemplateRef<{ reset: () => void }>('generalForm')
 
-// Cantidad por producto del catálogo (entero >= 1). Mismo saneo por dígitos que el cargo general.
-// Solo aplica a la pestaña "Productos": el POST product-charge-open-accounts acepta `quantity`.
-const qtyById = reactive<Record<number, string>>({})
-function qtyStr(id: number): string {
-  return qtyById[id] ?? '1'
-}
-function setQty(id: number, v: string): void {
-  qtyById[id] = v.replace(/\D/g, '')
-}
-function qtyNum(id: number): number {
-  return Number(qtyStr(id).replace(/\D/g, '')) || 0
-}
-function resetQtys(): void {
-  for (const k of Object.keys(qtyById)) Reflect.deleteProperty(qtyById, Number(k))
-}
+/**
+ * Claves de idempotencia vivas de este modal, una por operación pendiente.
+ *
+ * Son del INTENTO, no del clic: volver a pulsar tras un fallo es EL MISMO cargo
+ * y tiene que reenviar la misma clave, o el POST que llegó al servidor pero
+ * perdió la respuesta se cobra dos veces. El porqué completo está en
+ * `useAttemptKeys`; aquí lo que importa es que el `op` que identifica cada
+ * operación lo arman `addCatalogItem` y `addGeneral` con todo lo que distingue
+ * un cargo de otro, y que la clave se descarta al completarse para que un
+ * segundo clic deliberado sí sume otra unidad.
+ */
+const attempts = useAttemptKeys()
 
 watch(
   () => props.open,
@@ -55,111 +51,78 @@ watch(
     if (!open) return
     tienda.ensureLoaded()
     selectedPet.value = props.pets[0]?.id ?? 'general'
-    tab.value = 'service'
-    query.value = ''
-    resetQtys()
-    Object.assign(general, { name: '', unitAmount: '', quantity: '1', taxId: '' })
+    // Pestaña, búsqueda, cantidades y formulario general son estado de los dos
+    // hijos, y `ModalShell` los monta de cero en cada apertura (`v-if="open"`),
+    // así que aquí solo queda lo que sobrevive al cierre: las claves vivas.
+    attempts.reset()
   },
 )
 
-const taxOptions = computed(() => [
-  { value: '', label: 'Sin impuesto' },
-  ...tienda.taxes.value.map((t) => ({
-    value: String(t.id),
-    label: `${t.name} (${t.percentage}%)`,
-  })),
-])
-
-const catalog = computed(() => {
-  const q = query.value.trim().toLowerCase()
-  if (tab.value === 'service') {
-    return tienda.services.value
-      .filter((s) => !q || s.name.toLowerCase().includes(q))
-      .map((s) => ({ id: s.id, name: s.name, price: s.price }))
-  }
-  return tienda.products.value
-    .filter((p) => !q || p.name.toLowerCase().includes(q))
-    .map((p) => ({ id: p.id, name: p.name, price: p.salePrice }))
-})
-
 const isGeneral = computed(() => selectedPet.value === 'general')
 
-async function addCatalogItem(itemId: number) {
-  if (isGeneral.value || busy.value) return
-  // Producto: la cantidad va en el POST (>= 1). Servicio: siempre 1 unidad.
-  const qty = tab.value === 'product' ? qtyNum(itemId) : 1
-  if (tab.value === 'product' && qty < 1) return
+/**
+ * `catch` único de los dos envíos. El 409 de concurrencia no es culpa de quien
+ * cobra —otra persona tocó la cuenta—, así que avisa y pide recargar en vez de
+ * teñirlo de rojo; el resto pasa por `errorFrom`, que conserva el mensaje del
+ * `ProblemDetail` y el `X-Trace-Id`.
+ */
+function reportChargeError(e: unknown): void {
+  if (isConcurrencyConflict(e)) {
+    toast.warn('Conflicto de concurrencia', getProblemDetailMessage(e))
+    emit('refresh')
+  } else {
+    toast.errorFrom('Ocurrió un error', e, 'No se pudo agregar el cargo')
+  }
+}
+
+async function addCatalogItem(charge: CatalogChargeRequest) {
+  if (isGeneral.value || busy.value || charge.qty < 1) return
   busy.value = true
   try {
     const animalId = selectedPet.value as number
-    // Idempotency key por click: si el POST se reintenta (respuesta perdida), el backend no duplica el cargo.
-    const reqId = crypto.randomUUID()
-    if (tab.value === 'service')
-      await cuentas.addServiceCharge(props.accountId, animalId, itemId, reqId)
+    // Clave de idempotencia del intento, no del clic: si el POST se reintenta tras fallar
+    // (respuesta perdida a mitad), viaja la MISMA clave y el backend devuelve el cargo que
+    // ya hubiera creado en vez de cobrarlo otra vez.
+    const op = `${charge.kind}:${animalId}:${charge.itemId}:${charge.qty}`
+    const reqId = attempts.keyFor(op)
+    if (charge.kind === 'service')
+      await cuentas.addServiceCharge(props.accountId, animalId, charge.itemId, reqId)
     else {
-      await cuentas.addProductCharge(props.accountId, animalId, itemId, qty, reqId)
-      Reflect.deleteProperty(qtyById, itemId)
+      await cuentas.addProductCharge(props.accountId, animalId, charge.itemId, charge.qty, reqId)
+      catalogPicker.value?.clearQty(charge.itemId)
     }
+    // Operación completada: la clave muere aquí, así el siguiente clic sobre el mismo ítem
+    // es un cargo nuevo de verdad.
+    attempts.settle(op)
     toast.success('Cargo agregado', 'Se añadió a la cuenta.')
     emit('added')
   } catch (e) {
-    if (isConcurrencyConflict(e)) {
-      toast.warn('Conflicto de concurrencia', getProblemDetailMessage(e))
-      emit('refresh')
-    } else {
-      toast.errorFrom('Ocurrió un error', e, 'No se pudo agregar el cargo')
-    }
+    reportChargeError(e)
   } finally {
     busy.value = false
   }
 }
 
-// COP en enteros: se descartan no-dígitos (incl. separador de miles) en el valor unitario y se fuerza la
-// cantidad a un entero. Evita `Number("1.500") === 1.5`, cantidades negativas/cero (crédito encubierto) y
-// fracciones que antes pasaban vía `Number("2.5")`.
-const unitAmountDigits = computed(() => general.unitAmount.replace(/\D/g, ''))
-const unitAmountNum = computed(() => Number(unitAmountDigits.value) || 0)
-const unitAmountDisplay = computed({
-  get: () => (general.unitAmount === '' ? '' : formatMoney(unitAmountNum.value)),
-  set: (v: string) => {
-    general.unitAmount = v.replace(/\D/g, '')
-  },
-})
-const quantityNum = computed(() => Number(general.quantity.replace(/\D/g, '')) || 0)
-const quantityDisplay = computed({
-  get: () => general.quantity,
-  set: (v: string) => {
-    general.quantity = v.replace(/\D/g, '')
-  },
-})
-const canAddGeneral = computed(
-  // Monto libre por diseño (sin catálogo): se permite 0, pero exige un valor explícito; la cantidad debe ser entera >= 1.
-  () => general.name.trim().length >= 2 && unitAmountDigits.value !== '' && quantityNum.value >= 1,
-)
-
-async function addGeneral() {
-  if (!canAddGeneral.value || busy.value) return
+async function addGeneral(charge: GeneralChargeDraft) {
+  if (busy.value) return
   busy.value = true
+  // Misma regla que en el catálogo: la clave es del intento (este concepto, este importe,
+  // esta cantidad, este impuesto), no del clic, y sobrevive al reintento tras un fallo.
+  const op = `general:${charge.name}:${charge.unitAmount}:${charge.quantity}:${charge.taxId ?? ''}`
   try {
     await cuentas.addGeneralCharge({
-      name: general.name.trim(),
-      unitAmount: unitAmountNum.value,
-      quantity: quantityNum.value,
-      taxId: general.taxId ? Number(general.taxId) : null,
-      hasTax: general.taxId !== '',
+      ...charge,
       openAccountId: props.accountId,
-      clientRequestId: crypto.randomUUID(),
+      clientRequestId: attempts.keyFor(op),
     })
+    attempts.settle(op)
     toast.success('Cargo agregado', 'Cargo general añadido a la cuenta.')
-    Object.assign(general, { name: '', unitAmount: '', quantity: '1', taxId: '' })
+    // Se vacía SOLO con el cargo ya creado: si falla, lo escrito se queda para
+    // que el reintento reconstruya el mismo `op` y reenvíe la misma clave.
+    generalForm.value?.reset()
     emit('added')
   } catch (e) {
-    if (isConcurrencyConflict(e)) {
-      toast.warn('Conflicto de concurrencia', getProblemDetailMessage(e))
-      emit('refresh')
-    } else {
-      toast.errorFrom('Ocurrió un error', e, 'No se pudo agregar el cargo')
-    }
+    reportChargeError(e)
   } finally {
     busy.value = false
   }
@@ -200,111 +163,13 @@ async function addGeneral() {
         </div>
       </div>
 
-      <template v-if="!isGeneral">
-        <div class="tabs">
-          <button
-            type="button"
-            class="tab"
-            :class="{ active: tab === 'service' }"
-            @click="tab = 'service'"
-          >
-            Servicios
-          </button>
-          <button
-            type="button"
-            class="tab"
-            :class="{ active: tab === 'product' }"
-            @click="tab = 'product'"
-          >
-            Productos
-          </button>
-        </div>
-        <div class="search">
-          <Search :size="14" :stroke-width="1.7" class="s-icon" />
-          <input v-model="query" type="text" class="s-input ds-focus-ring" placeholder="Buscar…" />
-        </div>
-        <ul class="catalog ds-list-reset ds-stack">
-          <li
-            v-for="it in catalog"
-            :key="it.id"
-            class="cat-row ds-flex-row ds-flex-row--12 ds-hover-accent"
-          >
-            <span class="cat-name">{{ it.name }}</span>
-            <span class="ds-num ds-meta-dark">
-              {{ formatMoney(it.price) }}
-              <span v-if="tab === 'product' && qtyNum(it.id) > 1" class="cat-sub">
-                · {{ formatMoney(it.price * qtyNum(it.id)) }}
-              </span>
-            </span>
-            <input
-              v-if="tab === 'product'"
-              class="qty-input ds-focus-ring"
-              :class="{ invalid: qtyNum(it.id) < 1 }"
-              type="text"
-              inputmode="numeric"
-              aria-label="Cantidad"
-              :value="qtyStr(it.id)"
-              @input="setQty(it.id, ($event.target as HTMLInputElement).value)"
-            />
-            <button
-              type="button"
-              class="add-btn ds-tone--accent-soft"
-              :class="{ 'ds-is-disabled': busy || (tab === 'product' && qtyNum(it.id) < 1) }"
-              :disabled="busy || (tab === 'product' && qtyNum(it.id) < 1)"
-              @click="addCatalogItem(it.id)"
-            >
-              <Plus :size="14" :stroke-width="1.9" /> Agregar
-            </button>
-          </li>
-          <li v-if="catalog.length === 0" class="ds-empty ds-empty--tight">
-            No hay ítems en este catálogo.
-          </li>
-        </ul>
-      </template>
-
-      <div v-else class="ds-stack ds-stack--14">
-        <BaseField label="Concepto" required>
-          <template #default="{ id }">
-            <BaseInput :id="id" v-model="general.name" placeholder="Ej. Insumo, recargo…" />
-          </template>
-        </BaseField>
-        <div class="grid">
-          <BaseField label="Valor unitario (IVA incl.)" required>
-            <template #default="{ id }">
-              <BaseInput
-                :id="id"
-                v-model="unitAmountDisplay"
-                inputmode="numeric"
-                placeholder="$0"
-              />
-            </template>
-          </BaseField>
-          <BaseField label="Cantidad" required>
-            <template #default="{ id }">
-              <BaseInput :id="id" v-model="quantityDisplay" inputmode="numeric" placeholder="1" />
-            </template>
-          </BaseField>
-          <BaseField label="Impuesto">
-            <template #default="{ id }">
-              <BaseSelect
-                :id="id"
-                v-model="general.taxId"
-                :options="taxOptions"
-                placeholder="Sin impuesto"
-              />
-            </template>
-          </BaseField>
-        </div>
-        <button
-          type="button"
-          class="add-btn solid"
-          :class="{ 'ds-is-disabled': !canAddGeneral || busy }"
-          :disabled="!canAddGeneral || busy"
-          @click="addGeneral"
-        >
-          <Plus :size="14" :stroke-width="1.9" /> Agregar cargo general
-        </button>
-      </div>
+      <AddChargeCatalogPicker
+        v-if="!isGeneral"
+        ref="catalogPicker"
+        :busy="busy"
+        @add="addCatalogItem"
+      />
+      <AddChargeGeneralForm v-else ref="generalForm" :busy="busy" @add="addGeneral" />
     </template>
 
     <template #footer-actions>
@@ -316,17 +181,9 @@ async function addGeneral() {
 </template>
 
 <style scoped>
-/* Layout via primitivas: .ds-stack(--14), .ds-flex-row(--12), .ds-wrap-row,
-   .ds-list-reset, .ds-focus-ring, .ds-num, .ds-meta-dark,
-   .ds-tone--accent-soft, .ds-is-disabled.
-
-   `.grid` sigue local: es una rejilla intrínseca de mínimo 220px, no el par
-   `repeat(2,…)` + media query que replican las primitivas de rejilla. */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-}
+/* Layout via primitivas: .ds-wrap-row, .ds-btn(--ghost, --lg). El catálogo y el
+   cargo general se llevaron sus reglas a `AddChargeCatalogPicker` y
+   `AddChargeGeneralForm`; aquí solo queda el selector de mascota. */
 .section {
   margin-bottom: 16px;
 }
@@ -346,140 +203,13 @@ async function addGeneral() {
   font-family: inherit;
   cursor: pointer;
   background: var(--warm-100);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   color: var(--warm-700);
 }
 .chip.active {
   background: var(--amatista-50);
-  border-color: var(--amatista-400);
+  border-color: var(--amatista-500);
   color: var(--amatista-700);
   font-weight: 500;
-}
-.tabs {
-  display: flex;
-  gap: 4px;
-  border-bottom: 1px solid var(--warm-200);
-  margin-bottom: 12px;
-}
-
-.tab {
-  padding: 8px 14px;
-  font-size: 13px;
-  font-family: inherit;
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  color: var(--warm-600);
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-}
-.tab.active {
-  color: var(--amatista-700);
-  border-bottom-color: var(--amatista-700);
-  font-weight: 500;
-}
-.search {
-  position: relative;
-  display: flex;
-  align-items: center;
-  margin-bottom: 12px;
-}
-.s-icon {
-  position: absolute;
-  left: 13px;
-  color: var(--warm-500);
-}
-
-.s-input {
-  width: 100%;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 10px;
-  padding: 10px 14px 10px 38px;
-  font-family: inherit;
-  font-size: 13.5px;
-  color: var(--warm-900);
-  outline: none;
-}
-.catalog {
-  gap: 6px;
-  max-height: 320px;
-  overflow: auto;
-}
-
-.cat-row {
-  padding: 11px 14px;
-  background: var(--warm-50);
-  border: 1px solid var(--warm-200);
-  border-radius: 10px;
-  transition:
-    border-color 0.12s,
-    background 0.12s;
-}
-
-/* El hover de la fila es `.ds-hover-accent` (primitives.css). Pesa (0,3,0) y
-   gana al `.cat-row[data-v-…]` de (0,2,0) sin tocar la regla base, así que el
-   `:hover` local se borra en vez de dejarlo compitiendo. Su tercera declaración
-   (`color: amatista-700`) no se ve: `.cat-name`, `.ds-meta-dark`, `.cat-sub`,
-   `.qty-input` y `.add-btn` fijan su propio color y la fila no tiene texto
-   directo. */
-
-/* `flex: 1` a secas, sin el `min-width: 0` de `.ds-flex-fill`: el nombre del
-   ítem no lleva elipsis y no debe encoger por debajo de su contenido. */
-.cat-name {
-  flex: 1;
-  font-size: 13.5px;
-  color: var(--warm-900);
-}
-.cat-sub {
-  color: var(--amatista-700);
-  font-weight: 500;
-}
-
-.qty-input {
-  width: 46px;
-  text-align: center;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-800);
-  border: 1px solid var(--warm-200);
-  border-radius: 8px;
-  padding: 6px 0;
-  outline: none;
-  background: var(--warm-50);
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
-}
-.qty-input.invalid {
-  border-color: oklch(60% 0.18 25deg);
-  box-shadow: 0 0 0 3px var(--danger-100);
-}
-
-.add-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  font-size: 12.5px;
-  font-weight: 500;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: inherit;
-  border: 1px solid var(--amatista-200);
-}
-.add-btn:hover:not(:disabled) {
-  background: var(--amatista-100);
-}
-
-/* El estado apagado lo pone `.ds-is-disabled` (primitives.css), enganchado
-   con `:class` en el template — la primitiva no sustituye al atributo nativo. */
-.add-btn.solid {
-  background: var(--gradient-primary);
-  color: white;
-  border: none;
-  padding: 9px 16px;
-  font-size: 13px;
-  align-self: flex-start;
 }
 </style>

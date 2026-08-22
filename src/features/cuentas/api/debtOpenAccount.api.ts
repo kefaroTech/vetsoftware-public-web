@@ -1,5 +1,5 @@
 import { http } from '@/services/http/http.client'
-import type { CreateDebtPayload, DebtResponse } from '../types/cuentas'
+import type { CreateDebtOpenAccountRequest, DebtResponse } from '../types/cuentas'
 
 export const debtOpenAccountApi = {
   async listByOpenAccount(accountId: number): Promise<DebtResponse[]> {
@@ -8,7 +8,12 @@ export const debtOpenAccountApi = {
     )
     return data
   },
-  async create(payload: CreateDebtPayload): Promise<DebtResponse> {
+  /**
+   * El abono no declara sede: el contrato no la trae y el backend la resuelve desde la propia
+   * cuenta (`CashRegisterAdapter.resolveBranch`), que es la fuente correcta para un movimiento
+   * de caja.
+   */
+  async create(payload: CreateDebtOpenAccountRequest): Promise<DebtResponse> {
     const { data } = await http.post<DebtResponse>('/debt-open-accounts', payload)
     return data
   },

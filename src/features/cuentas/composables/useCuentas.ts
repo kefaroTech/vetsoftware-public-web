@@ -31,6 +31,7 @@ export function useCuentas() {
     searchPage: store.searchPage,
     loadSummary: store.loadSummary,
     loadDetail: store.loadDetail,
+    fetchAccount: store.fetchAccount,
     refreshAccount: store.refreshAccount,
     findOpenAccountByOwner: store.findOpenAccountByOwner,
     openAccount: store.openAccount,

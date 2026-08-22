@@ -76,7 +76,7 @@ function formatLocation(owner: Owner): string {
 <style scoped>
 .change {
   background: transparent;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   padding: 6px 12px;
   border-radius: 7px;
   font-family: inherit;

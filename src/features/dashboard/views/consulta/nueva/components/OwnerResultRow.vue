@@ -32,7 +32,7 @@ defineEmits<{ select: [] }>()
   width: 100%;
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--warm-200);
+  border-bottom: 1px solid var(--warm-450);
   padding: 14px 18px;
   display: grid;
   grid-template-columns: 38px 1.5fr 1fr 1fr auto;

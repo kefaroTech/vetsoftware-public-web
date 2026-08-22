@@ -26,7 +26,7 @@ const emit = defineEmits<{ 'update:modelValue': [destino: BillingDestino] }>()
       v-if="hasAccount"
       type="button"
       class="destopt"
-      :class="modelValue === 'existing' ? 'ds-tone--accent-outline' : 'destopt-off'"
+      :class="modelValue === 'existing' ? 'ds-tone--accent-outline' : 'destopt-off ds-field-rest'"
       @click="emit('update:modelValue', 'existing')"
     >
       <span
@@ -44,7 +44,7 @@ const emit = defineEmits<{ 'update:modelValue': [destino: BillingDestino] }>()
       v-else
       type="button"
       class="destopt"
-      :class="modelValue === 'new' ? 'ds-tone--accent-outline' : 'destopt-off'"
+      :class="modelValue === 'new' ? 'ds-tone--accent-outline' : 'destopt-off ds-field-rest'"
       @click="emit('update:modelValue', 'new')"
     >
       <span
@@ -61,7 +61,7 @@ const emit = defineEmits<{ 'update:modelValue': [destino: BillingDestino] }>()
     <button
       type="button"
       class="destopt"
-      :class="modelValue === 'nada' ? 'ds-tone--accent-outline' : 'destopt-off'"
+      :class="modelValue === 'nada' ? 'ds-tone--accent-outline' : 'destopt-off ds-field-rest'"
       @click="emit('update:modelValue', 'nada')"
     >
       <span
@@ -106,16 +106,16 @@ const emit = defineEmits<{ 'update:modelValue': [destino: BillingDestino] }>()
     border-color 0.12s,
     background 0.12s;
 }
-.destopt-off {
-  background: var(--warm-50);
-  border-color: var(--warm-200);
-}
 
 /* El `:hover` se acota al estado de reposo: la opción activa ya no tiene regla
    de hover con la que competir, así que conserva su borde amatista-500 como
-   antes (cuando ganaba por orden de aparición). */
+   antes (cuando ganaba por orden de aparición).
+
+   A11Y-09: `--amatista-300` daba 2,02:1, por debajo del `--warm-450` en reposo
+   (3,55:1) que aporta `.ds-field-rest` — el hover apagaba el borde.
+   `--amatista-450` da 3,77:1 y sigue por debajo del `--amatista-500` activo. */
 .destopt-off:hover {
-  border-color: var(--amatista-300);
+  border-color: var(--amatista-450);
 }
 .do-check {
   width: 18px;

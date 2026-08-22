@@ -103,7 +103,7 @@ function pick(action: QuickAction) {
 .action {
   position: relative;
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 11px;
   padding: 12px;
   font-family: inherit;
@@ -114,7 +114,14 @@ function pick(action: QuickAction) {
     background 0.15s;
 }
 
-.action:hover {
+/* `:not(.muted)` en vez de una regla `.action.muted:hover` que devolvía a mano
+   el par de reposo — ese cuerpo era una copia literal de `.ds-field-rest`. El
+   `:not(.muted)` de `.highlighted` NO es decorativo: iguala su especificidad a
+   la del hover ((0,4,0) las dos) para que siga ganando por orden de aparición,
+   como cuando ambas eran (0,3,0). Una acción no puede ser `muted` y
+   `highlighted` a la vez: `muted` implica `kind` nulo y `highlighted` exige
+   conteo sobre un `kind`. */
+.action:not(.muted):hover {
   border-color: var(--amatista-700);
   background: var(--amatista-50);
 }
@@ -124,12 +131,7 @@ function pick(action: QuickAction) {
   cursor: not-allowed;
 }
 
-.action.muted:hover {
-  border-color: var(--warm-200);
-  background: var(--warm-50);
-}
-
-.action.highlighted {
+.action.highlighted:not(.muted) {
   border-width: 1.5px;
   border-color: var(--amatista-500);
   background: var(--amatista-50);

@@ -1,22 +1,20 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, X } from 'lucide-vue-next'
+import { ArrowLeft, Stethoscope, X } from 'lucide-vue-next'
 import WizardFooter from './components/WizardFooter.vue'
-import DiscardConsultaDialog from './components/DiscardConsultaDialog.vue'
-import SaveConsultaConfirmDialog from './components/SaveConsultaConfirmDialog.vue'
 import PasoPaciente from './pasos/PasoPaciente.vue'
 import PasoConsulta from './pasos/PasoConsulta.vue'
 import { useNuevaConsultaDraft, type WizardStep } from './composables/useNuevaConsultaDraft'
 import { showResumeOrNewDialog } from '@/composables/useConsultaResumeGuard'
 import { useConsultationSave } from './composables/useConsultationSave'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 
 const router = useRouter()
 const route = useRoute()
 const draft = useNuevaConsultaDraft()
+const { confirm, isOpen: confirmDialogOpen } = useConfirmDialog()
 
-const discardOpen = ref(false)
-const confirmSaveOpen = ref(false)
 const submittingStep = ref(false)
 
 // La cascada de POSTs vive en su propio composable (useConsultationSave).
@@ -100,12 +98,52 @@ async function handleNext() {
     return
   }
   // Antes de guardar, pedimos confirmación explícita (modal).
-  confirmSaveOpen.value = true
+  void askSave()
 }
 
-async function confirmSave() {
-  confirmSaveOpen.value = false
-  await saveConsultation()
+/**
+ * Guardar y descartar pasan por el único diálogo de confirmación de la app.
+ *
+ * El nombre del paciente va en un SEGMENTO `strong`, nunca por `v-html`: es un
+ * dato escrito por el usuario y el `<strong>` lo pone la plantilla del diálogo.
+ *
+ * En «guardar», la cascada de POSTs viaja como `action`, así que el diálogo se
+ * queda abierto con «Guardando…» y los dos botones inertes mientras dura. Antes
+ * se cerraba ANTES de empezar a guardar y su prop `:saving` no llegaba a verse.
+ */
+async function askSave() {
+  const pet = draft.state.pet?.name
+  await confirm({
+    title: '¿Guardar la consulta?',
+    message: pet
+      ? [
+          'Se registrará la consulta de ',
+          { strong: pet },
+          ' y los procedimientos que hayas agregado. A continuación podrás facturarla.',
+        ]
+      : 'Se registrará la consulta y los procedimientos que hayas agregado. A continuación podrás facturarla.',
+    icon: Stethoscope,
+    accent: 'amatista',
+    confirmLabel: 'Confirmar y guardar',
+    busyLabel: 'Guardando…',
+    cancelLabel: 'Seguir editando',
+    action: () => saveConsultation(),
+  })
+}
+
+async function askDiscard() {
+  const pet = draft.state.pet?.name
+  const ok = await confirm({
+    title: '¿Descartar esta consulta?',
+    message: pet
+      ? ['Perderás todos los datos ingresados de ', { strong: pet }, '.']
+      : 'Perderás todos los datos ingresados.',
+    consequence: 'Esta acción no se puede deshacer.',
+    confirmLabel: 'Descartar',
+    cancelLabel: 'Seguir editando',
+  })
+  if (!ok) return
+  confirmCancel()
 }
 
 async function handleBack() {
@@ -122,11 +160,10 @@ function attemptCancel() {
     promptResumeOrRestart()
     return
   }
-  discardOpen.value = true
+  void askDiscard()
 }
 
 function confirmCancel() {
-  discardOpen.value = false
   draft.reset()
   router.push({ name: 'home' })
 }
@@ -140,7 +177,7 @@ function goHome() {
     promptResumeOrRestart()
     return
   }
-  discardOpen.value = true
+  void askDiscard()
 }
 
 function promptResumeOrRestart() {
@@ -161,7 +198,7 @@ function promptResumeOrRestart() {
 }
 
 function onKey(e: KeyboardEvent) {
-  if (e.key === 'Escape' && !discardOpen.value) {
+  if (e.key === 'Escape' && !confirmDialogOpen.value) {
     e.preventDefault()
     attemptCancel()
     return
@@ -249,21 +286,6 @@ onUnmounted(() => {
         </button>
       </template>
     </WizardFooter>
-
-    <DiscardConsultaDialog
-      :open="discardOpen"
-      :pet-name="draft.state.pet?.name"
-      @cancel="discardOpen = false"
-      @confirm="confirmCancel"
-    />
-
-    <SaveConsultaConfirmDialog
-      :open="confirmSaveOpen"
-      :pet-name="draft.state.pet?.name"
-      :saving="saving"
-      @cancel="confirmSaveOpen = false"
-      @confirm="confirmSave"
-    />
   </div>
 </template>
 

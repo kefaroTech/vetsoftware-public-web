@@ -1,7 +1,6 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNuevaConsultaDraft } from './useNuevaConsultaDraft'
-import { useAuth } from '@/features/auth/composables/useAuth'
 import { openBilling } from '@/features/cuentas/composables/useBillingPrompt'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { consultationApi } from '../api/consultation.api'
@@ -39,17 +38,12 @@ function intOrNull(raw: string): number | null {
 export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) {
   const router = useRouter()
   const draft = useNuevaConsultaDraft()
-  const auth = useAuth()
 
   const saving = ref(false)
   const saveError = ref<string | null>(null)
 
   /** POSTea los items del draft que aún no tengan `savedId`. */
-  async function persistConsultationItems(
-    consultationId: number,
-    animalId: number,
-    companyId: number,
-  ) {
+  async function persistConsultationItems(consultationId: number, animalId: number) {
     const s = draft.state
 
     // Recetas: cabecera + medicamentos en cascada. Items con savedId se saltan.
@@ -68,7 +62,6 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
           observations: p.observations,
           animalId,
           consultationId,
-          companyId,
         })
         prescriptionId = created.id
         draft.markPrescriptionSaved(i, prescriptionId)
@@ -96,7 +89,6 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
         diagnosis: t.diagnosis,
         animalId,
         consultationId,
-        companyId,
         // Sede elegida en el modal de la muestra; si no hay, withBranchBody usa la del menú principal.
         branchId: t.branchId,
       })
@@ -114,7 +106,6 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
         observations: img.observations,
         animalId,
         consultationId,
-        companyId,
       })
       draft.markDiagnosticImagingSaved(i, created.id)
     }
@@ -129,7 +120,6 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
         nextVaccination: v.nextVaccination || null,
         animalId,
         consultationId,
-        companyId,
       })
       draft.markVaccinationSaved(i, created.id)
     }
@@ -146,7 +136,6 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
         observations: h.observations,
         animalId,
         consultationId,
-        companyId,
         weight: h.weight?.trim() ? Number(h.weight.trim().replace(',', '.')) : null,
         weightUnit: h.weight?.trim() ? (draft.state.pet?.weightType ?? null) : null,
       })
@@ -165,7 +154,6 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
         observations: d.observations,
         animalId,
         consultationId,
-        companyId,
       })
       draft.markDewormingSaved(i, created.id)
     }
@@ -181,7 +169,6 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
         complications: sg.complications,
         animalId,
         consultationId,
-        companyId,
       })
       draft.markSurgerySaved(i, created.id)
     }
@@ -193,9 +180,8 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
     const owner = draft.state.owner
     const consultationType = draft.state.consultationType
     const cDraft = draft.state.consultation
-    const companyId = auth.companyId.value
 
-    if (!pet || !consultationType || !companyId) {
+    if (!pet || !consultationType) {
       saveError.value = 'Faltan datos para guardar la consulta.'
       return
     }
@@ -235,7 +221,7 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
       }
 
       // 2. Crear los items vinculados que no se hayan guardado aún
-      await persistConsultationItems(consultationId, Number(pet.id), companyId)
+      await persistConsultationItems(consultationId, Number(pet.id))
 
       // 3. Reset y navegación
       const date = cDraft.date

@@ -393,12 +393,17 @@ function goToExistingAccount(): void {
   font-family: inherit;
   cursor: pointer;
   background: var(--warm-100);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   color: var(--warm-700);
 }
+
+/* A11Y-09: `--amatista-400` daba 2,80:1 sobre el `--amatista-50` del chip
+   activo — incumple, y encima por debajo del chip inactivo (`--warm-450` sobre
+   `--warm-100`, 3,35:1): el seleccionado se veía menos. `--amatista-500` da
+   4,24:1. */
 .chip.active {
   background: var(--amatista-50);
-  border-color: var(--amatista-400);
+  border-color: var(--amatista-500);
   color: var(--amatista-700);
   font-weight: 500;
 }
@@ -407,7 +412,11 @@ function goToExistingAccount(): void {
   align-items: center;
   gap: 5px;
   background: var(--amatista-50);
-  border: 1.5px dashed var(--amatista-300);
+
+  /* A11Y-09: discontinuo o no, es la frontera del control. `--amatista-300`
+     daba 1,90:1 en reposo y 1,73:1 con el relleno del hover; `--amatista-500`
+     da 4,24:1 y 3,86:1. */
+  border: 1.5px dashed var(--amatista-500);
   color: var(--amatista-700);
   font-weight: 600;
 }

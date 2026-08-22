@@ -96,10 +96,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 </template>
 
 <style scoped>
-/* Residuo sobre `.ds-dialog-overlay`: este diálogo necesita ganarle a otros
-   modales, por eso su z-index es 1500 y no el 100 de los otros tres. */
+/* Residuo sobre `.ds-dialog-overlay`: el z-index no entra en la primitiva.
+   Este diálogo tiene que ganarle a cualquier modal abierto, así que va en
+   la capa del velo de modal. Es el ÚNICO diálogo que sigue siendo un
+   componente propio: no es una confirmación de sí/no sino una elección de
+   TRES salidas (continuar / crear una nueva / cancelar), y el diálogo
+   canónico resuelve una promesa booleana. */
 .overlay {
-  z-index: 1500;
+  z-index: var(--z-modal);
 }
 
 .resume-fade-enter-active,

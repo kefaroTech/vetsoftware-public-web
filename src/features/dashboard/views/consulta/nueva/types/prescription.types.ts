@@ -5,7 +5,6 @@ export interface CreatePrescriptionPayload {
   observations: string
   animalId: number
   consultationId: number
-  companyId: number
 }
 
 export interface PrescriptionMedicamentSummary {

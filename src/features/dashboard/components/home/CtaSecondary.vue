@@ -23,7 +23,7 @@ import { History, ArrowRight } from 'lucide-vue-next'
 <style scoped>
 .cta-secondary {
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 16px;
   padding: 24px;
   color: inherit;

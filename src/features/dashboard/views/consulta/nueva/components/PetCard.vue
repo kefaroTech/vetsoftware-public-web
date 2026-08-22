@@ -60,7 +60,7 @@ defineEmits<{ select: [] }>()
 <style scoped>
 .pet-card {
   background: var(--warm-50);
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 12px;
   padding: 16px;
   cursor: pointer;
@@ -74,7 +74,10 @@ defineEmits<{ select: [] }>()
 }
 
 .pet-card:hover:not(.selected) {
-  border-color: var(--warm-300);
+  /* A11Y-09: era --warm-300 (1,54:1), más claro que el reposo ya migrado a
+     --warm-450 (3,55:1). El estado seleccionado lo sigue ganando
+     `.pet-card.selected` (0,2,0) con su `border` completo en amatista-700. */
+  border-color: var(--warm-500);
 }
 
 .pet-card.selected {

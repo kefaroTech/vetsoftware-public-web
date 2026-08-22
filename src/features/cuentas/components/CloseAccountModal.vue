@@ -87,7 +87,7 @@ function onShellClose() {
           <button
             type="button"
             class="destopt"
-            :class="motivo === 'COBRADA' ? 'ds-tone--accent-outline' : 'destopt-off'"
+            :class="motivo === 'COBRADA' ? 'ds-tone--accent-outline' : 'destopt-off ds-field-rest'"
             @click="motivo = 'COBRADA'"
           >
             <span
@@ -103,7 +103,9 @@ function onShellClose() {
           <button
             type="button"
             class="destopt"
-            :class="motivo === 'CANCELADA' ? 'ds-tone--accent-outline' : 'destopt-off'"
+            :class="
+              motivo === 'CANCELADA' ? 'ds-tone--accent-outline' : 'destopt-off ds-field-rest'
+            "
             @click="motivo = 'CANCELADA'"
           >
             <span
@@ -324,15 +326,14 @@ function onShellClose() {
     border-color 0.12s,
     background 0.12s;
 }
-.destopt-off {
-  background: var(--warm-50);
-  border-color: var(--warm-200);
-}
 
 /* El `:hover` se acota al reposo: la opción activa ya no compite con él y
-   conserva su amatista-500, igual que cuando ganaba por orden de aparición. */
+   conserva su amatista-500, igual que cuando ganaba por orden de aparición.
+
+   A11Y-09: `--amatista-300` daba 2,02:1, por debajo del reposo `--warm-450`
+   (3,55:1) — el hover apagaba el borde. `--amatista-450` da 3,77:1. */
 .destopt-off:hover {
-  border-color: var(--amatista-300);
+  border-color: var(--amatista-450);
 }
 .do-check {
   width: 18px;
