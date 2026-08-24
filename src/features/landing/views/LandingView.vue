@@ -87,7 +87,7 @@ const trust = [
       </h1>
 
       <p class="land-sub pub-reveal" style="animation-delay: 0.19s">
-        Administra clínicas, empleados, membresías y permisos desde una sola plataforma clara y
+        Administra clínicas, empleados, suscripciones y permisos desde una sola plataforma clara y
         segura. Comienza en segundos.
       </p>
 

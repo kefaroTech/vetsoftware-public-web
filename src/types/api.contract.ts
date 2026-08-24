@@ -300,11 +300,14 @@ type NullableWhereRequired<Local, Name extends keyof Schemas> = {
  *
  * <p>Este era el agujero del propio guardián. Los cuatro conjuntos de arriba cruzan todos por
  * `keyof Local`, así que solo saben hablar de campos que este repositorio ya nombra: **omitir**
- * un campo entero les resultaba invisible. `CreateMembershipRequest` declaraba `name` y
- * `status`, el contrato traía además `mandatory`, y
- * `MatchesContract<CreateMembershipRequest, 'CreateMembershipRequest'>` pasaba en verde mientras
- * cada membresía creada o editada desde la consola se guardaba con `mandatory = false` sin que
- * nadie lo eligiera ni lo viera.
+ * un campo entero les resultaba invisible. La petición de crear membresía declaraba `name` y
+ * `status`, el contrato traía además `mandatory`, y su atadura pasaba en verde mientras cada
+ * membresía creada o editada desde la consola se guardaba con `mandatory = false` sin que nadie
+ * lo eligiera ni lo viera.
+ *
+ * <p>Aquel esquema ya no existe: el modelo de membresías se sustituyó por el de suscripciones.
+ * El mecanismo sí sigue haciendo falta —el mismo fallo reaparece cada vez que el backend añade
+ * un `boolean` primitivo a una petición—, y por eso el ejemplo se conserva.
  *
  * <p>Y no basta con mirar los `required` del contrato, que es lo que hace `MissingRequiredFields`:
  * `mandatory` **no** es `required` allí —springdoc solo marca lo que lleva `@NotNull` o

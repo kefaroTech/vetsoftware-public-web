@@ -136,7 +136,8 @@ export const PERMISSIONS = {
   CHARGE_OPEN_ACCOUNT_VOID: 'chargeOpenAccount.delete',
 
   // Facturación electrónica (DIAN) — módulo premium. El front muestra/usa el módulo
-  // SOLO si el usuario tiene `electronicbilling.create` (submódulo BILLING de la membresía).
+  // SOLO si el usuario tiene `electronicbilling.create`, que el backend deriva hoy de los
+  // entitlements de la suscripción de la empresa.
   // Los permisos granulares de abajo se conservan para usos puntuales.
   ELECTRONIC_BILLING_CREATE: 'electronicbilling.create',
   ELECTRONIC_DOCUMENT_READ: 'electronicDocument.read',
