@@ -11,8 +11,6 @@ export interface CompanyResponse {
   address: string | null
   contactNumber: string | null
   city: { id: number; name: string }
-  /** TR-01: declaraba un `status` que el resumen del backend no trae; valía `undefined`. */
-  membership: { id: number; name: string }
   createdDate: string
   enabled: boolean
 }

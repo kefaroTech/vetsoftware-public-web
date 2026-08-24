@@ -43,6 +43,10 @@ export interface SubModuleResponse {
   name: string
   code: string
   module: ModuleRef
+  /** Si el submodulo se puede vender como linea de una suscripcion. */
+  sellable: boolean
+  /** Si el submodulo admite concederse en modo solo lectura. */
+  readOnlyCapable: boolean
   /** TR-01: el backend siempre lo devuelve (columna NOT NULL); no era opcional. */
   createdDate: string
 }
