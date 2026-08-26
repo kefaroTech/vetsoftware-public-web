@@ -109,8 +109,9 @@ function quantityOf(p: ProductResponse): number {
 async function reloadStock() {
   // loadStock ya traga errores (incl. 403 sin permiso): deja el mapa vacío. Solo tiene sentido si puede leer.
   if (!canReadStock.value) return
-  await store.loadStock(branchId.value)
-  await store.loadInventoryInsights(branchId.value)
+  // Saldo e insights solo dependen de la sede, no uno del otro: a la vez, la
+  // cabecera de inventario tarda lo que el más lento y no la suma (#254).
+  await Promise.all([store.loadStock(branchId.value), store.loadInventoryInsights(branchId.value)])
 }
 
 /** Lotes por vencer (≤30 días o vencidos) de la sede activa. */
@@ -118,8 +119,11 @@ const expiringLots = computed(() => (showStock.value ? (store.alerts.value?.expi
 const totalValue = computed(() => (showStock.value ? (store.valuation.value?.totalValue ?? 0) : 0))
 
 onMounted(async () => {
-  await store.reload()
-  await reloadStock()
+  // Catálogo y saldo por sede son independientes: el mapa de stock se indexa por
+  // id de producto y no necesita la lista cargada para pedirse (#254). Ninguna de
+  // las dos propaga error —cada una deja su estado vacío— así que `all` no puede
+  // tumbar la vista por un fallo parcial.
+  await Promise.all([store.reload(), reloadStock()])
 })
 // Regla: recargar al cambiar de sede activa.
 watch(branchId, () => reloadStock())

@@ -54,14 +54,15 @@ async function load(rawId: string): Promise<void> {
       return
     }
     account.value = fresh
-    await store.loadDetail(id)
-    try {
-      const animals = await animalApi.listByOwner(fresh.owner.id)
-      ownerPets.value = animals.map((a) => ({ id: a.id, name: a.name }))
-    } catch {
-      // Sin el listado de mascotas el detalle sigue siendo utilizable.
-      ownerPets.value = []
-    }
+    // Detalle y mascotas del propietario dependen de la cuenta que ya llegó, no
+    // una de la otra: a la vez (#254). La tolerancia por rama se conserva tal
+    // cual —sin el listado de mascotas el detalle sigue siendo utilizable— con
+    // el `catch` pegado a SU promesa, para que no tumbe el detalle.
+    const [, animals] = await Promise.all([
+      store.loadDetail(id),
+      animalApi.listByOwner(fresh.owner.id).catch(() => []),
+    ])
+    ownerPets.value = animals.map((a) => ({ id: a.id, name: a.name }))
   } finally {
     loading.value = false
   }

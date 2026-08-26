@@ -52,14 +52,16 @@ async function hydrate() {
       hydrateError.value = 'Ruta inválida.'
       return
     }
-    if (!state.owner || state.owner.id !== ownerIdParam.value) {
-      const o = await ownerApi.findById(ownerNum)
-      setOwner(mapOwnerResponse(o))
-    }
-    if (!state.pet || state.pet.id !== petIdParam.value) {
-      const a = await animalApi.findById(petNum)
-      setPet(mapAnimalResponse(a))
-    }
+    // Propietario y mascota son dos lecturas independientes; en un enlace directo
+    // o un F5 faltan las dos y en serie se pagaba la suma (#254). Las dos son
+    // imprescindibles para pintar la pantalla, así que `all` y no `allSettled`:
+    // el `catch` de abajo sigue siendo el mismo camino de error que ya había.
+    const [o, a] = await Promise.all([
+      !state.owner || state.owner.id !== ownerIdParam.value ? ownerApi.findById(ownerNum) : null,
+      !state.pet || state.pet.id !== petIdParam.value ? animalApi.findById(petNum) : null,
+    ])
+    if (o) setOwner(mapOwnerResponse(o))
+    if (a) setPet(mapAnimalResponse(a))
   } catch {
     hydrateError.value = 'No se pudo cargar la mascota.'
   } finally {

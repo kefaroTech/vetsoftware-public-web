@@ -185,12 +185,19 @@ const cityOptions = computed<Opt[]>(() =>
 )
 
 onMounted(async () => {
-  if (recaptchaEl.value) await recaptcha.render(recaptchaEl.value)
+  // El widget de reCAPTCHA y el listado de países son independientes: uno baja un
+  // script de un tercero (que en una red que lo bloquea tarda hasta su timeout) y
+  // el otro es una petición nuestra. En serie, el selector de país se quedaba
+  // vacío todo ese rato sin motivo (#254). `recaptcha.render()` no rechaza nunca
+  // —traga su fallo en `failed`/`failureMessage`, que el marcado ya pinta— así
+  // que esperarlo al final no cambia ningún mensaje de error visible.
+  const recaptchaListo = recaptchaEl.value ? recaptcha.render(recaptchaEl.value) : Promise.resolve()
   try {
     countries.value = await locationsApi.listCountries()
   } catch (e) {
     globalError.value = getProblemDetailMessage(e, 'No se pudieron cargar los países')
   }
+  await recaptchaListo
 })
 
 watch(

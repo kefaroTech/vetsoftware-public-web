@@ -334,10 +334,16 @@ export const useCuentasStore = defineStore('cuentas', () => {
     }
   }
 
+  /**
+   * Cabecera + detalle de la cuenta. Las dos solo dependen del id de la cuenta y
+   * no una de la otra, así que van a la vez: en serie el POS pagaba la suma tras
+   * CADA cargo y cada abono (#254). `loadDetail` no propaga error —lo publica en
+   * `error`— así que el único rechazo que puede ver quien llama sigue siendo el
+   * de `findById`, exactamente el mismo de antes.
+   */
   async function refreshAccount(accountId: number) {
-    const fresh = await openAccountApi.findById(accountId)
+    const [fresh] = await Promise.all([openAccountApi.findById(accountId), loadDetail(accountId)])
     upsertAccount(fresh)
-    await loadDetail(accountId)
   }
 
   async function addProductCharge(
