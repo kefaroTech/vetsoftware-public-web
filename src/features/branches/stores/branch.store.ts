@@ -97,8 +97,14 @@ export const useBranchStore = defineStore('branch', () => {
     // listado de sedes. `refreshMe()` respeta su propia ventana de frescura y deduplica, así
     // que en la práctica no añade una petición; sin él, un arranque en frío resolvería con
     // `me` a null y respondería «no hay sede» habiéndola.
-    await auth.refreshMe()
-    await fetchAll()
+    //
+    // Y esperadas A LA VEZ: son independientes entre sí (ninguna necesita el
+    // resultado de la otra) y son justo las dos peticiones que el interceptor de
+    // sede excluye por construcción, así que lanzarlas juntas no puede hacer que
+    // se esperen a sí mismas. En serie, esto costaba la suma de las dos (#254).
+    // `fetchAll()` no rechaza nunca (traga su error en `error`), así que el único
+    // rechazo posible sigue siendo el de `refreshMe()`, igual que antes.
+    await Promise.all([auth.refreshMe(), fetchAll()])
     resolveSelectedBranch()
     return selectedBranchId.value
   }

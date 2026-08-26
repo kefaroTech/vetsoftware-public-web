@@ -258,20 +258,29 @@ export const useTiendaStore = defineStore('tienda', () => {
     return stockKnownIds.value === null || stockKnownIds.value.has(productId)
   }
 
+  /**
+   * Saldo + insights de una sede tras una escritura de inventario.
+   *
+   * Las dos recargas dependen de la escritura —que ya terminó— pero NO una de la
+   * otra, así que van a la vez y la espera pasa de la suma al máximo (#254).
+   * Ninguna de las dos propaga error: cada una traga el suyo y deja su parte
+   * vacía, así que `all` aquí no puede descartar el resultado de la otra.
+   */
+  function reloadBranchStock(branchId: number | null): Promise<void> {
+    return Promise.all([loadStock(branchId), loadInventoryInsights(branchId)]).then(() => undefined)
+  }
+
   async function receiveStock(payload: ReceiveStockPayload): Promise<void> {
     await inventoryApi.receive(payload)
-    await loadStock(payload.branchId ?? stockBranchId.value)
-    await loadInventoryInsights(payload.branchId ?? stockBranchId.value)
+    await reloadBranchStock(payload.branchId ?? stockBranchId.value)
   }
   async function adjustStock(payload: AdjustStockPayload): Promise<void> {
     await inventoryApi.adjust(payload)
-    await loadStock(payload.branchId ?? stockBranchId.value)
-    await loadInventoryInsights(payload.branchId ?? stockBranchId.value)
+    await reloadBranchStock(payload.branchId ?? stockBranchId.value)
   }
   async function transferStock(payload: TransferStockPayload): Promise<void> {
     await inventoryApi.transfer(payload)
-    await loadStock(stockBranchId.value)
-    await loadInventoryInsights(stockBranchId.value)
+    await reloadBranchStock(stockBranchId.value)
   }
   async function setMinStock(
     productId: number,
@@ -290,32 +299,29 @@ export const useTiendaStore = defineStore('tienda', () => {
       alerts.value = null
       return
     }
-    try {
-      const v = await inventoryApi.valuation(branchId, turno.signal)
-      if (turno.isCurrent()) valuation.value = v
-    } catch {
-      if (turno.isCurrent()) valuation.value = null
-    }
-    try {
-      const a = await inventoryApi.alerts(branchId, 30, turno.signal)
-      if (turno.isCurrent()) alerts.value = a
-    } catch {
-      if (turno.isCurrent()) alerts.value = null
-    }
+    // Las dos son independientes y cada una TOLERA su propio fallo (un 403 de
+    // valuación no debe borrar las alertas), así que `allSettled` y no `all`:
+    // con `all` el primer rechazo descartaría el resultado de la otra y la
+    // pantalla perdería media cabecera por un permiso que sí tiene (#254).
+    const [v, a] = await Promise.allSettled([
+      inventoryApi.valuation(branchId, turno.signal),
+      inventoryApi.alerts(branchId, 30, turno.signal),
+    ])
+    if (!turno.isCurrent()) return
+    valuation.value = v.status === 'fulfilled' ? v.value : null
+    alerts.value = a.status === 'fulfilled' ? a.value : null
   }
 
   /** F6: consumo clínico manual; recarga stock + insights de la sede. */
   async function consumeStock(payload: ConsumeStockPayload): Promise<void> {
     await inventoryApi.consume(payload)
-    await loadStock(payload.branchId ?? stockBranchId.value)
-    await loadInventoryInsights(payload.branchId ?? stockBranchId.value)
+    await reloadBranchStock(payload.branchId ?? stockBranchId.value)
   }
 
   /** Conteo físico/cíclico: concilia (genera ADJUSTMENT_IN/OUT por diferencia) y recarga stock + insights. */
   async function recordCount(payload: RecordCountPayload): Promise<InventoryCountView> {
     const view = await inventoryApi.recordCount(payload)
-    await loadStock(payload.branchId ?? stockBranchId.value)
-    await loadInventoryInsights(payload.branchId ?? stockBranchId.value)
+    await reloadBranchStock(payload.branchId ?? stockBranchId.value)
     return view
   }
 
