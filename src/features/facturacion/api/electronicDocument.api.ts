@@ -8,6 +8,7 @@ import type {
   ElectronicDocumentResponse,
   ElectronicDocumentType,
   EmitElectronicDocumentRequest,
+  IssueElectronicCreditNoteRequest,
 } from '../types/facturacion'
 
 /** Tope de pagina que acepta el backend. */
@@ -98,9 +99,12 @@ export const electronicDocumentApi = {
   },
 
   async creditNote(id: number, reason: CreditNoteReason): Promise<ElectronicDocumentResponse> {
+    // El cuerpo viaja tipado por el esquema del contrato, no como objeto anonimo:
+    // asi un renombrado de `reason` en el backend rompe aqui al compilar (TR-01).
+    const body: IssueElectronicCreditNoteRequest = { reason }
     const { data } = await http.post<ElectronicDocumentResponse>(
       `/electronic-documents/${id}/credit-note`,
-      { reason },
+      body,
       { timeout: DIAN_TIMEOUT_MS },
     )
     return data

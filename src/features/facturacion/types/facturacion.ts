@@ -218,6 +218,23 @@ export interface EmitElectronicDocumentRequest {
   finalConsumer: boolean
 }
 
+/**
+ * Cuerpo de `POST /electronic-documents/{id}/credit-note` (esquema
+ * `IssueElectronicCreditNoteRequest`).
+ *
+ * <p>Hasta ahora este cuerpo se escribia en linea dentro del cliente y no tenia atadura posible:
+ * el contrato publicaba bajo ese endpoint el `IssueCreditNoteRequest` de la facturacion de la
+ * plataforma —`{ chargeIds }`—, que describe otra operacion. Con esquema propio ya existe el tipo
+ * al que atarse, y renombrar `reason` en el `record` del backend pasa a romper la compilacion
+ * aqui en vez de emitir una nota credito sin concepto DIAN.
+ *
+ * <p>`partialAmount` ausente ⇒ nota TOTAL (anulacion); presente ⇒ nota PARCIAL por ese importe.
+ */
+export interface IssueElectronicCreditNoteRequest {
+  reason: CreditNoteReason
+  partialAmount?: number
+}
+
 // ── Configuración: proveedor DIAN ────────────────────────────────────────────
 
 export interface DianProviderConfigResponse {
