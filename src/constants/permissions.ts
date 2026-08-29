@@ -181,6 +181,25 @@ export const PERMISSIONS = {
   QUOTE_READ: 'quote.read',
   QUOTE_ACCEPT: 'quote.accept',
   QUOTE_REJECT: 'quote.reject',
+  /**
+   * Autocontratación: pedir la propia oferta (`POST /quotes/self-serve`, sembrado por el
+   * changeset 378 con backfill sobre las empresas existentes).
+   *
+   * **Lo usa el paso 6 del embudo** (`ContratarView`), que esconde el botón de confirmar cuando
+   * el rol no lo tiene. El gate del servidor vive en el puerto y no en el controlador:
+   * `hasRole('SYSTEM') or (hasAuthority('quote.request') and @authz.isMyCompany(#command.companyId))`.
+   * La segunda mitad se cumple sola —la empresa no viaja en el cuerpo, la pone el controlador
+   * desde el principal—, así que para un empleado del tenant este permiso es la puerta entera.
+   *
+   * <p>**Es de nivel `FULL`, y eso hay que tenerlo delante al usarlo.** No termina en `.read`,
+   * así que el backfill de la 378 no lo concedió a los roles `READ_ONLY`: una empresa en mora no
+   * lo tiene. La ausencia es intencionada y significa «no puede contratar ahora mismo», no «hay
+   * un permiso mal sembrado» — la pantalla la trata como estado de cuenta, no como error.
+   *
+   * <p>Lo que este permiso **no** cubre: aceptar la oferta (`quote.accept`) y encender los
+   * módulos, que hoy no lo hace nadie.
+   */
+  QUOTE_REQUEST: 'quote.request',
   LEGAL_DOCUMENT_READ: 'legaldocument.read',
 } as const
 

@@ -24,8 +24,15 @@ import type { TaxTreatment } from '../types/suscripcion.types'
  * render, y una región viva sobre contenido inicial o se anuncia dos veces o no se anuncia
  * ninguna, según el lector.
  */
+/*
+ * Decía «Aquí las consultas **y las descargas**», y no hay ninguna descarga: cero ocurrencias de
+ * `descarg`, `download` o `.pdf` en toda la feature. Prometer un botón que no existe es
+ * exactamente el fallo que esta frase existía para evitar, con otro verbo — y quien viene a
+ * buscar su factura en PDF se va sin ella y sin saber dónde está. Implementarla necesita backend
+ * (el documento fiscal lo emite el proveedor DIAN); quitar la promesa, no.
+ */
 export const CABECERA_SOLO_LECTURA =
-  'Las cuentas de cobro las emite VetSoftware. Aquí las consultas y las descargas; no se registran pagos desde esta pantalla.'
+  'Las cuentas de cobro las emite VetSoftware. Aquí las consultas; no se registran pagos desde esta pantalla.'
 
 export const SIN_DOCUMENTOS =
   'Todavía no tienes cuentas de cobro. Aparecerán aquí en cuanto se emita la primera.'
@@ -34,8 +41,14 @@ export const SIN_DOCUMENTOS =
  * La separación devengado / facturado / cobrado de la consola, renombrada entera. La palabra
  * «devengado» no aparece en ninguna pantalla del tenant.
  */
+/*
+ * `acumulado: 'Lo que se está acumulando este mes'` vivía aquí sin un solo consumidor. Se borra
+ * en vez de conectarse, y el motivo es que no hay dónde: rotula el bloque de lo DEVENGADO, y el
+ * tenant no tiene ningún listado de cargos aún no facturados —los cargos se leen por documento
+ * (`GET /subscription-billing/charges?billingDocumentId=…`), no por periodo abierto—. Un rótulo
+ * esperando a una pantalla que nadie ha pedido es deuda, no previsión.
+ */
 export const MONEY_LABELS = {
-  acumulado: 'Lo que se está acumulando este mes',
   facturado: 'Tus cuentas de cobro',
   cobrado: 'Tus pagos',
 } as const

@@ -33,7 +33,8 @@ const {
   totalMostrado,
   avisoImporte,
   vigenciaActual,
-  puedeResponder,
+  puedeAceptar,
+  puedeRechazar,
   loadDetalle,
   aceptar,
   rechazar,
@@ -160,11 +161,20 @@ async function onRechazar() {
         </dl>
       </SectionCard>
 
-      <div v-if="puedeResponder" class="ds-actions">
-        <button type="button" class="ds-btn ds-btn--neutral ds-btn--snug" @click="onRechazar">
+      <!-- Cada botón tras SU permiso: `quote.accept` y `quote.reject` son distintos y un rol
+           puede tener uno y no el otro. El gate de estado (SENT + vigente) sigue dentro de los
+           dos. -->
+      <div v-if="puedeAceptar || puedeRechazar" class="ds-actions">
+        <button
+          v-if="puedeRechazar"
+          type="button"
+          class="ds-btn ds-btn--neutral ds-btn--snug"
+          @click="onRechazar"
+        >
           Rechazar propuesta
         </button>
         <button
+          v-if="puedeAceptar"
           type="button"
           class="ds-btn ds-btn--primary ds-btn--snug"
           @click="aceptarAbierto = true"

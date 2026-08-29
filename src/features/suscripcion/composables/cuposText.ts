@@ -115,10 +115,14 @@ export interface AvisoCupo {
   resto: string
 }
 
-/** El aviso entero en una línea. Para pruebas y para el nombre accesible. */
-export function avisoTexto(aviso: AvisoCupo): string {
-  return aviso.resto ? `${aviso.fuerte} ${aviso.resto}` : aviso.fuerte
-}
+/*
+ * Aquí vivía `avisoTexto(aviso)`, que unía `fuerte` y `resto` en una línea «para pruebas y para
+ * el nombre accesible». Se borra: el nombre accesible nunca lo necesitó —`CupoCard` pinta las
+ * dos partes dentro del mismo `<span>`, así que el lector ya las lee seguidas— y su único
+ * llamante eran sus propias pruebas. Una función de producción cuyo único consumidor es el test
+ * que la cubre no está cubierta: está sola. El helper equivalente vive ahora en
+ * `tests/unit/suscripcion-cupos.spec.ts`, que es donde hacía falta.
+ */
 
 function restantesTexto(limite: number, usado: number, nombre: string): string {
   return `${Math.max(0, limite - usado)} ${nombre}`

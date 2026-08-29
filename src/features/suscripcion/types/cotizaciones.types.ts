@@ -1,9 +1,13 @@
 /**
  * Cotizaciones (propuestas) y su aceptación.
  *
- * <p><b>La plataforma propone, la clínica acepta.</b> `POST /quotes` y `GET /quotes/platform`
- * son de sistema: el tenant no se cotiza solo ni añade líneas. Por eso aquí hay tipos de
- * lectura y un único tipo de petición, el de aceptar.
+ * <p><b>Hay dos caminos y no se mezclan.</b> El de plataforma —`POST /quotes`,
+ * `GET /quotes/platform`— sigue siendo de sistema: ahí viajan `priceListId`, `validUntil`,
+ * `trialDays` y el descuento de cada línea, y por eso el tenant no lo alcanza. El de
+ * autoservicio —`POST /quotes/self-serve`— sí lo alcanza la clínica, y su cuerpo no declara
+ * **ni un solo campo económico**: solo qué artículo y cuántos. Un `@PreAuthorize` evalúa quién
+ * llama y no qué trae el cuerpo, así que la garantía no es un gate sino el tipo, y por eso son
+ * dos peticiones distintas en vez de una con permisos distintos.
  */
 
 /**
@@ -124,4 +128,52 @@ export interface QuoteResponse {
  */
 export interface AcceptQuoteRequest {
   acceptedByEmail: string
+}
+
+/**
+ * Una línea de la autocontratación: **qué artículo y cuántos**, y nada más.
+ *
+ * <p>`code` es el rótulo del catálogo público, no un id. El servidor lo traduce contra el mismo
+ * conjunto que publica `GET /plans` y responde lo mismo para un código inexistente que para uno
+ * interno, así que este campo no sirve para enumerar el catálogo. Máximo 50 caracteres: es el
+ * ancho exacto de `catalog_items.code`.
+ *
+ * <p>`quantity` es la cantidad **contratada**, no la extra: el servidor resta lo que el artículo
+ * ya incluye (`TieredPrice.of` → `billableQuantity`) antes de repartir por tramos. Restarla
+ * aquí la restaría dos veces.
+ *
+ * <p>El contrato lo declara opcional porque `int` primitivo no lleva `@NotNull`; aquí es
+ * **requerido** a propósito, y esa estrechez es legítima: el borde REST lo valida `@Positive`, y
+ * un cuerpo sin `quantity` llega a Java como `0` y se rechaza con un 400. Declararlo opcional
+ * dejaría compilar exactamente esa petición.
+ *
+ * <p>Espeja `SelfServeQuoteLineRequest`.
+ */
+export interface SelfServeQuoteLineRequest {
+  code: string
+  quantity: number
+}
+
+/**
+ * `POST /quotes/self-serve`. La clínica pide su propia oferta y la recibe ya emitida (`SENT`).
+ *
+ * <p><b>No lleva `companyId`</b> —la pone el servidor desde el principal— <b>ni ningún término
+ * económico</b>: ni tarifa, ni vigencia, ni descuento, ni días de prueba. No es una omisión que
+ * el servidor valide después: son campos que el tipo no tiene, así que no hay dónde escribirlos.
+ *
+ * <p>`billingCycle` **ya no es un estrechamiento local**: el contrato publica el esquema como
+ * `enum: ["MONTHLY","ANNUAL"]` (springdoc lo deriva del `@Pattern(regexp = "MONTHLY|ANNUAL")`
+ * del DTO), así que esta unión es una copia del contrato y no una decisión de este repositorio.
+ * Aquí decía lo contrario: que un tercer ciclo se colaría en silencio porque el esquema seguiría
+ * diciendo `string` y la atadura no miraría. Ya no es verdad — `MismatchedFields` compara la
+ * unión contra la del contrato, así que **un tercer ciclo en el backend rompe este build**, con
+ * el nombre del campo a la vista, y la unión se amplía aquí para volver a compilar.
+ *
+ * <p>Espeja `SelfServeQuoteRequest`.
+ */
+export interface SelfServeQuoteRequest {
+  /** Llave de idempotencia del cliente. Máximo 64 caracteres. */
+  clientRequestId: string
+  billingCycle: 'MONTHLY' | 'ANNUAL'
+  lines: SelfServeQuoteLineRequest[]
 }

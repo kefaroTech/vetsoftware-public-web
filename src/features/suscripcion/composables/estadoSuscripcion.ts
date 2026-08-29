@@ -22,6 +22,30 @@ const MS_PER_DAY = 86_400_000
 
 export type EstadoTono = 'none' | 'warning' | 'error'
 
+/**
+ * Si la clínica tiene hoy un plan que contar, **con la tercera rama que importa**.
+ *
+ * <p>`DESCONOCIDO` no es un adorno: `GET /subscriptions/current` responde 403 a las empresas cuyo
+ * rol no incluye `subscription.read` (migración 377), y eso **no es** «no tiene plan». Aplastar
+ * los dos a un `boolean` es lo que hacía que a una clínica con plan se le ofreciera contratar
+ * otro solo porque su ADMIN no podía leerlo. Un 404 —o una respuesta vacía— sí es `SIN_PLAN`.
+ */
+export type EstadoPlanActual = 'CON_PLAN' | 'SIN_PLAN' | 'DESCONOCIDO'
+
+/**
+ * Los estados en los que ya hay un contrato vivo y **no hay nada que contratar**.
+ *
+ * <p>`CANCELLED` y `EXPIRED` quedan fuera a propósito: son planes terminados, y una clínica que
+ * terminó el suyo tiene todo el derecho a contratar de nuevo. Bloquearla ahí sería el mismo
+ * fallo con el signo cambiado.
+ */
+const VIGENTES: readonly SubscriptionStatus[] = ['TRIALING', 'ACTIVE', 'PAST_DUE', 'READ_ONLY']
+
+/** `true` cuando el plan que devuelve el servidor sigue vivo. */
+export function planVigente(sub: SubscriptionResponse | null | undefined): boolean {
+  return sub != null && VIGENTES.includes(sub.status)
+}
+
 export interface EstadoAccion {
   label: string
   routeName: string
@@ -31,8 +55,20 @@ export interface EstadoPlan {
   /** Rótulo corto para la píldora. Siempre acompañado de `frase`: nunca va solo. */
   rotulo: string
   /**
-   * La frase de apoyo, **obligatoria**. Un fondo ámbar no se puede leer por teléfono, que es
-   * exactamente lo que hace la auxiliar cuando llama a soporte.
+   * **Lo que va en negrita, y por eso es lo que tranquiliza y no lo que amenaza.**
+   *
+   * <p>El banner ponía en `<strong>` el rótulo del estado —«Pago pendiente.»— y dejaba la
+   * tranquilidad tercera y sin peso. El modelo garantiza que **nunca hay un corte total**: abrir
+   * con la amenaza asusta a una clínica que puede seguir atendiendo con normalidad, y una
+   * clínica asustada deja de atender para llamar por teléfono. Misma forma `fuerte`/`resto` que
+   * ya usa `AvisoCupo` en `cuposText.ts`.
+   *
+   * <p>El rótulo sigue existiendo para la píldora de «Mi plan», que es donde sí es un dato.
+   */
+  fuerte: string
+  /**
+   * El resto de la explicación, **obligatorio**. Un fondo ámbar no se puede leer por teléfono,
+   * que es exactamente lo que hace la auxiliar cuando llama a soporte.
    */
   frase: string
   tono: EstadoTono
@@ -113,14 +149,16 @@ function enPrueba(sub: SubscriptionResponse, today: string): EstadoPlan {
   if (restantes != null && restantes <= TRIAL_WARN_DAYS) {
     return {
       rotulo: ROTULOS.TRIALING,
-      frase: `Tu prueba termina el ${fin}. Después, el servicio pasa a cobrarse; no se corta nada por sí solo.`,
+      fuerte: `No se corta nada por sí solo.`,
+      frase: `Tu prueba termina el ${fin}. Después, el servicio pasa a cobrarse.`,
       tono: 'warning',
       accion: VER_PLAN,
     }
   }
   return {
     rotulo: ROTULOS.TRIALING,
-    frase: `Estás probando el servicio hasta el ${fin}.`,
+    fuerte: 'Estás probando el servicio.',
+    frase: `Tienes todo disponible hasta el ${fin}.`,
     tono: 'none',
     accion: null,
   }
@@ -129,14 +167,20 @@ function enPrueba(sub: SubscriptionResponse, today: string): EstadoPlan {
 function enMora(sub: SubscriptionResponse, today: string): EstadoPlan {
   const restantes = graceDaysLeft(sub, today)
   const desde = formatDateShort(sub.pastDueSince)
-  // El orden de las frases NO es cosmético: «sigues trabajando» va PRIMERO porque es lo que
-  // quita el pánico, y el pánico es lo que hace que alguien deje de atender para llamar.
+  // El orden NO es cosmético, y aquí estaba escrito al revés de como lo pide §8.1 de la
+  // especificación (su §6.1 se contradice y la implementación copió la mitad equivocada):
+  // «Sigues trabajando con normalidad» va PRIMERO **y en negrita**, porque es lo que quita el
+  // pánico, y el pánico es lo que hace que alguien deje de atender para llamar por teléfono. El
+  // modelo garantiza que nunca hay corte total; abrir con la deuda promete un castigo que no
+  // existe. El caso `READ_ONLY` de más abajo ya estaba bien escrito y es el patrón que se copia.
+  const SIGUES = 'Sigues trabajando con normalidad.'
   if (restantes == null) {
     return {
       rotulo: ROTULOS.PAST_DUE,
+      fuerte: SIGUES,
       frase: sub.pastDueSince
-        ? `Tienes un saldo pendiente desde el ${desde}. Sigues trabajando con normalidad.`
-        : 'Tienes un saldo pendiente. Sigues trabajando con normalidad.',
+        ? `Tienes un saldo pendiente desde el ${desde}.`
+        : 'Tienes un saldo pendiente.',
       tono: 'warning',
       accion: VER_COBROS,
     }
@@ -144,14 +188,16 @@ function enMora(sub: SubscriptionResponse, today: string): EstadoPlan {
   if (restantes === 0) {
     return {
       rotulo: ROTULOS.PAST_DUE,
-      frase: `Tienes un saldo pendiente desde el ${desde} y se agotaron los días de cortesía. Sigues trabajando, pero conviene ponerse al día ya.`,
+      fuerte: SIGUES,
+      frase: `Tienes un saldo pendiente desde el ${desde} y se agotaron los días de cortesía: conviene ponerse al día ya.`,
       tono: 'error',
       accion: VER_COBROS,
     }
   }
   return {
     rotulo: ROTULOS.PAST_DUE,
-    frase: `Tienes un saldo pendiente desde el ${desde}. Sigues trabajando con normalidad. Te quedan ${dias(restantes)} de cortesía.`,
+    fuerte: SIGUES,
+    frase: `Tienes un saldo pendiente desde el ${desde}. Te quedan ${dias(restantes)} de cortesía.`,
     tono: 'warning',
     accion: VER_COBROS,
   }
@@ -174,7 +220,8 @@ export function estadoPlan(
     case 'ACTIVE':
       return {
         rotulo: ROTULOS.ACTIVE,
-        frase: `Todo en orden. El próximo cobro es el ${formatDateShort(sub.nextBillingDate)}.`,
+        fuerte: 'Todo en orden.',
+        frase: `El próximo cobro es el ${formatDateShort(sub.nextBillingDate)}.`,
         tono: 'none',
         accion: null,
       }
@@ -185,15 +232,17 @@ export function estadoPlan(
         rotulo: ROTULOS.READ_ONLY,
         // Las tres partes son obligatorias: qué conserva (consulta e impresión, INCLUIDA la
         // historia clínica), qué pierde, y cómo vuelve. Recortar cualquiera deja a alguien
-        // contándolo por teléfono como si fuera otra cosa.
+        // contándolo por teléfono como si fuera otra cosa. Lo que conserva va en negrita.
+        fuerte: 'Puedes consultar e imprimir todo lo tuyo, incluida la historia clínica.',
         frase:
-          'Puedes consultar e imprimir todo lo tuyo, incluida la historia clínica. Por ahora no puedes crear ni modificar. Se reactiva en cuanto se regularice el pago.',
+          'Por ahora no puedes crear ni modificar. Se reactiva en cuanto se regularice el pago.',
         tono: 'error',
         accion: VER_COBROS,
       }
     case 'CANCELLED':
       return {
         rotulo: ROTULOS.CANCELLED,
+        fuerte: 'Lo que ya registraste sigue siendo tuyo.',
         frase: `Tu plan quedó cancelado el ${formatDateShort(sub.cancelEffectiveDate)}.`,
         tono: 'error',
         accion: null,
@@ -201,6 +250,7 @@ export function estadoPlan(
     case 'EXPIRED':
       return {
         rotulo: ROTULOS.EXPIRED,
+        fuerte: 'Lo que ya registraste sigue siendo tuyo.',
         frase: `Tu plan terminó el ${formatDateShort(sub.currentPeriodEnd)} y no se renovó.`,
         tono: 'error',
         accion: null,

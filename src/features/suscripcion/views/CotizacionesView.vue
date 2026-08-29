@@ -16,6 +16,7 @@ import {
   quoteStatusLabel,
   vigencia,
 } from '../composables/cotizacionesText'
+import type { PageResponse } from '@/types/pagination'
 import type { QuoteSummaryResponse } from '../types/cotizaciones.types'
 
 /**
@@ -28,12 +29,67 @@ import type { QuoteSummaryResponse } from '../types/cotizaciones.types'
  */
 const route = useRoute()
 
+/**
+ * Tamaño con el que se BARRE el servidor. No es el de la página que se pinta: es el tope de
+ * filas por petición del backend, para drenar en el menor número de viajes posible.
+ */
+const BARRIDO = 200
+
+/**
+ * Cota del barrido. Una clínica tiene propuestas de su propio plan —decenas, no miles—, así que
+ * 2.000 no se alcanza en la práctica. Existe para que un backend que devuelva `totalPages` mal
+ * no deje un bucle vivo, no porque se espere llegar.
+ */
+const BARRIDO_MAX_PAGINAS = 10
+
+/**
+ * El paginador MENTÍA, y este es el arreglo.
+ *
+ * <p>`DRAFT` se filtraba **en el cliente, después de paginar**, mientras el paginador seguía
+ * usando el `totalElements` del servidor. Consecuencia: una página podía salir entera vacía
+ * —«Todavía no tienes propuestas»— con el pie diciendo «Mostrando 21–40 de 47». Y no hay forma
+ * de arreglarlo desde la petición: `GET /quotes` (`listMine`) no acepta ningún filtro de estado,
+ * solo `page` y `pageSize`.
+ *
+ * <p>Así que el filtro se aplica ANTES de contar: se drena el listado del servidor con el tope
+ * de 200 filas —releyendo `totalPages` de cada respuesta, como manda el repositorio, y nunca
+ * calculándolo del tamaño pedido—, se quitan los borradores y se sirve la página desde lo que
+ * queda. El total que se anuncia es entonces el número de propuestas que la clínica puede ver,
+ * y una página nunca sale vacía con un número al lado.
+ *
+ * <p>El día que `listMine` acepte `status`, esto se sustituye por un parámetro y desaparece.
+ */
+async function paginaListable(
+  page: number,
+  pageSize: number,
+): Promise<PageResponse<QuoteSummaryResponse>> {
+  const todas: QuoteSummaryResponse[] = []
+  let pagina = 0
+  let totalPaginas = 1
+  while (pagina < totalPaginas && pagina < BARRIDO_MAX_PAGINAS) {
+    const respuesta = await cotizacionesApi.listAll(pagina, BARRIDO)
+    todas.push(...respuesta.content)
+    totalPaginas = Math.max(1, respuesta.totalPages)
+    pagina += 1
+  }
+
+  const listables = todas.filter((q) => esListable(q.status))
+  const desde = page * pageSize
+  return {
+    content: listables.slice(desde, desde + pageSize),
+    page,
+    pageSize,
+    totalElements: listables.length,
+    totalPages: Math.max(1, Math.ceil(listables.length / pageSize)),
+  }
+}
+
 const lista = useServerPaged<QuoteSummaryResponse>((page, pageSize) =>
-  cotizacionesApi.listAll(page, pageSize),
+  paginaListable(page, pageSize),
 )
 
-/** `DRAFT` no se lista: es el borrador de plataforma y no le concierne a la clínica. */
-const filas = computed(() => lista.items.value.filter((q) => esListable(q.status)))
+/** Ya vienen filtradas: `esListable` se aplicó antes de contar. */
+const filas = computed(() => lista.items.value)
 
 const desdeCupo = computed(() => route.query.motivo === 'cupo')
 

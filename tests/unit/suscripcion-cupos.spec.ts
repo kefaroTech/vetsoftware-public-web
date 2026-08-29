@@ -2,14 +2,23 @@ import { describe, expect, it } from 'vitest'
 import {
   CUPOS_ILEGIBLES,
   avisoCupo,
-  avisoTexto,
   consecuencia,
   medidorTexto,
   sinContadores,
   sustantivo,
   umbralAlcanzado,
 } from '@/features/suscripcion/composables/cuposText'
+import type { AvisoCupo } from '@/features/suscripcion/composables/cuposText'
 import type { CompanyAccessResponse } from '@/features/suscripcion/types/cupos.types'
+
+/**
+ * El aviso entero en una línea. Vivía en `cuposText.ts` y su único llamante era este fichero:
+ * una función de producción cuyo único consumidor es su propia prueba no está cubierta, está
+ * sola. Aquí sí gana algo — deja las aserciones legibles sin partirlas en `fuerte` y `resto`.
+ */
+function avisoTexto(aviso: AvisoCupo): string {
+  return aviso.resto ? `${aviso.fuerte} ${aviso.resto}` : aviso.fuerte
+}
 
 /**
  * Los cupos son el bloque donde una mentira sale más cara: si la pantalla dice «no tienes

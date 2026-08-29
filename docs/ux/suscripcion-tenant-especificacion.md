@@ -1057,8 +1057,8 @@ Todo WCAG 2.2, nivel A y AA.
 | --- | --- | --- |
 | 1 | **§1.4.1 Use of Color (A)** | Ningún estado —plan, cupo, documento, medio de pago— se distingue solo por color. Cada uno lleva su rótulo textual. La barra de cupo **siempre** con su «340 de 500». |
 | 2 | **§1.4.3 Contraste mínimo (AA)** | Texto normal ≥ 4,5:1; texto grande ≥ 3:1. `.ds-tone--warning` medido en 7,92:1 (§9.2). **Nada de color nuevo fuera de `tokens.css`.** |
-| 3 | **§1.4.11 No-text Contrast (AA)** | Bordes de campo, iconos portadores de significado y **el borde del `<progress>`** ≥ 3:1. Es el criterio que más incumplen los design systems. |
-| 4 | **§2.4.1 Bypass Blocks (A)** | El repositorio **no tiene skip link**. Esta feature no lo introduce ni lo arregla; queda declarado como hueco preexistente (§11.4). |
+| 3 | **§1.4.11 No-text Contrast (AA)** | Bordes de campo, iconos portadores de significado y **el borde del `<progress>`** ≥ 3:1. Es el criterio que más incumplen los design systems. **Cubierto (2026-08-28)**: `MedidorCupo` no declaraba ni borde ni relleno —quedaba al criterio de cada navegador, y el gris de fábrica de varios no llega a 3:1—; hoy declara `--warm-450` sobre `--warm-50` (3,55:1) y el relleno con las tres seudoclases portables. El color es FIJO, no por umbral: la barra sigue sin comunicar nada por sí sola. |
+| 4 | **§2.4.1 Bypass Blocks (A)** | **Cubierto (2026-08-28).** La zona pública ya lo tenía (`PublicLayout.vue:20`, `LandingView.vue:84`) y la app autenticada no: `AppLayout.vue` monta ahora «Saltar al contenido» como primer elemento focalizable, con `#app-contenido` y `tabindex="-1"` en su `<main>`. Cubre las 45+ rutas bajo `/dashboard`, `contratar` y `contratar/exito` incluidas. |
 | 5 | **§2.4.3 Focus Order (A)** | Tras aceptar/rechazar/revocar/cancelar, el foco va al `<h1>` con `tabindex="-1"`, **nunca a un botón que puede haber desaparecido**. Quien cierra un modal devuelve el foco al disparador (R02). |
 | 6 | **§2.4.7 Focus Visible (AA)** + **§2.4.11 Focus Appearance (AA)** | `.ds-focus-ring` tokenizado, ≥ 3:1 contra la superficie real (A11Y-01, `AGENTS.md:124-151`). |
 | 7 | **§2.5.8 Target Size (AA)** | ≥ 24×24 px CSS con separación. Afecta a la sub-navegación (§3.3, **sin `--sm`**) y a los iconos de acción de la tabla de cobros. |
@@ -1069,17 +1069,35 @@ Todo WCAG 2.2, nivel A y AA.
 | 12 | **§4.1.2 Name, Role, Value (A)** | `aria-current="page"` en la sub-navegación (§3.3). `<progress>` nativo con `<label>` asociado. `<nav aria-label>`. |
 | 13 | **§4.1.3 Status Messages (AA)** | Cambios sin foco anunciados con `role="status"` en contenedor persistente. **Ni un `assertive` nuevo.** |
 
-### 10.1 Focus trap en modales — hueco conocido, se declara
+### 10.1 Focus trap en modales — CORREGIDO: ya existe
 
-`ModalShell.vue` (gemelo de facto entre los dos repos, byte a byte, **no declarado en la tabla
-TR-02**) ya trae `role="dialog"`, `aria-modal`, `aria-labelledby`, Escape condicionado y foco inicial.
-**Lo que no tiene es retención del foco**, y esta feature monta cinco modales nuevos sobre él.
+> **Corrección (2026-08-28).** Esta sección declaraba un hueco que no existe. Se comprobó leyendo
+> el código: **`ModalShell` sí retiene el foco.** `useModalFocus.ts:47-64` implementa `onTrapTab`
+> —Tab desde el último foco vuelve al primero, Shift+Tab desde el primero salta al último, y con
+> cero tabulables el foco vuelve a la tarjeta— y `ModalShell.vue:188` lo cablea con
+> `@keydown.capture="modalFocus.onTrapTab"`. Lo que sigue es el texto anterior, que era falso.
 
-**No se arregla aquí** —`ModalShell` es gemelo y su cambio es de `front-parity`—, pero **se declara**:
-los cinco modales heredan el hueco de **§2.4.3 Focus Order (A)**. Con el trap resuelto en la
-primitiva, los cinco lo ganan sin tocar ni una línea de esta feature. Es el mejor argumento
-disponible para priorizarlo: el *blast radius* del arreglo cubre todos los diálogos de los dos
-fronts, no cinco.
+`ModalShell.vue` (gemelo de facto entre los dos repos, byte a byte, ahora **sí declarado en la
+tabla TR-02** del `CLAUDE.md`) trae `role="dialog"`, `aria-modal`, `aria-labelledby`, Escape
+condicionado, foco inicial **y retención de foco**. Los cinco modales de esta feature la heredan,
+igual que el resto de los diálogos de los dos fronts.
+
+El listener va en el overlay y no en `window` a propósito: `BaseSelect` y `SearchableSelect`
+teletransportan su panel a `<body>`, fuera del árbol del overlay, así que un `Tab` originado allí
+no entra en la trampa y el selector con búsqueda sigue funcionando dentro de cualquier modal sin
+listas de excepción. `aria-modal="true"` ya delimita el diálogo para el lector, así que no hace
+falta `inert` —que además inutilizaría esos paneles teletransportados—.
+
+### 10.2 `prefers-reduced-motion` — CORREGIDO: el tenant SÍ lo tiene
+
+> **Corrección (2026-08-28).** `base.css:108-119` declara la regla global de
+> `prefers-reduced-motion` en este repositorio: anula duración de animación, retardo, iteraciones,
+> transiciones y `scroll-behavior` para `*`, `*::before` y `*::after`.
+>
+> Quien lo niega es `primitives.css:1685-1687`, cuyo comentario afirma que el gemelo del tenant
+> «no tiene la regla global de `prefers-reduced-motion`». **Ese comentario es falso y no se toca
+> aquí**: `primitives.css` es gemelo TR-02 y su corrección es de `front-parity`, en los dos repos
+> y en el mismo PR. Queda reportado.
 
 ---
 

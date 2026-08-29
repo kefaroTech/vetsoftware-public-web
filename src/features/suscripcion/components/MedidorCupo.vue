@@ -53,9 +53,40 @@ const valor = computed(() => Math.min(props.usado ?? 0, props.limite ?? 0))
 </template>
 
 <style scoped>
-/* Geometría y NADA más: sin color, que es lo que la haría comunicar por sí sola. */
+/*
+ * El color aquí es FIJO, y por eso no contradice la regla 3 de la cabecera: no cambia con el
+ * umbral, así que la barra sigue sin comunicar nada por sí sola — el umbral lo dice el banner de
+ * al lado, con su texto.
+ *
+ * Lo que sí hace es cumplir §1.4.11 (Non-text Contrast, AA), que la §10 de la especificación
+ * exige con nombre y cifra —«≥ 3:1 en el borde»— y que aquí no cumplía nadie: sin `border` ni
+ * `background` declarados, un `<progress>` queda al criterio de cada navegador, y el gris de
+ * fábrica de varios de ellos no llega a 3:1 sobre el blanco de la tarjeta. Un medidor cuyo
+ * contorno no se ve es un medidor que no se lee.
+ *
+ * `--warm-450` sobre `--warm-50` mide 3,55:1; es el mismo token con el que `Pagination` resolvió
+ * exactamente este criterio (A11Y-09). Las tres seudoclases son la única forma portable de
+ * pintar un `<progress>`: WebKit/Blink usan `::-webkit-progress-*` y Gecko `::-moz-progress-bar`.
+ */
 .medidor {
   width: 100%;
   height: var(--space-8);
+  border: 1px solid var(--warm-450);
+  background: var(--warm-50);
+
+  /* Gecko pinta el relleno con `color` cuando no hay seudoclase. */
+  color: var(--amatista-700);
+}
+
+.medidor::-webkit-progress-bar {
+  background: var(--warm-50);
+}
+
+.medidor::-webkit-progress-value {
+  background: var(--amatista-700);
+}
+
+.medidor::-moz-progress-bar {
+  background: var(--amatista-700);
 }
 </style>

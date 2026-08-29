@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { formatDateShort } from '@/composables/format'
+import { PERMISSIONS } from '@/constants/permissions'
+import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { mandateStatusLabel, methodKindLabel } from '../composables/cotizacionesText'
 import type { MedioConAviso } from '../composables/useMediosPago'
 
@@ -19,6 +21,16 @@ const emit = defineEmits<{
   predeterminado: []
   revocar: []
 }>()
+
+/**
+ * Las dos acciones de esta tarjeta exigen el MISMO permiso en el backend:
+ * `SetDefaultPaymentMethodUseCase` y `RevokeSubscriptionPaymentMethodUseCase` piden los dos
+ * `hasAuthority('subscriptionPaymentMethod.update')` más `isMyCompany`. Sin él, pulsar cualquiera
+ * de los dos botones se comía un 403 después de haberlos ofrecido — y en «Revocar», después de
+ * pasar por un modal de confirmación con motivo obligatorio.
+ */
+const { can } = useAuthorization()
+const puedeEditar = can(PERMISSIONS.SUBSCRIPTION_PAYMENT_METHOD_UPDATE)
 
 const medio = computed(() => props.entrada.medio)
 
@@ -57,7 +69,7 @@ const claseAviso = computed(() =>
       </span>
     </div>
 
-    <div v-if="!apagado" class="ds-actions">
+    <div v-if="!apagado && puedeEditar" class="ds-actions">
       <!-- Solo aparece en las que NO lo son: un botón que no cambia nada es ruido. -->
       <button
         v-if="!medio.defaultMethod"

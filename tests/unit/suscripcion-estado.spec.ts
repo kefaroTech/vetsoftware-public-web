@@ -71,7 +71,9 @@ describe('estadoSuscripcion · vocabulario prohibido', () => {
       for (const extra of fechas) {
         const s = sub({ status, ...extra })
         const estado = estadoPlan(s, HOY)
-        if (estado) salidas.push(estado.rotulo, estado.frase, estado.accion?.label ?? '')
+        if (estado) {
+          salidas.push(estado.rotulo, estado.fuerte, estado.frase, estado.accion?.label ?? '')
+        }
         salidas.push(bajaRegistrada(s) ?? '', estadoRotulo(status), cicloLabel(s.billingCycle))
       }
     }
@@ -100,7 +102,7 @@ describe('estadoSuscripcion · días de cortesía', () => {
   it('no inventa un número cuando no lo sabe', () => {
     const estado = estadoPlan(sub({ status: 'PAST_DUE', pastDueSince: '2026-08-20' }), HOY)
     expect(estado?.frase).not.toMatch(/\d+ días de cortesía/)
-    expect(estado?.frase).toContain('Sigues trabajando con normalidad')
+    expect(estado?.fuerte).toContain('Sigues trabajando con normalidad')
   })
 
   it('concuerda en número: «1 día», no «1 días»', () => {
@@ -112,13 +114,18 @@ describe('estadoSuscripcion · días de cortesía', () => {
   })
 })
 
-describe('estadoSuscripcion · la mora empieza por «sigues trabajando»', () => {
-  it('dice que sigue trabajando antes de nombrar la deuda pendiente', () => {
+describe('estadoSuscripcion · la mora empieza por «sigues trabajando», Y EN NEGRITA', () => {
+  it('la tranquilidad va en `fuerte` y la deuda después, nunca al revés', () => {
     const estado = estadoPlan(
       sub({ status: 'PAST_DUE', pastDueSince: '2026-08-20', graceDays: 10 }),
       HOY,
     )
-    expect(estado?.frase).toContain('Sigues trabajando con normalidad')
+    // `fuerte` es lo que el banner pone en `<strong>`. Que la deuda NO esté ahí es el punto
+    // entero: el modelo garantiza que nunca hay corte total, y abrir en negrita con «Pago
+    // pendiente» asusta a una clínica que puede seguir atendiendo.
+    expect(estado?.fuerte).toBe('Sigues trabajando con normalidad.')
+    expect(estado?.fuerte).not.toContain('saldo pendiente')
+    expect(estado?.frase).toContain('saldo pendiente')
     expect(estado?.tono).toBe('warning')
     expect(estado?.accion?.routeName).toBe('suscripcion-cobros')
   })
@@ -129,14 +136,15 @@ describe('estadoSuscripcion · la mora empieza por «sigues trabajando»', () =>
       HOY,
     )
     expect(estado?.tono).toBe('error')
-    expect(estado?.frase).toContain('Sigues trabajando')
+    expect(estado?.fuerte).toContain('Sigues trabajando')
   })
 })
 
 describe('estadoSuscripcion · solo consulta', () => {
   it('dice qué conserva, qué pierde y cómo vuelve', () => {
     const estado = estadoPlan(sub({ status: 'READ_ONLY' }), HOY)
-    expect(estado?.frase).toContain('incluida la historia clínica')
+    // Lo que CONSERVA va en negrita; lo que pierde, después.
+    expect(estado?.fuerte).toContain('incluida la historia clínica')
     expect(estado?.frase).toContain('no puedes crear ni modificar')
     expect(estado?.frase).toContain('se regularice el pago')
   })

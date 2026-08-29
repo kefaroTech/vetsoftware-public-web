@@ -7,15 +7,19 @@ import SectionCard from '@/components/ui/SectionCard.vue'
 import { formatDateShort } from '@/composables/format'
 import { formatMoney } from '@/composables/money'
 import { useCobros } from '../composables/useCobros'
+import { useCupos } from '../composables/useCupos'
 import { SIN_PERMISO } from '../composables/accesoBloqueado'
 import {
   billingReasonLabel,
   documentKindLabel,
   estadoDocumento,
+  excedenteTexto,
   impuestoTexto,
   referenciaDocumento,
   taxTreatmentLabel,
 } from '../composables/cobrosText'
+import { sustantivo } from '../composables/cuposText'
+import type { SubscriptionChargeResponse } from '../types/cobros.types'
 
 /**
  * La ficha de una cuenta de cobro: responde a «¿de dónde salen estos 18.500?» **dentro** de la
@@ -40,11 +44,53 @@ const {
   loadDocument,
 } = useCobros()
 
+/**
+ * Los cupos, **para poder responder de verdad a «¿de dónde salen estos 18.500?»**.
+ *
+ * <p>Un cargo `OVERAGE` no lleva ni el nombre de la dimensión ni el tope: los dos hay que
+ * cruzarlos en el cliente, igual que ya se cruzan consumo y límite en «Cupos y consumo». El
+ * cruce es `charge.subscriptionItemId` → `SubscriptionItemLimitResponse` (tope) →
+ * `limitDimensionId` → `CompanyCapacityResponse` (nombre del eje).
+ *
+ * <p>Es un bloque secundario: si el 403 de `subscriptionItemLimit.read` deja `limits` vacío, la
+ * línea vuelve a su descripción y la ficha sigue entera. Nunca se inventa un tope.
+ */
+const { cupos, limits, load: loadCupos } = useCupos()
+
 const documentoId = computed(() => Number(props.id))
 
 const estado = computed(() => (document.value ? estadoDocumento(document.value) : null))
 
-onMounted(() => void loadDocument(documentoId.value))
+onMounted(() => {
+  void loadDocument(documentoId.value)
+  void loadCupos(true)
+})
+
+/**
+ * La línea de un cargo, en palabras.
+ *
+ * <p>Para un excedente, la frase de `excedenteTexto` —que estaba escrita y **no la llamaba
+ * nadie**, así que el excedente se pintaba como «— 40 × $450», que es exactamente la pregunta
+ * sin responder—. Para el resto, su descripción; y si el excedente no se puede resolver entero
+ * (sin tope, sin cantidad o sin unitario), también: media frase con un hueco es peor que la
+ * descripción del servidor.
+ */
+function descripcionCargo(c: SubscriptionChargeResponse): string {
+  const porDefecto = c.description ?? '—'
+  if (c.chargeType !== 'OVERAGE') return porDefecto
+
+  const tope = limits.value.find((l) => l.subscriptionItemId === c.subscriptionItemId)
+  if (!tope || tope.limitQuantity == null || c.quantity == null || c.unitAmount == null) {
+    return porDefecto
+  }
+  const cupo = cupos.value.find((x) => x.capacidad.limitDimensionId === tope.limitDimensionId)
+  return excedenteTexto(
+    sustantivo(cupo?.capacidad.dimensionCode),
+    c.quantity,
+    tope.limitQuantity,
+    c.unitAmount,
+  )
+}
 </script>
 
 <template>
@@ -124,7 +170,7 @@ onMounted(() => void loadDocument(documentoId.value))
           <p class="ds-item-label">{{ grupo.titulo }}</p>
           <ul class="ds-list-reset ds-stack ds-stack--8">
             <li v-for="c in grupo.cargos" :key="c.id" class="ds-flex-row ds-flex-row--12">
-              <span class="ds-flex-fill">{{ c.description ?? '—' }}</span>
+              <span class="ds-flex-fill">{{ descripcionCargo(c) }}</span>
               <span v-if="c.prorationDays != null && c.periodDays != null" class="ds-meta">
                 {{ c.prorationDays }} de {{ c.periodDays }} días
               </span>

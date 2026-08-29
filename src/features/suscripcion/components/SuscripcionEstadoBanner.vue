@@ -59,8 +59,16 @@ const accion = computed(() => {
         class="ds-banner-icon"
         aria-hidden="true"
       />
+      <!-- La negrita es `fuerte`, NUNCA el rótulo del estado. Poner «Pago pendiente.» en
+           `<strong>` abría con la amenaza y dejaba la tranquilidad tercera y sin peso, cuando el
+           modelo garantiza que no hay corte total.
+
+           Y el rótulo desaparece de aquí, no se mueve al final: el banner explica, no clasifica.
+           El nombre del estado es un dato y vive donde es un dato — la ficha «Estado» de «Mi
+           plan» (`estadoRotulo`). Repetirlo aquí solo servía para tener algo que poner en
+           negrita. -->
       <span class="ds-flex-fill">
-        <strong>{{ estado.rotulo }}.</strong>
+        <strong>{{ estado.fuerte }}</strong>
         {{ estado.frase }}
       </span>
       <RouterLink

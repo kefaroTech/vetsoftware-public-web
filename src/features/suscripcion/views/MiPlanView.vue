@@ -7,6 +7,8 @@ import { formatDateShort, todayISO } from '@/composables/format'
 import { formatMoney } from '@/composables/money'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { useToast } from '@/composables/useToast'
+import { PERMISSIONS } from '@/constants/permissions'
+import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import CambiarCantidadModal from '../components/CambiarCantidadModal.vue'
 import { useSuscripcion } from '../composables/useSuscripcion'
 import { useCupos } from '../composables/useCupos'
@@ -33,6 +35,19 @@ const { subscription, items, loading, error, errorTraceId, forbidden, notFound, 
 const { entitlements, entitlementsLegibles, cupos, load: loadCupos } = useCupos()
 const { confirm } = useConfirmDialog()
 const toast = useToast()
+
+/**
+ * Las tres escrituras de esta pantalla, cada una tras SU permiso.
+ *
+ * <p>Estaban a la vista de cualquiera que llegara aquí con `subscription.read`, que es lo único
+ * que exige la ruta. El resultado: el usuario abría el diálogo de baja, lo confirmaba, y recibía
+ * un 403 después de haber decidido dar de baja el plan de su clínica. Un botón que no se puede
+ * pulsar no se deja pulsar: se retira, que es lo que hace el resto del repositorio
+ * (`AgendaView`, `CuentasListaView`).
+ */
+const { can } = useAuthorization()
+const puedeCancelar = can(PERMISSIONS.SUBSCRIPTION_CANCEL)
+const puedeEditarLineas = can(PERMISSIONS.SUBSCRIPTION_UPDATE)
 
 const cantidadAbierta = ref(false)
 const itemEnEdicion = ref<SubscriptionItemResponse | null>(null)
@@ -224,6 +239,7 @@ async function guardarCantidad(newQuantity: number) {
             <span class="ds-num">{{ formatMoney(item.unitAmount ?? 0) }}</span>
             <span class="ds-num total">{{ formatMoney(lineaTotal(item)) }}</span>
             <button
+              v-if="puedeEditarLineas"
               type="button"
               class="ds-btn ds-btn--neutral ds-btn--snug"
               @click="abrirCantidad(item)"
@@ -231,6 +247,7 @@ async function guardarCantidad(newQuantity: number) {
               Cambiar cantidad
             </button>
             <button
+              v-if="puedeEditarLineas"
               type="button"
               class="ds-btn ds-btn--plain ds-btn--snug"
               @click="quitarLinea(item)"
@@ -262,7 +279,7 @@ async function guardarCantidad(newQuantity: number) {
         </p>
       </SectionCard>
 
-      <div class="ds-actions">
+      <div v-if="puedeCancelar" class="ds-actions">
         <button type="button" class="ds-btn ds-btn--danger ds-btn--snug" @click="pedirBaja">
           Pedir la baja de mi plan
         </button>

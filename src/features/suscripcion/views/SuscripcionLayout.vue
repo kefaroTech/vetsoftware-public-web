@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
+import { PERMISSIONS } from '@/constants/permissions'
+import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import SuscripcionEstadoBanner from '../components/SuscripcionEstadoBanner.vue'
 import { useSuscripcion } from '../composables/useSuscripcion'
 
@@ -27,25 +29,49 @@ const { estado, load } = useSuscripcion()
 
 // Regla obligatoria del repositorio: recargar SIEMPRE al abrir la pantalla, sin caché vieja.
 onMounted(() => void load(true))
+
+/**
+ * Los cinco enlaces, cada uno con SU permiso.
+ *
+ * <p>Enseñaban los cinco a todo el mundo, y el guard de cada destino devolvía al tablero en
+ * silencio a quien no lo tenía — el mismo fallo que la entrada del menú lateral, repetido aquí
+ * cinco veces. Un enlace que no lleva a ninguna parte es peor que un enlace ausente: el que
+ * falta se nota una vez, el que engaña se prueba tres.
+ *
+ * <p>El orden es el de `SUSCRIPCION_DESTINOS` en `router/index.ts`, que es el que usa la
+ * redirección del armazón.
+ */
+const { hasPermission } = useAuthorization()
+
+const TODOS = [
+  { name: 'suscripcion-plan', label: 'Mi plan', permiso: PERMISSIONS.SUBSCRIPTION_READ },
+  { name: 'suscripcion-cupos', label: 'Cupos y consumo', permiso: PERMISSIONS.ENTITLEMENT_READ },
+  {
+    name: 'suscripcion-cobros',
+    label: 'Mis cuentas de cobro',
+    permiso: PERMISSIONS.SUBSCRIPTION_BILLING_READ,
+  },
+  {
+    name: 'suscripcion-medios-pago',
+    label: 'Medios de pago',
+    permiso: PERMISSIONS.SUBSCRIPTION_PAYMENT_METHOD_READ,
+  },
+  { name: 'suscripcion-cotizaciones', label: 'Cotizaciones', permiso: PERMISSIONS.QUOTE_READ },
+] as const
+
+const enlaces = computed(() => TODOS.filter((e) => hasPermission(e.permiso)))
 </script>
 
 <template>
   <div class="ds-page ds-page--stack">
     <nav class="sub-nav" aria-label="Secciones de mi suscripción">
-      <RouterLink :to="{ name: 'suscripcion-plan' }" class="ds-btn ds-btn--plain enlace">
-        Mi plan
-      </RouterLink>
-      <RouterLink :to="{ name: 'suscripcion-cupos' }" class="ds-btn ds-btn--plain enlace">
-        Cupos y consumo
-      </RouterLink>
-      <RouterLink :to="{ name: 'suscripcion-cobros' }" class="ds-btn ds-btn--plain enlace">
-        Mis cuentas de cobro
-      </RouterLink>
-      <RouterLink :to="{ name: 'suscripcion-medios-pago' }" class="ds-btn ds-btn--plain enlace">
-        Medios de pago
-      </RouterLink>
-      <RouterLink :to="{ name: 'suscripcion-cotizaciones' }" class="ds-btn ds-btn--plain enlace">
-        Cotizaciones
+      <RouterLink
+        v-for="e in enlaces"
+        :key="e.name"
+        :to="{ name: e.name }"
+        class="ds-btn ds-btn--plain enlace"
+      >
+        {{ e.label }}
       </RouterLink>
     </nav>
 
