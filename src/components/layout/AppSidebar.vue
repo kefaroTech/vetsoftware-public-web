@@ -7,6 +7,7 @@ import {
   Bell,
   Building2,
   Calendar,
+  CreditCard,
   FilePlus,
   FileText,
   FlaskConical,
@@ -39,6 +40,7 @@ const {
   canEmployees,
   canRoles,
   canEmpresa,
+  canSuscripcion,
   canMedicaments,
   canLabProcess,
   canHospitalWard,
@@ -52,6 +54,7 @@ const {
   isAccionesActive,
   isTiendaActive,
   isComprasActive,
+  isSuscripcionActive,
   subItems,
   accionesItems,
   tiendaItems,
@@ -295,6 +298,17 @@ function onNotifications() {
         :icon="Building2"
         :active="route.name === 'empresa'"
         @click="router.push({ name: 'empresa' })"
+      />
+      <!-- Una sola entrada para los cinco bloques, y plana: las sub-pantallas se navegan
+           DENTRO de la página (rutas hijas), que es además lo que las hace enlazables para
+           soporte. Va entre «Empresa» y «Empleados» porque es una responsabilidad de
+           titularidad, no de personal. -->
+      <SidebarNavItem
+        v-if="canSuscripcion"
+        label="Mi suscripción"
+        :icon="CreditCard"
+        :active="isSuscripcionActive"
+        @click="router.push({ name: 'suscripcion-plan' })"
       />
       <SidebarNavItem
         v-if="canEmployees"

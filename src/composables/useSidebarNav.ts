@@ -52,6 +52,18 @@ export function useSidebarNav() {
     PERMISSIONS.BRANCH_UPDATE,
     PERMISSIONS.BRANCH_READ,
   )
+  /**
+   * «Mi suscripción». Basta CUALQUIERA de los cuatro: la 377 documenta que varios de estos
+   * permisos se sembraron y nunca se asignaron a los roles existentes, así que exigir el
+   * `subscription.read` escondería la entrada a empresas que sí pueden ver sus cuentas de cobro
+   * o sus propuestas. Dentro, cada sub-pantalla se protege por su cuenta.
+   */
+  const canSuscripcion = canAny(
+    PERMISSIONS.SUBSCRIPTION_READ,
+    PERMISSIONS.SUBSCRIPTION_BILLING_READ,
+    PERMISSIONS.QUOTE_READ,
+    PERMISSIONS.SUBSCRIPTION_PAYMENT_METHOD_READ,
+  )
   const canMedicaments = can(PERMISSIONS.PRESCRIPTION_CREATE)
   const canLabProcess = can(PERMISSIONS.LABORATORY_TEST_READ)
   const canHospitalWard = can(PERMISSIONS.HOSPITALIZATION_READ)
@@ -124,6 +136,10 @@ export function useSidebarNav() {
     'compras-libro',
   ] as const
   const isComprasActive = computed(() => comprasSubRoutes.some((name) => route.name === name))
+
+  // La entrada del menú es UNA y sus cinco sub-pantallas se navegan DENTRO de la página, así
+  // que se mantiene resaltada en las siete rutas hijas.
+  const isSuscripcionActive = computed(() => String(route.name ?? '').startsWith('suscripcion-'))
 
   // ── Listas de entradas ─────────────────────────────────────────────────────
   const subItems = computed(() =>
@@ -248,7 +264,12 @@ export function useSidebarNav() {
   // ── Visibilidad de secciones ───────────────────────────────────────────────
   const showAccionesSection = computed(() => accionesItems.value.length > 0)
   const showAdminSection = computed(
-    () => canEmpresa.value || canEmployees.value || canRoles.value || canMedicaments.value,
+    () =>
+      canEmpresa.value ||
+      canSuscripcion.value ||
+      canEmployees.value ||
+      canRoles.value ||
+      canMedicaments.value,
   )
   const showTiendaMenu = computed(() => tiendaItems.value.length > 0)
   const showComprasSection = computed(() => comprasItems.value.length > 0)
@@ -259,6 +280,7 @@ export function useSidebarNav() {
     canEmployees,
     canRoles,
     canEmpresa,
+    canSuscripcion,
     canMedicaments,
     canLabProcess,
     canHospitalWard,
@@ -272,6 +294,7 @@ export function useSidebarNav() {
     isAccionesActive,
     isTiendaActive,
     isComprasActive,
+    isSuscripcionActive,
     subItems,
     accionesItems,
     tiendaItems,

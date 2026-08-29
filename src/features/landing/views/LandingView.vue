@@ -1,150 +1,121 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useContratacion } from '@/features/contratacion/composables/useContratacion'
+import LandingDayFlow from '../components/LandingDayFlow.vue'
+import LandingFaq from '../components/LandingFaq.vue'
+import LandingFinalCta from '../components/LandingFinalCta.vue'
+import LandingFooter from '../components/LandingFooter.vue'
+import LandingHero from '../components/LandingHero.vue'
+import LandingPlans from '../components/LandingPlans.vue'
+import LandingTopbar from '../components/LandingTopbar.vue'
+import LandingValueGrid from '../components/LandingValueGrid.vue'
+import ResumeIntentBanner from '../components/ResumeIntentBanner.vue'
+import { usePlanes } from '../composables/usePlanes'
+import type { Ciclo, PublicPlan } from '../types/plans.types'
 
-/** Página de inicio / decisión (handoff §6). Glow que sigue el cursor + blobs + grid. */
-const stage = ref<HTMLElement | null>(null)
-const pointer = reactive({ x: 0.5, y: 0.35 })
-const hover = ref<'' | 'login' | 'signup'>('')
+/**
+ * La landing comercial.
+ *
+ * ── Por qué esta vista es tan corta ────────────────────────────────────────
+ * La versión anterior eran 468 líneas con 317 de CSS contra 28 de script, y ese
+ * es exactamente el perfil que revienta `maxStyleMinusScript: 0` del presupuesto
+ * de CSS — un techo de trinquete que se pone rojo **para todo el repo**. Una
+ * landing es tentación pura de CSS nuevo, así que se parte en componentes desde
+ * el primer commit, no «cuando crezca». Aquí solo queda composición y estados.
+ *
+ * ── Lo que se eliminó y por qué ────────────────────────────────────────────
+ * El `@mousemove` que recomputaba un `radial-gradient` en cada píxel. Era el
+ * mayor coste de INP de la página —y la landing es donde el INP se mide— y la
+ * guarda global de `prefers-reduced-motion` **no lo apagaba**: esa guarda actúa
+ * sobre `animation`/`transition`, y aquello era un `:style` reactivo que la
+ * regla no ve. Los blobs y la cuadrícula se quedan: son CSS, y `.pub-drift` sí
+ * cae bajo la guarda.
+ *
+ * Y las dos tarjetas-enlace de la página de decisión. Un `RouterLink` que
+ * envuelve icono, kicker, título, descripción y CTA tiene como nombre accesible
+ * la concatenación de los cinco textos: el lector anunciaba un párrafo entero
+ * como si fuera el rótulo del botón. Sus dos acciones viven ahora en el CTA del
+ * hero y en la barra superior, que es donde las busca quien llega de una
+ * búsqueda.
+ */
+const router = useRouter()
+const { plans, loading, error, refresh, findByCode } = usePlanes()
+const { vigente, elegir, limpiar } = useContratacion()
 
-function onMove(e: MouseEvent) {
-  const el = stage.value
-  if (!el) return
-  const r = el.getBoundingClientRect()
-  pointer.x = (e.clientX - r.left) / r.width
-  pointer.y = (e.clientY - r.top) / r.height
-}
+/** Se oculta al actuar sobre ella; no se vuelve a mostrar en esta visita. */
+const bandaCerrada = ref(false)
 
-const glow = computed(() => {
-  const x = 50 + (pointer.x - 0.5) * 40
-  const y = 30 + (pointer.y - 0.5) * 30
-  return `radial-gradient(560px circle at ${x}% ${y}%, rgba(168,85,247,.18), transparent 62%)`
+const intencionParaBanda = computed(() => (bandaCerrada.value ? null : vigente.value))
+
+const planDeLaBanda = computed(() => {
+  const i = intencionParaBanda.value
+  if (!i) return null
+  const plan = findByCode(i.planCode)
+  return plan ? { plan, intencion: i } : null
 })
 
-const trust = [
-  { icon: 'mdi-office-building-outline', label: 'Multiclínica' },
-  { icon: 'mdi-account-multiple', label: 'Gestión de equipo' },
-  { icon: 'mdi-shield-check-outline', label: 'Datos cifrados' },
-]
+/**
+ * Elegir desde una tarjeta guarda la intención con las cantidades que ya
+ * hubiera (o los mínimos), y el propio enlace de la tarjeta lleva a `/planes`,
+ * donde se ajustan. Guardar aquí y no allí es lo que hace que la elección
+ * sobreviva a cerrar el navegador antes de llegar al configurador.
+ */
+function onElegir(plan: PublicPlan, ciclo: Ciclo) {
+  const previa = vigente.value
+  elegir(plan, ciclo, previa?.sedes ?? 1, previa?.usuarios ?? 1)
+}
+
+function seguirDondeLoDejaste() {
+  const i = vigente.value
+  bandaCerrada.value = true
+  if (!i) return
+  void router.push({ name: 'planes', query: { plan: i.planCode, ciclo: i.ciclo } })
+}
+
+function empezarDeNuevo() {
+  bandaCerrada.value = true
+  limpiar()
+}
 </script>
 
 <template>
-  <div ref="stage" class="pub-scope land-stage ds-stack" @mousemove="onMove">
-    <div class="land-glow" :style="{ background: glow }" />
-    <div
-      class="pub-blob pub-drift"
-      style="
-        top: -160px;
-        right: -120px;
-        width: 480px;
-        height: 480px;
-        animation-delay: 0s;
-        background: radial-gradient(circle, rgb(192 132 252 / 30%), transparent 60%);
-      "
+  <div class="pub-scope land-stage">
+    <a class="pub-skip" href="#contenido">Saltar al contenido</a>
+
+    <div class="land-decor" aria-hidden="true">
+      <div class="pub-blob pub-drift land-blob-a" />
+      <div class="pub-blob pub-drift land-blob-b" />
+      <div class="pub-grid-bg" />
+    </div>
+
+    <LandingTopbar />
+
+    <ResumeIntentBanner
+      v-if="planDeLaBanda"
+      :plan-nombre="planDeLaBanda.plan.name"
+      :sedes="planDeLaBanda.intencion.sedes"
+      :usuarios="planDeLaBanda.intencion.usuarios"
+      @seguir="seguirDondeLoDejaste"
+      @empezar-de-nuevo="empezarDeNuevo"
     />
-    <div
-      class="pub-blob pub-drift"
-      style="
-        bottom: -180px;
-        left: -140px;
-        width: 520px;
-        height: 520px;
-        animation-delay: -7s;
-        background: radial-gradient(circle, rgb(147 51 234 / 20%), transparent 62%);
-      "
-    />
-    <div
-      class="pub-blob pub-drift"
-      style="
-        top: 40%;
-        left: 52%;
-        width: 340px;
-        height: 340px;
-        animation-delay: -3.5s;
-        background: radial-gradient(circle, rgb(216 180 254 / 28%), transparent 60%);
-      "
-    />
-    <div class="pub-grid-bg" />
 
-    <header class="land-topbar">
-      <div class="land-brand">
-        <span class="land-brand-mark"><v-icon size="17">mdi-paw</v-icon></span>
-        <span class="land-brand-word">VetSoftware</span>
-      </div>
-      <RouterLink :to="{ name: 'login' }" class="land-login-btn">
-        Iniciar sesión <v-icon size="13">mdi-arrow-right</v-icon>
-      </RouterLink>
-    </header>
-
-    <main class="land-main ds-stack">
-      <div class="land-eyebrow pub-reveal" style="animation-delay: 0.05s">
-        <v-icon size="13">mdi-star-four-points-outline</v-icon> Plataforma de gestión veterinaria
-      </div>
-
-      <h1 class="land-h1 pub-reveal" style="animation-delay: 0.12s">
-        Todo tu centro veterinario,<br />
-        <span class="land-h1-em">en un solo panel.</span>
-      </h1>
-
-      <p class="land-sub pub-reveal" style="animation-delay: 0.19s">
-        Administra clínicas, empleados, suscripciones y permisos desde una sola plataforma clara y
-        segura. Comienza en segundos.
-      </p>
-
-      <div class="land-cards ds-grid-2 pub-reveal" style="animation-delay: 0.28s">
-        <RouterLink
-          :to="{ name: 'signup' }"
-          class="land-card land-card--primary ds-stack"
-          :class="{ 'is-active': hover === 'signup' }"
-          @mouseenter="hover = 'signup'"
-          @mouseleave="hover = ''"
-        >
-          <div class="land-card-glow" />
-          <div class="land-card-icon">
-            <v-icon size="20">mdi-star-four-points-outline</v-icon>
-          </div>
-          <div class="land-card-kicker">Nuevo aquí</div>
-          <div class="land-card-title">Crear cuenta</div>
-          <div class="land-card-desc">Registra tu centro y empieza a operar hoy mismo.</div>
-          <div class="land-card-cta">
-            Registrarme <v-icon size="14" class="land-card-arrow">mdi-arrow-right</v-icon>
-          </div>
-        </RouterLink>
-
-        <RouterLink
-          :to="{ name: 'login' }"
-          class="land-card land-card--secondary ds-stack"
-          :class="{ 'is-active': hover === 'login' }"
-          @mouseenter="hover = 'login'"
-          @mouseleave="hover = ''"
-        >
-          <div class="land-card-icon">
-            <v-icon size="20">mdi-shield-check-outline</v-icon>
-          </div>
-          <div class="land-card-kicker">Ya tengo cuenta</div>
-          <div class="land-card-title">Iniciar sesión</div>
-          <div class="land-card-desc">Accede a tu panel administrativo de siempre.</div>
-          <div class="land-card-cta">
-            Entrar <v-icon size="14" class="land-card-arrow">mdi-arrow-right</v-icon>
-          </div>
-        </RouterLink>
-      </div>
-
-      <div class="land-trust pub-reveal" style="animation-delay: 0.38s">
-        <span v-for="t in trust" :key="t.label" class="land-trust-item">
-          <v-icon size="15">{{ t.icon }}</v-icon> {{ t.label }}
-        </span>
-      </div>
+    <main id="contenido" class="land-main" tabindex="-1">
+      <LandingHero />
+      <LandingValueGrid />
+      <LandingDayFlow />
+      <LandingPlans
+        :plans="plans"
+        :loading="loading"
+        :error="error"
+        @elegir="onElegir"
+        @reintentar="refresh"
+      />
+      <LandingFaq />
+      <LandingFinalCta />
     </main>
 
-    <footer class="land-footer">
-      <span>© 2026 VetSoftware</span>
-      <div class="land-footer-links">
-        <a href="#" @click.prevent>Privacidad</a>
-        <a href="#" @click.prevent>Términos</a>
-        <a href="#" @click.prevent>Soporte</a>
-      </div>
-    </footer>
+    <LandingFooter />
   </div>
 </template>
 
@@ -153,316 +124,41 @@ const trust = [
   position: relative;
   width: 100%;
   min-height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden;
   background: radial-gradient(ellipse at top, #f3e8ff 0%, #f5f1fa 48%, #ede8f4 100%);
-  font-family: Inter, sans-serif;
   color: var(--pub-ink-900);
 }
 
-.land-glow {
+.land-decor {
   position: absolute;
   inset: 0;
+  overflow: hidden;
   pointer-events: none;
-  transition: background 0.18s ease-out;
 }
 
-.land-topbar {
-  position: relative;
-  padding: 26px 44px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
+.land-blob-a {
+  top: -160px;
+  right: -120px;
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, rgb(192 132 252 / 30%), transparent 60%);
 }
 
-.land-brand {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-}
-
-.land-brand-mark {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, #a855f7, #581c87);
-  display: grid;
-  place-items: center;
-  color: #fff;
-  box-shadow: 0 4px 10px -2px rgb(126 34 206 / 45%);
-}
-
-.land-brand-word {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.land-login-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--pub-ink-700);
-  text-decoration: none;
-  padding: 9px 15px;
-  border-radius: 9px;
-  border: 1px solid #e6ddf0;
-  background: rgb(255 255 255 / 60%);
-  backdrop-filter: blur(6px);
-  transition: all 0.16s;
-}
-
-.land-login-btn:hover {
-  background: #fff;
-  border-color: #d6c8ea;
+.land-blob-b {
+  bottom: -180px;
+  left: -140px;
+  width: 520px;
+  height: 520px;
+  animation-delay: -7s;
+  background: radial-gradient(circle, rgb(147 51 234 / 20%), transparent 62%);
 }
 
 .land-main {
   position: relative;
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 24px 8px;
-  text-align: center;
-  min-height: 0;
+  z-index: 1;
 }
 
-.land-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 13px;
-  border-radius: var(--radius-pill);
-  background: rgb(255 255 255 / 70%);
-  border: 1px solid #ecd9fb;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--pub-ame-700);
-  text-transform: uppercase;
-}
-
-.land-h1 {
-  font-family: 'Instrument Serif', serif;
-  font-weight: 400;
-  font-size: clamp(38px, 5.4vw, 64px);
-  line-height: 1.12;
-  letter-spacing: -0.02em;
-  margin: 22px 0 0;
-  max-width: 820px;
-  text-wrap: balance;
-}
-
-.land-h1-em {
-  font-style: italic;
-  color: var(--pub-ame-700);
-}
-
-.land-sub {
-  font-size: 16px;
-  line-height: 1.55;
-  color: var(--pub-ink-500);
-  margin: 20px 0 0;
-  max-width: 500px;
-}
-
-.land-cards {
-  gap: 18px;
-  margin-top: 40px;
-  width: 100%;
-  max-width: 720px;
-}
-
-.land-card {
-  position: relative;
-  overflow: hidden;
-  text-align: left;
-  text-decoration: none;
-  padding: 24px 24px 22px;
-  border-radius: 16px;
-  transition:
-    transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
-    box-shadow 0.2s,
-    border-color 0.2s;
-}
-
-.land-card.is-active {
-  transform: translateY(-4px);
-}
-
-.land-card--primary {
-  background: linear-gradient(160deg, #9333ea, #7e22ce 70%, #6b1fa8);
-  color: #fff;
-  border: 1px solid transparent;
-  box-shadow: 0 12px 28px -12px rgb(126 34 206 / 40%);
-}
-
-.land-card--primary.is-active {
-  box-shadow: 0 22px 44px -14px rgb(126 34 206 / 55%);
-}
-
-.land-card--secondary {
-  background: #fff;
-  color: var(--pub-ink-900);
-  border: 1px solid var(--pub-line);
-  box-shadow: 0 8px 20px -12px rgb(91 33 182 / 12%);
-}
-
-.land-card--secondary.is-active {
-  border-color: #d6c8ea;
-  box-shadow: 0 22px 44px -16px rgb(91 33 182 / 22%);
-}
-
-.land-card-glow {
-  position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgb(255 255 255 / 18%), transparent 65%);
-  pointer-events: none;
-  transition: transform 0.3s;
-}
-
-.land-card--primary.is-active .land-card-glow {
-  transform: scale(1.15);
-}
-
-.land-card-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 11px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 16px;
-}
-
-.land-card--primary .land-card-icon {
-  background: rgb(255 255 255 / 16%);
-  color: #fff;
-  border: 1px solid rgb(255 255 255 / 22%);
-}
-
-.land-card--secondary .land-card-icon {
-  background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
-  color: var(--pub-ame-700);
-  border: 1px solid #ecd9fb;
-}
-
-.land-card-kicker {
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  margin-bottom: 5px;
-}
-
-.land-card--primary .land-card-kicker {
-  color: rgb(255 255 255 / 70%);
-}
-
-.land-card--secondary .land-card-kicker {
-  color: #a08bbd;
-}
-
-.land-card-title {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.land-card-desc {
-  font-size: 13.5px;
-  line-height: 1.5;
-  margin-top: 7px;
-}
-
-.land-card--primary .land-card-desc {
-  color: rgb(255 255 255 / 82%);
-}
-
-.land-card--secondary .land-card-desc {
-  color: var(--pub-ink-500);
-}
-
-.land-card-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: 18px;
-  font-size: 13.5px;
-  font-weight: 600;
-}
-
-.land-card--primary .land-card-cta {
-  color: #fff;
-}
-
-.land-card--secondary .land-card-cta {
-  color: var(--pub-ame-700);
-}
-
-.land-card-arrow {
-  transition: transform 0.2s;
-}
-
-.land-card.is-active .land-card-arrow {
-  transform: translateX(4px);
-}
-
-.land-trust {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 24px;
-  margin-top: 34px;
-  font-size: 12.5px;
-  color: var(--pub-ink-400);
-}
-
-.land-trust-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.land-trust-item :deep(.v-icon) {
-  color: var(--pub-ame-500);
-}
-
-.land-footer {
-  position: relative;
-  padding: 18px 44px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--pub-ink-400);
-  flex-shrink: 0;
-}
-
-.land-footer-links {
-  display: flex;
-  gap: 18px;
-}
-
-.land-footer-links a {
-  color: var(--pub-ink-400);
-  text-decoration: none;
-}
-
-.land-footer-links a:hover {
-  color: var(--pub-ink-500);
-}
-
-@media (width <= 720px) {
-  .land-topbar,
-  .land-footer {
-    padding-left: 24px;
-    padding-right: 24px;
-  }
+.land-main:focus {
+  outline: none;
 }
 </style>

@@ -5,6 +5,7 @@ import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { popLoader, pushLoader } from '@/composables/useGlobalLoader'
 import { useScrollMemoryStore } from '@/stores/scrollMemory.store'
 import { PERMISSIONS } from '@/constants/permissions'
+import { useContratacionStore } from '@/features/contratacion/stores/contratacion.store'
 
 /**
  * El contenedor real de scroll. **No es la ventana**: es el `<main>` de
@@ -66,7 +67,19 @@ const router = createRouter({
       path: '/',
       name: 'landing',
       component: () => import('@/features/landing/views/LandingView.vue'),
-      meta: { guestOnly: true },
+      meta: {
+        guestOnly: true,
+        title: 'VetSoftware — Software para clínicas veterinarias en Colombia',
+      },
+    },
+    {
+      // Paso 2 del embudo comercial. `guestOnly` como el resto de la zona
+      // pública: un cliente con sesión que entra aquí va al tablero, porque su
+      // plan se gestiona desde dentro y no desde el escaparate.
+      path: '/planes',
+      name: 'planes',
+      component: () => import('@/features/landing/views/PlanesView.vue'),
+      meta: { guestOnly: true, title: 'Planes y precios — VetSoftware' },
     },
     {
       path: '/login',
@@ -139,6 +152,26 @@ const router = createRouter({
           component: () =>
             import('@/features/dashboard/views/consulta/nueva/exito/ConsultaGuardada.vue'),
           meta: { fullBleed: true, hideTopbar: true, permission: PERMISSIONS.CONSULTATION_CREATE },
+        },
+        {
+          // Pasos 6 y 7 del embudo comercial. `fullBleed` + `hideTopbar` es el
+          // patrón que ya usan `consulta/nueva` y su pantalla de éxito: es un
+          // embudo, y un menú de treinta entradas al lado de un embudo es una
+          // invitación a abandonarlo. NO llevan `permission`: contratar el plan
+          // de la propia clínica no es una acción de catálogo, y hoy el front
+          // del tenant no declara ningún permiso `quote.*` ni `subscription.*`.
+          // Tampoco entran en el menú lateral: no son destinos de navegación,
+          // se llega a ellos por el flujo.
+          path: 'contratar',
+          name: 'contratar',
+          component: () => import('@/features/contratacion/views/ContratarView.vue'),
+          meta: { fullBleed: true, hideTopbar: true, title: 'Confirma tu plan — VetSoftware' },
+        },
+        {
+          path: 'contratar/exito',
+          name: 'contratar-exito',
+          component: () => import('@/features/contratacion/views/ContratarExitoView.vue'),
+          meta: { fullBleed: true, hideTopbar: true, title: 'Tu plan está activo — VetSoftware' },
         },
         {
           path: 'consulta/historial',
@@ -348,6 +381,65 @@ const router = createRouter({
           },
         },
         {
+          // «Mi suscripción»: un armazón con cinco sub-pantallas como RUTAS HIJAS, no como
+          // pestañas. Una pestaña con estado local no es enlazable, y «mándame el enlace de lo
+          // que ves» tiene que funcionar cuando la auxiliar llama a soporte.
+          //
+          // Cada hija lleva SU permiso: la 377 documenta que varios de estos se sembraron y
+          // nunca se asignaron, así que hay empresas cuyo ADMIN no tiene alguno. `meta` se
+          // hereda por fusión de los registros coincidentes, así que la hija sin `permission`
+          // propio queda protegida por el `subscription.read` del padre.
+          path: 'suscripcion',
+          component: () => import('@/features/suscripcion/views/SuscripcionLayout.vue'),
+          meta: { permission: PERMISSIONS.SUBSCRIPTION_READ },
+          children: [
+            { path: '', redirect: { name: 'suscripcion-plan' } },
+            {
+              path: 'plan',
+              name: 'suscripcion-plan',
+              component: () => import('@/features/suscripcion/views/MiPlanView.vue'),
+            },
+            {
+              path: 'cupos',
+              name: 'suscripcion-cupos',
+              component: () => import('@/features/suscripcion/views/CuposView.vue'),
+              meta: { permission: PERMISSIONS.ENTITLEMENT_READ },
+            },
+            {
+              path: 'cobros',
+              name: 'suscripcion-cobros',
+              component: () => import('@/features/suscripcion/views/CuentasCobroView.vue'),
+              meta: { permission: PERMISSIONS.SUBSCRIPTION_BILLING_READ },
+            },
+            {
+              path: 'cobros/:id',
+              name: 'suscripcion-cobro',
+              component: () => import('@/features/suscripcion/views/CuentaCobroDetalleView.vue'),
+              props: true,
+              meta: { permission: PERMISSIONS.SUBSCRIPTION_BILLING_READ },
+            },
+            {
+              path: 'medios-pago',
+              name: 'suscripcion-medios-pago',
+              component: () => import('@/features/suscripcion/views/MediosPagoView.vue'),
+              meta: { permission: PERMISSIONS.SUBSCRIPTION_PAYMENT_METHOD_READ },
+            },
+            {
+              path: 'cotizaciones',
+              name: 'suscripcion-cotizaciones',
+              component: () => import('@/features/suscripcion/views/CotizacionesView.vue'),
+              meta: { permission: PERMISSIONS.QUOTE_READ },
+            },
+            {
+              path: 'cotizaciones/:id',
+              name: 'suscripcion-cotizacion',
+              component: () => import('@/features/suscripcion/views/CotizacionDetalleView.vue'),
+              props: true,
+              meta: { permission: PERMISSIONS.QUOTE_READ },
+            },
+          ],
+        },
+        {
           path: 'empleados',
           name: 'empleados',
           component: () => import('@/features/employees/views/EmpleadosView.vue'),
@@ -435,6 +527,28 @@ router.beforeEach(async (to, from) => {
     return redirect({ name: 'home' })
   }
 
+  // ── Paso 5 del embudo comercial: el enganche del login ────────────────────
+  //
+  // Quien eligió un plan antes de registrarse pasa por un salto de verificación
+  // por correo que puede durar días y cambiar de dispositivo. Cuando por fin
+  // entra, mandarlo al tablero le hace buscar por su cuenta dónde estaba lo que
+  // ya había elegido — y ahí es donde se pierde la conversión.
+  //
+  // Dos cautelas, que son las que evitan que esto se convierta en una jaula:
+  //
+  //  1. Solo en la PRIMERA navegación tras autenticar, nunca en cada `push`. La
+  //     señal es `from.name === 'login'` y `to.name === 'home'`, así que si el
+  //     usuario sale de `/dashboard/contratar` a mano no vuelve a caer ahí.
+  //  2. Solo si la intención sigue VIGENTE. Pulsar «Ahora no» la marca como
+  //     descartada y este redirect deja de dispararse para siempre.
+  if (isAuthenticated.value && to.name === 'home' && from.name === 'login') {
+    const contratacion = useContratacionStore()
+    contratacion.hidratar()
+    if (contratacion.hayIntencionVigente && !contratacion.contratada) {
+      return redirect({ name: 'contratar' })
+    }
+  }
+
   const { permissions } = useAuthorization()
   const required = to.meta.permission as string | undefined
   const requiredAny = to.meta.permissionsAny as string[] | undefined
@@ -448,7 +562,19 @@ router.beforeEach(async (to, from) => {
   return true
 })
 
-router.afterEach(() => {
+/**
+ * §2.4.2 Page Titled (A). Sin esto, todas las pantallas de la SPA comparten el
+ * `<title>` de `index.html`: quien tiene ocho pestañas abiertas no distingue
+ * ninguna, y quien usa lector de pantalla oye el mismo nombre en cada
+ * navegación. El valor por defecto vuelve a poner el título del documento
+ * cuando la ruta destino no declara el suyo — si no, el título de la pantalla
+ * anterior se quedaría pegado, que es el defecto clásico de este arreglo.
+ */
+const TITULO_POR_DEFECTO = 'VetSoftware'
+
+router.afterEach((to) => {
+  const titulo = to.meta.title
+  document.title = typeof titulo === 'string' && titulo ? titulo : TITULO_POR_DEFECTO
   popLoader()
 })
 
