@@ -57,11 +57,32 @@ const DIST = path.resolve(import.meta.dirname, '../dist')
  * 1 chunk de 72 (19,7 KB, 10 %). No lo causa el vendor —agrupar por familias solo
  * lo baja al 71 % y encarece la ruta crítica un 25 %—, así que es una
  * investigación aparte, no un `manualChunks`.
+ *
+ * -- JS total sube de 520 a 560 KB (28 de agosto de 2026) -------------------
+ *
+ * Medida al subirlo: 523,1 KB gzip. El techo de 520 se fijo el 8 de agosto
+ * sobre 431,4 KB, y ese 21 % de holgura se consumio con superficie nueva y
+ * legitima: la landing comercial publica (7 componentes), el flujo de
+ * contratacion y las siete vistas de suscripcion del tenant.
+ *
+ * POR QUE NO SE ARREGLA PARTIENDO MEJOR EL PAQUETE. Esta medida es
+ * `sum(allJs())`: la suma de TODOS los fragmentos, no lo que descarga un
+ * usuario. 58 de las 59 rutas ya son de carga perezosa, las nuevas incluidas,
+ * asi que dividir mas no baja este numero ni un byte. La metrica crece por
+ * construccion con cada pantalla que se anada. Quien vigile el peso REAL de una
+ * visita tiene que mirar `criticalJs`, que sigue en 130 KB y con margen.
+ *
+ * POR QUE 560 Y NO EL 21 % DE COSTUMBRE. El 21 % sobre 523,1 daria 633 KB, y
+ * eso dejaria pasar 110 KB de crecimiento sin que nadie se entere — que es
+ * exactamente lo que este fichero existe para impedir. 560 da un 7 %: llega
+ * para un par de features y obliga a volver a mirar pronto. Con una metrica que
+ * solo puede subir, la holgura generosa es una forma elegante de apagar la
+ * alarma.
  */
 const BUDGET_GZIP = {
   criticalJs: 130 * 1024,
   criticalCss: 45 * 1024,
-  totalJs: 520 * 1024,
+  totalJs: 560 * 1024,
 }
 
 const KB = (bytes) => `${(bytes / 1024).toFixed(1)} KB`
