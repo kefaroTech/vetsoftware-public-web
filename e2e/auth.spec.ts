@@ -16,7 +16,10 @@ test.describe('Autenticación y guard de sesión', () => {
 
   // --- Error: validación de campos vacíos ---
   test('campos vacíos muestran "Campo requerido" y no navega', async ({ page }) => {
-    await page.goto('/')
+    // `/login` y ya no `/`: desde que existe la landing comercial, la raíz es el
+    // escaparate —con un ENLACE «Iniciar sesión», no el formulario—, así que este
+    // caso llevaba esperando 30 s a un botón que ya no estaba en esa ruta.
+    await page.goto('/login')
     await page.getByRole('button', { name: 'Iniciar sesión' }).click()
     await expect(page.getByText('Campo requerido').first()).toBeVisible()
     // Sigue en el login (el botón de login continúa presente).
