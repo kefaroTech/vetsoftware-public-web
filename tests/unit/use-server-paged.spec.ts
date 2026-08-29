@@ -107,15 +107,20 @@ describe('useServerPaged — el fallo llega entero a la pantalla', () => {
     expect(api.errorTraceId.value).toBe(TRAZA)
   })
 
-  it('el literal genérico sigue siendo el suelo cuando no hay cuerpo (un timeout)', async () => {
-    // No es una regresión: es el caso que el literal SÍ cubre. Si desapareciera,
-    // la pantalla se quedaría con `error` vacío y no pintaría nada.
+  it('el literal genérico sigue siendo el suelo cuando no hay respuesta (un timeout)', async () => {
+    // No es una regresión: es el caso que el literal SÍ cubre. Un timeout nunca
+    // llega a tener `error.response` -el servidor no alcanzó a contestar-, así
+    // que no hay nada suyo que mostrar y el literal es lo único que puede
+    // pintar la pantalla. Antes de la corrección de `getProblemDetailMessage`
+    // esto devolvía el `error.message` crudo de axios
+    // (`"timeout of 15000ms exceeded"`, sin traducir); ese era el defecto, no
+    // el comportamiento correcto.
     const timeout = new AxiosError('timeout of 15000ms exceeded', 'ECONNABORTED')
     const { api } = montarPaginado(() => Promise.reject(timeout))
 
     await api.reload()
 
-    expect(api.error.value).toBe('timeout of 15000ms exceeded')
+    expect(api.error.value).toBe(LITERAL_GENERICO)
     expect(api.errorTraceId.value).toBeNull()
   })
 
