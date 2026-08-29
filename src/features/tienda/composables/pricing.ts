@@ -35,41 +35,24 @@ export function taxTreatmentLabel(taxTreatment: TaxTreatment): string {
   return TAX_TREATMENT_LABELS[taxTreatment] ?? taxTreatment
 }
 
-const moneyFmt = new Intl.NumberFormat('es-CO', {
-  style: 'currency',
-  currency: 'COP',
-  maximumFractionDigits: 0,
-})
-
 /**
- * Importe a pesos enteros. Es lo correcto para el ticket y para el carrito: en
- * Colombia no circulan centavos y un recibo con decimales confunde al cliente.
+ * El formato del dinero vive **una sola vez**, en `@/composables/money`.
  *
- * Ojo: redondear aquí es lo que hacía INVISIBLE el descuadre que describe
- * FE-09. Ya no hay descuadre que ocultar —el cálculo replica al backend al
- * centavo—, pero para las pantallas de desglose fiscal está `formatMoneyExact`,
- * que sí muestra los centavos cuando existen.
+ * <p>Aquí había una segunda implementación completa —dos `Intl.NumberFormat` y las dos
+ * funciones, idénticas hasta en el javadoc—, nacida cuando `composables/money.ts` se sobrescribió
+ * por error durante el trabajo en paralelo y se reconstruyó a partir de sus consumidores. Dos
+ * copias del formato del dinero es una promesa de que un día el ticket y la cuenta de cobro
+ * enseñarán el mismo importe con distinto número de decimales.
+ *
+ * <p>Se reexporta en vez de borrarse porque medio repositorio importa `formatMoney` desde este
+ * módulo (compras, cuentas, caja, el recibo): el nombre canónico es el de `composables/money`, y
+ * este fichero deja de tener implementación propia.
+ *
+ * <p>Ojo con `formatMoney` y FE-09: redondear a pesos enteros es lo que hacía INVISIBLE aquel
+ * descuadre. Ya no hay descuadre que ocultar —el cálculo replica al backend al centavo—, pero
+ * para las pantallas de desglose fiscal está `formatMoneyExact`.
  */
-export function formatMoney(n: number): string {
-  return moneyFmt.format(Number.isFinite(n) ? n : 0)
-}
-
-const moneyExactFmt = new Intl.NumberFormat('es-CO', {
-  style: 'currency',
-  currency: 'COP',
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-})
-
-/**
- * Importe con centavos, para desgloses fiscales: base gravable e IVA por
- * tarifa, que es lo que tiene que cuadrar con el documento electrónico. Aquí
- * esconder los centavos sería esconder precisamente lo que se está
- * comprobando.
- */
-export function formatMoneyExact(n: number): string {
-  return moneyExactFmt.format(Number.isFinite(n) ? n : 0)
-}
+export { formatMoney, formatMoneyExact } from '@/composables/money'
 
 /** Porcentaje (0–100) de impuesto efectivo de un ítem; 0 si no aplica. */
 export function effectiveTaxRate(

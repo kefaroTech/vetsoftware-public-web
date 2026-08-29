@@ -1,13 +1,12 @@
 /**
  * Dinero: aritmética y formato, en un solo sitio para toda la aplicación.
  *
- * <p><b>Aviso de reconstrucción.</b> Este fichero lo creó el frente de `landing` /
- * `contratacion` y quedó sobrescrito por error mientras se implantaba «Mi suscripción». Se ha
- * reconstruido a partir de sus consumidores reales —`planPricing.ts` usa `money.scaled`,
- * `money.multiply` y `money.sum`; siete componentes de `landing` y `contratacion` importan
- * `formatMoney`—, así que la superficie pública que necesitan está cubierta, pero **puede no
- * ser byte a byte la original**: no llegó a versionarse y no hay copia en HEAD de la que
- * partir. Si el frente de `landing` tenía aquí algo más, hay que volver a añadirlo.
+ * <p><b>Es la única fuente del formato.</b> `features/tienda/composables/pricing.ts` tenía una
+ * segunda implementación completa de `formatMoney` y `formatMoneyExact` —secuela de que este
+ * fichero se sobrescribiera por error mientras se implantaba «Mi suscripción» y se
+ * reconstruyera a partir de sus consumidores—. Hoy `pricing.ts` **reexporta estas dos**, así que
+ * medio repositorio puede seguir importándolas de allí sin que existan dos verdades sobre
+ * cuántos decimales lleva un importe.
  *
  * <p>La aritmética no se reimplementa: se reexporta de `features/tienda/composables/money`, que
  * es el puerto de `com.vetsoftware.app.shared.domain.Money` en `bigint` y la autoridad fiscal
