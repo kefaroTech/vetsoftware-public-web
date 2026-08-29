@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, inject } from 'vue'
+import { FieldKey } from '@/components/ui/fieldContext'
 
 /** Input de texto/email/tel/password con ícono, focus-ring y estado de error (handoff reg-fields). */
 const props = withDefaults(
@@ -21,6 +22,18 @@ const emit = defineEmits<{
   (e: 'update:modelValue', v: string): void
   (e: 'blur'): void
 }>()
+
+/**
+ * TAREA 0 — el contexto que publica `AuthField`. Se lee SIEMPRE después de la
+ * prop explícita (`props.id ?? field?.controlId`), igual que hacen las seis
+ * primitivas de `components/ui/`: así este input sigue funcionando fuera de un
+ * `AuthField` y ningún uso actual cambia de comportamiento.
+ */
+const field = inject(FieldKey, null)
+
+const controlId = computed(() => props.id ?? field?.controlId)
+const describedBy = computed(() => field?.describedBy.value)
+const ariaRequired = computed(() => (field?.required.value ? true : undefined))
 
 const focused = ref(false)
 const show = ref(false)
@@ -46,7 +59,7 @@ function onBlur() {
   >
     <v-icon v-if="icon" size="15" class="pub-input-ico">{{ icon }}</v-icon>
     <input
-      :id="id"
+      :id="controlId"
       :type="resolvedType"
       :value="modelValue"
       :placeholder="placeholder"
@@ -55,6 +68,8 @@ function onBlur() {
       :inputmode="inputmode"
       :disabled="disabled"
       :aria-invalid="invalid"
+      :aria-describedby="describedBy"
+      :aria-required="ariaRequired"
       @input="onInput"
       @focus="focused = true"
       @blur="onBlur"
@@ -91,11 +106,11 @@ function onBlur() {
 }
 
 .pub-input.is-invalid {
-  border-color: var(--pub-err-tx);
+  border-color: var(--pub-err-tx-2);
 }
 
 .pub-input.is-invalid.is-focused {
-  box-shadow: 0 0 0 3px rgb(220 38 38 / 10%);
+  box-shadow: 0 0 0 3px rgb(185 28 28 / 12%);
 }
 
 .pub-input.is-disabled {
@@ -104,7 +119,7 @@ function onBlur() {
 }
 
 .pub-input-ico {
-  color: #a89bbd;
+  color: var(--pub-ink-500);
   flex-shrink: 0;
 }
 
@@ -127,9 +142,14 @@ function onBlur() {
   border: none;
   background: transparent;
   cursor: pointer;
-  color: #a89bbd;
+  color: var(--pub-ink-500);
   display: grid;
   place-items: center;
   padding: 0;
+
+  /* §2.5.8 Target Size (Minimum), AA en 2.2: el ojo era un icono de 16 px sin
+     caja propia, muy por debajo de los 24×24 exigidos. */
+  min-width: 24px;
+  min-height: 24px;
 }
 </style>

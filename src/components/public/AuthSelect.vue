@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, inject, ref } from 'vue'
+import { FieldKey } from '@/components/ui/fieldContext'
 
 /** Select nativo estilizado con estado loading (handoff reg-fields `SelectInput`). */
-withDefaults(
+const props = withDefaults(
   defineProps<{
     modelValue: string
     id?: string
@@ -19,6 +20,14 @@ const emit = defineEmits<{
   (e: 'blur'): void
 }>()
 
+/** TAREA 0 — mismo cableado que `AuthInput`: la prop explícita primero, el
+ * contexto de `AuthField` después. Ver el comentario de `AuthField.vue`. */
+const field = inject(FieldKey, null)
+
+const controlId = computed(() => props.id ?? field?.controlId)
+const describedBy = computed(() => field?.describedBy.value)
+const ariaRequired = computed(() => (field?.required.value ? true : undefined))
+
 const focused = ref(false)
 function onChange(e: Event) {
   emit('update:modelValue', (e.target as HTMLSelectElement).value)
@@ -32,16 +41,18 @@ function onBlur() {
 <template>
   <div class="pub-select" :class="{ 'is-focused': focused, 'is-invalid': invalid }">
     <select
-      :id="id"
+      :id="controlId"
       :value="modelValue"
       :disabled="disabled || loading"
       :aria-invalid="invalid"
+      :aria-describedby="describedBy"
+      :aria-required="ariaRequired"
       :class="{ 'is-placeholder': !modelValue }"
       @change="onChange"
       @focus="focused = true"
       @blur="onBlur"
     >
-      <option v-if="placeholder" value="">{{ placeholder }}</option>
+      <option v-if="placeholder" value="">{{ loading ? 'Cargando…' : placeholder }}</option>
       <option v-for="o in options" :key="o.value" :value="o.value">{{ o.label }}</option>
     </select>
     <span class="pub-select-tail">
@@ -73,8 +84,11 @@ function onBlur() {
     box-shadow 0.15s;
 }
 
+/* `--pub-ink-300` mide 2,60:1 sobre blanco. El placeholder de este select NO es
+   decorativo: en los tres selects de la cascada geográfica dice «Cargando…»
+   mientras baja el catálogo, y ese es el único canal que informa de la espera. */
 .pub-select select.is-placeholder {
-  color: #a89bbd;
+  color: var(--pub-ink-500);
 }
 
 .pub-select select:disabled {
@@ -89,11 +103,11 @@ function onBlur() {
 }
 
 .pub-select.is-invalid select {
-  border-color: var(--pub-err-tx);
+  border-color: var(--pub-err-tx-2);
 }
 
 .pub-select.is-invalid.is-focused select {
-  box-shadow: 0 0 0 3px rgb(220 38 38 / 10%);
+  box-shadow: 0 0 0 3px rgb(185 28 28 / 12%);
 }
 
 .pub-select-tail {
@@ -102,7 +116,7 @@ function onBlur() {
   top: 50%;
   transform: translateY(-50%);
   pointer-events: none;
-  color: #a89bbd;
+  color: var(--pub-ink-500);
   display: grid;
   place-items: center;
 }

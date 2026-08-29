@@ -25,7 +25,10 @@
   --pub-err-tx-2: #b91c1c;
   --pub-err-bg: #fef2f2;
   --pub-err-bd: #fecaca;
-  --pub-ok-tx: #16a34a;
+
+  /* #16a34a medía 3,12:1 sobre `--pub-ok-bg` y fallaba §1.4.3 AA para texto
+     normal. #15803d mide 4,76:1 sobre el mismo fondo. */
+  --pub-ok-tx: #15803d;
   --pub-ok-bg: #ecfdf3;
   --pub-ok-bd: #bbf7d0;
   --pub-warn-tx: #92600a;
@@ -197,12 +200,15 @@
   font-family: Inter, sans-serif;
 }
 
+/* `--pub-err-tx` (#dc2626) sobre `--pub-err-bg` mide 4,41:1 y falla §1.4.3 AA
+   por 0,09. `--pub-err-tx-2` (#b91c1c) ya estaba declarado arriba y mide
+   5,91:1 sobre ese mismo fondo. Es un cambio de token, no un color nuevo. */
 .pub-error {
   padding: 9px 12px;
   border: 1px solid var(--pub-err-bd);
   border-radius: 8px;
   background: var(--pub-err-bg);
-  color: var(--pub-err-tx);
+  color: var(--pub-err-tx-2);
   font-size: 12.5px;
 }
 
@@ -210,4 +216,133 @@
   .pub-card {
     padding: 32px 24px;
   }
+}
+
+/* ===========================================================================
+   LANDING COMERCIAL — las siete clases que la landing y `/planes` necesitan.
+
+   Van aquí y NO en `primitives.css` a propósito: `primitives.css` y
+   `tokens.css` son gemelos TR-02, verificados idénticos byte a byte con la
+   consola, y ninguna de estas formas existe allí ni tiene por qué. Esta hoja es
+   tenant-only. El balance del diseño es cero primitivas nuevas en el gemelo.
+
+   Todas tienen tres usos o más; ninguna es CSS de un solo sitio disfrazado de
+   primitiva. Ninguna declara animación: el movimiento de esta zona vive en
+   `.pub-reveal` / `.pub-drift`, con su guarda de `prefers-reduced-motion` más
+   arriba en este mismo fichero.
+   =========================================================================== */
+
+/* §2.4.1 Bypass Blocks (A). Primer elemento focalizable del documento, fuera de
+   pantalla hasta recibir el foco. No se oculta con `display: none` ni con
+   `visibility: hidden`: eso lo sacaría del orden de tabulación y entonces no
+   habría nada que saltar. Blanco sobre `--pub-ame-700` mide 6,98:1. */
+.pub-skip {
+  position: absolute;
+  left: 12px;
+  top: -100px;
+  z-index: 50;
+  padding: 10px 16px;
+  border-radius: 0 0 9px 9px;
+  background: var(--pub-ame-700);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 0.15s ease-out;
+}
+
+.pub-skip:focus-visible {
+  top: 0;
+  outline: 3px solid var(--pub-ame-600);
+  outline-offset: 2px;
+}
+
+/* Ritmo vertical de una sección de la landing (§B, §C, §D, §E, §F). */
+.pub-section {
+  position: relative;
+  padding: clamp(48px, 7vw, 88px) clamp(20px, 5vw, 44px);
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1120px;
+}
+
+/* Encabezado de sección: `<h2>` + bajada, centrados y con ancho de lectura.
+   El título y la bajada se estilan POR ELEMENTO y no con una clase por
+   componente: las cinco secciones de la landing tenían el mismo cuerpo de regla
+   copiado, y eso es una primitiva que falta —lo dice `css:budget`, que cuenta
+   los cuerpos repetidos en más de tres componentes, y lo diría igual
+   `no-duplicate-primitive` si el cuerpo estuviera ya aquí—. */
+.pub-section-head {
+  max-width: 640px;
+  margin: 0 auto clamp(28px, 4vw, 44px);
+  text-align: center;
+}
+
+.pub-section-head h2 {
+  margin: 0;
+  font-family: 'Instrument Serif', serif;
+  font-weight: 400;
+  font-size: clamp(26px, 3.4vw, 38px);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--pub-ink-900);
+}
+
+.pub-section-head p {
+  margin: 10px 0 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--pub-ink-600);
+}
+
+/* Geometría y superficie de la tarjeta de plan. El realce de la recomendada NO
+   viaja aquí: va en el modificador, para que se pueda medir por separado. */
+.pub-plan-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 26px 24px 24px;
+  border-radius: 16px;
+  border: 1px solid var(--pub-line);
+  background: var(--pub-surface);
+  box-shadow: 0 8px 20px -14px rgb(91 33 182 / 18%);
+}
+
+/* §1.4.11 Non-text Contrast (AA): `--pub-line` mide 1,23:1 contra blanco, así
+   que un borde de ese color NO puede ser lo que distingue a la recomendada.
+   `--pub-ame-600` mide 5,38:1 sobre blanco y 4,56:1 sobre el fondo de la
+   landing. Y aun así el color no es el único canal (§1.4.1): la tarjeta lleva
+   además `.pub-badge` con texto visible. */
+.pub-plan-card--featured {
+  border: 2px solid var(--pub-ame-600);
+  box-shadow: 0 20px 40px -20px rgb(126 34 206 / 42%);
+}
+
+/* La cifra grande. `tabular-nums` para que «$89.000» y «$129.000» no bailen al
+   cambiar de ciclo con el conmutador. */
+.pub-price {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(30px, 3.4vw, 40px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--pub-ink-900);
+  font-variant-numeric: tabular-nums;
+}
+
+/* La insignia con TEXTO de «La que más eligen», y los rótulos equivalentes de
+   `/planes`. Es el canal no cromático que §1.4.1 exige. */
+.pub-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--pub-ame-700);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
