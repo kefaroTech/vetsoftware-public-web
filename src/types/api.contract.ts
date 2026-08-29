@@ -12,28 +12,46 @@
  * necesita `?.`. Eso es perder información, no ganarla. Afirmar conserva los tipos escritos a
  * mano —con su documentación de negocio— y detecta lo que de verdad rompe la pantalla.
  *
- * <p><b>Qué comprueba.</b> Tres cosas, y solo tres, porque son las que el contrato sabe expresar:
+ * <p><b>Qué comprueba.</b> Seis conjuntos de campos. La lista importa, porque de ella depende
+ * qué cambios del backend rompen este build y cuáles no:
  *
  * <ol>
- *   <li><b>Campos que no existen.</b> Si este repositorio declara un campo que el contrato no
- *       tiene, es un campo inventado, renombrado en el backend o eliminado — y en runtime vale
- *       `undefined`. Es el fallo que describe TR-01.</li>
- *   <li><b>Tipos primitivos incompatibles</b>, incluidos los enums: un campo que el backend
- *       declara como una unión cerrada y aquí se escribió como `string` acepta valores que el
- *       servidor rechazará.</li>
- *   <li><b>Campos obligatorios declarados opcionales.</b> springdoc deriva `required` de las
- *       anotaciones de validación de los DTO de entrada, así que en 187 esquemas de petición sí
- *       sabe qué exige el servidor. Declararlo opcional aquí deja construir una petición
- *       incompleta que compila y se rechaza con un 400.</li>
+ *   <li><b>Campos que no existen</b> (`UnknownFields`). Si este repositorio declara un campo que
+ *       el contrato no tiene, es un campo inventado, renombrado en el backend o eliminado — y en
+ *       runtime vale `undefined`. Es el fallo que describe TR-01.</li>
+ *   <li><b>Tipos primitivos incompatibles</b> (`MismatchedFields`), incluidos los enums: un campo
+ *       que el backend declara como una unión cerrada y aquí se escribió como `string` acepta
+ *       valores que el servidor rechazará. Un tipo local MÁS estrecho que el del contrato sí
+ *       pasa, y es legítimo.</li>
+ *   <li><b>Campos obligatorios declarados opcionales</b> (`MissingRequiredFields`). springdoc
+ *       deriva `required` de las anotaciones de validación de los DTO de entrada. Declararlo
+ *       opcional aquí deja construir una petición incompleta que compila y se rechaza con un
+ *       400.</li>
+ *   <li><b>Campos garantizados declarados nulables</b> (`NullableWhereRequired`). Desde que los
+ *       DTO de salida llevan `requiredMode`, el contrato SÍ dice qué garantiza devolver el
+ *       servidor, y declararlo nulable aquí obliga a comprobaciones que nunca se cumplen.</li>
+ *   <li><b>Campos del contrato que este repositorio NO declara en absoluto</b>
+ *       (`UndeclaredFields`), descontando el techo de `ContractGaps`.</li>
+ *   <li><b>Entradas caducadas del techo</b> (`StaleGaps`): quien termine de declarar un esquema
+ *       tiene que borrar su línea de `ContractGaps` o el build no compila.</li>
  * </ol>
  *
- * <p><b>Qué NO comprueba, a propósito.</b> La nulabilidad de las <em>respuestas</em>: los DTO de
- * salida son `record` sin anotaciones, así que el contrato no dice qué garantiza devolver el
- * servidor y ninguno de sus 400 esquemas de respuesta trae `required`. Tampoco la forma de los
- * campos anidados, porque cada tipo anidado tiene su propia atadura en la lista de abajo y se
- * comprueba ahí; compararla aquí solo produciría falsos positivos, ya que el generador emite
- * `campo?: string` donde este repositorio escribe `string | null` y esa diferencia no dice nada
- * sobre el backend.
+ * <p><b>Consecuencia que hay que tener delante, porque es contraintuitiva.</b> El quinto conjunto
+ * significa que <b>un campo NUEVO en una respuesta del backend rompe la compilación de todo front
+ * que ate ese esquema</b>. Un cambio 100 % aditivo —nada renombrado, nada borrado— NO es seguro
+ * para los fronts. Es deliberado: un campo que el servidor manda y la pantalla ignora es
+ * exactamente cómo se pierden datos en silencio (ver el javadoc de `UndeclaredFields`).
+ *
+ * <p>Ya ocurrió, y no es hipotético: al regenerar el contrato, `CatalogItemResponse` ganó el campo
+ * opcional `defaultTrialDays` y la consola dejó de compilar con
+ * `error TS2344: Type '"defaultTrialDays"' does not satisfy the constraint 'true'`. La atadura
+ * hizo su trabajo. Quien lea esta cabecera y planifique un cambio aditivo en el backend tiene que
+ * contar con este paso en los dos fronts.
+ *
+ * <p><b>Qué NO comprueba, a propósito.</b> La forma de los campos anidados: cada tipo anidado
+ * tiene su propia atadura en la lista de abajo y se comprueba ahí. Compararla aquí solo
+ * produciría falsos positivos, ya que el generador emite `campo?: string` donde este repositorio
+ * escribe `string | null` y esa diferencia no dice nada sobre el backend.
  */
 import type { components } from './api.generated'
 import type { PageResponse } from './pagination'
@@ -249,6 +267,52 @@ import type {
   ServiceResponse,
   TaxResponse,
 } from '../features/tienda/types/tienda'
+import type {
+  CancelSubscriptionRequest,
+  ChangeSubscriptionItemQuantityRequest,
+  RemoveSubscriptionItemRequest,
+  SubscriptionItemResponse,
+  SubscriptionResponse,
+} from '../features/suscripcion/types/suscripcion.types'
+import type {
+  CompanyAccessResponse,
+  CompanyCapacityResponse,
+  CompanyEntitlementResponse,
+  CompanyLimitEventResponse,
+  EffectiveLimitResponse,
+  SubModuleSummary,
+  SubscriptionItemLimitResponse,
+} from '../features/suscripcion/types/cupos.types'
+import type {
+  BillingDocumentResponse,
+  BillingDocumentTaxSummary,
+  CustomerCreditBalanceResponse,
+  CustomerCreditEntryResponse,
+  DunningBillingDocumentSummary,
+  DunningEventResponse,
+  DunningSubscriptionSummary,
+  SubscriptionChargeResponse,
+  SubscriptionPaymentResponse,
+} from '../features/suscripcion/types/cobros.types'
+import type {
+  RegisterSubscriptionPaymentMethodRequest,
+  RevokeSubscriptionPaymentMethodRequest,
+  SubscriptionPaymentMethodResponse,
+} from '../features/suscripcion/types/medios-pago.types'
+import type {
+  AcceptQuoteRequest,
+  QuoteAnswerResponse,
+  QuoteCompanySummary,
+  QuoteLineResponse,
+  QuoteResponse,
+  QuoteSummaryResponse,
+} from '../features/suscripcion/types/cotizaciones.types'
+import type {
+  PlanCapacity,
+  PlanInclude,
+  PublicCatalog,
+  PublicPlanContract,
+} from '../features/landing/types/plans.types'
 export type Schemas = components['schemas']
 
 /** Lo que el contrato sabe comparar campo a campo. Lo demás se comprueba por su propia atadura. */
@@ -657,4 +721,63 @@ export type ContractAssertions = [
   Expect<MatchesContract<VaccinationTypeResponse, 'VaccinationTypeResponse'>>,
   Expect<MatchesContract<VaccinationTypeSummary, 'VaccinationTypeSummary'>>,
   Expect<MatchesContract<WeightRecordResponse, 'WeightRecordResponse'>>,
+
+  // ── Mi suscripción ──────────────────────────────────────────────────────────────────
+  // Cada tipo ANIDADO lleva su propia línea, y no es celo: el comparador solo alcanza
+  // `string | number | boolean`, así que `capacities[]`, `taxes[]`, `lines[]` y los
+  // `subscription{}` / `billingDocument{}` de un aviso de cobranza le resultan invisibles
+  // desde su padre. Atando cada nivel por separado, la ceguera del comparador deja de ser
+  // un hueco: no baja, pero cada escalón está cubierto por el suyo.
+  Expect<MatchesContract<SubscriptionResponse, 'SubscriptionResponse'>>,
+  Expect<MatchesContract<SubscriptionItemResponse, 'SubscriptionItemResponse'>>,
+  Expect<MatchesContract<CancelSubscriptionRequest, 'CancelSubscriptionRequest'>>,
+  Expect<MatchesContract<RemoveSubscriptionItemRequest, 'RemoveSubscriptionItemRequest'>>,
+  Expect<
+    MatchesContract<ChangeSubscriptionItemQuantityRequest, 'ChangeSubscriptionItemQuantityRequest'>
+  >,
+  Expect<MatchesContract<CompanyAccessResponse, 'CompanyAccessResponse'>>,
+  Expect<MatchesContract<CompanyCapacityResponse, 'CompanyCapacityResponse'>>,
+  Expect<MatchesContract<CompanyEntitlementResponse, 'CompanyEntitlementResponse'>>,
+  Expect<MatchesContract<SubModuleSummary, 'SubModuleSummary'>>,
+  Expect<MatchesContract<SubscriptionItemLimitResponse, 'SubscriptionItemLimitResponse'>>,
+  Expect<MatchesContract<EffectiveLimitResponse, 'EffectiveLimitResponse'>>,
+  Expect<MatchesContract<CompanyLimitEventResponse, 'CompanyLimitEventResponse'>>,
+  Expect<MatchesContract<BillingDocumentResponse, 'BillingDocumentResponse'>>,
+  Expect<MatchesContract<BillingDocumentTaxSummary, 'BillingDocumentTaxSummary'>>,
+  Expect<MatchesContract<SubscriptionChargeResponse, 'SubscriptionChargeResponse'>>,
+  Expect<MatchesContract<SubscriptionPaymentResponse, 'SubscriptionPaymentResponse'>>,
+  Expect<MatchesContract<CustomerCreditBalanceResponse, 'CustomerCreditBalanceResponse'>>,
+  Expect<MatchesContract<CustomerCreditEntryResponse, 'CustomerCreditEntryResponse'>>,
+  Expect<MatchesContract<DunningEventResponse, 'DunningEventResponse'>>,
+  Expect<MatchesContract<DunningSubscriptionSummary, 'DunningSubscriptionSummary'>>,
+  Expect<MatchesContract<DunningBillingDocumentSummary, 'DunningBillingDocumentSummary'>>,
+  Expect<MatchesContract<SubscriptionPaymentMethodResponse, 'SubscriptionPaymentMethodResponse'>>,
+  Expect<
+    MatchesContract<
+      RegisterSubscriptionPaymentMethodRequest,
+      'RegisterSubscriptionPaymentMethodRequest'
+    >
+  >,
+  Expect<
+    MatchesContract<
+      RevokeSubscriptionPaymentMethodRequest,
+      'RevokeSubscriptionPaymentMethodRequest'
+    >
+  >,
+  Expect<MatchesContract<QuoteResponse, 'QuoteResponse'>>,
+  Expect<MatchesContract<QuoteSummaryResponse, 'QuoteSummaryResponse'>>,
+  Expect<MatchesContract<QuoteLineResponse, 'QuoteLineResponse'>>,
+  Expect<MatchesContract<QuoteAnswerResponse, 'QuoteAnswerResponse'>>,
+  Expect<MatchesContract<QuoteCompanySummary, 'CompanySummary'>>,
+  Expect<MatchesContract<AcceptQuoteRequest, 'AcceptQuoteRequest'>>,
+  // El catálogo público de la landing. `PublicPlan` NO se ata: es
+  // `PublicPlanContract` más `recommended`, que es una decisión comercial de la
+  // portada y no un campo del contrato. Atar el que lleva el añadido daría un
+  // `UnknownFields` legítimo por un campo que el backend no debe conocer.
+  Expect<MatchesContract<PublicCatalog, 'PublicPlanCatalogResponse'>>,
+  Expect<MatchesContract<PublicPlanContract, 'PublicPlanResponse'>>,
+  Expect<MatchesContract<PlanInclude, 'PublicPlanIncludedResponse'>>,
+  Expect<MatchesContract<PlanCapacity, 'PublicPlanCapacityResponse'>>,
+  // Las envolturas de página no necesitan una línea por contenido: los cinco campos los
+  // declara `PageResponse<T>`, no el elemento, y ya hay una instanciación centinela.
 ]
