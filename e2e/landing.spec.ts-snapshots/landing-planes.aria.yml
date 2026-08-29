@@ -1,0 +1,55 @@
+- region "Planes":
+  - heading "Planes" [level=2]
+  - paragraph: Elige por el tamaño de tu clínica, no por una lista de funciones.
+  - group "Cómo prefieres pagar":
+    - text: ""
+    - radio "Mes a mes" [checked]
+    - text: Mes a mes
+    - radio "Un año — 2 meses gratis"
+    - text: Un año — 2 meses gratis
+  - article:
+    - heading "Esencial" [level=3]
+    - paragraph: Para una clínica que empieza
+    - paragraph: /desde \$ \d+\.\d+ \+ IVA al mes/
+    - list:
+      - listitem: 3 personas incluidas
+      - listitem: 1 sede incluida
+      - listitem: Agenda
+      - listitem: Historia clínica
+      - listitem: Caja
+    - link "Empezar con Esencial":
+      - /url: /planes?plan=ESENCIAL&ciclo=MENSUAL
+  - article:
+    - paragraph: La que más eligen
+    - heading "Clínica" [level=3]
+    - paragraph: Para una clínica con quirófano y hospital
+    - paragraph: /desde \$ \d+\.\d+ \+ IVA al mes/
+    - list:
+      - listitem: 8 personas incluidas
+      - listitem: 2 sedes incluidas
+      - listitem: Agenda
+      - listitem: Historia clínica
+      - listitem: Caja
+      - listitem: Hospitalización
+      - listitem: Inventario
+    - link "Empezar con Clínica":
+      - /url: /planes?plan=CLINICA&ciclo=MENSUAL
+  - article:
+    - heading "Cadena" [level=3]
+    - paragraph: Para varias sedes con facturación electrónica
+    - paragraph: /desde \$ \d+\.\d+ \+ IVA al mes/
+    - list:
+      - listitem: /\d+ personas incluidas/
+      - listitem: 5 sedes incluidas
+      - listitem: Agenda
+      - listitem: Historia clínica
+      - listitem: Caja
+      - listitem: Hospitalización
+      - listitem: Inventario
+      - listitem: Facturación electrónica DIAN
+    - link "Empezar con Cadena":
+      - /url: /planes?plan=CADENA&ciclo=MENSUAL
+  - paragraph: Los precios son orientativos, en pesos colombianos (COP), y no incluyen IVA. El precio exacto para tu clínica lo ves antes de confirmar, sin compromiso y sin tarjeta.
+  - paragraph:
+    - link "Comparar los tres planes en detalle":
+      - /url: /planes

@@ -13,6 +13,11 @@ withDefaults(
 
 <template>
   <div class="pub-scope pub-shell">
+    <!-- §2.4.1 Bypass Blocks (A). Primer elemento focalizable del documento:
+         antes de la marca, antes del enlace contextual de la barra. Cubre las
+         siete pantallas públicas de una vez, que es justo por lo que vive aquí
+         y no en cada vista. -->
+    <a class="pub-skip" href="#contenido">Saltar al contenido</a>
     <div
       class="pub-blob"
       style="
@@ -44,7 +49,7 @@ withDefaults(
       </div>
     </header>
 
-    <main class="pub-main">
+    <main id="contenido" class="pub-main" tabindex="-1">
       <slot />
     </main>
 
@@ -97,6 +102,13 @@ withDefaults(
   color: var(--pub-ink-500);
 }
 
+/* El destino del salto no es focalizable por naturaleza: sin `tabindex="-1"`
+   el hash mueve el scroll pero deja el foco en el `<body>`, y la siguiente
+   tabulación vuelve a la barra de navegación — el bloque no se ha saltado. */
+.pub-main:focus {
+  outline: none;
+}
+
 .pub-topbar-right :deep(a) {
   color: var(--pub-ame-700);
   font-weight: 600;
@@ -124,7 +136,11 @@ withDefaults(
   align-items: center;
   justify-content: space-between;
   font-size: 12px;
-  color: var(--pub-ink-400);
+
+  /* `--pub-ink-400` mide 4,05:1 sobre blanco y 3,43:1 sobre el fondo de la
+     zona pública: falla §1.4.3 AA para texto normal, y este pie es de 12 px.
+     `--pub-ink-500` mide 6,12:1 y 5,18:1. */
+  color: var(--pub-ink-500);
   flex-shrink: 0;
 }
 
@@ -133,7 +149,7 @@ withDefaults(
 }
 
 .pub-footer-back {
-  color: var(--pub-ink-400);
+  color: var(--pub-ink-500);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -141,6 +157,6 @@ withDefaults(
 }
 
 .pub-footer-back:hover {
-  color: var(--pub-ink-500);
+  color: var(--pub-ink-700);
 }
 </style>

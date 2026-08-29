@@ -31,6 +31,24 @@ export const SELECTED_BRANCH_KEY = 'vetsoft.branch'
  */
 export const RECEIPT_WIDTH_KEY = 'vetrina:receipt-width'
 
+/**
+ * Intención de contratación del embudo comercial: el plan, el ciclo y las
+ * cantidades que el prospecto eligió en la landing.
+ *
+ * **NO es volátil, y es deliberado.** Aplicando la regla de arriba —¿depende de
+ * QUIÉN inició sesión?— la respuesta es que no: esta clave se escribe **antes de
+ * que exista ninguna sesión**, en `/` o en `/planes`, por alguien que todavía no
+ * es usuario. Entre elegir el plan y poder contratarlo hay un salto de
+ * verificación por correo que puede durar días; si un cierre de sesión se la
+ * llevara, quien entrase a comprobar algo con otra cuenta perdería la elección
+ * que hizo antes de registrarse, que es justo lo que este dato existe para
+ * evitar. No lleva ningún dato clínico ni personal: plan, ciclo y dos números.
+ *
+ * El `v1` no es adorno: cuando la forma cambie, una clave nueva evita leer un
+ * objeto viejo con campos que ya no existen.
+ */
+export const CONTRATACION_INTENCION_KEY = 'vs.contratacion.intencion.v1'
+
 /** Claves que un cierre de sesión debe llevarse por delante. */
 export const VOLATILE_STORAGE_KEYS: readonly string[] = [
   NUEVA_CONSULTA_DRAFT_KEY,

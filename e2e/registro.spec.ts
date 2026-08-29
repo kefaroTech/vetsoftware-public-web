@@ -193,7 +193,7 @@ function buildSignupValues(): SignupValues {
 
 /** Rellena el formulario de signup (sin enviar) con los valores dados. */
 async function fillSignup(page: Page, v: SignupValues): Promise<void> {
-  await page.goto('/signup')
+  await page.goto('/registro')
   await expect(page.getByRole('heading', { name: 'Crear cuenta' })).toBeVisible()
   // Empresa (documentType queda en NIT por defecto).
   await page.getByLabel('Número de documento *').fill(v.identifier)
@@ -397,11 +397,11 @@ test.describe('Registro de veterinaria + roles base + visibilidad por permiso', 
       await page.getByRole('button', { name: 'Crear cuenta' }).click()
       const resp = await respProm
       expect(resp.status(), 'registrar con identificador duplicado debe devolver 400').toBe(400)
-      // No debe auto-loguear: permanece en /signup y muestra el banner de error
+      // No debe auto-loguear: permanece en /registro y muestra el banner de error
       // (el v-alert de submitError; se filtra por texto para no chocar con los
       // mensajes de campo que Vuetify también expone como role="alert").
       await expect(page, 'no debe entrar al dashboard con identificador duplicado').toHaveURL(
-        /\/signup/,
+        /\/registro/,
       )
       await expect(
         page.locator('.v-alert').filter({ hasText: /in use|uso|No se pudo crear/i }),

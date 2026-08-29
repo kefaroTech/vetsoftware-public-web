@@ -77,10 +77,20 @@ describe('withBranchBody', () => {
     expect(withBranchBody({ total: 1_000 })).toEqual({ total: 1_000, branchId: 7 })
   })
 
-  it('con "Todas las sedes" deja que el backend elija la Principal', () => {
+  it('con "Todas las sedes" deja que el backend elija la Principal', async () => {
     getSelectedBranchId.mockReturnValue(null)
 
-    expect(withBranchBody({ total: 1_000 })).toEqual({ total: 1_000 })
+    const body = withBranchBody({ total: 1_000 })
+    // Sin sede resuelta, `withBranchBody` marca el cuerpo para que
+    // `http.client.ts` espere al resolutor (issue #215): la marca vive en un
+    // símbolo propio del objeto y se retira sola en el siguiente microtask
+    // (`markPendingBranchBody`), no de forma síncrona. Sin este `await`, el
+    // símbolo seguiría presente y `toEqual` lo vería como una diferencia real
+    // aunque invisible en el log ("no visual difference").
+    await Promise.resolve()
+
+    expect(body).toEqual({ total: 1_000 })
+    expect(Object.getOwnPropertySymbols(body)).toEqual([])
   })
 
   it('respeta el branchId explícito del formulario', () => {

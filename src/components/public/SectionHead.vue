@@ -47,7 +47,11 @@ defineProps<{
 
 .pub-sechead-desc {
   font-size: 12px;
-  color: var(--pub-ink-400);
+
+  /* `--pub-ink-400` mide 4,05:1 sobre blanco: falla §1.4.3 AA para texto normal, y esta
+     bajada es de 12 px. `--pub-ink-500` mide 6,12:1. Superviviente de la tabla de
+     contraste que ya corrigió `PublicLayout`. */
+  color: var(--pub-ink-500);
   margin-top: 1px;
 }
 </style>

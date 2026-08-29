@@ -1,0 +1,11 @@
+- navigation "Secciones de mi suscripción":
+  - link "Mi plan":
+    - /url: /dashboard/suscripcion/plan
+  - link "Cupos y consumo":
+    - /url: /dashboard/suscripcion/cupos
+  - link "Mis cuentas de cobro":
+    - /url: /dashboard/suscripcion/cobros
+  - link "Medios de pago":
+    - /url: /dashboard/suscripcion/medios-pago
+  - link "Cotizaciones":
+    - /url: /dashboard/suscripcion/cotizaciones

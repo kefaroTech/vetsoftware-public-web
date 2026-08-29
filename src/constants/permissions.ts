@@ -155,6 +155,52 @@ export const PERMISSIONS = {
   WITHHOLDING_CONFIG_READ: 'withholdingConfig.read',
   COMPANY_TAX_PROFILE_MANAGE: 'companyTaxProfile.manage',
   COMPANY_TAX_PROFILE_READ: 'companyTaxProfile.read',
+  // Autoservicio de la suscripción («Mi suscripción»). Todos existen ya en el backend:
+  // sembrados por 259 (los `.read`), 260 (update/cancel/accept/reject), 366 (los `.read` de
+  // límites) y BACKFILLEADOS sobre las empresas existentes por la 377.
+  //
+  // Ese backfill importa para el front: la 377 documenta que `entitlement.read`,
+  // `subscriptionPayment.read`, `billingDocumentApplication.read`, `dunningEvent.read` y
+  // `subscription.read` se sembraron y nunca se asignaron hasta ella. Traducción: hay empresas
+  // cuyo rol ADMIN no tiene alguno de estos. Ninguna pantalla de la feature puede asumirlos —
+  // cada bloque degrada a su hueco honesto y ninguna ausencia deja la pantalla en blanco.
+  SUBSCRIPTION_READ: 'subscription.read',
+  SUBSCRIPTION_UPDATE: 'subscription.update',
+  SUBSCRIPTION_CANCEL: 'subscription.cancel',
+  ENTITLEMENT_READ: 'entitlement.read',
+  SUBSCRIPTION_ITEM_LIMIT_READ: 'subscriptionItemLimit.read',
+  COMPANY_LIMIT_OVERRIDE_READ: 'companyLimitOverride.read',
+  COMPANY_LIMIT_EVENT_READ: 'companyLimitEvent.read',
+  SUBSCRIPTION_BILLING_READ: 'subscriptionBilling.read',
+  SUBSCRIPTION_PAYMENT_READ: 'subscriptionPayment.read',
+  CUSTOMER_CREDIT_READ: 'customerCredit.read',
+  DUNNING_EVENT_READ: 'dunningEvent.read',
+  SUBSCRIPTION_PAYMENT_METHOD_READ: 'subscriptionPaymentMethod.read',
+  SUBSCRIPTION_PAYMENT_METHOD_CREATE: 'subscriptionPaymentMethod.create',
+  SUBSCRIPTION_PAYMENT_METHOD_UPDATE: 'subscriptionPaymentMethod.update',
+  QUOTE_READ: 'quote.read',
+  QUOTE_ACCEPT: 'quote.accept',
+  QUOTE_REJECT: 'quote.reject',
+  /**
+   * Autocontratación: pedir la propia oferta (`POST /quotes/self-serve`, sembrado por el
+   * changeset 378 con backfill sobre las empresas existentes).
+   *
+   * **Lo usa el paso 6 del embudo** (`ContratarView`), que esconde el botón de confirmar cuando
+   * el rol no lo tiene. El gate del servidor vive en el puerto y no en el controlador:
+   * `hasRole('SYSTEM') or (hasAuthority('quote.request') and @authz.isMyCompany(#command.companyId))`.
+   * La segunda mitad se cumple sola —la empresa no viaja en el cuerpo, la pone el controlador
+   * desde el principal—, así que para un empleado del tenant este permiso es la puerta entera.
+   *
+   * <p>**Es de nivel `FULL`, y eso hay que tenerlo delante al usarlo.** No termina en `.read`,
+   * así que el backfill de la 378 no lo concedió a los roles `READ_ONLY`: una empresa en mora no
+   * lo tiene. La ausencia es intencionada y significa «no puede contratar ahora mismo», no «hay
+   * un permiso mal sembrado» — la pantalla la trata como estado de cuenta, no como error.
+   *
+   * <p>Lo que este permiso **no** cubre: aceptar la oferta (`quote.accept`) y encender los
+   * módulos, que hoy no lo hace nadie.
+   */
+  QUOTE_REQUEST: 'quote.request',
+  LEGAL_DOCUMENT_READ: 'legaldocument.read',
 } as const
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS]

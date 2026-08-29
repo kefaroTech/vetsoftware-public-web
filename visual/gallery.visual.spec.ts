@@ -75,6 +75,17 @@ const SHOTS = [
   // salen de cualquier recorte por pantalla.
   'resumen-de-errores',
   'dialogos',
+
+  // La familia de tonos completa, y la zona pública entera. Los tres bloques
+  // entran a la vez porque comparten el mismo hueco: hasta hoy la galería no
+  // cargaba `public-auth.css`, así que NINGUNA captura veía la landing, las
+  // siete pantallas de sesión ni el flujo comercial. Los dos cambios de token
+  // por contraste (`--pub-ok-tx` y el color de `.pub-error`) y la primitiva
+  // nueva `.ds-tone--warning` habrían pasado en verde: no por tolerancia, sino
+  // porque no había nada que comparar.
+  'tonos',
+  'publico-campos',
+  'publico-plan',
 ] as const
 
 /**

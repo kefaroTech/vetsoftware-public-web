@@ -17,15 +17,21 @@ import type {
  * padre; aquí sólo se pinta. `form` llega como el `toRefs` del mismo `reactive`,
  * así que escribir en estos `v-model` escribe en el borrador original — el mismo
  * trato que `AppointmentWhenFields` da al suyo.
+ *
+ * `fieldIds` baja desde el padre porque los enlaces de `ErrorSummary` tienen que
+ * conocer el id del control ANTES de que este componente renderice.
  */
 const props = defineProps<{
   form: ToRefs<RegisterFormState>
   err: (key: RegisterFieldKey) => string | undefined
+  fieldIds: Readonly<Record<RegisterFieldKey, string>>
   markTouched: (key: RegisterFieldKey) => void
   sanitizeIdentifier: (value: string) => void
   sanitizePhone: (value: string) => void
   isNit: boolean
   docHint: string
+  /** §5, caso 5: el servidor rechazó el documento. Ver `RegisterForm.vue`. */
+  nitTaken: boolean
   docTypeOptions: RegisterOption[]
   regimeOptions: RegisterOption[]
   countryOptions: RegisterOption[]
@@ -62,6 +68,7 @@ const {
           <AuthSelect v-model="documentType" :options="docTypeOptions" />
         </AuthField>
         <AuthField
+          :id="fieldIds.companyIdentifier"
           label="Número de documento"
           required
           :hint="docHint"
@@ -78,10 +85,19 @@ const {
             @update:model-value="sanitizeIdentifier"
             @blur="markTouched('companyIdentifier')"
           />
+          <template #after>
+            <p v-if="nitTaken" class="reg-way-out">
+              Si esta clínica es tuya,
+              <RouterLink :to="{ name: 'login' }">inicia sesión</RouterLink>. Si crees que es un
+              error, escríbenos a
+              <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a>.
+            </p>
+          </template>
         </AuthField>
       </div>
 
       <AuthField
+        :id="fieldIds.companyName"
         label="Razón social"
         required
         :error="err('companyName')"
@@ -91,6 +107,7 @@ const {
           v-model="companyName"
           placeholder="Clínica Veterinaria Patitas S.A.S."
           :maxlength="100"
+          autocomplete="organization"
           icon="mdi-office-building-outline"
           :invalid="!!err('companyName')"
           @blur="markTouched('companyName')"
@@ -98,7 +115,12 @@ const {
       </AuthField>
 
       <div class="reg-grid-2">
-        <AuthField label="Régimen tributario" required :error="err('taxRegime')">
+        <AuthField
+          :id="fieldIds.taxRegime"
+          label="Régimen tributario"
+          required
+          :error="err('taxRegime')"
+        >
           <AuthSelect
             v-model="taxRegime"
             :options="regimeOptions"
@@ -108,6 +130,7 @@ const {
           />
         </AuthField>
         <AuthField
+          :id="fieldIds.fiscalEmail"
           label="Correo fiscal"
           required
           :error="err('fiscalEmail')"
@@ -118,6 +141,7 @@ const {
             type="email"
             placeholder="facturacion@clinica.com"
             :maxlength="255"
+            autocomplete="email"
             icon="mdi-receipt-text-outline"
             :invalid="!!err('fiscalEmail')"
             @blur="markTouched('fiscalEmail')"
@@ -131,10 +155,12 @@ const {
             v-model="companyAddress"
             placeholder="Cra 12 # 34-56"
             :maxlength="200"
+            autocomplete="street-address"
             icon="mdi-map-marker-outline"
           />
         </AuthField>
         <AuthField
+          :id="fieldIds.companyContactNumber"
           label="Teléfono de contacto"
           hint="Opcional"
           :error="err('companyContactNumber')"
@@ -144,6 +170,7 @@ const {
             type="tel"
             placeholder="+57 601 234 5678"
             :maxlength="30"
+            autocomplete="tel"
             icon="mdi-phone-outline"
             :invalid="!!err('companyContactNumber')"
             @update:model-value="sanitizePhone"
@@ -153,7 +180,7 @@ const {
       </div>
 
       <div class="reg-grid-3">
-        <AuthField label="País" required :error="err('countryId')">
+        <AuthField :id="fieldIds.countryId" label="País" required :error="err('countryId')">
           <AuthSelect
             v-model="countryId"
             :options="countryOptions"
@@ -162,7 +189,7 @@ const {
             @blur="markTouched('countryId')"
           />
         </AuthField>
-        <AuthField label="Departamento" required :error="err('stateId')">
+        <AuthField :id="fieldIds.stateId" label="Departamento" required :error="err('stateId')">
           <AuthSelect
             v-model="stateId"
             :options="stateOptions"
@@ -173,7 +200,7 @@ const {
             @blur="markTouched('stateId')"
           />
         </AuthField>
-        <AuthField label="Ciudad" required :error="err('cityId')">
+        <AuthField :id="fieldIds.cityId" label="Ciudad" required :error="err('cityId')">
           <AuthSelect
             v-model="cityId"
             :options="cityOptions"
@@ -197,5 +224,18 @@ const {
 .reg-fields {
   gap: 15px;
   margin-top: 18px;
+}
+
+.reg-way-out {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--pub-ink-600);
+}
+
+.reg-way-out :deep(a),
+.reg-way-out a {
+  color: var(--pub-ame-700);
+  font-weight: 600;
 }
 </style>

@@ -23,3 +23,12 @@ api/openapi.json
 # guarde aquí necesita el formateador — son binarios de fuente y los textos
 # legales que los acompañan.
 visual/fonts/
+
+# Instantáneas ARIA de Playwright (`toMatchAriaSnapshot`). Las ESCRIBE la
+# herramienta con `--update-snapshots` y las vuelve a escribir en cada
+# regeneración: si Prettier las reformatea —les añade el salto de línea final
+# que Playwright no pone—, la siguiente regeneración lo quita y `format:check`
+# se pone rojo otra vez. Es el mismo criterio que ya excluye
+# `visual/__screenshots__` de facto (son PNG) y `test-results`: no se formatea
+# lo que genera una herramienta.
+e2e/**/*-snapshots/

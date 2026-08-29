@@ -14,6 +14,13 @@ import '../src/assets/styles/tokens.css'
 import '../src/assets/styles/base.css'
 import '../src/assets/styles/primitives.css'
 import '../src/assets/styles/app.css'
+// La hoja de la ZONA PÚBLICA. Entra porque la reparación de accesibilidad de
+// nivel A y el flujo comercial viven ahí, y hasta ahora ninguna captura la
+// cargaba: `--pub-ok-tx` y el color de `.pub-error` cambiaron de token sin que
+// ningún gate visual pudiera verlo. No arrastra nada al resto de la galería —
+// sus variables se declaran bajo `.pub-scope`, no en `:root`, y todos sus
+// selectores son de clase `.pub-*`.
+import '../src/assets/styles/public-auth.css'
 import Gallery from './Gallery.vue'
 
 createApp(Gallery).mount('#app')
