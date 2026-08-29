@@ -88,8 +88,8 @@ const usuariosTexto = computed(
 
 .land-resume-primary {
   border: none;
-  background: linear-gradient(180deg, #9333ea, #7e22ce);
-  color: #fff;
+  background: linear-gradient(180deg, var(--pub-ame-600), var(--pub-ame-700));
+  color: var(--pub-surface);
 }
 
 .land-resume-ghost {

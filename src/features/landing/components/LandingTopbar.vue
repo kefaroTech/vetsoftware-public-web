@@ -54,10 +54,10 @@ import { RouterLink } from 'vue-router'
   width: 32px;
   height: 32px;
   border-radius: 9px;
-  background: linear-gradient(135deg, #a855f7, #581c87);
+  background: linear-gradient(135deg, var(--pub-ame-500), var(--pub-ame-900));
   display: grid;
   place-items: center;
-  color: #fff;
+  color: var(--pub-surface);
   box-shadow: 0 4px 10px -2px rgb(126 34 206 / 45%);
 }
 
@@ -95,8 +95,8 @@ import { RouterLink } from 'vue-router'
 }
 
 .land-nav-cta {
-  color: #fff;
-  background: linear-gradient(180deg, #9333ea, #7e22ce);
+  color: var(--pub-surface);
+  background: linear-gradient(180deg, var(--pub-ame-600), var(--pub-ame-700));
   box-shadow: var(--pub-btn-shadow);
 }
 </style>

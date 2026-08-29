@@ -75,6 +75,11 @@ const tarjetas = [
   border-radius: 10px;
   display: grid;
   place-items: center;
+
+  /* Los tres tintes de este degradado (#f3e8ff, #e9d5ff, #ecd9fb) NO tienen token equivalente
+     en `public-auth.css`, y no se inventa uno aquí: crear paleta es una decisión del sistema de
+     diseño, no de un componente, y cambiarles el valor movería una línea base visual ya
+     verificada. Quedan reportados como pendientes de tokenizar. */
   background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
   border: 1px solid #ecd9fb;
   color: var(--pub-ame-700);

@@ -113,14 +113,14 @@ function irAPlanes(e: Event) {
 }
 
 .land-cta--primary {
-  background: linear-gradient(180deg, #9333ea, #7e22ce);
-  color: #fff;
+  background: linear-gradient(180deg, var(--pub-ame-600), var(--pub-ame-700));
+  color: var(--pub-surface);
   box-shadow: var(--pub-btn-shadow);
 }
 
 .land-cta--ghost {
   background: rgb(255 255 255 / 70%);
-  border: 1px solid #e6ddf0;
+  border: 1px solid var(--pub-line-strong);
   color: var(--pub-ink-700);
 }
 

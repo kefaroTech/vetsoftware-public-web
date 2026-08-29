@@ -74,7 +74,7 @@ const pasos = [
   display: grid;
   place-items: center;
   background: var(--pub-ame-700);
-  color: #fff;
+  color: var(--pub-surface);
   font-size: 13px;
   font-weight: 700;
 }

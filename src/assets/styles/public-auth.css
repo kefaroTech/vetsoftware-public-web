@@ -20,8 +20,17 @@
   --pub-ink-300: #a89bbd;
   --pub-line: #ece5f4;
   --pub-line-2: #f0eaf7;
+
+  /* El borde de las tarjetas secundarias de la portada. Estaba escrito a pelo en dos SFC
+     (`LandingHero`, `LandingFinalCta`) con el mismo valor y ningún token equivalente, así
+     que ninguna auditoría de contraste lo veía. Mismo valor exacto: cero cambio visual. */
+  --pub-line-strong: #e6ddf0;
   --pub-surface: #fff;
-  --pub-err-tx: #dc2626;
+
+  /* `--pub-err-tx: #dc2626` se retira: medía 4,41:1 sobre `--pub-err-bg` y fallaba
+     §1.4.3 AA para texto normal. Sus dos últimos consumidores (`RestablecerContrasenaView`,
+     `VerifyEmailView`) pasan a `-tx-2`, que es lo que el resto de la zona pública ya usaba.
+     Dejarlo declarado invitaba a volver a elegirlo. */
   --pub-err-tx-2: #b91c1c;
   --pub-err-bg: #fef2f2;
   --pub-err-bd: #fecaca;

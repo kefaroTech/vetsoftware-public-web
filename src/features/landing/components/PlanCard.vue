@@ -170,8 +170,8 @@ const puntos = computed<string[]>(() => {
   font-size: 14.5px;
   font-weight: 600;
   text-decoration: none;
-  background: linear-gradient(180deg, #9333ea, #7e22ce);
-  color: #fff;
+  background: linear-gradient(180deg, var(--pub-ame-600), var(--pub-ame-700));
+  color: var(--pub-surface);
   box-shadow: var(--pub-btn-shadow);
 }
 </style>
