@@ -63,6 +63,25 @@ import BaseTextarea from '../src/components/ui/BaseTextarea.vue'
 // dos únicos consumidores vivos teleportan a `body`, fuera del alcance de
 // cualquier captura recortada por `data-shot`.
 import ErrorSummary from '../src/components/feedback/ErrorSummary.vue'
+
+// ── La zona pública (landing + las 7 pantallas de sesión) ─────────────────
+// `AuthField` es el componente que la reparación de nivel A cambió entero: el
+// `<label>` ganó `for`, el error pasó de `<span role="alert">` suelto a un `<p>`
+// con icono dentro de una región viva persistente, y dos colores cambiaron de
+// token por contraste (`--pub-err-tx` → `--pub-err-tx-2` en el error,
+// `--pub-ink-400` → `--pub-ink-500` en la pista). Nada de eso lo veía ninguna
+// captura: la galería no cargaba `public-auth.css`.
+//
+// Se monta el componente REAL, por el mismo motivo que los campos de la app: el
+// color vive en la hoja, pero la geometría —hueco, tamaños, el icono del
+// error— vive en su `<style scoped>`, y un campo dibujado a mano aquí tendría
+// los colores buenos y ninguna forma.
+//
+// `AuthInput` se usa SIN `icon` y sin `type="password"` a propósito: los dos
+// caminos pintan `<v-icon>`, y esta galería no monta Vuetify (no monta ningún
+// plugin, que es lo que la mantiene determinista).
+import AuthField from '../src/components/public/AuthField.vue'
+import AuthInput from '../src/components/public/AuthInput.vue'
 import type { ErrorSummaryItem } from '../src/components/feedback/ErrorSummary.vue'
 import BaseTabs from '../src/components/ui/BaseTabs.vue'
 import type { TabItem } from '../src/components/ui/tabs'
@@ -81,6 +100,11 @@ import type { CashSessionStatus, MethodTotal } from '../src/features/caja/types/
  * Al añadir una primitiva a `primitives.css`, añádela también aquí: lo que no
  * está en la galería no tiene red.
  */
+
+/** Valores fijos para los campos públicos: la captura no puede depender de nada vivo. */
+const pubTexto = ref('Clínica Veterinaria Guau')
+const pubConError = ref('')
+const pubConPista = ref('900123456')
 
 const doses = [
   { savedId: undefined, date: '2026-08-12', label: 'Drontal Plus', sub: '1 comp. / 10 kg' },
@@ -825,6 +849,85 @@ const TABS_LARGA: TabItem<string>[] = [
         </div>
       </div>
     </section>
+
+    <!-- ── Tonos ──────────────────────────────────────────────────────── -->
+    <!--
+      La familia `.ds-tone--*` completa. Entra ahora porque `.ds-tone--warning`
+      es primitiva NUEVA (petición de la especificación de suscripción §9.2: el
+      catálogo cubría éxito, peligro, neutro y acento, y no aviso) y la regla de
+      esta galería es que lo que no está aquí no tiene red.
+
+      Se pinta sobre `.ds-pill`, que es como la consumen sus dos usos reales —el
+      «Datos con retraso» de un cupo y el estado de una cuenta de cobro—: un tono
+      suelto sin forma no retrata el contraste real del texto sobre su fondo.
+    -->
+    <section data-shot="tonos">
+      <h2>Tonos</h2>
+      <div class="row">
+        <span class="ds-pill ds-tone--accent">Acento</span>
+        <span class="ds-pill ds-tone--success">Al día</span>
+        <span class="ds-pill ds-tone--warning">Datos con retraso</span>
+        <span class="ds-pill ds-tone--danger">Vencida</span>
+        <span class="ds-pill ds-tone--neutral">Borrador</span>
+      </div>
+    </section>
+
+    <!-- ── Zona pública: campos ───────────────────────────────────────── -->
+    <!--
+      Los cuatro estados de `AuthField` + `AuthInput`. El envoltorio `.pub-scope`
+      no es decorativo: `public-auth.css` declara sus variables AHÍ y no en
+      `:root`, así que un campo montado fuera de él saldría con los colores de
+      respaldo y la captura no retrataría nada.
+    -->
+    <section data-shot="publico-campos">
+      <h2>Zona pública · campos</h2>
+      <div class="pub-scope pub-campos">
+        <AuthField label="Nombre de la clínica" required>
+          <AuthInput v-model="pubTexto" placeholder="Clínica Veterinaria" />
+        </AuthField>
+
+        <AuthField label="NIT" required hint="Sin dígito de verificación ni puntos.">
+          <AuthInput v-model="pubConPista" placeholder="900123456" />
+        </AuthField>
+
+        <AuthField label="Correo" required error="Ese correo ya está registrado.">
+          <AuthInput v-model="pubConError" placeholder="clinica@correo.com" invalid />
+        </AuthField>
+
+        <AuthField label="Comentario" counter="120 / 500">
+          <AuthInput v-model="pubTexto" placeholder="Opcional" />
+        </AuthField>
+
+        <p class="pub-error">No pudimos crear la cuenta. Vuelve a intentarlo en un minuto.</p>
+      </div>
+    </section>
+
+    <!-- ── Zona pública: la tarjeta de plan ───────────────────────────── -->
+    <!--
+      `.pub-plan-card`, `.pub-badge` y `.pub-price` en marcado, no montando
+      `PlanCard.vue`: ese componente contiene un `RouterLink` y aquí no hay
+      router. La sustitución es fiel porque estas tres formas declaran TODA su
+      geometría y su color en `public-auth.css` — borde, radio, sombra, fondo,
+      tipografía—, a diferencia de los campos, cuya forma vive en el SFC.
+
+      Lo que este bloque vigila es el borde de 2 px de la recomendada: es el
+      indicador de estado de §1.4.11, y `--pub-line` (1,23:1) no llega al 3:1
+      que exige. Un retoque que lo devolviera al borde tenue se ve aquí.
+    -->
+    <section data-shot="publico-plan">
+      <h2>Zona pública · tarjeta de plan</h2>
+      <div class="pub-scope pub-planes">
+        <article class="pub-plan-card">
+          <h3 class="pub-plan-h3">Esencial</h3>
+          <p class="pub-price">$89.000</p>
+        </article>
+        <article class="pub-plan-card pub-plan-card--featured">
+          <p class="pub-badge">La que más eligen</p>
+          <h3 class="pub-plan-h3">Clínica</h3>
+          <p class="pub-price">$179.000</p>
+        </article>
+      </div>
+    </section>
   </main>
 </template>
 
@@ -913,6 +1016,40 @@ section > div:not(.row, .bar, .ancho) {
   font-size: 15px;
   line-height: 1.5;
   color: #444;
+}
+
+/* Andamiaje de los dos bloques de la zona pública. Solo caja: ni un color, ni un
+   radio, ni una tipografía — todo eso es lo que estos bloques miden y tiene que
+   venir de `public-auth.css`. */
+.pub-campos {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 420px;
+  padding: 20px;
+  background: #fff;
+}
+
+.pub-planes {
+  display: flex;
+  align-items: stretch;
+  gap: 18px;
+  width: 620px;
+  padding: 20px;
+  background: #fff;
+}
+
+.pub-planes .pub-plan-card {
+  flex: 1;
+}
+
+/* El `<h3>` de la tarjeta lo estila `PlanCard.vue` en su `<style scoped>`, que
+   aquí no aplica. Se le da solo tamaño y peso para que la caja tenga el alto
+   que tiene en producción; lo que este bloque mide es el borde y la sombra. */
+.pub-plan-h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
 }
 
 /* Mismo ancho que el resto de bloques sueltos, en columna para que los dos
