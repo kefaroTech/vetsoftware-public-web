@@ -4,13 +4,18 @@ import { useRouter } from 'vue-router'
 import ErrorSummary from '@/components/feedback/ErrorSummary.vue'
 import PawLoader from '@/components/feedback/PawLoader.vue'
 import { useToast } from '@/composables/useToast'
+import { PERMISSIONS } from '@/constants/permissions'
 import { getTraceId } from '@/services/http/http.client'
 import { useAuth } from '@/features/auth/composables/useAuth'
+import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { usePlanes } from '@/features/landing/composables/usePlanes'
+import { useSuscripcion } from '@/features/suscripcion/composables/useSuscripcion'
 import PlanesConfigurador from '@/features/landing/components/PlanesConfigurador.vue'
 import type { Ciclo } from '@/features/landing/types/plans.types'
+import ConfirmarBloqueadoNotice from '../components/ConfirmarBloqueadoNotice.vue'
 import ContratarResumenTabla from '../components/ContratarResumenTabla.vue'
 import DemoModeNotice from '../components/DemoModeNotice.vue'
+import LetraPequenaPaso6 from '../components/LetraPequenaPaso6.vue'
 import PriceDriftNotice from '../components/PriceDriftNotice.vue'
 import TrialLinesTable from '../components/TrialLinesTable.vue'
 import { activarPlan, fetchResumenContratacion } from '../api/contratacion.source'
@@ -37,8 +42,10 @@ import type { ResumenContratacion } from '../types/contratacion.types'
 const router = useRouter()
 const toast = useToast()
 const { companyId } = useAuth()
+const { can } = useAuthorization()
 const { plans, findByCode, loading: cargandoPlanes, refresh: recargarPlanes } = usePlanes()
-const { vigente, elegir, descartar, marcarContratada, contratada } = useContratacion()
+const { vigente, elegir, descartar, marcarContratada } = useContratacion()
+const { estadoPlanActual, load: cargarSuscripcion } = useSuscripcion()
 const resultadoStore = useResultadoContratacionStore()
 
 const uid = useId()
@@ -57,7 +64,9 @@ const enviando = ref(false)
 const tardando = ref(false)
 const errorEnvio = ref<string | null>(null)
 const traceId = ref<string | undefined>()
-const driftVisible = ref(false)
+
+/** La deriva, con SUS DOS CIFRAS dentro: sin las dos, el aviso no puede ser verdad. */
+const drift = ref<{ antes: number; ahora: number } | null>(null)
 
 /**
  * Llave de idempotencia, generada al ENTRAR en el paso, no al pulsar. Es lo que
@@ -70,6 +79,29 @@ const clientRequestId = ref('')
 /** Por encima de diez segundos hay que decir algo, o el usuario asume que se colgó. */
 const UMBRAL_LARGO_MS = 10_000
 let temporizadorLargo: ReturnType<typeof setTimeout> | null = null
+
+/**
+ * La puerta del paso vinculante, en el mismo sitio que la del servidor.
+ *
+ * <p>`POST /quotes/self-serve` exige `quote.request` (`SelfServeQuoteUseCase`), y ese permiso se
+ * siembra **solo en nivel `FULL`** (changeset 378): una empresa en mora queda en `READ_ONLY` y
+ * NO lo tiene. Eso no es un borde raro, es el estado normal de una clínica que se atrasó en un
+ * pago, y el resultado sin esta comprobación sería el peor posible — el botón más importante del
+ * embudo, pulsado, girando y devolviendo un 403 sin explicación.
+ *
+ * <p>Se esconde la acción, no se deshabilita: un botón deshabilitado sin motivo visible se lee
+ * como un fallo de la aplicación. En su lugar va una frase que dice quién puede hacerlo, y
+ * «Ahora no» sigue ahí — quien no puede contratar tiene que poder salir del embudo.
+ *
+ * <p>Es la MISMA convención que `SiguientesPasos`: `hasPermission` del rol y la acción
+ * desaparece. Aquí se usa `can()` porque el valor se lee en la plantilla y conviene reactivo.
+ */
+const puedeContratar = can(PERMISSIONS.QUOTE_REQUEST)
+
+/** La segunda puerta: **hay un precio**. El porqué, en `ConfirmarBloqueadoNotice`. */
+const hayPrecio = computed(() => resumen.value?.subtotal != null)
+
+const puedeConfirmar = computed(() => puedeContratar.value && hayPrecio.value)
 
 const errorTerminos = computed(() =>
   terminosTocado.value && !aceptaTerminos.value
@@ -89,6 +121,8 @@ function nuevoRequestId(): string {
 
 async function cargar() {
   cargando.value = true
+  // Sin esto, un aviso de deriva de la selección anterior sobrevive a `elegirAqui()`.
+  drift.value = null
   const intencion = vigente.value
   const plan = findByCode(intencion?.planCode)
   if (!intencion || !plan) {
@@ -97,17 +131,29 @@ async function cargar() {
     return
   }
 
+  // La señal REAL, preguntada al servidor en cada apertura de la pantalla (regla
+  // del repositorio: nunca caché vieja al abrir). Antes esto era una bandera en
+  // memoria que volvía a `false` en cada recarga, así que el caso 6 solo se
+  // disparaba si el usuario acababa de contratar en esa misma pestaña.
+  await cargarSuscripcion(true)
+
   resumen.value = await fetchResumenContratacion({
     intencion,
     plan,
     companyId: companyId.value,
-    yaTienePlanActivo: contratada.value,
+    estadoPlanActual: estadoPlanActual.value,
   })
 
   // §5, caso 6: la empresa ya tiene plan. Aviso `info`, NO `error` — no ha
   // fallado nada—, la intención se descarta para que el enganche del login no
   // la vuelva a disparar, y al tablero.
-  if (resumen.value.yaTienePlanActivo) {
+  //
+  // Solo con `CON_PLAN`. Un 403 —el rol sin `subscription.read`, que la
+  // migración 377 documenta como real— llega como `DESCONOCIDO` y **no** cierra
+  // la puerta: echar de aquí a quien quizá no tiene plan por un permiso que no
+  // podemos leer es peor que dejarle seguir con un aviso. Lo que tampoco se hace
+  // es callarlo: se dice en pantalla, más abajo.
+  if (resumen.value.estadoPlanActual === 'CON_PLAN') {
     descartar()
     toast.info('Tu clínica ya tiene un plan activo', 'No hace falta contratar otro.')
     void router.replace({ name: 'home' })
@@ -124,8 +170,15 @@ async function cargar() {
   cargando.value = false
 
   // §5, caso 3: el precio se movió mientras decidía.
-  if (resumen.value.subtotalMensualEquivalente !== intencion.importeVistoMensual) {
-    driftVisible.value = true
+  //
+  // Los dos operandos van normalizados a MES en los dos lados, así que cambiar de
+  // ciclo entre sesiones no se lee como una subida del 900 %. Lo que cambia es que
+  // la comparación exige que EXISTAN las dos cifras: un lado vacío no es deriva,
+  // es un hueco, y el aviso dice «antes valía esto, ahora esto».
+  const antes = intencion.importeVistoMensual
+  const ahora = resumen.value.subtotalMensualEquivalente
+  if (antes !== null && ahora !== null && antes !== ahora) {
+    drift.value = { antes, ahora }
     aceptaTerminos.value = false
     terminosTocado.value = false
     await nextTick()
@@ -178,9 +231,24 @@ async function confirmar() {
   errorEnvio.value = null
   traceId.value = undefined
 
-  if (!aceptaTerminos.value || !resumen.value) {
+  // El cinturón del gate de arriba: sin el permiso el botón no existe, así que llegar aquí solo
+  // es posible si el rol cambió con la pantalla abierta. No se manda una petición que el
+  // servidor va a rechazar con un 403.
+  if (!puedeConfirmar.value || !aceptaTerminos.value || !resumen.value) {
     await nextTick()
     errorRef.value?.focus()
+    return
+  }
+
+  // El plan ENTERO, no solo su código: los rótulos de las capacidades son lo que viaja en las
+  // líneas de la oferta y el resumen no los lleva. Si el catálogo se movió y el plan ya no está,
+  // no se inventa un cuerpo: se dice y no se envía nada.
+  const plan = findByCode(resumen.value.planCode)
+  if (!plan) {
+    errorEnvio.value =
+      'El catálogo de planes cambió mientras confirmabas. Recarga la página y vuelve a elegir; no se ha hecho ningún cambio en tu clínica.'
+    await nextTick()
+    errorEnvioRef.value?.focus()
     return
   }
 
@@ -193,6 +261,7 @@ async function confirmar() {
   try {
     const resultado = await activarPlan({
       resumen: resumen.value,
+      plan,
       clientRequestId: clientRequestId.value,
     })
     resultadoStore.guardar(resultado)
@@ -201,12 +270,12 @@ async function confirmar() {
   } catch (e) {
     // El aviso va por `errorFrom`, NUNCA con el texto escrito a mano: es lo que
     // conserva el `X-Trace-Id`, y sin traza soporte no correlaciona nada.
-    toast.errorFrom('No se pudo activar el plan', e)
+    toast.errorFrom('No se pudo registrar tu contratación', e)
     traceId.value = getTraceId(e)
     // Y además DENTRO de la pantalla: un toast se va solo, y este es el clic más
     // importante de todo el flujo.
     errorEnvio.value =
-      'No pudimos activar tu plan. No se ha hecho ningún cambio en tu clínica. Vuelve a intentarlo; si sigue fallando, escríbenos con este código:'
+      'No pudimos registrar tu contratación. No se ha hecho ningún cambio en tu clínica y no se te ha cobrado nada. Vuelve a intentarlo; si sigue fallando, escríbenos con este código:'
     await nextTick()
     errorEnvioRef.value?.focus()
   } finally {
@@ -261,16 +330,34 @@ function ahoraNo() {
       </p>
 
       <PriceDriftNotice
-        v-if="driftVisible"
+        v-if="drift"
         ref="driftRef"
-        :antes="vigente?.importeVistoMensual ?? 0"
-        :ahora="resumen.subtotalMensualEquivalente"
+        :antes="drift.antes"
+        :ahora="drift.ahora"
         sufijo="al mes"
       />
 
-      <ContratarResumenTabla :resumen="resumen" />
+      <!-- No se pudo leer la suscripción (403 del rol sin `subscription.read`, o un fallo del
+           servidor). No se echa al usuario del embudo, pero tampoco se le deja creer que se
+           comprobó: si su clínica ya tuviera plan, contratar otro es un problema caro. -->
+      <p
+        v-if="resumen.estadoPlanActual === 'DESCONOCIDO'"
+        class="ds-banner ds-banner--warning"
+        role="status"
+      >
+        No pudimos comprobar si tu clínica ya tiene un plan contratado. Si crees que ya lo tiene,
+        escríbenos a <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> antes de
+        confirmar.
+      </p>
 
+      <!-- El ORDEN decide qué se cree, y estaba al revés. Primero qué se paga hoy —nada, y
+           hasta cuándo, por módulo—, y solo después el importe del ciclo, que es lo que se
+           cobrará cuando la prueba termine. Antes la pantalla abría con «Total del primer mes:
+           $105.910» y lo desmentía dos bloques más abajo, en el momento exacto en que alguien
+           decide una compra: tres afirmaciones incompatibles y ninguna jerarquía. -->
       <TrialLinesTable :lineas="resumen.lineasPrueba" />
+
+      <ContratarResumenTabla :resumen="resumen" />
 
       <DemoModeNotice />
 
@@ -290,7 +377,10 @@ function ahoraNo() {
       </div>
 
       <div class="ds-stack ds-stack--10">
-        <label class="ct-check" :for="idTerminos">
+        <!-- Sin `quote.request` no hay nada que aceptar: la casilla de términos existe para
+             habilitar un botón que no se va a pintar, y pedir que se acepten unos términos para
+             después no dejar continuar es la peor forma de comunicar una falta de permiso. -->
+        <label v-if="puedeConfirmar" class="ct-check" :for="idTerminos">
           <input
             :id="idTerminos"
             v-model="aceptaTerminos"
@@ -304,33 +394,27 @@ function ahoraNo() {
           </span>
         </label>
 
-        <!-- Las dos páginas legales TODAVÍA NO EXISTEN, y por eso aquí no hay
-             enlace: un enlace que no navega falla §2.4.4 y enseña al usuario
-             que los enlaces de esta web no funcionan. En Colombia el
-             tratamiento de datos es una obligación legal (Ley 1581 de 2012),
-             así que esto es una dependencia de publicación, no un detalle de
-             diseño: este paso no se puede publicar sin ellas. -->
-        <p class="ds-meta ds-meta--sm">
-          Todavía no están publicadas en la web: pídenoslas en
-          <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y te las enviamos antes
-          de que confirmes.
-        </p>
+        <ConfirmarBloqueadoNotice
+          v-else
+          :motivo="puedeContratar ? 'SIN_PRECIO' : 'PERMISO'"
+          :sin-precio="resumen.sinPrecio"
+          :ciclo="resumen.ciclo"
+        />
 
-        <p class="ds-meta ds-meta--sm">
-          Durante la prueba no se cobra nada. Si quieres darte de baja antes de que empiece el
-          cobro, escríbenos a
-          <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y lo hacemos.
-        </p>
+        <LetraPequenaPaso6 />
 
         <div class="ct-actions">
+          <!-- Ausente, no deshabilitado: ver `puedeContratar`. «Ahora no» se queda en los dos
+               casos — quien no puede contratar tiene que poder salir del embudo. -->
           <button
+            v-if="puedeConfirmar"
             type="button"
             class="ds-btn ds-btn--primary ds-btn--lg"
             :disabled="enviando"
             @click="confirmar"
           >
             <PawLoader v-if="enviando" :size="18" :glow="false" :speed="900" />
-            {{ enviando ? 'Activando…' : 'Confirmar y activar mi plan' }}
+            {{ enviando ? 'Confirmando…' : 'Confirmar mi plan' }}
           </button>
           <button type="button" class="ds-btn ds-btn--ghost" :disabled="enviando" @click="ahoraNo">
             Ahora no
@@ -338,7 +422,7 @@ function ahoraNo() {
         </div>
 
         <p v-if="tardando" class="ds-meta" aria-live="polite">
-          Seguimos activando tu plan. No cierres esta ventana.
+          Seguimos registrando tu contratación. No cierres esta ventana.
         </p>
       </div>
     </template>
@@ -365,8 +449,14 @@ function ahoraNo() {
   outline-offset: 2px;
 }
 
+/* `.pub-scope` está en el marcado porque el configurador se pinta ENTERO con los tokens
+   `--pub-*`, que solo existen bajo esa clase: quitarla lo deja sin un solo color. Lo que sí se
+   quita es su tipografía —`.pub-scope` fija Inter, y esta pantalla la repetía—, porque dentro del
+   producto autenticado eso se lee como otra aplicación. Y esta rama no es rara: se ejecuta cada
+   vez que alguien verificó su correo desde el móvil y vuelve sin la intención. */
 .ct-picker {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-sans);
+  color: var(--warm-900);
 }
 
 /* La pila la pone `.ds-stack` desde `primitives.css`. */

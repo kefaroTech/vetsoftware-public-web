@@ -29,6 +29,33 @@ import type { PublicCatalog } from '../types/plans.types'
  * enseñar un dato falso; pero cuando `plans.source.ts` pase a leer del endpoint,
  * estos valores los pondrá el servidor y esta nota se borra con el fichero.
  */
+/**
+ * POR QUÉ `annualExtraUnitAmount` ESTÁ EN `null` EN LAS SEIS FILAS.
+ *
+ * Porque no hay nada que transcribir. `PublicPlanCapacityResponse` pasó a traer
+ * el precio de la unidad adicional PARTIDO POR CICLO, y de la lista `PUB-2026-COP`
+ * este front solo tiene transcritas las cifras mensuales: la escalera `ANNUAL` de
+ * cada artículo no está publicada en ninguna fuente que se pueda leer desde aquí.
+ *
+ * <p>Lo que había antes en su lugar no era un dato, era una cuenta:
+ * `calcularEstimado` multiplicaba el importe mensual por diez —la proporción del
+ * precio base, «2 meses gratis»— y enseñaba el resultado como el precio anual de
+ * una sede o de un usuario extra. El servidor no cobra así: liquida la capacidad
+ * extra contra la escalera `ANNUAL` del propio artículo, que no tiene por qué
+ * valer diez mensualidades. Copiar aquí ese `× 10` habría convertido una cuenta
+ * inventada en un «precio de lista revisado por comercial», que es peor que
+ * dejarlo vacío: le pondría el sello a lo que no lo tiene.
+ *
+ * <p>Consecuencia visible, y es la correcta: en ciclo anual, pasar de las sedes o
+ * las personas incluidas deja de tener importe estimado y la pantalla lo dice con
+ * todas las letras (`textoSinPrecio`). Contratarlo tampoco funcionaría — la
+ * autocontratación exige precio en el ciclo pedido y hunde la oferta entera si no
+ * lo hay—, así que la portada deja de anunciar lo que el paso siguiente rechaza.
+ *
+ * <p>Para cerrarlo hace falta un dato que no está en el código: las cifras
+ * anuales de `USER` y `BRANCH` de los tres paquetes en `PUB-2026-COP`. Con ellas,
+ * se reemplazan los seis `null` y se mueve `SELLO.revisadoEl`.
+ */
 export const SELLO = {
   listaDePrecioCodigo: 'PUB-2026-COP',
   revisadoEl: '2026-08-28',
@@ -64,8 +91,22 @@ export const PLANS_CONTENT: PublicCatalog = {
         { code: 'CAJA', name: 'Caja', trialDays: 14 },
       ],
       capacities: [
-        { code: 'USER', name: 'Usuarios', unit: 'USER', included: 3, extraUnitAmount: 15000 },
-        { code: 'BRANCH', name: 'Sedes', unit: 'BRANCH', included: 1, extraUnitAmount: 45000 },
+        {
+          code: 'USER',
+          name: 'Usuarios',
+          unit: 'USER',
+          included: 3,
+          monthlyExtraUnitAmount: 15000,
+          annualExtraUnitAmount: null,
+        },
+        {
+          code: 'BRANCH',
+          name: 'Sedes',
+          unit: 'BRANCH',
+          included: 1,
+          monthlyExtraUnitAmount: 45000,
+          annualExtraUnitAmount: null,
+        },
       ],
     },
     {
@@ -86,8 +127,22 @@ export const PLANS_CONTENT: PublicCatalog = {
         { code: 'INVENTARIO', name: 'Inventario', trialDays: 30 },
       ],
       capacities: [
-        { code: 'USER', name: 'Usuarios', unit: 'USER', included: 8, extraUnitAmount: 14000 },
-        { code: 'BRANCH', name: 'Sedes', unit: 'BRANCH', included: 2, extraUnitAmount: 42000 },
+        {
+          code: 'USER',
+          name: 'Usuarios',
+          unit: 'USER',
+          included: 8,
+          monthlyExtraUnitAmount: 14000,
+          annualExtraUnitAmount: null,
+        },
+        {
+          code: 'BRANCH',
+          name: 'Sedes',
+          unit: 'BRANCH',
+          included: 2,
+          monthlyExtraUnitAmount: 42000,
+          annualExtraUnitAmount: null,
+        },
       ],
     },
     {
@@ -109,8 +164,22 @@ export const PLANS_CONTENT: PublicCatalog = {
         { code: 'DIAN', name: 'Facturación electrónica DIAN', trialDays: 14 },
       ],
       capacities: [
-        { code: 'USER', name: 'Usuarios', unit: 'USER', included: 20, extraUnitAmount: 12000 },
-        { code: 'BRANCH', name: 'Sedes', unit: 'BRANCH', included: 5, extraUnitAmount: 38000 },
+        {
+          code: 'USER',
+          name: 'Usuarios',
+          unit: 'USER',
+          included: 20,
+          monthlyExtraUnitAmount: 12000,
+          annualExtraUnitAmount: null,
+        },
+        {
+          code: 'BRANCH',
+          name: 'Sedes',
+          unit: 'BRANCH',
+          included: 5,
+          monthlyExtraUnitAmount: 38000,
+          annualExtraUnitAmount: null,
+        },
       ],
     },
   ],

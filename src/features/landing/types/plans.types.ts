@@ -84,6 +84,20 @@ export interface PlanInclude {
  * `name` hoy no se muestra; se declara porque el contrato lo garantiza y no
  * declararlo era justamente el agujero que `UndeclaredFields` existe para tapar.
  *
+ * <p>El precio de la unidad adicional viene **por ciclo**, y los dos son
+ * NULABLES. Antes había un solo `extraUnitAmount` que el contrato ya no manda y
+ * que además era mensual sin decirlo: el ciclo anual se derivaba multiplicándolo
+ * por diez. `null` no es cero ni «gratis»: significa que esa capacidad **no se
+ * vende suelta en ese ciclo**, y la resolución del servidor en el momento de
+ * contratar la rechaza (`JpaPublicPlanQueryPort` publica la fila con un `LEFT
+ * JOIN`, mientras que el traductor de la autocontratación exige un `INNER JOIN`
+ * con precio en el ciclo pedido). Por eso lo que la pantalla NO puede hacer con
+ * un `null` es inventarse una cifra: estaría anunciando algo que la contratación
+ * va a rechazar.
+ *
+ * <p>Lo que sigue siendo verdad con `null` es `included`: la capacidad incluida
+ * existe en los dos ciclos aunque su unidad adicional no tenga precio en uno.
+ *
  * Espeja `PublicPlanCapacityResponse`.
  */
 export interface PlanCapacity {
@@ -91,7 +105,10 @@ export interface PlanCapacity {
   name: string
   unit: CapacityUnit
   included: number
-  extraUnitAmount: number
+  /** Precio de la unidad adicional al mes. `null` = no se vende suelta en ese ciclo. */
+  monthlyExtraUnitAmount: number | null
+  /** Precio de la unidad adicional al año. `null` = no se vende suelta en ese ciclo. */
+  annualExtraUnitAmount: number | null
 }
 
 /**

@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
-import { formatMoney } from '@/composables/money'
-import { calcularEstimado, sufijoCiclo } from '../composables/planPricing'
+import {
+  calcularEstimado,
+  importeEstimado,
+  sufijoCiclo,
+  textoSinPrecio,
+} from '../composables/planPricing'
 import {
   CAPACITY_UNIT_LABEL,
   CAPACITY_UNIT_LABEL_ONE,
@@ -44,6 +48,14 @@ const linea = computed(() => {
   const personas = `${props.usuarios} ${props.usuarios === 1 ? CAPACITY_UNIT_LABEL_ONE.USER : CAPACITY_UNIT_LABEL.USER}`
   return `Plan ${props.plan.name} · ${CICLO_LABEL[props.ciclo]} · ${sedes} · ${personas}`
 })
+
+/**
+ * Cuando el ciclo elegido no publica precio de una capacidad que se cobra no hay
+ * estimado que enseñar. El carril NO se calla: quien está tecleando su NIT tiene
+ * que saber que esa combinación no se va a poder contratar ANTES de terminar el
+ * formulario, no en el paso 6.
+ */
+const avisoSinPrecio = computed(() => textoSinPrecio(estimado.value.sinPrecio, props.ciclo))
 </script>
 
 <template>
@@ -52,8 +64,11 @@ const linea = computed(() => {
       <summary id="seleccion-titulo" class="sel-summary">Tu selección</summary>
       <p class="sel-line">{{ linea }}</p>
       <p class="sel-amount">
-        Estimado: <strong>{{ formatMoney(estimado.subtotal) }}</strong> + IVA
+        Estimado: <strong>{{ importeEstimado(estimado.subtotal) }}</strong> + IVA
         {{ sufijoCiclo(ciclo) }}
+      </p>
+      <p v-if="avisoSinPrecio" class="ds-banner ds-banner--warning sel-sinprecio" role="status">
+        {{ avisoSinPrecio }}
       </p>
       <p class="sel-note">Prueba gratis. Sin tarjeta. Nada de esto te compromete todavía.</p>
       <RouterLink
@@ -106,6 +121,11 @@ const linea = computed(() => {
   font-size: 13.5px;
   color: var(--pub-ink-700);
   font-variant-numeric: tabular-nums;
+}
+
+/* Solo separación: el aspecto lo pone `.ds-banner--warning` (FE-08). */
+.sel-sinprecio {
+  margin: 8px 0 0;
 }
 
 .sel-note {

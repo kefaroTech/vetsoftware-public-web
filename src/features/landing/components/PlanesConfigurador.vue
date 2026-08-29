@@ -2,7 +2,13 @@
 import { computed, onBeforeUnmount, ref, useId, watch } from 'vue'
 import { formatMoney } from '@/composables/money'
 import CicloFieldset from './CicloFieldset.vue'
-import { calcularEstimado, precioBase, sufijoCiclo } from '../composables/planPricing'
+import {
+  calcularEstimado,
+  importeEstimado,
+  precioBase,
+  sufijoCiclo,
+  textoSinPrecio,
+} from '../composables/planPricing'
 import type { Ciclo, PublicPlan } from '../types/plans.types'
 
 /**
@@ -55,7 +61,15 @@ const estimado = computed(() =>
 )
 
 /** El importe que se PINTA. Cambia en cuanto cambia la selección. */
-const importe = computed(() => (estimado.value ? formatMoney(estimado.value.subtotal) : '—'))
+const importe = computed(() => (estimado.value ? importeEstimado(estimado.value.subtotal) : '—'))
+
+/**
+ * Por qué no hay cifra, cuando no la hay. El `—` sin explicación se lee como un
+ * fallo de carga; esto dice qué falta, en qué ciclo y qué se puede hacer.
+ */
+const avisoSinPrecio = computed(() =>
+  estimado.value ? textoSinPrecio(estimado.value.sinPrecio, ciclo.value) : null,
+)
 
 /** El importe que se ANUNCIA. Va 400 ms por detrás del anterior, a propósito. */
 const importeAnunciado = ref(importe.value)
@@ -162,15 +176,25 @@ function normalizar(valor: unknown): number {
           <span>Plan {{ plan?.name }}</span
           ><span>{{ formatMoney(estimado.base) }}</span>
         </li>
+        <!-- La fila se pinta aunque no haya precio: la sede adicional se está
+             pidiendo igual, y esconderla sería un total que no cuadra con la
+             selección. Lo que cambia es la cifra, que pasa a `—`. -->
         <li v-if="estimado.sedesCobradas > 0">
           <span>{{ estimado.sedesCobradas }} sede(s) adicional(es)</span>
-          <span>{{ formatMoney(estimado.sedesExtra) }}</span>
+          <span>{{ importeEstimado(estimado.sedesExtra) }}</span>
         </li>
         <li v-if="estimado.usuariosCobrados > 0">
           <span>{{ estimado.usuariosCobrados }} persona(s) adicional(es)</span>
-          <span>{{ formatMoney(estimado.usuariosExtra) }}</span>
+          <span>{{ importeEstimado(estimado.usuariosExtra) }}</span>
         </li>
       </ul>
+
+      <!-- `role="status"` y no `alert`: no ha fallado nada, es lo que esa
+           combinación vale hoy. Va JUNTO al desglose y no al pie, porque explica
+           el `—` que se acaba de leer. -->
+      <p v-if="avisoSinPrecio" class="ds-banner ds-banner--warning pl-sinprecio" role="status">
+        {{ avisoSinPrecio }}
+      </p>
 
       <p class="pl-resumen-note">
         Es un cálculo orientativo con los precios de lista. El precio exacto de tu clínica lo ves
@@ -355,6 +379,12 @@ function normalizar(valor: unknown): number {
   font-variant-numeric: tabular-nums;
 }
 
+/* Solo separación: el aspecto entero lo pone `.ds-banner--warning`, que no se
+   reescribe aquí (FE-08). */
+.pl-sinprecio {
+  margin: 14px 0 0;
+}
+
 .pl-resumen-note {
   margin: 14px 0 0;
   font-size: 12px;
@@ -404,8 +434,8 @@ function normalizar(valor: unknown): number {
   min-height: 48px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(180deg, #9333ea, #7e22ce);
-  color: #fff;
+  background: linear-gradient(180deg, var(--pub-ame-600), var(--pub-ame-700));
+  color: var(--pub-surface);
   font-family: inherit;
   font-size: 14.5px;
   font-weight: 600;

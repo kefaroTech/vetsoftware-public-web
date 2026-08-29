@@ -3,9 +3,12 @@ import {
   calcularEstimado,
   subtotalMensualEquivalente,
 } from '@/features/landing/composables/planPricing'
-import type { PublicPlan } from '@/features/landing/types/plans.types'
+import type { CapacityUnit, Ciclo, PublicPlan } from '@/features/landing/types/plans.types'
+import { cotizacionesApi } from '@/features/suscripcion/api/cotizaciones.api'
+import type { SelfServeQuoteLineRequest } from '@/features/suscripcion/types/cotizaciones.types'
 import { parseISODate, todayISO } from '@/composables/format'
 import type {
+  EstadoPlanActual,
   IntencionContratacion,
   LineaPrueba,
   ResultadoContratacion,
@@ -20,27 +23,51 @@ import type {
  * el NIT que se pintan en «Estás contratando para…» **vienen de verdad del
  * servidor**.
  *
- * Lo que NO existe es un endpoint con el que una clínica contrate su propio
- * plan. `CreateQuoteUseCase.java:29` sigue siendo `hasRole('SYSTEM')`, y el
- * front del tenant no declara ningún permiso `quote.*`. `AcceptQuoteUseCase`
- * ya admite que acepte el empleado del tenant, así que falta la otra mitad. Ver
- * la petición al backend en `docs/ux/landing-comercial-y-contratacion.md` §12.2.
+ * ── La autocontratación SÍ viaja al servidor ───────────────────────────────
+ * `POST /quotes/self-serve` (`QuoteController.java:138`) es alcanzable por un
+ * empleado del tenant y `activarPlan` lo llama de verdad. El gate está en el
+ * puerto, no en el controlador (`SelfServeQuoteUseCase.java`):
  *
- * Mientras eso no exista, **el importe no lo calcula el servidor: lo calcula
- * este módulo** con la misma lista de precio transcrita que la landing. Ese
- * hecho es la razón de que el aviso de modo demostración sea obligatorio y no
- * descartable, y de que la pantalla no prometa nada que no pueda cumplir.
+ * ```
+ * hasRole('SYSTEM') or (hasAuthority('quote.request') and @authz.isMyCompany(#command.companyId))
+ * ```
  *
- * El día que llegue el endpoint, se reescriben estas dos funciones y **nada
- * más**: ni la vista del paso 6, ni la del 7, ni el store, ni los tipos.
+ * La rama de tenant se cumple sola por construcción: la empresa **no viaja en el
+ * cuerpo**, la pone el controlador desde el principal con `authz.currentCompanyId()`,
+ * así que `isMyCompany` compara la empresa consigo misma. Lo único que hay que
+ * tener a este lado es el permiso `quote.request` — sembrado por el changeset
+ * 378, y solo en nivel `FULL`: una empresa en mora (`READ_ONLY`) no lo tiene, y
+ * por eso el paso 6 esconde el botón en vez de dejar que falle con un 403.
+ *
+ * ── El artículo se nombra por `code`, y eso es lo que desbloqueó el camino ──
+ * `SelfServeQuoteLineRequest` pedía un `catalogItemId` que ninguna respuesta
+ * alcanzable por el tenant publicaba, así que el endpoint tenía ruta, permiso y
+ * cero llamadores posibles. Hoy la línea es `{ code, quantity }` y el servidor
+ * traduce el rótulo contra el MISMO conjunto que publica `GET /plans`
+ * (`PublishedCatalogItemQueryPort`), sin distinguir un código inexistente de uno
+ * interno. Traducción para este fichero: **todos los `code` que mandamos tienen
+ * que salir del catálogo público**, y un rechazo significa «el catálogo se
+ * movió, vuelve a leer los planes», no «te equivocaste de campo».
+ *
+ * ── Qué es real y qué sigue siendo simulado ────────────────────────────────
+ * Real: la oferta. El servidor resuelve tarifa vigente, tramos, IVA y vigencia,
+ * la deja `SENT` y devuelve sus importes — que son los que se pintan en el paso
+ * 7, no los de la lista transcrita.
+ *
+ * Simulado: **el cobro**. No hay pasarela conectada y no se pide ninguna tarjeta.
+ *
+ * Y hay un tercer estado que no es ni una cosa ni la otra: **aceptar una oferta
+ * no enciende los módulos**. `SelfServeQuoteService` lo dice sin rodeos —nadie
+ * reacciona hoy a `QuoteStatus.ACCEPTED`—, así que el eslabón «oferta aceptada →
+ * suscripción con sus concesiones» no existe. Aquí NO se inventa: `activarPlan`
+ * pide la oferta y para. Que aceptarla deba activar el servicio es una decisión
+ * de producto abierta, y cablearla a ciegas sería exactamente el tipo de promesa
+ * que esta pantalla existe para no hacer.
+ *
+ * El importe orientativo de `calcularEstimado` sigue vivo, pero solo hasta el
+ * paso 6: es lo que se compara contra lo que el usuario vio al elegir (deriva de
+ * precio). A partir del envío manda el servidor.
  */
-
-/**
- * Marca única de lo que todavía no tiene backend. Está aquí, en una constante
- * exportada, para que se pueda encontrar con una búsqueda y para que las
- * pantallas puedan decir la verdad sin repetir el matiz en cinco sitios.
- */
-export const SIN_ENDPOINT_DE_CONTRATACION = true
 
 /** Suma días a una fecha ISO y devuelve ISO. Sin corrimiento de zona: usa `parseISODate`. */
 export function sumarDias(iso: string, dias: number): string {
@@ -93,8 +120,12 @@ export interface ResumenArgs {
   intencion: IntencionContratacion
   plan: PublicPlan
   companyId: number | null
-  /** Ya tiene plan activo. Hoy solo lo sabe el propio front (ver el store). */
-  yaTienePlanActivo: boolean
+  /**
+   * Si la clínica ya tiene plan, **preguntado al servidor** por
+   * `GET /subscriptions/current` a través del store de suscripción. Antes era una bandera de
+   * memoria que se perdía en cada recarga.
+   */
+  estadoPlanActual: EstadoPlanActual
 }
 
 /**
@@ -102,7 +133,7 @@ export interface ResumenArgs {
  * la lista de precio transcrita (ver el encabezado de este fichero).
  */
 export async function fetchResumenContratacion(args: ResumenArgs): Promise<ResumenContratacion> {
-  const { intencion, plan, companyId, yaTienePlanActivo } = args
+  const { intencion, plan, companyId, estadoPlanActual } = args
 
   const empresa = companyId != null ? await companyApi.findById(companyId) : null
 
@@ -124,47 +155,148 @@ export async function fetchResumenContratacion(args: ResumenArgs): Promise<Resum
     ciclo: intencion.ciclo,
     sedes: intencion.sedes,
     usuarios: intencion.usuarios,
+    // Los importes viajan tal cual, `null` incluido. `calcularEstimado` deja en
+    // `null` lo que no puede calcular —una capacidad que se cobra y que la lista
+    // no publica en el ciclo elegido—, y aplanarlo aquí a cero sería reintroducir
+    // en el paso VINCULANTE justo la cifra inventada que se acaba de quitar.
     subtotal: desglose.subtotal,
     impuesto: desglose.impuesto,
     tasaImpuesto: plan.taxRate,
     total: desglose.total,
     subtotalMensualEquivalente: subtotalMensualEquivalente(plan, seleccion),
+    sinPrecio: desglose.sinPrecio,
     lineasPrueba: lineasDePrueba(plan),
-    yaTienePlanActivo,
+    estadoPlanActual,
   }
+}
+
+/**
+ * El único punto donde el vocabulario de pantalla se traduce al del contrato.
+ *
+ * `plans.types.ts` lo dejó escrito por adelantado: `MENSUAL`/`ANUAL` son el
+ * rótulo de un selector y no viajan por el cable; el día que un campo de ciclo
+ * entrara en una petición llevaría el vocabulario del contrato y la traducción
+ * se haría en el seam. Este es el campo y este es el seam.
+ */
+const CICLO_DEL_CONTRATO: Readonly<Record<Ciclo, 'MONTHLY' | 'ANNUAL'>> = {
+  MENSUAL: 'MONTHLY',
+  ANUAL: 'ANNUAL',
+}
+
+/**
+ * Cuántas unidades de esa capacidad se contratan, o `null` si la pantalla no
+ * pregunta por ese eje.
+ *
+ * <p>El paso 2 solo pregunta dos cosas —sedes y personas—, así que `TERMINAL` y
+ * `STORAGE_GB` no tienen ninguna cantidad que mandar. **No se rellenan con lo
+ * incluido**: una línea es una afirmación sobre lo que la clínica contrata, y
+ * afirmar «tres terminales» porque el paquete trae tres es inventarse una
+ * respuesta que nadie dio. Lo que el paquete incluya ya viene dentro del
+ * paquete.
+ */
+function cantidadContratada(unit: CapacityUnit, sedes: number, usuarios: number): number | null {
+  if (unit === 'BRANCH') return sedes
+  if (unit === 'USER') return usuarios
+  return null
+}
+
+/**
+ * Las líneas de la oferta: **el paquete, y una capacidad solo cuando se pasa de
+ * lo incluido**. Nunca los módulos.
+ *
+ * Tres decisiones, las tres con una cifra detrás:
+ *
+ *  1. **Los `includes` NO son líneas.** Son componentes del paquete
+ *     (`bundle_components`) y su precio ya está dentro del precio de entrada del
+ *     paquete. Mandarlos como línea propia los cobraría otra vez — el servidor
+ *     los resolvería sin rechistar, porque `findPublishedIdByCode` acepta un
+ *     `MODULE` que cuelgue de un paquete publicado. Es la única forma de que el
+ *     total del servidor se separe del estimado que el usuario acaba de aceptar.
+ *  2. **La cantidad es la CONTRATADA, no la extra.** `TieredPrice.of` resta lo
+ *     incluido (`billableQuantity`) y reparte el resto por tramos acumulativos:
+ *     mandar «2 usuarios extra» en vez de «5 usuarios» haría que el servidor
+ *     restara lo incluido por segunda vez.
+ *  3. **Y aun así, la capacidad que no se pasa de lo incluido NO se manda.** El
+ *     servidor no emitiría renglón por ella —`billableQuantity` da 0 y
+ *     `TieredPrice` devuelve el reparto vacío—, así que la línea no aporta nada;
+ *     lo que sí puede hacer es tumbar la petición entera. `GET /plans` lee el
+ *     precio de cada capacidad con un `LEFT JOIN` fijado a `billing_cycle =
+ *     'MONTHLY'` (`JpaPublicPlanQueryPort.SQL_COMPONENTS`), mientras que el
+ *     traductor de la autocontratación exige un `INNER JOIN` con precio **en el
+ *     ciclo pedido**. Una capacidad publicada en la portada pero sin fila de
+ *     precio `ANNUAL` se resuelve a `Optional.empty()` y el `IllegalArgument`
+ *     hunde la oferta completa — con un mensaje indistinguible a propósito, así
+ *     que desde aquí no hay forma de saber cuál de las líneas falló. Mandar solo
+ *     lo que de verdad se cobra reduce esa superficie al caso en el que la
+ *     capacidad extra es justamente lo que se está comprando, donde el fallo sí
+ *     es el resultado correcto: sin precio anual no hay nada que cobrar.
+ */
+export function lineasDeContratacion(
+  plan: PublicPlan,
+  resumen: Pick<ResumenContratacion, 'sedes' | 'usuarios'>,
+): SelfServeQuoteLineRequest[] {
+  const lineas: SelfServeQuoteLineRequest[] = [{ code: plan.code, quantity: 1 }]
+  for (const capacidad of plan.capacities) {
+    const cantidad = cantidadContratada(capacidad.unit, resumen.sedes, resumen.usuarios)
+    if (cantidad !== null && cantidad > capacidad.included) {
+      lineas.push({ code: capacidad.code, quantity: cantidad })
+    }
+  }
+  return lineas
 }
 
 export interface ActivarArgs {
   resumen: ResumenContratacion
   /**
+   * El plan del catálogo público. Hace falta entero —y no solo su `code`— porque
+   * los rótulos de las capacidades (`capacities[].code`) son lo que el servidor
+   * traduce, y el resumen no los lleva: el resumen es lo que se PINTA, no lo que
+   * se envía.
+   */
+  plan: PublicPlan
+  /**
    * Llave de idempotencia generada al ENTRAR en el paso 6, no al pulsar. Es lo
-   * que hace que un doble clic —o una segunda pestaña— no cree dos contratos.
-   * Viaja ya, aunque hoy no haya quien la lea, para que el día del endpoint no
-   * haya que cambiar la firma ni el momento en que se genera.
+   * que hace que un doble clic —o una segunda pestaña— no cree dos ofertas. El
+   * servidor la lee: un reintento con la misma llave devuelve la misma oferta y
+   * el mismo 201.
    */
   clientRequestId: string
 }
 
 /**
- * Activa el plan.
+ * Pide la oferta de autoservicio y devuelve lo que el paso 7 tiene que contar.
  *
- * **Hoy no llama a ningún endpoint** porque no hay ninguno al que llamar (ver el
- * encabezado). Devuelve el resultado derivado del resumen para que el paso 7
- * exista y esté escrito, y la pantalla dice exactamente eso: no se ha cobrado
- * nada y la activación queda pendiente de la conexión con el backend. Lo que no
- * hace es fingir un cambio en la clínica que no ha ocurrido.
+ * **Los importes que salen de aquí son los del servidor.** Esa es la diferencia
+ * entera con la versión anterior: el subtotal, el IVA y el total dejan de ser el
+ * cálculo orientativo de la lista transcrita y pasan a ser los que la oferta
+ * congeló contra la tarifa vigente. El `??` sobre el resumen es el suelo de
+ * tipos —springdoc no marca requerido ningún campo de un `record`, así que el
+ * contrato los declara opcionales—, no una alternativa de negocio: si el
+ * servidor manda el importe, gana el servidor.
+ *
+ * Lo que NO hace, y es deliberado: no acepta la oferta y no activa nada. Ver el
+ * encabezado del fichero.
  */
 export async function activarPlan(args: ActivarArgs): Promise<ResultadoContratacion> {
-  const { resumen } = args
-  await Promise.resolve()
+  const { resumen, plan, clientRequestId } = args
+
+  const cotizacion = await cotizacionesApi.selfServe({
+    clientRequestId,
+    billingCycle: CICLO_DEL_CONTRATO[resumen.ciclo],
+    lines: lineasDeContratacion(plan, resumen),
+  })
+
   return {
     planNombre: resumen.planNombre,
     empresaNombre: resumen.empresaNombre,
     modulosActivados: resumen.lineasPrueba.map((l) => l.name),
     lineasPrueba: resumen.lineasPrueba,
-    subtotal: resumen.subtotal,
-    impuesto: resumen.impuesto,
-    total: resumen.total,
+    subtotal: cotizacion.subtotalAmount ?? resumen.subtotal,
+    impuesto: cotizacion.taxAmount ?? resumen.impuesto,
+    total: cotizacion.totalAmount ?? resumen.total,
     ciclo: resumen.ciclo,
+    cotizacionId: cotizacion.id,
+    cotizacionNumero: cotizacion.quoteNumber ?? null,
+    validaHasta: cotizacion.validUntil ?? null,
   }
 }

@@ -6,6 +6,7 @@ import PublicLayout from '@/components/public/PublicLayout.vue'
 import { useContratacion } from '@/features/contratacion/composables/useContratacion'
 import PlanesConfigurador from '../components/PlanesConfigurador.vue'
 import { usePlanes } from '../composables/usePlanes'
+import { MONEDA_DE_FACTURACION } from '../composables/planPricing'
 import type { Ciclo } from '../types/plans.types'
 
 /**
@@ -91,6 +92,10 @@ function continuar() {
         <p class="pub-sub">
           Ajusta el ciclo, las sedes y las personas, y mira el estimado. Nada de esto te compromete.
         </p>
+        <!-- El indicador de moneda va AQUÍ, una vez por pantalla, y no pegado a cada cifra: ver
+             `MONEDA_DE_FACTURACION`. Sin él, «$ 149.000» en una web que se lee desde cualquier
+             país es una cifra sin unidad en la pantalla donde alguien decide comprar. -->
+        <p class="pl-moneda">Todos los precios están en {{ MONEDA_DE_FACTURACION }}, sin IVA.</p>
       </div>
 
       <div v-if="error" class="pub-error" role="alert">
@@ -134,6 +139,12 @@ function continuar() {
 
 .pl-head {
   margin-bottom: 26px;
+}
+
+.pl-moneda {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  color: var(--pub-ink-600);
 }
 
 .pl-state-title {

@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import CicloFieldset from './CicloFieldset.vue'
 import PlanCard from './PlanCard.vue'
+import { MONEDA_DE_FACTURACION } from '../composables/planPricing'
 import type { Ciclo, PublicPlan } from '../types/plans.types'
 
 /**
@@ -76,9 +77,13 @@ const ciclo = ref<Ciclo>('MENSUAL')
       />
     </div>
 
+    <!-- La moneda sale de UNA constante, no de la respuesta ni de esta frase: ver
+         `MONEDA_DE_FACTURACION`. Antes estaba escrita a mano aquí y en ningún otro sitio, así que
+         `/planes` —la otra pantalla pública con precios— no la decía en absoluto y sus cifras se
+         leían como un `$` sin país. -->
     <p class="land-plans-note">
-      Los precios son orientativos, en pesos colombianos, y no incluyen IVA. El precio exacto para
-      tu clínica lo ves antes de confirmar, sin compromiso y sin tarjeta.
+      Los precios son orientativos, en {{ MONEDA_DE_FACTURACION }}, y no incluyen IVA. El precio
+      exacto para tu clínica lo ves antes de confirmar, sin compromiso y sin tarjeta.
     </p>
 
     <p class="land-plans-more">
