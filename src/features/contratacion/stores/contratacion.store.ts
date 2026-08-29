@@ -39,9 +39,14 @@ function parseIntencion(raw: string | null): IntencionContratacion | null {
       ciclo: o.ciclo,
       sedes: Number.isFinite(o.sedes) ? Number(o.sedes) : 1,
       usuarios: Number.isFinite(o.usuarios) ? Number(o.usuarios) : 1,
+      // `null` y no `0`: lo que se guarda aquí es «el importe que el usuario
+      // vio», y un cero inventado es una afirmación sobre lo que vio. El paso 6
+      // compara este valor para detectar deriva de precio, así que el cero
+      // fabricado disparaba el aviso —«Cuando lo elegiste: $ 0»— en cada entrada
+      // corrupta o antigua. Sin dato, no hay comparación.
       importeVistoMensual: Number.isFinite(o.importeVistoMensual)
         ? Number(o.importeVistoMensual)
-        : 0,
+        : null,
       selloRevisadoEl: typeof o.selloRevisadoEl === 'string' ? o.selloRevisadoEl : '',
       creadaEn: o.creadaEn,
       descartada: o.descartada === true,
@@ -69,13 +74,17 @@ function leerDelAlmacenamiento(): IntencionContratacion | null {
 export const useContratacionStore = defineStore('contratacion', () => {
   const intencion = ref<IntencionContratacion | null>(null)
 
-  /**
-   * Se marca cuando la activación termina bien. Es la ÚNICA señal de la que hoy
-   * dispone el front para saber que la empresa ya tiene plan: no existe ningún
-   * endpoint de suscripción en el tenant. Cuando exista, esta bandera se
-   * sustituye por lo que diga el servidor, y no al revés.
-   */
-  const contratada = ref(false)
+  // Aquí vivía una bandera `contratada` en memoria, y era la ÚNICA señal con la
+  // que el front decidía si la empresa ya tenía plan. Volvía a `false` en cada
+  // recarga, así que «tu clínica ya tiene un plan activo» solo saltaba si el
+  // usuario acababa de contratar en esa misma pestaña. La señal real es
+  // `GET /subscriptions/current` (`suscripcion.api.ts`), que ya existe en el
+  // tenant y distingue el 403 del 404; la resuelve `useSuscripcion().
+  // estadoPlanActual` y la consume el paso 6. Borrarla de aquí es lo que evita
+  // que vuelva a haber dos fuentes de verdad para el mismo hecho.
+  //
+  // El guard del enganche del login tampoco la necesita: `marcarContratada()`
+  // llama a `descartar()`, y una intención descartada ya no es vigente.
 
   let hidratado = false
   let listenerPuesto = false
@@ -128,7 +137,11 @@ export const useContratacionStore = defineStore('contratacion', () => {
   const hayIntencionVigente = computed(() => vigente.value !== null)
 
   /** Crea o actualiza la intención. Reescribir la selección la «desdescarta». */
-  function guardar(seleccion: SeleccionContratacion, importeVistoMensual: number, sello: string) {
+  function guardar(
+    seleccion: SeleccionContratacion,
+    importeVistoMensual: number | null,
+    sello: string,
+  ) {
     hidratar()
     intencion.value = {
       ...seleccion,
@@ -162,8 +175,12 @@ export const useContratacionStore = defineStore('contratacion', () => {
     persistir()
   }
 
+  /**
+   * La activación terminó bien: la intención deja de estar vigente para que el
+   * enganche del login no vuelva a mandar al usuario al paso 6. **No marca
+   * ninguna bandera de «ya tiene plan»**: eso lo dice el servidor.
+   */
   function marcarContratada() {
-    contratada.value = true
     descartar()
   }
 
@@ -171,7 +188,6 @@ export const useContratacionStore = defineStore('contratacion', () => {
     intencion,
     vigente,
     hayIntencionVigente,
-    contratada,
     hidratar,
     guardar,
     cambiarCiclo,

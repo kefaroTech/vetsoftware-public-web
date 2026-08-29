@@ -113,9 +113,12 @@ describe('lo que se lee del almacenamiento', () => {
 
     expect(store.intencion?.sedes).toBe(1)
     expect(store.intencion?.usuarios).toBe(1)
-    // Cero, no `undefined`: la comparación del paso 6 es numérica y un
-    // `undefined` daría deriva siempre, o nunca, según cómo se compare.
-    expect(store.intencion?.importeVistoMensual).toBe(0)
+    // `null`, que es lo que dice el nombre de esta prueba. Aquí se rellenaba con
+    // `0`, y un cero guardado como «el importe que el usuario vio» SÍ es inventarlo:
+    // el paso 6 compara este valor para detectar deriva de precio, así que cada
+    // entrada vieja o corrupta sacaba el aviso «Cuando lo elegiste: $ 0» contra una
+    // cifra que nadie vio. Sin dato no hay comparación, y el paso 6 lo respeta.
+    expect(store.intencion?.importeVistoMensual).toBeNull()
   })
 })
 
@@ -152,14 +155,18 @@ describe('descartar, limpiar y volver a elegir', () => {
     expect(store.vigente?.descartada).toBe(false)
   })
 
-  it('contratar marca la bandera y descarta, para que el guard no reabra el embudo', () => {
+  it('contratar descarta la intención, para que el guard no reabra el embudo', () => {
     const store = useContratacionStore()
     store.guardar({ planCode: 'CLINICA', ciclo: 'MENSUAL', sedes: 1, usuarios: 1 }, 179000, 'x')
 
     store.marcarContratada()
 
-    expect(store.contratada).toBe(true)
+    // Ya no hay bandera `contratada`: era memoria de UNA pestaña y se usaba como si fuera la
+    // respuesta a «¿esta clínica tiene plan?», que la contesta el servidor
+    // (`GET /subscriptions/current`). Lo único que hace falta aquí es que la intención deje de
+    // estar vigente, y eso SÍ persiste en el espejo de `localStorage`.
     expect(store.hayIntencionVigente).toBe(false)
+    expect(store.intencion?.descartada).toBe(true)
   })
 })
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
-import { formatMoney } from '@/composables/money'
+import { importeEstimado } from '@/features/landing/composables/planPricing'
 import { CICLO_LABEL } from '@/features/landing/types/plans.types'
 import type { ResumenContratacion } from '../types/contratacion.types'
 
@@ -14,6 +14,15 @@ import type { ResumenContratacion } from '../types/contratacion.types'
  * `reglas-de-interfaz.md`. La parte visible del texto es corta; el resto viaja
  * en `.ds-sr-only`, así que el rótulo leído y el rótulo visible empiezan igual
  * (§2.5.3 Label in Name).
+ *
+ * ── Un importe puede faltar, y entonces se escribe `—` ─────────────────
+ * Cuando la selección incluye una capacidad que se cobra y que la lista de
+ * precio no publica en el ciclo elegido, el resumen llega sin subtotal, sin IVA
+ * y sin total. Las tres celdas escriben `—` —el marcador de «sin dato» de toda
+ * la aplicación— y NO un cero, que en la pantalla que decide una compra se lee
+ * como «no me cobran nada». El motivo lo explica la vista, que en ese caso
+ * además esconde el botón de confirmar. Las filas de arriba se quedan: el plan,
+ * el ciclo y las cantidades siguen siendo verdad, y los «Cambiar» son la salida.
  *
  * ── Por qué existen estos cuatro enlaces ───────────────────────────────────
  * Son la mitad de *corregir* de WCAG §3.3.4 Error Prevention (Legal,
@@ -71,17 +80,27 @@ const filas = [
         <tbody>
           <tr>
             <th scope="row">Subtotal</th>
-            <td class="ds-num">{{ formatMoney(resumen.subtotal) }}</td>
+            <td class="ds-num">{{ importeEstimado(resumen.subtotal) }}</td>
           </tr>
           <tr>
             <th scope="row">IVA ({{ resumen.tasaImpuesto }} %)</th>
-            <td class="ds-num">{{ formatMoney(resumen.impuesto) }}</td>
+            <td class="ds-num">{{ importeEstimado(resumen.impuesto) }}</td>
           </tr>
+          <!-- El rótulo decía «Total del primer mes» y era FALSO: durante la prueba no se cobra
+               nada, y esta misma pantalla lo dice dos bloques más arriba. Un total que no se
+               cobra este mes no se llama «total del primer mes». Lo que este número es, es lo
+               que costará el ciclo cuando la prueba termine. -->
           <tr>
             <th scope="row" class="ds-text-strong">
-              {{ resumen.ciclo === 'ANUAL' ? 'Total del primer año' : 'Total del primer mes' }}
+              {{ resumen.ciclo === 'ANUAL' ? 'Total por año' : 'Total por mes' }}, cuando termine la
+              prueba
             </th>
-            <td class="ds-num ds-text-strong">{{ formatMoney(resumen.total) }}</td>
+            <td class="ds-num ds-text-strong">{{ importeEstimado(resumen.total) }}</td>
+          </tr>
+          <!-- Y la respuesta a la única pregunta que se hace quien está a punto de confirmar. -->
+          <tr>
+            <th scope="row" class="ds-text-strong">Lo que se te cobra hoy</th>
+            <td class="ds-num ds-text-strong">{{ importeEstimado(0) }}</td>
           </tr>
         </tbody>
       </table>

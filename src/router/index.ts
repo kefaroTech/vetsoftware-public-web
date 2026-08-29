@@ -25,6 +25,38 @@ function contentEl(): HTMLElement | null {
  */
 const RESTORE_ATTEMPTS = 3
 
+/**
+ * Las cinco sub-pantallas de «Mi suscripción», **en el orden de su sub-navegación**, con el
+ * permiso que abre cada una.
+ *
+ * <p>Es la lista que hace que el armazón y el menú lateral prometan lo mismo que el guard
+ * concede. Vive aquí, junto a las rutas, porque el orden ES el de la sub-navegación y separarlo
+ * garantizaba que los dos se desincronizaran.
+ */
+const SUSCRIPCION_DESTINOS = [
+  { name: 'suscripcion-plan', permission: PERMISSIONS.SUBSCRIPTION_READ },
+  { name: 'suscripcion-cupos', permission: PERMISSIONS.ENTITLEMENT_READ },
+  { name: 'suscripcion-cobros', permission: PERMISSIONS.SUBSCRIPTION_BILLING_READ },
+  { name: 'suscripcion-medios-pago', permission: PERMISSIONS.SUBSCRIPTION_PAYMENT_METHOD_READ },
+  { name: 'suscripcion-cotizaciones', permission: PERMISSIONS.QUOTE_READ },
+] as const
+
+/** Los cinco permisos, para el `permissionsAny` del armazón. */
+const PERMISOS_SUSCRIPCION = SUSCRIPCION_DESTINOS.map((d) => d.permission)
+
+/**
+ * `/dashboard/suscripcion` sin sub-ruta: a la primera que el rol SÍ alcanza.
+ *
+ * <p>El destino fijo era `suscripcion-plan`, y a quien tiene `quote.read` sin `subscription.read`
+ * el guard lo devolvía al tablero sin decir nada. El suelo es `suscripcion-plan`: si no alcanza
+ * ninguna, el guard del armazón ya lo habrá parado antes por `permissionsAny`.
+ */
+function primeraSuscripcionPermitida(): { name: string } {
+  const { permissions } = useAuthorization()
+  const destino = SUSCRIPCION_DESTINOS.find((d) => permissions.value.includes(d.permission))
+  return { name: destino?.name ?? 'suscripcion-plan' }
+}
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   // El tipo de retorno va ANOTADO, y no inferido: sin anotacion, el `return
@@ -158,8 +190,12 @@ const router = createRouter({
           // patrón que ya usan `consulta/nueva` y su pantalla de éxito: es un
           // embudo, y un menú de treinta entradas al lado de un embudo es una
           // invitación a abandonarlo. NO llevan `permission`: contratar el plan
-          // de la propia clínica no es una acción de catálogo, y hoy el front
-          // del tenant no declara ningún permiso `quote.*` ni `subscription.*`.
+          // de la propia clínica no es una acción de catálogo, y hoy la
+          // confirmación no viaja al servidor, así que no hay ninguna llamada
+          // que un permiso pudiera cubrir. (El comentario anterior decía que el
+          // front del tenant «no declara ningún permiso `quote.*` ni
+          // `subscription.*`»: declara dieciocho, en `constants/permissions.ts`,
+          // y las cinco sub-pantallas de «Mi suscripción» los usan.)
           // Tampoco entran en el menú lateral: no son destinos de navegación,
           // se llega a ellos por el flujo.
           path: 'contratar',
@@ -171,7 +207,13 @@ const router = createRouter({
           path: 'contratar/exito',
           name: 'contratar-exito',
           component: () => import('@/features/contratacion/views/ContratarExitoView.vue'),
-          meta: { fullBleed: true, hideTopbar: true, title: 'Tu plan está activo — VetSoftware' },
+          // El título repetía la mentira del `<h1>`. Va con la misma palabra que
+          // la pantalla: reservado, que es lo que de verdad ocurrió.
+          meta: {
+            fullBleed: true,
+            hideTopbar: true,
+            title: 'Tu plan está reservado — VetSoftware',
+          },
         },
         {
           path: 'consulta/historial',
@@ -386,18 +428,29 @@ const router = createRouter({
           // que ves» tiene que funcionar cuando la auxiliar llama a soporte.
           //
           // Cada hija lleva SU permiso: la 377 documenta que varios de estos se sembraron y
-          // nunca se asignaron, así que hay empresas cuyo ADMIN no tiene alguno. `meta` se
-          // hereda por fusión de los registros coincidentes, así que la hija sin `permission`
-          // propio queda protegida por el `subscription.read` del padre.
+          // nunca se asignaron, así que hay empresas cuyo ADMIN no tiene alguno.
+          //
+          // El armazón NO exige `subscription.read`, y ese era el fallo: el menú enseñaba «Mi
+          // suscripción» con cualquiera de cuatro permisos, apuntaba a `suscripcion-plan`, y a
+          // quien tenía `quote.read` sin `subscription.read` —el escenario exacto de la 377— el
+          // guard lo devolvía al tablero EN SILENCIO. Se arregla por la vía buena: el armazón
+          // admite a cualquiera que pueda ver alguna de sus cinco pantallas, y la entrada sin
+          // sub-ruta REDIRIGE a la primera que su rol sí alcanza. Alinear el menú con
+          // `subscription.read` habría sido lo otro: correcto y peor: escondería sus cuentas de
+          // cobro a quien sí puede verlas.
+          //
+          // `meta` se fusiona entre los registros coincidentes, así que `suscripcion-plan`
+          // declara ahora su propio `subscription.read` en vez de heredarlo del padre.
           path: 'suscripcion',
           component: () => import('@/features/suscripcion/views/SuscripcionLayout.vue'),
-          meta: { permission: PERMISSIONS.SUBSCRIPTION_READ },
+          meta: { permissionsAny: [...PERMISOS_SUSCRIPCION] },
           children: [
-            { path: '', redirect: { name: 'suscripcion-plan' } },
+            { path: '', name: 'suscripcion', redirect: primeraSuscripcionPermitida },
             {
               path: 'plan',
               name: 'suscripcion-plan',
               component: () => import('@/features/suscripcion/views/MiPlanView.vue'),
+              meta: { permission: PERMISSIONS.SUBSCRIPTION_READ },
             },
             {
               path: 'cupos',
@@ -544,7 +597,11 @@ router.beforeEach(async (to, from) => {
   if (isAuthenticated.value && to.name === 'home' && from.name === 'login') {
     const contratacion = useContratacionStore()
     contratacion.hidratar()
-    if (contratacion.hayIntencionVigente && !contratacion.contratada) {
+    // `marcarContratada()` descarta la intención, así que una activación reciente
+    // ya deja de ser vigente. La bandera `contratada` que se comprobaba aquí era
+    // memoria de una sola pestaña y se ha eliminado del store: la única fuente de
+    // «esta clínica ya tiene plan» es el servidor.
+    if (contratacion.hayIntencionVigente) {
       return redirect({ name: 'contratar' })
     }
   }

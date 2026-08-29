@@ -68,8 +68,13 @@ const ultima = computed(() => props.lineas[props.lineas.length - 1] ?? null)
           <tr v-for="l in lineas" :key="l.code">
             <td class="ds-text-strong">{{ l.name }}</td>
             <td>{{ formatDateLong(l.trialEndDate) }}</td>
+            <!-- «Incluido en tu plan» se leía como «gratis para siempre», que es lo contrario
+                 de lo que dice esta columna: lo que hay después de la prueba es cobro. No hay
+                 precio POR MÓDULO en ninguna fuente (ver `precioDespues` en el adaptador), así
+                 que se dice dónde se cobra y no cuánto — inventar la cifra sería peor, pero
+                 callar que se cobra es lo que quema una cuenta nueva el día 14. -->
             <td>
-              <span v-if="l.precioDespues == null">Incluido en tu plan</span>
+              <span v-if="l.precioDespues == null">Se cobra dentro del total del plan</span>
               <span v-else>{{ formatMoney(l.precioDespues) }} + IVA / mes</span>
             </td>
           </tr>

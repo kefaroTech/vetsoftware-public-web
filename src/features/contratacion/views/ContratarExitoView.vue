@@ -3,12 +3,12 @@ import { storeToRefs } from 'pinia'
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { formatDateLong } from '@/composables/format'
-import { formatMoney } from '@/composables/money'
+import { importeEstimado } from '@/features/landing/composables/planPricing'
 import { CICLO_LABEL } from '@/features/landing/types/plans.types'
 import DemoModeNotice from '../components/DemoModeNotice.vue'
 import SiguientesPasos from '../components/SiguientesPasos.vue'
 import TrialLinesTable from '../components/TrialLinesTable.vue'
-import { SIN_ENDPOINT_DE_CONTRATACION, sumarDias } from '../api/contratacion.source'
+import { sumarDias } from '../api/contratacion.source'
 import { useResultadoContratacionStore } from '../stores/resultadoContratacion.store'
 
 /**
@@ -55,11 +55,17 @@ onMounted(async () => {
     class="ds-page ds-page--contained ds-stack ds-stack--16 ex"
     data-testid="contratacion-exito"
   >
+    <!-- «está activo» era mentira, y la propia pantalla la desmentía ochenta píxeles más abajo
+         («esta confirmación no ha viajado al servidor»). «Reservado» es lo que de verdad
+         ocurrió: la elección quedó tomada y guardada, y la activación es el paso que falta.
+         Es el punto donde la app le habla a quien acaba de decidir una compra, así que lo
+         primero que se lee no puede desmentir lo último. -->
     <h1 ref="h1" class="ds-display ds-display--sm" tabindex="-1">
-      Listo. Tu plan {{ resultado.planNombre }} está activo.
+      Listo. Tu plan {{ resultado.planNombre }} está reservado.
     </h1>
     <p class="ds-subtitle">
-      {{ modulos }} ya están encendidos para <strong>{{ resultado.empresaNombre }}</strong
+      {{ modulos }} son los módulos que quedan reservados para
+      <strong>{{ resultado.empresaNombre }}</strong
       >.
     </p>
 
@@ -69,8 +75,9 @@ onMounted(async () => {
       <TrialLinesTable :lineas="resultado.lineasPrueba" />
 
       <p class="ds-meta">
-        {{ CICLO_LABEL[resultado.ciclo] }} · {{ formatMoney(resultado.subtotal) }} + IVA
-        {{ formatMoney(resultado.impuesto) }} = <strong>{{ formatMoney(resultado.total) }}</strong>
+        {{ CICLO_LABEL[resultado.ciclo] }} · {{ importeEstimado(resultado.subtotal) }} + IVA
+        {{ importeEstimado(resultado.impuesto) }} =
+        <strong>{{ importeEstimado(resultado.total) }}</strong>
         <template v-if="primerCobro">
           · Primer cobro previsto: {{ formatDateLong(primerCobro) }}
         </template>
@@ -81,21 +88,29 @@ onMounted(async () => {
       <!-- La segunda y ÚLTIMA vez que aparece el aviso. Nunca más. -->
       <DemoModeNotice compacto />
 
-      <!-- Lo que todavía no es verdad, dicho donde se puede leer y sin adornos.
-           No existe ningún endpoint con el que una clínica contrate su propio
-           plan (`CreateQuoteUseCase` sigue siendo `hasRole('SYSTEM')`), así que
-           esta confirmación no ha viajado al servidor. Es la única frase de
-           esta pantalla que desaparecerá el día que exista el endpoint. -->
-      <p v-if="SIN_ENDPOINT_DE_CONTRATACION" class="ds-meta">
-        La conexión con el servicio de suscripciones todavía no está publicada, así que esta
-        confirmación no ha viajado al servidor. Escríbenos a
-        <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y la dejamos aplicada en
-        tu cuenta.
+      <!-- Lo que SÍ pasó y lo que todavía no, sin adornos y sin bandera que lo esconda.
+           La confirmación viajó: `POST /quotes/self-serve` dejó una oferta emitida con estos
+           importes, resueltos por el servidor. Lo que no ocurre solo es el último eslabón —hoy
+           nadie reacciona a una oferta aceptada, así que los módulos no se encienden—, y eso se
+           dice aquí en vez de dejar que el usuario lo descubra entrando al tablero. El número de
+           la oferta es lo que convierte «escríbenos» en algo accionable. -->
+      <p class="ds-meta">
+        Ya registramos tu contratación
+        <template v-if="resultado.cotizacionNumero">
+          con el número <strong>{{ resultado.cotizacionNumero }}</strong>
+        </template>
+        <template v-if="resultado.validaHasta">
+          , válida hasta el {{ formatDateLong(resultado.validaHasta) }}</template
+        >. Para dejar los módulos encendidos en tu cuenta escríbenos a
+        <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a
+        ><template v-if="resultado.cotizacionNumero"> con ese número</template>.
       </p>
     </section>
 
     <section class="ds-stack ds-stack--10" aria-labelledby="ahora-titulo">
-      <h2 id="ahora-titulo" class="ds-title">Tres cosas que hacer ahora</h2>
+      <!-- «Tres cosas» prometía un número que el permiso del usuario puede no permitir:
+           `SiguientesPasos` oculta la tarjeta cuyo destino el rol no alcanza. -->
+      <h2 id="ahora-titulo" class="ds-title">Qué hacer ahora</h2>
       <SiguientesPasos />
     </section>
   </main>

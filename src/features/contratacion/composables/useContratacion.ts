@@ -17,7 +17,7 @@ export function useContratacion() {
   const store = useContratacionStore()
   store.hidratar()
 
-  const { intencion, vigente, hayIntencionVigente, contratada } = storeToRefs(store)
+  const { intencion, vigente, hayIntencionVigente } = storeToRefs(store)
 
   /** La selección tal como la manipulan los controles, con valores por defecto. */
   const seleccion = computed<SeleccionContratacion | null>(() => {
@@ -44,7 +44,6 @@ export function useContratacion() {
     vigente,
     seleccion,
     hayIntencionVigente,
-    contratada,
     elegir,
     cambiarCiclo: store.cambiarCiclo,
     descartar: store.descartar,

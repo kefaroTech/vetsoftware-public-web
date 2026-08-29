@@ -463,7 +463,10 @@ Y, si aplica, el bloque de prueba por línea de la §6.
 - Una casilla: «He leído y acepto los [Términos del servicio] y la [Política de tratamiento de
   datos].» — obligatoria, con su error asociado, y **los dos enlaces abren en pestaña nueva con
   `rel="noopener"` y el aviso «(se abre en otra pestaña)` en `.ds-sr-only`».
-- El botón: **«Confirmar y activar mi plan»**. Nunca «Pagar». Nunca «Comprar».
+- El botón: **«Confirmar mi plan»**. Nunca «Pagar». Nunca «Comprar». Y tampoco
+  «Confirmar y activar mi plan», que es lo que decía antes: no hay pasarela de pago y aceptar la
+  cotización **no activa** el servicio, así que ese rótulo prometía una activación que no ocurre. El
+  criterio es el mismo que descarta «Pagar» — el rótulo nombra lo que el botón hace de verdad.
 - A su lado, en el mismo grupo: **«Ahora no»**, que descarta la intención y lleva al tablero. Sin
   esta salida el paso 6 es una jaula, y una jaula al final de un embudo es lo que convierte una duda
   en un abandono definitivo.
@@ -569,15 +572,20 @@ Reglas de este bloque:
 
 ### 4.4 El botón y lo que ocurre al pulsarlo
 
-- Rótulo: **«Confirmar y activar mi plan»**. Nunca «Pagar», «Comprar» ni «Finalizar compra».
-- Al pulsar: `disabled` mientras `submitting`, con el texto «Activando…».
+- Rótulo: **«Confirmar mi plan»**. Nunca «Pagar», «Comprar» ni «Finalizar compra», y tampoco
+  «Confirmar y activar mi plan»: sin pasarela de pago, lo que el botón envía es la aceptación de una
+  cotización, y el servicio **no queda activado** al pulsarlo. Prometer la activación en el rótulo
+  es la misma clase de error que prometer el cobro.
+- Al pulsar: `disabled` mientras `submitting`, con el texto «Confirmando…» — por lo mismo que el
+  rótulo no dice «activar».
 - **Con `PawLoader` y solo `PawLoader`** si la espera pasa de los 200 ms de retardo del componente
   (`src/components/feedback/PawLoader.vue`). Nada de spinners genéricos, ni de rotaciones CSS
   sueltas, ni de los iconos giratorios de Lucide.
 - **Llave de idempotencia**: se genera un `clientRequestId` (UUID) **al entrar en el paso 6**, no al
   pulsar. El modelo ya lo tiene y ya documenta para qué sirve: «Es lo que hace que un doble clic no
   cree dos» (`quotes.types.ts:147-148`).
-- Si tarda más de 10 s, el texto cambia a «Seguimos activando tu plan. No cierres esta ventana.»
+- Si tarda más de 10 s, el texto cambia a «Seguimos registrando tu contratación. No cierres esta
+  ventana.»
   (umbral de NN/g: por encima de 10 s hay que decir algo o el usuario asume que se colgó).
 
 ---
@@ -1292,7 +1300,7 @@ flujo por cerrado.
 - **`toMatchAriaSnapshot()` de la sección de planes y del paso 6.** Es regresión de *semántica*, no
   de píxeles: detecta que alguien convirtió la tarjeta de plan en un enlace envolvente otra vez, o
   que el `<h2>` se volvió un `<div>`. Es exactamente el fallo que esta spec está corrigiendo.
-- Recorrido de **solo teclado** desde el skip link hasta «Confirmar y activar mi plan», comprobando
+- Recorrido de **solo teclado** desde el skip link hasta «Confirmar mi plan», comprobando
   que el foco es visible en cada parada y que el orden es el visual.
 - Los ocho estados de la §5, cada uno con su texto exacto.
 

@@ -50,8 +50,8 @@ const tituloId = `${uid}-demo`
     <div v-else class="demo-body">
       <h3 :id="tituloId" class="demo-title">Modo demostración: no vamos a cobrarte nada</h3>
       <p class="demo-text">
-        Todavía no tenemos conectada la pasarela de pago. Al confirmar, tu plan se activa y empieza
-        tu periodo de prueba.
+        Todavía no tenemos conectada la pasarela de pago. Al confirmar, tu contratación queda
+        registrada con estos importes y nosotros dejamos los módulos listos.
       </p>
       <p class="demo-text demo-text--strong">
         No se te va a cobrar, no vamos a pedirte una tarjeta y no guardamos ningún dato de pago.
