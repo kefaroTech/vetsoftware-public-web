@@ -306,6 +306,8 @@ import type {
   QuoteLineResponse,
   QuoteResponse,
   QuoteSummaryResponse,
+  SelfServeQuoteLineRequest,
+  SelfServeQuoteRequest,
 } from '../features/suscripcion/types/cotizaciones.types'
 import type {
   PlanCapacity,
@@ -770,6 +772,15 @@ export type ContractAssertions = [
   Expect<MatchesContract<QuoteAnswerResponse, 'QuoteAnswerResponse'>>,
   Expect<MatchesContract<QuoteCompanySummary, 'CompanySummary'>>,
   Expect<MatchesContract<AcceptQuoteRequest, 'AcceptQuoteRequest'>>,
+  // La autocontratación, atada por sus DOS esquemas y no solo por el de fuera. `lines` es un
+  // array, y `MismatchedFields` solo compara `string | number | boolean`: la envoltura sabe que
+  // el campo `lines` existe y se llama así, pero **no mira dentro**. Sin la segunda línea, el
+  // día que `code` volviera a llamarse `catalogItemId` —o cambiara de `string` a `number`— el
+  // build seguiría verde y la petición se rechazaría con un 400 en la pantalla que decide una
+  // compra. Es exactamente el esquema que acaba de moverse, así que es exactamente el que no
+  // puede quedarse sin centinela.
+  Expect<MatchesContract<SelfServeQuoteRequest, 'SelfServeQuoteRequest'>>,
+  Expect<MatchesContract<SelfServeQuoteLineRequest, 'SelfServeQuoteLineRequest'>>,
   // El catálogo público de la landing. `PublicPlan` NO se ata: es
   // `PublicPlanContract` más `recommended`, que es una decisión comercial de la
   // portada y no un campo del contrato. Atar el que lleva el añadido daría un
