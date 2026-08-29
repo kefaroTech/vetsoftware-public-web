@@ -28,12 +28,22 @@ import { EMPRESA_ID, enrutarApi, instalarSesion } from './helpers/sesion'
 /** 2026-08-28, mediodía UTC: la misma fecha en cualquier huso de −11 a +11. */
 const HOY = new Date('2026-08-28T12:00:00.000Z')
 
+/**
+ * Los permisos del empleado simulado.
+ *
+ * <p>`subscriptionPaymentMethod.update` no estaba y ahora hace falta: las dos acciones de
+ * `MedioPagoCard` —«Hacer predeterminado» y «Revocar»— se ocultan sin él, porque los dos puertos
+ * del backend lo exigen (`SetDefaultPaymentMethodUseCase`, `RevokeSubscriptionPaymentMethodUseCase`)
+ * y antes el botón se ofrecía a todo el mundo para devolver un 403 al pulsarlo. El caso de §13.9
+ * abre el modal de revocar, así que su rol tiene que poder revocar de verdad.
+ */
 const PERMISOS = [
   'subscription.read',
   'entitlement.read',
   'subscriptionItemLimit.read',
   'subscriptionBilling.read',
   'subscriptionPaymentMethod.read',
+  'subscriptionPaymentMethod.update',
   'quote.read',
 ]
 
@@ -181,7 +191,9 @@ test.describe('§13.6 — el banner de estado del armazón', () => {
     {
       nombre: 'en prueba, dentro de los 7 días',
       sub: suscripcion({ status: 'TRIALING', trialEndDate: '2026-09-02' }),
-      contiene: 'no se corta nada por sí solo',
+      // Va en mayúscula porque ahora ABRE la frase: es lo que se pone en negrita, y lo que
+      // tranquiliza va delante de lo que preocupa.
+      contiene: 'No se corta nada por sí solo',
     },
     { nombre: 'al día', sub: suscripcion({ status: 'ACTIVE' }), contiene: '' },
     {
@@ -227,7 +239,12 @@ test.describe('§13.6 — el banner de estado del armazón', () => {
     // `textContent()` es una lectura de una sola vez, sin espera: el contenedor
     // del banner está SIEMPRE montado y nace vacío, así que leerlo antes de que
     // llegue el plan devuelve «» y la comparación de orden se haría sobre nada.
-    await expect(banner).toContainText('Pago pendiente')
+    // El centinela de carga era «Pago pendiente», el rótulo del estado, que ya NO se pinta en el
+    // banner: era lo único que iba en `<strong>` y abrir en negrita con la amenaza es
+    // exactamente lo que este caso existe para impedir. El rótulo sigue estando donde es un
+    // dato — la ficha «Estado» de «Mi plan» —. Aquí se espera por la deuda, que sí está en el
+    // banner y sirve igual de centinela.
+    await expect(banner).toContainText('saldo pendiente')
     const texto = (await banner.textContent()) ?? ''
 
     // El orden NO es cosmético: lo que quita el pánico va primero, y el pánico es

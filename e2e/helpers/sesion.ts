@@ -137,6 +137,24 @@ function json(route: Route, body: unknown, status = 200): Promise<void> {
   })
 }
 
+/**
+ * La misma respuesta JSON que sirve el comodín, pero pública.
+ *
+ * La necesita toda ruta declarada como FUNCIÓN, que es la única forma de
+ * inspeccionar la petición —el cuerpo de un `POST`, por ejemplo— antes de
+ * contestarla. Sin esto, cada spec que quisiera mirar un cuerpo tendría que
+ * reescribir a mano las cabeceras de `cabecerasCors`, y una copia incompleta no
+ * falla diciendo «faltan cabeceras»: falla con `/auth/me` caído, la sesión
+ * limpiada y una prueba que dice «no encuentro el encabezado» sobre una pantalla
+ * que nunca llegó a montarse.
+ *
+ * El preflight lo contesta `enrutarApi` ANTES de llamar a la función, así que
+ * aquí solo llega el método real.
+ */
+export function responderJson(route: Route, body: unknown, status = 200): Promise<void> {
+  return json(route, body, status)
+}
+
 /** Una página vacía con la forma de `PageResponse`, para el comodín. */
 const PAGINA_VACIA = { content: [], page: 0, pageSize: 20, totalElements: 0, totalPages: 0 }
 

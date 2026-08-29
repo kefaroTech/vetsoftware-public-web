@@ -49,7 +49,7 @@
       - listitem: Facturación electrónica DIAN
     - link "Empezar con Cadena":
       - /url: /planes?plan=CADENA&ciclo=MENSUAL
-  - paragraph: Los precios son orientativos, en pesos colombianos, y no incluyen IVA. El precio exacto para tu clínica lo ves antes de confirmar, sin compromiso y sin tarjeta.
+  - paragraph: Los precios son orientativos, en pesos colombianos (COP), y no incluyen IVA. El precio exacto para tu clínica lo ves antes de confirmar, sin compromiso y sin tarjeta.
   - paragraph:
     - link "Comparar los tres planes en detalle":
       - /url: /planes

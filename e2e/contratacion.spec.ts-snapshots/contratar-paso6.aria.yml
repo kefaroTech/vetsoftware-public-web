@@ -4,6 +4,38 @@
     - text: Estás contratando para
     - strong: Clínica E2E de prueba
     - text: /\(NIT \d+-7\)\./
+  - paragraph:
+    - text: Cada módulo tiene su propia prueba, y no terminan todas el mismo día.
+    - strong: "Caja termina antes:"
+    - text: /el \d+ de septiembre, \d+ empezamos a cobrar Caja, y Inventario sigue gratis hasta el \d+ de septiembre, \d+\./
+  - table "Fecha de fin de la prueba de cada módulo, de la que termina antes a la que termina después":
+    - caption: Fecha de fin de la prueba de cada módulo, de la que termina antes a la que termina después
+    - rowgroup:
+      - row "Módulo Gratis hasta Después":
+        - columnheader "Módulo"
+        - columnheader "Gratis hasta"
+        - columnheader "Después"
+    - rowgroup:
+      - row /Caja \d+ de septiembre, \d+ Se cobra dentro del total del plan/:
+        - cell "Caja"
+        - cell /\d+ de septiembre, \d+/
+        - cell "Se cobra dentro del total del plan"
+      - row /Agenda \d+ de septiembre, \d+ Se cobra dentro del total del plan/:
+        - cell "Agenda"
+        - cell /\d+ de septiembre, \d+/
+        - cell "Se cobra dentro del total del plan"
+      - row /Historia clínica \d+ de septiembre, \d+ Se cobra dentro del total del plan/:
+        - cell "Historia clínica"
+        - cell /\d+ de septiembre, \d+/
+        - cell "Se cobra dentro del total del plan"
+      - row /Hospitalización \d+ de septiembre, \d+ Se cobra dentro del total del plan/:
+        - cell "Hospitalización"
+        - cell /\d+ de septiembre, \d+/
+        - cell "Se cobra dentro del total del plan"
+      - row /Inventario \d+ de septiembre, \d+ Se cobra dentro del total del plan/:
+        - cell "Inventario"
+        - cell /\d+ de septiembre, \d+/
+        - cell "Se cobra dentro del total del plan"
   - table "Lo que vas a contratar, con un enlace para cambiar cada dato":
     - caption: Lo que vas a contratar, con un enlace para cambiar cada dato
     - rowgroup:
@@ -40,44 +72,15 @@
       - row /IVA \(\d+ %\) \$ \d+\.\d+/:
         - rowheader /IVA \(\d+ %\)/
         - cell /\$ \d+\.\d+/
-      - row /Total del primer mes \$ \d+\.\d+/:
-        - rowheader "Total del primer mes"
+      - row /Total por mes, cuando termine la prueba \$ \d+\.\d+/:
+        - rowheader "Total por mes, cuando termine la prueba"
         - cell /\$ \d+\.\d+/
-  - paragraph:
-    - text: Cada módulo tiene su propia prueba, y no terminan todas el mismo día.
-    - strong: "Caja termina antes:"
-    - text: /el \d+ de septiembre, \d+ empezamos a cobrar Caja, y Inventario sigue gratis hasta el \d+ de septiembre, \d+\./
-  - table "Fecha de fin de la prueba de cada módulo, de la que termina antes a la que termina después":
-    - caption: Fecha de fin de la prueba de cada módulo, de la que termina antes a la que termina después
-    - rowgroup:
-      - row "Módulo Gratis hasta Después":
-        - columnheader "Módulo"
-        - columnheader "Gratis hasta"
-        - columnheader "Después"
-    - rowgroup:
-      - row /Caja \d+ de septiembre, \d+ Incluido en tu plan/:
-        - cell "Caja"
-        - cell /\d+ de septiembre, \d+/
-        - cell "Incluido en tu plan"
-      - row /Agenda \d+ de septiembre, \d+ Incluido en tu plan/:
-        - cell "Agenda"
-        - cell /\d+ de septiembre, \d+/
-        - cell "Incluido en tu plan"
-      - row /Historia clínica \d+ de septiembre, \d+ Incluido en tu plan/:
-        - cell "Historia clínica"
-        - cell /\d+ de septiembre, \d+/
-        - cell "Incluido en tu plan"
-      - row /Hospitalización \d+ de septiembre, \d+ Incluido en tu plan/:
-        - cell "Hospitalización"
-        - cell /\d+ de septiembre, \d+/
-        - cell "Incluido en tu plan"
-      - row /Inventario \d+ de septiembre, \d+ Incluido en tu plan/:
-        - cell "Inventario"
-        - cell /\d+ de septiembre, \d+/
-        - cell "Incluido en tu plan"
+      - row /Lo que se te cobra hoy \$ 0/:
+        - rowheader "Lo que se te cobra hoy"
+        - cell /\$ 0/
   - 'complementary "Modo demostración: no vamos a cobrarte nada"':
     - 'heading "Modo demostración: no vamos a cobrarte nada" [level=3]'
-    - paragraph: Todavía no tenemos conectada la pasarela de pago. Al confirmar, tu plan se activa y empieza tu periodo de prueba.
+    - paragraph: Todavía no tenemos conectada la pasarela de pago. Al confirmar, tu contratación queda registrada con estos importes y nosotros dejamos los módulos listos.
     - paragraph: No se te va a cobrar, no vamos a pedirte una tarjeta y no guardamos ningún dato de pago. Cuando conectemos la pasarela te escribiremos por correo antes del primer cobro, y podrás decidir entonces.
   - checkbox "He leído y acepto los Términos del servicio y la Política de tratamiento de datos."
   - text: He leído y acepto los
@@ -95,5 +98,5 @@
     - link "soporte@vetsoftware.co":
       - /url: mailto:soporte@vetsoftware.co
     - text: y lo hacemos.
-  - button "Confirmar y activar mi plan"
+  - button "Confirmar mi plan"
   - button "Ahora no"

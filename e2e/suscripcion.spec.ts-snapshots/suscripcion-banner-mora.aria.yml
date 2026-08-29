@@ -1,5 +1,5 @@
 - status:
-  - strong: Pago pendiente.
-  - text: /Tienes un saldo pendiente desde el \d+ ago \d+\. Sigues trabajando con normalidad\. Te quedan 7 días de cortesía\./
+  - strong: Sigues trabajando con normalidad.
+  - text: /Tienes un saldo pendiente desde el \d+ ago \d+\. Te quedan 7 días de cortesía\./
   - link "Ver mis cuentas de cobro":
     - /url: /dashboard/suscripcion/cobros
