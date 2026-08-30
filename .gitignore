@@ -37,3 +37,14 @@ testsprite_tests/tmp/config.json
 
 # Artefactos de sembrado e2e (no versionar)
 e2e/.artifacts/
+
+# Marcadores de codigo de salida de procesos en segundo plano: se escribe
+# `cmd > x.log 2>&1; echo $? > x.exit` porque la notificacion de fondo miente
+# sobre el exit code. Son desechables y NUNCA deben commitearse; sin esta regla
+# un `git add .` se los lleva (en el backend se acumularon sesenta).
+#
+# OJO, el `.log` hermano NO queda cubierto: arriba solo se ignoran los logs de
+# npm/yarn/pnpm, no `*.log` en general, asi que un `quality.log` suelto en la
+# raiz si es commiteable. Anadir `*.log` es una decision aparte, porque hay uno
+# versionado a proposito (`testsprite_tests/tmp/mcp.log`).
+*.exit
