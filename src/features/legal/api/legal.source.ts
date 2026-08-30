@@ -3,7 +3,7 @@ import type {
   LegalAcceptanceRef,
   LegalDocument,
   LegalDocumentCode,
-  LegalDocumentVersionResponse,
+  PublicLegalDocumentResponse,
 } from '../types/legal.types'
 
 /**
@@ -65,7 +65,7 @@ export async function fetchLegalDocument(
  * fila —exactamente la divergencia que la columna existe para impedir—. Cuando
  * el documento se publique en el backend, la huella se toma de la respuesta.
  */
-export function desdeRespuesta(res: LegalDocumentVersionResponse): LegalAcceptanceRef {
+export function desdeRespuesta(res: PublicLegalDocumentResponse): LegalAcceptanceRef {
   return {
     code: res.code as LegalDocumentCode,
     kind: res.kind,

@@ -314,7 +314,7 @@ import type {
   PublicCatalog,
   PublicPlanContract,
 } from '../features/landing/types/plans.types'
-import type { LegalDocumentVersionResponse } from '../features/legal/types/legal.types'
+import type { PublicLegalDocumentResponse } from '../features/legal/types/legal.types'
 import type {
   PublicCatalogCapacityResponse,
   PublicCatalogItemResponse,
@@ -606,7 +606,14 @@ export type ContractAssertions = [
   // `documentVersion`— siga nombrando la misma fila de `legal_document_versions`
   // que el backend publica. Si esa forma cambia, el build se rompe aquí y no en
   // el momento de tener que demostrar qué texto aceptó un titular.
-  Expect<MatchesContract<LegalDocumentVersionResponse, 'LegalDocumentVersionResponse'>>,
+  //
+  // Se ata a `PublicLegalDocumentResponse` y NO a `LegalDocumentVersionResponse`
+  // porque la ruta que este front consume —`GET /legal-documents/{code}/current`—
+  // es anónima y devuelve la vista pública, sin `publishedBySystemUserId`. La
+  // consola de plataforma usa las tres operaciones autenticadas y por eso espeja
+  // el otro esquema, con el campo dentro. Atar aquí el esquema autenticado dejaba
+  // una atadura verde vigilando una forma que este front nunca recibe.
+  Expect<MatchesContract<PublicLegalDocumentResponse, 'PublicLegalDocumentResponse'>>,
   Expect<MatchesContract<AdjustStockPayload, 'AdjustStockRequest'>>,
   Expect<MatchesContract<TransferStockPayload, 'TransferStockRequest'>>,
   Expect<MatchesContract<PurchaseBook, 'PurchaseBookDto'>>,

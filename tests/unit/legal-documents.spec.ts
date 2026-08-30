@@ -13,7 +13,8 @@ import {
 } from '@/features/legal/content/legal.content'
 import { MARCA_PENDIENTE, RESPONSABLE } from '@/features/legal/content/responsable'
 import { REGIONES_BEDROCK, regionesEnFrase } from '@/features/legal/content/transferencia'
-import type { LegalDocumentVersionResponse } from '@/features/legal/types/legal.types'
+import type { PublicLegalDocumentResponse } from '@/features/legal/types/legal.types'
+import { exigir } from '../helpers/exigir'
 
 /**
  * LOS TEXTOS LEGALES, Y LAS TRES COSAS QUE NO PUEDEN ROMPERSE EN SILENCIO.
@@ -112,7 +113,8 @@ describe('Las tres regiones de Bedrock, que el texto legal tiene que nombrar', (
     const match = /bedrock_routing_regions\s*=\s*\[([^\]]*)\]/.exec(readFileSync(locals, 'utf8'))
     if (match === null) throw new Error('no encuentro `bedrock_routing_regions` en locals.tf')
 
-    const enTerraform = [...match[1].matchAll(/"([^"]+)"/g)].map((m) => m[1])
+    const lista = exigir(match[1], 'el cuerpo de la lista `bedrock_routing_regions`')
+    const enTerraform = [...lista.matchAll(/"([^"]+)"/g)].map((m) => m[1])
     expect(enTerraform).toEqual([...REGIONES_BEDROCK])
   })
 })
@@ -163,7 +165,7 @@ describe('La referencia de versión que viaja con una aceptación', () => {
     // `document_version` es la versión de negocio y `version` el bloqueo
     // optimista. Guardar la segunda en una aceptación deja una referencia que no
     // identifica ningún texto.
-    const respuesta: LegalDocumentVersionResponse = {
+    const respuesta: PublicLegalDocumentResponse = {
       id: 7,
       code: 'PRIVACY_POLICY',
       documentVersion: 3,
@@ -172,7 +174,6 @@ describe('La referencia de versión que viaja con una aceptación', () => {
       content: 'texto',
       contentHash: 'a'.repeat(64),
       publishedAt: '2026-09-01T10:00:00',
-      publishedBySystemUserId: 1,
       effectiveFrom: '2026-09-01',
       supersededAt: null,
       current: true,
