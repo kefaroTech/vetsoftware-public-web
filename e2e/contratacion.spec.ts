@@ -40,10 +40,18 @@ import { tabularHasta } from './helpers/teclado'
  * es un caso con nombre propio, más abajo.
  *
  * ── El caso que justifica media especificación ─────────────────────────────
- * §5, caso 3: si el precio se movió entre elegir y confirmar, **la casilla de
- * términos se desmarca**. No es un adorno de interfaz: es §3.3.4 Error
- * Prevention. Nadie confirma un importe que no ha leído, y el consentimiento
- * dado sobre otra cifra no vale.
+ * §5, caso 3: si el precio se movió entre elegir y confirmar, la pantalla lo
+ * dice con LAS DOS CIFRAS y **se lleva el foco al aviso**, y sin volver a
+ * aceptar no sale ninguna oferta. Eso es lo que esta pantalla hace por §3.3.4
+ * Error Prevention, y es todo lo que hace.
+ *
+ * <p><b>Lo que este fichero afirmaba de más.</b> Aquí decía que la casilla de
+ * términos «se desmarca», y el caso lo comprobaba con un `not.toBeChecked()`.
+ * Era verde por una razón que no era esa: cuando la deriva se detecta la casilla
+ * acaba de nacer sin marcar, así que la aserción pasaba igual con la línea del
+ * componente borrada — y se borró, por muerta. El caso de abajo ya no descansa
+ * en ese `not.toBeChecked()`: comprueba el foco, comprueba que confirmar a
+ * ciegas no manda nada, y comprueba que tras releer y aceptar la compra SÍ sale.
  */
 
 const CONFIRMAR = 'Confirmar mi plan'
@@ -57,8 +65,8 @@ function planPorCodigo(code: string) {
   return plan
 }
 
-/** El plan de la intención por defecto del helper. */
-const CLINICA = planPorCodigo('CLINICA')
+/** El plan de la intención por defecto del helper. `PACK_CLINIC` es su código real. */
+const CLINICA = planPorCodigo('PACK_CLINIC')
 
 /**
  * El importe mensual equivalente de una selección, calculado con la MISMA
@@ -178,8 +186,11 @@ test.describe('Paso 6 — el paso vinculante', () => {
 
     // La prueba vence POR LÍNEA, no por contrato. Caja tiene 14 días y Agenda
     // 30 dentro del mismo plan, así que la tabla tiene que enseñar las dos.
-    await expect(paso).toContainText('Caja')
-    await expect(paso).toContainText('Agenda')
+    // Los nombres van COMPLETOS, como los publica el catálogo (changeset 308):
+    // «Caja» y «Agenda» a secas pasaban por subcadena y habrían seguido pasando
+    // con el módulo renombrado a cualquier cosa que empezara igual.
+    await expect(paso).toContainText('Caja y punto de venta')
+    await expect(paso).toContainText('Agenda de citas')
 
     // Al entrar en el paso el foco va al `<h1>`: tras un `router.push` se queda
     // en el `<body>` y el lector empieza a leer desde la navegación otra vez.
@@ -294,8 +305,9 @@ test.describe('El cuerpo que viaja a POST /quotes/self-serve', () => {
   test('el paquete viaja por su `code`, y va una sola línea cuando nada se pasa de lo incluido', async ({
     page,
   }) => {
-    // La intención por defecto: 1 sede y 1 persona, muy por debajo de las 2
-    // sedes y las 8 personas que el paquete ya trae.
+    // La intención por defecto: 1 sede y 1 persona, que es JUSTO el mínimo
+    // estructural que la plataforma concede (1 sede, 2 personas). Nada se pasa de
+    // lo incluido, así que no hay línea de capacidad que mandar.
     const captura = await entrarAlPaso6(page)
     await confirmar(page)
 
@@ -323,11 +335,32 @@ test.describe('El cuerpo que viaja a POST /quotes/self-serve', () => {
     }
   })
 
-  test('la capacidad solo viaja cuando se pasa de lo incluido, y con la cantidad CONTRATADA', async ({
+  /**
+   * ⚠️ ESTE CASO DESCRIBE UN CAMINO QUE EL SERVIDOR RECHAZA HOY. Va verde a
+   * propósito y no se borra: es el único registro ejecutable de que está roto.
+   *
+   * Lo que afirma es correcto y es lo que este front DEBE hacer: si el cliente
+   * pide más capacidad de la incluida, la línea viaja con la cantidad CONTRATADA.
+   * La alternativa —no mandarla— cobraría el paquete base mientras el cliente
+   * cree haber comprado doce personas, que es peor que fallar.
+   *
+   * Lo que NO es verdad es que el servidor lo acepte. `EXTRA_USER` y
+   * `EXTRA_BRANCH` son códigos reales y con precio, pero no son componentes de
+   * ningún paquete, y `findPublishedIdByCode` solo resuelve un `BUNDLE`
+   * publicado o un `MODULE`/`CAPACITY` que cuelgue de uno. Así que en producción
+   * esta petición se rechaza entera con `Unknown or unavailable catalog item
+   * code`, indistinguible de un código inventado. Es un hueco del CATÁLOGO, no
+   * de este front: está escrito en `plans.content.ts` («LO QUE ESTA
+   * TRANSCRIPCIÓN NO PUEDE ARREGLAR»).
+   *
+   * El caso siguiente comprueba qué ve el cliente cuando eso pasa. Los dos
+   * juntos dicen la verdad completa; este solo, no.
+   */
+  test('la capacidad viaja con la cantidad CONTRATADA — y hoy el servidor la rechaza (ver el caso siguiente)', async ({
     page,
   }) => {
-    const sedes = 3 // el paquete incluye 2
-    const usuarios = 12 // el paquete incluye 8
+    const sedes = 3 // el mínimo estructural incluye 1
+    const usuarios = 12 // el mínimo estructural incluye 2
     const captura = await entrarAlPaso6(page, {
       sedes,
       usuarios,
@@ -351,6 +384,81 @@ test.describe('El cuerpo que viaja a POST /quotes/self-serve', () => {
     }
 
     expect(lineas).toHaveLength(1 + CLINICA.capacities.length)
+
+    // Y la afirmación que convierte el comentario de arriba en algo ejecutable:
+    // los códigos que se acaban de mandar son EXACTAMENTE los que el servidor no
+    // sabe resolver. El día que el catálogo cuelgue `EXTRA_USER`/`EXTRA_BRANCH`
+    // de los paquetes —o que se publiquen de otra forma— esto habrá que
+    // revisarlo, y esta línea es lo que obliga a mirar.
+    const codigosDeCapacidad = lineas.filter((l) => l.code !== CLINICA.code).map((l) => l.code)
+    expect(
+      codigosDeCapacidad.sort(),
+      'si estos códigos cambian, revisa si el catálogo ya los publica como componentes',
+    ).toEqual(['EXTRA_BRANCH', 'EXTRA_USER'])
+  })
+
+  /**
+   * La otra mitad de la verdad: qué ve el cliente cuando el servidor rechaza la
+   * línea de capacidad del caso anterior.
+   *
+   * Este caso NO simula un fallo inventado: reproduce la respuesta real de
+   * `findPublishedIdByCode` ante `EXTRA_USER`. Sin él, la suite entera dice que
+   * comprar más de dos personas funciona, y no funciona.
+   */
+  test('cuando el servidor rechaza la capacidad, el cliente NO acaba en el paso 7 creyendo que compró', async ({
+    page,
+  }) => {
+    const sedes = 3
+    const usuarios = 12
+    let llamadas = 0
+
+    await instalarSesion(page)
+    await sembrarIntencion(
+      page,
+      intencion({ sedes, usuarios, importeVistoMensual: vistoMensual(sedes, usuarios) }),
+    )
+    await enrutarApi(
+      page,
+      {
+        '/companies/*': EMPRESA_RESPUESTA,
+        // La respuesta REAL del backend ante un código que no cuelga de ningún
+        // paquete. El mensaje es el mismo que para un código inventado: ni
+        // siquiera dice cuál de las líneas falló.
+        '/quotes/self-serve': (route: Route) => {
+          llamadas += 1
+          return responderJson(
+            route,
+            {
+              status: 400,
+              error: 'Bad Request',
+              message: 'Unknown or unavailable catalog item code',
+              path: '/api/v1/quotes/self-serve',
+            },
+            400,
+          )
+        },
+      },
+      { permisos: PERMISOS_CONTRATAR },
+    )
+    await page.goto('/dashboard/contratar')
+    await expect(page.getByRole('heading', { level: 1, name: 'Confirma tu plan' })).toBeVisible()
+
+    const paso = page.getByTestId('paso-contratar')
+    await paso.getByRole('checkbox').check()
+    await paso.getByRole('button', { name: CONFIRMAR }).click()
+
+    // Salió la petición y volvió rechazada.
+    await expect(paso).toContainText('No pudimos registrar tu contratación')
+    expect(llamadas).toBe(1)
+
+    // Y lo que NO pasó: no hay paso 7, no hay «tu plan está reservado» y la
+    // intención sigue viva para poder reintentar. Un cliente que ve la pantalla
+    // de éxito sobre una oferta que el servidor rechazó es el peor final posible
+    // de este embudo.
+    await expect(page).toHaveURL(/\/dashboard\/contratar$/)
+    await expect(page.getByTestId('contratacion-exito')).toHaveCount(0)
+    const guardada = await leerIntencion(page)
+    expect(guardada?.descartada, 'una contratación fallida no descarta la intención').toBe(false)
   })
 
   test('la capacidad que NO se pasa de lo incluido se queda fuera del cuerpo', async ({ page }) => {
@@ -474,7 +582,9 @@ test.describe('Paso 7 — manda el servidor', () => {
 })
 
 test.describe('§5 caso 3 — el precio cambió mientras decidía', () => {
-  test('el aviso aparece, se lleva el foco y la casilla queda DESMARCADA', async ({ page }) => {
+  test('el aviso aparece, se lleva el foco, y no se compra sin volver a aceptar', async ({
+    page,
+  }) => {
     // El importe que se vio: uno que el catálogo no va a devolver. Es lo que le
     // pasa a quien eligió antes de que se moviera la lista de precio.
     const captura = await entrarAlPaso6(page, { importeVistoMensual: 111_111 })
@@ -490,14 +600,23 @@ test.describe('§5 caso 3 — el precio cambió mientras decidía', () => {
     await expect(aviso).toContainText(grupos.format(111_111))
     await expect(aviso).toContainText(grupos.format(vistoMensual(1, 1)))
 
-    // LA AFIRMACIÓN QUE IMPORTA. El consentimiento anterior era sobre otra
-    // cifra: no vale, y la casilla tiene que volver a su estado inicial.
+    // La casilla está sin marcar. Es el estado con el que el usuario se
+    // encuentra el aviso — no la prueba de una salvaguarda: cuando la deriva se
+    // detecta, la casilla acaba de aparecer. Ver la cabecera del fichero.
     await expect(paso.getByRole('checkbox')).not.toBeChecked()
 
-    // Y no hay atajo: confirmar sin volver a marcarla no pide ninguna oferta.
+    // ESTA es la afirmación que sí tiene puerta: no hay atajo. Confirmar sin
+    // aceptar los importes NUEVOS no pide ninguna oferta.
     await paso.getByRole('button', { name: CONFIRMAR }).click()
     await expect(page).toHaveURL(/\/dashboard\/contratar$/)
     expect(captura.llamadas).toBe(0)
+
+    // Y la otra mitad, que sin ella lo de arriba lo cumpliría también una
+    // pantalla rota: la deriva es un badén, no un muro. Quien lee las cifras
+    // nuevas y las acepta, compra — y compra UNA vez.
+    await confirmar(page)
+    expect(captura.llamadas).toBe(1)
+    expect(captura.cuerpo?.lines).toEqual([{ code: 'PACK_CLINIC', quantity: 1 }])
   })
 
   test('sin deriva no hay aviso: el caso feliz no paga el precio del raro', async ({ page }) => {
@@ -609,16 +728,20 @@ test.describe('Recorrido de solo teclado', () => {
     await expect(page.locator('#planes')).toBeFocused()
 
     // Y desde la sección de planes, hasta el CTA de la tarjeta recomendada.
-    const cta = page.getByRole('link', { name: 'Empezar con Clínica' })
+    // `exact: true` NO es adorno: «Empezar con Pack Clínica» es PREFIJO de
+    // «Empezar con Pack Clínica completa», y el emparejamiento por nombre de rol
+    // es por subcadena. Sin esto el selector resuelve DOS enlaces y falla con
+    // «strict mode violation», que no señala a la causa.
+    const cta = page.getByRole('link', { name: 'Empezar con Pack Clínica', exact: true })
     await tabularHasta(page, cta)
     await page.keyboard.press('Enter')
 
-    await expect(page).toHaveURL(/\/planes\?plan=CLINICA/)
+    await expect(page).toHaveURL(/\/planes\?plan=PACK_CLINIC/)
 
     const continuar = page.getByRole('button', { name: /^Continuar con / })
     await tabularHasta(page, continuar)
     await page.keyboard.press('Enter')
-    await expect(page).toHaveURL(/\/registro\?plan=CLINICA/)
+    await expect(page).toHaveURL(/\/registro\?plan=PACK_CLINIC/)
   })
 
   test('tramo autenticado: del inicio del paso 6 hasta «Confirmar mi plan»', async ({ page }) => {

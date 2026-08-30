@@ -6,8 +6,8 @@
     - text: /\(NIT \d+-7\)\./
   - paragraph:
     - text: Cada módulo tiene su propia prueba, y no terminan todas el mismo día.
-    - strong: "Caja termina antes:"
-    - text: /el \d+ de septiembre, \d+ empezamos a cobrar Caja, y Inventario sigue gratis hasta el \d+ de septiembre, \d+\./
+    - strong: "Caja y punto de venta termina antes:"
+    - text: /el \d+ de \w+, \d+ empezamos a cobrar Caja y punto de venta, y Vacunación y desparasitación sigue gratis hasta el \d+ de \w+, \d+\./
   - table "Fecha de fin de la prueba de cada módulo, de la que termina antes a la que termina después":
     - caption: Fecha de fin de la prueba de cada módulo, de la que termina antes a la que termina después
     - rowgroup:
@@ -16,53 +16,53 @@
         - columnheader "Gratis hasta"
         - columnheader "Después"
     - rowgroup:
-      - row /Caja \d+ de septiembre, \d+ Se cobra dentro del total del plan/:
-        - cell "Caja"
-        - cell /\d+ de septiembre, \d+/
+      - row /Caja y punto de venta \d+ de \w+, \d+ Se cobra dentro del total del plan/:
+        - cell "Caja y punto de venta"
+        - cell /\d+ de \w+, \d+/
         - cell "Se cobra dentro del total del plan"
-      - row /Agenda \d+ de septiembre, \d+ Se cobra dentro del total del plan/:
-        - cell "Agenda"
-        - cell /\d+ de septiembre, \d+/
+      - 'row /Núcleo: clientes y mascotas \d+ de \w+, \d+ Se cobra dentro del total del plan/':
+        - 'cell "Núcleo: clientes y mascotas"'
+        - cell /\d+ de \w+, \d+/
         - cell "Se cobra dentro del total del plan"
-      - row /Historia clínica \d+ de septiembre, \d+ Se cobra dentro del total del plan/:
-        - cell "Historia clínica"
-        - cell /\d+ de septiembre, \d+/
+      - row /Agenda de citas \d+ de \w+, \d+ Se cobra dentro del total del plan/:
+        - cell "Agenda de citas"
+        - cell /\d+ de \w+, \d+/
         - cell "Se cobra dentro del total del plan"
-      - row /Hospitalización \d+ de septiembre, \d+ Se cobra dentro del total del plan/:
-        - cell "Hospitalización"
-        - cell /\d+ de septiembre, \d+/
+      - row /Historia clínica y consultas \d+ de \w+, \d+ Se cobra dentro del total del plan/:
+        - cell "Historia clínica y consultas"
+        - cell /\d+ de \w+, \d+/
         - cell "Se cobra dentro del total del plan"
-      - row /Inventario \d+ de septiembre, \d+ Se cobra dentro del total del plan/:
-        - cell "Inventario"
-        - cell /\d+ de septiembre, \d+/
+      - row /Vacunación y desparasitación \d+ de \w+, \d+ Se cobra dentro del total del plan/:
+        - cell "Vacunación y desparasitación"
+        - cell /\d+ de \w+, \d+/
         - cell "Se cobra dentro del total del plan"
   - table "Lo que vas a contratar, con un enlace para cambiar cada dato":
     - caption: Lo que vas a contratar, con un enlace para cambiar cada dato
     - rowgroup:
-      - row "Plan Clínica Cambiar el plan":
+      - row "Plan Pack Clínica Cambiar el plan":
         - rowheader "Plan"
-        - cell "Clínica"
+        - cell "Pack Clínica"
         - cell "Cambiar el plan":
           - link "Cambiar el plan":
-            - /url: /planes?plan=CLINICA&ciclo=MENSUAL&sedes=1&usuarios=1
+            - /url: /planes?plan=PACK_CLINIC&ciclo=MENSUAL&sedes=1&usuarios=1
       - row "Ciclo de pago Mes a mes Cambiar el ciclo de pago":
         - rowheader "Ciclo de pago"
         - cell "Mes a mes"
         - cell "Cambiar el ciclo de pago":
           - link "Cambiar el ciclo de pago":
-            - /url: /planes?plan=CLINICA&ciclo=MENSUAL&sedes=1&usuarios=1
+            - /url: /planes?plan=PACK_CLINIC&ciclo=MENSUAL&sedes=1&usuarios=1
       - row "Sedes 1 Cambiar el número de sedes":
         - rowheader "Sedes"
         - cell "1"
         - cell "Cambiar el número de sedes":
           - link "Cambiar el número de sedes":
-            - /url: /planes?plan=CLINICA&ciclo=MENSUAL&sedes=1&usuarios=1
+            - /url: /planes?plan=PACK_CLINIC&ciclo=MENSUAL&sedes=1&usuarios=1
       - row "Personas 1 Cambiar el número de personas":
         - rowheader "Personas"
         - cell "1"
         - cell "Cambiar el número de personas":
           - link "Cambiar el número de personas":
-            - /url: /planes?plan=CLINICA&ciclo=MENSUAL&sedes=1&usuarios=1
+            - /url: /planes?plan=PACK_CLINIC&ciclo=MENSUAL&sedes=1&usuarios=1
   - table "Importes":
     - caption: Importes
     - rowgroup:
@@ -75,9 +75,9 @@
       - row /Total por mes, cuando termine la prueba \$ \d+\.\d+/:
         - rowheader "Total por mes, cuando termine la prueba"
         - cell /\$ \d+\.\d+/
-      - row /Lo que se te cobra hoy \$ 0/:
+      - row "Lo que se te cobra hoy $ 0":
         - rowheader "Lo que se te cobra hoy"
-        - cell /\$ 0/
+        - cell "$ 0"
   - 'complementary "Modo demostración: no vamos a cobrarte nada"':
     - 'heading "Modo demostración: no vamos a cobrarte nada" [level=3]'
     - paragraph: Todavía no tenemos conectada la pasarela de pago. Al confirmar, tu contratación queda registrada con estos importes y nosotros dejamos los módulos listos.
