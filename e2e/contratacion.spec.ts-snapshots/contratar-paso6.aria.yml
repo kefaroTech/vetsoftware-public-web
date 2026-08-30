@@ -79,20 +79,18 @@
         - rowheader "Lo que se te cobra hoy"
         - cell "$ 0"
   - 'complementary "Modo demostración: no vamos a cobrarte nada"':
-    - 'heading "Modo demostración: no vamos a cobrarte nada" [level=3]'
+    - 'heading "Modo demostración: no vamos a cobrarte nada" [level=2]'
     - paragraph: Todavía no tenemos conectada la pasarela de pago. Al confirmar, tu contratación queda registrada con estos importes y nosotros dejamos los módulos listos.
     - paragraph: No se te va a cobrar, no vamos a pedirte una tarjeta y no guardamos ningún dato de pago. Cuando conectemos la pasarela te escribiremos por correo antes del primer cobro, y podrás decidir entonces.
-  - checkbox "He leído y acepto los Términos del servicio y la Política de tratamiento de datos."
+  - 'checkbox /He leído y acepto los Términos del Servicio \(se abre en una pestaña nueva\) y la Política de Tratamiento de Datos Personales \(se abre en una pestaña nueva\) \. Términos del Servicio: versión 1, vigente desde el 1 de septiembre, \d+ · Política de Tratamiento de Datos Personales: versión 1, vigente desde el 1 de septiembre, \d+/'
   - text: He leído y acepto los
-  - strong: Términos del servicio
+  - link "Términos del Servicio (se abre en una pestaña nueva)":
+    - /url: /legal/terminos
   - text: y la
-  - strong: Política de tratamiento de datos
-  - text: .
-  - paragraph:
-    - text: "Todavía no están publicadas en la web: pídenoslas en"
-    - link "soporte@vetsoftware.co":
-      - /url: mailto:soporte@vetsoftware.co
-    - text: y te las enviamos antes de que confirmes.
+  - link "Política de Tratamiento de Datos Personales (se abre en una pestaña nueva)":
+    - /url: /legal/privacidad
+  - text: "/\\. Términos del Servicio: versión 1, vigente desde el 1 de septiembre, \\d+ · Política de Tratamiento de Datos Personales: versión 1, vigente desde el 1 de septiembre, \\d+/"
+  - paragraph: "Los dos documentos están enlazados en la casilla de arriba y se abren en una pestaña nueva: los puedes leer sin perder nada de esta pantalla."
   - paragraph:
     - text: Durante la prueba no se cobra nada. Si quieres darte de baja antes de que empiece el cobro, escríbenos a
     - link "soporte@vetsoftware.co":

@@ -18,8 +18,24 @@ import type { CapacidadPropuesta } from '../types/asistente.types'
  * enumeración— después de que el prospecto se haya registrado y verificado el
  * correo. Es decir: el error aparece en el peor momento posible y sin pista.
  *
- * Así que la pantalla dice la verdad completa y no cobra por ella: «3 personas:
- * 1 incluida, el resto se ajusta al contratar».
+ * ── LA FRASE QUE ESTE BLOQUE TENÍA Y ERA FALSA ──────────────────────────────
+ * Decía «Se ajusta al contratar», y nada se ajusta al contratar. Estos dos
+ * números no salen del navegador: {@link useAsistente.fijarCapacidades} los
+ * guarda en el store, viajan a la intención y de ahí solo los lee la banda de
+ * continuación de la landing («para 2 sedes y 5 personas»). La oferta que se
+ * manda en el paso 6 son **las líneas de la propuesta y nada más**
+ * (`lineasDePropuesta`), y `SelfServeQuoteRequest` no tiene ningún campo de
+ * capacidad donde meterlos: el único canal es `lines[].code` + `quantity`.
+ *
+ * <p>Y la propuesta puede traer su PROPIA línea de capacidad —el servidor
+ * devuelve `EXTRA_USER × 3` si el modelo leyó tres personas en el texto libre—,
+ * que sí se cotiza y sí se cobra. Con la frase vieja, escribir 8 aquí dejaba al
+ * prospecto creyendo que había contratado ocho plazas mientras la oferta pedía
+ * tres. La cantidad cobrada solo la mueve el servidor: se cambia refinando la
+ * propuesta con palabras, que es lo que hace `RefinarCuadro`.
+ *
+ * <p>Así que el bloque dice lo que hace y lo que no: recoge el tamaño del equipo
+ * y **no toca el precio**. Sin dato de lo incluido no se afirma nada sobre él.
  *
  * ── Por qué NO es un `<fieldset>` ───────────────────────────────────────────
  * Un `<fieldset>` existe para que la `<legend>` complete el nombre accesible de
@@ -40,6 +56,15 @@ const emit = defineEmits<{ cambiar: [sedes: number, usuarios: number] }>()
 const uid = useId()
 const idSedes = `${uid}-sedes`
 const idUsuarios = `${uid}-usuarios`
+/**
+ * La nota está ENLAZADA a los dos campos, no solo puesta encima.
+ *
+ * <p>«No cambia el precio» es la información que decide si merece la pena tocar
+ * el control, y quien lo alcanza con el tabulador nunca ha visto el párrafo de
+ * arriba. Sin `aria-describedby` el lector anuncia «¿Cuántas personas van a
+ * usarlo?, campo numérico» y el aviso se queda fuera (§3.3.2).
+ */
+const idNota = `${uid}-nota`
 
 /** Lo incluido para un eje, o `null` si el servidor no lo ha dicho. */
 function incluidas(unit: string): number | null {
@@ -47,23 +72,32 @@ function incluidas(unit: string): number | null {
 }
 
 /**
- * «3 personas: 1 incluida, el resto se ajusta al contratar.»
+ * «3 personas: van incluidas.» / «8 personas: 2 van incluidas.»
  *
- * <p>⚠️ Y «3 personas. Se ajusta al contratar.» cuando no hay dato de lo
- * incluido, que es **hoy siempre**: `AssistantProposalResponse` no trae bloque
- * de capacidades, así que `propuesta.capacidades` llega vacío. El `?? 0` que
- * había antes convertía esa ausencia en la afirmación «0 personas van
- * incluidas», que no es un valor por defecto inofensivo: es una frase sobre el
- * precio, en la pantalla que decide una compra, que nadie ha calculado. Sin dato
- * se dice menos, no algo falso.
+ * <p>⚠️ Y **nada** cuando no hay dato de lo incluido, que es hoy siempre:
+ * `AssistantProposalResponse` no trae bloque de capacidades, así que
+ * `propuesta.capacidades` llega vacío. El `?? 0` que hubo aquí convertía esa
+ * ausencia en «0 personas van incluidas» —una frase sobre el precio que nadie
+ * había calculado—, y el «Se ajusta al contratar» que lo sustituyó era la misma
+ * clase de invención: prometía un ajuste que no ocurre en ninguna parte del
+ * código. Sin dato se dice menos, no algo falso; lo que sí se puede afirmar
+ * siempre —que esto no mueve el precio— lo dice la nota del bloque.
+ *
+ * <p>Y cuando el contrato publique las capacidades, la rama de arriba tampoco
+ * promete el ajuste: dice cuántas van incluidas, que es un hecho del catálogo, y
+ * se para ahí.
  */
-function frase(unit: CapacityUnit, pedidas: number): string {
+function frase(unit: CapacityUnit, pedidas: number): string | null {
   const inc = incluidas(unit)
+  if (inc === null) return null
   const etiqueta = pedidas === 1 ? CAPACITY_UNIT_LABEL_ONE[unit] : CAPACITY_UNIT_LABEL[unit]
-  if (inc === null) return `${pedidas} ${etiqueta}. Se ajusta al contratar.`
-  if (pedidas <= inc) return `${pedidas} ${etiqueta}: van incluidas.`
-  const etiquetaInc = inc === 1 ? CAPACITY_UNIT_LABEL_ONE[unit] : CAPACITY_UNIT_LABEL[unit]
-  return `${pedidas} ${etiqueta}: ${inc} ${etiquetaInc} van incluidas, el resto se ajusta al contratar.`
+  // «1 sede va incluida» / «2 van incluidas». La versión anterior concordaba con
+  // la cantidad pedida y no con la incluida, y escribía «3 sedes: 1 sede van
+  // incluidas».
+  const cuantas = pedidas <= inc ? pedidas : inc
+  const verbo = cuantas === 1 ? 'va incluida' : 'van incluidas'
+  if (pedidas <= inc) return `${pedidas} ${etiqueta}: ${verbo}.`
+  return `${pedidas} ${etiqueta}: ${inc} ${verbo}.`
 }
 
 const fraseSedes = computed(() => frase('BRANCH', props.sedes))
@@ -80,6 +114,17 @@ function entero(valor: string): number {
   <section class="pcap" aria-labelledby="pcap-h3">
     <h3 id="pcap-h3" class="pcap-legend">¿De qué tamaño es tu equipo?</h3>
 
+    <!-- Lo que este bloque hace y lo que NO hace, antes de los campos. Un control
+         numérico junto a un total se lee como si moviera el total; decirlo
+         después de que el usuario haya tecleado llega tarde. -->
+    <p :id="idNota" class="pcap-nota" data-testid="pcap-nota">
+      Nos dice el tamaño de tu equipo y viaja con tu selección.
+      <strong>No cambia el precio de esta propuesta:</strong> las sedes y las personas que pasen de
+      lo incluido todavía no se pueden contratar por tu cuenta. Si necesitas más, escríbenos y lo
+      cotizamos contigo. Para cambiar lo que ya está cotizado arriba, cuéntanoslo en «¿Se nos olvidó
+      algo?».
+    </p>
+
     <div class="pcap-grid">
       <div>
         <label :for="idSedes" class="pcap-label">¿Cuántas sedes tienes?</label>
@@ -90,9 +135,10 @@ function entero(valor: string): number {
           min="1"
           inputmode="numeric"
           :value="sedes"
+          :aria-describedby="idNota"
           @change="emit('cambiar', entero(($event.target as HTMLInputElement).value), usuarios)"
         />
-        <p class="pcap-dato">{{ fraseSedes }}</p>
+        <p v-if="fraseSedes" class="pcap-dato">{{ fraseSedes }}</p>
       </div>
 
       <div>
@@ -104,9 +150,10 @@ function entero(valor: string): number {
           min="1"
           inputmode="numeric"
           :value="usuarios"
+          :aria-describedby="idNota"
           @change="emit('cambiar', sedes, entero(($event.target as HTMLInputElement).value))"
         />
-        <p class="pcap-dato">{{ fraseUsuarios }}</p>
+        <p v-if="fraseUsuarios" class="pcap-dato">{{ fraseUsuarios }}</p>
       </div>
     </div>
   </section>
@@ -118,6 +165,13 @@ function entero(valor: string): number {
   margin: 0;
   font-size: 12px;
   font-weight: 600;
+  color: var(--pub-ink-700);
+}
+
+.pcap-nota {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
   color: var(--pub-ink-700);
 }
 
