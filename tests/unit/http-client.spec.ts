@@ -366,15 +366,25 @@ describe('401 y renovación de sesión', () => {
     expect(location.href).toBe('/login?redirect=%2Ftienda')
   })
 
-  it('conserva query string en el destino recordado, no solo el pathname', async () => {
-    vi.stubGlobal('location', { pathname: '/tienda', search: '?tab=historia', href: '' })
+  it('no arrastra la cadena de consulta al destino recordado, solo el pathname', async () => {
+    // Una URL con query string puede llevar un secreto (token de restablecer
+    // contraseña, de recuperar una propuesta...). `redirectToLogin()` no debe
+    // republicarlo en `/login?redirect=`. Ver el comentario de
+    // `redirectToLogin` en `http.client.ts` para el porqué completo.
+    vi.stubGlobal('location', {
+      pathname: '/tienda',
+      search: '?token=secreto-de-un-solo-uso',
+      href: '',
+    })
     useAdapter(async (config) => {
       throw httpError(config, 401, { code: 'TOKEN_INVALID' })
     })
 
     await expect(http.get('/medicaments')).rejects.toThrow()
 
-    expect(location.href).toBe('/login?redirect=%2Ftienda%3Ftab%3Dhistoria')
+    expect(location.href).toBe('/login?redirect=%2Ftienda')
+    expect(location.href).not.toContain('token')
+    expect(location.href).not.toContain('secreto')
   })
 
   it('limpia el store ANTES de la limpieza de almacenamiento, incluso sin recarga', async () => {
