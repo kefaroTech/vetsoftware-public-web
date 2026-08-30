@@ -301,7 +301,6 @@ import type {
 } from '../features/suscripcion/types/medios-pago.types'
 import type {
   AcceptQuoteRequest,
-  QuoteAnswerResponse,
   QuoteCompanySummary,
   QuoteLineResponse,
   QuoteResponse,
@@ -315,6 +314,7 @@ import type {
   PublicCatalog,
   PublicPlanContract,
 } from '../features/landing/types/plans.types'
+import type { LegalDocumentVersionResponse } from '../features/legal/types/legal.types'
 export type Schemas = components['schemas']
 
 /** Lo que el contrato sabe comparar campo a campo. Lo demás se comprueba por su propia atadura. */
@@ -584,6 +584,13 @@ export type ContractAssertions = [
   Expect<MatchesContract<ReceiveStockPayload, 'ReceiveStockRequest'>>,
   Expect<MatchesContract<SaveBranchRequest, 'UpdateBranchRequest'>>,
   Expect<MatchesContract<SystemConfigurationResponse, 'SystemConfigurationDto'>>,
+  // Los textos legales. Se ata aunque ninguna pantalla lo pida todavía por red
+  // (ver `legal.source.ts`): lo que esta atadura protege NO es una petición, es
+  // que la referencia guardada con un consentimiento —`code` +
+  // `documentVersion`— siga nombrando la misma fila de `legal_document_versions`
+  // que el backend publica. Si esa forma cambia, el build se rompe aquí y no en
+  // el momento de tener que demostrar qué texto aceptó un titular.
+  Expect<MatchesContract<LegalDocumentVersionResponse, 'LegalDocumentVersionResponse'>>,
   Expect<MatchesContract<AdjustStockPayload, 'AdjustStockRequest'>>,
   Expect<MatchesContract<TransferStockPayload, 'TransferStockRequest'>>,
   Expect<MatchesContract<PurchaseBook, 'PurchaseBookDto'>>,
@@ -769,7 +776,6 @@ export type ContractAssertions = [
   Expect<MatchesContract<QuoteResponse, 'QuoteResponse'>>,
   Expect<MatchesContract<QuoteSummaryResponse, 'QuoteSummaryResponse'>>,
   Expect<MatchesContract<QuoteLineResponse, 'QuoteLineResponse'>>,
-  Expect<MatchesContract<QuoteAnswerResponse, 'QuoteAnswerResponse'>>,
   Expect<MatchesContract<QuoteCompanySummary, 'CompanySummary'>>,
   Expect<MatchesContract<AcceptQuoteRequest, 'AcceptQuoteRequest'>>,
   // La autocontratación, atada por sus DOS esquemas y no solo por el de fuera. `lines` es un

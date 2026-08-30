@@ -112,7 +112,7 @@ exactamente los campos que llevan la información**:
 | `CompanyAccessResponse` | `companyId`, `recalculatedAt` | `entitlements[]` y **`capacities[]`** — el «340 de 500» entero |
 | `BillingDocumentResponse` | 20 campos planos | `taxes[]` |
 | `DunningEventResponse` | los planos | `subscription{}`, `billingDocument{}` |
-| `QuoteResponse` | los planos | `lines[]`, `answers[]` |
+| `QuoteResponse` | los planos | `lines[]` |
 | todo `PageResponse<T>` | la envoltura | **`content[]`**, es decir, todo |
 
 **La defensa que sí hay que poner**, porque la atadura es decorativa en estos:
@@ -852,8 +852,9 @@ CotizacionDetalleView   GET /quotes/{id} → QuoteResponse
 `QuoteStatus` traducido: `DRAFT` → **no se lista** (borrador de plataforma), `SENT` → `Pendiente de
 tu respuesta`, `ACCEPTED` → `Aceptada`, `REJECTED` → `Rechazada`, `EXPIRED` → `Vencida`.
 
-De `QuoteResponse` **no se enseñan** `priceListId`, `clientRequestId`, `acceptedIp`, ni `answers[]`
-si son notas internas del comercial.
+De `QuoteResponse` **no se enseñan** `priceListId`, `clientRequestId` ni `acceptedIp`: son datos
+internos de plataforma. `answers[]` ya no existe — el configurador determinista se eliminó del
+producto y el contrato dejó de traer el campo y su esquema `QuoteAnswerResponse`.
 
 #### 7.5.2 Aceptar — el importe que se mostró, no el que se recalcule
 

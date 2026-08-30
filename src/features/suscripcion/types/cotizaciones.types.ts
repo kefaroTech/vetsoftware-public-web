@@ -49,16 +49,6 @@ export interface QuoteLineResponse {
   enabled?: boolean
 }
 
-/** Respuestas del configurador. **No se pintan**: son notas internas del comercial. */
-export interface QuoteAnswerResponse {
-  id?: number
-  questionId?: number
-  optionId?: number
-  questionCode?: string
-  answerValue?: string
-  enabled?: boolean
-}
-
 export interface QuoteSummaryResponse {
   id: number
   quoteNumber?: string
@@ -116,8 +106,6 @@ export interface QuoteResponse {
   clientRequestId?: string
   /** Suelto para `MatchesContract`: se lee siempre con `Array.isArray`. */
   lines?: QuoteLineResponse[]
-  /** **NO se pintan**: notas internas del comercial. */
-  answers?: QuoteAnswerResponse[]
   createdDate?: string
   enabled?: boolean
 }
