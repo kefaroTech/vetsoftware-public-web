@@ -315,6 +315,22 @@ import type {
   PublicPlanContract,
 } from '../features/landing/types/plans.types'
 import type { LegalDocumentVersionResponse } from '../features/legal/types/legal.types'
+import type {
+  PublicCatalogCapacityResponse,
+  PublicCatalogItemResponse,
+  PublicCatalogPackResponse,
+  PublicCatalogRequirementResponse,
+  PublicCatalogResponse,
+} from '../features/asistente/types/catalogo.types'
+import type {
+  AssistantPackOfferResponse,
+  AssistantProposalLineResponse,
+  AssistantProposalResponse,
+  EditProposalLinesRequest,
+  GenerateProposalRequest,
+  LegalAcceptanceRequest,
+  RefineProposalRequest,
+} from '../features/asistente/types/asistente.types'
 export type Schemas = components['schemas']
 
 /** Lo que el contrato sabe comparar campo a campo. Lo demás se comprueba por su propia atadura. */
@@ -795,6 +811,50 @@ export type ContractAssertions = [
   Expect<MatchesContract<PublicPlanContract, 'PublicPlanResponse'>>,
   Expect<MatchesContract<PlanInclude, 'PublicPlanIncludedResponse'>>,
   Expect<MatchesContract<PlanCapacity, 'PublicPlanCapacityResponse'>>,
+  // El catalogo comercial de los 26 articulos, atado por sus CINCO esquemas.
+  // `GET /catalog` es publico y existe hoy, asi que TR-01 aplica entero: si el
+  // backend renombra un campo o anade uno, este build deja de compilar antes de
+  // que la pantalla que decide una compra empiece a leer `undefined`.
+  //
+  Expect<MatchesContract<PublicCatalogResponse, 'PublicCatalogResponse'>>,
+  Expect<MatchesContract<PublicCatalogItemResponse, 'PublicCatalogItemResponse'>>,
+  Expect<MatchesContract<PublicCatalogCapacityResponse, 'PublicCatalogCapacityResponse'>>,
+  Expect<MatchesContract<PublicCatalogPackResponse, 'PublicCatalogPackResponse'>>,
+  Expect<MatchesContract<PublicCatalogRequirementResponse, 'PublicCatalogRequirementResponse'>>,
+  // El ASISTENTE COMERCIAL. Las cuatro rutas de `/assistant/proposal` existen
+  // desde el contrato de agosto de 2026, asi que los tipos que viajan por el
+  // cable dejan de ser palabra de nadie y pasan por aqui.
+  //
+  // ⚠️ LO QUE ESTAS SIETE LINEAS **NO** COMPRUEBAN, y hay que tenerlo delante
+  // antes de leerlas como una garantia:
+  //
+  //   · `MatchesContract` no es unidireccional. Un tipo local MAS ESTRECHO que
+  //     el contrato pasa en verde: `presentation` se declara aqui como la union
+  //     de los cuatro valores de `ProposalPresentation` y el contrato solo dice
+  //     `string`, asi que un quinto valor del backend NO rompe este build. Por
+  //     eso el mapeador del seam tiene rama por defecto y no un `never`.
+  //   · Es CIEGA A LO ANIDADO: su `Comparable` es `string | number | boolean`,
+  //     asi que atar `AssistantProposalResponse` no compara ni una linea ni la
+  //     oferta de paquete. `AssistantProposalLineResponse` y
+  //     `AssistantPackOfferResponse` estan atados APARTE por eso: alcanzarlos a
+  //     traves de la respuesta no cubre ni uno de sus campos.
+  //   · Los `*Response` del asistente son 100 % opcionales en el contrato -son
+  //     `record` de Java sin `requiredMode`-, asi que `MissingRequiredFields` y
+  //     `NullableWhereRequired` no afirman nada aqui. Lo que si muerde es
+  //     `UndeclaredFields`: un campo nuevo en la respuesta rompe este build, que
+  //     es justo lo que se quiere en la pantalla que decide una compra.
+  //
+  // Los tipos de DOMINIO del asistente (`Propuesta`, `PropuestaLinea`,
+  // `OfertaPaquete`...) siguen SIN atar y siguen en espanol a proposito: no son
+  // la forma que viaja por el cable, y el hueco entre las dos formas lo cierra
+  // el mapeador de `api/asistente.source.ts`.
+  Expect<MatchesContract<GenerateProposalRequest, 'GenerateProposalRequest'>>,
+  Expect<MatchesContract<LegalAcceptanceRequest, 'LegalAcceptanceRequest'>>,
+  Expect<MatchesContract<RefineProposalRequest, 'RefineProposalRequest'>>,
+  Expect<MatchesContract<EditProposalLinesRequest, 'EditProposalLinesRequest'>>,
+  Expect<MatchesContract<AssistantProposalResponse, 'AssistantProposalResponse'>>,
+  Expect<MatchesContract<AssistantProposalLineResponse, 'AssistantProposalLineResponse'>>,
+  Expect<MatchesContract<AssistantPackOfferResponse, 'AssistantPackOfferResponse'>>,
   // Las envolturas de página no necesitan una línea por contenido: los cinco campos los
   // declara `PageResponse<T>`, no el elemento, y ya hay una instanciación centinela.
 ]
