@@ -38,13 +38,22 @@ testsprite_tests/tmp/config.json
 # Artefactos de sembrado e2e (no versionar)
 e2e/.artifacts/
 
-# Marcadores de codigo de salida de procesos en segundo plano: se escribe
+# Las dos salidas de un proceso en segundo plano. Se escribe
 # `cmd > x.log 2>&1; echo $? > x.exit` porque la notificacion de fondo miente
-# sobre el exit code. Son desechables y NUNCA deben commitearse; sin esta regla
-# un `git add .` se los lleva (en el backend se acumularon sesenta).
+# sobre el resultado —informa del envoltorio, no del comando de dentro—, asi que
+# el `.exit` es la unica senal fiable de si termino y con que, y ademas distingue
+# «murio el shell» de «termino mal», que sin el se leen igual. Los dos ficheros
+# son desechables y NUNCA deben commitearse; sin estas reglas un `git add .` se
+# los lleva, y en el backend llegaron a acumularse sesenta.
 #
-# OJO, el `.log` hermano NO queda cubierto: arriba solo se ignoran los logs de
-# npm/yarn/pnpm, no `*.log` en general, asi que un `quality.log` suelto en la
-# raiz si es commiteable. Anadir `*.log` es una decision aparte, porque hay uno
-# versionado a proposito (`testsprite_tests/tmp/mcp.log`).
+# LAS DOS MITADES DEL PATRON VAN JUNTAS, a proposito. Hasta el 2026-08-30 solo se
+# ignoraban los logs de depuracion de los gestores de paquetes (`npm-debug.log*`
+# y compania), no `*.log` en general, asi que un `quality.log` suelto en la raiz
+# SI era commiteable: se ignoraba el marcador y se colaba el log al que apunta.
 *.exit
+*.log
+# Excepcion deliberada, este log SI esta versionado y debe seguir estandolo. La
+# negacion es redundante hoy —`.gitignore` no desrastrea lo que ya esta rastreado—
+# pero deja la intencion escrita para quien lo vea caer bajo el `*.log` de arriba
+# y dude de si sigue debiendo estar ahi.
+!testsprite_tests/tmp/mcp.log
