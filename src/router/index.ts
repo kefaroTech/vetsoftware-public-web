@@ -114,6 +114,28 @@ const router = createRouter({
       meta: { guestOnly: true, title: 'Planes y precios — VetSoftware' },
     },
     {
+      // Los dos textos legales. **Sin `guestOnly`**, a diferencia de todo lo
+      // demás que cuelga de la zona pública, y no es un olvido: quien ya
+      // contrató tiene MÁS motivo que un prospecto para releer lo que aceptó, y
+      // `guestOnly` lo devolvería al tablero. El derecho a conocer del artículo
+      // 8 de la Ley 1581 de 2012 no se pierde al iniciar sesión.
+      //
+      // Tampoco llevan `requiresAuth` ni permiso: son públicas por obligación
+      // legal. La casilla de consentimiento las enlaza en pestaña nueva, así
+      // que un guard que redirigiera aquí rompería el consentimiento informado
+      // justo en el instante en que se está recogiendo.
+      path: '/legal/privacidad',
+      name: 'legal-privacidad',
+      component: () => import('@/features/legal/views/PoliticaPrivacidadView.vue'),
+      meta: { title: 'Política de Tratamiento de Datos Personales — VetSoftware' },
+    },
+    {
+      path: '/legal/terminos',
+      name: 'legal-terminos',
+      component: () => import('@/features/legal/views/TerminosView.vue'),
+      meta: { title: 'Términos del Servicio — VetSoftware' },
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('@/features/auth/views/LoginView.vue'),

@@ -7,11 +7,15 @@ import { formatMoney } from '@/composables/money'
  * decisión del catálogo.
  *
  * El importe que el usuario VIO al elegir viaja en la intención; en el paso
- * vinculante se compara con el que da el servidor. Si difieren, esto aparece
- * **antes** del resumen y el padre hace las dos cosas que lo convierten en un
- * cumplimiento de §3.3.4 y no en un adorno: **desmarca la casilla de términos**
- * y devuelve el botón a su estado inicial. Nadie confirma un importe que no ha
- * leído.
+ * vinculante se compara con el que se recalcula. Si difieren, esto aparece
+ * **antes** del resumen y **se lleva el foco** — eso es lo que lo separa de un
+ * adorno, y es la única mitad de §3.3.4 que el padre puede sostener hoy.
+ *
+ * <p>Lo que este aviso **no** hace, aunque este docblock lo afirmó durante un
+ * tiempo: no desmarca ninguna casilla ya marcada. Cuando aparece, la casilla
+ * todavía no existe o acaba de nacer sin marcar, así que no hay consentimiento
+ * previo que retirar; la línea del padre que decía hacerlo era inalcanzable y
+ * se quitó. Ver la cabecera de `ContratarView.vue`.
  *
  * Lleva `role="alert"` y `tabindex="-1"` porque **sí** acaba de ocurrir algo que
  * cambia la decisión, a diferencia del aviso de modo demostración: el padre le

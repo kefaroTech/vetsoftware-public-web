@@ -9,6 +9,7 @@ import { getTraceId } from '@/services/http/http.client'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { usePlanes } from '@/features/landing/composables/usePlanes'
+import LegalConsentCheckbox from '@/features/legal/components/LegalConsentCheckbox.vue'
 import { useSuscripcion } from '@/features/suscripcion/composables/useSuscripcion'
 import PlanesConfigurador from '@/features/landing/components/PlanesConfigurador.vue'
 import type { Ciclo } from '@/features/landing/types/plans.types'
@@ -38,6 +39,18 @@ import type { ResumenContratacion } from '../types/contratacion.types'
  * La vía «Reversible» **no** se puede reclamar hoy y la pantalla no la promete:
  * el front del tenant no tiene ninguna superficie de suscripción, así que no
  * hay «cancela cuando quieras». Lo que dice es lo que es verdad: escríbenos.
+ *
+ * <p><b>Lo que el aviso de deriva NO hace, escrito porque dijo que sí.</b> No
+ * desmarca ninguna casilla ya marcada, y no puede: la deriva se detecta en
+ * `cargar()`, y ahí la casilla o no está pintada o acaba de nacer en `false`.
+ * Había una línea `aceptaTerminos.value = false` que tres docblocks vendían
+ * como «la mitad que hace cumplir §3.3.4»; era inalcanzable. Lo que el aviso sí
+ * hace es salir ANTES del resumen, con las dos cifras, y llevarse el foco.
+ *
+ * <p>Re-comprobar al confirmar sería la otra mitad, y hoy no se puede con
+ * honradez: `plans.source.ts` devuelve la constante `PLANS_CONTENT` —no hay red
+ * tras el catálogo—, así que recalcular compararía un valor contra sí mismo.
+ * Cuando el catálogo lea de la red, este es el sitio.
  */
 const router = useRouter()
 const toast = useToast()
@@ -164,9 +177,9 @@ async function cargar() {
   // entre que el foco se mueva y que no: mientras `cargando` vale `true` la
   // plantilla pinta «Cargando tu resumen…», así que `PriceDriftNotice` todavía
   // no existe, `driftRef` es `null` y el `focus()` de abajo no llamaba a nadie.
-  // El aviso salía en pantalla sin el foco, que es justo la mitad que lo hace
-  // cumplir §3.3.4: quien navega con lector no se enteraba de que el precio
-  // había cambiado y solo notaba que la casilla se había desmarcado sola.
+  // El aviso salía en pantalla sin el foco: quien navega con lector de pantalla
+  // no se enteraba de que el precio había cambiado. El foco ES la protección
+  // aquí, y es toda la que hay — ver la cabecera del fichero.
   cargando.value = false
 
   // §5, caso 3: el precio se movió mientras decidía.
@@ -177,10 +190,12 @@ async function cargar() {
   // es un hueco, y el aviso dice «antes valía esto, ahora esto».
   const antes = intencion.importeVistoMensual
   const ahora = resumen.value.subtotalMensualEquivalente
+  //
+  // Aquí NO se toca `aceptaTerminos` ni `terminosTocado`: las dos asignaciones a
+  // `false` que había eran inalcanzables (mutación inversa: devolverlas no mueve
+  // ni una de las 970 pruebas). Ver la cabecera.
   if (antes !== null && ahora !== null && antes !== ahora) {
     drift.value = { antes, ahora }
-    aceptaTerminos.value = false
-    terminosTocado.value = false
     await nextTick()
     driftRef.value?.focus()
   }
@@ -379,20 +394,22 @@ function ahoraNo() {
       <div class="ds-stack ds-stack--10">
         <!-- Sin `quote.request` no hay nada que aceptar: la casilla de términos existe para
              habilitar un botón que no se va a pintar, y pedir que se acepten unos términos para
-             después no dejar continuar es la peor forma de comunicar una falta de permiso. -->
-        <label v-if="puedeConfirmar" class="ct-check" :for="idTerminos">
-          <input
-            :id="idTerminos"
-            v-model="aceptaTerminos"
-            type="checkbox"
-            :aria-invalid="!!errorTerminos"
-            @blur="terminosTocado = true"
-          />
-          <span>
-            He leído y acepto los <strong>Términos del servicio</strong> y la
-            <strong>Política de tratamiento de datos</strong>.
-          </span>
-        </label>
+             después no dejar continuar es la peor forma de comunicar una falta de permiso.
+
+             Los dos documentos se NOMBRABAN en negrita y no se enlazaban, porque las páginas no
+             existían. Ya existen, y la casilla las enlaza: una casilla que dice «he leído» algo
+             que no se puede leer recoge un clic, no el consentimiento informado que exige el
+             artículo 9 de la Ley 1581 de 2012. `LegalConsentCheckbox` añade además la versión
+             aceptada, que es lo que convierte «aceptó la política» en una afirmación con
+             referente. -->
+        <LegalConsentCheckbox
+          v-if="puedeConfirmar"
+          :id="idTerminos"
+          v-model="aceptaTerminos"
+          :documentos="['TERMS_OF_SERVICE', 'PRIVACY_POLICY']"
+          :invalid="!!errorTerminos"
+          @blur="terminosTocado = true"
+        />
 
         <ConfirmarBloqueadoNotice
           v-else
@@ -460,22 +477,6 @@ function ahoraNo() {
 }
 
 /* La pila la pone `.ds-stack` desde `primitives.css`. */
-.ct-check {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-size: 13.5px;
-  line-height: 1.55;
-  cursor: pointer;
-}
-
-.ct-check input {
-  width: 18px;
-  height: 18px;
-  margin-top: 2px;
-  flex-shrink: 0;
-}
-
 .ct-actions {
   display: flex;
   flex-wrap: wrap;
