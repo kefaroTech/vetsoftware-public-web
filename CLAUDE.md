@@ -296,10 +296,40 @@ Medición del 2026-08-30: 389 SFC, el mayor en 499 líneas (`POSView.vue`), cero
 infractores. El margen real es de una línea en los cinco ficheros que están en
 498-499.
 
-`vue-tsc` NO ve `tests/` ni `e2e/`: `tsconfig.app.json` solo incluye `src/` y
-`visual/`. Una fixture de prueba puede quedarse con la forma vieja de un tipo y
-nada se pone rojo — pasó con `ResumenContratacion` en
-`tests/unit/contratacion-payload.spec.ts`.
+### `vue-tsc` SÍ ve `tests/` y `e2e/`, desde el 2026-08-30
+
+`tsconfig.app.json` sigue incluyendo solo `src/` y `visual/`, pero el
+`tsconfig.json` raíz —que es lo que compilan `npm run typecheck` y
+`npm run build`— referencia además `tsconfig.vitest.json` y `tsconfig.e2e.json`.
+Los dos **extienden** al de la app, así que heredan sus reglas estrictas
+enteras: `noUncheckedIndexedAccess`, `noUnusedLocals`, `noImplicitReturns`. Los
+árboles de prueba se comprueban con el mismo rigor que `src/`, no con uno
+rebajado — y lo mismo en `eslint.config.ts`, donde entran en los mismos bloques
+y no en unos aparte.
+
+**Son dos proyectos y no uno, a propósito.** En `tests/` el `expect` y el `test`
+vienen de `vitest`; en `e2e/`, de `@playwright/test`. En un único programa un
+import equivocado —el `expect` de Playwright en una prueba unitaria— pasaría
+desapercibido, que es justo la clase de error que esto existe para cazar. Los
+dos listan además `src/**/*.d.ts`, porque las declaraciones globales
+(`grecaptcha`, `vite-env`) no llegan por `import` y sin ellas el programa de
+pruebas vería un `window` distinto del que ve la aplicación.
+
+**No lo deshagas, y esto es lo que lo justifica.** Mientras estuvieron fuera,
+una fixture podía quedarse con la forma vieja de un tipo sin que nada se pusiera
+rojo — pasó con `ResumenContratacion` en
+`tests/unit/contratacion-payload.spec.ts`. Al meterlos salieron **115 errores
+reales**, y tres dicen bien lo que se estaba perdiendo:
+
+- **23 sesiones de autenticación declaraban un sujeto que no existe**: `type`
+  valía `'Bearer'`, cuando ese campo es el sujeto de la sesión (`EMPLOYEE` o
+  `SYSTEM_USER`) y el backend no emite `'Bearer'` nunca.
+- **Las 40 pruebas del recibo del cliente** corrían con el rótulo genérico en
+  vez de «Factura electrónica».
+- **El test que impide cobrar en negativo afirmaba por la rama contraria de un
+  ternario**: usaba un `valueType` que no existe (`'AMOUNT'` en vez de
+  `'VALUE'`), así que pasaba por el «si no» de `applyPromo` y nunca tocó la
+  rama que dice cubrir.
 
 ## Estado actual del catálogo (mayo 2026)
 
