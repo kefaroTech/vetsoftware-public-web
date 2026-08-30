@@ -21,8 +21,10 @@ export interface IntencionContratacion {
   usuarios: number
   /**
    * El importe MENSUAL sin impuesto que el usuario VIO cuando eligió. Se compara
-   * contra el que se recalcula en el paso 6; si difieren, la pantalla lo dice y
-   * desmarca la casilla de términos.
+   * contra el que se recalcula en el paso 6; si difieren, la pantalla lo dice
+   * con las dos cifras y se lleva el foco al aviso. **No desmarca ninguna
+   * casilla**: cuando la comparación corre, la casilla de términos todavía no
+   * está pintada. Ver la cabecera de `ContratarView.vue`.
    *
    * <p>`null` cuando no había importe que ver: la selección incluye una capacidad
    * que se cobra y que el catálogo no publica en el ciclo mensual. Antes esto se
@@ -59,8 +61,24 @@ export interface LineaPrueba {
   /**
    * ISO date del ÚLTIMO día de prueba, **inclusive**. Se redacta «gratis hasta
    * el 11», no «hasta el 12»: equivocarse aquí es equivocarse en un día de cobro.
+   *
+   * <p>No basta por sí solo para saber si HAY prueba: un módulo sin prueba deja
+   * esta fecha en el día de inicio, que es indistinguible de una prueba de cero
+   * días. Para eso está `trialDays`.
    */
   trialEndDate: string
+  /**
+   * Los días de prueba que el catálogo concede a ese artículo, o `null` cuando no
+   * concede ninguno (`trial_eligibility = 'NEVER_FREE'`).
+   *
+   * <p>Existe porque `trialEndDate` solo no distingue «sin prueba» de «prueba que
+   * acaba hoy», y esa diferencia se ve en pantalla. `ELECTRONIC_INVOICING` es
+   * NEVER_FREE en el catálogo: sin este campo, la tabla del paso 6 rotularía
+   * «Facturación electrónica DIAN — gratis hasta el 29 de agosto» sobre un módulo
+   * que se cobra desde el primer día, que es exactamente la promesa que este
+   * cambio existe para retirar.
+   */
+  trialDays: number | null
   /** Lo que se cobra por esa línea cuando termine la prueba, o `null` si va incluida. */
   precioDespues: number | null
 }

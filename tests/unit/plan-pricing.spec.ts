@@ -252,17 +252,23 @@ describe('cómo se dice el hueco en pantalla', () => {
 
 describe('el catálogo transcrito de hoy', () => {
   /**
-   * `plans.content.ts` transcribe la lista `PUB-2026-COP`, de la que solo se
-   * publicaron las cifras MENSUALES: la escalera `ANNUAL` de cada artículo no
-   * está en ninguna fuente que este front pueda leer. Antes ese hueco no se veía
-   * porque el `× 10` lo rellenaba con una cuenta.
+   * Esta pareja de pruebas se dio la vuelta, y su versión anterior había dejado
+   * escrito que pasaría.
    *
-   * Esta prueba fija la consecuencia visible mientras el hueco siga ahí. Cuando
-   * comercial publique las cifras anuales, se rellenan los seis `null` y esta
-   * prueba se da la vuelta — que es exactamente lo que tiene que pasar.
+   * <p>Decían que la escalera `ANNUAL` de las unidades adicionales «no está en
+   * ninguna fuente que este front pueda leer», así que el ciclo anual con extras
+   * se quedaba sin estimado. Sí estaba: el changeset 310 siembra las 64 filas de
+   * `LISTA-2026-01` como 32 tramos **por los dos ciclos**, con el importe anual
+   * escrito a mano tramo a tramo. Lo que no existía era el `PUB-2026-COP` que el
+   * sello nombraba.
+   *
+   * <p>Hoy los dos ciclos tienen precio de unidad adicional transcrito, así que
+   * lo que se fija aquí es lo contrario: que ninguno de los dos deja un hueco.
    */
-  it('no publica precio anual de unidad adicional, así que el anual con extras no tiene estimado', () => {
-    const clinica = PLANS_CONTENT.plans.find((p) => p.code === 'CLINICA')
+  const PLAN = 'PACK_CLINIC'
+
+  it('el ciclo anual sí tiene precio de unidad adicional: no quedan huecos', () => {
+    const clinica = PLANS_CONTENT.plans.find((p) => p.code === PLAN)
     expect(clinica).toBeDefined()
 
     const sedesIncluidas = clinica!.capacities.find((c) => c.unit === 'BRANCH')!.included
@@ -272,12 +278,13 @@ describe('el catálogo transcrito de hoy', () => {
       usuarios: 1,
     })
 
-    expect(anual.sinPrecio).toContain('BRANCH')
-    expect(anual.total).toBeNull()
+    expect(anual.sinPrecio).toEqual([])
+    expect(anual.sedesExtra).toBe(350_000)
+    expect(anual.total).not.toBeNull()
   })
 
   it('el mensual sí tiene precio: lo transcrito no se perdió al partir el campo en dos', () => {
-    const clinica = PLANS_CONTENT.plans.find((p) => p.code === 'CLINICA')!
+    const clinica = PLANS_CONTENT.plans.find((p) => p.code === PLAN)!
     const sedesIncluidas = clinica.capacities.find((c) => c.unit === 'BRANCH')!.included
 
     const mensual = calcularEstimado(clinica, {
@@ -287,7 +294,7 @@ describe('el catálogo transcrito de hoy', () => {
     })
 
     expect(mensual.sinPrecio).toEqual([])
-    expect(mensual.sedesExtra).toBe(42_000)
-    expect(mensual.subtotal).toBe(clinica.monthlyFromAmount + 42_000)
+    expect(mensual.sedesExtra).toBe(35_000)
+    expect(mensual.subtotal).toBe(clinica.monthlyFromAmount + 35_000)
   })
 })

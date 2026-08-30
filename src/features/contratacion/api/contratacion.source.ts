@@ -103,7 +103,10 @@ export function lineasDePrueba(plan: PublicPlan, desdeISO: string = todayISO()):
       // `trialDays` es nulable en el contrato: un artículo sin
       // `default_trial_days` no tiene prueba. Cero días deja `trialEndDate` en
       // la fecha de inicio, que es exactamente «no hay prueba» y no inventa una.
+      // Pero la FECHA sola no lo dice: viaja también el dato, para que la tabla
+      // pueda escribir «sin prueba» en vez de «gratis hasta hoy».
       trialEndDate: sumarDias(desdeISO, inc.trialDays ?? 0),
+      trialDays: inc.trialDays,
       precioDespues: null,
     }))
     .sort((a, b) => a.trialEndDate.localeCompare(b.trialEndDate))

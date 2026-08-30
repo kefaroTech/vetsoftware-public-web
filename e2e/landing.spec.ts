@@ -103,13 +103,14 @@ test.describe('Landing comercial', () => {
     // limita a congelar lo que hubiera; esto dice lo que TIENE que haber.
     await expect(seccion.getByRole('heading', { level: 2, name: 'Planes' })).toBeVisible()
 
-    for (const nombre of ['Esencial', 'Clínica', 'Cadena']) {
+    for (const nombre of ['Pack Spa', 'Pack Clínica', 'Pack Clínica completa']) {
       const tarjeta = seccion.getByTestId('plan-card').filter({
         has: page.getByRole('heading', { level: 3, name: nombre, exact: true }),
       })
       // UN solo control por tarjeta, y su nombre accesible NOMBRA EL PLAN. Con
       // la tarjeta envuelta en un enlace habría dos, y el de fuera se llamaría
-      // «Esencial Para empezar desde $89.000 + IVA al mes 1 sede incluida…».
+      // «Pack Spa Núcleo, agenda, servicios, spa y caja desde $179.000 + IVA al
+      // mes 2 personas incluidas…».
       await expect(tarjeta.getByRole('link')).toHaveCount(1)
       await expect(tarjeta.getByRole('link')).toHaveAccessibleName(`Empezar con ${nombre}`)
     }
@@ -123,13 +124,17 @@ test.describe('Landing comercial', () => {
   test('elegir un plan guarda la intención y la lleva a /planes por la URL', async ({ page }) => {
     await page.goto('/')
 
-    await page.getByRole('link', { name: 'Empezar con Clínica' }).click()
+    // `exact: true` NO es adorno: «Empezar con Pack Clínica» es PREFIJO de
+    // «Empezar con Pack Clínica completa», y el emparejamiento por nombre de rol
+    // es por subcadena. Sin esto el selector resuelve DOS enlaces y falla con
+    // «strict mode violation», que no señala a la causa.
+    await page.getByRole('link', { name: 'Empezar con Pack Clínica', exact: true }).click()
 
-    await expect(page).toHaveURL(/\/planes\?plan=CLINICA&ciclo=MENSUAL$/)
+    await expect(page).toHaveURL(/\/planes\?plan=PACK_CLINIC&ciclo=MENSUAL$/)
 
     const leida = await leerIntencion(page)
     expect(leida, 'la elección tiene que sobrevivir al cierre del navegador').not.toBeNull()
-    expect(leida!.planCode).toBe('CLINICA')
+    expect(leida!.planCode).toBe('PACK_CLINIC')
     // El importe que se VIO viaja con la elección: es la mitad de la regla de
     // «se confirma el importe que se mostró» (§5, caso 3).
     expect(leida!.importeVistoMensual).toBeGreaterThan(0)
@@ -140,10 +145,10 @@ test.describe('Landing comercial', () => {
     await page.goto('/')
 
     const banda = page.getByRole('complementary').filter({ hasText: 'Estabas mirando el plan' })
-    await expect(banda).toContainText('Clínica')
+    await expect(banda).toContainText('Pack Clínica')
 
     await banda.getByRole('button', { name: 'Seguir' }).click()
-    await expect(page).toHaveURL(/\/planes\?plan=CLINICA&ciclo=MENSUAL$/)
+    await expect(page).toHaveURL(/\/planes\?plan=PACK_CLINIC&ciclo=MENSUAL$/)
   })
 
   test('«Empezar de nuevo» borra el espejo y no deja la banda puesta', async ({ page }) => {
@@ -184,7 +189,10 @@ test.describe('Landing comercial', () => {
 
 test.describe('/planes — el configurador ligero', () => {
   test('siembra la selección desde la URL y continúa al registro con ella', async ({ page }) => {
-    await page.goto('/planes?plan=CADENA&ciclo=ANUAL&sedes=3&usuarios=8')
+    // 3 sedes y 8 personas se pasan de verdad de lo incluido (1 sede, 2
+    // personas): antes el contenido inventaba que `CADENA` traía 5 sedes y 20
+    // personas y esta selección no cobraba ni un extra.
+    await page.goto('/planes?plan=PACK_FULL&ciclo=ANUAL&sedes=3&usuarios=8')
 
     await expect(page.getByRole('heading', { level: 1, name: 'Planes y precios' })).toBeVisible()
 
@@ -195,17 +203,17 @@ test.describe('/planes — el configurador ligero', () => {
 
     await page.getByRole('button', { name: /^Continuar con / }).click()
 
-    await expect(page).toHaveURL(/\/registro\?plan=CADENA&ciclo=ANUAL&sedes=3&usuarios=8$/)
+    await expect(page).toHaveURL(/\/registro\?plan=PACK_FULL&ciclo=ANUAL&sedes=3&usuarios=8$/)
   })
 
   test('el carril «Tu selección» acompaña al registro', async ({ page }) => {
-    await page.goto('/planes?plan=CLINICA&ciclo=MENSUAL&sedes=2&usuarios=4')
+    await page.goto('/planes?plan=PACK_CLINIC&ciclo=MENSUAL&sedes=2&usuarios=4')
     await page.getByRole('button', { name: /^Continuar con / }).click()
 
     // Lo que evita que el salto de verificación por correo mate la conversión:
     // el prospecto ve durante todo el registro lo que ya eligió.
     const carril = page.getByRole('complementary').filter({ hasText: 'Tu selección' })
-    await expect(carril).toContainText('Clínica')
+    await expect(carril).toContainText('Pack Clínica')
     await expect(carril).toContainText('2 sedes')
     await expect(carril.getByRole('link', { name: 'Cambiar la selección' })).toBeVisible()
   })

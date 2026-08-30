@@ -20,7 +20,7 @@ const MS_POR_DIA = 86_400_000
 
 function intencion(over: Partial<IntencionContratacion> = {}): IntencionContratacion {
   return {
-    planCode: 'CLINICA',
+    planCode: 'PACK_CLINIC',
     ciclo: 'MENSUAL',
     sedes: 1,
     usuarios: 1,
@@ -100,14 +100,27 @@ describe('lo que se lee del almacenamiento', () => {
     expect(store.intencion).toBeNull()
   })
 
-  it('una entrada sin plan o con ciclo inventado no se acepta', () => {
+  it('una entrada sin plan no se acepta', () => {
     escribirEspejo({ ...intencion(), planCode: '' })
     useContratacionStore().hidratar()
     expect(useContratacionStore().intencion).toBeNull()
   })
 
+  it('una entrada con un ciclo inventado tampoco', () => {
+    // Iba en el mismo caso que el de arriba —«sin plan O con ciclo inventado»—
+    // y solo se probaba la primera mitad: borrar la comprobación del ciclo
+    // dejaba la prueba verde con su propio título describiendo lo contrario.
+    // Y no es simetría de adorno: `ciclo` alimenta `CICLO_DEL_CONTRATO`, que
+    // indexa un `Record` cerrado. Un valor de fuera de la unión llega al cuerpo
+    // de `POST /quotes/self-serve` como `undefined` y el `@Pattern` del borde
+    // REST lo rechaza con un 400 en el clic vinculante.
+    escribirEspejo({ ...intencion(), ciclo: 'TRIMESTRAL' })
+    useContratacionStore().hidratar()
+    expect(useContratacionStore().intencion).toBeNull()
+  })
+
   it('rellena con mínimos los números que falten, sin inventar el importe', () => {
-    escribirEspejo({ planCode: 'CLINICA', ciclo: 'ANUAL', creadaEn: new Date().toISOString() })
+    escribirEspejo({ planCode: 'PACK_CLINIC', ciclo: 'ANUAL', creadaEn: new Date().toISOString() })
     const store = useContratacionStore()
     store.hidratar()
 
@@ -125,7 +138,7 @@ describe('lo que se lee del almacenamiento', () => {
 describe('descartar, limpiar y volver a elegir', () => {
   it('«ahora no» marca, no borra', () => {
     const store = useContratacionStore()
-    store.guardar({ planCode: 'CLINICA', ciclo: 'MENSUAL', sedes: 1, usuarios: 1 }, 179000, 'x')
+    store.guardar({ planCode: 'PACK_CLINIC', ciclo: 'MENSUAL', sedes: 1, usuarios: 1 }, 179000, 'x')
 
     store.descartar()
 
@@ -139,25 +152,25 @@ describe('descartar, limpiar y volver a elegir', () => {
 
   it('«empezar de nuevo» sí borra', () => {
     const store = useContratacionStore()
-    store.guardar({ planCode: 'CLINICA', ciclo: 'MENSUAL', sedes: 1, usuarios: 1 }, 179000, 'x')
+    store.guardar({ planCode: 'PACK_CLINIC', ciclo: 'MENSUAL', sedes: 1, usuarios: 1 }, 179000, 'x')
     store.limpiar()
     expect(leerEspejo()).toBeNull()
   })
 
   it('reescribir la selección la «desdescarta»', () => {
     const store = useContratacionStore()
-    store.guardar({ planCode: 'CLINICA', ciclo: 'MENSUAL', sedes: 1, usuarios: 1 }, 179000, 'x')
+    store.guardar({ planCode: 'PACK_CLINIC', ciclo: 'MENSUAL', sedes: 1, usuarios: 1 }, 179000, 'x')
     store.descartar()
 
-    store.guardar({ planCode: 'CADENA', ciclo: 'ANUAL', sedes: 3, usuarios: 8 }, 329000, 'y')
+    store.guardar({ planCode: 'PACK_FULL', ciclo: 'ANUAL', sedes: 3, usuarios: 8 }, 329000, 'y')
 
-    expect(store.vigente?.planCode).toBe('CADENA')
+    expect(store.vigente?.planCode).toBe('PACK_FULL')
     expect(store.vigente?.descartada).toBe(false)
   })
 
   it('contratar descarta la intención, para que el guard no reabra el embudo', () => {
     const store = useContratacionStore()
-    store.guardar({ planCode: 'CLINICA', ciclo: 'MENSUAL', sedes: 1, usuarios: 1 }, 179000, 'x')
+    store.guardar({ planCode: 'PACK_CLINIC', ciclo: 'MENSUAL', sedes: 1, usuarios: 1 }, 179000, 'x')
 
     store.marcarContratada()
 
@@ -174,7 +187,7 @@ describe('el espejo sobrevive a que se vaya la pestaña', () => {
   it('`pagehide` vuelve a escribir lo que hay en memoria', () => {
     const store = useContratacionStore()
     store.hidratar()
-    store.guardar({ planCode: 'CLINICA', ciclo: 'MENSUAL', sedes: 2, usuarios: 5 }, 200000, 'x')
+    store.guardar({ planCode: 'PACK_CLINIC', ciclo: 'MENSUAL', sedes: 2, usuarios: 5 }, 200000, 'x')
 
     // Alguien (otra pestaña, una limpieza) se llevó el espejo por delante.
     window.localStorage.removeItem(CONTRATACION_INTENCION_KEY)
@@ -198,10 +211,10 @@ describe('almacenamiento bloqueado (modo privado)', () => {
     try {
       const store = useContratacionStore()
       expect(() =>
-        store.guardar({ planCode: 'CLINICA', ciclo: 'MENSUAL', sedes: 1, usuarios: 1 }, 1, 'x'),
+        store.guardar({ planCode: 'PACK_CLINIC', ciclo: 'MENSUAL', sedes: 1, usuarios: 1 }, 1, 'x'),
       ).not.toThrow()
       // Lo que se pierde es la reanudación, no la compra.
-      expect(store.vigente?.planCode).toBe('CLINICA')
+      expect(store.vigente?.planCode).toBe('PACK_CLINIC')
     } finally {
       romper.mockRestore()
     }

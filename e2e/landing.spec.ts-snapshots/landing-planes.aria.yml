@@ -8,47 +8,57 @@
     - radio "Un año — 2 meses gratis"
     - text: Un año — 2 meses gratis
   - article:
-    - heading "Esencial" [level=3]
-    - paragraph: Para una clínica que empieza
+    - heading "Pack Spa" [level=3]
+    - paragraph: Núcleo, agenda, servicios, spa y caja
     - paragraph: /desde \$ \d+\.\d+ \+ IVA al mes/
     - list:
-      - listitem: 3 personas incluidas
+      - listitem: 2 personas incluidas
       - listitem: 1 sede incluida
-      - listitem: Agenda
-      - listitem: Historia clínica
-      - listitem: Caja
-    - link "Empezar con Esencial":
-      - /url: /planes?plan=ESENCIAL&ciclo=MENSUAL
+      - listitem: "Núcleo: clientes y mascotas"
+      - listitem: Agenda de citas
+      - listitem: Spa, estética y guardería
+      - listitem: Servicios, tarifas y promociones
+      - listitem: Caja y punto de venta
+    - link "Empezar con Pack Spa":
+      - /url: /planes?plan=PACK_SPA&ciclo=MENSUAL
   - article:
     - paragraph: La que más eligen
-    - heading "Clínica" [level=3]
-    - paragraph: Para una clínica con quirófano y hospital
+    - heading "Pack Clínica" [level=3]
+    - paragraph: Núcleo, agenda, historia clínica, vacunación y caja
     - paragraph: /desde \$ \d+\.\d+ \+ IVA al mes/
     - list:
-      - listitem: 8 personas incluidas
-      - listitem: 2 sedes incluidas
-      - listitem: Agenda
-      - listitem: Historia clínica
-      - listitem: Caja
-      - listitem: Hospitalización
-      - listitem: Inventario
-    - link "Empezar con Clínica":
-      - /url: /planes?plan=CLINICA&ciclo=MENSUAL
+      - listitem: 2 personas incluidas
+      - listitem: 1 sede incluida
+      - listitem: "Núcleo: clientes y mascotas"
+      - listitem: Agenda de citas
+      - listitem: Historia clínica y consultas
+      - listitem: Vacunación y desparasitación
+      - listitem: Caja y punto de venta
+    - link "Empezar con Pack Clínica":
+      - /url: /planes?plan=PACK_CLINIC&ciclo=MENSUAL
   - article:
-    - heading "Cadena" [level=3]
-    - paragraph: Para varias sedes con facturación electrónica
+    - heading "Pack Clínica completa" [level=3]
+    - paragraph: Todo el producto, de la historia clínica a la facturación DIAN
     - paragraph: /desde \$ \d+\.\d+ \+ IVA al mes/
     - list:
-      - listitem: /\d+ personas incluidas/
-      - listitem: 5 sedes incluidas
-      - listitem: Agenda
-      - listitem: Historia clínica
-      - listitem: Caja
+      - listitem: 2 personas incluidas
+      - listitem: 1 sede incluida
+      - listitem: "Núcleo: clientes y mascotas"
+      - listitem: Agenda de citas
+      - listitem: Historia clínica y consultas
+      - listitem: Vacunación y desparasitación
       - listitem: Hospitalización
-      - listitem: Inventario
+      - listitem: Cirugía
+      - listitem: Laboratorio e imagen diagnóstica
+      - listitem: Spa, estética y guardería
+      - listitem: Servicios, tarifas y promociones
+      - listitem: Caja y punto de venta
+      - listitem: Inventario y kardex
+      - listitem: Compras y proveedores
+      - listitem: Cuentas abiertas y cartera
       - listitem: Facturación electrónica DIAN
-    - link "Empezar con Cadena":
-      - /url: /planes?plan=CADENA&ciclo=MENSUAL
+    - link "Empezar con Pack Clínica completa":
+      - /url: /planes?plan=PACK_FULL&ciclo=MENSUAL
   - paragraph: Los precios son orientativos, en pesos colombianos (COP), y no incluyen IVA. El precio exacto para tu clínica lo ves antes de confirmar, sin compromiso y sin tarjeta.
   - paragraph:
     - link "Comparar los tres planes en detalle":
