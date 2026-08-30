@@ -1,6 +1,12 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, useId, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, useId, watch } from 'vue'
 import { formatMoney } from '@/composables/money'
+import {
+  MAX_CANTIDAD_LINEA,
+  MAX_CANTIDAD_LINEA_TXT,
+  normalizarCantidad,
+  seRecorta,
+} from '@/constants/cantidades'
 import CicloFieldset from './CicloFieldset.vue'
 import {
   calcularEstimado,
@@ -95,10 +101,22 @@ function textoPrueba(dias: number | null): string {
   return dias === null ? 'Sin prueba' : `${dias} días`
 }
 
-/** Los `<input type="number">` devuelven cadena vacía al borrarlos: nunca por debajo de 1. */
-function normalizar(valor: unknown): number {
-  const n = Math.trunc(Number(valor))
-  return Number.isFinite(n) && n >= 1 ? n : 1
+/**
+ * Qué campo se recortó por arriba, para poder decirlo. Estado de ESTA instancia
+ * del componente: un `reactive` dentro del `setup`, no el singleton de módulo
+ * que la regla del repositorio prohíbe.
+ */
+const techo = reactive({ sedes: false, usuarios: false })
+
+/** El aviso, con el límite DENTRO: un tope que no se nombra no se puede respetar. */
+const AVISO_TECHO = `Como máximo ${MAX_CANTIDAD_LINEA_TXT} por campo. Si tu grupo es más grande, escríbenos y lo cotizamos contigo.`
+
+/** Escribe el campo ya normalizado y deja dicho si hubo recorte. */
+function fijar(campo: 'sedes' | 'usuarios', crudo: string) {
+  techo[campo] = seRecorta(crudo)
+  const valor = normalizarCantidad(crudo)
+  if (campo === 'sedes') sedes.value = valor
+  else usuarios.value = valor
 }
 </script>
 
@@ -139,11 +157,15 @@ function normalizar(valor: unknown): number {
             class="pl-input"
             type="number"
             min="1"
+            :max="MAX_CANTIDAD_LINEA"
             step="1"
             inputmode="numeric"
             :value="sedes"
-            @input="sedes = normalizar(($event.target as HTMLInputElement).value)"
+            @input="fijar('sedes', ($event.target as HTMLInputElement).value)"
           />
+          <p v-if="techo.sedes" class="ds-banner ds-banner--warning ds-banner--sm" role="status">
+            {{ AVISO_TECHO }}
+          </p>
         </div>
         <div class="pl-number">
           <label :for="idUsuarios" class="pl-label">¿Cuántas personas van a usarlo?</label>
@@ -152,11 +174,15 @@ function normalizar(valor: unknown): number {
             class="pl-input"
             type="number"
             min="1"
+            :max="MAX_CANTIDAD_LINEA"
             step="1"
             inputmode="numeric"
             :value="usuarios"
-            @input="usuarios = normalizar(($event.target as HTMLInputElement).value)"
+            @input="fijar('usuarios', ($event.target as HTMLInputElement).value)"
           />
+          <p v-if="techo.usuarios" class="ds-banner ds-banner--warning ds-banner--sm" role="status">
+            {{ AVISO_TECHO }}
+          </p>
         </div>
       </div>
     </div>

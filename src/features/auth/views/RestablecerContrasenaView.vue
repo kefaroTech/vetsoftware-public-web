@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import PublicLayout from '@/components/public/PublicLayout.vue'
 import PrimaryButton from '@/components/public/PrimaryButton.vue'
 import AuthField from '@/components/public/AuthField.vue'
 import AuthInput from '@/components/public/AuthInput.vue'
+import PawLoader from '@/components/feedback/PawLoader.vue'
+import { useTokenDeEnlace } from '@/composables/useTokenDeEnlace'
 import { authApi } from '../api/auth.api'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 
 type State = 'loading' | 'form' | 'invalid' | 'success'
 
-const route = useRoute()
 const router = useRouter()
+const { tomarTokenDeLaUrl } = useTokenDeEnlace()
 
 const state = ref<State>('loading')
 const token = ref('')
@@ -34,8 +36,17 @@ function err(key: 'password' | 'confirm'): string | undefined {
 }
 
 onMounted(async () => {
-  const raw = route.query.token
-  const t = Array.isArray(raw) ? raw[0] : raw
+  // El token sale de la barra ANTES de gastarlo. Es la credencial más fuerte que
+  // maneja el front sin sesión —permite FIJAR la contraseña de la cuenta hasta
+  // que se consuma—, y el rato en que está expuesta es justo el que duran estas
+  // dos peticiones: limpiar al terminar la dejaría visible durante todo el viaje
+  // de red, y para siempre si la petición falla o se cuelga.
+  //
+  // El valor se queda en un `ref` de esta instancia y no en un store: `submit()`
+  // lo necesita después, muere con la pantalla, y una acción de Pinia lo
+  // republicaría en la línea de tiempo de las devtools. Por eso limpiar la URL
+  // NO deja a la pantalla sin saber qué token traía.
+  const t = await tomarTokenDeLaUrl()
   if (!t) {
     state.value = 'invalid'
     return
@@ -77,7 +88,7 @@ async function submit() {
       <!-- Validando token -->
       <template v-if="state === 'loading'">
         <div class="rp-center ds-stack ds-stack--14">
-          <span class="rp-spin" />
+          <PawLoader :size="42" :glow="false" :speed="900" label="Validando el enlace" />
           <p class="pub-sub">Validando el enlace…</p>
         </div>
       </template>
@@ -163,16 +174,6 @@ async function submit() {
 .rp-center {
   align-items: center;
   padding: 20px 0;
-}
-
-.rp-spin {
-  width: 42px;
-  height: 42px;
-  border: 4px solid #e9d5ff;
-  border-top-color: var(--pub-ame-700);
-  border-radius: 50%;
-  display: block;
-  animation: pub-spin 0.8s linear infinite;
 }
 
 .rp-icon {

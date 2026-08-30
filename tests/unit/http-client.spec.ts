@@ -23,6 +23,7 @@ import {
 } from '@/services/http/http.client'
 import { storageService } from '@/services/storage/storage.service'
 import { useLoaderStore } from '@/stores/loader.store'
+import { elemento } from '../helpers/exigir'
 import { SELECTED_BRANCH_KEY } from '@/constants/storageKeys'
 import { electronicDocumentApi } from '@/features/facturacion/api/electronicDocument.api'
 import { posSaleApi } from '@/features/tienda/api/posSale.api'
@@ -82,6 +83,16 @@ function useAdapter(adapter: (config: InternalAxiosRequestConfig) => Promise<Axi
   return spy
 }
 
+/**
+ * La petición número `i` que llegó al adapter. `mock.calls[i]` es
+ * `[config] | undefined` y estas pruebas la leían directamente: si el
+ * interceptor deja de enviar —que es justo lo que varias de ellas miden por el
+ * lado contrario—, el fallo era un «cannot read properties of undefined» en vez
+ * de «no llegó la petición 0».
+ */
+const peticion = (adapter: ReturnType<typeof useAdapter>, i: number) =>
+  elemento(adapter.mock.calls, i, 'las peticiones que llegaron al adapter')[0]
+
 let loader: ReturnType<typeof useLoaderStore>
 
 beforeEach(() => {
@@ -125,7 +136,7 @@ describe('timeout', () => {
 
     await llamada()
 
-    expect(adapter.mock.calls[0][0].timeout).toBe(DIAN_TIMEOUT_MS)
+    expect(peticion(adapter, 0).timeout).toBe(DIAN_TIMEOUT_MS)
   })
 
   it.each([
@@ -140,7 +151,7 @@ describe('timeout', () => {
 
     await llamada()
 
-    expect(adapter.mock.calls[0][0].timeout).toBe(TRANSFER_TIMEOUT_MS)
+    expect(peticion(adapter, 0).timeout).toBe(TRANSFER_TIMEOUT_MS)
   })
 })
 
@@ -355,15 +366,25 @@ describe('401 y renovación de sesión', () => {
     expect(location.href).toBe('/login?redirect=%2Ftienda')
   })
 
-  it('conserva query string en el destino recordado, no solo el pathname', async () => {
-    vi.stubGlobal('location', { pathname: '/tienda', search: '?tab=historia', href: '' })
+  it('no arrastra la cadena de consulta al destino recordado, solo el pathname', async () => {
+    // Una URL con query string puede llevar un secreto (token de restablecer
+    // contraseña, de recuperar una propuesta...). `redirectToLogin()` no debe
+    // republicarlo en `/login?redirect=`. Ver el comentario de
+    // `redirectToLogin` en `http.client.ts` para el porqué completo.
+    vi.stubGlobal('location', {
+      pathname: '/tienda',
+      search: '?token=secreto-de-un-solo-uso',
+      href: '',
+    })
     useAdapter(async (config) => {
       throw httpError(config, 401, { code: 'TOKEN_INVALID' })
     })
 
     await expect(http.get('/medicaments')).rejects.toThrow()
 
-    expect(location.href).toBe('/login?redirect=%2Ftienda%3Ftab%3Dhistoria')
+    expect(location.href).toBe('/login?redirect=%2Ftienda')
+    expect(location.href).not.toContain('token')
+    expect(location.href).not.toContain('secreto')
   })
 
   it('limpia el store ANTES de la limpieza de almacenamiento, incluso sin recarga', async () => {
@@ -681,7 +702,7 @@ describe('sede activa en las escrituras (issue #215)', () => {
     await venta
 
     expect(orden).toEqual(['sede resuelta', 'petición enviada'])
-    expect(cuerpoEnviado(adapter.mock.calls[0][0])).toEqual({ total: 1_000, branchId: 7 })
+    expect(cuerpoEnviado(peticion(adapter, 0))).toEqual({ total: 1_000, branchId: 7 })
     // El cuerpo del llamador NO se toca: el interceptor copia. Mutarlo dejaría
     // un `branchId` pegado en el objeto del formulario, que se reenviaría con la
     // sede vieja si el usuario cambia de sede y vuelve a guardar.
@@ -706,7 +727,7 @@ describe('sede activa en las escrituras (issue #215)', () => {
     await http.post('/ventas', cuerpo)
 
     expect(resolutor).toHaveBeenCalledTimes(1)
-    expect(cuerpoEnviado(adapter.mock.calls[0][0])).toEqual({ total: 500 })
+    expect(cuerpoEnviado(peticion(adapter, 0))).toEqual({ total: 500 })
     expect(loader.pending).toBe(0)
   })
 
@@ -733,7 +754,7 @@ describe('sede activa en las escrituras (issue #215)', () => {
 
     expect(cuerpo).toEqual({ total: 500, nota: 'venta de mostrador' })
     expect(Object.getOwnPropertySymbols(cuerpo)).toEqual([])
-    expect(cuerpoEnviado(adapter.mock.calls[0][0])).toEqual({
+    expect(cuerpoEnviado(peticion(adapter, 0))).toEqual({
       total: 500,
       nota: 'venta de mostrador',
       branchId: 7,
@@ -764,7 +785,7 @@ describe('sede activa en las escrituras (issue #215)', () => {
     await http.post('/ventas', { total: 300, branchId: 2 })
 
     expect(resolutor).not.toHaveBeenCalled()
-    expect(cuerpoEnviado(adapter.mock.calls[0][0])).toEqual({ total: 300, branchId: 2 })
+    expect(cuerpoEnviado(peticion(adapter, 0))).toEqual({ total: 300, branchId: 2 })
   })
 
   it('un cuerpo que no es un objeto nunca entra a la espera', async () => {
@@ -807,7 +828,7 @@ describe('sede activa en las escrituras (issue #215)', () => {
     await http.post('/ventas', cuerpo)
 
     expect(visitadas).toEqual(['/auth/me', '/branches', '/ventas'])
-    expect(cuerpoEnviado(adapter.mock.calls[2][0])).toEqual({ total: 900, branchId: 3 })
+    expect(cuerpoEnviado(peticion(adapter, 2))).toEqual({ total: 900, branchId: 3 })
     // Las peticiones anidadas también balancean el velo: si el arranque dejara
     // el contador arriba, la aplicación nacería con el loader puesto.
     expect(loader.pending).toBe(0)
@@ -830,7 +851,7 @@ describe('sede activa en las escrituras (issue #215)', () => {
     await http.post('/ventas', cuerpo)
 
     expect(resolutor).toHaveBeenCalledTimes(1)
-    expect(cuerpoEnviado(adapter.mock.calls[0][0])).toEqual({ total: 100, branchId: 7 })
-    expect(cuerpoEnviado(adapter.mock.calls[1][0])).toEqual({ total: 100 })
+    expect(cuerpoEnviado(peticion(adapter, 0))).toEqual({ total: 100, branchId: 7 })
+    expect(cuerpoEnviado(peticion(adapter, 1))).toEqual({ total: 100 })
   })
 })

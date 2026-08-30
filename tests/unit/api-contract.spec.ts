@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { elemento } from '../helpers/exigir'
 
 /**
  * TR-01. `src/types/api.contract.ts` ata los tipos de este repositorio al contrato del backend,
@@ -22,7 +23,7 @@ function typeNamesInSource(): Set<string> {
       else if (path.endsWith('.ts') && !path.endsWith('.d.ts')) {
         const source = readFileSync(path, 'utf8')
         for (const match of source.matchAll(/^export (?:interface|type) (\w+)/gm)) {
-          names.add(match[1]!)
+          names.add(elemento(match, 1, 'match'))
         }
       }
     }
@@ -38,7 +39,9 @@ describe('la atadura al contrato de la API cubre todo lo que puede cubrir', () =
     }
     const schemas = new Set(Object.keys(spec.components.schemas))
     const contract = readFileSync(join(root, 'src', 'types', 'api.contract.ts'), 'utf8')
-    const bound = new Set([...contract.matchAll(/MatchesContract<\s*(\w+)\s*,/g)].map((m) => m[1]!))
+    const bound = new Set(
+      [...contract.matchAll(/MatchesContract<\s*(\w+)\s*,/g)].map((m) => elemento(m, 1, 'm')),
+    )
 
     // `api.contract.ts` se excluye: los tipos que exporta son la maquinaria, no DTOs.
     const shouldBeBound = [...typeNamesInSource()].filter(
@@ -61,7 +64,7 @@ describe('la atadura al contrato de la API cubre todo lo que puede cubrir', () =
     const schemas = new Set(Object.keys(spec.components.schemas))
     const contract = readFileSync(join(root, 'src', 'types', 'api.contract.ts'), 'utf8')
     const boundSchemas = [...contract.matchAll(/MatchesContract<\s*\w+\s*,\s*'([^']+)'/g)].map(
-      (m) => m[1]!,
+      (m) => elemento(m, 1, 'm'),
     )
 
     expect(boundSchemas.filter((name) => !schemas.has(name)).sort()).toEqual([])

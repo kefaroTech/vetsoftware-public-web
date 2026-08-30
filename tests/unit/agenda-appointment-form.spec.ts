@@ -26,7 +26,8 @@ function makeForm(mode: FormMode = 'create', appointment: Appt | null = null) {
 
 function makeAppt(over: Partial<Appt> & { id: number }): Appt {
   return {
-    id: over.id,
+    // `id` lo aporta el `...over` de abajo: repetirlo aquí era una línea muerta
+    // que el spread pisaba en cada llamada.
     startAt: '2026-08-17T09:00:00',
     durationMinutes: null,
     type: 'CONSULTATION',

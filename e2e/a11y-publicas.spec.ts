@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { exigir } from './helpers/exigir'
 
 /**
  * La reparación de nivel A de la zona pública, sujeta para que no vuelva.
@@ -172,11 +173,10 @@ test.describe('§2.5.8 Target Size — el ojo de la contraseña', () => {
     const ojo = page.getByRole('button', { name: 'Mostrar contraseña' })
     await expect(ojo).toBeVisible()
 
-    const caja = await ojo.boundingBox()
-    expect(caja).not.toBeNull()
+    const caja = exigir(await ojo.boundingBox(), 'la caja del objetivo táctil')
     // Era un icono de 16 px sin caja propia. El mínimo de la 2.2 son 24.
-    expect(caja!.width, 'ancho del objetivo').toBeGreaterThanOrEqual(24)
-    expect(caja!.height, 'alto del objetivo').toBeGreaterThanOrEqual(24)
+    expect(caja.width, 'ancho del objetivo').toBeGreaterThanOrEqual(24)
+    expect(caja.height, 'alto del objetivo').toBeGreaterThanOrEqual(24)
 
     // Y cambia de nombre al pulsarlo: el estado no puede ir solo en el icono.
     await ojo.click()

@@ -49,16 +49,6 @@ export interface QuoteLineResponse {
   enabled?: boolean
 }
 
-/** Respuestas del configurador. **No se pintan**: son notas internas del comercial. */
-export interface QuoteAnswerResponse {
-  id?: number
-  questionId?: number
-  optionId?: number
-  questionCode?: string
-  answerValue?: string
-  enabled?: boolean
-}
-
 export interface QuoteSummaryResponse {
   id: number
   quoteNumber?: string
@@ -116,8 +106,6 @@ export interface QuoteResponse {
   clientRequestId?: string
   /** Suelto para `MatchesContract`: se lee siempre con `Array.isArray`. */
   lines?: QuoteLineResponse[]
-  /** **NO se pintan**: notas internas del comercial. */
-  answers?: QuoteAnswerResponse[]
   createdDate?: string
   enabled?: boolean
 }
@@ -176,4 +164,18 @@ export interface SelfServeQuoteRequest {
   clientRequestId: string
   billingCycle: 'MONTHLY' | 'ANNUAL'
   lines: SelfServeQuoteLineRequest[]
+  /**
+   * Token público de la propuesta del asistente de la que sale esta cesta, o ausente si el
+   * cliente llegó por el configurador de la portada. Son los 43 caracteres que produce
+   * `ProposalToken`.
+   *
+   * <p><b>No es un término económico</b>, así que no rompe la regla que da sentido a este tipo:
+   * sigue sin haber un solo campo con el que el cliente pueda influir en lo que se le cobra.
+   * Solo dice de dónde viene la cesta, y el servidor lo traduce a id.
+   *
+   * <p>Un token desconocido <b>no es un error</b>: la oferta se emite igual y se queda sin
+   * atribuir, que es lo correcto cuando la purga de retención ya se llevó la propuesta. No hay
+   * que tratarlo como un fallo de la compra.
+   */
+  aiProposalToken?: string
 }

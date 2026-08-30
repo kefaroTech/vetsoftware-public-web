@@ -3,12 +3,18 @@
  * La letra pequeña del paso vinculante: dos frases que tienen que estar delante
  * de quien va a confirmar, y ninguna de las dos es decorativa.
  *
- * ── Por qué no hay enlace a los documentos legales ─────────────────────────
- * Las dos páginas legales TODAVÍA NO EXISTEN. Un enlace que no navega falla
- * §2.4.4 y, peor, enseña al usuario que los enlaces de esta web no funcionan. En
- * Colombia el tratamiento de datos es una obligación legal (Ley 1581 de 2012),
- * así que esto es una dependencia de publicación y no un detalle de diseño: este
- * paso no se puede publicar sin ellas. Mientras tanto se dice cómo pedirlas.
+ * ── Los documentos legales YA están publicados ─────────────────────────────
+ * Este bloque decía «Todavía no están publicadas en la web: pídenoslas en
+ * soporte@…», y llevaba siendo mentira desde que existen `/legal/terminos` y
+ * `/legal/privacidad`: la casilla de encima las enlaza por su nombre y con su
+ * versión. Dos frases contradictorias sobre la misma obligación legal (Ley 1581
+ * de 2012), a un centímetro una de otra, en la pantalla que decide la compra —y
+ * la que pedía escribir un correo es la que hace abandonar.
+ *
+ * <p>No se repiten aquí los enlaces: serían un segundo par al mismo destino en
+ * la lista de enlaces de un lector de pantalla. Se dice dónde están, y solo
+ * cuando la casilla está pintada — sin ella (sin permiso, o sin precio) no hay
+ * nada que enlazar arriba y la frase señalaría al vacío.
  *
  * ── Por qué la baja se explica aquí ────────────────────────────────────────
  * La vía «Reversible» de WCAG §3.3.4 no se puede reclamar —no hay superficie de
@@ -19,13 +25,20 @@
  * 500 líneas de `css:budget`, y porque esto es texto que se revisa con legal, no
  * lógica de la pantalla.
  */
+defineProps<{
+  /**
+   * Si arriba se está pintando `LegalConsentCheckbox`. Es lo que decide si la
+   * primera frase tiene a qué referirse: la vista la esconde cuando falta el
+   * permiso o falta el precio, y entonces no hay casilla ni enlaces.
+   */
+  conCasilla: boolean
+}>()
 </script>
 
 <template>
-  <p class="ds-meta ds-meta--sm">
-    Todavía no están publicadas en la web: pídenoslas en
-    <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y te las enviamos antes de
-    que confirmes.
+  <p v-if="conCasilla" class="ds-meta ds-meta--sm">
+    Los dos documentos están enlazados en la casilla de arriba y se abren en una pestaña nueva: los
+    puedes leer sin perder nada de esta pantalla.
   </p>
 
   <p class="ds-meta ds-meta--sm">

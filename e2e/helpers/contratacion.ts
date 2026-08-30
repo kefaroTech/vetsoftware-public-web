@@ -27,14 +27,27 @@ export interface Intencion {
   descartada: boolean
 }
 
-/** El plan «Clínica», mensual, una sede y una persona: 179.000 al mes. */
+/**
+ * El plan «Pack Clínica», mensual, una sede y una persona: 189.000 al mes.
+ *
+ * `planCode` es el código REAL del catálogo (`PACK_CLINIC`, changeset 308). El
+ * `CLINICA` que había aquí no existía en ninguna parte y el servidor no podía
+ * resolverlo.
+ *
+ * `importeVistoMensual` tiene que ser EXACTAMENTE el subtotal mensual que
+ * `calcularEstimado` da para esta selección (189.000 = precio de entrada de
+ * `PACK_CLINIC`, sin extras: 1 sede y 1 persona caben en lo incluido). Si no lo
+ * es, `ContratarView` detecta deriva de precio, pinta `PriceDriftNotice` y
+ * DESMARCA la casilla de términos — y entonces media spec falla por un motivo
+ * que no tiene nada que ver con lo que cada caso dice comprobar.
+ */
 export function intencion(over: Partial<Intencion> = {}): Intencion {
   return {
-    planCode: 'CLINICA',
+    planCode: 'PACK_CLINIC',
     ciclo: 'MENSUAL',
     sedes: 1,
     usuarios: 1,
-    importeVistoMensual: 179000,
+    importeVistoMensual: 189000,
     selloRevisadoEl: '2026-08-28',
     creadaEn: new Date().toISOString(),
     descartada: false,

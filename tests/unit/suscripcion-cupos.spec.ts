@@ -10,6 +10,7 @@ import {
 } from '@/features/suscripcion/composables/cuposText'
 import type { AvisoCupo } from '@/features/suscripcion/composables/cuposText'
 import type { CompanyAccessResponse } from '@/features/suscripcion/types/cupos.types'
+import { exigir } from '../helpers/exigir'
 
 /**
  * El aviso entero en una línea. Vivía en `cuposText.ts` y su único llamante era este fichero:
@@ -65,31 +66,33 @@ describe('cuposText · cada enforcement tiene su frase', () => {
   const agotado = { usedQuantity: 500, limitQuantity: 500, dimensionCode: 'ANIMAL' }
 
   it('WARN dice «puedes seguir registrando» — es la parte que no se puede recortar', () => {
-    const aviso = avisoCupo(agotado, 'WARN')
+    const aviso = exigir(avisoCupo(agotado, 'WARN'), 'un aviso de cupo')
     expect(aviso).not.toBeNull()
-    expect(avisoTexto(aviso!)).toContain('Puedes seguir registrando')
-    expect(aviso!.tono).toBe('warning')
+    expect(avisoTexto(aviso)).toContain('Puedes seguir registrando')
+    expect(aviso.tono).toBe('warning')
   })
 
   it('BLOCK avisa de que no se podrá registrar más, y en tono de error', () => {
-    const aviso = avisoCupo(agotado, 'BLOCK')
-    expect(aviso!.tono).toBe('error')
-    expect(avisoTexto(aviso!)).toContain('No podrás registrar más')
-    expect(avisoTexto(aviso!)).toContain('Lo que ya tienes sigue funcionando')
+    const aviso = exigir(avisoCupo(agotado, 'BLOCK'), 'un aviso de cupo')
+    expect(aviso.tono).toBe('error')
+    expect(avisoTexto(aviso)).toContain('No podrás registrar más')
+    expect(avisoTexto(aviso)).toContain('Lo que ya tienes sigue funcionando')
   })
 
   it('OVERAGE dice que el exceso se cobra aparte', () => {
-    expect(avisoTexto(avisoCupo(agotado, 'OVERAGE')!)).toContain('se cobra aparte')
+    expect(
+      avisoTexto(exigir(avisoCupo(agotado, 'OVERAGE'), "avisoCupo(agotado, 'OVERAGE')")),
+    ).toContain('se cobra aparte')
   })
 
   it('READ_ONLY conserva la consulta y la impresión', () => {
-    const aviso = avisoCupo(agotado, 'READ_ONLY')
-    expect(aviso!.tono).toBe('error')
-    expect(avisoTexto(aviso!)).toContain('consultar e imprimir')
+    const aviso = exigir(avisoCupo(agotado, 'READ_ONLY'), 'un aviso de cupo')
+    expect(aviso.tono).toBe('error')
+    expect(avisoTexto(aviso)).toContain('consultar e imprimir')
   })
 
   it('sin modo conocido NO adivina: ni promete seguir ni amenaza con parar', () => {
-    const texto = avisoTexto(avisoCupo(agotado, undefined)!)
+    const texto = avisoTexto(exigir(avisoCupo(agotado, undefined), 'avisoCupo(agotado, undefined)'))
     expect(texto).not.toContain('Puedes seguir registrando')
     expect(texto).not.toContain('No podrás registrar')
     expect(consecuencia(undefined)).toBeNull()
@@ -97,8 +100,12 @@ describe('cuposText · cada enforcement tiene su frase', () => {
 
   it('al 90 % nombra la consecuencia real, y la omite si no la conoce', () => {
     const casi = { usedQuantity: 95, limitQuantity: 100, dimensionCode: 'ANIMAL' }
-    expect(avisoTexto(avisoCupo(casi, 'BLOCK')!)).toContain('Al agotarse no podrás registrar más')
-    expect(avisoTexto(avisoCupo(casi, undefined)!)).not.toContain('Al agotarse')
+    expect(avisoTexto(exigir(avisoCupo(casi, 'BLOCK'), "avisoCupo(casi, 'BLOCK')"))).toContain(
+      'Al agotarse no podrás registrar más',
+    )
+    expect(
+      avisoTexto(exigir(avisoCupo(casi, undefined), 'avisoCupo(casi, undefined)')),
+    ).not.toContain('Al agotarse')
   })
 })
 
@@ -124,6 +131,8 @@ describe('CompanyAccessResponse · capacities ausente ≠ sin cupos', () => {
 
   it('un array vacío sí es un plan sin contadores, y no es un error', () => {
     const acceso: CompanyAccessResponse = { companyId: 1, capacities: [] }
-    expect(legible(acceso) && acceso.capacities!.length === 0).toBe(true)
+    expect(legible(acceso) && exigir(acceso.capacities, 'acceso.capacities').length === 0).toBe(
+      true,
+    )
   })
 })

@@ -1,9 +1,8 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page, type Request, type Response } from '@playwright/test'
 import { PASSWORD } from './helpers/auth'
 import {
   gotoNuevaConsulta,
   NUEVA_CONSULTA_URL,
-  ownerSearch,
   searchOwner,
   unlikelyTerm,
   startCreateOwnerFromEmpty,
@@ -30,6 +29,7 @@ import {
   asteriskAudit,
   type OwnerData,
 } from './helpers/consulta'
+import { exigir } from './helpers/exigir'
 
 /**
  * Suite rigurosa del flujo de CREACIÓN DE CONSULTA.
@@ -138,7 +138,7 @@ test.describe('C · Propietario nuevo · validación de campos', () => {
   })
 
   // --- Documento (matriz) ---
-  const docCases: Array<{ v: string; msg: string; nombre: string }> = [
+  const docCases: { v: string; msg: string; nombre: string }[] = [
     { v: '', msg: 'El documento es obligatorio.', nombre: 'vacío' },
     { v: '1234', msg: 'Debe tener al menos 5 caracteres.', nombre: '4 caracteres' },
     { v: 'A'.repeat(21), msg: 'No puede superar los 20 caracteres.', nombre: '21 caracteres' },
@@ -420,7 +420,7 @@ test.describe('E · Mascota nueva · validación de campos', () => {
   })
 
   // --- Peso (OPCIONAL · numérico · validado solo cuando hay valor) ---
-  const pesoCases: Array<{ v: string; msg: string; nombre: string }> = [
+  const pesoCases: { v: string; msg: string; nombre: string }[] = [
     { v: '0', msg: 'Debe ser mayor que 0.', nombre: 'cero' },
     { v: '3000', msg: 'Valor demasiado grande.', nombre: 'demasiado grande' },
   ]
@@ -1142,9 +1142,7 @@ test.describe('F3 · Consumo de servicio (Fase 3)', () => {
     await irAPasoConsulta(page)
   })
 
-  const isConsultationsPost = (
-    r: import('@playwright/test').Request | import('@playwright/test').Response,
-  ) => {
+  const isConsultationsPost = (r: Request | Response) => {
     const req = 'request' in r ? r.request() : r
     return new URL(req.url()).pathname.endsWith('/consultations') && req.method() === 'POST'
   }
@@ -1401,11 +1399,11 @@ test.describe('G · Flujo completo y borrador', () => {
     await footerNext(page, 'Guardar consulta').click()
     // Tras validar, el primer campo faltante queda centrado verticalmente en el viewport.
     const field = page.locator('.field', { hasText: 'Tipo de consulta' }).first()
-    const vh = page.viewportSize()!.height
+    const vh = exigir(page.viewportSize(), 'page.viewportSize()').height
     await expect
       .poll(async () => (await field.boundingBox())?.y ?? 0, { timeout: 4000 })
       .toBeGreaterThan(vh * 0.12)
-    const y = (await field.boundingBox())!.y
+    const y = exigir(await field.boundingBox(), '(await field.boundingBox())').y
     expect(y, 'el campo debe quedar en la banda central, no pegado al borde').toBeLessThan(vh * 0.8)
   })
 
@@ -1641,7 +1639,7 @@ interface QuickActionCase {
   dialog: string | RegExp
   save: { name: string; exact?: boolean }
   editLabel: string
-  seed: (page: import('@playwright/test').Page) => Promise<void>
+  seed: (page: Page) => Promise<void>
 }
 
 const QUICK_ACTIONS: QuickActionCase[] = [
@@ -1792,7 +1790,7 @@ test.describe('K · Edición enfocada y guardas de las acciones rápidas', () =>
 
 // ── util local ───────────────────────────────────────────────────────────────
 /** Crea propietario + mascota mínimos y avanza al paso 2 (consulta). [data] */
-async function irAPasoConsulta(page: import('@playwright/test').Page): Promise<void> {
+async function irAPasoConsulta(page: Page): Promise<void> {
   await createAndSelectOwner(page)
   await startCreatePet(page)
   await fillValidPet(page)

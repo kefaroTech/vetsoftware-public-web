@@ -49,6 +49,31 @@ export const RECEIPT_WIDTH_KEY = 'vetrina:receipt-width'
  */
 export const CONTRATACION_INTENCION_KEY = 'vs.contratacion.intencion.v1'
 
+/**
+ * Las propuestas vivas del asistente comercial: `{ id opaco → token }`.
+ *
+ * **La escribe y la lee un solo módulo**, `features/asistente/api/asistente.source.ts`,
+ * y ningún otro sitio del front debe tocarla. Guarda la credencial de 43
+ * caracteres con la que se relee y se edita una propuesta, así que su cabecera
+ * explica el porqué de cada decisión; aquí solo queda la que corresponde a esta
+ * lista.
+ *
+ * **NO es volátil, por el mismo motivo que la intención**: se escribe en
+ * `/planes` **antes de que exista ninguna sesión**, por alguien que todavía no
+ * es usuario, y entre generar la propuesta y poder contratarla hay el mismo
+ * salto de verificación por correo. Un cierre de sesión que se la llevara
+ * dejaría al prospecto en el paso 6 con una intención que apunta a una propuesta
+ * que ya no se puede releer — que es exactamente el carrito perdido en silencio
+ * que este dato existe para evitar.
+ *
+ * Por qué `localStorage` y no un store de Pinia: lo que hay en un store se ve
+ * entero en las devtools y se serializa con cualquier volcado de estado, y
+ * además muere con la recarga, que es justo el caso que hay que sobrevivir. El
+ * precedente del repositorio es `AUTH_STORAGE_KEY`: la credencial de sesión ya
+ * vive aquí, con la misma exposición y el mismo origen.
+ */
+export const ASISTENTE_PROPUESTA_KEY = 'vs.asistente.propuestas.v1'
+
 /** Claves que un cierre de sesión debe llevarse por delante. */
 export const VOLATILE_STORAGE_KEYS: readonly string[] = [
   NUEVA_CONSULTA_DRAFT_KEY,

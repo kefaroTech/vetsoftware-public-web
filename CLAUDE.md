@@ -271,6 +271,66 @@ borradores con la forma anterior — añade defaults o migración.
 Ejecuta `npx vue-tsc -b` después de cualquier cambio significativo en tipos o
 componentes.
 
+### El techo de 500 líneas por SFC SÍ es un gate
+
+No es una convención: lo comprueba `scripts/css-budget.mjs` (`npm run css:budget`,
+dentro de `npm run quality`) con `maxSfcLines: 500` y `maxOversizedSfc: 0` en
+`scripts/css-budget.config.json`. Un SFC que lo pase pone la cadena en rojo.
+
+Está anotado aquí porque el enunciado vive en `AGENTS.md` bajo el encabezado
+«CSS: consumir el design system» —es una de las tres cosas que mide ese script—,
+y quien busca «límite de tamaño de un SFC» mira `eslint.config.ts`, no encuentra
+ningún `max-lines` y concluye que no se aplica. Ha pasado dos veces, y una de
+ellas costó una tarea abandonada.
+
+Dos detalles del contador, por si alguien anda justo de margen:
+
+- Cuenta el fichero **entero** (script, template, estilo y comentarios) partiendo
+  por saltos de línea, así que un fichero de 499 líneas terminadas
+  en salto cuenta 500. El límite efectivo es **`wc -l` ≤ 499**.
+- Los techos son un trinquete: se bajan cuando una tanda los mejora, **nunca se
+  suben**. Si el gate bloquea, la salida es partir el componente —a un
+  subcomponente, o la lógica a un composable—, no tocar el número.
+
+Medición del 2026-08-30: 389 SFC, el mayor en 499 líneas (`POSView.vue`), cero
+infractores. El margen real es de una línea en los cinco ficheros que están en
+498-499.
+
+### `vue-tsc` SÍ ve `tests/` y `e2e/`, desde el 2026-08-30
+
+`tsconfig.app.json` sigue incluyendo solo `src/` y `visual/`, pero el
+`tsconfig.json` raíz —que es lo que compilan `npm run typecheck` y
+`npm run build`— referencia además `tsconfig.vitest.json` y `tsconfig.e2e.json`.
+Los dos **extienden** al de la app, así que heredan sus reglas estrictas
+enteras: `noUncheckedIndexedAccess`, `noUnusedLocals`, `noImplicitReturns`. Los
+árboles de prueba se comprueban con el mismo rigor que `src/`, no con uno
+rebajado — y lo mismo en `eslint.config.ts`, donde entran en los mismos bloques
+y no en unos aparte.
+
+**Son dos proyectos y no uno, a propósito.** En `tests/` el `expect` y el `test`
+vienen de `vitest`; en `e2e/`, de `@playwright/test`. En un único programa un
+import equivocado —el `expect` de Playwright en una prueba unitaria— pasaría
+desapercibido, que es justo la clase de error que esto existe para cazar. Los
+dos listan además `src/**/*.d.ts`, porque las declaraciones globales
+(`grecaptcha`, `vite-env`) no llegan por `import` y sin ellas el programa de
+pruebas vería un `window` distinto del que ve la aplicación.
+
+**No lo deshagas, y esto es lo que lo justifica.** Mientras estuvieron fuera,
+una fixture podía quedarse con la forma vieja de un tipo sin que nada se pusiera
+rojo — pasó con `ResumenContratacion` en
+`tests/unit/contratacion-payload.spec.ts`. Al meterlos salieron **115 errores
+reales**, y tres dicen bien lo que se estaba perdiendo:
+
+- **23 sesiones de autenticación declaraban un sujeto que no existe**: `type`
+  valía `'Bearer'`, cuando ese campo es el sujeto de la sesión (`EMPLOYEE` o
+  `SYSTEM_USER`) y el backend no emite `'Bearer'` nunca.
+- **Las 40 pruebas del recibo del cliente** corrían con el rótulo genérico en
+  vez de «Factura electrónica».
+- **El test que impide cobrar en negativo afirmaba por la rama contraria de un
+  ternario**: usaba un `valueType` que no existe (`'AMOUNT'` en vez de
+  `'VALUE'`), así que pasaba por el «si no» de `applyPromo` y nunca tocó la
+  rama que dice cubrir.
+
 ## Estado actual del catálogo (mayo 2026)
 
 - **Especies**: cargadas desde `GET /api/v1/species` (`useSpecies`).
@@ -510,29 +570,30 @@ versiona y evoluciona por su cuenta.
 A cambio, la práctica es la misma en los dos. **Estos archivos se mantienen byte
 a byte idénticos**; si tocas uno, tocas el otro en el mismo PR:
 
-| Archivo                                                                                                       | Qué es                                                                               |
-| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `src/services/http/http.client.ts`                                                                            | cliente axios, refresh _single-flight_, lectores de `ProblemDetail`                  |
-| `src/services/http/api-base-url.ts`                                                                           | resolución de la URL base                                                            |
-| `src/services/storage/storage.service.ts`                                                                     | único acceso a `localStorage`/`sessionStorage`                                       |
-| `src/services/telemetry/telemetry.ts`                                                                         | telemetría de navegador vía Grafana Faro, carga diferida tras el montaje (TR-05)     |
-| `src/stores/loader.store.ts`                                                                                  | debounce anti-parpadeo del velo                                                      |
-| `src/stores/toast.store.ts`                                                                                   | avisos                                                                               |
-| `src/composables/useGlobalLoader.ts` · `useToast.ts`                                                          | sus fachadas                                                                         |
-| `src/features/auth/utils/jwt.ts`                                                                              | decodificación del JWT                                                               |
-| `src/types/api.types.ts`                                                                                      | `ProblemDetail`                                                                      |
-| `src/plugins/vuetify.ts` · `vuetify-icon-aliases.ts`                                                          | tema e iconos de Vuetify                                                             |
-| `src/assets/styles/tokens.css` · `primitives.css` · `base.css`                                                | capas 1, 2 y 0 del sistema de diseño                                                 |
-| `src/components/feedback/{PawLoader,PageLoader,ToastStack,ErrorSummary}.vue`                                  | primitivas de feedback                                                               |
-| `src/components/ui/ModalShell.vue`                                                                            | contenedor de diálogo — byte a byte idéntico, no declarado hasta ahora               |
-| `src/composables/useModalLayer.ts` · `useModalHistory.ts` · `useModalFocus.ts`                                | pila de modales, entrada de historial (EST-09) y trampa/devolución de foco (A11Y-08) |
-| `src/types/pagination.ts`                                                                                     | `PageResponse<T>`, `PageQuery`, `emptyPage()` — el único contrato de paginación      |
-| `src/composables/useServerPaged.ts` · `useQuerySync.ts`                                                       | paginación servida por el backend y filtros sincronizados con la query string        |
-| `scripts/check-bundle-budget.mjs` · `ds-audit.mjs` · `css-budget.mjs`                                         | verificadores                                                                        |
-| `scripts/tr02-parity-check.mjs` · `tr02-parity.config.json`                                                   | gate de paridad TR-02 — compara este listado byte a byte, corre en `npm run quality` |
-| `tests/unit/setup.ts` · `storage-service.spec.ts` · `ui-stores.spec.ts`                                       | sus pruebas                                                                          |
-| `eslint.config.ts` · `stylelint.config.mjs` · `lint-staged.config.mjs` · `commitlint.config.js` · `AGENTS.md` | tooling                                                                              |
-| `stylelint-plugins/no-duplicate-primitive.mjs`                                                                | regla stylelint FE-08: rechaza CSS que reescribe una primitiva                       |
+| Archivo                                                                                                       | Qué es                                                                                                                                                                                                                                                                                     |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/services/http/http.client.ts`                                                                            | cliente axios, refresh _single-flight_, lectores de `ProblemDetail`                                                                                                                                                                                                                        |
+| `src/services/http/api-base-url.ts`                                                                           | resolución de la URL base                                                                                                                                                                                                                                                                  |
+| `src/services/storage/storage.service.ts`                                                                     | único acceso a `localStorage`/`sessionStorage`                                                                                                                                                                                                                                             |
+| `src/services/telemetry/telemetry.ts`                                                                         | telemetría de navegador vía Grafana Faro, carga diferida tras el montaje (TR-05)                                                                                                                                                                                                           |
+| `src/stores/loader.store.ts`                                                                                  | debounce anti-parpadeo del velo                                                                                                                                                                                                                                                            |
+| `src/stores/toast.store.ts`                                                                                   | avisos                                                                                                                                                                                                                                                                                     |
+| `src/composables/useGlobalLoader.ts` · `useToast.ts`                                                          | sus fachadas                                                                                                                                                                                                                                                                               |
+| `src/composables/useTokenDeEnlace.ts`                                                                         | lee el token de un enlace de correo y lo borra de la URL en el mismo gesto, antes de devolverlo — declarado gemelo TR-02 el 2026-08-30 (existía igual en los dos fronts sin estar en esta lista; el comentario de cabecera se generalizó al mecanismo para poder ser byte a byte idéntico) |
+| `src/features/auth/utils/jwt.ts`                                                                              | decodificación del JWT                                                                                                                                                                                                                                                                     |
+| `src/types/api.types.ts`                                                                                      | `ProblemDetail`                                                                                                                                                                                                                                                                            |
+| `src/plugins/vuetify.ts` · `vuetify-icon-aliases.ts`                                                          | tema e iconos de Vuetify                                                                                                                                                                                                                                                                   |
+| `src/assets/styles/tokens.css` · `primitives.css` · `base.css`                                                | capas 1, 2 y 0 del sistema de diseño                                                                                                                                                                                                                                                       |
+| `src/components/feedback/{PawLoader,PageLoader,ToastStack,ErrorSummary}.vue`                                  | primitivas de feedback                                                                                                                                                                                                                                                                     |
+| `src/components/ui/ModalShell.vue`                                                                            | contenedor de diálogo — byte a byte idéntico, no declarado hasta ahora                                                                                                                                                                                                                     |
+| `src/composables/useModalLayer.ts` · `useModalHistory.ts` · `useModalFocus.ts`                                | pila de modales, entrada de historial (EST-09) y trampa/devolución de foco (A11Y-08)                                                                                                                                                                                                       |
+| `src/types/pagination.ts`                                                                                     | `PageResponse<T>`, `PageQuery`, `emptyPage()` — el único contrato de paginación                                                                                                                                                                                                            |
+| `src/composables/useServerPaged.ts` · `useQuerySync.ts`                                                       | paginación servida por el backend y filtros sincronizados con la query string                                                                                                                                                                                                              |
+| `scripts/check-bundle-budget.mjs` · `ds-audit.mjs` · `css-budget.mjs`                                         | verificadores                                                                                                                                                                                                                                                                              |
+| `scripts/tr02-parity-check.mjs` · `tr02-parity.config.json`                                                   | gate de paridad TR-02 — compara este listado byte a byte, corre en `npm run quality`                                                                                                                                                                                                       |
+| `tests/unit/setup.ts` · `storage-service.spec.ts` · `ui-stores.spec.ts`                                       | sus pruebas                                                                                                                                                                                                                                                                                |
+| `eslint.config.ts` · `stylelint.config.mjs` · `lint-staged.config.mjs` · `commitlint.config.js` · `AGENTS.md` | tooling                                                                                                                                                                                                                                                                                    |
+| `stylelint-plugins/no-duplicate-primitive.mjs`                                                                | regla stylelint FE-08: rechaza CSS que reescribe una primitiva                                                                                                                                                                                                                             |
 
 **Divergencias permitidas, y solo estas.** Van siempre con un comentario que
 diga por qué (y con una entrada en `scripts/tr02-parity.config.json`, que es

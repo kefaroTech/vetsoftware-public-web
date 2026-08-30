@@ -13,6 +13,7 @@ import {
   uniqueSuffix,
   type OwnerData,
 } from './helpers/consulta'
+import { exigir } from './helpers/exigir'
 
 /**
  * E2E RIGUROSO de la UX de modales (contra la app real):
@@ -42,14 +43,14 @@ interface Box {
 function viewport(page: Page): { width: number; height: number } {
   const vp = page.viewportSize()
   expect(vp, 'el test necesita un viewport definido').not.toBeNull()
-  return vp!
+  return exigir(vp, 'vp')
 }
 
 async function boxOf(loc: Locator): Promise<Box> {
   await expect(loc).toBeVisible()
   const b = await loc.boundingBox()
   expect(b, 'el elemento debe tener bounding box').not.toBeNull()
-  return b!
+  return exigir(b, 'b')
 }
 
 /** El card del modal actualmente abierto (ModalShell teletransporta `.overlay` a <body>). */

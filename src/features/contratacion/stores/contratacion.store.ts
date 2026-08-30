@@ -2,7 +2,11 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { CONTRATACION_INTENCION_KEY } from '@/constants/storageKeys'
 import type { Ciclo } from '@/features/landing/types/plans.types'
-import type { IntencionContratacion, SeleccionContratacion } from '../types/contratacion.types'
+import type {
+  CapacidadesElegidas,
+  IntencionContratacion,
+  SeleccionContratacion,
+} from '../types/contratacion.types'
 
 /**
  * La intención de contratación, con espejo en `localStorage`.
@@ -26,16 +30,29 @@ export const INTENCION_MAX_DIAS = 30
 
 const MS_POR_DIA = 86_400_000
 
-/** Valida la forma leída del almacenamiento. Una entrada corrupta se descarta. */
+/** Lo que las dos formas comparten, ya validado. */
+type Comun = Omit<IntencionContratacion, 'origen' | 'planCode' | 'propuestaId'>
+
+/**
+ * Valida la forma leída del almacenamiento. Una entrada corrupta se descarta.
+ *
+ * ── La migración, que NO es opcional ────────────────────────────────────────
+ * Hay navegadores con una intención escrita antes de que existiera `origen`:
+ * un objeto con `planCode` y sin discriminador. Descartarla haría que quien
+ * eligió su plan ayer y vuelve hoy tras verificar el correo se encontrara el
+ * selector otra vez — la conversión exacta que el enganche del login existe para
+ * no perder. Se lee como lo que es, `PLAN`, sin subir la versión de la clave:
+ * la forma vieja sigue siendo legible sin ambigüedad porque `planCode` solo
+ * existe en esa rama.
+ */
 function parseIntencion(raw: string | null): IntencionContratacion | null {
   if (!raw) return null
   try {
-    const o = JSON.parse(raw) as Partial<IntencionContratacion>
-    if (typeof o?.planCode !== 'string' || !o.planCode) return null
-    if (o.ciclo !== 'MENSUAL' && o.ciclo !== 'ANUAL') return null
+    const o = JSON.parse(raw) as Record<string, unknown>
+    if (o?.ciclo !== 'MENSUAL' && o?.ciclo !== 'ANUAL') return null
     if (typeof o.creadaEn !== 'string') return null
-    return {
-      planCode: o.planCode,
+
+    const comun: Comun = {
       ciclo: o.ciclo,
       sedes: Number.isFinite(o.sedes) ? Number(o.sedes) : 1,
       usuarios: Number.isFinite(o.usuarios) ? Number(o.usuarios) : 1,
@@ -51,6 +68,17 @@ function parseIntencion(raw: string | null): IntencionContratacion | null {
       creadaEn: o.creadaEn,
       descartada: o.descartada === true,
     }
+
+    if (o.origen === 'PROPUESTA') {
+      // Sin referencia no hay nada que releer, y sin relectura no hay líneas ni
+      // importes: una intención de propuesta sin `propuestaId` no es una
+      // intención a medias, es basura.
+      if (typeof o.propuestaId !== 'string' || !o.propuestaId) return null
+      return { ...comun, origen: 'PROPUESTA', propuestaId: o.propuestaId }
+    }
+
+    if (typeof o.planCode !== 'string' || !o.planCode) return null
+    return { ...comun, origen: 'PLAN', planCode: o.planCode }
   } catch {
     return null
   }
@@ -136,7 +164,7 @@ export const useContratacionStore = defineStore('contratacion', () => {
 
   const hayIntencionVigente = computed(() => vigente.value !== null)
 
-  /** Crea o actualiza la intención. Reescribir la selección la «desdescarta». */
+  /** Crea o actualiza la intención con un PLAN. Reescribir la selección la «desdescarta». */
   function guardar(
     seleccion: SeleccionContratacion,
     importeVistoMensual: number | null,
@@ -145,6 +173,40 @@ export const useContratacionStore = defineStore('contratacion', () => {
     hidratar()
     intencion.value = {
       ...seleccion,
+      origen: 'PLAN',
+      importeVistoMensual,
+      selloRevisadoEl: sello,
+      creadaEn: new Date().toISOString(),
+      descartada: false,
+    }
+    persistir()
+  }
+
+  /**
+   * Crea o actualiza la intención con una PROPUESTA a medida.
+   *
+   * <p>Sustituye a cualquier intención anterior, incluida una de plan: son dos
+   * respuestas a la misma pregunta y tener las dos vivas obligaría al paso 6 a
+   * elegir por su cuenta cuál manda.
+   *
+   * @param importeVistoMensual
+   *            el subtotal que el prospecto TENÍA DELANTE al pulsar. El
+   *            asistente cotiza en mensual por contrato (`totales.ciclo`), así
+   *            que es directamente comparable con el que se relea en el paso 6:
+   *            es lo que hace que una propuesta editada entre medias salte como
+   *            deriva de precio en vez de cambiar de importe en silencio.
+   */
+  function guardarPropuesta(
+    propuestaId: string,
+    capacidades: CapacidadesElegidas,
+    importeVistoMensual: number | null,
+    sello: string,
+  ) {
+    hidratar()
+    intencion.value = {
+      ...capacidades,
+      origen: 'PROPUESTA',
+      propuestaId,
       importeVistoMensual,
       selloRevisadoEl: sello,
       creadaEn: new Date().toISOString(),
@@ -154,8 +216,9 @@ export const useContratacionStore = defineStore('contratacion', () => {
   }
 
   function cambiarCiclo(ciclo: Ciclo) {
-    if (!intencion.value) return
-    intencion.value = { ...intencion.value, ciclo }
+    const actual = intencion.value
+    if (!actual) return
+    intencion.value = { ...actual, ciclo }
     persistir()
   }
 
@@ -190,6 +253,7 @@ export const useContratacionStore = defineStore('contratacion', () => {
     hayIntencionVigente,
     hidratar,
     guardar,
+    guardarPropuesta,
     cambiarCiclo,
     descartar,
     limpiar,

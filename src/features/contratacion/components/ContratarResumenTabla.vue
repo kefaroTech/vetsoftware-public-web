@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { importeEstimado } from '@/features/landing/composables/planPricing'
 import { CICLO_LABEL } from '@/features/landing/types/plans.types'
@@ -32,23 +33,92 @@ import type { ResumenContratacion } from '../types/contratacion.types'
  */
 const props = defineProps<{ resumen: ResumenContratacion }>()
 
-/** Volver al configurador con la selección puesta, no a un formulario vacío. */
-const volverAPlanes = {
+/**
+ * Volver al sitio donde se armó la selección, **con ella puesta**.
+ *
+ * <p>Las dos formas vuelven a `/planes` porque las dos se arman ahí —el
+ * configurador de paquetes arriba, el asistente debajo—, pero la de la propuesta
+ * NO lleva `plan` en la consulta: preseleccionaría un paquete que el prospecto
+ * no eligió, y ese es el patrón oscuro exacto de «te devolvemos al catálogo con
+ * algo ya marcado».
+ */
+const volverAPlanes = computed(() => ({
   name: 'planes',
   query: {
-    plan: props.resumen.planCode,
+    ...(props.resumen.origen === 'PLAN' ? { plan: props.resumen.planCode } : {}),
     ciclo: props.resumen.ciclo,
-    sedes: String(props.resumen.sedes),
-    usuarios: String(props.resumen.usuarios),
+    // Y las cantidades tampoco viajan en la vuelta cuando es una propuesta: el
+    // configurador de paquetes las leería de la URL y las pintaría puestas,
+    // que es preseleccionar por el prospecto lo mismo que `plan` no hace.
+    ...(props.resumen.origen === 'PLAN'
+      ? { sedes: String(props.resumen.sedes), usuarios: String(props.resumen.usuarios) }
+      : {}),
   },
-} as const
+}))
 
-const filas = [
-  { rotulo: 'Plan', valor: props.resumen.planNombre, cambiar: 'el plan' },
-  { rotulo: 'Ciclo de pago', valor: CICLO_LABEL[props.resumen.ciclo], cambiar: 'el ciclo de pago' },
-  { rotulo: 'Sedes', valor: String(props.resumen.sedes), cambiar: 'el número de sedes' },
-  { rotulo: 'Personas', valor: String(props.resumen.usuarios), cambiar: 'el número de personas' },
-]
+/**
+ * Las filas de arriba: qué se contrata.
+ *
+ * <p>En la rama del plan es una fila —el paquete—; en la de la propuesta son
+ * **sus N líneas**, que es toda la diferencia entre las dos formas. La cantidad
+ * se pinta solo cuando pasa de una: {@link LineaContratada.importe} es el precio
+ * unitario que devolvió el servidor, así que una línea de tres unidades enseñaría
+ * un importe que no explica su parte del subtotal si no se dice cuántas son. Y
+ * no se multiplica: eso es aritmética de dinero en el cliente.
+ */
+const filas = computed(() => {
+  const r = props.resumen
+  const ciclo = {
+    rotulo: 'Ciclo de pago',
+    valor: CICLO_LABEL[r.ciclo],
+    cambiar: 'el ciclo de pago',
+  }
+
+  if (r.origen === 'PLAN') {
+    return [
+      { rotulo: 'Plan', valor: r.titulo, cambiar: 'el plan' },
+      ciclo,
+      // Aquí las dos cifras SÍ son lo que se contrata: `lineasDeContratacion`
+      // las manda como línea de la oferta en cuanto pasan de lo incluido.
+      { rotulo: 'Sedes', valor: String(r.sedes), cambiar: 'el número de sedes' },
+      { rotulo: 'Personas', valor: String(r.usuarios), cambiar: 'el número de personas' },
+    ]
+  }
+
+  // La propuesta NO lleva filas de sedes ni de personas, y es la corrección de
+  // un hueco de negocio, no una simplificación: la oferta de esta rama son sus
+  // líneas y nada más (`lineasDePropuesta`), así que la capacidad que se cobra
+  // ya está abajo con su cantidad y su importe —«Usuario adicional (capacidad)
+  // 3 × $ 12.000»—. Las dos filas de arriba venían del control de
+  // `PropuestaCapacidades`, que no sale a la red: enseñaban «Personas 8» encima
+  // de una oferta que pedía tres, con un «Cambiar» que no cambiaba nada de lo
+  // que se iba a cobrar. Ver `ResumenPlan.sedes`.
+  return [
+    ...r.lineas.map((l) => ({
+      // Una CAPACIDAD cotizada no es una funcionalidad, y sin decirlo las dos
+      // filas son indistinguibles: «Personas adicionales» leído como un
+      // módulo más. El `kind` viene del servidor y estaba en el contrato
+      // desde el principio; lo que faltaba era pintarlo.
+      rotulo: l.tipo === 'CAPACITY' ? `${l.nombre} (capacidad)` : l.nombre,
+      valor: l.cantidad > 1 ? `${l.cantidad} × ${importeEstimado(l.importe)}` : '✓',
+      cambiar: 'lo que incluye tu propuesta',
+    })),
+    ciclo,
+  ]
+})
+
+/**
+ * El rótulo del IVA.
+ *
+ * <p>Con tipo publicado se escribe «IVA (19 %)»; sin él, **«IVA» a secas** y el
+ * importe al lado, que sí es del servidor. La propuesta del asistente no publica
+ * el tipo —el contrato solo trae un `taxRate` por línea y sin escala declarada—,
+ * y escribir un porcentaje deducido en la pantalla que decide una compra es
+ * equivocarse por un factor de cien de la forma más barata posible.
+ */
+const rotuloImpuesto = computed(() =>
+  props.resumen.tasaImpuesto != null ? `IVA (${props.resumen.tasaImpuesto} %)` : 'IVA',
+)
 </script>
 
 <template>
@@ -83,7 +153,7 @@ const filas = [
             <td class="ds-num">{{ importeEstimado(resumen.subtotal) }}</td>
           </tr>
           <tr>
-            <th scope="row">IVA ({{ resumen.tasaImpuesto }} %)</th>
+            <th scope="row">{{ rotuloImpuesto }}</th>
             <td class="ds-num">{{ importeEstimado(resumen.impuesto) }}</td>
           </tr>
           <!-- El rótulo decía «Total del primer mes» y era FALSO: durante la prueba no se cobra

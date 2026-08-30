@@ -1,4 +1,4 @@
-import { test, expect, type APIRequestContext } from '@playwright/test'
+import { test, expect, type APIRequestContext, type Page } from '@playwright/test'
 import { EMPLOYEE_CODE, PASSWORD } from './helpers/auth'
 import { uniqueSuffix } from './helpers/consulta'
 import { todayISO } from '../src/composables/format'
@@ -175,7 +175,7 @@ test.afterAll(async ({ playwright }, testInfo) => {
  * versión anterior. Un login por caso invalidaría el token que el `afterAll` necesita
  * para limpiar. Con la sesión inyectada hay un único login por corrida.
  */
-async function authenticate(page: import('@playwright/test').Page) {
+async function authenticate(page: Page) {
   await page.goto('/')
   await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
     key: AUTH_STORAGE_KEY,

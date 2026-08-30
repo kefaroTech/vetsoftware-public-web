@@ -124,21 +124,25 @@ const LA_BASE = 'assets/styles/base.css'
  *
  * Ojo a la diferencia con la lista que había antes de #232: esto ya no son
  * «ficheros que animan sin ser PawLoader», son ficheros que incumplen la
- * CONDICIÓN REAL. Son los cuatro `.pub-spin` copiados en `<style scoped>` sin
- * ninguna guarda, más la hoja pública, donde el bloque de movimiento reducido
- * existe y enumera `.pub-reveal` y `.pub-drift` pero se deja fuera `.pub-spin`
- * — que es literalmente lo que denuncia #112.
+ * CONDICIÓN REAL. Son los `.pub-spin` copiados en `<style scoped>` sin ninguna
+ * guarda, más la hoja pública, donde el bloque de movimiento reducido existe y
+ * enumera `.pub-reveal` y `.pub-drift` pero se deja fuera `.pub-spin` — que es
+ * literalmente lo que denuncia #112.
+ *
+ * Van dos menos: las dos pantallas que llegan por enlace de correo
+ * —`RestablecerContrasenaView` y `VerifyEmailView`— cambiaron su aro copiado por
+ * `PawLoader`, que es el único lenguaje de espera del producto y trae su propia
+ * guarda de movimiento reducido. No es que se les añadiera una guarda: es que ya
+ * no animan nada propio. Quedan los dos aros de `components/public/` y la hoja.
  *
  * `.pub-drift` ya NO figura en ninguna lista: cumple la condición y pasa sola.
- * Por eso, cuando se cierre #112 y mueran los `pub-spin`, la entrada de
- * `public-auth.css` se podrá borrar de aquí sin discutir nada — hay un bloque
+ * Por eso, cuando se cierre #112 y mueran los `pub-spin` que quedan, la entrada
+ * de `public-auth.css` se podrá borrar de aquí sin discutir nada — hay un bloque
  * de pruebas abajo que lo comprueba contra una réplica de cómo quedará.
  */
 const SIN_GUARDA_TODAVIA: readonly string[] = [
   'components/public/AuthSelect.vue',
   'components/public/PrimaryButton.vue',
-  'features/auth/views/RestablecerContrasenaView.vue',
-  'features/registration/views/VerifyEmailView.vue',
   'assets/styles/public-auth.css',
 ]
 

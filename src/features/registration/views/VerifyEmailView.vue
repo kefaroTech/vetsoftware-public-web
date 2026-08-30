@@ -1,22 +1,27 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { registrationApi } from '../api/registration.api'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import PublicLayout from '@/components/public/PublicLayout.vue'
 import PrimaryButton from '@/components/public/PrimaryButton.vue'
+import PawLoader from '@/components/feedback/PawLoader.vue'
+import { useTokenDeEnlace } from '@/composables/useTokenDeEnlace'
 
 /** Pantalla 3 — Verificación de correo (handoff §7.3). 3 estados: loading | success | error. */
-const route = useRoute()
 const router = useRouter()
+const { tomarTokenDeLaUrl } = useTokenDeEnlace()
 
 type State = 'loading' | 'success' | 'error'
 const state = ref<State>('loading')
 const errorMessage = ref('El enlace de verificación no es válido o expiró.')
 
 onMounted(async () => {
-  const raw = route.query.token
-  const token = Array.isArray(raw) ? raw[0] : raw
+  // El token sale de la barra ANTES de gastarlo: si la verificación falla o
+  // tarda, no ha estado visible entretanto. Se recibe ya en una variable local,
+  // así que el desenlace de error —token inválido o caducado— sigue teniendo el
+  // valor que necesita para pedirlo y para contarlo.
+  const token = await tomarTokenDeLaUrl()
   if (!token) {
     state.value = 'error'
     return
@@ -40,7 +45,7 @@ onMounted(async () => {
       <!-- Verificando -->
       <template v-if="state === 'loading'">
         <div class="verify-icon verify-icon--load">
-          <span class="verify-spin" />
+          <PawLoader :size="46" :glow="false" :speed="900" label="Verificando tu cuenta" />
         </div>
         <h1 class="verify-title">Verificando tu cuenta…</h1>
         <p class="verify-text">Un momento, estamos confirmando tu correo.</p>
@@ -115,16 +120,6 @@ onMounted(async () => {
   background: var(--pub-err-bg);
   border: 1px solid var(--pub-err-bd);
   color: var(--pub-err-tx-2);
-}
-
-.verify-spin {
-  width: 46px;
-  height: 46px;
-  border: 4px solid #e9d5ff;
-  border-top-color: var(--pub-ame-700);
-  border-radius: 50%;
-  display: block;
-  animation: pub-spin 0.8s linear infinite;
 }
 
 .verify-title {

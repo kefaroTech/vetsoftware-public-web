@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import PublicLayout from '@/components/public/PublicLayout.vue'
 import { useContratacion } from '@/features/contratacion/composables/useContratacion'
+import AsistentePanel from '@/features/asistente/components/AsistentePanel.vue'
 import PlanesConfigurador from '../components/PlanesConfigurador.vue'
 import { usePlanes } from '../composables/usePlanes'
 import { MONEDA_DE_FACTURACION } from '../composables/planPricing'
@@ -20,6 +21,21 @@ import type { Ciclo } from '../types/plans.types'
  * compartido o el CTA de una tarjeta), lo que hubiera en la intención guardada,
  * y por último los mínimos. La URL manda porque es lo que el usuario acaba de
  * pulsar.
+ *
+ * ── Dos superficies, UNA ruta ───────────────────────────────────────────────
+ * Desde el asistente de propuesta a medida, esta ruta tiene dos contenidos: el
+ * cuadro de texto libre arriba, como contenido principal, y los tres paquetes
+ * debajo en un `<details>`. **No hay ruta nueva**, y es una decisión: una
+ * `/planes/asistente` partiría la entrada del embudo en dos URLs, obligaría a
+ * mantener dos pantallas de precio y haría ilegible la analítica del paso 2.
+ *
+ * <p>Y los paquetes **no desaparecen**, por conversión y no por comodidad: son
+ * el ancla de precio. El flujo a medida pide escribir un párrafo y esperar unos
+ * segundos **antes de ver una sola cifra**; si al final del túnel sale un importe
+ * fuera de presupuesto, quien no llegaba se va habiendo trabajado gratis. Con
+ * los tres paquetes a mano se autoselecciona en dos segundos. Es el mismo
+ * criterio que `LandingPlans` ya dejó escrito para no quitar los precios ni
+ * cuando la petición falla.
  */
 const route = useRoute()
 const router = useRouter()
@@ -34,7 +50,10 @@ function entero(v: unknown, porDefecto: number): number {
   return Number.isFinite(n) && n >= 1 ? n : porDefecto
 }
 
-const planCode = ref(texto(route.query.plan) ?? vigente.value?.planCode ?? '')
+/** El paquete que la intención trae, o nada si lo que trae es una propuesta. */
+const planDeLaIntencion = vigente.value?.origen === 'PLAN' ? vigente.value.planCode : undefined
+
+const planCode = ref(texto(route.query.plan) ?? planDeLaIntencion ?? '')
 const ciclo = ref<Ciclo>(
   route.query.ciclo === 'ANUAL' || route.query.ciclo === 'MENSUAL'
     ? route.query.ciclo
@@ -88,9 +107,14 @@ function continuar() {
 
     <div class="pl-page">
       <div class="pl-head">
-        <h1 class="pub-title">Planes y precios</h1>
+        <!-- El `<h1>` vive AQUÍ y no dentro del asistente, y es deliberado: el
+             panel monta y desmonta sus estados, así que un `<h1>` suyo
+             desaparecería del documento en cuanto llegara la propuesta y la
+             página se quedaría sin encabezado de nivel 1. -->
+        <h1 class="pub-title">Armemos el plan de tu clínica</h1>
         <p class="pub-sub">
-          Ajusta el ciclo, las sedes y las personas, y mira el estimado. Nada de esto te compromete.
+          Cuéntanos con tus palabras a qué se dedica tu veterinaria. Te proponemos los módulos que
+          te sirven, con su precio. No te compromete a nada y no pedimos tarjeta.
         </p>
         <!-- El indicador de moneda va AQUÍ, una vez por pantalla, y no pegado a cada cifra: ver
              `MONEDA_DE_FACTURACION`. Sin él, «$ 149.000» en una web que se lee desde cualquier
@@ -116,15 +140,26 @@ function continuar() {
         <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a>.
       </p>
 
-      <PlanesConfigurador
-        v-else
-        v-model:plan-code="planCode"
-        v-model:ciclo="ciclo"
-        v-model:sedes="sedes"
-        v-model:usuarios="usuarios"
-        :plans="plans"
-        @continuar="continuar"
-      />
+      <!-- Contenido principal: la propuesta a medida. -->
+      <AsistentePanel />
+
+      <!-- Y los tres paquetes, siempre disponibles. `open` en escritorio y
+           cerrado en móvil no se puede expresar con un atributo estático, así
+           que va abierto: en móvil cuesta un scroll; cerrado en escritorio
+           costaría el ancla de precio, que es lo que sostiene la conversión. -->
+      <details class="pl-paquetes" open>
+        <summary class="pl-paquetes-sum">O elige uno de nuestros tres paquetes</summary>
+
+        <PlanesConfigurador
+          v-if="plans.length > 0"
+          v-model:plan-code="planCode"
+          v-model:ciclo="ciclo"
+          v-model:sedes="sedes"
+          v-model:usuarios="usuarios"
+          :plans="plans"
+          @continuar="continuar"
+        />
+      </details>
     </div>
   </PublicLayout>
 </template>
@@ -156,6 +191,20 @@ function continuar() {
   margin: 6px 0 0;
   font-size: 13.5px;
   color: var(--pub-ink-600);
+}
+
+.pl-paquetes {
+  margin-block-start: 30px;
+  padding-block-start: 18px;
+  border-block-start: 1px solid var(--pub-line-strong);
+}
+
+.pl-paquetes-sum {
+  margin-block-end: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--pub-ink-900);
+  cursor: pointer;
 }
 
 .pl-retry {

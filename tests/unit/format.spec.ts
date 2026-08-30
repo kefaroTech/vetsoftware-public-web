@@ -9,6 +9,7 @@ import {
   parseISODate,
   todayISO,
 } from '@/composables/format'
+import { exigir } from '../helpers/exigir'
 
 /**
  * Red de seguridad del módulo de formato transversal.
@@ -31,7 +32,7 @@ import {
  */
 describe('parseISODate', () => {
   it('fija la medianoche local, no la UTC', () => {
-    const d = parseISODate('2026-08-13')!
+    const d = exigir(parseISODate('2026-08-13'), "parseISODate('2026-08-13')")
     expect(d.getFullYear()).toBe(2026)
     expect(d.getMonth()).toBe(7)
     expect(d.getDate()).toBe(13)
@@ -39,7 +40,10 @@ describe('parseISODate', () => {
   })
 
   it('acepta un instante completo y se queda con la parte de fecha', () => {
-    const d = parseISODate('2026-08-13T22:45:10.123Z')!
+    const d = exigir(
+      parseISODate('2026-08-13T22:45:10.123Z'),
+      "parseISODate('2026-08-13T22:45:10.123Z')",
+    )
     expect(d.getDate()).toBe(13)
     expect(d.getHours()).toBe(0)
   })

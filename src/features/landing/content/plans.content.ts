@@ -3,11 +3,10 @@ import type { PublicCatalog } from '../types/plans.types'
 /**
  * CONTENIDO, NO CONTRATO.
  *
- * Estos precios NO vienen del backend: hoy no existe ningún endpoint público que
- * los sirva (`ListCatalogPricesUseCase.java:14` exige `hasRole('SYSTEM')`, y el
- * único asistente público, `/configurator/resolve`, devuelve `catalogItemId` y
- * `quantity`, sin nombre ni precio). Son una transcripción manual de la lista de
- * precio publicada, y por eso llevan sello.
+ * Estos precios NO los pide este front al backend: `plans.source.ts` sigue
+ * devolviendo este fichero (ver su encabezado, que explica por qué el seam no
+ * cambia solo porque `GET /plans` exista). Son una transcripción manual del
+ * catálogo comercial y de la tarifa vigente, y por eso llevan sello.
  *
  * La cifra que se muestra aquí es ORIENTATIVA y así se rotula en pantalla, con
  * «desde» delante y con la nota bajo las tarjetas. La cifra VINCULANTE la
@@ -15,51 +14,107 @@ import type { PublicCatalog } from '../types/plans.types'
  * desacuerdo tiene su propio estado en pantalla (`PriceDriftNotice`), que además
  * DESMARCA la casilla de términos — nadie confirma un importe que no ha leído.
  *
- * Cuando exista `GET /plans`, este fichero se borra y `plans.source.ts` pasa a
- * llamar al endpoint. Nada más cambia.
+ * ── DE DÓNDE SALE CADA CIFRA, ARTÍCULO POR ARTÍCULO ────────────────────────
+ * De los changesets de siembra del backend, que son la fuente de verdad y se
+ * aplican en TODOS los entornos (no llevan `context`):
+ *
+ *   · `308_seed_commercial_catalog_items.xml` — los 26 artículos: `code`, `name`,
+ *     `item_type`, `trial_eligibility` y `default_trial_days`.
+ *   · `309_seed_commercial_catalog_relations.xml` — `bundle_components`: qué
+ *     módulos trae cada paquete. Es lo que alimenta `includes`.
+ *   · `310_seed_price_list_2026.xml` — la tarifa `LISTA-2026-01` y sus 64 precios
+ *     (32 tramos × 2 ciclos). Es lo que alimenta los importes.
+ *
+ * `tests/unit/plans-content-catalogo.spec.ts` contrasta este fichero contra esos
+ * tres changesets cuando el repositorio del backend está al lado (el caso normal
+ * del monorepo de trabajo). Esa prueba existe porque este fichero YA se separó
+ * del catálogo una vez sin que nada lo detectara: declaraba tres planes
+ * `ESENCIAL` / `CLINICA` / `CADENA` y módulos `AGENDA` / `HISTORIA` / `CAJA`, y
+ * ninguno de los seis códigos existía. `contratacion.source.ts` manda el `code`
+ * del plan al servidor tal cual, así que el embudo de compra estaba roto de
+ * punta a punta y fallaba tarde, después de que el prospecto se registrara.
  */
 /**
- * NOTA SOBRE `code` y `name` DE LAS CAPACIDADES.
+ * POR QUÉ LOS PLANES SON LOS TRES `PACK_*` Y NO OTROS.
  *
- * El contrato los garantiza (`PublicPlanCapacityResponse`) y son el ARTÍCULO del
- * catálogo que vende la capacidad, no el eje. Aquí se transcriben con el mismo
- * código del eje porque el código real del artículo en la lista `PUB-2026-COP`
- * no está publicado en ninguna fuente que este front pueda leer. No se muestran
- * en pantalla —la tarjeta rotula por `unit`—, así que la transcripción no puede
- * enseñar un dato falso; pero cuando `plans.source.ts` pase a leer del endpoint,
- * estos valores los pondrá el servidor y esta nota se borra con el fichero.
+ * `GET /plans` publica **un plan por cada `catalog_items` de tipo `BUNDLE`**
+ * ACTIVE con precio de entrada en la tarifa vigente (`JpaPublicPlanQueryPort`,
+ * `SQL_PLANS`). Hoy hay exactamente tres: `PACK_SPA`, `PACK_CLINIC` y
+ * `PACK_FULL`, en ese orden (`sort_order` 310 / 320 / 330).
+ *
+ * `CORE` (69.000 al mes) NO es un plan: es un `MODULE` obligatorio que viaja
+ * dentro de los tres paquetes, así que no aparece en esta lista ni debe hacerlo.
  */
 /**
- * POR QUÉ `annualExtraUnitAmount` ESTÁ EN `null` EN LAS SEIS FILAS.
+ * `includes`: LOS COMPONENTES DE TIPO MÓDULO, CON SU PRUEBA REAL.
  *
- * Porque no hay nada que transcribir. `PublicPlanCapacityResponse` pasó a traer
- * el precio de la unidad adicional PARTIDO POR CICLO, y de la lista `PUB-2026-COP`
- * este front solo tiene transcritas las cifras mensuales: la escalera `ANNUAL` de
- * cada artículo no está publicada en ninguna fuente que se pueda leer desde aquí.
+ * `SQL_COMPONENTS` trae los componentes `MODULE` y `CAPACITY` del paquete y
+ * `GetPublicPlansService.toPlan` los reparte: los `MODULE` van a `includes` y los
+ * `CAPACITY` a `capacities`. `trialDays` es
+ * `CASE WHEN trial_eligibility = 'ELIGIBLE' THEN default_trial_days END`.
  *
- * <p>Lo que había antes en su lugar no era un dato, era una cuenta:
- * `calcularEstimado` multiplicaba el importe mensual por diez —la proporción del
- * precio base, «2 meses gratis»— y enseñaba el resultado como el precio anual de
- * una sede o de un usuario extra. El servidor no cobra así: liquida la capacidad
- * extra contra la escalera `ANNUAL` del propio artículo, que no tiene por qué
- * valer diez mensualidades. Copiar aquí ese `× 10` habría convertido una cuenta
- * inventada en un «precio de lista revisado por comercial», que es peor que
- * dejarlo vacío: le pondría el sello a lo que no lo tiene.
+ * <p>De ahí salen los tres únicos valores posibles hoy: **30** (núcleo, agenda,
+ * historia clínica, vacunación, hospitalización, cirugía, laboratorio, spa y
+ * servicios), **14** (caja, inventario, compras y cuentas abiertas) y **`null`**.
  *
- * <p>Consecuencia visible, y es la correcta: en ciclo anual, pasar de las sedes o
- * las personas incluidas deja de tener importe estimado y la pantalla lo dice con
- * todas las letras (`textoSinPrecio`). Contratarlo tampoco funcionaría — la
- * autocontratación exige precio en el ciclo pedido y hunde la oferta entera si no
- * lo hay—, así que la portada deja de anunciar lo que el paso siguiente rechaza.
+ * <p>`null` es el caso de `ELECTRONIC_INVOICING`, y merece decirse entero: la
+ * facturación electrónica DIAN es `NEVER_FREE` en el catálogo —`trial_eligibility
+ * = 'NEVER_FREE'`, `default_trial_days = NULL`, y `chk_catalog_items_trial_policy`
+ * lo impone como arco exclusivo—. Este fichero prometía 14 días de prueba sobre
+ * ella. No es un matiz de rótulo: un paquete probable regalaría la facturación
+ * electrónica que lleva dentro, que es justamente lo que el catálogo prohíbe
+ * (D-05). `PlanesConfigurador.textoPrueba` rotula `null` como «Sin prueba».
  *
- * <p>Para cerrarlo hace falta un dato que no está en el código: las cifras
- * anuales de `USER` y `BRANCH` de los tres paquetes en `PUB-2026-COP`. Con ellas,
- * se reemplazan los seis `null` y se mueve `SELLO.revisadoEl`.
+ * <p>`CAPACITY_TERMINAL` (la terminal de caja incluida) es el único componente de
+ * tipo `CAPACITY` de los tres paquetes, y **no se transcribe**: la pantalla solo
+ * pregunta por sedes y personas, no por terminales, y una capacidad que la
+ * pantalla no ofrece no tiene nada que aportar aquí. Ver la nota siguiente.
+ */
+/**
+ * `capacities`: LOS DOS EJES QUE LA PANTALLA SÍ PREGUNTA, Y SU LETRA PEQUEÑA.
+ *
+ * `code` y `name` son el ARTÍCULO que vende la unidad adicional —`EXTRA_USER`
+ * «Usuario adicional» y `EXTRA_BRANCH` «Sede adicional»—, y `unit` es el eje
+ * sobre el que se cuenta. El tipo `PlanCapacity` ya dejaba escrito que no son lo
+ * mismo; antes aquí se transcribía el eje en las dos columnas (`code: 'USER'`),
+ * que no es el código de ningún artículo del catálogo.
+ *
+ * <p>`included` NO sale del paquete: sale del mínimo estructural que la
+ * plataforma concede a toda empresa nueva, que es el mismo con cualquiera de los
+ * tres paquetes. `CapacityGrantLine.ceiling()` es `included_quantity + quantity`,
+ * y con la plantilla inicial (`findInitialCapacityTemplates`, cantidad
+ * `min_quantity = 1`) sale:
+ *
+ *   · `CAPACITY_USER`   → `included_quantity` 1 + 1 = **2 personas**
+ *   · `CAPACITY_BRANCH` → `included_quantity` 0 + 1 = **1 sede**
+ *
+ * Los 3/8/20 usuarios y 1/2/5 sedes que este fichero declaraba por plan no salían
+ * de ninguna parte del catálogo.
+ *
+ * <p>Los importes son el TRAMO DE ENTRADA (`tier_min = 1`) de cada artículo en
+ * `LISTA-2026-01`, en los dos ciclos, que sí están publicados: `EXTRA_USER`
+ * 12.000 / 120.000 y `EXTRA_BRANCH` 35.000 / 350.000. Los seis `null` anuales que
+ * había aquí decían «la escalera ANNUAL no está publicada en ninguna fuente
+ * legible»; sí lo está, en las 32 filas anuales del changeset 310. Los tramos
+ * superiores (EXTRA_USER 9+ a 9.000; EXTRA_BRANCH 3-9 a 28.000, 10+ a 22.000) NO
+ * se transcriben porque el contrato publica solo el tramo de entrada: la escalera
+ * completa es política de descuento por volumen y no se publica.
+ *
+ * >>> LO QUE ESTA TRANSCRIPCIÓN NO PUEDE ARREGLAR, Y HAY QUE SABER <<<
+ * `EXTRA_USER` y `EXTRA_BRANCH` son códigos REALES y con precio, pero **hoy no se
+ * pueden contratar por autoservicio**: `findPublishedIdByCode` solo resuelve un
+ * `BUNDLE` publicado o un `MODULE`/`CAPACITY` que **cuelgue de un paquete**, y
+ * ninguno de los dos es componente de ningún paquete. Así que la línea que
+ * `lineasDeContratacion` empuja al pasar de lo incluido se rechaza con
+ * `Unknown or unavailable catalog item code` y hunde la oferta entera. Eso es un
+ * hueco del CATÁLOGO, no de este fichero, y no se tapa desde aquí: poner otro
+ * código sería volver a inventar, y no mandar la línea cobraría el paquete base
+ * mientras el cliente cree haber comprado cinco personas. Se deja fallar.
  */
 export const SELLO = {
-  listaDePrecioCodigo: 'PUB-2026-COP',
-  revisadoEl: '2026-08-28',
-  revisadoPor: 'comercial',
+  listaDePrecioCodigo: 'LISTA-2026-01',
+  revisadoEl: '2026-08-29',
+  revisadoPor: 'contraste con los changesets 308/309/310 del backend',
 } as const
 
 /**
@@ -71,116 +126,111 @@ export const SELLO = {
  */
 export const SELLO_MAX_DIAS = 90
 
+/**
+ * Las dos capacidades que la pantalla pregunta. Son las mismas en los tres
+ * paquetes porque el mínimo estructural que las concede es el mismo: se declara
+ * una vez y se referencia, en vez de repetir tres veces dos filas que tienen que
+ * mantenerse iguales. Ver la nota de `capacities` de arriba.
+ */
+const CAPACIDADES_DEL_NUCLEO: PublicCatalog['plans'][number]['capacities'] = [
+  {
+    code: 'EXTRA_USER',
+    name: 'Usuario adicional',
+    unit: 'USER',
+    included: 2,
+    monthlyExtraUnitAmount: 12000,
+    annualExtraUnitAmount: 120000,
+  },
+  {
+    code: 'EXTRA_BRANCH',
+    name: 'Sede adicional',
+    unit: 'BRANCH',
+    included: 1,
+    monthlyExtraUnitAmount: 35000,
+    annualExtraUnitAmount: 350000,
+  },
+]
+
 export const PLANS_CONTENT: PublicCatalog = {
   currency: 'COP',
-  priceValidFrom: '2026-08-01',
+  priceValidFrom: '2026-08-27',
   plans: [
     {
-      code: 'ESENCIAL',
-      name: 'Esencial',
-      tagline: 'Para una clínica que empieza',
+      code: 'PACK_SPA',
+      name: 'Pack Spa',
+      tagline: 'Núcleo, agenda, servicios, spa y caja',
       recommended: false,
-      monthlyFromAmount: 89000,
-      annualFromAmount: 890000,
-      setupAmount: 0,
-      taxRate: 19,
-      taxTreatment: 'TAXED',
-      includes: [
-        { code: 'AGENDA', name: 'Agenda', trialDays: 30 },
-        { code: 'HISTORIA', name: 'Historia clínica', trialDays: 30 },
-        { code: 'CAJA', name: 'Caja', trialDays: 14 },
-      ],
-      capacities: [
-        {
-          code: 'USER',
-          name: 'Usuarios',
-          unit: 'USER',
-          included: 3,
-          monthlyExtraUnitAmount: 15000,
-          annualExtraUnitAmount: null,
-        },
-        {
-          code: 'BRANCH',
-          name: 'Sedes',
-          unit: 'BRANCH',
-          included: 1,
-          monthlyExtraUnitAmount: 45000,
-          annualExtraUnitAmount: null,
-        },
-      ],
-    },
-    {
-      code: 'CLINICA',
-      name: 'Clínica',
-      tagline: 'Para una clínica con quirófano y hospital',
-      recommended: true,
       monthlyFromAmount: 179000,
       annualFromAmount: 1790000,
       setupAmount: 0,
       taxRate: 19,
       taxTreatment: 'TAXED',
       includes: [
-        { code: 'AGENDA', name: 'Agenda', trialDays: 30 },
-        { code: 'HISTORIA', name: 'Historia clínica', trialDays: 30 },
-        { code: 'CAJA', name: 'Caja', trialDays: 14 },
-        { code: 'HOSPITAL', name: 'Hospitalización', trialDays: 30 },
-        { code: 'INVENTARIO', name: 'Inventario', trialDays: 30 },
+        { code: 'CORE', name: 'Núcleo: clientes y mascotas', trialDays: 30 },
+        { code: 'SCHEDULING', name: 'Agenda de citas', trialDays: 30 },
+        { code: 'GROOMING', name: 'Spa, estética y guardería', trialDays: 30 },
+        { code: 'SERVICES', name: 'Servicios, tarifas y promociones', trialDays: 30 },
+        { code: 'CASH_REGISTER', name: 'Caja y punto de venta', trialDays: 14 },
       ],
-      capacities: [
-        {
-          code: 'USER',
-          name: 'Usuarios',
-          unit: 'USER',
-          included: 8,
-          monthlyExtraUnitAmount: 14000,
-          annualExtraUnitAmount: null,
-        },
-        {
-          code: 'BRANCH',
-          name: 'Sedes',
-          unit: 'BRANCH',
-          included: 2,
-          monthlyExtraUnitAmount: 42000,
-          annualExtraUnitAmount: null,
-        },
-      ],
+      capacities: [...CAPACIDADES_DEL_NUCLEO],
     },
     {
-      code: 'CADENA',
-      name: 'Cadena',
-      tagline: 'Para varias sedes con facturación electrónica',
-      recommended: false,
-      monthlyFromAmount: 329000,
-      annualFromAmount: 3290000,
+      code: 'PACK_CLINIC',
+      name: 'Pack Clínica',
+      tagline: 'Núcleo, agenda, historia clínica, vacunación y caja',
+      recommended: true,
+      monthlyFromAmount: 189000,
+      annualFromAmount: 1890000,
       setupAmount: 0,
       taxRate: 19,
       taxTreatment: 'TAXED',
       includes: [
-        { code: 'AGENDA', name: 'Agenda', trialDays: 30 },
-        { code: 'HISTORIA', name: 'Historia clínica', trialDays: 30 },
-        { code: 'CAJA', name: 'Caja', trialDays: 14 },
-        { code: 'HOSPITAL', name: 'Hospitalización', trialDays: 30 },
-        { code: 'INVENTARIO', name: 'Inventario', trialDays: 30 },
-        { code: 'DIAN', name: 'Facturación electrónica DIAN', trialDays: 14 },
+        { code: 'CORE', name: 'Núcleo: clientes y mascotas', trialDays: 30 },
+        { code: 'SCHEDULING', name: 'Agenda de citas', trialDays: 30 },
+        { code: 'CLINICAL_HISTORY', name: 'Historia clínica y consultas', trialDays: 30 },
+        { code: 'VACCINATION_DEWORMING', name: 'Vacunación y desparasitación', trialDays: 30 },
+        { code: 'CASH_REGISTER', name: 'Caja y punto de venta', trialDays: 14 },
       ],
-      capacities: [
-        {
-          code: 'USER',
-          name: 'Usuarios',
-          unit: 'USER',
-          included: 20,
-          monthlyExtraUnitAmount: 12000,
-          annualExtraUnitAmount: null,
-        },
-        {
-          code: 'BRANCH',
-          name: 'Sedes',
-          unit: 'BRANCH',
-          included: 5,
-          monthlyExtraUnitAmount: 38000,
-          annualExtraUnitAmount: null,
-        },
+      capacities: [...CAPACIDADES_DEL_NUCLEO],
+    },
+    {
+      // `tagline` es la ÚNICA divergencia deliberada de este fichero frente al
+      // catálogo, y va declarada porque el día que `plans.source.ts` lea de la
+      // red se va a notar. `SQL_PLANS` publica `short_description` como tagline, y
+      // la de `PACK_FULL` en el changeset 308 es una nota interna de modelado
+      // —«Todo el producto: quince piezas enumeradas, sin anidar paquetes»—, no
+      // texto de escaparate. Transcribirla literalmente pondría esa frase en la
+      // pantalla donde alguien decide una compra. Lo que hay que corregir es la
+      // semilla; mientras tanto, aquí va una frase que dice lo mismo sin la nota
+      // de modelado. Las de `PACK_SPA` y `PACK_CLINIC` sí van literales.
+      code: 'PACK_FULL',
+      name: 'Pack Clínica completa',
+      tagline: 'Todo el producto, de la historia clínica a la facturación DIAN',
+      recommended: false,
+      monthlyFromAmount: 449000,
+      annualFromAmount: 4490000,
+      setupAmount: 0,
+      taxRate: 19,
+      taxTreatment: 'TAXED',
+      includes: [
+        { code: 'CORE', name: 'Núcleo: clientes y mascotas', trialDays: 30 },
+        { code: 'SCHEDULING', name: 'Agenda de citas', trialDays: 30 },
+        { code: 'CLINICAL_HISTORY', name: 'Historia clínica y consultas', trialDays: 30 },
+        { code: 'VACCINATION_DEWORMING', name: 'Vacunación y desparasitación', trialDays: 30 },
+        { code: 'HOSPITALIZATION', name: 'Hospitalización', trialDays: 30 },
+        { code: 'SURGERY', name: 'Cirugía', trialDays: 30 },
+        { code: 'LAB_IMAGING', name: 'Laboratorio e imagen diagnóstica', trialDays: 30 },
+        { code: 'GROOMING', name: 'Spa, estética y guardería', trialDays: 30 },
+        { code: 'SERVICES', name: 'Servicios, tarifas y promociones', trialDays: 30 },
+        { code: 'CASH_REGISTER', name: 'Caja y punto de venta', trialDays: 14 },
+        { code: 'INVENTORY', name: 'Inventario y kardex', trialDays: 14 },
+        { code: 'PURCHASES', name: 'Compras y proveedores', trialDays: 14 },
+        { code: 'OPEN_ACCOUNTS', name: 'Cuentas abiertas y cartera', trialDays: 14 },
+        // NEVER_FREE en el catálogo: no hay prueba que prometer. Ver la nota de
+        // `includes` de arriba.
+        { code: 'ELECTRONIC_INVOICING', name: 'Facturación electrónica DIAN', trialDays: null },
       ],
+      capacities: [...CAPACIDADES_DEL_NUCLEO],
     },
   ],
 }

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import SegTabs from '@/features/tienda/components/SegTabs.vue'
+import { elemento } from '../helpers/exigir'
 
 /**
  * El conmutador segmentado sustituyó cinco copias del mismo marcado. Al
@@ -34,8 +35,8 @@ describe('SegTabs', () => {
     const wrapper = mount(SegTabs, { props: { modelValue: 'paused', options: OPCIONES } })
     const botones = wrapper.findAll('button')
 
-    expect(botones[0]!.classes()).not.toContain('on')
-    expect(botones[1]!.classes()).toContain('on')
+    expect(elemento(botones, 0, 'botones').classes()).not.toContain('on')
+    expect(elemento(botones, 1, 'botones').classes()).toContain('on')
   })
 
   it('emite update:modelValue con el VALOR de la opción pulsada', async () => {
@@ -43,7 +44,7 @@ describe('SegTabs', () => {
     // el índice se rompe en cuanto alguien reordena las opciones.
     const wrapper = mount(SegTabs, { props: { modelValue: 'active', options: OPCIONES } })
 
-    await wrapper.findAll('button')[1]!.trigger('click')
+    await elemento(wrapper.findAll('button'), 1, "wrapper.findAll('button')").trigger('click')
 
     expect(wrapper.emitted('update:modelValue')).toEqual([['paused']])
   })
@@ -54,7 +55,7 @@ describe('SegTabs', () => {
     // enterarse del segundo clic.
     const wrapper = mount(SegTabs, { props: { modelValue: 'active', options: OPCIONES } })
 
-    await wrapper.findAll('button')[0]!.trigger('click')
+    await elemento(wrapper.findAll('button'), 0, "wrapper.findAll('button')").trigger('click')
 
     expect(wrapper.emitted('update:modelValue')).toEqual([['active']])
   })
@@ -64,14 +65,20 @@ describe('SegTabs', () => {
     // v-model, el botón activo sigue siendo el anterior.
     const wrapper = mount(SegTabs, { props: { modelValue: 'active', options: OPCIONES } })
 
-    await wrapper.findAll('button')[1]!.trigger('click')
+    await elemento(wrapper.findAll('button'), 1, "wrapper.findAll('button')").trigger('click')
 
-    expect(wrapper.findAll('button')[0]!.classes()).toContain('on')
-    expect(wrapper.findAll('button')[1]!.classes()).not.toContain('on')
+    expect(elemento(wrapper.findAll('button'), 0, "wrapper.findAll('button')").classes()).toContain(
+      'on',
+    )
+    expect(
+      elemento(wrapper.findAll('button'), 1, "wrapper.findAll('button')").classes(),
+    ).not.toContain('on')
 
     await wrapper.setProps({ modelValue: 'paused' })
 
-    expect(wrapper.findAll('button')[1]!.classes()).toContain('on')
+    expect(elemento(wrapper.findAll('button'), 1, "wrapper.findAll('button')").classes()).toContain(
+      'on',
+    )
   })
 
   it('usa la métrica de cabecera (sm) por defecto y admite la de modal (md)', () => {

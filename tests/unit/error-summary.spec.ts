@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import ErrorSummary, { toSummaryItems } from '@/components/feedback/ErrorSummary.vue'
+import { elemento } from '../helpers/exigir'
 
 /**
  * El resumen de errores — la pieza que sustituyó a «revisa los campos marcados
@@ -36,7 +37,7 @@ describe('toSummaryItems · el orden es el del formulario', () => {
     const mensaje = 'Escribe por qué revocas este medio de pago.'
     const items = toSummaryItems({ reason: mensaje }, { reason: 'id-reason' }, ['reason'])
 
-    expect(items[0]!.text).toBe(mensaje)
+    expect(elemento(items, 0, 'items').text).toBe(mensaje)
   })
 
   it('omite los campos sin error y los que no tienen id al que apuntar', () => {
@@ -47,14 +48,14 @@ describe('toSummaryItems · el orden es el del formulario', () => {
     )
 
     expect(items).toHaveLength(1)
-    expect(items[0]!.id).toBe('id-a')
+    expect(elemento(items, 0, 'items').id).toBe('id-a')
   })
 
   it('apunta al id del CONTROL, que es el mismo del `<label for>`', () => {
     // Si apuntara al id del MENSAJE, el ancla llevaría el foco a un párrafo y
     // quien lo siguiera no podría escribir la corrección.
     const items = toSummaryItems({ x: 'mal' }, { x: 'campo-x' }, ['x'])
-    expect(items[0]!.id).toBe('campo-x')
+    expect(elemento(items, 0, 'items').id).toBe('campo-x')
   })
 })
 
@@ -104,7 +105,7 @@ describe('ErrorSummary · lo que pinta', () => {
 
     try {
       const w = mount(ErrorSummary, { props: { items } })
-      await w.findAll('a')[0]!.trigger('click')
+      await elemento(w.findAll('a'), 0, "w.findAll('a')").trigger('click')
 
       expect(enfocar).toHaveBeenCalled()
       expect(control.scrollIntoView).toHaveBeenCalled()
@@ -115,6 +116,8 @@ describe('ErrorSummary · lo que pinta', () => {
 
   it('un ancla hacia un id que no existe no revienta la pantalla', async () => {
     const w = mount(ErrorSummary, { props: { items: [{ id: 'no-existe', text: 'mal' }] } })
-    await expect(w.findAll('a')[0]!.trigger('click')).resolves.not.toThrow()
+    await expect(
+      elemento(w.findAll('a'), 0, "w.findAll('a')").trigger('click'),
+    ).resolves.not.toThrow()
   })
 })

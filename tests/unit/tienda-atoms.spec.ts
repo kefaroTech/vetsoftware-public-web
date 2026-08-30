@@ -6,6 +6,7 @@ import CategoryPill from '@/features/tienda/components/CategoryPill.vue'
 import TonePill from '@/features/tienda/components/TonePill.vue'
 import ExportBar from '@/features/tienda/components/ExportBar.vue'
 import DiffCell from '@/features/tienda/components/DiffCell.vue'
+import { exigir } from '../helpers/exigir'
 
 /**
  * Las seis piezas pequeñas de la tienda. Son casi todo piel, así que aquí no se
@@ -178,8 +179,8 @@ describe('ExportBar', () => {
     const wrapper = mount(ExportBar, { props: { label: 'Descargar' } })
     const [csv, pdf] = wrapper.findAll('button.exp')
 
-    csv!.trigger('click')
-    pdf!.trigger('click')
+    exigir(csv, 'csv').trigger('click')
+    exigir(pdf, 'pdf').trigger('click')
 
     expect(wrapper.emitted('export')).toEqual([['csv'], ['pdf']])
   })

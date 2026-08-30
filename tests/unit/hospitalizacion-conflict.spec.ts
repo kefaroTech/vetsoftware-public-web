@@ -4,6 +4,7 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import type { HospitalizationResponse } from '@/features/dashboard/views/consulta/nueva/types/hospitalization.types'
 import type { OrderVM } from '@/features/hospitalizacion/types/hospital'
+import type { CascadeOutcome } from '@/features/hospitalizacion/composables/useHospitalizacion'
 
 /**
  * El 409 de concurrencia en la sala de hospitalización.
@@ -90,7 +91,14 @@ function createHosp() {
     addProgressNote: vi.fn(async () => {}),
     discharge: vi.fn(async () => {}),
     applyDose: vi.fn(async () => {}),
-    moveDose: vi.fn(async () => {}),
+    /**
+     * El doble declaraba `async () => {}`, es decir, «no devuelve nada». El real
+     * devuelve `CascadeOutcome`, que es JUSTO lo que los tres casos de #134 leen para
+     * distinguir «se aplicó», «no se aplicó» y «no lo sé». Con el doble mintiendo
+     * sobre su propio retorno, un cambio de forma en `CascadeOutcome` no habría roto
+     * nada aquí. `null` por defecto = el caso del endpoint que no informa.
+     */
+    moveDose: vi.fn(async (): Promise<CascadeOutcome> => null),
   }
   return hosp
 }
@@ -135,8 +143,8 @@ const boom = () => httpError(500, { detail: 'Fallo interno' })
 function stub(name: string, emits: string[]) {
   return defineComponent({
     name,
-    emits,
     inheritAttrs: false,
+    emits,
     setup: () => () => h('div', { 'data-stub': name }),
   })
 }

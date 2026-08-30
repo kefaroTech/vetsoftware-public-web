@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils'
 import SearchField from '@/features/tienda/components/SearchField.vue'
 import FilterSelect from '@/features/tienda/components/FilterSelect.vue'
 import PagerBar from '@/features/tienda/components/PagerBar.vue'
+import { elemento, exigir } from '../helpers/exigir'
 
 /**
  * Los controles de la barra de filtros de la tienda: búsqueda, desplegable y
@@ -133,8 +134,8 @@ describe('PagerBar', () => {
     const wrapper = mount(PagerBar, { props: BASE })
     const [anterior, siguiente] = wrapper.findAll('.pag-ctrl button')
 
-    anterior!.trigger('click')
-    siguiente!.trigger('click')
+    exigir(anterior, 'anterior').trigger('click')
+    exigir(siguiente, 'siguiente').trigger('click')
 
     expect(wrapper.emitted('prev')).toHaveLength(1)
     expect(wrapper.emitted('next')).toHaveLength(1)
@@ -148,14 +149,16 @@ describe('PagerBar', () => {
     })
     const [anterior, siguiente] = primeraPagina.findAll('.pag-ctrl button')
 
-    expect(anterior!.attributes('disabled')).toBeDefined()
-    expect(siguiente!.attributes('disabled')).toBeUndefined()
+    expect(exigir(anterior, 'anterior').attributes('disabled')).toBeDefined()
+    expect(exigir(siguiente, 'siguiente').attributes('disabled')).toBeUndefined()
   })
 
   it('una flecha deshabilitada no emite nada', () => {
     const wrapper = mount(PagerBar, { props: { ...BASE, prevDisabled: true } })
 
-    wrapper.findAll('.pag-ctrl button')[0]!.trigger('click')
+    elemento(wrapper.findAll('.pag-ctrl button'), 0, "wrapper.findAll('.pag-ctrl button')").trigger(
+      'click',
+    )
 
     expect(wrapper.emitted('prev')).toBeUndefined()
   })

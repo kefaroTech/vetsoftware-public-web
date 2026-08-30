@@ -1,5 +1,6 @@
 import { test, expect, type Page, type BrowserContext, type Browser } from '@playwright/test'
 import { login } from './helpers/auth'
+import { exigir } from './helpers/exigir'
 
 /**
  * E2E EXHAUSTIVO del flujo de REGISTRO de una veterinaria y del sistema de roles.
@@ -415,8 +416,12 @@ test.describe('Registro de veterinaria + roles base + visibilidad por permiso', 
   // ── 4) Por cada rol base: login real + visibilidad data-driven + rutas + sin errores HTTP ──
   for (const roleName of BASE_ROLE_NAMES) {
     test(`rol "${roleName}": ve exactamente lo que sus permisos permiten, accede a lo suyo, se le bloquea el resto y no hay errores HTTP`, async () => {
-      const creds = employeeByRole[roleName]
-      expect(creds, `el empleado de "${roleName}" debió crearse en beforeAll`).toBeTruthy()
+      // `expect(...).toBeTruthy()` corta la ejecución pero no estrecha el tipo, así
+      // que `creds.code` seguía siendo un acceso sobre `posible undefined`.
+      const creds = exigir(
+        employeeByRole[roleName],
+        `el empleado de "${roleName}" (debió crearse en beforeAll)`,
+      )
 
       const ctx = await browserRef.newContext()
       const page = await ctx.newPage()

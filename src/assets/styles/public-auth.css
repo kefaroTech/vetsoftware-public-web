@@ -355,3 +355,279 @@
   text-transform: uppercase;
   white-space: nowrap;
 }
+
+/* ===========================================================================
+   DOCUMENTOS LEGALES (`/legal/privacidad`, `/legal/terminos`)
+   ===========================================================================
+
+   Por qué estas reglas viven aquí y no en el `<style scoped>` de sus SFC:
+   `scripts/css-budget.mjs` mide el AGREGADO de `<style>` contra el de
+   `<script>` de todos los SFC de `src/`, y el techo es `maxStyleMinusScript: 0`
+   — el árbol está exactamente en cero, sin margen. Un documento legal es
+   tipografía casi pura: su hoja de estilos multiplica por cuatro a su lógica, y
+   meterla en el SFC pondría el gate en rojo PARA TODO EL REPO por una pantalla
+   que no tiene ninguna lógica que añadir. Además son estilos de la zona pública
+   y compartidos por las dos páginas, que es la definición de lo que pertenece a
+   este fichero.
+
+   Todas las medidas del cuerpo del texto van en unidades relativas (`rem`,
+   `ch`, `em`) y no en `px`: §1.4.4 Resize Text y §1.4.12 Text Spacing exigen
+   que el zoom al 200 % y el espaciado forzado por el usuario no rompan la caja,
+   y una pared de texto legal es donde más gente lo usa. */
+
+.pub-doc-page {
+  position: relative;
+  z-index: 1;
+  padding: clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 5vw, 2.75rem) clamp(2rem, 5vw, 4rem);
+}
+
+.pub-doc {
+  /* ~66 caracteres. Sin cota, en un monitor ancho la línea llega a 200 y el
+     ojo pierde el renglón al volver (§1.4.8 Visual Presentation). */
+  max-width: 66ch;
+  margin: 0 auto;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--pub-ink-700);
+}
+
+.pub-doc-eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pub-ame-700);
+}
+
+.pub-doc-title {
+  margin: 0;
+  font-family: 'Instrument Serif', serif;
+  font-weight: 400;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--pub-ink-900);
+}
+
+.pub-doc-resumen {
+  margin: 0.75rem 0 0;
+  font-size: 1.0625rem;
+  color: var(--pub-ink-600);
+}
+
+.pub-doc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  margin: 1.25rem 0 0;
+  padding: 0.875rem 1.125rem;
+  border: 1px solid var(--pub-line);
+  border-radius: 0.625rem;
+  background: var(--pub-surface);
+  font-size: 0.875rem;
+}
+
+.pub-doc-meta dt {
+  font-weight: 600;
+  color: var(--pub-ink-500);
+}
+
+.pub-doc-meta dd {
+  margin: 0;
+  color: var(--pub-ink-900);
+}
+
+/* El aviso de borrador. NO es región viva a propósito: está presente desde el
+   primer pintado y no aparece tras ninguna interacción, así que un `role=alert`
+   no lo anunciaría (nace con su texto dentro) y encima cortaría la locución del
+   título. Ver `regiones-vivas.spec.ts`. */
+.pub-doc-draft {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  margin: 1.25rem 0 0;
+  padding: 0.875rem 1.125rem;
+  border: 1px solid var(--pub-err-bd);
+  border-radius: 0.625rem;
+  background: var(--pub-err-bg);
+  color: var(--pub-err-tx-2);
+  font-size: 0.9375rem;
+}
+
+.pub-doc-draft-icon {
+  flex-shrink: 0;
+  margin-top: 0.1875rem;
+}
+
+.pub-doc-toc {
+  margin: 2.25rem 0 0;
+  padding: 1.125rem 1.375rem;
+  border: 1px solid var(--pub-line);
+  border-radius: 0.75rem;
+  background: var(--pub-surface);
+}
+
+.pub-doc-toc-title {
+  margin: 0 0 0.625rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--pub-ink-900);
+}
+
+.pub-doc-toc ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.9375rem;
+}
+
+.pub-doc-toc a {
+  color: var(--pub-ame-800);
+}
+
+.pub-doc-section {
+  margin-top: 2.5rem;
+
+  /* Al saltar desde el índice, el encabezado no queda pegado al borde. */
+  scroll-margin-top: 1.5rem;
+}
+
+.pub-doc-section h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--pub-ink-900);
+}
+
+.pub-doc-section p {
+  margin: 0 0 1rem;
+}
+
+.pub-doc-section ul {
+  margin: 0 0 1rem;
+  padding-left: 1.375rem;
+}
+
+.pub-doc-section li {
+  margin-bottom: 0.4375rem;
+}
+
+.pub-doc-section dl {
+  margin: 0 0 1rem;
+}
+
+.pub-doc-section dt {
+  margin-top: 0.75rem;
+  font-weight: 700;
+  color: var(--pub-ink-900);
+}
+
+.pub-doc-section dd {
+  margin: 0.125rem 0 0;
+}
+
+/* El aparte destacado dentro de una sección: lo que el lector no puede pasar
+   por alto (la advertencia de datos sensibles, los plazos sin validar, la
+   salida sin transferencia internacional). */
+.pub-doc-nota {
+  padding: 0.875rem 1.125rem;
+  border-left: 3px solid var(--pub-ame-600);
+  border-radius: 0 0.5rem 0.5rem 0;
+  background: #faf5ff;
+  color: var(--pub-ink-700);
+}
+
+/* Pie de las páginas legales: el enlace al OTRO documento y la vuelta al
+   inicio. Que cada documento enlace a su pareja no es cortesía: la casilla de
+   consentimiento nombra los dos, y quien llega a uno tiene que poder leer el
+   otro sin volver atrás. */
+.pub-doc-foot {
+  max-width: 66ch;
+  margin: 3rem auto 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--pub-line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  font-size: 0.875rem;
+}
+
+.pub-doc-foot a {
+  color: var(--pub-ame-800);
+}
+
+/* El lienzo de una página legal. No reutiliza `.pub-shell` (que centra su
+   contenido en un flex de altura completa, correcto para una tarjeta de login y
+   equivocado para un documento largo: con contenido más alto que el
+   contenedor, el centrado deja la cabecera fuera de alcance por arriba). Aquí
+   el documento fluye desde arriba, como un documento. */
+.pub-doc-stage {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: radial-gradient(ellipse at top, #f3e8ff 0%, #f5f1fa 48%, #ede8f4 100%);
+}
+
+.pub-doc-topbar {
+  position: relative;
+  z-index: 1;
+  padding: 1.375rem clamp(1.25rem, 5vw, 2.5rem);
+}
+
+.pub-doc-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--pub-ink-900);
+  text-decoration: none;
+}
+
+.pub-doc-brand:hover {
+  color: var(--pub-ame-800);
+}
+
+/* ===========================================================================
+   CASILLA DE CONSENTIMIENTO (`LegalConsentCheckbox`)
+   =========================================================================== */
+
+.pub-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  cursor: pointer;
+}
+
+.pub-consent input {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: 0.1875rem;
+  flex-shrink: 0;
+}
+
+.pub-consent a {
+  color: var(--pub-ame-800);
+  font-weight: 600;
+}
+
+/* La versión aceptada, visible junto a la casilla. Es lo que convierte «acepté
+   la política» en «acepté la versión 1, vigente desde el 1 de septiembre de
+   2026»: sin ella el consentimiento no tiene referente. */
+.pub-consent-version {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--pub-ink-500);
+}
+
+.pub-consent-error {
+  margin: 0.375rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--pub-err-tx-2);
+}
