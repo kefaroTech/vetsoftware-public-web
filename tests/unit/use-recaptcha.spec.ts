@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { exigir } from '../helpers/exigir'
 
 /**
  * GUARDA DE VUE-10 — el widget falla en su sitio, nunca con un `TypeError` suelto.
@@ -53,7 +54,9 @@ afterEach(() => {
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
   vi.restoreAllMocks()
-  delete ventana[CALLBACK_NAME]
+  // `delete obj[clave]` con clave calculada deja el objeto en modo diccionario;
+  // `Reflect.deleteProperty` hace lo mismo sin esa penalización.
+  Reflect.deleteProperty(ventana, CALLBACK_NAME)
   scriptInyectado()?.remove()
 })
 
@@ -92,7 +95,7 @@ describe('useRecaptcha().render — fallos de carga (VUE-10)', () => {
     expect(alCargar, `el script no registró window.${CALLBACK_NAME}`).toBeTypeOf('function')
 
     // El script "carga" —Google responde 200— pero no deja nada en `window`.
-    alCargar!()
+    exigir(alCargar, 'alCargar')()
 
     // Este `resolves` es la regresión: antes de VUE-10 la promesa se RECHAZABA con
     // un TypeError («Cannot read properties of undefined») y el estado se quedaba
@@ -114,7 +117,7 @@ describe('useRecaptcha().render — fallos de carga (VUE-10)', () => {
 
     const script = scriptInyectado()
     expect(script).not.toBeNull()
-    script!.dispatchEvent(new Event('error'))
+    exigir(script, 'script').dispatchEvent(new Event('error'))
 
     await expect(enCurso).resolves.toBeUndefined()
     expect(captcha.failed.value).toBe(true)

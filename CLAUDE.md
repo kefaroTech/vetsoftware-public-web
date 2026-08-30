@@ -271,6 +271,36 @@ borradores con la forma anterior — añade defaults o migración.
 Ejecuta `npx vue-tsc -b` después de cualquier cambio significativo en tipos o
 componentes.
 
+### El techo de 500 líneas por SFC SÍ es un gate
+
+No es una convención: lo comprueba `scripts/css-budget.mjs` (`npm run css:budget`,
+dentro de `npm run quality`) con `maxSfcLines: 500` y `maxOversizedSfc: 0` en
+`scripts/css-budget.config.json`. Un SFC que lo pase pone la cadena en rojo.
+
+Está anotado aquí porque el enunciado vive en `AGENTS.md` bajo el encabezado
+«CSS: consumir el design system» —es una de las tres cosas que mide ese script—,
+y quien busca «límite de tamaño de un SFC» mira `eslint.config.ts`, no encuentra
+ningún `max-lines` y concluye que no se aplica. Ha pasado dos veces, y una de
+ellas costó una tarea abandonada.
+
+Dos detalles del contador, por si alguien anda justo de margen:
+
+- Cuenta el fichero **entero** (script, template, estilo y comentarios) partiendo
+  por saltos de línea, así que un fichero de 499 líneas terminadas
+  en salto cuenta 500. El límite efectivo es **`wc -l` ≤ 499**.
+- Los techos son un trinquete: se bajan cuando una tanda los mejora, **nunca se
+  suben**. Si el gate bloquea, la salida es partir el componente —a un
+  subcomponente, o la lógica a un composable—, no tocar el número.
+
+Medición del 2026-08-30: 389 SFC, el mayor en 499 líneas (`POSView.vue`), cero
+infractores. El margen real es de una línea en los cinco ficheros que están en
+498-499.
+
+`vue-tsc` NO ve `tests/` ni `e2e/`: `tsconfig.app.json` solo incluye `src/` y
+`visual/`. Una fixture de prueba puede quedarse con la forma vieja de un tipo y
+nada se pone rojo — pasó con `ResumenContratacion` en
+`tests/unit/contratacion-payload.spec.ts`.
+
 ## Estado actual del catálogo (mayo 2026)
 
 - **Especies**: cargadas desde `GET /api/v1/species` (`useSpecies`).

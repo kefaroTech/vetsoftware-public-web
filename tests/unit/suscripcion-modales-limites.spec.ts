@@ -5,6 +5,7 @@ import AceptarCotizacionModal from '@/features/suscripcion/components/AceptarCot
 import CambiarCantidadModal from '@/features/suscripcion/components/CambiarCantidadModal.vue'
 import type { QuoteResponse } from '@/features/suscripcion/types/cotizaciones.types'
 import type { SubscriptionItemResponse } from '@/features/suscripcion/types/suscripcion.types'
+import { exigir } from '../helpers/exigir'
 
 /**
  * LOS DOS TOPES QUE EL SERVIDOR IMPONE Y QUE ESTOS FORMULARIOS NO DECÍAN.
@@ -67,10 +68,21 @@ function montarAceptar() {
   })
 }
 
-/** Pulsa el botón de confirmar del modal, buscado por su rótulo. */
-async function pulsar(wrapper: ReturnType<typeof montarCantidad>, rotulo: string) {
-  const boton = wrapper.findAll('button').find((b) => b.text().includes(rotulo))!
-  await boton.trigger('click')
+/**
+ * Pulsa el botón de confirmar del modal, buscado por su rótulo.
+ *
+ * Admite los DOS modales: estaba escrito contra el tipo de `montarCantidad`, de
+ * modo que los tres casos del correo le pasaban un `AceptarCotizacionModal` a un
+ * parámetro que declaraba el otro componente. Y el botón se tomaba con `!`: si el
+ * rótulo cambiaba, la prueba moría con «cannot read properties of undefined» en
+ * vez de decir qué botón no encontró.
+ */
+async function pulsar(
+  wrapper: ReturnType<typeof montarCantidad> | ReturnType<typeof montarAceptar>,
+  rotulo: string,
+) {
+  const boton = wrapper.findAll('button').find((b) => b.text().includes(rotulo))
+  await exigir(boton, `un botón rotulado «${rotulo}»`).trigger('click')
 }
 
 describe('cambiar cantidad · el techo de `quantity`', () => {

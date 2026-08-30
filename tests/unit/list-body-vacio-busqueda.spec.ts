@@ -35,7 +35,18 @@ const VACUNAS: Vacuna[] = [
 /** El literal por defecto: el que se colaba donde no tocaba. */
 const VACIO_DE_VERDAD = 'No hay registros aún'
 
-const buscar = (v: Vacuna, q: string) => v.nombre.toLowerCase().includes(q)
+/**
+ * `ListBody` es genérico, pero al montarlo desde una prueba su `T` colapsa a
+ * `unknown`, así que el `searchFn` que recibe se le pasa como `unknown`. Esta
+ * versión lo dice —y lo comprueba— en vez de declarar un `Vacuna` que el
+ * componente no promete: un filtro que se creyera el tipo y recibiera otra cosa
+ * reventaría dentro del componente, no aquí.
+ */
+function esVacuna(item: unknown): item is Vacuna {
+  return typeof item === 'object' && item !== null && 'nombre' in item
+}
+
+const buscar = (item: unknown, q: string) => esVacuna(item) && item.nombre.toLowerCase().includes(q)
 
 /** Una fila por vacuna, como la pinta cada pantalla clínica desde su slot. */
 const FILA = '<tr><td>{{ params.item.nombre }}</td></tr>'

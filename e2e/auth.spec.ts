@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { login, EMPLOYEE_CODE, PASSWORD } from './helpers/auth'
+import { login, PASSWORD } from './helpers/auth'
 
 /**
  * Ejemplo de suite que describe casos como TestSprite, pero en código.

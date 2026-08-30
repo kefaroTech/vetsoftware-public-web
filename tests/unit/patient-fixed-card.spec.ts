@@ -23,7 +23,13 @@ import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/t
  *      `· propietario` SOLO si viene. Sin la guarda quedaba un `·` colgando.
  */
 
-/** Animal completo mínimo: solo importan los campos que la ficha lee. */
+/**
+ * Animal completo. Se llamaba «mínimo» y llevaba un `as AnimalResponse & typeof
+ * overrides` que ocultaba DOS cosas: que faltaba `enabled` —campo obligatorio— y,
+ * peor, que `overrides` no se aplicaba nunca. La firma prometía un fixture
+ * parametrizable y devolvía siempre el mismo animal; cualquier caso futuro que
+ * pasara un `override` habría afirmado sobre un valor que jamás se puso.
+ */
 function animalDe(overrides: Partial<AnimalResponse> = {}): AnimalResponse {
   return {
     id: 7,
@@ -33,9 +39,12 @@ function animalDe(overrides: Partial<AnimalResponse> = {}): AnimalResponse {
     breed: { id: 3, name: 'Beagle' },
     owner: { id: 11, name: 'Ana Restrepo', document: '1017254398' },
     gender: 'FEMALE',
-    weightType: 'KG',
-    animalType: 'PET',
-    reproductiveState: 'INTACT',
+    // Los tres valían 'KG' / 'PET' / 'INTACT', que NO están en los enums del dominio
+    // (`KILOGRAMS`, `SERVICE|SUPPORT|NONE`, `STERILIZED|NO_STERILIZED|UNKNOWN`). El `as`
+    // que se quitó los tapaba; `format.ts` los habría pintado como «—».
+    weightType: 'KILOGRAMS',
+    animalType: 'NONE',
+    reproductiveState: 'NO_STERILIZED',
     color: { id: 2, name: 'Tricolor' },
     bod: '2022-04-18',
     weight: 12.4,
@@ -45,7 +54,9 @@ function animalDe(overrides: Partial<AnimalResponse> = {}): AnimalResponse {
     deceasedDate: null,
     company: { id: 1, name: 'Veterinaria Kefaro', identifier: '900123456' },
     createdDate: '2026-01-10',
-  } as AnimalResponse & typeof overrides
+    enabled: true,
+    ...overrides,
+  }
 }
 
 describe('PatientFixedCard', () => {

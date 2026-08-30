@@ -1,5 +1,6 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
 import { execFileSync } from 'node:child_process'
+import { elemento, exigir } from './helpers/exigir'
 
 /**
  * Suite exhaustiva del flujo de KARDEX / inventario por sede (F1–F6). Prueba por API contra el backend real
@@ -51,7 +52,7 @@ async function req(
       body = text
     }
   }
-  return { status: res.status(), body: body as Record<string, unknown> & Array<unknown> }
+  return { status: res.status(), body: body as Record<string, unknown> & unknown[] }
 }
 
 let uniq = 0
@@ -111,7 +112,7 @@ async function stockOf(request: APIRequestContext, productId: number, branchId: 
   const { body } = await req(request, 'get', '/inventory/stock', {
     params: { branchId, pageSize: 200 },
   })
-  const rows = (body.content as Array<Record<string, unknown>>) ?? []
+  const rows = (body.content as Record<string, unknown>[]) ?? []
   return rows.find((r) => r.productId === productId) ?? null
 }
 async function qtyOf(
@@ -131,7 +132,7 @@ async function kardexTypes(
   const { body } = await req(request, 'get', `/inventory/products/${productId}/kardex`, {
     params: { branchId, pageSize: 200 },
   })
-  return ((body.content as Array<Record<string, unknown>>) ?? []).map((m) => m.type as string)
+  return ((body.content as Record<string, unknown>[]) ?? []).map((m) => m.type as string)
 }
 async function receive(
   request: APIRequestContext,
@@ -165,18 +166,16 @@ test.beforeAll(async ({ request }) => {
 
   const branches = await req(request, 'get', '/branches')
   expect(branches.status).toBe(200)
-  const active = (branches.body as unknown as Array<Record<string, unknown>>).filter(
-    (b) => b.active,
-  )
+  const active = (branches.body as unknown as Record<string, unknown>[]).filter((b) => b.active)
   expect(active.length, 'se requieren ≥1 sede activa').toBeGreaterThan(0)
-  branchA = active[0].id as number
-  branchB = active.length > 1 ? (active[1].id as number) : 0
+  branchA = elemento(active, 0, 'las sedes activas').id as number
+  branchB = active.length > 1 ? (elemento(active, 1, 'las sedes activas').id as number) : 0
 
   // Auto-provisión: si el usuario ve una sola sede, intenta crear una segunda (reusando la ciudad de la primera).
   // Solo sirve si el usuario ADMIN puede además LEERLA (resolveAccessibleBranch); un no-admin scopeado a 1 sede no
   // puede acceder a la nueva → se descarta y los casos de transferencia/multi-sede se saltan (no fallan).
   if (branchB === 0) {
-    const cityId = (active[0].city as { id: number } | undefined)?.id
+    const cityId = (elemento(active, 0, 'las sedes activas').city as { id: number } | undefined)?.id
     if (cityId) {
       const created = await req(request, 'post', '/branches', {
         data: { name: `Kardex Sede ${sku()}`, code: sku('BR'), cityId },
@@ -195,8 +194,12 @@ test.beforeAll(async ({ request }) => {
   setNegFlagDb(companyId, 'false')
 
   const cats = await req(request, 'get', '/product-categories')
-  if ((cats.body as unknown as Array<unknown>).length > 0) {
-    categoryId = (cats.body as unknown as Array<Record<string, unknown>>)[0].id as number
+  if ((cats.body as unknown as unknown[]).length > 0) {
+    categoryId = elemento(
+      cats.body as unknown as Record<string, unknown>[],
+      0,
+      'las categorías de producto',
+    ).id as number
   } else {
     const c = await req(request, 'post', '/product-categories', {
       data: { name: `Kardex Cat ${sku()}`, description: 'test' },
@@ -223,8 +226,10 @@ test.describe('Recepción de mercancía (entrada)', () => {
       params: { branchId: branchA },
     })
     expect(lots.status).toBe(200)
-    expect((lots.body as unknown as Array<Record<string, unknown>>).length).toBe(1)
-    expect((lots.body as unknown as Array<Record<string, unknown>>)[0].unitCost).toBe(30000)
+    expect((lots.body as unknown as Record<string, unknown>[]).length).toBe(1)
+    expect(
+      elemento(lots.body as unknown as Record<string, unknown>[], 0, 'los lotes').unitCost,
+    ).toBe(30000)
     expect(await kardexTypes(request, p, branchA)).toContain('PURCHASE')
   })
 
@@ -238,7 +243,7 @@ test.describe('Recepción de mercancía (entrada)', () => {
     const lots = await req(request, 'get', `/inventory/products/${p}/lots`, {
       params: { branchId: branchA },
     })
-    expect((lots.body as unknown as Array<unknown>).length).toBe(1)
+    expect((lots.body as unknown as unknown[]).length).toBe(1)
   })
 
   test('entradas con distinto costo generan lotes separados', async ({ request }) => {
@@ -248,7 +253,7 @@ test.describe('Recepción de mercancía (entrada)', () => {
     const lots = await req(request, 'get', `/inventory/products/${p}/lots`, {
       params: { branchId: branchA },
     })
-    expect((lots.body as unknown as Array<unknown>).length).toBe(2)
+    expect((lots.body as unknown as unknown[]).length).toBe(2)
   })
 
   test('productId ausente → 400', async ({ request }) => {
@@ -366,7 +371,10 @@ test.describe('Transferencias entre sedes', () => {
     const lotsB = await req(request, 'get', `/inventory/products/${p}/lots`, {
       params: { branchId: branchB },
     })
-    expect((lotsB.body as unknown as Array<Record<string, unknown>>)[0].unitCost).toBe(8000)
+    expect(
+      elemento(lotsB.body as unknown as Record<string, unknown>[], 0, 'los lotes de destino')
+        .unitCost,
+    ).toBe(8000)
     expect(await kardexTypes(request, p, branchA)).toContain('TRANSFER_OUT')
     expect(await kardexTypes(request, p, branchB)).toContain('TRANSFER_IN')
   })
@@ -453,14 +461,12 @@ test.describe('Mínimo por sede y alertas', () => {
     const low = await req(request, 'get', '/inventory/stock', {
       params: { branchId: branchA, lowStock: true, pageSize: 200 },
     })
-    expect(
-      (low.body.content as Array<Record<string, unknown>>).some((r) => r.productId === p),
-    ).toBe(true)
+    expect((low.body.content as Record<string, unknown>[]).some((r) => r.productId === p)).toBe(
+      true,
+    )
     const alerts = await req(request, 'get', '/inventory/alerts', { params: { branchId: branchA } })
     expect(
-      (alerts.body.lowStock as unknown as Array<Record<string, unknown>>).some(
-        (r) => r.productId === p,
-      ),
+      (alerts.body.lowStock as unknown as Record<string, unknown>[]).some((r) => r.productId === p),
     ).toBe(true)
   })
   test('mínimo negativo → 400', async ({ request }) => {
@@ -473,10 +479,10 @@ test.describe('Mínimo por sede y alertas', () => {
     const alerts = await req(request, 'get', '/inventory/alerts', {
       params: { branchId: branchA, expiringInDays: 30 },
     })
-    const exp = alerts.body.expiring as unknown as Array<Record<string, unknown>>
+    const exp = alerts.body.expiring as unknown as Record<string, unknown>[]
     const hit = exp.find((e) => e.productId === p)
     expect(hit, 'el lote vencido debe estar en expiring').toBeTruthy()
-    expect(hit!.daysToExpire as number).toBeLessThan(0)
+    expect(exigir(hit, 'hit').daysToExpire as number).toBeLessThan(0)
   })
 })
 
@@ -489,7 +495,7 @@ test.describe('Lecturas (valuación, compras, kardex)', () => {
     await receive(request, p, branchA, 10, 2500)
     const val = await req(request, 'get', '/inventory/valuation', { params: { branchId: branchA } })
     expect(val.status).toBe(200)
-    const row = (val.body.byProduct as unknown as Array<Record<string, unknown>>).find(
+    const row = (val.body.byProduct as unknown as Record<string, unknown>[]).find(
       (r) => r.productId === p,
     )
     expect(row?.value).toBe(25000)
@@ -502,9 +508,9 @@ test.describe('Lecturas (valuación, compras, kardex)', () => {
       params: { branchId: branchA, pageSize: 200 },
     })
     expect(pur.status).toBe(200)
-    const row = (pur.body.content as Array<Record<string, unknown>>).find((r) => r.productId === p)
+    const row = (pur.body.content as Record<string, unknown>[]).find((r) => r.productId === p)
     expect(row, 'la compra debe aparecer').toBeTruthy()
-    expect(row!.total).toBe(21000)
+    expect(exigir(row, 'row').total).toBe(21000)
   })
   test('kardex paginado y con rango de fechas', async ({ request }) => {
     const p = await createProduct(request)
@@ -514,11 +520,11 @@ test.describe('Lecturas (valuación, compras, kardex)', () => {
       params: { branchId: branchA, page: 0, pageSize: 1 },
     })
     expect(k.body.totalElements as number).toBeGreaterThanOrEqual(2)
-    expect((k.body.content as Array<unknown>).length).toBe(1)
+    expect((k.body.content as unknown[]).length).toBe(1)
     const future = await req(request, 'get', `/inventory/products/${p}/kardex`, {
       params: { branchId: branchA, from: '2099-01-01' },
     })
-    expect((future.body.content as Array<unknown>).length).toBe(0)
+    expect((future.body.content as unknown[]).length).toBe(0)
   })
 })
 
@@ -540,7 +546,10 @@ test.describe('Multi-sede', () => {
 // 7b. Conteo físico / cíclico (concilia generando ADJUSTMENT_IN/OUT por la diferencia)
 // ─────────────────────────────────────────────────────────────────────────────
 test.describe('Conteo físico (cíclico)', () => {
-  type CountLine = { productId: number; countedQuantity: number }
+  interface CountLine {
+    productId: number
+    countedQuantity: number
+  }
   async function count(
     request: APIRequestContext,
     lines: CountLine[],
@@ -557,7 +566,7 @@ test.describe('Conteo físico (cíclico)', () => {
     expect(r.status, JSON.stringify(r.body)).toBe(201)
     expect(r.body.totalLines).toBe(1)
     expect(r.body.adjustedLines).toBe(0)
-    const line = (r.body.lines as Array<Record<string, unknown>>)[0]
+    const line = elemento(r.body.lines as Record<string, unknown>[], 0, 'las líneas del conteo')
     expect(line.systemQuantity).toBe(10)
     expect(line.countedQuantity).toBe(10)
     expect(line.difference).toBe(0)
@@ -574,7 +583,9 @@ test.describe('Conteo físico (cíclico)', () => {
     const r = await count(request, [{ productId: p, countedQuantity: 7 }], 'merma detectada')
     expect(r.status).toBe(201)
     expect(r.body.adjustedLines).toBe(1)
-    expect((r.body.lines as Array<Record<string, unknown>>)[0].difference).toBe(-3)
+    expect(
+      elemento(r.body.lines as Record<string, unknown>[], 0, 'las líneas del conteo').difference,
+    ).toBe(-3)
     expect(await qtyOf(request, p, branchA)).toBe(7)
     expect(await kardexTypes(request, p, branchA)).toContain('ADJUSTMENT_OUT')
   })
@@ -586,7 +597,9 @@ test.describe('Conteo físico (cíclico)', () => {
     await receive(request, p, branchA, 10)
     const r = await count(request, [{ productId: p, countedQuantity: 15 }])
     expect(r.status).toBe(201)
-    expect((r.body.lines as Array<Record<string, unknown>>)[0].difference).toBe(5)
+    expect(
+      elemento(r.body.lines as Record<string, unknown>[], 0, 'las líneas del conteo').difference,
+    ).toBe(5)
     expect(await qtyOf(request, p, branchA)).toBe(15)
     expect(await kardexTypes(request, p, branchA)).toContain('ADJUSTMENT_IN')
   })
@@ -595,7 +608,7 @@ test.describe('Conteo físico (cíclico)', () => {
     const p = await createProduct(request)
     const r = await count(request, [{ productId: p, countedQuantity: 8 }])
     expect(r.status).toBe(201)
-    const line = (r.body.lines as Array<Record<string, unknown>>)[0]
+    const line = elemento(r.body.lines as Record<string, unknown>[], 0, 'las líneas del conteo')
     expect(line.systemQuantity).toBe(0)
     expect(line.difference).toBe(8)
     expect(await qtyOf(request, p, branchA)).toBe(8)
@@ -632,16 +645,20 @@ test.describe('Conteo físico (cíclico)', () => {
       params: { branchId: branchA, pageSize: 200 },
     })
     expect(list.status).toBe(200)
-    const summary = (list.body.content as Array<Record<string, unknown>>).find((c) => c.id === id)
+    const summary = (list.body.content as Record<string, unknown>[]).find((c) => c.id === id)
     expect(summary, 'la sesión debe aparecer en el historial').toBeTruthy()
-    expect(summary!.totalLines).toBe(1)
-    expect(summary!.adjustedLines).toBe(1)
+    expect(exigir(summary, 'summary').totalLines).toBe(1)
+    expect(exigir(summary, 'summary').adjustedLines).toBe(1)
 
     // Detalle (con líneas y diferencias).
     const detail = await req(request, 'get', `/inventory/counts/${id}`)
     expect(detail.status).toBe(200)
     expect(detail.body.note).toBe('conteo semanal')
-    const line = (detail.body.lines as Array<Record<string, unknown>>)[0]
+    const line = elemento(
+      detail.body.lines as Record<string, unknown>[],
+      0,
+      'las líneas del detalle del conteo',
+    )
     expect(line.productId).toBe(p)
     expect(line.difference).toBe(-6)
   })
@@ -720,11 +737,12 @@ test.describe('Inventario ↔ cuenta abierta', () => {
   let ownerId = 0
   test.beforeAll(async ({ request }) => {
     const animals = await req(request, 'get', '/animals')
-    const list = (animals.body as unknown as Array<Record<string, unknown>>) ?? []
+    const list = (animals.body as unknown as Record<string, unknown>[]) ?? []
     if (list.length > 0) {
-      animalId = list[0].id as number
-      const owner = list[0].owner as Record<string, unknown> | undefined
-      ownerId = (owner?.id as number) ?? (list[0].ownerId as number) ?? 0
+      const primero = elemento(list, 0, 'los animales')
+      animalId = primero.id as number
+      const owner = primero.owner as Record<string, unknown> | undefined
+      ownerId = (owner?.id as number) ?? (primero.ownerId as number) ?? 0
     }
   })
 

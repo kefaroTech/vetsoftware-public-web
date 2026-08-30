@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { PLANS_CONTENT, SELLO } from '@/features/landing/content/plans.content'
+import { exigir } from '../helpers/exigir'
 
 /**
  * EL CONTRASTE CONTRA EL CATÁLOGO REAL.
@@ -273,16 +274,20 @@ describe.skipIf(!HAY_BACKEND)('plans.content · contraste contra las semillas de
 
   it('los tres planes son paquetes del catálogo, con su nombre y su precio', () => {
     for (const plan of PLANS_CONTENT.plans) {
-      const articulo = catalogo().items.get(plan.code)
-      expect(articulo, `«${plan.code}» no es un artículo del catálogo`).toBeDefined()
-      expect(articulo!.itemType, `«${plan.code}» no es un BUNDLE`).toBe('BUNDLE')
-      expect(plan.name, `el nombre de «${plan.code}»`).toBe(articulo!.name)
+      const articulo = exigir(
+        catalogo().items.get(plan.code),
+        `«${plan.code}» como artículo del catálogo`,
+      )
+      expect(articulo.itemType, `«${plan.code}» no es un BUNDLE`).toBe('BUNDLE')
+      expect(plan.name, `el nombre de «${plan.code}»`).toBe(articulo.name)
 
-      const tramo = catalogo().precios.get(plan.code)
-      expect(tramo, `«${plan.code}» no tiene precio de entrada en la tarifa`).toBeDefined()
-      expect(plan.monthlyFromAmount, `el mensual de «${plan.code}»`).toBe(tramo!.monthly)
-      expect(plan.annualFromAmount, `el anual de «${plan.code}»`).toBe(tramo!.annual)
-      expect(plan.setupAmount, `la implantación de «${plan.code}»`).toBe(tramo!.setup)
+      const tramo = exigir(
+        catalogo().precios.get(plan.code),
+        `«${plan.code}» con precio de entrada en la tarifa`,
+      )
+      expect(plan.monthlyFromAmount, `el mensual de «${plan.code}»`).toBe(tramo.monthly)
+      expect(plan.annualFromAmount, `el anual de «${plan.code}»`).toBe(tramo.annual)
+      expect(plan.setupAmount, `la implantación de «${plan.code}»`).toBe(tramo.setup)
     }
   })
 
@@ -302,17 +307,18 @@ describe.skipIf(!HAY_BACKEND)('plans.content · contraste contra las semillas de
   it('cada módulo lleva su nombre y sus días de prueba REALES', () => {
     for (const plan of PLANS_CONTENT.plans) {
       for (const incluido of plan.includes) {
-        const articulo = catalogo().items.get(incluido.code)
-        expect(articulo, `«${incluido.code}» no existe en el catálogo`).toBeDefined()
-        expect(incluido.name, `el nombre de «${incluido.code}»`).toBe(articulo!.name)
+        const articulo = exigir(
+          catalogo().items.get(incluido.code),
+          `«${incluido.code}» en el catálogo`,
+        )
+        expect(incluido.name, `el nombre de «${incluido.code}»`).toBe(articulo.name)
 
         // El mismo `CASE` que `JpaPublicPlanQueryPort.SQL_COMPONENTS`: los días
         // solo cuentan si el artículo es ELIGIBLE.
-        const esperado =
-          articulo!.trialEligibility === 'ELIGIBLE' ? articulo!.defaultTrialDays : null
+        const esperado = articulo.trialEligibility === 'ELIGIBLE' ? articulo.defaultTrialDays : null
         expect(
           incluido.trialDays,
-          `«${incluido.code}» es ${articulo!.trialEligibility} en el catálogo`,
+          `«${incluido.code}» es ${articulo.trialEligibility} en el catálogo`,
         ).toBe(esperado)
       }
     }
@@ -333,19 +339,23 @@ describe.skipIf(!HAY_BACKEND)('plans.content · contraste contra las semillas de
   it('las capacidades nombran el artículo que vende la unidad, con su precio', () => {
     for (const plan of PLANS_CONTENT.plans) {
       for (const capacidad of plan.capacities) {
-        const articulo = catalogo().items.get(capacidad.code)
-        expect(articulo, `«${capacidad.code}» no existe en el catálogo`).toBeDefined()
-        expect(articulo!.itemType, `«${capacidad.code}» no es CAPACITY`).toBe('CAPACITY')
-        expect(articulo!.capacityUnit, `el eje de «${capacidad.code}»`).toBe(capacidad.unit)
-        expect(capacidad.name, `el nombre de «${capacidad.code}»`).toBe(articulo!.name)
+        const articulo = exigir(
+          catalogo().items.get(capacidad.code),
+          `«${capacidad.code}» en el catálogo`,
+        )
+        expect(articulo.itemType, `«${capacidad.code}» no es CAPACITY`).toBe('CAPACITY')
+        expect(articulo.capacityUnit, `el eje de «${capacidad.code}»`).toBe(capacidad.unit)
+        expect(capacidad.name, `el nombre de «${capacidad.code}»`).toBe(articulo.name)
 
-        const tramo = catalogo().precios.get(capacidad.code)
-        expect(tramo, `«${capacidad.code}» no tiene tramo de entrada`).toBeDefined()
+        const tramo = exigir(
+          catalogo().precios.get(capacidad.code),
+          `«${capacidad.code}» con tramo de entrada`,
+        )
         expect(capacidad.monthlyExtraUnitAmount, `el mensual de «${capacidad.code}»`).toBe(
-          tramo!.monthly,
+          tramo.monthly,
         )
         expect(capacidad.annualExtraUnitAmount, `el anual de «${capacidad.code}»`).toBe(
-          tramo!.annual,
+          tramo.annual,
         )
       }
     }

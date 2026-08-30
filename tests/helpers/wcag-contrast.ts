@@ -13,6 +13,8 @@
  *  - WCAG 2.2, definición de «relative luminance» y «contrast ratio».
  */
 
+import { elemento } from './exigir'
+
 /** Canales sRGB con gamma, en [0, 1]. */
 export type Srgb = readonly [number, number, number]
 
@@ -84,7 +86,9 @@ export function readCustomProperties(css: string): Map<string, string> {
   const out = new Map<string, string>()
   const sinComentarios = css.replace(/\/\*[\s\S]*?\*\//g, '')
   for (const match of sinComentarios.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
-    out.set(match[1]!, match[2]!.trim().replace(/\s+/g, ' '))
+    const nombre = elemento(match, 1, 'el nombre de la propiedad personalizada')
+    const valor = elemento(match, 2, 'el valor de la propiedad personalizada')
+    out.set(nombre, valor.trim().replace(/\s+/g, ' '))
   }
   return out
 }

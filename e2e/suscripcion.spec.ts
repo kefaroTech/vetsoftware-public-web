@@ -1,5 +1,6 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
 import { EMPRESA_ID, enrutarApi, instalarSesion } from './helpers/sesion'
+import { exigir } from './helpers/exigir'
 
 /**
  * «Mi suscripción» — las cinco sub-pantallas del tenant.
@@ -308,10 +309,9 @@ test.describe('§13.7 — la sub-navegación', () => {
       .getByRole('link')
 
     for (let i = 0; i < (await enlaces.count()); i++) {
-      const caja = await enlaces.nth(i).boundingBox()
-      expect(caja, 'un destino de la sub-navegación no se puede medir').not.toBeNull()
-      expect(caja!.width).toBeGreaterThanOrEqual(24)
-      expect(caja!.height).toBeGreaterThanOrEqual(24)
+      const caja = exigir(await enlaces.nth(i).boundingBox(), 'la caja del objetivo táctil')
+      expect(caja.width).toBeGreaterThanOrEqual(24)
+      expect(caja.height).toBeGreaterThanOrEqual(24)
     }
   })
 })

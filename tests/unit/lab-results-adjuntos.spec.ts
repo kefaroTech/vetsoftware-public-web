@@ -3,6 +3,7 @@ import { mount, flushPromises } from '@vue/test-utils'
 import LabResultsModal from '@/features/laboratorio/modals/LabResultsModal.vue'
 import type { LaboratoryTestResponse } from '@/features/dashboard/views/consulta/nueva/types/laboratoryTest.types'
 import { adjuntarArchivos, fakeFile } from '../helpers/pick-files'
+import { exigir } from '../helpers/exigir'
 
 /**
  * GUARDA DE VUE-08 — la lista de adjuntos se identifica por clave estable, no por índice.
@@ -81,7 +82,7 @@ describe('LabResultsModal — adjuntos con clave estable (VUE-08)', () => {
       .findAll('button')
       .find((b) => b.attributes('aria-label') === `Quitar el adjunto ${SEGUNDO}`)
     expect(quitarSegundo, `no hay botón para quitar ${SEGUNDO}`).toBeDefined()
-    await quitarSegundo!.trigger('click')
+    await exigir(quitarSegundo, 'quitarSegundo').trigger('click')
     await flushPromises()
 
     expect(
@@ -103,10 +104,12 @@ describe('LabResultsModal — adjuntos con clave estable (VUE-08)', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('3 archivo(s) adjunto(s)')
 
-    await wrapper
-      .findAll('button')
-      .find((b) => b.attributes('aria-label') === `Quitar el adjunto ${SEGUNDO}`)!
-      .trigger('click')
+    await exigir(
+      wrapper
+        .findAll('button')
+        .find((b) => b.attributes('aria-label') === `Quitar el adjunto ${SEGUNDO}`),
+      "wrapper .findAll('button') .find((b) => b.attributes('a…",
+    ).trigger('click')
     await flushPromises()
 
     expect(wrapper.text()).toContain('2 archivo(s) adjunto(s)')

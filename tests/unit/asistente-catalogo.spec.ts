@@ -11,6 +11,7 @@ import type {
   PublicCatalogResponse,
 } from '@/features/asistente/types/catalogo.types'
 import { http } from '@/services/http/http.client'
+import { elemento } from '../helpers/exigir'
 
 /**
  * El seam del catálogo: la traducción de `GET /catalog` a lo que ve la pantalla.
@@ -141,7 +142,7 @@ describe('el seam pide el catálogo a la red', () => {
     get.mockResolvedValueOnce({ data: MUESTRA } as never)
     const catalogo = await fetchCatalogo('MENSUAL')
 
-    const [url, config] = get.mock.calls[0]!
+    const [url, config] = elemento(get.mock.calls, 0, 'get.mock.calls')
     expect(url).toBe('/catalog')
     // El catálogo se carga al montar `/planes`, la primera pantalla que ve un
     // visitante anónimo. Un overlay `inset: 0` con `cursor: wait` sobre la
@@ -198,8 +199,17 @@ describe('la composición del catálogo', () => {
   it('lo incluido existe en los dos ciclos aunque el ciclo no publique tramo', () => {
     // `annualIncludedQuantity` es `null` en la muestra. Cero, no `undefined`:
     // la frase de capacidades lo lee y un hueco la dejaría sin decir nada.
-    expect(componer(MUESTRA, 'MENSUAL').capacidades[0]!.incluido).toBe(1)
-    expect(componer(MUESTRA, 'ANUAL').capacidades[0]!.incluido).toBe(0)
+    expect(
+      elemento(
+        componer(MUESTRA, 'MENSUAL').capacidades,
+        0,
+        "componer(MUESTRA, 'MENSUAL').capacidades",
+      ).incluido,
+    ).toBe(1)
+    expect(
+      elemento(componer(MUESTRA, 'ANUAL').capacidades, 0, "componer(MUESTRA, 'ANUAL').capacidades")
+        .incluido,
+    ).toBe(0)
   })
 
   it('añade los RECOMMENDS editoriales, que el contrato NO publica', () => {

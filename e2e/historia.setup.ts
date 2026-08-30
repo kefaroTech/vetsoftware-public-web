@@ -43,7 +43,7 @@ setup('sembrar historia clínica', async ({ browser }) => {
   }
 
   const p2 = await browser.newPage()
-  let emptyOwnerDoc = ''
+  let emptyOwnerDoc: string
   try {
     emptyOwnerDoc = await seedEmptyOwner(p2)
   } finally {

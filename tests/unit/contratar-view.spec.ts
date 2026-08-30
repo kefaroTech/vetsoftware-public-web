@@ -6,6 +6,7 @@ import ContratarView from '@/features/contratacion/views/ContratarView.vue'
 import { useResultadoContratacionStore } from '@/features/contratacion/stores/resultadoContratacion.store'
 import type { EstadoPlanActual } from '@/features/suscripcion/composables/estadoSuscripcion'
 import type { QuoteResponse } from '@/features/suscripcion/types/cotizaciones.types'
+import { elemento, exigir } from '../helpers/exigir'
 
 /**
  * EL PASO VINCULANTE, MONTADO.
@@ -174,7 +175,7 @@ describe('la puerta del permiso `quote.request`', () => {
 
     const ahoraNo = wrapper.findAll('button').find((b) => b.text().includes('Ahora no'))
     expect(ahoraNo, '«Ahora no» sigue estando: hay que poder salir').toBeDefined()
-    await ahoraNo!.trigger('click')
+    await exigir(ahoraNo, 'ahoraNo').trigger('click')
     await flushPromises()
 
     expect(selfServe).not.toHaveBeenCalled()
@@ -194,7 +195,7 @@ describe('la casilla de términos es una puerta, no un adorno', () => {
   it('sin marcarla no se manda nada y se dice qué falta', async () => {
     const wrapper = await montar()
 
-    await botonConfirmar(wrapper)[0]!.trigger('click')
+    await elemento(botonConfirmar(wrapper), 0, 'botonConfirmar(wrapper)').trigger('click')
     await flushPromises()
 
     expect(selfServe, 'no se pide la oferta sin aceptar los términos').not.toHaveBeenCalled()
@@ -206,11 +207,11 @@ describe('la casilla de términos es una puerta, no un adorno', () => {
     const wrapper = await montar()
 
     await wrapper.find('input[type="checkbox"]').setValue(true)
-    await botonConfirmar(wrapper)[0]!.trigger('click')
+    await elemento(botonConfirmar(wrapper), 0, 'botonConfirmar(wrapper)').trigger('click')
     await flushPromises()
 
     expect(selfServe).toHaveBeenCalledTimes(1)
-    expect(selfServe.mock.calls[0]![0]).toMatchObject({
+    expect(elemento(selfServe.mock.calls, 0, 'selfServe.mock.calls')[0]).toMatchObject({
       billingCycle: 'MONTHLY',
       lines: [{ code: 'PACK_CLINIC', quantity: 1 }],
     })
@@ -231,7 +232,7 @@ describe('la casilla de términos es una puerta, no un adorno', () => {
     const wrapper = await montar()
     await wrapper.find('input[type="checkbox"]').setValue(true)
 
-    await botonConfirmar(wrapper)[0]!.trigger('click')
+    await elemento(botonConfirmar(wrapper), 0, 'botonConfirmar(wrapper)').trigger('click')
     await flushPromises()
     selfServe.mockRejectedValueOnce(new Error('reintento'))
     await botonConfirmar(wrapper)[0]?.trigger('click')
@@ -299,7 +300,7 @@ describe('§5 caso 3 · el precio se movió mientras decidía', () => {
     sembrarIntencion(150_000)
     const wrapper = await montar()
 
-    await botonConfirmar(wrapper)[0]!.trigger('click')
+    await elemento(botonConfirmar(wrapper), 0, 'botonConfirmar(wrapper)').trigger('click')
     await flushPromises()
 
     expect(selfServe).not.toHaveBeenCalled()
@@ -331,7 +332,7 @@ describe('cuando el servidor rechaza la oferta', () => {
     const wrapper = await montar()
 
     await wrapper.find('input[type="checkbox"]').setValue(true)
-    await botonConfirmar(wrapper)[0]!.trigger('click')
+    await elemento(botonConfirmar(wrapper), 0, 'botonConfirmar(wrapper)').trigger('click')
     await flushPromises()
 
     const banner = wrapper.find('[role="alert"]')
@@ -347,9 +348,10 @@ describe('cuando el servidor rechaza la oferta', () => {
     // escribir el texto a mano en el `catch` tira la traza y soporte no
     // correlaciona nada.
     expect(errorFrom).toHaveBeenCalledTimes(1)
-    expect(errorFrom.mock.calls[0]![1], 'el objeto de error entero, no su mensaje').toBeInstanceOf(
-      Error,
-    )
+    expect(
+      elemento(errorFrom.mock.calls, 0, 'errorFrom.mock.calls')[1],
+      'el objeto de error entero, no su mensaje',
+    ).toBeInstanceOf(Error)
   })
 
   it('el botón vuelve al reposo: se puede reintentar', async () => {
@@ -359,11 +361,15 @@ describe('cuando el servidor rechaza la oferta', () => {
     const wrapper = await montar()
 
     await wrapper.find('input[type="checkbox"]').setValue(true)
-    await botonConfirmar(wrapper)[0]!.trigger('click')
+    await elemento(botonConfirmar(wrapper), 0, 'botonConfirmar(wrapper)').trigger('click')
     await flushPromises()
 
-    expect(botonConfirmar(wrapper)[0]!.attributes('disabled')).toBeUndefined()
-    expect(botonConfirmar(wrapper)[0]!.text()).toContain('Confirmar mi plan')
+    expect(
+      elemento(botonConfirmar(wrapper), 0, 'botonConfirmar(wrapper)').attributes('disabled'),
+    ).toBeUndefined()
+    expect(elemento(botonConfirmar(wrapper), 0, 'botonConfirmar(wrapper)').text()).toContain(
+      'Confirmar mi plan',
+    )
   })
 
   it('el fallo NO consume la intención: el usuario sigue teniendo su elección', async () => {
@@ -375,12 +381,12 @@ describe('cuando el servidor rechaza la oferta', () => {
     const wrapper = await montar()
 
     await wrapper.find('input[type="checkbox"]').setValue(true)
-    await botonConfirmar(wrapper)[0]!.trigger('click')
+    await elemento(botonConfirmar(wrapper), 0, 'botonConfirmar(wrapper)').trigger('click')
     await flushPromises()
 
     const crudo = window.localStorage.getItem(CONTRATACION_INTENCION_KEY)
     expect(crudo).not.toBeNull()
-    expect(JSON.parse(crudo!).descartada).toBe(false)
+    expect(JSON.parse(exigir(crudo, 'crudo')).descartada).toBe(false)
     expect(useResultadoContratacionStore().resultado).toBeNull()
   })
 })
@@ -394,11 +400,18 @@ describe('§5 caso 6 · la empresa ya tiene plan', () => {
     await montar()
 
     expect(toastInfo).toHaveBeenCalledTimes(1)
-    expect(toastInfo.mock.calls[0]![0]).toContain('ya tiene un plan activo')
-    expect(replace).toHaveBeenCalledWith({ name: 'home' })
-    expect(JSON.parse(window.localStorage.getItem(CONTRATACION_INTENCION_KEY)!).descartada).toBe(
-      true,
+    expect(elemento(toastInfo.mock.calls, 0, 'toastInfo.mock.calls')[0]).toContain(
+      'ya tiene un plan activo',
     )
+    expect(replace).toHaveBeenCalledWith({ name: 'home' })
+    expect(
+      JSON.parse(
+        exigir(
+          window.localStorage.getItem(CONTRATACION_INTENCION_KEY),
+          'window.localStorage.getItem(CONTRATACION_INTENCION_KEY)',
+        ),
+      ).descartada,
+    ).toBe(true)
   })
 
   it('un `DESCONOCIDO` NO cierra la puerta, pero tampoco se calla', async () => {

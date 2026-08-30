@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
+import { exigir } from '../helpers/exigir'
 
 /**
  * `SearchableSelect` activaba sus opciones con `@mousedown.prevent`, y eso lo
@@ -52,7 +53,10 @@ async function abrir(w: VueWrapper) {
 }
 
 const opcion = (w: VueWrapper, etiqueta: string) =>
-  w.findAll('button.item').find((b) => b.text().includes(etiqueta))!
+  exigir(
+    w.findAll('button.item').find((b) => b.text().includes(etiqueta)),
+    "w.findAll('button.item').find((b) => b.text().includes(…",
+  )
 
 afterEach(() => {
   wrapper?.unmount()

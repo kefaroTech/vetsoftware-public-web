@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import LoginForm from '@/features/auth/components/LoginForm.vue'
+import type * as UseAuthModulo from '@/features/auth/composables/useAuth'
 
 /**
  * A dónde navega tras autenticar (issue #53). El guard del router deja el
@@ -19,9 +20,7 @@ vi.mock('vue-router', () => ({
 
 const login = vi.fn()
 vi.mock('@/features/auth/composables/useAuth', async () => {
-  const actual = await vi.importActual<typeof import('@/features/auth/composables/useAuth')>(
-    '@/features/auth/composables/useAuth',
-  )
+  const actual = await vi.importActual<typeof UseAuthModulo>('@/features/auth/composables/useAuth')
   return { ...actual, useAuth: () => ({ login }) }
 })
 

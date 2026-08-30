@@ -10,6 +10,7 @@ import {
   responderJson,
 } from './helpers/sesion'
 import { tabularHasta } from './helpers/teclado'
+import { exigir } from './helpers/exigir'
 
 /**
  * Pasos 6 y 7 del embudo — `/dashboard/contratar` y su pantalla de éxito.
@@ -78,7 +79,13 @@ const CLINICA = planPorCodigo('PACK_CLINIC')
  * casos que no van del precio.
  */
 function vistoMensual(sedes: number, usuarios: number): number {
-  return subtotalMensualEquivalente(CLINICA, { ciclo: 'MENSUAL', sedes, usuarios })
+  // `subtotalMensualEquivalente` devuelve `number | null` —`null` es «este plan no
+  // tiene precio calculable»—. Declararlo `number` a secas hacía que un `null` se
+  // sembrara como importe visto y el aviso de deriva se comprobara contra nada.
+  return exigir(
+    subtotalMensualEquivalente(CLINICA, { ciclo: 'MENSUAL', sedes, usuarios }),
+    `un subtotal mensual para ${sedes} sede(s) y ${usuarios} usuario(s)`,
+  )
 }
 
 /** «179.000» a partir del número, sin transcribirlo: los grupos que pinta `formatMoney`. */

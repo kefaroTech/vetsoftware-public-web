@@ -7,6 +7,7 @@ import {
 } from '@/features/landing/composables/planPricing'
 import { PLANS_CONTENT } from '@/features/landing/content/plans.content'
 import type { PlanCapacity, PublicPlan } from '@/features/landing/types/plans.types'
+import { exigir } from '../helpers/exigir'
 
 /**
  * El cálculo orientativo del catálogo público, y sobre todo **el hueco**.
@@ -271,8 +272,11 @@ describe('el catálogo transcrito de hoy', () => {
     const clinica = PLANS_CONTENT.plans.find((p) => p.code === PLAN)
     expect(clinica).toBeDefined()
 
-    const sedesIncluidas = clinica!.capacities.find((c) => c.unit === 'BRANCH')!.included
-    const anual = calcularEstimado(clinica!, {
+    const sedesIncluidas = exigir(
+      exigir(clinica, 'clinica').capacities.find((c) => c.unit === 'BRANCH'),
+      'exigir(clinica, "clinica").capacities.find((c) => c.uni…',
+    ).included
+    const anual = calcularEstimado(exigir(clinica, 'clinica'), {
       ciclo: 'ANUAL',
       sedes: sedesIncluidas + 1,
       usuarios: 1,
@@ -284,8 +288,14 @@ describe('el catálogo transcrito de hoy', () => {
   })
 
   it('el mensual sí tiene precio: lo transcrito no se perdió al partir el campo en dos', () => {
-    const clinica = PLANS_CONTENT.plans.find((p) => p.code === PLAN)!
-    const sedesIncluidas = clinica.capacities.find((c) => c.unit === 'BRANCH')!.included
+    const clinica = exigir(
+      PLANS_CONTENT.plans.find((p) => p.code === PLAN),
+      'PLANS_CONTENT.plans.find((p) => p.code === PLAN)',
+    )
+    const sedesIncluidas = exigir(
+      clinica.capacities.find((c) => c.unit === 'BRANCH'),
+      "clinica.capacities.find((c) => c.unit === 'BRANCH')",
+    ).included
 
     const mensual = calcularEstimado(clinica, {
       ciclo: 'MENSUAL',

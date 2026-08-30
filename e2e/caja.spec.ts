@@ -1,5 +1,6 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
 import { execFileSync } from 'node:child_process'
+import { elemento } from './helpers/exigir'
 
 /**
  * Suite del dominio de CAJA / arqueo (punto 5). Prueba por API contra el backend real (vía el proxy `/api/v1` del
@@ -47,7 +48,7 @@ async function req(
       body = text
     }
   }
-  return { status: res.status(), body: body as Record<string, unknown> & Array<unknown> }
+  return { status: res.status(), body: body as Record<string, unknown> & unknown[] }
 }
 
 /** Fija el flag `cashregister.required` de la empresa en `company_settings` directamente en la BD (Docker). */
@@ -110,11 +111,9 @@ test.beforeAll(async ({ request }) => {
   expect(companyId, 'companyId de /auth/me').toBeTruthy()
 
   const branches = await req(request, 'get', '/branches')
-  const active = (branches.body as unknown as Array<Record<string, unknown>>).filter(
-    (b) => b.active,
-  )
+  const active = (branches.body as unknown as Record<string, unknown>[]).filter((b) => b.active)
   expect(active.length, 'se requiere ≥1 sede activa').toBeGreaterThan(0)
-  branchA = active[0].id as number
+  branchA = elemento(active, 0, 'las sedes activas').id as number
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -157,9 +156,7 @@ test.describe('ciclo básico de caja', () => {
     })
     expect(last.status).toBe(201)
     // 100000 base + 50000 − 20000 − 10000 = 120000
-    const cash = (last.body.totals as Array<Record<string, unknown>>).find(
-      (t) => t.method === 'CASH',
-    )
+    const cash = (last.body.totals as Record<string, unknown>[]).find((t) => t.method === 'CASH')
     expect(Number(cash?.expectedAmount)).toBe(120000)
   })
 
@@ -176,7 +173,7 @@ test.describe('ciclo básico de caja', () => {
     })
     expect(status, JSON.stringify(body)).toBe(200)
     expect(body.status).toBe('CLOSED')
-    const cash = (body.counts as Array<Record<string, unknown>>).find((c) => c.method === 'CASH')
+    const cash = (body.counts as Record<string, unknown>[]).find((c) => c.method === 'CASH')
     expect(Number(cash?.expectedAmount)).toBe(120000)
     expect(Number(cash?.countedAmount)).toBe(118000)
     expect(Number(cash?.difference)).toBe(-2000)
@@ -196,7 +193,7 @@ test.describe('ciclo básico de caja', () => {
     const { body } = await req(request, 'get', '/cash-sessions', {
       params: { branchId: branchA, pageSize: 50 },
     })
-    const ids = (body.content as Array<Record<string, unknown>>).map((s) => s.id)
+    const ids = (body.content as Record<string, unknown>[]).map((s) => s.id)
     expect(ids).toContain(sessionId)
   })
 })
@@ -213,7 +210,7 @@ test.describe('bloqueo caja requerida y orquestación de abonos', () => {
     await closeAnyOpenCaja(request)
     // Reutiliza una cuenta abierta OPEN con saldo pendiente (evita crear owner por API). Si no hay, se salta.
     const { body } = await req(request, 'get', '/open-accounts')
-    const open = (body as unknown as Array<Record<string, unknown>>).find(
+    const open = (body as unknown as Record<string, unknown>[]).find(
       (a) => a.status === 'OPEN' && Number(a.outstandingAmount) > 0,
     )
     if (open) {
@@ -253,7 +250,7 @@ test.describe('bloqueo caja requerida y orquestación de abonos', () => {
     expect([200, 201], JSON.stringify(abono.body)).toContain(abono.status)
 
     let cur = await currentCaja(request)
-    let types = ((cur?.movements as Array<Record<string, unknown>>) ?? []).map((m) => m.type)
+    let types = ((cur?.movements as Record<string, unknown>[]) ?? []).map((m) => m.type)
     expect(types).toContain('OPEN_ACCOUNT_IN')
 
     // Anular el abono compensa con VOID_OUT (requiere permiso elevado; si no lo tiene, se salta la aserción).
@@ -263,7 +260,7 @@ test.describe('bloqueo caja requerida y orquestación de abonos', () => {
     })
     if (voided.status === 200) {
       cur = await currentCaja(request)
-      types = ((cur?.movements as Array<Record<string, unknown>>) ?? []).map((m) => m.type)
+      types = ((cur?.movements as Record<string, unknown>[]) ?? []).map((m) => m.type)
       expect(types).toContain('VOID_OUT')
     }
 

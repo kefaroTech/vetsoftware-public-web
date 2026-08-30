@@ -20,6 +20,7 @@ import {
 } from '@/features/agenda/types/appointment'
 import { itemsOnDay, type AgendaItem } from '@/features/agenda/types/agenda'
 import { TYPE_COLORS } from '@/features/historia-clinica/constants/eventTypes'
+import { exigir } from '../helpers/exigir'
 
 /**
  * Red de seguridad de la lógica pura de la agenda.
@@ -41,7 +42,8 @@ import { TYPE_COLORS } from '@/features/historia-clinica/constants/eventTypes'
 // ── Fixtures ─────────────────────────────────────────────────────────
 function makeAppt(over: Partial<AppointmentResponse> & { id: number }): AppointmentResponse {
   return {
-    id: over.id,
+    // `id` lo aporta el `...over` de abajo: repetirlo aquí era una línea muerta
+    // que el spread pisaba en cada llamada.
     startAt: '2026-08-17T09:00:00',
     durationMinutes: null,
     type: 'CONSULTATION',
@@ -187,14 +189,24 @@ describe('máquina de estados', () => {
 // ── Aritmética de intervalos ─────────────────────────────────────────
 describe('apptStartMinutes', () => {
   it('convierte el LocalDateTime en minutos absolutos comparables', () => {
-    const nueve = apptStartMinutes('2026-08-17T09:00:00')!
-    expect(apptStartMinutes('2026-08-17T09:30:00')! - nueve).toBe(30)
-    expect(apptStartMinutes('2026-08-18T09:00:00')! - nueve).toBe(24 * 60)
+    const nueve = exigir(
+      apptStartMinutes('2026-08-17T09:00:00'),
+      "apptStartMinutes('2026-08-17T09:00:00')",
+    )
+    expect(
+      exigir(apptStartMinutes('2026-08-17T09:30:00'), "apptStartMinutes('2026-08-17T09:30:00')") -
+        nueve,
+    ).toBe(30)
+    expect(
+      exigir(apptStartMinutes('2026-08-18T09:00:00'), "apptStartMinutes('2026-08-18T09:00:00')") -
+        nueve,
+    ).toBe(24 * 60)
   })
 
   it('cruza el borde de mes y el de año sin aritmética de calendario', () => {
     expect(
-      apptStartMinutes('2027-01-01T00:00:00')! - apptStartMinutes('2026-12-31T23:30:00')!,
+      exigir(apptStartMinutes('2027-01-01T00:00:00'), "apptStartMinutes('2027-01-01T00:00:00')") -
+        exigir(apptStartMinutes('2026-12-31T23:30:00'), "apptStartMinutes('2026-12-31T23:30:00')"),
     ).toBe(30)
   })
 

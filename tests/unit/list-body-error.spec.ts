@@ -4,6 +4,7 @@ import { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from 'axios
 import ListBody from '@/features/acciones/components/ListBody.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import type { PageResponse } from '@/types/pagination'
+import { exigir } from '../helpers/exigir'
 
 /**
  * GUARDA DE EST-01 — un fallo del servidor NO es una lista vacía.
@@ -138,7 +139,7 @@ describe('ListBody — el fallo del servidor se anuncia como fallo (EST-01)', ()
     const llamadasAntes = fetchPage.mock.calls.length
     const reintentar = botonReintentar(wrapper)
     expect(reintentar, 'la rama de error debe ofrecer «Reintentar»').toBeDefined()
-    await reintentar!.trigger('click')
+    await exigir(reintentar, 'reintentar').trigger('click')
     await flushPromises()
 
     expect(fetchPage).toHaveBeenCalledTimes(llamadasAntes + 1)
@@ -165,7 +166,7 @@ describe('ListBody — el fallo del servidor se anuncia como fallo (EST-01)', ()
     expect(wrapper.find('[role="alert"]').exists()).toBe(true)
 
     fallar = false
-    await botonReintentar(wrapper)!.trigger('click')
+    await exigir(botonReintentar(wrapper), 'botonReintentar(wrapper)').trigger('click')
     await flushPromises()
 
     expect(wrapper.find('[role="alert"]').exists()).toBe(false)

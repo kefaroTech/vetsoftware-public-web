@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { buildDocumentReceiptTicket } from '@/composables/buildDocumentReceipt'
 import type { ElectronicDocumentResponse } from '@/features/facturacion/types/facturacion'
+import { elemento, exigir } from '../helpers/exigir'
 
 /**
  * El recibo impreso. Es la fuente única del comprobante —lo usan el POS y el
@@ -19,12 +20,28 @@ const $ = (n: number) =>
     maximumFractionDigits: 0,
   }).format(n)
 
+type Recibo = ReturnType<typeof buildDocumentReceiptTicket>
+
+/**
+ * `ReceiptTicket` declara opcionales los bloques que este constructor SIEMPRE
+ * rellena. Las pruebas los leían directamente y, cuando `tests/**` entró bajo
+ * `vue-tsc`, cada acceso salió como «posiblemente undefined». No se tapan con
+ * `!`: se exigen, de modo que un recibo al que le falte un bloque falle diciendo
+ * cuál falta en vez de morir con un «cannot read properties of undefined».
+ */
+const pie = (t: Recibo) => exigir(t.footer, 'el pie del recibo')
+const entrega = (t: Recibo, i: number) =>
+  elemento(exigir(t.tender, 'el bloque de entrega/cambio'), i, 'el bloque de entrega/cambio')
+const fiscal = (t: Recibo) => exigir(t.fiscal, 'el bloque fiscal del emisor')
+const datos = (t: Recibo) => exigir(t.meta, 'el bloque de datos del recibo')
+const linea = (t: Recibo, i: number) => elemento(t.lines, i, 'las líneas del recibo')
+
 function doc(over: Partial<ElectronicDocumentResponse> = {}): ElectronicDocumentResponse {
   return {
     id: 42,
     companyId: 1,
     openAccountId: null,
-    documentType: 'FACTURA_VENTA',
+    documentType: 'FE_VENTA',
     prefix: 'SETP',
     consecutive: 990_000_001,
     issueDate: '2026-08-08',
@@ -78,6 +95,42 @@ function total(ticket: ReturnType<typeof buildDocumentReceiptTicket>, label: str
   return ticket.totals.find((t) => t.label === label)
 }
 
+describe('tipo de documento', () => {
+  /**
+   * El rótulo fiscal del recibo no lo comprobaba nadie, y el `doc()` de arriba
+   * declaraba `documentType: 'FACTURA_VENTA'`, que NO es un
+   * `ElectronicDocumentType` (`FE_VENTA` | `DOC_EQUIV_POS` | `NOTA_CREDITO` |
+   * `NOTA_DEBITO`). Con ese valor, `DOC_TYPE_LABEL[doc.documentType]` fallaba y
+   * `buildDocumentReceipt.ts` caía en su `?? 'Comprobante'`: TODAS las pruebas
+   * de este fichero corrían sobre el rótulo genérico, nunca sobre uno real.
+   */
+  it('imprime el rótulo fiscal del tipo, no el genérico', () => {
+    expect(buildDocumentReceiptTicket(doc(), { width: '80' }).docType).toBe('Factura electrónica')
+  })
+
+  it('cada tipo trae el suyo', () => {
+    const rotulo = (t: ElectronicDocumentResponse['documentType']) =>
+      buildDocumentReceiptTicket(doc({ documentType: t }), { width: '80' }).docType
+
+    expect(rotulo('DOC_EQUIV_POS')).toBe('Documento POS')
+    expect(rotulo('NOTA_CREDITO')).toBe('Nota crédito')
+    expect(rotulo('NOTA_DEBITO')).toBe('Nota débito')
+  })
+
+  it('ante un tipo que todavía no conoce, imprime «Comprobante» en vez de quedarse en blanco', () => {
+    // El `?? 'Comprobante'` de `buildDocumentReceipt.ts` es la red para el día en
+    // que la DIAN añada un tipo y el backend lo emita antes de que este front lo
+    // conozca. Bajo el tipo del contrato ese caso es inalcanzable, así que la
+    // única forma de ejercitarlo es fabricar a mano lo que fabricaría el backend:
+    // el `as` es el simulacro, y va aquí y en ningún otro sitio.
+    const desconocido = 'FE_EXPORTACION' as ElectronicDocumentResponse['documentType']
+
+    const ticket = buildDocumentReceiptTicket(doc({ documentType: desconocido }), { width: '80' })
+
+    expect(ticket.docType).toBe('Comprobante')
+  })
+})
+
 describe('numeración del documento', () => {
   it('imprime prefijo y consecutivo juntos', () => {
     expect(buildDocumentReceiptTicket(doc(), { width: '80' }).docNumber).toBe('SETP990000001')
@@ -91,11 +144,11 @@ describe('numeración del documento', () => {
     })
 
     expect(ticket.docNumber).toBe('Interno 42')
-    expect(ticket.footer.lines?.[0]).toContain('emisión a la DIAN pendiente')
+    expect(pie(ticket).lines?.[0]).toContain('emisión a la DIAN pendiente')
   })
 
   it('con consecutivo no imprime el aviso de emisión pendiente', () => {
-    expect(buildDocumentReceiptTicket(doc(), { width: '80' }).footer.lines).toBeUndefined()
+    expect(pie(buildDocumentReceiptTicket(doc(), { width: '80' })).lines).toBeUndefined()
   })
 
   it('tolera un prefijo nulo con consecutivo presente', () => {
@@ -155,8 +208,8 @@ describe('efectivo y cambio', () => {
     // pagó 119.000, le devuelven 31.000.
     const ticket = buildDocumentReceiptTicket(doc(), { width: '80', change: 31_000 })
 
-    expect(ticket.tender[0]).toEqual({ label: 'Recibido', value: $(150_000), kind: 'pay' })
-    expect(ticket.tender[1]).toEqual({ label: 'Cambio', value: $(31_000), kind: 'change' })
+    expect(entrega(ticket, 0)).toEqual({ label: 'Recibido', value: $(150_000), kind: 'pay' })
+    expect(entrega(ticket, 1)).toEqual({ label: 'Cambio', value: $(31_000), kind: 'change' })
   })
 
   it('un cambio de 0 sí se imprime: es un pago exacto en efectivo, no la ausencia de dato', () => {
@@ -164,8 +217,8 @@ describe('efectivo y cambio', () => {
     const ticket = buildDocumentReceiptTicket(doc(), { width: '80', change: 0 })
 
     expect(ticket.tender).toHaveLength(2)
-    expect(ticket.tender[0].value).toBe($(119_000))
-    expect(ticket.tender[1].value).toBe($(0))
+    expect(entrega(ticket, 0).value).toBe($(119_000))
+    expect(entrega(ticket, 1).value).toBe($(0))
   })
 })
 
@@ -230,9 +283,9 @@ describe('líneas', () => {
     const ticket = buildDocumentReceiptTicket(doc(), { width: '80' })
 
     expect(ticket.lines).toHaveLength(1)
-    expect(ticket.lines[0].qty).toBe('1×')
-    expect(ticket.lines[0].desc).toBe('Consulta general')
-    expect(ticket.lines[0].amount).toBe($(119_000))
+    expect(linea(ticket, 0).qty).toBe('1×')
+    expect(linea(ticket, 0).desc).toBe('Consulta general')
+    expect(linea(ticket, 0).amount).toBe($(119_000))
   })
 
   it('añade el precio unitario solo cuando hay más de una unidad', () => {
@@ -251,8 +304,8 @@ describe('líneas', () => {
       { width: '80' },
     )
 
-    expect(una.lines[0].sub).toBeUndefined()
-    expect(varias.lines[0].sub).toBe(`· ${$(40_000)} c/u`)
+    expect(linea(una, 0).sub).toBeUndefined()
+    expect(linea(varias, 0).sub).toBe(`· ${$(40_000)} c/u`)
   })
 
   it('imprime todas las líneas, no solo la primera', () => {
@@ -276,7 +329,7 @@ describe('bloque fiscal del emisor', () => {
     const ticket = buildDocumentReceiptTicket(doc(), { width: '80' })
 
     expect(ticket.brand.name).toBe('Veterinaria Kefaro SAS')
-    expect(ticket.fiscal[0]).toContain('NIT 901234567-8')
+    expect(elemento(fiscal(ticket), 0)).toContain('NIT 901234567-8')
     expect(ticket.fiscal).toContain('facturacion@kefaro.tech')
   })
 
@@ -295,7 +348,7 @@ describe('bloque fiscal del emisor', () => {
       { width: '80' },
     )
 
-    expect(ticket.fiscal[0]).not.toContain('-')
+    expect(elemento(fiscal(ticket), 0)).not.toContain('-')
   })
 
   it('cae a un nombre por defecto si el emisor no trae razón social', () => {
@@ -322,8 +375,8 @@ describe('cliente', () => {
       { width: '80' },
     )
 
-    expect(conNombre.meta.find((m) => m.label === 'Cliente')?.value).toBe('Ana Pérez')
-    expect(soloLegal.meta.find((m) => m.label === 'Cliente')?.value).toBe('Distribuciones SAS')
+    expect(datos(conNombre).find((m) => m.label === 'Cliente')?.value).toBe('Ana Pérez')
+    expect(datos(soloLegal).find((m) => m.label === 'Cliente')?.value).toBe('Distribuciones SAS')
   })
 
   it('imprime el documento del cliente con su dígito de verificación', () => {
@@ -340,7 +393,7 @@ describe('cliente', () => {
       { width: '80' },
     )
 
-    expect(ticket.meta.find((m) => m.label === 'Documento')?.value).toBe('900123456-7')
+    expect(datos(ticket).find((m) => m.label === 'Documento')?.value).toBe('900123456-7')
   })
 
   it('omite el guion cuando el documento no lleva dígito de verificación', () => {
@@ -356,7 +409,7 @@ describe('cliente', () => {
       { width: '80' },
     )
 
-    expect(ticket.meta.find((m) => m.label === 'Documento')?.value).toBe('12345678')
+    expect(datos(ticket).find((m) => m.label === 'Documento')?.value).toBe('12345678')
   })
 
   it('un consumidor final anónimo no imprime línea de cliente', () => {
@@ -365,14 +418,14 @@ describe('cliente', () => {
       { width: '80' },
     )
 
-    expect(ticket.meta.find((m) => m.label === 'Cliente')).toBeUndefined()
-    expect(ticket.meta.find((m) => m.label === 'Documento')).toBeUndefined()
+    expect(datos(ticket).find((m) => m.label === 'Cliente')).toBeUndefined()
+    expect(datos(ticket).find((m) => m.label === 'Documento')).toBeUndefined()
   })
 
   it('imprime siempre la fecha, con la hora recortada a minutos', () => {
     const ticket = buildDocumentReceiptTicket(doc(), { width: '80' })
 
-    expect(ticket.meta[0]).toEqual({ label: 'Fecha', value: '2026-08-08 14:35' })
+    expect(elemento(datos(ticket), 0)).toEqual({ label: 'Fecha', value: '2026-08-08 14:35' })
   })
 })
 
@@ -389,7 +442,7 @@ describe('medio y forma de pago', () => {
   it('sin pagos registrados no rompe: muestra una etiqueta genérica', () => {
     const ticket = buildDocumentReceiptTicket(doc({ payments: [] }), { width: '80' })
 
-    expect(ticket.payPill.startsWith('Pago')).toBe(true)
+    expect(exigir(ticket.payPill, 'la pastilla de pago').startsWith('Pago')).toBe(true)
   })
 
   it('ante un medio o una forma de pago que no conoce, imprime el valor crudo', () => {
@@ -415,6 +468,6 @@ describe('fecha', () => {
       width: '80',
     })
 
-    expect(ticket.meta[0]).toEqual({ label: 'Fecha', value: '2026-08-08' })
+    expect(elemento(datos(ticket), 0)).toEqual({ label: 'Fecha', value: '2026-08-08' })
   })
 })

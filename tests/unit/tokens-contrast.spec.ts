@@ -10,6 +10,7 @@ import {
   WHITE,
   type Srgb,
 } from '../helpers/wcag-contrast'
+import { elemento, exigir } from '../helpers/exigir'
 
 /**
  * GUARDA DE A11Y-01 — el anillo de foco tiene que verse.
@@ -43,12 +44,12 @@ const props = readCustomProperties(readFileSync(TOKENS_CSS, 'utf8'))
 function color(token: string): Srgb {
   const declarado = props.get(token)
   expect(declarado, `tokens.css ya no declara ${token}`).toBeDefined()
-  const oklch = parseOklch(resolveVars(declarado!, props))
+  const oklch = parseOklch(resolveVars(exigir(declarado, 'declarado'), props))
   expect(
     oklch,
     `${token} dejó de ser un color OKLCH (${declarado}); revisa esta guarda antes de tocar nada más`,
   ).not.toBeNull()
-  return oklchToSrgb(oklch!)
+  return oklchToSrgb(exigir(oklch, 'oklch'))
 }
 
 /**
@@ -61,13 +62,15 @@ function colorDelAnillo(token: string): { nombre: string; srgb: Srgb } {
   const declarado = props.get(token)
   expect(declarado, `tokens.css ya no declara ${token}`).toBeDefined()
 
-  const capas = [...declarado!.matchAll(/var\(\s*(--[\w-]+)\s*\)/g)].map((m) => m[1]!)
+  const capas = [...exigir(declarado, 'declarado').matchAll(/var\(\s*(--[\w-]+)\s*\)/g)].map((m) =>
+    elemento(m, 1, 'm'),
+  )
   expect(
     capas.length,
     `${token} debería llevar dos capas (superficie + color de contraste); se leyó: ${declarado}`,
   ).toBeGreaterThanOrEqual(2)
 
-  const nombre = capas.at(-1)!
+  const nombre = exigir(capas.at(-1), 'capas.at(-1)')
   return { nombre, srgb: color(nombre) }
 }
 

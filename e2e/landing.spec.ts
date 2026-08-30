@@ -1,11 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
-import {
-  CLAVE_INTENCION,
-  intencion,
-  leerIntencion,
-  sembrarIntencion,
-  type Intencion,
-} from './helpers/contratacion'
+import { CLAVE_INTENCION, intencion, leerIntencion, sembrarIntencion } from './helpers/contratacion'
+import { exigir } from './helpers/exigir'
 
 /**
  * La landing comercial y el paso 2 del embudo (`/planes`).
@@ -134,10 +129,10 @@ test.describe('Landing comercial', () => {
 
     const leida = await leerIntencion(page)
     expect(leida, 'la elección tiene que sobrevivir al cierre del navegador').not.toBeNull()
-    expect(leida!.planCode).toBe('PACK_CLINIC')
+    expect(exigir(leida, 'leida').planCode).toBe('PACK_CLINIC')
     // El importe que se VIO viaja con la elección: es la mitad de la regla de
     // «se confirma el importe que se mostró» (§5, caso 3).
-    expect(leida!.importeVistoMensual).toBeGreaterThan(0)
+    expect(exigir(leida, 'leida').importeVistoMensual).toBeGreaterThan(0)
   })
 
   test('con una intención vigente ofrece seguir donde lo dejó', async ({ page }) => {

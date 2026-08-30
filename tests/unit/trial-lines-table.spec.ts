@@ -4,6 +4,7 @@ import TrialLinesTable from '@/features/contratacion/components/TrialLinesTable.
 import { lineasDePrueba } from '@/features/contratacion/api/contratacion.source'
 import { PLANS_CONTENT } from '@/features/landing/content/plans.content'
 import type { LineaPrueba } from '@/features/contratacion/types/contratacion.types'
+import { exigir } from '../helpers/exigir'
 
 /**
  * LO QUE LA TABLA DE PRUEBAS PROMETE, Y LO QUE NO PUEDE PROMETER.
@@ -95,7 +96,7 @@ describe('un módulo NEVER_FREE no lleva fecha', () => {
     const frase = wrapper.findAll('.trial-lead').find((p) => p.text().includes('no tienen'))
 
     expect(frase, 'plural cuando hay más de uno').toBeDefined()
-    expect(frase!.text()).toContain('se cobran desde el primer día')
+    expect(exigir(frase, 'frase').text()).toContain('se cobran desde el primer día')
   })
 })
 
@@ -121,7 +122,10 @@ describe('el plan real, tal como llega del adaptador', () => {
   it('PACK_FULL pinta una sola fila «Sin prueba», y es la de la DIAN', () => {
     // Extremo a extremo con el contenido de verdad: si mañana el catálogo marca
     // otro artículo como NEVER_FREE, este caso lo cuenta en vez de dejarlo pasar.
-    const full = PLANS_CONTENT.plans.find((p) => p.code === 'PACK_FULL')!
+    const full = exigir(
+      PLANS_CONTENT.plans.find((p) => p.code === 'PACK_FULL'),
+      "PLANS_CONTENT.plans.find((p) => p.code === 'PACK_FULL')",
+    )
     const wrapper = montar(lineasDePrueba(full, '2026-08-29'))
 
     const sinPrueba = wrapper

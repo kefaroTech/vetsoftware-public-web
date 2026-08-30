@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
+import type { AuthSession, TokenResponse } from '@/features/auth/types'
 
 /**
  * La renovación de sesión. Su propiedad crítica no es refrescar, sino refrescar
@@ -12,6 +13,12 @@ import { createPinia, setActivePinia } from 'pinia'
  * El resto de pruebas cubre lo que pasa cuando el refresco falla —debe dejar la
  * sesión limpia, no a medias— y la lectura del JWT, de la que dependen los
  * guards y la resolución de empresa.
+ *
+ * Nota sobre `type`: es el SUJETO de la sesión (`EMPLOYEE` | `SYSTEM_USER`), no el
+ * esquema del header `Authorization`. Este fichero decía `'Bearer'` en sus 23
+ * sesiones —un valor que el backend no emite nunca— y nadie lo vio porque
+ * `tests/**` estaba fuera de todo `tsconfig`. Los literales que se serializan a
+ * mano llevan ahora `satisfies` para que el compilador los mire también a ellos.
  */
 
 const refresh = vi.fn()
@@ -108,7 +115,10 @@ describe('refresco de sesión: single-flight', () => {
     await loadStore()
 
     const enVuelo = [refreshHandler()(), refreshHandler()(), refreshHandler()()]
-    resolver({ token: jwt({ sub: '1', exp: 9_999_999_999 }), type: 'Bearer' })
+    resolver({
+      token: jwt({ sub: '1', exp: 9_999_999_999 }),
+      type: 'EMPLOYEE',
+    } satisfies TokenResponse)
     const tokens = await Promise.all(enVuelo)
 
     expect(refresh).toHaveBeenCalledTimes(1)
@@ -118,7 +128,10 @@ describe('refresco de sesión: single-flight', () => {
   it('libera el cerrojo al terminar: un 401 posterior sí vuelve a refrescar', async () => {
     // Si `refreshInFlight` no se limpiara, la sesión no podría renovarse nunca
     // más y el usuario acabaría expulsado a los 15 minutos siguientes.
-    refresh.mockResolvedValue({ token: jwt({ sub: '1' }), type: 'Bearer' })
+    refresh.mockResolvedValue({
+      token: jwt({ sub: '1' }),
+      type: 'EMPLOYEE',
+    } satisfies TokenResponse)
     await loadStore()
 
     await refreshHandler()()
@@ -141,7 +154,7 @@ describe('refresco de sesión: single-flight', () => {
     // El interceptor reintenta la petición releyendo el token del storage. Si se
     // resolviera antes de persistir, el reintento iría con el token viejo.
     const token = jwt({ sub: '1', companyId: 3 })
-    refresh.mockResolvedValue({ token, type: 'Bearer' })
+    refresh.mockResolvedValue({ token, type: 'EMPLOYEE' } satisfies TokenResponse)
     const store = await loadStore()
 
     const devuelto = await refreshHandler()()
@@ -149,7 +162,7 @@ describe('refresco de sesión: single-flight', () => {
     expect(devuelto).toBe(token)
     expect(JSON.parse(storage.getItem(AUTH_STORAGE_KEY) ?? 'null')).toEqual({
       token,
-      type: 'Bearer',
+      type: 'EMPLOYEE',
     })
     expect(store.isAuthenticated).toBe(true)
   })
@@ -158,7 +171,10 @@ describe('refresco de sesión: single-flight', () => {
     // Media sesión —token borrado pero `me` en memoria— dejaría la interfaz
     // mostrando datos de un usuario que ya no está autenticado.
     refresh.mockRejectedValue(new Error('401'))
-    storage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ token: jwt({ sub: '1' }), type: 'Bearer' }))
+    storage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({ token: jwt({ sub: '1' }), type: 'EMPLOYEE' } satisfies AuthSession),
+    )
     const store = await loadStore()
 
     const resultado = await refreshHandler()()
@@ -187,7 +203,10 @@ describe('refresco de sesión: single-flight', () => {
     // Simétrico al de refresh: sin este registro, un 401 sin refresh posible
     // limpia el storage pero deja `session`/`me` del store como estaban, con
     // `isAuthenticated` en `true` pese a un token que el backend ya rechazó.
-    storage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ token: jwt({ sub: '1' }), type: 'Bearer' }))
+    storage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({ token: jwt({ sub: '1' }), type: 'EMPLOYEE' } satisfies AuthSession),
+    )
     const store = await loadStore()
     expect(store.isAuthenticated).toBe(true)
 
@@ -204,7 +223,10 @@ describe('carga del perfil', () => {
   it('deduplica llamadas concurrentes a refreshMe', async () => {
     let resolver!: (v: unknown) => void
     me.mockReturnValue(new Promise((r) => (resolver = r)))
-    storage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ token: jwt({ sub: '1' }), type: 'Bearer' }))
+    storage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({ token: jwt({ sub: '1' }), type: 'EMPLOYEE' } satisfies AuthSession),
+    )
     const store = await loadStore()
 
     const enVuelo = [store.refreshMe(), store.refreshMe()]
@@ -224,7 +246,10 @@ describe('carga del perfil', () => {
 
   it('si el perfil falla, cierra la sesión en vez de dejarla a medias', async () => {
     me.mockRejectedValue(new Error('500'))
-    storage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ token: jwt({ sub: '1' }), type: 'Bearer' }))
+    storage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({ token: jwt({ sub: '1' }), type: 'EMPLOYEE' } satisfies AuthSession),
+    )
     const store = await loadStore()
 
     await store.refreshMe()
@@ -239,7 +264,7 @@ describe('carga del perfil', () => {
     me.mockRejectedValue(new Error('500'))
     const store = await loadStore()
 
-    await store.login({ token: jwt({ sub: '1' }), type: 'Bearer' })
+    await store.login({ token: jwt({ sub: '1' }), type: 'EMPLOYEE' })
 
     expect(store.isAuthenticated).toBe(true)
   })
@@ -249,7 +274,10 @@ describe('lectura del JWT', () => {
   it('resuelve la empresa desde el claim cuando aún no hay perfil', async () => {
     storage.setItem(
       AUTH_STORAGE_KEY,
-      JSON.stringify({ token: jwt({ sub: '1', companyId: 42 }), type: 'Bearer' }),
+      JSON.stringify({
+        token: jwt({ sub: '1', companyId: 42 }),
+        type: 'EMPLOYEE',
+      } satisfies AuthSession),
     )
     const store = await loadStore()
 
@@ -260,7 +288,7 @@ describe('lectura del JWT', () => {
     // `/me` es la fuente autorizada; el claim es el respaldo mientras carga.
     me.mockResolvedValue({ id: 1, companyId: 7, permissions: [] })
     const store = await loadStore()
-    await store.login({ token: jwt({ sub: '1', companyId: 42 }), type: 'Bearer' })
+    await store.login({ token: jwt({ sub: '1', companyId: 42 }), type: 'EMPLOYEE' })
 
     expect(store.companyId).toBe(7)
   })
@@ -268,7 +296,10 @@ describe('lectura del JWT', () => {
   it('un token corrupto no revienta la aplicación', async () => {
     // Un JWT ilegible tiene que degradar a "sin datos", no dejar la pantalla en
     // blanco: el guard depende de estos valores en cada navegación.
-    storage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ token: 'no-es-un-jwt', type: 'Bearer' }))
+    storage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({ token: 'no-es-un-jwt', type: 'EMPLOYEE' } satisfies AuthSession),
+    )
     const store = await loadStore()
 
     expect(store.companyId).toBeNull()
@@ -279,7 +310,10 @@ describe('lectura del JWT', () => {
   it('conserva los caracteres no ASCII del payload', async () => {
     storage.setItem(
       AUTH_STORAGE_KEY,
-      JSON.stringify({ token: jwt({ sub: '9', companyId: 1, name: 'Muñoz' }), type: 'Bearer' }),
+      JSON.stringify({
+        token: jwt({ sub: '9', companyId: 1, name: 'Muñoz' }),
+        type: 'EMPLOYEE',
+      } satisfies AuthSession),
     )
     const store = await loadStore()
 
@@ -290,7 +324,7 @@ describe('lectura del JWT', () => {
     // `Number('abc')` es NaN y NaN se cuela en cualquier comparación sin fallar.
     storage.setItem(
       AUTH_STORAGE_KEY,
-      JSON.stringify({ token: jwt({ sub: 'abc' }), type: 'Bearer' }),
+      JSON.stringify({ token: jwt({ sub: 'abc' }), type: 'EMPLOYEE' } satisfies AuthSession),
     )
     const store = await loadStore()
 
@@ -301,7 +335,10 @@ describe('lectura del JWT', () => {
     const hace1h = Math.floor(Date.now() / 1000) - 3_600
     storage.setItem(
       AUTH_STORAGE_KEY,
-      JSON.stringify({ token: jwt({ sub: '1', exp: hace1h }), type: 'Bearer' }),
+      JSON.stringify({
+        token: jwt({ sub: '1', exp: hace1h }),
+        type: 'EMPLOYEE',
+      } satisfies AuthSession),
     )
     const store = await loadStore()
 
@@ -312,7 +349,10 @@ describe('lectura del JWT', () => {
     const en1h = Math.floor(Date.now() / 1000) + 3_600
     storage.setItem(
       AUTH_STORAGE_KEY,
-      JSON.stringify({ token: jwt({ sub: '1', exp: en1h }), type: 'Bearer' }),
+      JSON.stringify({
+        token: jwt({ sub: '1', exp: en1h }),
+        type: 'EMPLOYEE',
+      } satisfies AuthSession),
     )
     const store = await loadStore()
 
@@ -321,7 +361,10 @@ describe('lectura del JWT', () => {
 
   it('un token sin exp no se considera expirado', async () => {
     // Sin fecha de caducidad no hay motivo para expulsar; el backend decidirá.
-    storage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ token: jwt({ sub: '1' }), type: 'Bearer' }))
+    storage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({ token: jwt({ sub: '1' }), type: 'EMPLOYEE' } satisfies AuthSession),
+    )
     const store = await loadStore()
 
     expect(store.isExpired).toBe(false)
@@ -342,7 +385,7 @@ describe('sesión persistida', () => {
   it('una sesión sin token se descarta', async () => {
     // `{type}` sin `token` no sirve para autenticar nada; darla por buena
     // dejaría al usuario "dentro" sin poder hacer una sola petición.
-    storage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ type: 'Bearer' }))
+    storage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ type: 'EMPLOYEE' }))
 
     expect((await loadStore()).isAuthenticated).toBe(false)
   })
@@ -351,7 +394,10 @@ describe('sesión persistida', () => {
     // La revocación server-side es best-effort: si no se limpiara en local, el
     // usuario seguiría con sesión iniciada en un equipo compartido.
     logoutApi.mockRejectedValue(new Error('503'))
-    storage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ token: jwt({ sub: '1' }), type: 'Bearer' }))
+    storage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({ token: jwt({ sub: '1' }), type: 'EMPLOYEE' } satisfies AuthSession),
+    )
     const store = await loadStore()
 
     await store.logout()
@@ -375,7 +421,10 @@ describe('frescura de /auth/me (TTL)', () => {
   const perfil = { id: 1, companyId: 3, permissions: [] }
 
   function conSesion(sub = '1') {
-    storage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ token: jwt({ sub }), type: 'Bearer' }))
+    storage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({ token: jwt({ sub }), type: 'EMPLOYEE' } satisfies AuthSession),
+    )
   }
 
   beforeEach(() => {
@@ -434,7 +483,7 @@ describe('frescura de /auth/me (TTL)', () => {
     me.mockRejectedValueOnce(new Error('500'))
     const store = await loadStore()
 
-    await store.login({ token: jwt({ sub: '1' }), type: 'Bearer' })
+    await store.login({ token: jwt({ sub: '1' }), type: 'EMPLOYEE' })
     expect(store.isAuthenticated).toBe(true)
 
     me.mockResolvedValue(perfil)
@@ -455,7 +504,10 @@ describe('frescura de /auth/me (TTL)', () => {
     store.clearSession()
     // Sesión nueva sin pasar por `login()`, que traería el perfil por su cuenta: así
     // lo único que puede evitar el segundo `/auth/me` es una frescura heredada.
-    refresh.mockResolvedValue({ token: jwt({ sub: '2' }), type: 'Bearer' })
+    refresh.mockResolvedValue({
+      token: jwt({ sub: '2' }),
+      type: 'EMPLOYEE',
+    } satisfies TokenResponse)
     await refreshHandler()()
 
     const otroPerfil = { id: 2, companyId: 3, permissions: [] }
@@ -488,7 +540,7 @@ describe('frescura de /auth/me (TTL)', () => {
     me.mockResolvedValue(perfil)
     const store = await loadStore()
 
-    await store.login({ token: jwt({ sub: '1' }), type: 'Bearer' })
+    await store.login({ token: jwt({ sub: '1' }), type: 'EMPLOYEE' })
     await store.refreshMe()
 
     expect(me).toHaveBeenCalledTimes(1)

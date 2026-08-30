@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils'
 import { MAX_CANTIDAD_LINEA, MAX_CANTIDAD_LINEA_TXT } from '@/constants/cantidades'
 import PlanesConfigurador from '@/features/landing/components/PlanesConfigurador.vue'
 import { PLANS_CONTENT } from '@/features/landing/content/plans.content'
+import { exigir } from '../helpers/exigir'
 
 /**
  * LOS DOS CAMPOS QUE EL CLIENTE RELLENA EN EL EMBUDO, Y SUS BORDES.
@@ -49,7 +50,10 @@ async function teclear(
 ): Promise<{ emitido: number | undefined; texto: string }> {
   const wrapper = mount(PlanesConfigurador, { props: PROPS })
   const etiqueta = campo === 'sedes' ? '¿Cuántas sedes tienes?' : '¿Cuántas personas van a usarlo?'
-  const label = wrapper.findAll('label').find((l) => l.text().includes(etiqueta))!
+  const label = exigir(
+    wrapper.findAll('label').find((l) => l.text().includes(etiqueta)),
+    "wrapper.findAll('label').find((l) => l.text().includes(…",
+  )
   const input = wrapper.find(`#${label.attributes('for')}`)
 
   await input.setValue(valor)

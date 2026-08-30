@@ -22,6 +22,7 @@ import type {
   TaxTreatment,
 } from '@/features/tienda/types/tienda'
 import type { StockView } from '@/features/tienda/types/inventory'
+import { elemento } from '../helpers/exigir'
 
 /**
  * La aritmética del POS. Es la pantalla que más dinero mueve y la única del
@@ -191,7 +192,7 @@ describe('taxByRate', () => {
     // dos nombres distintos para la misma tarifa en el mismo ticket.
     const filas = taxByRate([{ gross: 119_000, ratePct: 19, label: 'IVA general' }])
 
-    expect(filas[0].name).toBe('IVA general')
+    expect(elemento(filas, 0, 'las filas de impuesto').name).toBe('IVA general')
   })
 
   it('acumula sin deriva sobre muchas líneas', () => {
@@ -200,7 +201,9 @@ describe('taxByRate', () => {
     const unaLinea = { gross: 33_333, ratePct: 19 }
     const filas = taxByRate(Array.from({ length: 20 }, () => unaLinea))
 
-    expect(filas[0].amount).toBe(splitGross(33_333, true, 19).tax * 20)
+    expect(elemento(filas, 0, 'las filas de impuesto').amount).toBe(
+      splitGross(33_333, true, 19).tax * 20,
+    )
   })
 
   it('el mismo carrito da el mismo desglose en el POS y en el cierre de cuenta', () => {
@@ -512,13 +515,15 @@ describe('applyPromo', () => {
   })
 
   it('aplica un descuento de importe fijo', () => {
-    const p = promo({ valueType: 'AMOUNT', value: 1_500 })
+    // `VALUE` es la etiqueta real del backend. Con `'AMOUNT'` —que estuvo aquí— el caso
+    // pasaba por el «si no» de `applyPromo`, no por la rama que dice cubrir.
+    const p = promo({ valueType: 'VALUE', value: 1_500 })
 
     expect(applyPromo(item, 'product', 10_000, 3, [p], HOY).unitPrice).toBe(8_500)
   })
 
   it('un descuento fijo mayor que el precio no produce un precio negativo', () => {
-    const p = promo({ valueType: 'AMOUNT', value: 99_999 })
+    const p = promo({ valueType: 'VALUE', value: 99_999 })
 
     expect(applyPromo(item, 'product', 10_000, 3, [p], HOY).unitPrice).toBe(0)
   })

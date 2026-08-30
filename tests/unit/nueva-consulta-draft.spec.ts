@@ -4,6 +4,7 @@ import { nextTick } from 'vue'
 import { useNuevaConsultaDraftStore } from '@/features/dashboard/views/consulta/nueva/stores/nuevaConsultaDraft.store'
 import { useAuthStore } from '@/features/auth/stores/auth.store'
 import type { LaboratoryTest, MedicamentPrescription, Prescription } from '@/types/domain'
+import { elemento, exigir } from '../helpers/exigir'
 
 /**
  * El borrador de "Nueva consulta" es la única defensa contra la duplicación
@@ -72,6 +73,27 @@ let storage: Storage
 function store() {
   return useNuevaConsultaDraftStore()
 }
+
+type Borrador = ReturnType<typeof store>
+
+/**
+ * Accesos exigidos al borrador. Con `noUncheckedIndexedAccess`, `prescriptions[0]`
+ * es `Prescription | undefined`: taparlo con `!` volvería a dejar sin comprobar
+ * justo lo que estas pruebas existen para comprobar —que el marcador está donde
+ * toca—, y el fallo llegaría como un «cannot read properties of undefined» sin
+ * decir qué lista salió vacía.
+ */
+const recetaN = (s: Borrador, i = 0) =>
+  elemento(s.state.prescriptions, i, 'las recetas del borrador')
+const medicamentoN = (s: Borrador, receta = 0, i = 0) =>
+  elemento(recetaN(s, receta).medicaments, i, 'los medicamentos de la receta')
+const laboratorioN = (s: Borrador, i = 0) =>
+  elemento(s.state.laboratoryTests, i, 'los laboratorios del borrador')
+
+/** Un método del store buscado por nombre, en las pruebas de tabla. */
+type MetodoBorrador = (...args: unknown[]) => void
+const metodo = (s: Record<string, MetodoBorrador>, nombre: string): MetodoBorrador =>
+  exigir(s[nombre], `el método \`${nombre}\` del borrador`)
 
 function receta(over: Partial<Prescription> = {}): Prescription {
   return {
@@ -171,10 +193,10 @@ describe('marcadores de guardado parcial', () => {
       hasPartialSave: boolean
     }
 
-    s[add](laboratorio())
+    metodo(s, add)(laboratorio())
     expect(s.hasPartialSave).toBe(false)
 
-    s[mark](0, 500)
+    metodo(s, mark)(0, 500)
     expect(s.hasPartialSave).toBe(true)
   })
 
@@ -196,7 +218,7 @@ describe('marcadores de guardado parcial', () => {
     s.markMedicamentSaved(0, 0, 99)
 
     expect(s.hasPartialSave).toBe(true)
-    expect(s.state.prescriptions[0].medicaments[0].savedId).toBe(99)
+    expect(medicamentoN(s).savedId).toBe(99)
   })
 
   it('marcar sobre un índice inexistente no revienta', () => {
@@ -221,8 +243,8 @@ describe('editar un ítem no debe reenviarlo', () => {
 
     s.updateLaboratoryTest(0, laboratorio({ date: '2026-08-09' }))
 
-    expect(s.state.laboratoryTests[0].savedId).toBe(500)
-    expect(s.state.laboratoryTests[0].date).toBe('2026-08-09')
+    expect(laboratorioN(s).savedId).toBe(500)
+    expect(laboratorioN(s).date).toBe('2026-08-09')
   })
 
   it.each([
@@ -248,11 +270,11 @@ describe('editar un ítem no debe reenviarlo', () => {
       state: Record<string, { savedId?: number }[]>
     }
 
-    s[add](laboratorio())
-    s[mark](0, 700)
-    s[update](0, laboratorio({ date: '2026-09-09' }))
+    metodo(s, add)(laboratorio())
+    metodo(s, mark)(0, 700)
+    metodo(s, update)(0, laboratorio({ date: '2026-09-09' }))
 
-    expect(s.state[lista][0].savedId).toBe(700)
+    expect(elemento(exigir(s.state[lista], `la lista \`${lista}\``), 0, lista).savedId).toBe(700)
   })
 
   it('conserva el savedId de la receta y el de sus medicamentos', () => {
@@ -263,9 +285,9 @@ describe('editar un ítem no debe reenviarlo', () => {
 
     s.updatePrescription(0, receta({ observations: 'Cambiado' }))
 
-    expect(s.state.prescriptions[0].savedId).toBe(10)
-    expect(s.state.prescriptions[0].medicaments[0].savedId).toBe(99)
-    expect(s.state.prescriptions[0].observations).toBe('Cambiado')
+    expect(recetaN(s).savedId).toBe(10)
+    expect(medicamentoN(s).savedId).toBe(99)
+    expect(recetaN(s).observations).toBe('Cambiado')
   })
 
   it('editar un índice inexistente no crea un ítem fantasma', () => {
@@ -310,8 +332,8 @@ describe('editar un ítem no debe reenviarlo', () => {
         }),
       )
 
-      expect(s.state.prescriptions[0].medicaments[0].savedId).toBe(99)
-      expect(s.state.prescriptions[0].medicaments[1].savedId).toBeUndefined()
+      expect(medicamentoN(s).savedId).toBe(99)
+      expect(medicamentoN(s, 0, 1).savedId).toBeUndefined()
     })
 
     it('quitar el primer medicamento no traslada su marcador al segundo', () => {
@@ -357,7 +379,7 @@ describe('editar un ítem no debe reenviarlo', () => {
         }),
       )
 
-      const restante = s.state.prescriptions[0].medicaments[0]
+      const restante = medicamentoN(s)
       expect(restante.medicamentId).toBe(2)
       expect(restante.savedId).toBeUndefined()
     })
@@ -372,7 +394,7 @@ describe('editar un ítem no debe reenviarlo', () => {
       // medicamento, no quedarse en su antigua posición.
       s.updatePrescription(0, receta({ medicaments: [meloxicam(), amoxicilina()] }))
 
-      const [primero, segundo] = s.state.prescriptions[0].medicaments
+      const [primero, segundo] = [medicamentoN(s, 0, 0), medicamentoN(s, 0, 1)]
       expect(primero.medicamentId).toBe(2)
       expect(primero.savedId).toBe(100)
       expect(segundo.medicamentId).toBe(1)
@@ -393,7 +415,7 @@ describe('editar un ítem no debe reenviarlo', () => {
         receta({ medicaments: [amoxicilina(), amoxicilina({ posology: 'c/12h' })] }),
       )
 
-      const [primero, segundo] = s.state.prescriptions[0].medicaments
+      const [primero, segundo] = [medicamentoN(s, 0, 0), medicamentoN(s, 0, 1)]
       expect(primero.savedId).toBe(99)
       expect(segundo.savedId).toBeUndefined()
     })
@@ -412,8 +434,8 @@ describe('borrar ítems', () => {
     s.removeLaboratoryTest(0)
 
     expect(s.state.laboratoryTests).toHaveLength(1)
-    expect(s.state.laboratoryTests[0].date).toBe('2026-02-02')
-    expect(s.state.laboratoryTests[0].savedId).toBe(222)
+    expect(laboratorioN(s).date).toBe('2026-02-02')
+    expect(laboratorioN(s).savedId).toBe(222)
   })
 })
 
@@ -605,7 +627,7 @@ describe('persistencia y borradores viejos', () => {
     const s = store()
 
     expect(s.state.consultationCreatedId).toBe(77)
-    expect(s.state.laboratoryTests[0].savedId).toBe(500)
+    expect(laboratorioN(s).savedId).toBe(500)
     expect(s.hasPartialSave).toBe(true)
   })
 })
@@ -790,7 +812,7 @@ describe('sellado al descargar la pestaña (VUE-09)', () => {
     // El temporizador está armado pero no ha vencido: en disco no hay nada.
     expect(storage.getItem(STORAGE_KEY)).toBeNull()
 
-    manejadores.get('pagehide')!()
+    exigir(manejadores.get('pagehide'), "manejadores.get('pagehide')")()
 
     expect(readPersisted().draft?.consultation.anamnesis).toBe('Decaído desde ayer, no come')
   })
@@ -803,7 +825,7 @@ describe('sellado al descargar la pestaña (VUE-09)', () => {
     s.state.consultation.anamnesis = 'A medio escribir'
     await nextTick()
 
-    manejadores.get('pagehide')!()
+    exigir(manejadores.get('pagehide'), "manejadores.get('pagehide')")()
 
     expect(readPersisted().sealedBy).toEqual({ companyId: 1, subjectId: 1 })
   })

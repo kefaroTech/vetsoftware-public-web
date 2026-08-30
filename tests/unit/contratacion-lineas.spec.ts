@@ -6,6 +6,7 @@ import {
 } from '@/features/contratacion/api/contratacion.source'
 import { PLANS_CONTENT } from '@/features/landing/content/plans.content'
 import type { PublicPlan } from '@/features/landing/types/plans.types'
+import { exigir } from '../helpers/exigir'
 
 /**
  * Lo que sale del catálogo transcrito y llega —o no— al servidor.
@@ -40,8 +41,14 @@ describe('lineasDeContratacion · lo que de verdad viaja en la oferta', () => {
     // sobra no es inofensiva — el servidor no emitiría renglón por ella y sí
     // puede tumbar la petición completa.
     const p = plan('PACK_CLINIC')
-    const sedes = p.capacities.find((c) => c.unit === 'BRANCH')!.included
-    const usuarios = p.capacities.find((c) => c.unit === 'USER')!.included
+    const sedes = exigir(
+      p.capacities.find((c) => c.unit === 'BRANCH'),
+      "p.capacities.find((c) => c.unit === 'BRANCH')",
+    ).included
+    const usuarios = exigir(
+      p.capacities.find((c) => c.unit === 'USER'),
+      "p.capacities.find((c) => c.unit === 'USER')",
+    ).included
 
     expect(lineasDeContratacion(p, { sedes, usuarios })).toEqual([
       { code: 'PACK_CLINIC', quantity: 1 },
@@ -52,8 +59,16 @@ describe('lineasDeContratacion · lo que de verdad viaja en la oferta', () => {
     // `USER` y `BRANCH` son ejes de capacidad, no códigos de artículo: mandarlos
     // era la otra mitad del mismo defecto.
     const p = plan('PACK_CLINIC')
-    const sedes = p.capacities.find((c) => c.unit === 'BRANCH')!.included + 1
-    const usuarios = p.capacities.find((c) => c.unit === 'USER')!.included + 2
+    const sedes =
+      exigir(
+        p.capacities.find((c) => c.unit === 'BRANCH'),
+        "p.capacities.find((c) => c.unit === 'BRANCH')",
+      ).included + 1
+    const usuarios =
+      exigir(
+        p.capacities.find((c) => c.unit === 'USER'),
+        "p.capacities.find((c) => c.unit === 'USER')",
+      ).included + 2
 
     const codigos = lineasDeContratacion(p, { sedes, usuarios }).map((l) => l.code)
     expect(codigos).toContain('EXTRA_USER')
@@ -76,8 +91,14 @@ describe('lineasDeContratacion · lo que de verdad viaja en la oferta', () => {
    */
   it('la cantidad que viaja es la CONTRATADA, nunca la extra', () => {
     const p = plan('PACK_CLINIC')
-    const incluidasUsuarios = p.capacities.find((c) => c.unit === 'USER')!.included
-    const incluidasSedes = p.capacities.find((c) => c.unit === 'BRANCH')!.included
+    const incluidasUsuarios = exigir(
+      p.capacities.find((c) => c.unit === 'USER'),
+      "p.capacities.find((c) => c.unit === 'USER')",
+    ).included
+    const incluidasSedes = exigir(
+      p.capacities.find((c) => c.unit === 'BRANCH'),
+      "p.capacities.find((c) => c.unit === 'BRANCH')",
+    ).included
     const usuarios = incluidasUsuarios + 4
     const sedes = incluidasSedes + 3
 
@@ -138,16 +159,22 @@ describe('lineasDePrueba · la prueba que el catálogo concede de verdad', () =>
       (l) => l.code === 'ELECTRONIC_INVOICING',
     )
     expect(linea, 'PACK_FULL debería incluir la facturación electrónica').toBeDefined()
-    expect(linea!.trialDays, 'la DIAN no tiene prueba').toBeNull()
+    expect(exigir(linea, 'linea').trialDays, 'la DIAN no tiene prueba').toBeNull()
     // Sin prueba, la fecha de fin es el propio día de alta — que es justo por lo
     // que la tabla NO la pinta y escribe «Sin prueba» en su lugar.
-    expect(linea!.trialEndDate).toBe('2026-08-29')
+    expect(exigir(linea, 'linea').trialEndDate).toBe('2026-08-29')
   })
 
   it('lleva los días junto a la fecha, para poder distinguir «sin prueba» de «acaba hoy»', () => {
     const lineas = lineasDePrueba(plan('PACK_CLINIC'), '2026-08-29')
-    const caja = lineas.find((l) => l.code === 'CASH_REGISTER')!
-    const agenda = lineas.find((l) => l.code === 'SCHEDULING')!
+    const caja = exigir(
+      lineas.find((l) => l.code === 'CASH_REGISTER'),
+      "lineas.find((l) => l.code === 'CASH_REGISTER')",
+    )
+    const agenda = exigir(
+      lineas.find((l) => l.code === 'SCHEDULING'),
+      "lineas.find((l) => l.code === 'SCHEDULING')",
+    )
 
     expect(caja.trialDays).toBe(14)
     expect(caja.trialEndDate).toBe('2026-09-12')
