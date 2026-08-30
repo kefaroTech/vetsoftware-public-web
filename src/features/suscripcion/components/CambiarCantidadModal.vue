@@ -5,6 +5,7 @@ import ModalShell from '@/components/ui/ModalShell.vue'
 import BaseField from '@/components/ui/BaseField.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import ErrorSummary, { toSummaryItems } from '@/components/feedback/ErrorSummary.vue'
+import { MAX_CANTIDAD_LINEA, MAX_CANTIDAD_LINEA_TXT } from '@/constants/cantidades'
 import { avisoBajarCantidad } from '../composables/cotizacionesText'
 import { sustantivo } from '../composables/cuposText'
 import type { SubscriptionItemResponse } from '../types/suscripcion.types'
@@ -39,10 +40,25 @@ const cantidadModelo = computed({
   set: (v: string) => (cantidad.value = v.replace(/\D/g, '')),
 })
 
+/**
+ * El suelo y el techo, los dos aquí: es el único sitio donde esta pantalla dice
+ * qué cantidad es válida, y una de las dos reglas faltaba.
+ *
+ * <p>El campo ya se sanea a dígitos, así que `1e10` no llega; lo que sí llega es
+ * una fila de ceros. Sin techo, esa cantidad viaja como `quantity` y por encima
+ * de `Integer.MAX_VALUE` el borde REST devuelve un 400 sin nombre de campo: la
+ * clínica lee «no se pudo» sobre un formulario que no le señala nada.
+ *
+ * <p>Y se DICE, no se recorta: el mensaje nombra el límite y el número que se
+ * tecleó se queda en el campo. Reescribirlo por detrás dejaría a alguien
+ * convencido de haber pedido una cantidad que no pidió.
+ */
 function validateCantidad(v: string): string | null {
   if (!v.trim()) return 'Escribe cuántas unidades quieres.'
   const n = Number(v)
   if (!Number.isFinite(n) || n < 1) return 'La cantidad tiene que ser 1 o más.'
+  if (n > MAX_CANTIDAD_LINEA)
+    return `Como máximo ${MAX_CANTIDAD_LINEA_TXT} unidades. Si necesitas más, escríbenos y lo ajustamos contigo.`
   return null
 }
 
