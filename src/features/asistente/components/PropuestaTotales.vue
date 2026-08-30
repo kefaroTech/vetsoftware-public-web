@@ -77,7 +77,7 @@ onBeforeUnmount(() => {
     <dl class="ptot-lista">
       <div class="ptot-fila">
         <dt>Subtotal</dt>
-        <dd>{{ formatMoney(totales.subtotal) }}</dd>
+        <dd data-testid="propuesta-subtotal">{{ formatMoney(totales.subtotal) }}</dd>
       </div>
       <div class="ptot-fila">
         <!-- El porcentaje solo si el servidor lo dijo. `AssistantProposalResponse`
@@ -87,18 +87,18 @@ onBeforeUnmount(() => {
              sigue enseñando: ese no falta. -->
         <dt v-if="totales.tasaImpuesto !== null">IVA {{ totales.tasaImpuesto }} %</dt>
         <dt v-else>IVA</dt>
-        <dd>{{ formatMoney(totales.impuesto) }}</dd>
+        <dd data-testid="propuesta-impuesto">{{ formatMoney(totales.impuesto) }}</dd>
       </div>
       <div class="ptot-fila ptot-fila--total">
         <dt>Total {{ sufijoCiclo(totales.ciclo) }}</dt>
-        <dd>{{ formatMoney(totales.total) }}</dd>
+        <dd data-testid="propuesta-total">{{ formatMoney(totales.total) }}</dd>
       </div>
     </dl>
 
     <!-- Solo se dice si hay algo de prueba. `primerMes` puede valer 0 —todo el
          carrito de prueba— y eso es una afirmación fuerte que merece decirse;
          `null` es «no aplica» y no se pinta. -->
-    <p v-if="totales.primerMes !== null" class="ptot-prueba">
+    <p v-if="totales.primerMes !== null" class="ptot-prueba" data-testid="propuesta-primer-mes">
       Los primeros días pagarías {{ formatMoney(totales.primerMes) }}: el resto va de prueba.
     </p>
 

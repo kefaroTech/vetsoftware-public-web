@@ -12,6 +12,7 @@ import type {
   AssistantProposalResponse,
 } from '@/features/asistente/types/asistente.types'
 import { http } from '@/services/http/http.client'
+import { elemento } from '../helpers/exigir'
 
 /**
  * EL SEAM DEL ASISTENTE, ya cortado a la red.
@@ -98,7 +99,7 @@ describe('el token no acaba nunca en la ruta', () => {
     get.mockResolvedValueOnce({ data: respuesta() } as never)
     await leerPropuesta(TOKEN)
 
-    const [url, config] = get.mock.calls[0]!
+    const [url, config] = elemento(get.mock.calls, 0, 'get.mock.calls')
     // Si el token fuera un segmento, `getRequestURI()` lo metería en el contexto
     // de log de TODA petición y ningún patrón del redactor casa con 43
     // caracteres de base64url: acabaría en claro en CloudWatch, en Loki con 31
@@ -114,7 +115,7 @@ describe('el token no acaba nunca en la ruta', () => {
     post.mockResolvedValueOnce({ data: respuesta({ version: 2 }) } as never)
     await refinarPropuesta({ propuestaId: id, version: 1, texto: 'También hacemos cirugía' })
 
-    const [urlRefine, cuerpoRefine] = post.mock.calls[1]!
+    const [urlRefine, cuerpoRefine] = elemento(post.mock.calls, 1, 'post.mock.calls')
     expect(urlRefine).toBe('/assistant/proposal/refine')
     expect(urlRefine).not.toContain(TOKEN)
     expect(cuerpoRefine).toMatchObject({ token: TOKEN, text: 'También hacemos cirugía' })
@@ -122,7 +123,7 @@ describe('el token no acaba nunca en la ruta', () => {
     put.mockResolvedValueOnce({ data: respuesta({ version: 3 }) } as never)
     await actualizarLineas({ propuestaId: id, version: 2, codigos: ['CORE'] })
 
-    const [urlLines, cuerpoLines] = put.mock.calls[0]!
+    const [urlLines, cuerpoLines] = elemento(put.mock.calls, 0, 'put.mock.calls')
     expect(urlLines).toBe('/assistant/proposal/lines')
     expect(urlLines).not.toContain(TOKEN)
     expect(cuerpoLines).toMatchObject({ token: TOKEN })
@@ -156,7 +157,7 @@ describe('la petición inicial', () => {
       clientRequestId: 'llave-abc',
     })
 
-    const [url, cuerpo, config] = post.mock.calls[0]!
+    const [url, cuerpo, config] = elemento(post.mock.calls, 0, 'post.mock.calls')
     expect(url).toBe('/assistant/proposal')
     // Es metadato de transporte —«esta petición es la misma que la anterior»—
     // y no un dato de la propuesta. Sin ella, un doble clic paga dos
@@ -180,9 +181,9 @@ describe('la petición inicial', () => {
     // El `PageLoader` es un overlay `inset: 0` con `cursor: wait`. Seis segundos
     // de eso sobre la pantalla que decide una compra son seis segundos sin poder
     // releer, corregir ni cancelar.
-    expect(post.mock.calls[0]![2]?.skipGlobalLoader).toBe(true)
-    expect(post.mock.calls[1]![2]?.skipGlobalLoader).toBe(true)
-    expect(put.mock.calls[0]![2]?.skipGlobalLoader).toBe(true)
+    expect(elemento(post.mock.calls, 0, 'post.mock.calls')[2]?.skipGlobalLoader).toBe(true)
+    expect(elemento(post.mock.calls, 1, 'post.mock.calls')[2]?.skipGlobalLoader).toBe(true)
+    expect(elemento(put.mock.calls, 0, 'put.mock.calls')[2]?.skipGlobalLoader).toBe(true)
   })
 })
 
@@ -282,6 +283,37 @@ describe('el desenlace lo dice el servidor, no una lista vacía', () => {
 })
 
 describe('la traducción no inventa lo que el contrato no trae', () => {
+  it('la CLASE de la línea viaja tal cual: una capacidad no se pierde por el camino', () => {
+    // `AssistantProposalLineResponse.kind` (`SellableItemKind`: MODULE,
+    // CAPACITY, BUNDLE, ONE_TIME) llevaba en el contrato desde el principio y
+    // este seam lo estaba tirando. Sin él, una capacidad cotizada —«3 personas
+    // adicionales», que se COBRA— se pinta con la misma fila y la misma letra
+    // que un módulo, tanto en el panel como en la tabla del paso vinculante:
+    // dinero dentro del total que nada distingue de una funcionalidad.
+    const propuesta = desdeRespuesta(
+      respuesta({
+        lines: [
+          linea({ code: 'CORE', kind: 'MODULE' }),
+          linea({ code: 'EXTRA_USER', kind: 'CAPACITY', quantity: 3 }),
+        ],
+      }),
+      new Set(),
+    )
+
+    expect(elemento(propuesta.lineas, 0, 'propuesta.lineas').tipo).toBe('MODULE')
+    expect(elemento(propuesta.lineas, 1, 'propuesta.lineas').tipo).toBe('CAPACITY')
+  })
+
+  it('un `kind` que el contrato no declara llega tal cual, sin aplanarse', () => {
+    // `kind` es `string` y no una unión cerrada a propósito: estrecharlo aquí
+    // escondería un valor nuevo del backend detrás de un tipo que miente. Quien
+    // lo consuma compara contra el literal que le interesa; lo demás es «otra
+    // cosa», y sigue siendo legible en las trazas.
+    const propuesta = desdeRespuesta(respuesta({ lines: [linea({ kind: 'ONE_TIME' })] }), new Set())
+
+    expect(elemento(propuesta.lineas, 0, 'propuesta.lineas').tipo).toBe('ONE_TIME')
+  })
+
   it('el importe de una línea es el UNITARIO y no el total con impuesto', () => {
     const propuesta = desdeRespuesta(
       respuesta({ lines: [linea({ unitAmount: 49000, taxAmount: 9310, totalAmount: 58310 })] }),
@@ -291,7 +323,7 @@ describe('la traducción no inventa lo que el contrato no trae', () => {
     // `totalAmount` es `totalConImpuesto`. Pintarlo al lado de un subtotal sin
     // impuesto mezclaría dos bases en la misma tabla, y restar `taxAmount` para
     // sacar el neto sería aritmética de dinero en el cliente.
-    expect(propuesta.lineas[0]!.importe).toBe(49000)
+    expect(elemento(propuesta.lineas, 0, 'propuesta.lineas').importe).toBe(49000)
   })
 
   it('«sin prueba» llega como null y nunca como cero', () => {
@@ -305,8 +337,8 @@ describe('la traducción no inventa lo que el contrato no trae', () => {
     // Un cero de relleno haría que la pantalla escribiera «0 días gratis» donde
     // la verdad es «sin prueba», y esa diferencia es la mitad de la comparación
     // con el paquete.
-    expect(propuesta.lineas[0]!.trialDays).toBeNull()
-    expect(propuesta.lineas[1]!.trialDays).toBe(14)
+    expect(elemento(propuesta.lineas, 0, 'propuesta.lineas').trialDays).toBeNull()
+    expect(elemento(propuesta.lineas, 1, 'propuesta.lineas').trialDays).toBe(14)
   })
 
   it('el tipo impositivo queda a null porque el contrato no lo publica', () => {
@@ -425,7 +457,7 @@ describe('la edición manual manda un DELTA, que es lo que el contrato quiere', 
     // El store piensa en carrito completo —no puede razonar sobre deltas de un
     // estado que otra pestaña pudo mover— y el seam traduce. La `version` es lo
     // que hace que el delta se pueda aplicar sin adivinar.
-    expect(put.mock.calls[0]![1]).toEqual({
+    expect(elemento(put.mock.calls, 0, 'put.mock.calls')[1]).toEqual({
       token: TOKEN,
       addedCodes: ['SURGERY'],
       removedCodes: ['INVENTORY'],

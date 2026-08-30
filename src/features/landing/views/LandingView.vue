@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useContratacion } from '@/features/contratacion/composables/useContratacion'
+import { useRecuperarPropuesta } from '@/features/asistente/composables/useRecuperarPropuesta'
 import LandingDayFlow from '../components/LandingDayFlow.vue'
 import LandingFaq from '../components/LandingFaq.vue'
 import LandingFinalCta from '../components/LandingFinalCta.vue'
@@ -42,17 +43,53 @@ import type { Ciclo, PublicPlan } from '../types/plans.types'
 const router = useRouter()
 const { plans, loading, error, refresh, findByCode } = usePlanes()
 const { vigente, elegir, limpiar } = useContratacion()
+const { recuperarDeEnlace, recuperarGuardada, conocePropuesta } = useRecuperarPropuesta()
+
+/**
+ * Aquí aterriza el enlace del correo de la propuesta.
+ *
+ * <p>El backend arma `<link-base-url>/?token=<43 caracteres>`, o sea la raíz, o
+ * sea esta vista — y hasta ahora nadie leía ese parámetro: el prospecto pulsaba,
+ * llegaba a la landing y la landing no sabía que traía una propuesta encima. El
+ * composable hidrata la propuesta, se lleva al prospecto a `/planes` y **quita
+ * el token de la barra sustituyendo la entrada del historial**.
+ *
+ * <p>Sin token no hace nada, que es el caso de prácticamente todas las visitas.
+ */
+onMounted(() => {
+  void recuperarDeEnlace()
+})
 
 /** Se oculta al actuar sobre ella; no se vuelve a mostrar en esta visita. */
 const bandaCerrada = ref(false)
 
 const intencionParaBanda = computed(() => (bandaCerrada.value ? null : vigente.value))
 
-const planDeLaBanda = computed(() => {
+/**
+ * La banda de «sigue donde lo dejaste», para las DOS formas de intención.
+ *
+ * <p>Antes solo cubría el paquete, y la carencia estaba escrita aquí como
+ * aceptada: «quien traiga una propuesta no ve banda». No era aceptable — la
+ * propuesta a medida es la entrada más cara de la landing (un párrafo escrito
+ * sobre el propio negocio, y unos segundos de espera), así que es justo la que
+ * más duele perder. Volver y que no se te ofrezca nada es empezar de cero.
+ *
+ * <p>Lo que sí se mantiene: en la rama del paquete hace falta que el catálogo
+ * haya llegado, porque la banda dice su nombre y no se inventa. En la rama de la
+ * propuesta hace falta que **este dispositivo siga pudiendo releerla**
+ * (`conocePropuesta`): sin el token local, «Seguimos donde lo dejaste» sería una
+ * promesa que el botón no puede cumplir, y el prospecto llegaría a `/planes` con
+ * el cuadro de texto vacío.
+ */
+const datosDeLaBanda = computed(() => {
   const i = intencionParaBanda.value
   if (!i) return null
-  const plan = findByCode(i.planCode)
-  return plan ? { plan, intencion: i } : null
+  if (i.origen === 'PLAN') {
+    const plan = findByCode(i.planCode)
+    return plan ? { origen: 'PLAN' as const, nombre: plan.name, intencion: i } : null
+  }
+  if (!conocePropuesta(i.propuestaId)) return null
+  return { origen: 'PROPUESTA' as const, nombre: undefined, intencion: i }
 })
 
 /**
@@ -66,11 +103,23 @@ function onElegir(plan: PublicPlan, ciclo: Ciclo) {
   elegir(plan, ciclo, previa?.sedes ?? 1, previa?.usuarios ?? 1)
 }
 
+/**
+ * «Seguir». En la rama de la propuesta **relee antes de navegar**: la intención
+ * guarda una referencia opaca y ni una cifra del carrito, así que sin la
+ * relectura `/planes` se abriría con el asistente en blanco y la banda habría
+ * mentido. No se espera al viaje para navegar —el panel monta ya en
+ * `RECUPERANDO` y enseña la propuesta cuando llega—, que es lo que hace que
+ * pulsar «Seguir» se sienta inmediato.
+ */
 function seguirDondeLoDejaste() {
   const i = vigente.value
   bandaCerrada.value = true
   if (!i) return
-  void router.push({ name: 'planes', query: { plan: i.planCode, ciclo: i.ciclo } })
+  if (i.origen === 'PROPUESTA') void recuperarGuardada(i.propuestaId)
+  void router.push({
+    name: 'planes',
+    query: i.origen === 'PLAN' ? { plan: i.planCode, ciclo: i.ciclo } : { ciclo: i.ciclo },
+  })
 }
 
 function empezarDeNuevo() {
@@ -92,10 +141,11 @@ function empezarDeNuevo() {
     <LandingTopbar />
 
     <ResumeIntentBanner
-      v-if="planDeLaBanda"
-      :plan-nombre="planDeLaBanda.plan.name"
-      :sedes="planDeLaBanda.intencion.sedes"
-      :usuarios="planDeLaBanda.intencion.usuarios"
+      v-if="datosDeLaBanda"
+      :origen="datosDeLaBanda.origen"
+      :plan-nombre="datosDeLaBanda.nombre"
+      :sedes="datosDeLaBanda.intencion.sedes"
+      :usuarios="datosDeLaBanda.intencion.usuarios"
       @seguir="seguirDondeLoDejaste"
       @empezar-de-nuevo="empezarDeNuevo"
     />

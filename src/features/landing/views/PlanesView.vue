@@ -50,7 +50,10 @@ function entero(v: unknown, porDefecto: number): number {
   return Number.isFinite(n) && n >= 1 ? n : porDefecto
 }
 
-const planCode = ref(texto(route.query.plan) ?? vigente.value?.planCode ?? '')
+/** El paquete que la intención trae, o nada si lo que trae es una propuesta. */
+const planDeLaIntencion = vigente.value?.origen === 'PLAN' ? vigente.value.planCode : undefined
+
+const planCode = ref(texto(route.query.plan) ?? planDeLaIntencion ?? '')
 const ciclo = ref<Ciclo>(
   route.query.ciclo === 'ANUAL' || route.query.ciclo === 'MENSUAL'
     ? route.query.ciclo

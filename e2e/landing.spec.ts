@@ -189,7 +189,16 @@ test.describe('/planes — el configurador ligero', () => {
     // personas y esta selección no cobraba ni un extra.
     await page.goto('/planes?plan=PACK_FULL&ciclo=ANUAL&sedes=3&usuarios=8')
 
-    await expect(page.getByRole('heading', { level: 1, name: 'Planes y precios' })).toBeVisible()
+    // El `<h1>` NO es «Planes y precios»: ese es el `<title>` de la ruta, que es
+    // otra cosa y sigue siendo correcto —lo afirman `a11y-publicas.spec.ts` y
+    // `TITULO_PLANES` aquí arriba—. La pantalla dejó de ser un catálogo de
+    // paquetes cuando el asistente pasó a ser su contenido principal, y ningún
+    // enlace de entrada promete ese texto: la topbar dice «Planes», el cierre de
+    // la landing «Ver los planes» y la tarjeta «Comparar los tres planes en
+    // detalle». El encabezado que describe lo que se hace aquí es el de la vista.
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Armemos el plan de tu clínica' }),
+    ).toBeVisible()
 
     const sedes = page.getByRole('spinbutton', { name: /sedes/i })
     await expect(sedes).toHaveValue('3')

@@ -4,18 +4,20 @@ import type { EstadoPlanActual } from '@/features/suscripcion/composables/estado
 export type { EstadoPlanActual }
 
 /**
- * Lo que el prospecto eligió ANTES de tener sesión.
+ * QUÉ eligió el prospecto. Es el discriminador de la unión, y existe porque el
+ * embudo dejó de tener una sola forma de entrada.
  *
- * Es una **intención**, no un compromiso, y así se rotula en pantalla: es
- * reversible y no tiene consecuencia. El acto vinculante ocurre después de
- * autenticarse, y no puede ocurrir antes: el registro es Opción B (sin
- * auto-login, con verificación por correo), así que firmar en la zona pública
- * dejaría una aceptación sin `acceptedByEmail` ni `acceptedIp` — los dos campos
- * que el modelo exige como prueba y que pone el SERVIDOR desde la petición, no
- * el formulario.
+ *  · `PLAN` — uno de los tres paquetes del catálogo, elegido en la landing o en
+ *    `/planes`. Lo identifica un `planCode` y sus importes los recalcula la
+ *    lista de precio transcrita.
+ *  · `PROPUESTA` — una propuesta a medida del asistente comercial: **N líneas**,
+ *    no un plan. La identifica una referencia opaca y sus importes **los tiene
+ *    el servidor y solo el servidor**.
  */
-export interface IntencionContratacion {
-  planCode: string
+export type OrigenIntencion = 'PLAN' | 'PROPUESTA'
+
+/** Lo que las dos formas comparten: el ciclo, las cantidades y los metadatos del embudo. */
+interface IntencionBase {
   ciclo: Ciclo
   sedes: number
   usuarios: number
@@ -45,9 +47,63 @@ export interface IntencionContratacion {
   descartada: boolean
 }
 
+/** Un paquete del catálogo. La forma que el embudo tuvo siempre. */
+export interface IntencionPlan extends IntencionBase {
+  origen: 'PLAN'
+  planCode: string
+}
+
+/**
+ * Una propuesta a medida del asistente.
+ *
+ * <p>Lleva **una referencia y ni una cifra del carrito**, y esa es toda la
+ * decisión de diseño. Arrastrar las líneas y los totales por el almacenamiento
+ * crearía una segunda verdad sobre unos importes que el servidor puede haber
+ * repreciado —el prospecto puede editar la propuesta en otra pestaña, o volver
+ * dos días después—, y esa segunda verdad envejecería en silencio dentro de la
+ * pantalla que decide una compra. El paso 6 **vuelve a preguntar** con
+ * `GET /assistant/proposal?token=…` y pinta lo que conteste el servidor.
+ */
+export interface IntencionPropuesta extends IntencionBase {
+  origen: 'PROPUESTA'
+  /**
+   * El identificador OPACO de cliente de la propuesta (`Propuesta.id`), **no el
+   * token**. El token no sale del seam del asistente ni entra en ningún store;
+   * ver la cabecera de `asistente.source.ts`. Con esto en la mano no se puede
+   * acreditar nada ante el servidor: solo pedirle al seam que relea.
+   */
+  propuestaId: string
+}
+
+/**
+ * Lo que el prospecto eligió ANTES de tener sesión: **un plan, o una propuesta**.
+ *
+ * <p>Es una **intención**, no un compromiso, y así se rotula en pantalla: es
+ * reversible y no tiene consecuencia. El acto vinculante ocurre después de
+ * autenticarse, y no puede ocurrir antes: el registro es Opción B (sin
+ * auto-login, con verificación por correo), así que firmar en la zona pública
+ * dejaría una aceptación sin `acceptedByEmail` ni `acceptedIp` — los dos campos
+ * que el modelo exige como prueba y que pone el SERVIDOR desde la petición, no
+ * el formulario.
+ *
+ * <p>Unión discriminada y no un `planCode` opcional: la mitad de los sitios que
+ * la consumen tienen que hacer una cosa distinta en cada rama —el resumen se
+ * calcula de una fuente o de la otra, las líneas de la oferta salen del paquete
+ * o de la propuesta—, y un campo nulable los habría dejado compilando con la
+ * rama que falta sin escribir.
+ */
+export type IntencionContratacion = IntencionPlan | IntencionPropuesta
+
 /** La selección tal como la manipulan la landing y `/planes`, sin metadatos. */
 export interface SeleccionContratacion {
   planCode: string
+  ciclo: Ciclo
+  sedes: number
+  usuarios: number
+}
+
+/** Las cantidades y el ciclo, que son lo único que las dos formas preguntan igual. */
+export interface CapacidadesElegidas {
   ciclo: Ciclo
   sedes: number
   usuarios: number
@@ -83,15 +139,51 @@ export interface LineaPrueba {
   precioDespues: number | null
 }
 
+/** Una línea de lo que se va a contratar, tal como se pinta y tal como se envía. */
+export interface LineaContratada {
+  code: string
+  nombre: string
+  /**
+   * `MODULE`, `CAPACITY`, `BUNDLE` u `ONE_TIME`, del servidor. `null` si no lo
+   * dijo.
+   *
+   * <p>Se pinta porque una capacidad cotizada —«5 usuarios»— no es una
+   * funcionalidad, y en la tabla del paso vinculante las dos filas serían
+   * indistinguibles. Ver {@link PropuestaLinea.tipo} para por qué es `string`.
+   */
+  tipo: string | null
+  /**
+   * Cuántas unidades. Es la que viaja como `quantity` en la oferta, así que no
+   * es solo presentación: una cantidad mal traída aquí es una cantidad mal
+   * cobrada.
+   */
+  cantidad: number
+  /**
+   * Importe **unitario** del servidor, o `null` si no lo publicó.
+   *
+   * <p>No se multiplica por {@link cantidad} en ningún sitio del front: eso es
+   * aritmética de dinero en el cliente, que es exactamente lo que este embudo no
+   * hace. Cuando la cantidad pasa de uno se pinta al lado, para que el importe
+   * se pueda leer.
+   */
+  importe: number | null
+}
+
 /** El resumen VINCULANTE del paso 6. Lo calcula el servidor, no el front. */
-export interface ResumenContratacion {
+interface ResumenBase {
   empresaNombre: string
   empresaIdentificador: string
-  planCode: string
-  planNombre: string
+  /**
+   * Qué se está contratando, en una frase: el nombre del paquete, o «Tu
+   * propuesta a medida».
+   *
+   * <p>Se llamaba `planNombre` y el nombre dejó de ser verdad en cuanto el
+   * resumen pudo venir de una propuesta: un campo llamado «nombre del plan»
+   * conteniendo «Tu propuesta a medida» es la clase de mentira pequeña con la
+   * que se empieza a no poder confiar en un tipo.
+   */
+  titulo: string
   ciclo: Ciclo
-  sedes: number
-  usuarios: number
   /**
    * Los tres importes son NULABLES, y los tres a la vez: `null` significa que la
    * selección incluye una capacidad que se cobra y que la lista de precio no
@@ -103,7 +195,18 @@ export interface ResumenContratacion {
    */
   subtotal: number | null
   impuesto: number | null
-  tasaImpuesto: number
+  /**
+   * Porcentaje, 0-100. **`null` cuando la fuente no lo publica**, y entonces la
+   * tabla escribe «IVA» a secas con el importe al lado.
+   *
+   * <p>Era `number` porque la única fuente era `PublicPlan.taxRate`. La
+   * propuesta del asistente no lo trae: `AssistantProposalResponse` publica
+   * `subtotal`, `taxes` y `total` pero ningún tipo impositivo, y el único
+   * `taxRate` del contrato es por línea y sin escala declarada —un `BigDecimal`
+   * que puede valer `0.19` o `19`—. Deducirlo aquí sería inventar un «IVA 19 %»
+   * en la pantalla que decide una compra, y equivocarse por un factor de cien.
+   */
+  tasaImpuesto: number | null
   total: number | null
   /** El mismo importe normalizado a mes, para comparar contra la intención. */
   subtotalMensualEquivalente: number | null
@@ -125,6 +228,48 @@ export interface ResumenContratacion {
   estadoPlanActual: EstadoPlanActual
 }
 
+/** El resumen de un paquete del catálogo. */
+export interface ResumenPlan extends ResumenBase {
+  origen: 'PLAN'
+  /** Con esto se resuelve el plan entero (`findByCode`) para armar las líneas de la oferta. */
+  planCode: string
+  /**
+   * Las cantidades contratadas de cada eje, y **solo de esta rama**.
+   *
+   * <p>Estaban en `ResumenBase`, y ahí eran una mentira de tipo: en la rama del
+   * plan `lineasDeContratacion` las convierte en líneas de la oferta —`{code:
+   * 'EXTRA_USER', quantity: 5}`— y el servidor cobra por ellas; en la de la
+   * propuesta la oferta son `lineasDePropuesta`, que no las mira, así que ni
+   * viajan ni se cobran. Con el campo compartido, el paso 6 pintaba «Sedes 3 /
+   * Personas 8» bajo «Lo que vas a contratar» para una propuesta cuya oferta
+   * pedía `EXTRA_USER × 3`: dos cifras distintas del mismo hecho, en la pantalla
+   * vinculante, y la que se cobraba era la que no se leía.
+   *
+   * <p>Vive aquí para que volver a pintarlas en la otra rama no compile.
+   */
+  sedes: number
+  usuarios: number
+}
+
+/**
+ * El resumen de una propuesta a medida.
+ *
+ * <p>Sus importes y sus líneas **son los que el servidor acaba de devolver**, no
+ * los que se guardaron al elegir. Por eso lleva {@link version}: es el bloqueo
+ * optimista con el que se detecta que la propuesta se editó desde otra pestaña
+ * mientras esta estaba abierta.
+ */
+export interface ResumenPropuesta extends ResumenBase {
+  origen: 'PROPUESTA'
+  propuestaId: string
+  /** El bloqueo optimista del servidor, tal como llegó en la relectura. */
+  version: number
+  /** Las líneas del carrito, del servidor. Son las que viajan a la oferta. */
+  lineas: LineaContratada[]
+}
+
+export type ResumenContratacion = ResumenPlan | ResumenPropuesta
+
 /**
  * Lo que devuelve la contratación.
  *
@@ -134,7 +279,10 @@ export interface ResumenContratacion {
  * y hasta cuándo vale, en vez de pedir al usuario que describa su compra por correo.
  */
 export interface ResultadoContratacion {
-  planNombre: string
+  /** Un paquete, o una propuesta a medida. La pantalla de éxito lo redacta distinto. */
+  origen: OrigenIntencion
+  /** Qué quedó reservado: el nombre del paquete, o «Tu propuesta a medida». */
+  titulo: string
   empresaNombre: string
   modulosActivados: string[]
   lineasPrueba: LineaPrueba[]

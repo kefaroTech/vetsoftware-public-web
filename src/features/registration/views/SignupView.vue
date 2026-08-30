@@ -36,8 +36,22 @@ function entero(v: unknown, porDefecto: number): number {
   return Number.isFinite(n) && n >= 1 ? n : porDefecto
 }
 
+/**
+ * La intención vigente, **solo cuando es un paquete**.
+ *
+ * <p>Una propuesta a medida no tiene `planCode`, y el carril de al lado pinta
+ * una tarjeta de plan con su precio calculado: no hay nada honesto que ponerle.
+ * Se declara aparte para que la ausencia sea explícita y no un `undefined` que
+ * se cuela por un `?.`.
+ */
+const intencionDePlan = computed(() => {
+  const i = vigente.value
+  return i && i.origen === 'PLAN' ? i : null
+})
+
 const seleccion = computed(() => {
-  const code = typeof route.query.plan === 'string' ? route.query.plan : vigente.value?.planCode
+  const code =
+    typeof route.query.plan === 'string' ? route.query.plan : intencionDePlan.value?.planCode
   const plan = findByCode(code)
   if (!plan) return null
   const ciclo: Ciclo =
@@ -51,6 +65,18 @@ const seleccion = computed(() => {
     usuarios: entero(route.query.usuarios, vigente.value?.usuarios ?? 1),
   }
 })
+
+/**
+ * El carril cuando lo que se trae es una propuesta a medida.
+ *
+ * <p>No se pinta la tarjeta de plan —no hay plan— y **tampoco se repiten aquí
+ * sus importes**: los tiene el servidor, releerlos costaría un viaje en la
+ * pantalla de registro y la cifra que se enseñara envejecería respecto de la del
+ * paso 6, que es la vinculante. Lo que sí hace falta es que quien se está
+ * registrando vea que su propuesta sigue ahí: el hueco en blanco se lee como
+ * «se perdió».
+ */
+const traePropuesta = computed(() => vigente.value?.origen === 'PROPUESTA')
 </script>
 
 <template>
@@ -69,6 +95,14 @@ const seleccion = computed(() => {
         :sedes="seleccion.sedes"
         :usuarios="seleccion.usuarios"
       />
+      <aside
+        v-else-if="traePropuesta"
+        class="ds-banner reg-propuesta"
+        data-testid="carril-propuesta"
+      >
+        Tu propuesta a medida te está esperando. Cuando confirmes tu correo la verás con sus
+        importes, y desde ahí la contratas.
+      </aside>
       <RegisterForm class="pub-reveal" @success="onSuccess" />
     </div>
     <CheckEmailPanel v-else :email="email" />
@@ -85,6 +119,10 @@ const seleccion = computed(() => {
   max-width: 1060px;
   margin: 0 auto;
   max-height: 100%;
+}
+
+.reg-propuesta {
+  align-self: start;
 }
 
 @media (width <= 960px) {

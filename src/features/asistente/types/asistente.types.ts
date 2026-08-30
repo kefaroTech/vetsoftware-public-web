@@ -58,6 +58,19 @@ import type { Ciclo } from '../../landing/types/plans.types'
  * <p>`YA_ERES_CLIENTE` está retirado a propósito (plan §8.2.2): comprobar si un
  * correo ya es cliente desde una pantalla anónima es un oráculo de existencia de
  * clientes abierto a cualquiera con un diccionario de correos.
+ *
+ * <p>`RECUPERANDO` y `ENLACE_CADUCADO` son los dos estados del enlace del
+ * correo, y ninguno se puede fundir con los que ya había:
+ *
+ *  · `RECUPERANDO` **no es `CARGANDO`**. `CARGANDO` es «el modelo está leyendo
+ *    lo que escribiste» —de tres a ocho segundos, con su cuenta atrás y su
+ *    botón de cancelar—; esto es una relectura sin modelo, y anunciarla con
+ *    aquellas frases le contaría al usuario un trabajo que no está pasando.
+ *  · `ENLACE_CADUCADO` **no es `ERROR_MODELO` ni `ASISTENTE_CAIDO`**. No ha
+ *    fallado nada nuestro: el enlace tenía fecha de caducidad y el correo la
+ *    decía por escrito. Pintarlo como avería manda al prospecto a reintentar
+ *    un camino que no lleva a ningún sitio, y de paso nos acusa de un fallo que
+ *    no hubo.
  */
 export type EstadoAsistente =
   | 'INICIAL'
@@ -68,6 +81,8 @@ export type EstadoAsistente =
   | 'ASISTENTE_CAIDO'
   | 'NO_ENTENDIDO'
   | 'FUERA_DE_DOMINIO'
+  | 'RECUPERANDO'
+  | 'ENLACE_CADUCADO'
 
 /**
  * De dónde salió una línea. Son cuatro y **ninguna es prescindible**.
@@ -96,6 +111,24 @@ export interface PropuestaLinea {
   /** `short_description` del catálogo, en español revisado. */
   descripcion: string
   origen: OrigenLinea
+  /**
+   * Qué CLASE de artículo es, tal como lo publica el servidor
+   * (`AssistantProposalLineResponse.kind`): `MODULE`, `CAPACITY`, `BUNDLE` o
+   * `ONE_TIME`.
+   *
+   * <p>Existe porque sin él **una capacidad cotizada se pinta como un módulo
+   * más**: la misma fila, el mismo tipo de letra y ningún indicio de que lo que
+   * se está cobrando son unidades de un eje y no una funcionalidad. El campo
+   * llevaba en el contrato desde el principio y este front lo estaba tirando en
+   * el seam.
+   *
+   * <p>Se guarda como `string | null` y NO como unión cerrada, por el mismo
+   * motivo que en `AssistantProposalLineResponse`: `MatchesContract` acepta un
+   * tipo local más estrecho sin comprobarlo, así que estrecharlo escondería un
+   * valor nuevo del backend detrás de un tipo que miente. Quien lo consuma
+   * compara contra el literal que le interesa y trata lo demás como «otra cosa».
+   */
+  tipo: string | null
   /**
    * Cuántas unidades del artículo. Casi siempre `1`; los ejes de capacidad son
    * los que traen más.
@@ -186,12 +219,14 @@ export interface PropuestaTotales {
 /**
  * Una capacidad, mostrada como DATO y nunca como línea cotizada.
  *
- * <p>La frase que produce es «3 personas: 1 incluida, el resto se ajusta al
- * contratar». No es una elección de redacción: los cuatro `EXTRA_*` tienen
- * `selfServiceEligible = false` porque no cuelgan de ningún `BUNDLE` activo, así
- * que cotizarlos produce un `ARTICULO_NO_CONTRATABLE` en el paso vinculante —
- * con un texto que a propósito **no dice qué línea sobró**, después de que el
- * prospecto se haya registrado y verificado el correo.
+ * <p>La frase que produce es «8 personas: 2 van incluidas», y **ahí se para**.
+ * Decía «el resto se ajusta al contratar» y eso no ocurría en ninguna parte: el
+ * número no sale del navegador. No es una elección de redacción que se pueda
+ * revisar a la ligera: los cuatro `EXTRA_*` tienen `selfServiceEligible = false`
+ * porque no cuelgan de ningún `BUNDLE` activo, así que cotizarlos produce un
+ * `ARTICULO_NO_CONTRATABLE` en el paso vinculante — con un texto que a propósito
+ * **no dice qué línea sobró**, después de que el prospecto se haya registrado y
+ * verificado el correo. Ver la cabecera de `PropuestaCapacidades.vue`.
  */
 export interface CapacidadPropuesta {
   unit: string
@@ -345,11 +380,14 @@ export interface AceptacionLegal {
 /**
  * La petición del turno inicial.
  *
- * <p>⚠️ **Sin ciclo, y no por olvido.** `GenerateProposalRequest` son tres
- * campos y ninguno es el ciclo; ver {@link PropuestaTotales.ciclo}. Lo que este
- * tipo declara es lo que de verdad sale por el cable: un argumento que el seam
- * no puede mandar no se declara aquí, porque un campo que el llamador rellena y
- * nadie envía es la forma más barata de creer que se está mandando algo.
+ * <p>⚠️ **Sigue sin ciclo, y ahora eso es una decisión y no un límite.**
+ * `GenerateProposalRequest` ya declara `billingCycle` —opcional, y ausente
+ * significa `MONTHLY`—, pero la pantalla del asistente no tiene selector de
+ * ciclo, así que el seam no tiene qué mandar. La regla de este tipo no cambia:
+ * lo que declara es lo que de verdad sale por el cable, porque un campo que el
+ * llamador rellena y nadie envía es la forma más barata de creer que se está
+ * mandando algo. El día que haya selector hay que añadirlo aquí **y** al cuerpo
+ * que arma `generarPropuesta`, no solo aquí. Ver {@link PropuestaTotales.ciclo}.
  */
 export interface GenerarArgs {
   /** Correo del prospecto. Va al enlace de vuelta, y a nada más. */
@@ -426,9 +464,10 @@ export interface LegalAcceptanceRequest {
 /**
  * El cuerpo del turno inicial.
  *
- * <p>⚠️ **No lleva ciclo, y tampoco sedes ni personas.** El esquema son tres
- * campos y estos tres: lo que el prospecto escribe, su correo y las
- * aceptaciones. Ver {@link PropuestaTotales.ciclo} y {@link CapacidadPropuesta}.
+ * <p>⚠️ **Ya lleva ciclo, y sigue sin llevar sedes ni personas.** El esquema son
+ * cuatro campos: lo que el prospecto escribe, su correo, las aceptaciones y el
+ * ciclo con el que se cotiza. Ver {@link PropuestaTotales.ciclo} y
+ * {@link CapacidadPropuesta}.
  *
  * <p>La llave de idempotencia **no está aquí**: viaja en la cabecera
  * `Idempotency-Key`, porque es metadato de transporte —«esta petición es la
@@ -439,6 +478,22 @@ export interface GenerateProposalRequest {
   /** El texto libre del prospecto, de 15 a 1000 caracteres. */
   description: string
   acceptances: LegalAcceptanceRequest[]
+  /**
+   * ⚠️ **Opcional en el contrato, y tiene que seguir siéndolo.** Ausente significa `MONTHLY`, y
+   * el defecto lo aplica el servidor (`GenerateProposalCommand`), no este front. Por eso el
+   * cambio es aditivo: un cliente ya desplegado que no lo mande recibe exactamente lo que
+   * recibía ayer.
+   *
+   * <p><b>Este front todavía no lo envía</b>, y el seam tampoco lo acepta —{@link GenerarArgs}
+   * no lo declara—: la pantalla del asistente no tiene selector de ciclo. Se declara aquí porque
+   * el esquema está atado en `api.contract.ts` y `UndeclaredFields` rompe el build si el
+   * contrato tiene un campo que este tipo no consta. Poner el selector es trabajo de pantalla,
+   * no de contrato.
+   *
+   * <p>Vocabulario del CONTRATO (inglés), no el {@link Ciclo} de dominio en español: los
+   * conjuntos de `MatchesContract` cruzan por nombre y por valor.
+   */
+  billingCycle?: 'MONTHLY' | 'ANNUAL'
 }
 
 /**

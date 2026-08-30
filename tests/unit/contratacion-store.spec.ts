@@ -5,7 +5,10 @@ import {
   estaCaducada,
   useContratacionStore,
 } from '@/features/contratacion/stores/contratacion.store'
-import type { IntencionContratacion } from '@/features/contratacion/types/contratacion.types'
+import type {
+  IntencionContratacion,
+  IntencionPlan,
+} from '@/features/contratacion/types/contratacion.types'
 
 /**
  * La intención de contratación y su espejo en `localStorage`.
@@ -18,8 +21,9 @@ import type { IntencionContratacion } from '@/features/contratacion/types/contra
 
 const MS_POR_DIA = 86_400_000
 
-function intencion(over: Partial<IntencionContratacion> = {}): IntencionContratacion {
+function intencion(over: Partial<IntencionPlan> = {}): IntencionPlan {
   return {
+    origen: 'PLAN',
     planCode: 'PACK_CLINIC',
     ciclo: 'MENSUAL',
     sedes: 1,
@@ -34,6 +38,12 @@ function intencion(over: Partial<IntencionContratacion> = {}): IntencionContrata
 
 function escribirEspejo(valor: unknown): void {
   window.localStorage.setItem(CONTRATACION_INTENCION_KEY, JSON.stringify(valor))
+}
+
+/** El `planCode` de la intención vigente, o `undefined` si no la hay o no es de plan. */
+function planVigente(store: ReturnType<typeof useContratacionStore>): string | undefined {
+  const i = store.vigente
+  return i && i.origen === 'PLAN' ? i.planCode : undefined
 }
 
 function leerEspejo(): IntencionContratacion | null {
@@ -164,7 +174,7 @@ describe('descartar, limpiar y volver a elegir', () => {
 
     store.guardar({ planCode: 'PACK_FULL', ciclo: 'ANUAL', sedes: 3, usuarios: 8 }, 329000, 'y')
 
-    expect(store.vigente?.planCode).toBe('PACK_FULL')
+    expect(planVigente(store)).toBe('PACK_FULL')
     expect(store.vigente?.descartada).toBe(false)
   })
 
@@ -214,7 +224,7 @@ describe('almacenamiento bloqueado (modo privado)', () => {
         store.guardar({ planCode: 'PACK_CLINIC', ciclo: 'MENSUAL', sedes: 1, usuarios: 1 }, 1, 'x'),
       ).not.toThrow()
       // Lo que se pierde es la reanudación, no la compra.
-      expect(store.vigente?.planCode).toBe('PACK_CLINIC')
+      expect(planVigente(store)).toBe('PACK_CLINIC')
     } finally {
       romper.mockRestore()
     }

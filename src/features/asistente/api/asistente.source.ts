@@ -1,3 +1,4 @@
+import { ASISTENTE_PROPUESTA_KEY } from '@/constants/storageKeys'
 import { http } from '@/services/http/http.client'
 import type {
   ActualizarLineasArgs,
@@ -86,6 +87,91 @@ const idPorToken = new Map<string, string>()
 let contador = 0
 
 /**
+ * ── EL ESPEJO EN ALMACENAMIENTO, y por qué existe ───────────────────────────
+ *
+ * El `Map` de arriba muere con la pestaña. Mientras la propuesta solo se veía en
+ * `/planes` eso bastaba; desde que una propuesta puede convertirse en una
+ * intención de contratación, deja de bastar: entre generarla y confirmarla hay
+ * un registro, una verificación por correo y al menos una recarga completa de la
+ * página. Sin espejo, quien pulsa «Continuar con esta propuesta» llega al paso 6
+ * con una intención que apunta a un identificador que ya no existe — el carrito
+ * perdido en silencio que el aviso del panel existía para no prometer.
+ *
+ * <p>Lo que se persiste es **exactamente lo que hay en el `Map`**, y por tanto
+ * el token. No hay alternativa honesta: la propuesta se relee con
+ * `GET /assistant/proposal?token=…` y el servidor no publica ningún otro
+ * identificador. Guardar el carrito en su lugar sería peor —dos verdades sobre
+ * los mismos importes, y la del cliente envejeciendo—; la regla de que **el
+ * servidor es la fuente de verdad de las líneas y los totales** se sostiene
+ * precisamente porque aquí solo se guarda con qué volver a preguntárselo.
+ *
+ * <p>La exposición es la misma que ya acepta el repositorio para la credencial
+ * de sesión (`AUTH_STORAGE_KEY`, en este mismo `localStorage`): mismo origen,
+ * mismo alcance de un XSS. Lo que sigue prohibido es lo de la cabecera —el token
+ * en un segmento de ruta, y el token dentro de un store de Pinia—, y las dos
+ * siguen sin ocurrir: el espejo lo escribe y lo lee este fichero, y hacia fuera
+ * sigue saliendo solo el identificador opaco.
+ */
+interface SesionSerializada {
+  id: string
+  token: string
+  codigos: string[]
+  manuales: string[]
+}
+
+let hidratado = false
+
+/** Escribir puede lanzar (modo privado, cuota llena): eso no puede tumbar el asistente. */
+function persistirSesiones(): void {
+  try {
+    const filas: SesionSerializada[] = [...sesiones.entries()].map(([id, s]) => ({
+      id,
+      token: s.token,
+      codigos: s.codigos,
+      manuales: [...s.manuales],
+    }))
+    window.localStorage.setItem(ASISTENTE_PROPUESTA_KEY, JSON.stringify({ contador, filas }))
+  } catch {
+    // Se pierde la reanudación tras recargar, no la propuesta de esta pestaña.
+  }
+}
+
+/**
+ * Lee el espejo una sola vez por vida del módulo.
+ *
+ * <p>El {@link contador} se restaura al máximo leído, y no a cero: si volviera a
+ * empezar, la propuesta siguiente de esta pestaña se llamaría `p-1` y pisaría en
+ * el `Map` a la que la intención guardada está apuntando. Una entrada corrupta
+ * se descarta entera —sin token no hay nada que releer— en vez de resucitar una
+ * sesión a medias.
+ */
+function hidratarSesiones(): void {
+  if (hidratado) return
+  hidratado = true
+  try {
+    const crudo = window.localStorage.getItem(ASISTENTE_PROPUESTA_KEY)
+    if (!crudo) return
+    const leido = JSON.parse(crudo) as { contador?: unknown; filas?: unknown }
+    const filas = Array.isArray(leido.filas) ? (leido.filas as SesionSerializada[]) : []
+    for (const fila of filas) {
+      if (typeof fila?.id !== 'string' || typeof fila?.token !== 'string' || !fila.token) continue
+      sesiones.set(fila.id, {
+        token: fila.token,
+        codigos: Array.isArray(fila.codigos) ? fila.codigos : [],
+        manuales: new Set(Array.isArray(fila.manuales) ? fila.manuales : []),
+      })
+      idPorToken.set(fila.token, fila.id)
+    }
+    contador = Number.isFinite(leido.contador)
+      ? Math.max(contador, Number(leido.contador))
+      : contador
+  } catch {
+    // Espejo ilegible: se sigue sin él. El asistente funciona, lo que se pierde
+    // es poder retomar una propuesta anterior a la recarga.
+  }
+}
+
+/**
  * Un identificador de cliente **que no es el token**.
  *
  * <p>Existe porque el contrato no publica ningún identificador de propuesta que
@@ -104,6 +190,7 @@ function abortadoAntesDeEmpezar(signal?: AbortSignal): Error | null {
 
 /** La sesión de una propuesta, o el error de haberla perdido. */
 function sesionDe(propuestaId: string): SesionPropuesta {
+  hidratarSesiones()
   const sesion = sesiones.get(propuestaId)
   if (!sesion) {
     // Sin token no hay petición que hacer. Se falla ruidosamente en vez de
@@ -116,9 +203,11 @@ function sesionDe(propuestaId: string): SesionPropuesta {
 
 /** Guarda —o refresca— la sesión, y devuelve el identificador estable del token. */
 function registrar(token: string, codigos: string[], manuales: Set<string>): string {
+  hidratarSesiones()
   const id = idPorToken.get(token) ?? nuevoId()
   idPorToken.set(token, id)
   sesiones.set(id, { token, codigos, manuales })
+  persistirSesiones()
   return id
 }
 
@@ -166,6 +255,9 @@ function comoLinea(
     nombre: linea.name ?? code,
     descripcion: linea.description ?? '',
     origen: origenDe(code, manuales, presentacion),
+    // El `kind` del servidor, tal cual. Se pasaba por alto y era el motivo de
+    // que una capacidad cotizada se pintara como un módulo más.
+    tipo: linea.kind,
     cantidad: linea.quantity ?? 1,
     // `unitAmount` y no `totalAmount`: aquél es el precio del artículo —la misma
     // base con la que el catálogo pinta su columna y con la que el servidor arma
@@ -486,14 +578,18 @@ export async function actualizarLineas(
  * `http.path` deja de distinguir «leer la propuesta A» de «leer la propuesta B».
  * Es exactamente lo que se busca.
  *
- * <p>Nota para quien venga detrás: **ninguna pantalla lo llama todavía**. La
- * ruta que abre el enlace del correo no existe en este front; la función sí,
- * porque es la operación cuyo detalle de seguridad no puede quedarse sin
- * escribir hasta que alguien tenga prisa.
+ * @param manuales
+ *            lo que este cliente añadió a mano, cuando se sabe. Se pasa vacío
+ *            desde el enlace del correo —otro navegador no puede saberlo— y
+ *            lleno desde {@link releerPropuesta}, que lo tiene en la sesión
+ *            persistida. Sin él, tras una recarga todas las líneas volverían a
+ *            rotularse `IA`/`BASE` y el usuario vería como sugerido lo que había
+ *            elegido él.
  */
 export async function leerPropuesta(
   token: string,
   signal?: AbortSignal,
+  manuales = new Set<string>(),
 ): Promise<ResultadoAsistente> {
   const abortado = abortadoAntesDeEmpezar(signal)
   if (abortado) throw abortado
@@ -504,7 +600,91 @@ export async function leerPropuesta(
     skipGlobalLoader: true,
   })
 
-  return comoResultado(data, new Set())
+  return comoResultado(data, manuales)
+}
+
+/**
+ * ¿Sigue este navegador teniendo con qué releer esa propuesta?
+ *
+ * <p>Es una pregunta LOCAL y no un viaje: distingue «perdimos el token» de
+ * «el servidor dijo que no». Las dos acaban en pantalla como una propuesta que
+ * no se puede mostrar, pero la primera se arregla volviendo a `/planes` en ESTE
+ * dispositivo y la segunda no, y la frase que se le escribe al usuario es
+ * distinta. Sin esto, el paso 6 tendría que leer un `Error` por su mensaje.
+ */
+export function conocePropuesta(propuestaId: string): boolean {
+  hidratarSesiones()
+  return sesiones.has(propuestaId)
+}
+
+/**
+ * Relee una propuesta que ESTE navegador generó, por su identificador opaco.
+ *
+ * <p>Es lo que convierte «continuar con esta propuesta» en algo que sobrevive a
+ * una recarga: el paso vinculante no arrastra el carrito, arrastra la referencia
+ * y **vuelve a preguntar**. Si el prospecto editó la propuesta en otra pestaña
+ * entre medias, lo que llega aquí son las líneas y los totales de después de esa
+ * edición, que es la única versión que el servidor va a cotizar.
+ *
+ * <p>El token no sale: entra {@link Propuesta.id} y sale la propuesta. Quien
+ * llama a esto no puede acreditar nada ante el servidor.
+ *
+ * @throws si el navegador ya no tiene la sesión. Compruébalo antes con
+ *         {@link conocePropuesta}: llegar aquí sin sesión es un fallo de
+ *         programación, no un estado del usuario.
+ */
+export async function releerPropuesta(
+  propuestaId: string,
+  signal?: AbortSignal,
+): Promise<ResultadoAsistente> {
+  const sesion = sesionDe(propuestaId)
+  return leerPropuesta(sesion.token, signal, sesion.manuales)
+}
+
+/**
+ * Lo que abre el enlace del correo: **relee por el token que trae la URL**.
+ *
+ * <p>Es {@link leerPropuesta} con lo único que este fichero puede aportar y el
+ * llamador no: si ESTE navegador ya conoce el token —lo generó él, y el espejo
+ * de `localStorage` sobrevivió a la recarga—, recupera de la sesión persistida
+ * los códigos que el usuario añadió a mano. Sin eso, un prospecto que vuelve
+ * por su propio enlace ve rotulado como «te lo sugerimos» lo que había elegido
+ * él, que es la carencia que el parámetro `manuales` de {@link leerPropuesta}
+ * existe para cubrir y que nadie estaba rellenando.
+ *
+ * <p>Desde otro navegador no hay nada que recuperar y se pasa el conjunto
+ * vacío: no se inventa un origen que no consta.
+ *
+ * <p>⚠️ El token **entra** aquí y no sale: lo que se devuelve lleva el
+ * identificador opaco. Quien llama a esto no puede acreditar nada ante el
+ * servidor, que es la razón de que la lectura del enlace viva en el seam y no
+ * en un composable ni —mucho menos— en un store.
+ */
+export async function recuperarPorToken(
+  token: string,
+  signal?: AbortSignal,
+): Promise<ResultadoAsistente> {
+  hidratarSesiones()
+  const id = idPorToken.get(token)
+  const manuales = id ? sesiones.get(id)?.manuales : undefined
+  return leerPropuesta(token, signal, new Set(manuales ?? []))
+}
+
+/**
+ * ¿El servidor dijo que esa propuesta no existe?
+ *
+ * <p>**404 y punto, sin distinguir «no existe» de «caducó».** No es una
+ * simplificación de este front: el servidor los colapsa a propósito
+ * (`ProposalReader`, «es 404 y no 410») porque un 410 le confirmaría a quien
+ * prueba tokens a ciegas que ese existió. Aquí la consecuencia es que la
+ * pantalla tiene **una** frase para los dos casos, y tiene que ser la del
+ * usuario —«este enlace ya no sirve»— y no la del sistema.
+ *
+ * <p>Se comprueba el `status` y no el mensaje del `ProblemDetail`: el texto es
+ * copy del servidor y cambiarlo no debe apagar esta rama en silencio.
+ */
+export function esPropuestaNoEncontrada(error: unknown): boolean {
+  return (error as { response?: { status?: number } })?.response?.status === 404
 }
 
 /** Solo para las pruebas: vacía el registro de sesiones entre casos. */
@@ -512,4 +692,10 @@ export function olvidarSesiones(): void {
   sesiones.clear()
   idPorToken.clear()
   contador = 0
+  hidratado = false
+  try {
+    window.localStorage.removeItem(ASISTENTE_PROPUESTA_KEY)
+  } catch {
+    /* ignore */
+  }
 }

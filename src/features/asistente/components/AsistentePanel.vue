@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useContratacion } from '@/features/contratacion/composables/useContratacion'
 import CicloFieldset from '../../landing/components/CicloFieldset.vue'
 import { useAsistente } from '../composables/useAsistente'
 import { useCatalogoComercial } from '../composables/useCatalogoComercial'
+import { useRecuperarPropuesta } from '../composables/useRecuperarPropuesta'
 import AsistenteEntrada from './AsistenteEntrada.vue'
 import AsistenteEspera from './AsistenteEspera.vue'
 import AsistenteFueraDeDominio from './AsistenteFueraDeDominio.vue'
@@ -74,6 +77,7 @@ const {
   cambiarCiclo,
   fijarCapacidades,
   cancelar,
+  reiniciar,
   nuevaLlave,
 } = useAsistente()
 
@@ -85,11 +89,30 @@ const {
 } = useCatalogoComercial(ciclo)
 
 const encabezado = ref<HTMLElement | null>(null)
+/** El aviso de enlace caducado, para llevarle el foco: es TODO lo que hay que leer al llegar. */
+const avisoCaducado = ref<HTMLElement | null>(null)
 
 // La llave de idempotencia se genera al ENTRAR en la pantalla, no al pulsar:
 // es lo que hace que un doble clic —o el reintento tras cancelar— no pague dos
 // invocaciones ni cree dos propuestas huérfanas que consumen cupo.
 onMounted(() => nuevaLlave())
+
+/**
+ * El enlace del correo, cuando la URL base apunta directamente a `/planes`.
+ *
+ * <p>Se llama también desde `LandingView` —el enlace que manda el backend hoy
+ * apunta a la raíz—, y por eso `recuperarDeEnlace` es inocuo sin token: tras
+ * limpiar la barra, la navegación monta este panel y vuelve a llamar aquí. Esa
+ * segunda llamada no debe tocar el estado o borraría el `RECUPERANDO` que la
+ * primera acaba de poner.
+ */
+const { recuperarDeEnlace } = useRecuperarPropuesta()
+onMounted(() => {
+  void recuperarDeEnlace()
+})
+
+const router = useRouter()
+const { elegirPropuesta } = useContratacion()
 
 const esperando = computed(() => estado.value === 'CARGANDO' || estado.value === 'REFINANDO')
 const conPropuesta = computed(
@@ -110,6 +133,33 @@ const esPaquete = computed(() => {
   return codigosEnCarrito.value.some((c) => codigos.has(c))
 })
 
+/**
+ * Lleva la propuesta al embudo de contratación.
+ *
+ * <p>Guarda **la referencia opaca y el subtotal que hay en pantalla**, y salta
+ * al registro. Lo que NO hace, y es toda la decisión: no copia las líneas, no
+ * copia el total y no calcula nada. El paso vinculante relee la propuesta del
+ * servidor, así que si el prospecto vuelve dos días después —o la edita en otra
+ * pestaña— lo que se le cotiza es lo que el servidor diga entonces, y la
+ * diferencia contra este subtotal se le enseña como deriva de precio en vez de
+ * cambiar el importe en silencio.
+ *
+ * <p>El ciclo que se guarda es **el de los totales** (`totales.ciclo`), no el
+ * del conmutador: el asistente cotiza en mensual y ese conmutador mueve el
+ * catálogo, no la propuesta. Guardar `ANUAL` junto a unos importes mensuales
+ * rotularía como anual el resumen del paso vinculante.
+ */
+function continuarConPropuesta(): void {
+  const actual = propuesta.value
+  if (!actual) return
+  elegirPropuesta(
+    actual.id,
+    { ciclo: actual.totales.ciclo, sedes: sedes.value, usuarios: usuarios.value },
+    actual.totales.subtotal,
+  )
+  void router.push({ name: 'signup' })
+}
+
 async function enfocarResultado(): Promise<void> {
   await nextTick()
   encabezado.value?.focus()
@@ -122,6 +172,14 @@ watch(estado, async (nuevo, anterior) => {
   if ((anterior === 'CARGANDO' || anterior === 'REFINANDO') && nuevo === 'PROPUESTA_LISTA') {
     await enfocarResultado()
   }
+  // Quien llega por el enlace del correo viene a ver una propuesta y se
+  // encuentra otra cosa. Sin llevar el foco al aviso, un lector de pantalla
+  // anuncia la pantalla de `/planes` desde arriba y el motivo real —lo único
+  // que explica por qué no está su propuesta— queda enterrado.
+  if (nuevo === 'ENLACE_CADUCADO' && (anterior === 'RECUPERANDO' || anterior === 'INICIAL')) {
+    await nextTick()
+    avisoCaducado.value?.focus()
+  }
 })
 </script>
 
@@ -130,7 +188,12 @@ watch(estado, async (nuevo, anterior) => {
     <!-- ENTRADA. Se mantiene montada mientras no haya propuesta para que el
          texto del prospecto no dependa de un remontaje. -->
     <AsistenteEntrada
-      v-if="estado === 'INICIAL' || estado === 'ERROR_MODELO' || estado === 'ASISTENTE_CAIDO'"
+      v-if="
+        estado === 'INICIAL' ||
+        estado === 'ERROR_MODELO' ||
+        estado === 'ASISTENTE_CAIDO' ||
+        estado === 'ENLACE_CADUCADO'
+      "
       v-model:texto="texto"
       v-model:email="email"
       :ocupado="esperando"
@@ -167,6 +230,36 @@ watch(estado, async (nuevo, anterior) => {
     >
       El asistente no está disponible ahora mismo. Puedes armar tu plan tú mismo aquí abajo, o
       elegir uno de nuestros paquetes.
+    </div>
+
+    <!-- RECUPERANDO. Es una relectura, no una invocación al modelo: ni las
+         frases escalonadas de la espera ni el botón de cancelar tienen sentido
+         aquí. Una sola región viva con la verdad de lo que está pasando. -->
+    <p v-if="estado === 'RECUPERANDO'" class="apan-cargando" role="status" aria-live="polite">
+      Estamos recuperando tu propuesta…
+    </p>
+
+    <!-- ENLACE CADUCADO. **No es un error del sistema y no se pinta como tal**:
+         el enlace tenía fecha de caducidad y el correo la decía por escrito. Es
+         `--warning` y no `--error`, dice qué pasó sin acusar a nadie, y la
+         salida está justo debajo — el cuadro de texto ya está montado, así que
+         «Empezar de nuevo» solo tiene que retirar el aviso. -->
+    <div
+      v-if="estado === 'ENLACE_CADUCADO'"
+      ref="avisoCaducado"
+      class="ds-banner ds-banner--warning apan-aviso"
+      role="status"
+      tabindex="-1"
+      data-testid="propuesta-enlace-caducado"
+    >
+      <p class="apan-aviso-t">Este enlace ya no sirve</p>
+      <p class="apan-aviso-p">
+        Los enlaces de propuesta caducan. Cuéntanos otra vez a qué se dedica tu clínica aquí abajo y
+        te armamos una nueva en unos segundos.
+      </p>
+      <button type="button" class="ds-btn ds-btn--ghost apan-boton" @click="reiniciar">
+        Empezar de nuevo
+      </button>
     </div>
 
     <AsistenteEspera v-if="esperando" :refinando="estado === 'REFINANDO'" @cancelar="cancelar" />
@@ -233,22 +326,25 @@ watch(estado, async (nuevo, anterior) => {
         @cambiar="cambiarAPaquete"
       />
 
-      <!-- ⚠️ AQUÍ VA «Continuar con esta propuesta», y hoy NO ESTÁ. No es un
-           olvido: el embudo de contratación asume que una selección es UN plan
-           (`IntencionContratacion.planCode`), y una propuesta a medida son N
-           líneas. Mientras esa unión discriminada no exista, el botón llevaría
-           al prospecto al registro y su carrito se perdería al hidratar, en
-           silencio — que es exactamente el fallo que esta feature no puede
-           permitirse. Un botón que promete algo que no pasa es peor que la
-           ausencia del botón.
-
-           En su lugar, la salida honesta: el camino que SÍ funciona hoy. -->
-      <p class="ds-banner apan-aviso apan-salida">
-        ¿Quieres contratar ya? Por ahora la contratación va por nuestros tres paquetes, aquí abajo.
-        Si prefieres esta propuesta a medida, escríbenos a
-        <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> con lo que armaste y la
-        cerramos contigo.
-      </p>
+      <!-- «Continuar con esta propuesta». Lo que se lleva al embudo es **la
+           referencia de la propuesta y el importe que hay ahora mismo en
+           pantalla**, no el carrito: el paso vinculante vuelve a pedirle las
+           líneas y los totales al servidor, y si esta propuesta cambia entre
+           medias lo que se cotiza es la versión de entonces. El importe viaja
+           solo para poder decir «cuando lo elegiste valía X, ahora vale Y» si se
+           movió; nunca para pintarlo como precio. -->
+      <div class="apan-salida">
+        <button
+          type="button"
+          class="ds-btn ds-btn--primary ds-btn--lg"
+          @click="continuarConPropuesta"
+        >
+          Continuar con esta propuesta
+        </button>
+        <p class="ds-meta apan-salida-nota">
+          Te pedimos los datos de tu clínica. Sin tarjeta, y todavía no contratas nada.
+        </p>
+      </div>
 
       <PropuestaRecomendados
         :recomendados="propuesta.recomendados"
@@ -339,7 +435,13 @@ watch(estado, async (nuevo, anterior) => {
 }
 
 .apan-salida {
-  font-weight: 600;
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.apan-salida-nota {
+  margin: 0;
 }
 
 .apan-resultado {

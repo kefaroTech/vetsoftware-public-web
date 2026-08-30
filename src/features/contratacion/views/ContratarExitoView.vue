@@ -60,8 +60,16 @@ onMounted(async () => {
          ocurrió: la elección quedó tomada y guardada, y la activación es el paso que falta.
          Es el punto donde la app le habla a quien acaba de decidir una compra, así que lo
          primero que se lee no puede desmentir lo último. -->
+    <!-- Un paquete se nombra («Tu plan Completo está reservado»); una propuesta a
+         medida ya se llama a sí misma («Tu propuesta a medida está reservada»), y
+         anteponerle «Tu plan» produciría «Tu plan Tu propuesta a medida». Es la
+         primera frase que lee quien acaba de comprar: tiene que estar escrita en
+         castellano, no en plantilla. -->
     <h1 ref="h1" class="ds-display ds-display--sm" tabindex="-1">
-      Listo. Tu plan {{ resultado.planNombre }} está reservado.
+      <template v-if="resultado.origen === 'PLAN'">
+        Listo. Tu plan {{ resultado.titulo }} está reservado.
+      </template>
+      <template v-else> Listo. {{ resultado.titulo }} está reservada. </template>
     </h1>
     <p class="ds-subtitle">
       {{ modulos }} son los módulos que quedan reservados para

@@ -11,9 +11,23 @@ import { CAPACITY_UNIT_LABEL, CAPACITY_UNIT_LABEL_ONE } from '../types/plans.typ
  *
  * «Empezar de nuevo» borra sin pedir confirmación: no destruye nada que costara
  * trabajo, y una confirmación para tirar dos números es fricción sin ganancia.
+ *
+ * ── Las DOS formas de intención, y por qué la banda tiene que saber cuál es ──
+ * El embudo dejó de tener una sola entrada: se puede volver a medias de elegir
+ * un **paquete** o a medias de armar una **propuesta a medida**. La banda solo
+ * conocía la primera, así que quien dejó a medias una propuesta —la entrada más
+ * cara de toda la landing, un párrafo escrito sobre su propio negocio— volvía y
+ * no se le ofrecía nada.
+ *
+ * <p>Y no se resuelve pintando un paquete cualquiera: una propuesta no tiene
+ * `planCode` y enseñar uno inventado sería mostrarle al prospecto una elección
+ * que no hizo. Por eso entra el discriminador y no un nombre opcional — la
+ * frase cambia entera, no solo el sustantivo.
  */
 const props = defineProps<{
-  planNombre: string
+  origen: 'PLAN' | 'PROPUESTA'
+  /** Solo en `PLAN`. Una propuesta a medida no tiene nombre de paquete que pintar. */
+  planNombre?: string
   sedes: number
   usuarios: number
 }>()
@@ -31,10 +45,13 @@ const usuariosTexto = computed(
 </script>
 
 <template>
-  <aside class="land-resume" aria-labelledby="resume-titulo">
+  <aside class="land-resume" aria-labelledby="resume-titulo" data-testid="banda-continuacion">
     <p id="resume-titulo" class="land-resume-text">
-      Estabas mirando el plan <strong>{{ planNombre }}</strong> para {{ sedesTexto }} y
-      {{ usuariosTexto }}. ¿Seguimos donde lo dejaste?
+      <template v-if="origen === 'PLAN'">
+        Estabas mirando el plan <strong>{{ planNombre }}</strong>
+      </template>
+      <template v-else> Estabas armando <strong>tu propuesta a medida</strong> </template>
+      para {{ sedesTexto }} y {{ usuariosTexto }}. ¿Seguimos donde lo dejaste?
     </p>
     <div class="land-resume-actions">
       <button type="button" class="land-resume-primary" @click="$emit('seguir')">Seguir</button>

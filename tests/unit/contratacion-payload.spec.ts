@@ -3,8 +3,9 @@ import { activarPlan, lineasDeContratacion } from '@/features/contratacion/api/c
 import { PLANS_CONTENT } from '@/features/landing/content/plans.content'
 import { calcularEstimado } from '@/features/landing/composables/planPricing'
 import type { PublicPlan } from '@/features/landing/types/plans.types'
-import type { ResumenContratacion } from '@/features/contratacion/types/contratacion.types'
+import type { ResumenPlan } from '@/features/contratacion/types/contratacion.types'
 import type { QuoteResponse } from '@/features/suscripcion/types/cotizaciones.types'
+import { elemento, exigir } from '../helpers/exigir'
 
 /**
  * EL CUERPO QUE VIAJA A `POST /quotes/self-serve`, Y LOS IMPORTES QUE VUELVEN.
@@ -43,7 +44,7 @@ function plan(code: string): PublicPlan {
 }
 
 /** El resumen que la pantalla ya tiene calculado cuando se pulsa «Confirmar». */
-function resumenDe(p: PublicPlan, over: Partial<ResumenContratacion> = {}): ResumenContratacion {
+function resumenDe(p: PublicPlan, over: Partial<ResumenPlan> = {}): ResumenPlan {
   const seleccion = {
     ciclo: over.ciclo ?? ('MENSUAL' as const),
     sedes: over.sedes ?? 1,
@@ -51,10 +52,11 @@ function resumenDe(p: PublicPlan, over: Partial<ResumenContratacion> = {}): Resu
   }
   const desglose = calcularEstimado(p, seleccion)
   return {
+    origen: 'PLAN',
     empresaNombre: 'Clínica de prueba',
     empresaIdentificador: '900123456',
     planCode: p.code,
-    planNombre: p.name,
+    titulo: p.name,
     ...seleccion,
     subtotal: desglose.subtotal,
     impuesto: desglose.impuesto,
@@ -103,14 +105,18 @@ describe('activarPlan · el cuerpo que se manda', () => {
     const p = plan('PACK_CLINIC')
 
     await activarPlan({ resumen: resumenDe(p), plan: p, clientRequestId: 'k-1' })
-    expect(selfServe.mock.calls[0]![0]).toMatchObject({ billingCycle: 'MONTHLY' })
+    expect(elemento(selfServe.mock.calls, 0, 'selfServe.mock.calls')[0]).toMatchObject({
+      billingCycle: 'MONTHLY',
+    })
 
     await activarPlan({
       resumen: resumenDe(p, { ciclo: 'ANUAL' }),
       plan: p,
       clientRequestId: 'k-2',
     })
-    expect(selfServe.mock.calls[1]![0]).toMatchObject({ billingCycle: 'ANNUAL' })
+    expect(elemento(selfServe.mock.calls, 1, 'selfServe.mock.calls')[0]).toMatchObject({
+      billingCycle: 'ANNUAL',
+    })
   })
 
   it('manda la llave de idempotencia que le dan, sin regenerarla', async () => {
@@ -121,7 +127,9 @@ describe('activarPlan · el cuerpo que se manda', () => {
     const p = plan('PACK_SPA')
     await activarPlan({ resumen: resumenDe(p), plan: p, clientRequestId: 'llave-fija-123' })
 
-    expect(selfServe.mock.calls[0]![0]).toMatchObject({ clientRequestId: 'llave-fija-123' })
+    expect(elemento(selfServe.mock.calls, 0, 'selfServe.mock.calls')[0]).toMatchObject({
+      clientRequestId: 'llave-fija-123',
+    })
   })
 
   it('el cuerpo no lleva NI UN campo económico ni la empresa', async () => {
@@ -132,7 +140,10 @@ describe('activarPlan · el cuerpo que se manda', () => {
     const p = plan('PACK_CLINIC')
     await activarPlan({ resumen: resumenDe(p), plan: p, clientRequestId: 'k' })
 
-    const cuerpo = selfServe.mock.calls[0]![0] as Record<string, unknown>
+    const cuerpo = elemento(selfServe.mock.calls, 0, 'selfServe.mock.calls')[0] as Record<
+      string,
+      unknown
+    >
     expect(Object.keys(cuerpo).sort()).toEqual(['billingCycle', 'clientRequestId', 'lines'])
 
     const lineas = cuerpo.lines as Record<string, unknown>[]
@@ -149,8 +160,16 @@ describe('activarPlan · el cuerpo que se manda', () => {
     // plan completo. Si alguien reconstruyera las líneas a partir del resumen, las
     // capacidades saldrían sin código y el servidor rechazaría la oferta.
     const p = plan('PACK_CLINIC')
-    const sedes = p.capacities.find((c) => c.unit === 'BRANCH')!.included + 2
-    const usuarios = p.capacities.find((c) => c.unit === 'USER')!.included + 3
+    const sedes =
+      exigir(
+        p.capacities.find((c) => c.unit === 'BRANCH'),
+        "p.capacities.find((c) => c.unit === 'BRANCH')",
+      ).included + 2
+    const usuarios =
+      exigir(
+        p.capacities.find((c) => c.unit === 'USER'),
+        "p.capacities.find((c) => c.unit === 'USER')",
+      ).included + 3
 
     await activarPlan({
       resumen: resumenDe(p, { sedes, usuarios }),
@@ -158,9 +177,9 @@ describe('activarPlan · el cuerpo que se manda', () => {
       clientRequestId: 'k',
     })
 
-    expect((selfServe.mock.calls[0]![0] as { lines: unknown }).lines).toEqual(
-      lineasDeContratacion(p, { sedes, usuarios }),
-    )
+    expect(
+      (elemento(selfServe.mock.calls, 0, 'selfServe.mock.calls')[0] as { lines: unknown }).lines,
+    ).toEqual(lineasDeContratacion(p, { sedes, usuarios }))
   })
 })
 

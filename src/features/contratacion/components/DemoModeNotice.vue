@@ -48,7 +48,15 @@ const tituloId = `${uid}-demo`
       </p>
     </div>
     <div v-else class="demo-body">
-      <h3 :id="tituloId" class="demo-title">Modo demostración: no vamos a cobrarte nada</h3>
+      <!-- `<h2>` y no `<h3>`, y la diferencia con la variante `compacto` de
+           arriba es la del sitio donde cuelga cada una. Esta vive en el paso 6
+           como hermana directa del `<h1>`, así que un `<h3>` salta el nivel 2 y
+           deja un hueco en el esquema de encabezados (§1.3.1) — se vio al
+           regenerar `contratar-paso6.aria.yml`, donde el árbol iba de
+           `[level=1]` a `[level=3]` sin nada en medio. La compacta sí es h3
+           porque va DENTRO de la sección «Qué se va a cobrar y cuándo» del paso
+           7, cuyo encabezado es el h2. -->
+      <h2 :id="tituloId" class="demo-title">Modo demostración: no vamos a cobrarte nada</h2>
       <p class="demo-text">
         Todavía no tenemos conectada la pasarela de pago. Al confirmar, tu contratación queda
         registrada con estos importes y nosotros dejamos los módulos listos.

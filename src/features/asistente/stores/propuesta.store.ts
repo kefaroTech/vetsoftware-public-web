@@ -8,6 +8,7 @@ import type {
   EstadoAsistente,
   Propuesta,
   PropuestaLinea,
+  ResultadoAsistente,
 } from '../types/asistente.types'
 
 /** Lo que se muestra en «No volvimos a añadir lo que quitaste». */
@@ -241,6 +242,89 @@ export const usePropuestaStore = defineStore('asistentePropuesta', () => {
     }
   }
 
+  /**
+   * Empieza a recuperar una propuesta ya existente: la del enlace del correo, o
+   * la que la intención guardada referencia.
+   *
+   * <p>Se separa de {@link adoptarRecuperada} porque el viaje lo hace el
+   * composable —es quien sostiene el token, que **no entra aquí**— y entre las
+   * dos llamadas hay una navegación: quien pulsa el enlace aterriza en `/` y
+   * acaba en `/planes`, y el panel tiene que encontrar la pantalla ya en
+   * `RECUPERANDO` al montar, o enseñaría el cuadro de texto vacío durante el
+   * viaje y el prospecto empezaría a escribir encima de lo que está llegando.
+   */
+  function comenzarRecuperacion(): void {
+    estado.value = 'RECUPERANDO'
+    traceId.value = null
+    delta.value = null
+    nuevos.value = []
+  }
+
+  /**
+   * Adopta lo que devolvió una relectura.
+   *
+   * <p>⚠️ **Ramifica por `clase` exactamente igual que {@link generar}**, y esa
+   * es toda la decisión: `clase` sale del `presentation` del servidor en el
+   * seam, y es lo que distingue una propuesta de un punto de partida
+   * determinista. Aplanar la relectura a «hay líneas → propuesta lista» pintaría
+   * un carrito `NOT_UNDERSTOOD` bajo el encabezado «Tu propuesta», sin el aviso
+   * de «punto de partida, no una recomendación» — que es la pantalla equivocada
+   * en el sitio donde más caro sale.
+   *
+   * <p>{@link nuevos} se vacía: una relectura no es un recálculo y nada de lo
+   * que llega es nuevo. Con el conjunto anterior vacío, `adoptar` marcaría como
+   * «Nuevo» **todas** las líneas de la propuesta recuperada.
+   */
+  function adoptarRecuperada(resultado: ResultadoAsistente): void {
+    if (resultado.clase === 'PROPUESTA') {
+      adoptar(resultado.propuesta, false)
+      estado.value = 'PROPUESTA_LISTA'
+    } else if (resultado.clase === 'NO_ENTENDIDO') {
+      adoptar(resultado.propuestaBase, false)
+      estado.value = 'NO_ENTENDIDO'
+    } else if (resultado.clase === 'FUERA_DE_DOMINIO') {
+      propuesta.value = null
+      estado.value = 'FUERA_DE_DOMINIO'
+    } else {
+      // `NO_DISPONIBLE` en una relectura es un 200 sin token ni tarifa. No hay
+      // carrito que enseñar y tampoco ha caducado nada: la salida honesta es la
+      // degradación, que deja el catálogo delante.
+      propuesta.value = null
+      estado.value = 'ASISTENTE_CAIDO'
+    }
+    nuevos.value = []
+  }
+
+  /**
+   * El 404 del servidor, traducido a lo que significa para quien pulsó el
+   * enlace.
+   *
+   * <p>No incrementa {@link fallos} y no toca {@link texto}: no ha fallado el
+   * asistente, ha caducado un enlace. Sumarlo a los fallos degradaría la
+   * pantalla a `ASISTENTE_CAIDO` al segundo enlace viejo que alguien abriera.
+   */
+  function marcarEnlaceCaducado(): void {
+    propuesta.value = null
+    retirados.value = []
+    delta.value = null
+    nuevos.value = []
+    estado.value = 'ENLACE_CADUCADO'
+  }
+
+  /**
+   * La recuperación falló por algo que **no** es un enlace caducado: red caída,
+   * 500, un 429 del límite por IP.
+   *
+   * <p>Degrada en vez de decir «caducó», porque decirlo sería mentir sobre una
+   * propuesta que probablemente sigue viva: la salida honesta es la misma que la
+   * del asistente caído —el catálogo delante— y el prospecto puede recargar. El
+   * aviso con la traza lo pone el composable con `errorFrom`.
+   */
+  function marcarRecuperacionFallida(): void {
+    propuesta.value = null
+    estado.value = 'ASISTENTE_CAIDO'
+  }
+
   async function refinar(anadido: string): Promise<void> {
     const actual = propuesta.value
     if (!actual || actual.ajustesRestantes <= 0) return
@@ -356,12 +440,26 @@ export const usePropuestaStore = defineStore('asistentePropuesta', () => {
   /**
    * Sedes y personas.
    *
-   * <p>⚠️ **Se quedan en el cliente.** No hay campo de capacidad en ninguna de
-   * las tres peticiones del contrato ni bloque de capacidades en la respuesta,
-   * así que no hay nada que empujar: un `PUT` con el mismo carrito devolvería
-   * los mismos importes y gastaría cupo para fingir que el número se tuvo en
-   * cuenta. Se guarda el dato —lo pide la pantalla y lo necesitará el paso
-   * vinculante— y se dice la verdad sobre lo que hace.
+   * <p>⚠️ **Se quedan en el cliente, y hay que saber hasta dónde llegan.** No hay
+   * campo de capacidad en ninguna de las tres peticiones del contrato ni bloque
+   * de capacidades en la respuesta, así que no hay nada que empujar: un `PUT` con
+   * el mismo carrito devolvería los mismos importes y gastaría cupo para fingir
+   * que el número se tuvo en cuenta.
+   *
+   * <p>El único consumidor real de estos dos números es **la banda de
+   * continuación de la landing** (`ResumeIntentBanner`: «para 2 sedes y 5
+   * personas»), que describe lo que el prospecto dijo. Nada más los lee. En
+   * concreto **no son el paso vinculante**, y este docblock afirmaba que sí:
+   * la oferta de una propuesta son `lineasDePropuesta(resumen)` —las líneas que
+   * devolvió el servidor, con SUS cantidades— y `SelfServeQuoteRequest` no tiene
+   * dónde poner una capacidad que no sea una línea con `code` y `quantity`.
+   * Enviar `EXTRA_USER`/`EXTRA_BRANCH` por nuestra cuenta tampoco es la salida:
+   * los dos son `selfServiceEligible = false` y hunden la oferta entera con un
+   * error que no dice qué línea sobró.
+   *
+   * <p>Por eso `PropuestaCapacidades` lo dice en pantalla en vez de dejar que el
+   * control se lea como una recotización. Lo que sí mueve la cantidad cobrada es
+   * refinar la propuesta con palabras, que va al servidor.
    */
   function fijarCapacidades(nuevasSedes: number, nuevosUsuarios: number): void {
     sedes.value = nuevasSedes
@@ -414,6 +512,10 @@ export const usePropuestaStore = defineStore('asistentePropuesta', () => {
     codigosEnCarrito,
     nuevaLlave,
     reiniciar,
+    comenzarRecuperacion,
+    adoptarRecuperada,
+    marcarEnlaceCaducado,
+    marcarRecuperacionFallida,
     generar,
     reintentar,
     refinar,

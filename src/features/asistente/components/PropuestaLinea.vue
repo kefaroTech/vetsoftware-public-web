@@ -79,14 +79,28 @@ const sePuedeQuitar = computed(() => props.linea.code !== 'CORE')
 </script>
 
 <template>
-  <li class="pli" :class="{ 'pli--ia': linea.origen === 'IA' }">
+  <!-- Los `data-testid` van por CÓDIGO de artículo, no por posición: una prueba
+       que apunte a «la tercera fila» se cae en cuanto el servidor devuelve las
+       líneas en otro orden, que es una decisión suya y no un cambio de esta
+       pantalla. Y la cantidad y el importe salen a testid PROPIOS porque son las
+       dos cifras que hay que poder afirmar por separado: el importe es unitario,
+       así que «12.000» sin «× 4» al lado es una lectura errónea del subtotal. -->
+  <li
+    class="pli"
+    :class="{ 'pli--ia': linea.origen === 'IA' }"
+    :data-testid="`propuesta-linea-${linea.code}`"
+  >
     <div class="pli-cab">
-      <span class="pub-badge pli-chip">{{ chip }}</span>
+      <span class="pub-badge pli-chip" data-testid="propuesta-linea-chip">{{ chip }}</span>
       <span v-if="nuevo" class="pub-badge pli-chip">Nuevo</span>
       <span class="pli-nombre">{{ linea.nombre }}</span>
       <span class="pli-precio">
-        <span v-if="cantidad" class="pli-cantidad">{{ cantidad }}</span>
-        {{ importeEstimado(linea.importe) }} {{ sufijoCiclo(ciclo) }}
+        <span v-if="cantidad" class="pli-cantidad" data-testid="propuesta-linea-cantidad">{{
+          cantidad
+        }}</span>
+        <span data-testid="propuesta-linea-importe"
+          >{{ importeEstimado(linea.importe) }} {{ sufijoCiclo(ciclo) }}</span
+        >
         <span class="pli-prueba">· {{ prueba }}</span>
       </span>
     </div>
