@@ -73,6 +73,45 @@ export const RELLENOS_RAPIDOS: readonly string[] = [
 ]
 
 /**
+ * El fallo de «texto demasiado corto», **una sola redacción**.
+ *
+ * <p>Lo dicen dos pantallas del mismo embudo —la caja del hero y la entrada de
+ * `/planes`— y tienen que decirlo con las mismas palabras: el mismo fallo con
+ * dos redacciones distintas se lee como dos fallos distintos, y quien acaba de
+ * corregirlo en una vuelve a leerlo reformulado en la otra sin entender qué
+ * cambió. GOV.UK lo exige además para el resumen de errores, que repite el texto
+ * del campo literalmente.
+ */
+export const ERROR_TEXTO_CORTO =
+  'Con eso no nos alcanza. Escríbenos una o dos frases sobre lo que hace tu veterinaria.'
+
+/**
+ * Los tres ejemplos pulsables de la caja de arranque.
+ *
+ * <p>**Rellenan el campo, no envían** — la misma regla que {@link
+ * RELLENOS_RAPIDOS}, y por el mismo motivo: un botón que dispara una llamada de
+ * pago con un texto que el usuario no ha leído es un gasto que él no autorizó.
+ * Aquí ni siquiera hay llamada, pero sí una navegación, y navegar con un texto
+ * que el usuario no ha leído es el mismo abuso en pequeño.
+ *
+ * <p>**Son amplios a propósito, no de nicho.** Un ejemplo demasiado específico se
+ * ignora: el usuario no se reconoce en él y descarta la fila entera. Los tres
+ * describen **la clínica**, que es lo que se le pide, y ninguno nombra una
+ * funcionalidad del producto.
+ *
+ * <p>⚠️ **Ninguno puede medir menos que {@link MIN_DESCRIPCION}**, y hay una
+ * prueba que lo afirma. Es exactamente el fallo que el javadoc de {@link
+ * MIN_REFINAMIENTO} documenta como ya ocurrido: la propia interfaz ofreciendo un
+ * botón que su propia validación rechaza. En desarrollo nadie pulsa los botones
+ * de relleno, así que sin la prueba esto vuelve, y vuelve en producción.
+ */
+export const EJEMPLOS_COTIZADOR: readonly string[] = [
+  'Consulta general, vacunas y desparasitación',
+  'Tenemos quirófano y hospitalización',
+  'Vendemos alimento y hacemos peluquería',
+]
+
+/**
  * Las frases de la espera, con el segundo en que entra cada una.
  *
  * <p>Van las tres a la MISMA región `aria-live`, sustituyendo su contenido: tres

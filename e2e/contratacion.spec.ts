@@ -724,13 +724,16 @@ test.describe('Recorrido de solo teclado', () => {
     await page.keyboard.press('Enter')
     await expect(page.getByRole('main')).toBeFocused()
 
-    // Desde el contenido, hasta el CTA del hero. Cada parada: visible, sin
-    // perder el foco y sin retroceder en el documento.
-    // El del hero, no el del CTA final: se llaman igual y van a sitios distintos.
-    const verPlanes = page
-      .getByRole('link', { name: 'Ver los planes' })
-      .and(page.locator('[href="#planes"]'))
-    await tabularHasta(page, verPlanes)
+    // Desde el contenido, atravesando la caja de arranque —que ahora es lo
+    // primero que se toca en el hero: `<textarea>`, tres ejemplos y el envío—,
+    // hasta su escape hacia los paquetes. Cada parada: visible, sin perder el
+    // foco y sin retroceder en el documento, que es lo que `tabularHasta`
+    // comprueba en cada tecla y lo que hace que este tramo valga.
+    //
+    // Ya no hace falta desambiguar por `href`: el rótulo «Ver los planes» estaba
+    // en el hero y en el cierre con destinos distintos, y se retiró de los dos.
+    const verPaquetes = page.getByRole('link', { name: 'Mira los tres paquetes ya armados.' })
+    await tabularHasta(page, verPaquetes)
     await page.keyboard.press('Enter')
     await expect(page.locator('#planes')).toBeFocused()
 
