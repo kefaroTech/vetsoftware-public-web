@@ -1,5 +1,6 @@
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
+import { useAuth } from '@/features/auth/composables/useAuth'
 import { SELLO } from '@/features/landing/content/plans.content'
 import { subtotalMensualEquivalente } from '@/features/landing/composables/planPricing'
 import type { Ciclo, PublicPlan } from '@/features/landing/types/plans.types'
@@ -18,6 +19,24 @@ export function useContratacion() {
   store.hidratar()
 
   const { intencion, vigente, hayIntencionVigente } = storeToRefs(store)
+  const { isAuthenticated } = useAuth()
+
+  /**
+   * A dónde lleva «continuar» una vez guardada la intención.
+   *
+   * <p>El embudo tiene DOS salidas hacia el paso siguiente —el configurador de
+   * paquetes y el asistente de propuesta a medida— y las dos empujaban fijo a
+   * `signup`. Eso era correcto mientras `/planes` fuera solo para visitantes;
+   * en cuanto un cliente autenticado sin plan puede entrar ahí (ver el guard en
+   * `router/index.ts`), `signup` es `guestOnly` y lo habría devuelto al tablero
+   * en silencio: el mismo callejón, movido un paso más adelante.
+   *
+   * <p>Vive AQUÍ y no en cada vista a propósito: son dos llamantes hoy, y la
+   * forma de que la decisión se desincronice es tenerla escrita dos veces.
+   */
+  const destinoTrasElegir = computed<'contratar' | 'signup'>(() =>
+    isAuthenticated.value ? 'contratar' : 'signup',
+  )
 
   /**
    * La selección tal como la manipulan los controles, con valores por defecto.
@@ -76,6 +95,7 @@ export function useContratacion() {
     vigente,
     seleccion,
     hayIntencionVigente,
+    destinoTrasElegir,
     elegir,
     elegirPropuesta,
     cambiarCiclo: store.cambiarCiclo,

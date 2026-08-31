@@ -114,7 +114,7 @@ onMounted(() => {
 })
 
 const router = useRouter()
-const { elegirPropuesta } = useContratacion()
+const { elegirPropuesta, destinoTrasElegir } = useContratacion()
 
 const esperando = computed(() => estado.value === 'CARGANDO' || estado.value === 'REFINANDO')
 const conPropuesta = computed(
@@ -139,7 +139,10 @@ const esPaquete = computed(() => {
  * Lleva la propuesta al embudo de contratación.
  *
  * <p>Guarda **la referencia opaca y el subtotal que hay en pantalla**, y salta
- * al registro. Lo que NO hace, y es toda la decisión: no copia las líneas, no
+ * al paso siguiente: el registro si es un prospecto, el paso vinculante si es un
+ * cliente con sesión que aún no ha contratado (`destinoTrasElegir`). Empujar
+ * fijo a `signup` mandaba a este último al tablero en silencio, porque `signup`
+ * es `guestOnly`. Lo que NO hace, y es toda la decisión: no copia las líneas, no
  * copia el total y no calcula nada. El paso vinculante relee la propuesta del
  * servidor, así que si el prospecto vuelve dos días después —o la edita en otra
  * pestaña— lo que se le cotiza es lo que el servidor diga entonces, y la
@@ -159,7 +162,7 @@ function continuarConPropuesta(): void {
     { ciclo: actual.totales.ciclo, sedes: sedes.value, usuarios: usuarios.value },
     actual.totales.subtotal,
   )
-  void router.push({ name: 'signup' })
+  void router.push({ name: destinoTrasElegir.value })
 }
 
 async function enfocarResultado(): Promise<void> {

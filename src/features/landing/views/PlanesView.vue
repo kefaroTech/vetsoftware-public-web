@@ -3,6 +3,7 @@ import { RefreshCw } from 'lucide-vue-next'
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import PublicLayout from '@/components/public/PublicLayout.vue'
+import { useAuth } from '@/features/auth/composables/useAuth'
 import { useContratacion } from '@/features/contratacion/composables/useContratacion'
 import AsistentePanel from '@/features/asistente/components/AsistentePanel.vue'
 import { useAsistente } from '@/features/asistente/composables/useAsistente'
@@ -14,9 +15,16 @@ import type { Ciclo } from '../types/plans.types'
 /**
  * Paso 2 del embudo — `/planes`.
  *
- * Lleva `guestOnly` como el resto de la zona pública: un cliente con sesión que
- * entra aquí va al tablero, que es lo correcto — su plan se gestiona desde
- * dentro, no desde el escaparate.
+ * Lleva `guestOnly` **con la excepción `allowClientWithoutPlan`**: quien ya
+ * contrató va al tablero —su plan se gestiona desde dentro, no desde el
+ * escaparate—, pero el cliente con sesión que todavía NO ha contratado entra.
+ * Sin esa excepción, quien llegaba al paso vinculante y quería cambiar lo que
+ * iba a contratar no tenía forma de volver aquí. El motivo largo está en la
+ * ruta y en el guard (`router/index.ts`).
+ *
+ * <p>Por eso esta pantalla tiene dos públicos, y se nota en dos sitios: el
+ * enlace de la esquina (iniciar sesión / volver al tablero) y a dónde lleva
+ * «continuar» (`destinoTrasElegir`).
  *
  * La selección se siembra, en este orden: lo que traiga la URL (un enlace
  * compartido o el CTA de una tarjeta), lo que hubiera en la intención guardada,
@@ -52,7 +60,8 @@ import type { Ciclo } from '../types/plans.types'
 const route = useRoute()
 const router = useRouter()
 const { plans, loading, error, refresh } = usePlanes()
-const { vigente, elegir } = useContratacion()
+const { vigente, elegir, destinoTrasElegir } = useContratacion()
+const { isAuthenticated } = useAuth()
 // Se renombra: esta vista ya tiene su propio `texto()`, el lector de la query.
 const { texto: textoLibre } = useAsistente()
 
@@ -116,14 +125,25 @@ watch(
 const planElegido = computed(() => plans.value.find((p) => p.code === planCode.value) ?? null)
 
 /**
- * Guarda la intención y salta al registro. La elección viaja también en la query
- * —además de en el store— para que el enlace se pueda compartir y para que el
- * carril «Tu selección» del registro no dependa solo del almacenamiento.
+ * Guarda la intención y salta al paso siguiente, que **no es el mismo para
+ * todos**: el registro para un prospecto, el paso vinculante para un cliente que
+ * ya tiene sesión y todavía no ha contratado (ver `destinoTrasElegir`). Empujar
+ * fijo a `signup` mandaba a este último al tablero en silencio, porque `signup`
+ * es `guestOnly`.
+ *
+ * La query solo viaja en la rama del registro: es lo que alimenta el carril «Tu
+ * selección» y hace el enlace compartible. El paso vinculante no la lee —se
+ * sirve de la intención que `elegir()` acaba de guardar— y arrastrarla ahí solo
+ * pondría la elección en la barra de direcciones sin que nadie la use.
  */
 function continuar() {
   const plan = planElegido.value
   if (!plan) return
   elegir(plan, ciclo.value, sedes.value, usuarios.value)
+  if (destinoTrasElegir.value === 'contratar') {
+    void router.push({ name: 'contratar' })
+    return
+  }
   void router.push({
     name: 'signup',
     query: {
@@ -138,8 +158,18 @@ function continuar() {
 
 <template>
   <PublicLayout>
+    <!-- Esta pantalla ya no es solo del visitante: también entra aquí el cliente
+         con sesión que todavía no ha contratado. Ofrecerle «¿Ya tienes cuenta?
+         Inicia sesión» sería la tercera frase falsa del embudo, y además le
+         dejaría sin salida: `PublicLayout` no trae la navegación de la app, así
+         que sin este enlace la única vuelta al tablero es el botón «atrás». -->
     <template #topRight>
-      ¿Ya tienes cuenta? <RouterLink :to="{ name: 'login' }">Inicia sesión</RouterLink>
+      <template v-if="isAuthenticated">
+        <RouterLink :to="{ name: 'home' }">Volver a mi tablero</RouterLink>
+      </template>
+      <template v-else>
+        ¿Ya tienes cuenta? <RouterLink :to="{ name: 'login' }">Inicia sesión</RouterLink>
+      </template>
     </template>
 
     <div class="pl-page">

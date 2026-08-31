@@ -3,6 +3,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { popLoader, pushLoader } from '@/composables/useGlobalLoader'
+import { useToast } from '@/composables/useToast'
+import { useSuscripcion } from '@/features/suscripcion/composables/useSuscripcion'
 import { useScrollMemoryStore } from '@/stores/scrollMemory.store'
 import { PERMISSIONS } from '@/constants/permissions'
 import { useContratacionStore } from '@/features/contratacion/stores/contratacion.store'
@@ -105,13 +107,28 @@ const router = createRouter({
       },
     },
     {
-      // Paso 2 del embudo comercial. `guestOnly` como el resto de la zona
-      // pública: un cliente con sesión que entra aquí va al tablero, porque su
-      // plan se gestiona desde dentro y no desde el escaparate.
+      // Paso 2 del embudo comercial. `guestOnly` **con una excepción declarada**:
+      // `allowClientWithoutPlan`.
+      //
+      // El `guestOnly` a secas era correcto para quien ya contrató —su plan se
+      // gestiona desde dentro, no desde el escaparate— y era una trampa para
+      // quien está a mitad del embudo. El paso vinculante (`/dashboard/contratar`)
+      // cuelga de `/dashboard`, así que quien llega ahí está autenticado; y desde
+      // ahí no había forma de volver a elegir qué contratar, porque esta ruta lo
+      // devolvía al tablero en silencio. Cambiar de idea antes de firmar es
+      // exactamente lo que el producto quiere que se pueda hacer.
+      //
+      // La excepción NO es «cualquiera con sesión»: es «cliente sin plan», y la
+      // señal la da el servidor (`GET /subscriptions/current`, vía
+      // `useSuscripcion().estadoPlanActual`). Ver el guard más abajo.
       path: '/planes',
       name: 'planes',
       component: () => import('@/features/landing/views/PlanesView.vue'),
-      meta: { guestOnly: true, title: 'Planes y precios — VetSoftware' },
+      meta: {
+        guestOnly: true,
+        allowClientWithoutPlan: true,
+        title: 'Planes y precios — VetSoftware',
+      },
     },
     {
       // Los dos textos legales. **Sin `guestOnly`**, a diferencia de todo lo
@@ -622,7 +639,35 @@ router.beforeEach(async (to, from) => {
     return redirect({ name: 'login', query: { redirect: to.path } })
   }
   if (to.meta.guestOnly && isAuthenticated.value) {
-    return redirect({ name: 'home' })
+    // La regla general: la zona pública es el escaparate, y quien tiene sesión
+    // no pinta nada ahí. La excepción, declarada ruta a ruta con
+    // `allowClientWithoutPlan`, es el cliente que todavía NO ha contratado.
+    if (to.meta.allowClientWithoutPlan !== true) {
+      return redirect({ name: 'home' })
+    }
+
+    // La señal es del SERVIDOR y se pide en cada apertura (regla del repositorio:
+    // nunca caché vieja al abrir pantalla). Es la misma que ya usa el paso 6 en
+    // `usePasoContratar.cargar()`, y con el mismo criterio de tres estados:
+    //
+    //  · SIN_PLAN      → pasa. Es el caso que existe este rodeo para arreglar.
+    //  · CON_PLAN      → al tablero, pero DICIÉNDOLO. El silencio era la mitad
+    //                    del defecto: el usuario pulsaba y aterrizaba en otro
+    //                    sitio sin ninguna explicación.
+    //  · DESCONOCIDO   → pasa. Un 403 (el rol sin `subscription.read`) o un
+    //                    fallo de red NO son «no tiene plan», y echar de aquí a
+    //                    quien quizá no lo tiene por un dato que no podemos leer
+    //                    es peor que dejarle seguir. Mismo criterio que el paso 6.
+    const { estadoPlanActual, load: cargarSuscripcion } = useSuscripcion()
+    await cargarSuscripcion(true)
+    if (estadoPlanActual.value === 'CON_PLAN') {
+      // `CON_PLAN` solo se alcanza si la lectura del plan respondió OK, así que
+      // el rol SÍ tiene `subscription.read` y «Mi suscripción» es una pantalla
+      // que de verdad puede abrir. Con `DESCONOCIDO` no se dice nada de esto
+      // porque no se sabría si es verdad.
+      useToast().info('Tu clínica ya tiene un plan activo', 'Puedes verlo en «Mi suscripción».')
+      return redirect({ name: 'home' })
+    }
   }
 
   // ── Paso 5 del embudo comercial: el enganche del login ────────────────────

@@ -36,6 +36,12 @@ vi.mock('vue-router', () => ({
 
 vi.mock('@/services/http/http.client', () => ({
   http: { get: vi.fn(), post: vi.fn(), put: vi.fn() },
+  // El árbol de esta pantalla llega hasta el store de `auth` —`useContratacion`
+  // pregunta si hay sesión para saber a dónde lleva «continuar»— y ese store
+  // registra sus dos manejadores en el cliente HTTP al crearse. Sin ellos el
+  // doble deja el módulo incompleto y el store revienta al instanciarse.
+  setRefreshHandler: vi.fn(),
+  setSessionClearHandler: vi.fn(),
 }))
 
 const catalogo: PublicCatalog = {
