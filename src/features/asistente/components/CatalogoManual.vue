@@ -31,6 +31,12 @@ import CatalogoGrupo from './CatalogoGrupo.vue'
  * exactamente lo que esta feature no hace en ningún sitio. El total repreciado
  * llega solo, del servidor, en cuanto la petición vuelva.
  *
+ * ── Y cuando no hay nada, lo dice ───────────────────────────────────────────
+ * Ver `vacio`. Sin lista de precios publicada el catálogo llega vacío, `grupos`
+ * filtra fuera los cuatro grupos y esta sección se quedaba en un encabezado
+ * colgando sobre un hueco. Un hueco no es un estado vacío: es lo que parece una
+ * avería, y aquí eso cuesta la venta.
+ *
  * ── `RECOMMENDS` no se auto-añade nunca ─────────────────────────────────────
  * Se ofrece con un botón explícito y un «No, gracias» que lo oculta el resto de
  * la sesión. Que el catálogo distinga los dos tipos de arco y la interfaz los
@@ -71,6 +77,25 @@ function nombreDe(code: string): string {
 function importeDe(code: string): number | null {
   return props.catalogo?.articulos.find((a) => a.code === code)?.importe ?? null
 }
+
+/**
+ * No hay nada que ofrecer: el catálogo **llegó** y no trae ni un artículo
+ * vendible.
+ *
+ * <p>Es el caso «no hay lista de precios publicada», que es un estado normal
+ * del negocio: `GET /catalog` responde 200 con `modules`, `packs` y el resto
+ * vacíos. `grupos` ya filtra fuera todo grupo sin artículos, así que sin esta
+ * rama el `v-for` de abajo no pintaba nada y el encabezado se quedaba solo,
+ * colgando sobre un hueco — que es exactamente como se ve una pantalla rota.
+ *
+ * <p>La condición exige `catalogo !== null` y **no se conforma con la lista
+ * vacía**: mientras la petición está en vuelo el catálogo es `null` y los
+ * grupos están vacíos también, y afirmar ahí «no hay módulos» sería desmentirse
+ * medio segundo después. Se deriva de las props que este componente ya recibe,
+ * sin pedirle al panel que le pase la conclusión: el hueco es suyo y la rama
+ * que lo tapa también.
+ */
+const vacio = computed(() => props.catalogo !== null && props.grupos.length === 0)
 
 const sugerencias = computed(() => {
   if (!props.catalogo || props.bloqueado) return []
@@ -145,11 +170,25 @@ const anuncioArrastre = computed(() => {
 
 <template>
   <section class="cman" aria-labelledby="catalogo-h2">
-    <h2 id="catalogo-h2" class="cman-h2">¿Te falta algo? Añádelo tú</h2>
+    <!-- El encabezado también cambia, y no es cosmética: «Añádelo tú» encima de
+         un estado vacío es la misma instrucción imposible que el hueco, dicha en
+         negrita y a mayor tamaño. -->
+    <h2 id="catalogo-h2" class="cman-h2">
+      {{ vacio ? 'Todavía no hay módulos que añadir' : '¿Te falta algo? Añádelo tú' }}
+    </h2>
 
     <p v-if="bloqueado" class="ds-banner ds-banner--warning cman-aviso" role="status">
       Estás viendo un paquete. Los paquetes no se combinan con módulos sueltos, así que para volver
       a elegir pieza a pieza, quita el paquete de tu propuesta.
+    </p>
+
+    <!-- El vacío se ANUNCIA: es contenido, no la ausencia de contenido. Sin
+         `role="status"` quien navega con lector se queda esperando una lista que
+         nunca va a llegar, porque nada le dijo que no venía (§4.1.3). -->
+    <p v-else-if="vacio" class="cman-vacio" role="status" data-testid="catalogo-vacio">
+      Todavía no hay módulos publicados para armar un plan a medida. Escríbenos a
+      <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y te decimos qué podemos
+      montarte hoy.
     </p>
 
     <div v-else class="cman-grupos">
@@ -245,6 +284,12 @@ const anuncioArrastre = computed(() => {
   margin-block-start: 12px;
   font-size: 13px;
   line-height: 1.5;
+}
+
+.cman-vacio {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--pub-ink-600);
 }
 
 .cman-sug {
