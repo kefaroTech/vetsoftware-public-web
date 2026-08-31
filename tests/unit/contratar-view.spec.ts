@@ -67,6 +67,19 @@ vi.mock('@/features/suscripcion/api/cotizaciones.api', () => ({
   cotizacionesApi: { selfServe: (p: unknown) => selfServe(p) },
 }))
 
+// El seam de los planes se dobla, y ahora HAY QUE doblarlo: desde que
+// `plans.source.ts` pide `GET /plans` en vez de devolver contenido local, esta
+// pantalla depende del catálogo por red, y sin doble el `usePlanes()` de
+// `usePasoContratar` no resolvía `PACK_CLINIC` y la vista entera no se pintaba.
+// Se devuelve `PLANS_CONTENT`, que es justo su papel nuevo: la transcripción de
+// referencia contrastada contra las semillas, aquí de muestra realista. Lo que
+// este fichero prueba es el embudo, no cómo habla el seam con la red — eso lo
+// prueba `planes-desde-el-servidor.spec.ts`.
+vi.mock('@/features/landing/api/plans.source', async () => {
+  const { PLANS_CONTENT } = await import('@/features/landing/content/plans.content')
+  return { fetchPlans: () => Promise.resolve(PLANS_CONTENT) }
+})
+
 vi.mock('@/composables/useToast', () => ({
   useToast: () => ({
     info: toastInfo,

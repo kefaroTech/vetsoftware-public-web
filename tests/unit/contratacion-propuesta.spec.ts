@@ -69,6 +69,15 @@ vi.mock('@/features/suscripcion/api/cotizaciones.api', () => ({
   cotizacionesApi: { selfServe: (p: unknown) => selfServe(p) },
 }))
 
+// El seam de los planes se dobla por el mismo motivo que el del asistente, y
+// desde que `plans.source.ts` pide `GET /plans` ya no es opcional: sin doble, el
+// `usePlanes()` de `usePasoContratar` se queda sin catálogo y la vista no llega
+// a pintarse. `PLANS_CONTENT` es la muestra realista.
+vi.mock('@/features/landing/api/plans.source', async () => {
+  const { PLANS_CONTENT } = await import('@/features/landing/content/plans.content')
+  return { fetchPlans: () => Promise.resolve(PLANS_CONTENT) }
+})
+
 // El seam del asistente se dobla ENTERO: lo que aquí se prueba es qué hace el
 // embudo con lo que ese seam devuelve, no cómo habla el seam con la red (eso lo
 // prueba `asistente-seam.spec.ts` y `asistente-sesion-persistida.spec.ts`).
