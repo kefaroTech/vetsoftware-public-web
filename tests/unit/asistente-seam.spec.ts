@@ -244,10 +244,15 @@ describe('el desenlace lo dice el servidor, no una lista vacía', () => {
     // `ProposalViewDto.sinCatalogo()` responde 200 con todo a `null` y es un
     // estado NORMAL del catálogo. Pintarlo como propuesta enseñaría un carrito
     // vacío de 0 pesos en la pantalla de compra.
+    //
+    // La presentación es `NO_CATALOG` porque es la que manda el servidor para
+    // ESTE cuerpo. La fixture decía `DETERMINISTIC` y describía un mundo que ya
+    // no existe; el caso seguía verde igualmente porque lo que decide es el
+    // token, y por eso hay debajo un segundo caso que sí ata el rótulo nuevo.
     post.mockResolvedValueOnce({
       data: respuesta({
         token: null,
-        presentation: 'DETERMINISTIC',
+        presentation: 'NO_CATALOG',
         lines: [],
         subtotal: null,
         total: null,
@@ -265,11 +270,35 @@ describe('el desenlace lo dice el servidor, no una lista vacía', () => {
     expect(resultado).toEqual({ clase: 'NO_DISPONIBLE' })
   })
 
+  it('NO_CATALOG con token tampoco se pinta como propuesta, y sin rama propia', async () => {
+    // El rótulo nuevo del backend. Hoy llega SIEMPRE con el token a `null`, así
+    // que la guarda de arriba lo atrapa antes de mirar la presentación; este
+    // caso fuerza el token para comprobar el OTRO camino —el `return` por
+    // defecto del final— y así deja atado que ampliar la unión de literales no
+    // abrió ningún camino hacia «propuesta». Si alguien añadiera `NO_CATALOG` a
+    // la comparación de `PROPOSAL`/`DETERMINISTIC`, esto se pone rojo.
+    post.mockResolvedValueOnce({
+      data: respuesta({ presentation: 'NO_CATALOG' }),
+    } as never)
+    const conToken = await generarPropuesta({
+      email: 'x@y.co',
+      texto: 'Una veterinaria con consulta general y vacunación al día.',
+      aceptaciones: [],
+      clientRequestId: 'k',
+    })
+
+    expect(conToken).toEqual({ clase: 'NO_DISPONIBLE' })
+  })
+
   it('un valor de presentación desconocido NO se pinta como propuesta', async () => {
     // La atadura al contrato acepta un tipo local más estrecho sin comprobarlo,
-    // así que un quinto valor del backend llegaría aquí sin romper el build.
+    // así que un valor nuevo del backend llega aquí sin romper el build — le
+    // acaba de pasar a `NO_CATALOG`. El literal de abajo es deliberadamente
+    // impronunciable como valor de negocio: `ALGO_NUEVO` se leía como el
+    // siguiente rótulo plausible del enum, y el día que el backend publique uno
+    // que se le parezca este caso dejaría de probar lo que dice su nombre.
     post.mockResolvedValueOnce({
-      data: respuesta({ presentation: 'ALGO_NUEVO' as never }),
+      data: respuesta({ presentation: '__NINGUN_VALOR_DEL_CONTRATO__' as never }),
     } as never)
     const resultado = await generarPropuesta({
       email: 'x@y.co',
