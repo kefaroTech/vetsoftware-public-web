@@ -120,18 +120,53 @@ export interface PlanCapacity {
 export interface PublicPlanContract {
   code: string
   name: string
-  tagline: string
-  /** Precio de ENTRADA del ciclo mensual. Se rotula siempre «desde». */
-  monthlyFromAmount: number
-  /** Precio de ENTRADA del ciclo anual. Se rotula siempre «desde». */
-  annualFromAmount: number
-  setupAmount: number
-  /** Porcentaje, 0–100. */
-  taxRate: number
+  /**
+   * NULABLE. `short_description` del artículo, y el catálogo no obliga a que
+   * exista.
+   */
+  tagline: string | null
+  /**
+   * Precio de ENTRADA del ciclo mensual. Se rotula siempre «desde».
+   *
+   * <p><b>NULABLE, y no por descuido del contrato.</b> `SQL_PLANS` resuelve cada
+   * ciclo con su propio `LEFT JOIN` sobre `catalog_prices` y solo exige que
+   * exista **alguno** de los dos (`WHERE pm.id IS NOT NULL OR pa.id IS NOT
+   * NULL`), así que un paquete tarifado solo al año publica este campo a `null`.
+   * El javadoc de `PublicPlanResponse` lo dice con todas las letras: «cualquiera
+   * de los dos puede ser nulo si el paquete solo esta tarifado en un ciclo».
+   */
+  monthlyFromAmount: number | null
+  /** Precio de ENTRADA del ciclo anual. Nulable por lo mismo que el mensual. */
+  annualFromAmount: number | null
+  /** NULABLE: `COALESCE(pm.setup_amount, pa.setup_amount)` puede no traer nada. */
+  setupAmount: number | null
+  /** Porcentaje, 0–100. NULABLE: es otro `COALESCE` de los dos ciclos. */
+  taxRate: number | null
   /** Nulable: el contrato lo declara opcional. */
   taxTreatment: TaxTreatment | null
   includes: PlanInclude[]
   capacities: PlanCapacity[]
+}
+
+/**
+ * El catálogo TAL Y COMO VIAJA POR EL CABLE, antes de que el seam lo componga.
+ *
+ * <p>Es lo que tipa el `http.get` de `plans.source.ts`, y se distingue de
+ * {@link PublicCatalog} en una cosa que importa: sus planes son
+ * {@link PublicPlanContract}, sin `recommended` y con los importes nulables tal
+ * y como el servidor los manda. `PublicCatalog` es lo que sale del seam, ya
+ * compuesto y ya filtrado.
+ *
+ * <p>No se ata en `api.contract.ts` y no hace falta: `MatchesContract` no mira
+ * dentro de los arrays —su propia cabecera lo dice—, así que la atadura de
+ * `PublicCatalog` contra `PublicPlanCatalogResponse` ya cubre estos tres campos
+ * de nivel superior, y la de `PublicPlanContract` contra `PublicPlanResponse`
+ * cubre lo de dentro. Una tercera línea afirmaría lo mismo dos veces.
+ */
+export interface PublicPlanCatalogWire {
+  currency: string | null
+  priceValidFrom: string | null
+  plans: PublicPlanContract[]
 }
 
 /**
@@ -142,6 +177,26 @@ export interface PublicPlanContract {
  */
 export interface PublicPlan extends PublicPlanContract {
   recommended: boolean
+  /**
+   * Los cuatro campos que la pantalla SÍ da por hechos, estrechados aquí.
+   *
+   * <p>El contrato los declara nulables y dice la verdad; lo que no puede pasar
+   * es que un `null` llegue hasta `precioBase()` o hasta `{{ plan.tagline }}`.
+   * Quien resuelve el hueco es el seam (`plans.source.ts`), que **descarta** el
+   * plan cuyos importes el servidor no publicó en los dos ciclos y rellena el
+   * `tagline` con el del contenido local. Estrecharlo aquí es lo que obliga a
+   * que ese filtro exista: si mañana alguien devuelve el plan crudo desde el
+   * seam, deja de compilar.
+   *
+   * <p>Estrechar en una interfaz derivada es legal porque `number` es asignable
+   * a `number | null`. `setupAmount` y `taxTreatment` NO se estrechan: no los
+   * pinta ni los calcula nadie, así que exigirlos sería descartar planes
+   * vendibles por un dato que a esta pantalla no le hace falta.
+   */
+  tagline: string
+  monthlyFromAmount: number
+  annualFromAmount: number
+  taxRate: number
 }
 
 /**

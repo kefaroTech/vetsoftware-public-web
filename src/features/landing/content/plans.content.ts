@@ -1,12 +1,41 @@
 import type { PublicCatalog } from '../types/plans.types'
 
 /**
- * CONTENIDO, NO CONTRATO.
+ * CONTENIDO, NO CONTRATO. Y YA NO ES LO QUE `/planes` MUESTRA.
  *
- * Estos precios NO los pide este front al backend: `plans.source.ts` sigue
- * devolviendo este fichero (ver su encabezado, que explica por qué el seam no
- * cambia solo porque `GET /plans` exista). Son una transcripción manual del
- * catálogo comercial y de la tarifa vigente, y por eso llevan sello.
+ * ── ⚠️ LO QUE CAMBIÓ, Y ES LO PRIMERO QUE HAY QUE SABER ────────────────────
+ * `plans.source.ts` **ya no devuelve este fichero**: pide `GET /plans` y compone
+ * la respuesta del servidor. Ningún importe de los que hay aquí abajo llega hoy
+ * a la pantalla de nadie.
+ *
+ * <p>El motivo fue un defecto comprobado contra dev: sin lista de precio
+ * publicada el servidor responde 200 con la lista vacía —que es un estado NORMAL
+ * del negocio, no una avería—, y esta pantalla seguía enseñando tres importes y
+ * dejando avanzar a contratar. La mentira se descubría en el peor momento
+ * posible, cuando alguien intentaba pagar.
+ *
+ * ── PARA QUÉ SIRVE ESTE FICHERO AHORA ──────────────────────────────────────
+ * Dos cosas, y ninguna es «el catálogo»:
+ *
+ *   1. {@link OVERLAY_EDITORIAL} — lo único de aquí que SÍ viaja a producción.
+ *      Es la capa editorial: qué paquete se destaca y qué `tagline` se corrige.
+ *      Ver su propio javadoc.
+ *   2. {@link PLANS_CONTENT} — la transcripción de referencia, que hoy solo
+ *      consumen las pruebas: de muestra realista para `plan-pricing`,
+ *      `contratacion-*` y `trial-lines-table`, y de sujeto del contraste contra
+ *      las semillas en `plans-content-catalogo.spec.ts`. **Ya no es una fuente
+ *      de precios para ninguna pantalla**, y por eso el riesgo que el sello
+ *      vigilaba —que se separe de la tarifa sin que nadie se entere— dejó de
+ *      poder llegar a un usuario. El sello se conserva porque el contraste
+ *      contra las semillas sigue siendo la única puerta que detecta que el
+ *      vocabulario del catálogo (`PACK_*`, `EXTRA_*`) se movió, y ese
+ *      vocabulario sí viaja: `contratacion.source.ts` manda el `code` al
+ *      servidor tal cual.
+ *
+ * <p><b>Si vuelves a enchufar este fichero al seam, lee antes lo de arriba.</b>
+ * `tests/unit/planes-desde-el-servidor.spec.ts` afirma que `fetchPlans` llama a
+ * `http.get('/plans')`, justamente para que ese camino de vuelta no sea
+ * silencioso.
  *
  * La cifra que se muestra aquí es ORIENTATIVA y así se rotula en pantalla, con
  * «desde» delante y con la nota bajo las tarjetas. La cifra VINCULANTE la
@@ -111,6 +140,42 @@ import type { PublicCatalog } from '../types/plans.types'
  * código sería volver a inventar, y no mandar la línea cobraría el paquete base
  * mientras el cliente cree haber comprado cinco personas. Se deja fallar.
  */
+/**
+ * LA CAPA EDITORIAL: lo único de este fichero que llega a producción.
+ *
+ * <p>Es la mitad de «lo que es dinero viene del servidor; lo que es mensaje
+ * puede seguir siendo del front». El servidor manda el precio, el nombre, lo que
+ * incluye y las capacidades; esto de aquí decide qué se destaca y arregla un
+ * texto de escaparate. Se aplica en `plans.source.ts`, por código, y un código
+ * que el servidor ya no publique simplemente no encuentra su entrada.
+ *
+ * ── `recommended`: no existe en el contrato, y no es un olvido ──────────────
+ * `PublicPlanResponse` no lo trae porque no es un dato del modelo comercial:
+ * cuál de los tres paquetes se rodea con el marco «el más elegido» es una
+ * decisión de la portada. Por eso `PublicPlan` extiende `PublicPlanContract` en
+ * vez de ser el mismo tipo. Si nadie casa, `plans.store.ts` cae al primero de la
+ * lista, que es el orden del servidor (`sort_order`).
+ *
+ * ── `tagline`: se corrige UNO, y hay que decir por qué ──────────────────────
+ * El servidor publica `short_description` como `tagline`. Las de `PACK_SPA` y
+ * `PACK_CLINIC` son texto de escaparate y se usan tal cual. La de `PACK_FULL` en
+ * el changeset 308 es una nota interna de modelado —«Todo el producto: quince
+ * piezas enumeradas, sin anidar paquetes»— y transcribirla pondría esa frase en
+ * la pantalla donde alguien decide una compra.
+ *
+ * <p><b>Esto es un parche, y el arreglo de verdad es la semilla.</b> Mientras la
+ * semilla no cambie, la alternativa era peor: enseñar la nota de modelado.
+ * Cuando `short_description` de `PACK_FULL` se corrija en el backend, esta
+ * entrada sobra y hay que borrarla — no se cae sola, porque un `tagline` local
+ * que coincide con el del servidor no se distingue de uno que lo tapa.
+ */
+export const OVERLAY_EDITORIAL: Readonly<
+  Record<string, { readonly recommended?: boolean; readonly tagline?: string }>
+> = {
+  PACK_CLINIC: { recommended: true },
+  PACK_FULL: { tagline: 'Todo el producto, de la historia clínica a la facturación DIAN' },
+}
+
 export const SELLO = {
   listaDePrecioCodigo: 'LISTA-2026-01',
   revisadoEl: '2026-08-29',

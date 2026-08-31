@@ -35,6 +35,19 @@ defineProps<{
   plans: PublicPlan[]
   loading: boolean
   error: unknown
+  /**
+   * El catálogo ya VOLVIÓ del servidor, con lo que traiga.
+   *
+   * <p>Sin esto, «Todavía no hay planes publicados» se pintaba en el primer
+   * render: `usePlanes()` pide el catálogo en su `onMounted`, que corre DESPUÉS,
+   * así que hasta entonces `loading` es `false` y la lista está vacía. Mientras
+   * los planes salían de un fichero local el hueco duraba un microtask y no se
+   * llegaba a pintar; desde que `plans.source.ts` pide `GET /plans` dura un viaje
+   * de red entero, y esto es la portada. Es el mismo criterio que
+   * `useCatalogoComercial.vacio` y `PlanesView.sinPaquetes`: el vacío no se
+   * afirma hasta que la respuesta vuelve.
+   */
+  loaded: boolean
 }>()
 
 const emit = defineEmits<{
@@ -48,7 +61,11 @@ const ciclo = ref<Ciclo>('MENSUAL')
 <template>
   <section id="planes" class="pub-section" aria-labelledby="planes-titulo" tabindex="-1">
     <div class="pub-section-head">
-      <h2 id="planes-titulo">Tres paquetes ya armados</h2>
+      <!-- «Paquetes», ya no «Tres». Cuántos hay lo decide el servidor desde que
+           vienen de `GET /plans` —hoy son tres, mañana los que publique la
+           tarifa vigente, y sin tarifa ninguno—, así que clavar el número aquí
+           era la última afirmación local sobre datos que ya no son locales. -->
+      <h2 id="planes-titulo">Paquetes ya armados</h2>
       <p>
         Por si quieres una cifra rápida. Si prefieres pagar solo por lo que uses, cuéntanos arriba
         qué hace tu clínica.
@@ -75,8 +92,13 @@ const ciclo = ref<Ciclo>('MENSUAL')
 
     <p v-else-if="loading" class="land-plans-state land-plans-loading">Cargando los planes…</p>
 
-    <p v-else-if="plans.length === 0" class="land-plans-state land-plans-loading">
-      Todavía no hay planes publicados. Escríbenos a
+    <p
+      v-else-if="loaded && plans.length === 0"
+      class="land-plans-state land-plans-loading"
+      role="status"
+      data-testid="landing-planes-vacio"
+    >
+      Todavía no hay paquetes con precio publicado. Escríbenos a
       <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y te contamos.
     </p>
 
