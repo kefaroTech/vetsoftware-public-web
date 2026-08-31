@@ -604,16 +604,27 @@ export interface AssistantPackOfferResponse {
  * la pantalla contra un estado normal del catálogo.
  *
  * <p>`presentation` es {@code ProposalPresentation} y es **el discriminador**:
- * `PROPOSAL`, `NOT_UNDERSTOOD`, `OUT_OF_DOMAIN` y `DETERMINISTIC`. Las tres
- * degradaciones internas del servidor colapsan en `DETERMINISTIC` a propósito
- * —saber cuál tocó le diría a un anónimo cuándo se agotó el presupuesto diario
- * de la plataforma—, pero `NOT_UNDERSTOOD` y `OUT_OF_DOMAIN` sí se distinguen,
- * porque son lectura del texto del prospecto y tienen pantallas distintas.
+ * `PROPOSAL`, `NOT_UNDERSTOOD`, `OUT_OF_DOMAIN`, `DETERMINISTIC` y
+ * `NO_CATALOG`. Las tres degradaciones internas del servidor colapsan en
+ * `DETERMINISTIC` a propósito —saber cuál tocó le diría a un anónimo cuándo se
+ * agotó el presupuesto diario de la plataforma—, pero `NOT_UNDERSTOOD` y
+ * `OUT_OF_DOMAIN` sí se distinguen, porque son lectura del texto del prospecto
+ * y tienen pantallas distintas.
+ *
+ * <p>`NO_CATALOG` es el rótulo del caso de arriba: `ProposalViewDto.sinCatalogo()`
+ * ya no viaja rotulado como una degradación cualquiera. **Declararlo aquí no
+ * cambia ni una rama del seam**, y es lo que se quería: el token nulo ya
+ * clasifica ese cuerpo antes de que nadie mire la presentación, así que la
+ * unión se amplía para no mentir sobre lo que el cable trae, no para abrir un
+ * camino nuevo. Y el build no lo habría avisado: el contrato declara
+ * `presentation` como `string` a secas, así que `MatchesContract` acepta esta
+ * unión igual de estrecha o de ancha (ver `api.contract.ts`, §del asistente).
  */
 export interface AssistantProposalResponse {
   /** La credencial de 43 caracteres. **No entra en ningún store.** */
   token: string | null
-  presentation: 'PROPOSAL' | 'NOT_UNDERSTOOD' | 'OUT_OF_DOMAIN' | 'DETERMINISTIC' | null
+  presentation:
+    'PROPOSAL' | 'NOT_UNDERSTOOD' | 'OUT_OF_DOMAIN' | 'DETERMINISTIC' | 'NO_CATALOG' | null
   expiresAt: string | null
   version: number | null
   lines: AssistantProposalLineResponse[] | null

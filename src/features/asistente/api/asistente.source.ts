@@ -387,7 +387,7 @@ function adoptarRespuesta(respuesta: AssistantProposalResponse, manuales: Set<st
  * El desenlace, leído del **discriminador del servidor** y no de una lista
  * vacía.
  *
- * <p>`presentation` es `ProposalPresentation` y tiene cuatro valores:
+ * <p>`presentation` es `ProposalPresentation` y tiene cinco valores:
  *
  *  · `PROPOSAL` — el modelo leyó el texto. Propuesta con sus líneas.
  *  · `DETERMINISTIC` — sin lectura del texto libre, pero **el carrito es una
@@ -399,11 +399,20 @@ function adoptarRespuesta(respuesta: AssistantProposalResponse, manuales: Set<st
  *  · `OUT_OF_DOMAIN` — reescribir NO sirve. **Ni una línea de catálogo**: el
  *    error caro no es perder el lead, es venderle software veterinario a quien
  *    no tiene animales.
+ *  · `NO_CATALOG` — no hay lista de precios publicada. Es el cuerpo de
+ *    `ProposalViewDto.sinCatalogo()`, y **no tiene rama propia aquí ni la va a
+ *    tener**: ese cuerpo llega con `token` a `null`, así que la guarda de abajo
+ *    lo clasifica como `NO_DISPONIBLE` antes de que este `switch` de igualdades
+ *    llegue a mirar la presentación. La degradación ya es correcta por dos
+ *    caminos independientes —el token ausente y, si algún día llegara con
+ *    token, el `return` por defecto del final—, y una tercera rama sería más
+ *    superficie para exactamente el mismo resultado.
  *
  * <p>Un `presentation` desconocido cae en `NO_DISPONIBLE` y no en «propuesta»:
  * la atadura al contrato acepta un tipo local más estrecho sin comprobarlo, así
- * que un quinto valor del backend llegaría aquí sin romper el build, y pintarlo
- * como propuesta sería enseñar un carrito que el servidor no llamó carrito.
+ * que un valor nuevo del backend llega aquí sin romper el build —le pasó a
+ * `NO_CATALOG`— y pintarlo como propuesta sería enseñar un carrito que el
+ * servidor no llamó carrito.
  */
 function comoResultado(
   respuesta: AssistantProposalResponse,

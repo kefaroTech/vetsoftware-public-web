@@ -6,6 +6,7 @@ import CicloFieldset from '../../landing/components/CicloFieldset.vue'
 import { useAsistente } from '../composables/useAsistente'
 import { useCatalogoComercial } from '../composables/useCatalogoComercial'
 import { useRecuperarPropuesta } from '../composables/useRecuperarPropuesta'
+import AsistenteCaidoAviso from './AsistenteCaidoAviso.vue'
 import AsistenteEntrada from './AsistenteEntrada.vue'
 import AsistenteEspera from './AsistenteEspera.vue'
 import AsistenteFueraDeDominio from './AsistenteFueraDeDominio.vue'
@@ -86,6 +87,7 @@ const {
 const {
   grupos,
   catalogo,
+  vacio: catalogoVacio,
   loading: cargandoCatalogo,
   error: errorCatalogo,
 } = useCatalogoComercial(ciclo)
@@ -227,15 +229,9 @@ watch(estado, async (nuevo, anterior) => {
 
     <!-- DEGRADACIÓN. La pantalla cambia de forma, no de mensaje: el catálogo
          manual pasa a ser el contenido principal. La ausencia del asistente
-         nunca puede impedir comprar. -->
-    <div
-      v-if="estado === 'ASISTENTE_CAIDO'"
-      class="ds-banner ds-banner--warning apan-aviso"
-      role="status"
-    >
-      El asistente no está disponible ahora mismo. Puedes armar tu plan tú mismo aquí abajo, o
-      elegir uno de nuestros paquetes.
-    </div>
+         nunca puede impedir comprar — pero tampoco puede mandar a un sitio
+         vacío, y por eso el aviso sabe si hay catálogo (ver el componente). -->
+    <AsistenteCaidoAviso v-if="estado === 'ASISTENTE_CAIDO'" :catalogo-vacio="catalogoVacio" />
 
     <!-- RECUPERANDO. Es una relectura, no una invocación al modelo: ni las
          frases escalonadas de la espera ni el botón de cancelar tienen sentido
