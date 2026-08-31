@@ -56,6 +56,23 @@ export function useCatalogoComercial(ciclo: Ref<Ciclo>) {
     })).filter((g) => g.articulos.length > 0),
   )
 
+  /**
+   * No hay nada que ofrecer a mano: el catálogo **llegó** y no trae ni un
+   * artículo vendible.
+   *
+   * <p>Es el caso «no hay lista de precios publicada» (`GET /catalog` responde
+   * 200 con todo vacío), y lo consume el aviso de `ASISTENTE_CAIDO` para no
+   * mandar al visitante a un catálogo manual que no tiene ni una casilla.
+   *
+   * <p>Exige `catalogo !== null` a propósito: con la petición en vuelo la lista
+   * también está vacía, y afirmar entonces que no hay nada es una mentira con
+   * fecha de caducidad de medio segundo. Un fallo de red tampoco entra aquí —el
+   * store conserva el catálogo anterior y, si no había, deja `null`—, porque
+   * «no pudimos cargarlo» y «no hay nada publicado» son dos frases distintas y
+   * la pantalla ya tiene la suya para la primera.
+   */
+  const vacio = computed<boolean>(() => catalogo.value !== null && grupos.value.length === 0)
+
   function articulo(code: string): ArticuloCatalogo | null {
     return articulos.value.find((a) => a.code === code) ?? null
   }
@@ -69,6 +86,7 @@ export function useCatalogoComercial(ciclo: Ref<Ciclo>) {
     catalogo,
     articulos,
     grupos,
+    vacio,
     loading,
     error,
     articulo,
