@@ -59,7 +59,7 @@ import type { Ciclo } from '../types/plans.types'
  */
 const route = useRoute()
 const router = useRouter()
-const { plans, loading, error, refresh } = usePlanes()
+const { plans, loading, error, loaded, refresh } = usePlanes()
 const { vigente, elegir, destinoTrasElegir } = useContratacion()
 const { isAuthenticated } = useAuth()
 // Se renombra: esta vista ya tiene su propio `texto()`, el lector de la query.
@@ -123,6 +123,33 @@ watch(
 )
 
 const planElegido = computed(() => plans.value.find((p) => p.code === planCode.value) ?? null)
+
+/**
+ * El catálogo **llegó** y no trae ni un paquete publicable.
+ *
+ * ── Esta rama acaba de nacer de verdad ──────────────────────────────────────
+ * Existía un `v-else-if="plans.length === 0"` que **no podía dispararse nunca**:
+ * los planes salían de `PLANS_CONTENT`, contenido local con tres paquetes
+ * escritos a mano, y una constante no está vacía jamás. Nadie la vio funcionar.
+ * Desde que `plans.source.ts` pide `GET /plans` sí ocurre, y es un estado NORMAL
+ * del negocio: sin lista de precio vigente el servidor responde 200 con la lista
+ * vacía a propósito, para que la portada siga cargando.
+ *
+ * ── Por qué exige `loaded` y la vieja no lo hacía ───────────────────────────
+ * `usePlanes()` pide el catálogo en su `onMounted`, que corre DESPUÉS del primer
+ * render. En ese primer render `loading` todavía es `false` y `plans` está
+ * vacío, así que la condición de antes se cumplía: con red detrás eso es un
+ * parpadeo de «todavía no hay paquetes publicados» sobre un catálogo que llega
+ * medio segundo después. Afirmar el vacío antes de que la respuesta vuelva es la
+ * misma mentira que este cambio quita, en la otra dirección. Es el criterio que
+ * `useCatalogoComercial.vacio` ya dejó escrito para el catálogo manual.
+ *
+ * <p>Y descuenta el error porque son dos frases distintas: «no pudimos
+ * cargarlo» ya tiene su bloque con su reintento. Puede darse a la vez —una
+ * recarga que falla sobre un catálogo vacío que sí cargó— y entonces manda el
+ * error, que es el que ofrece hacer algo.
+ */
+const sinPaquetes = computed(() => loaded.value && !error.value && plans.value.length === 0)
 
 /**
  * Guarda la intención y salta al paso siguiente, que **no es el mismo para
@@ -210,10 +237,10 @@ function continuar() {
 
       <p v-else-if="loading" class="pl-state-text">Cargando los planes…</p>
 
-      <p v-else-if="plans.length === 0" class="pl-state-text">
-        Todavía no hay planes publicados. Escríbenos a
-        <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a>.
-      </p>
+      <!-- El vacío ya NO se anuncia aquí arriba. Vivía suelto entre la carga y el
+           asistente, a media pantalla del hueco que describía, mientras la
+           sección de abajo seguía prometiendo «tres combinaciones cerradas, con
+           su precio» sobre la nada. Ahora está donde está el hueco. -->
 
       <!-- Contenido principal: la propuesta a medida. -->
       <AsistentePanel />
@@ -223,9 +250,33 @@ function continuar() {
            segundo lugar es el orden, el peso del encabezado y el lenguaje, no el
            ocultamiento. -->
       <section class="pl-paquetes" aria-labelledby="paquetes-h2">
-        <h2 id="paquetes-h2" class="pl-paquetes-h2">O empieza por un paquete ya armado</h2>
-        <p class="pl-paquetes-sub">
-          Tres combinaciones cerradas, con su precio. Puedes ajustarlas antes de contratar.
+        <!-- El encabezado cambia con el estado, y no es cosmética: «O empieza por
+             un paquete ya armado» encima de un hueco es una instrucción que la
+             pantalla no puede cumplir, dicha en negrita y a mayor tamaño. Es el
+             mismo criterio que `CatalogoManual` dejó escrito para su vacío. -->
+        <h2 id="paquetes-h2" class="pl-paquetes-h2">
+          {{
+            sinPaquetes
+              ? 'Todavía no hay paquetes publicados'
+              : 'O empieza por un paquete ya armado'
+          }}
+        </h2>
+
+        <!-- El vacío se ANUNCIA: es contenido, no la ausencia de contenido. Sin
+             `role="status"` quien navega con lector se queda esperando una lista
+             de precios que nunca va a llegar, porque nada le dijo que no venía
+             (§4.1.3). No roba el foco: el asistente de arriba sigue montado y es
+             la compra que en ese momento sí se puede intentar. -->
+        <p v-if="sinPaquetes" class="pl-paquetes-sub" role="status" data-testid="planes-vacio">
+          Todavía no hay paquetes con precio publicado. Escríbenos a
+          <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y te decimos qué
+          podemos montarte hoy.
+        </p>
+        <!-- «Combinaciones», ya no «Tres»: cuántos hay lo dice el servidor desde
+             que los paquetes vienen de `GET /plans`, y clavar el número aquí era
+             la última afirmación local sobre datos que ya no son locales. -->
+        <p v-else class="pl-paquetes-sub">
+          Combinaciones cerradas, con su precio. Puedes ajustarlas antes de contratar.
         </p>
 
         <PlanesConfigurador

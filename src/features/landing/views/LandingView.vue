@@ -41,7 +41,7 @@ import type { Ciclo, PublicPlan } from '../types/plans.types'
  * búsqueda.
  */
 const router = useRouter()
-const { plans, loading, error, refresh, findByCode } = usePlanes()
+const { plans, loading, error, loaded, refresh, findByCode } = usePlanes()
 const { vigente, elegir, limpiar } = useContratacion()
 const { recuperarDeEnlace, recuperarGuardada, conocePropuesta } = useRecuperarPropuesta()
 
@@ -158,6 +158,7 @@ function empezarDeNuevo() {
         :plans="plans"
         :loading="loading"
         :error="error"
+        :loaded="loaded"
         @elegir="onElegir"
         @reintentar="refresh"
       />
