@@ -12,6 +12,7 @@ import type {
 import type { Propuesta } from '@/features/asistente/types/asistente.types'
 import type { EstadoPlanActual } from '@/features/suscripcion/composables/estadoSuscripcion'
 import type { QuoteResponse } from '@/features/suscripcion/types/cotizaciones.types'
+import { elemento } from '../helpers/exigir'
 
 /**
  * LA PROPUESTA A MEDIDA, DENTRO DEL EMBUDO DE CONTRATACIÓN.
@@ -204,6 +205,18 @@ async function montar() {
   await flushPromises()
   await flushPromises()
   return wrapper
+}
+
+/**
+ * El rótulo del **único control que compromete el dinero**, localizado por lo
+ * que ES —el botón grande y primario del bloque de acciones— y no por el texto
+ * que se espera leer en él. Buscarlo por «Confirmar mi …» convertiría un rótulo
+ * equivocado en un «no lo encuentro», que es un fallo distinto y peor: dice que
+ * falta el botón cuando lo que falla es lo que dice.
+ */
+function rotuloVinculante(wrapper: Awaited<ReturnType<typeof montar>>): string {
+  const botones = wrapper.findAll('button.ds-btn--lg')
+  return elemento(botones, 0, 'el botón vinculante del paso 6').text().trim()
 }
 
 beforeEach(() => {
@@ -439,7 +452,28 @@ describe('el paso 6, montado, con una intención de propuesta', () => {
     expect(texto).toContain('Agenda')
     // La capacidad se rotula como lo que es, y no como un módulo más.
     expect(texto).toContain('Personas adicionales (capacidad)')
-    expect(wrapper.findAll('button').some((b) => b.text().includes('Confirmar mi plan'))).toBe(true)
+    expect(rotuloVinculante(wrapper)).toBe('Confirmar mi propuesta')
+  })
+
+  it('el botón vinculante NO le nombra un paquete que este cliente nunca eligió', async () => {
+    // El defecto que cierra esta prueba: el h1 y el título de la ruta ya decían
+    // «Confirma tu contratación» —renombrados justo porque la pantalla sirve por
+    // igual un paquete y una propuesta a medida—, y la pantalla de éxito ya
+    // ramifica («Listo. Tu propuesta a medida está reservada»). El botón, que es
+    // el único control que compromete el dinero, seguía diciendo «Confirmar mi
+    // plan» INCONDICIONALMENTE: a quien había descrito su clínica con sus
+    // palabras y no tocó un paquete en toda la sesión, lo último que leía antes
+    // de firmar le nombraba un paquete.
+    //
+    // Las dos mitades hacen falta. La primera sola pasaría con un rótulo neutro;
+    // la segunda sola pasaría con un botón que desapareciera del DOM.
+    sembrar(intencionDePropuesta())
+    const wrapper = await montar()
+
+    expect(rotuloVinculante(wrapper)).toBe('Confirmar mi propuesta')
+    expect(wrapper.text(), 'la palabra «plan» no aparece en el control').not.toContain(
+      'Confirmar mi plan',
+    )
   })
 
   it('una propuesta EDITADA desde que se trajo sale como deriva, con las dos cifras', async () => {

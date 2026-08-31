@@ -19,6 +19,7 @@ export function useAsistente() {
   const {
     estado,
     propuesta,
+    leyoElTexto,
     texto,
     email,
     ciclo,
@@ -76,6 +77,7 @@ export function useAsistente() {
   return {
     estado,
     propuesta,
+    leyoElTexto,
     texto,
     email,
     ciclo,

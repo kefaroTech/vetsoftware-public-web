@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Building2, Receipt, ShieldCheck } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
+import LandingCotizador from './LandingCotizador.vue'
 
 /**
  * §A — el hero.
@@ -8,24 +9,24 @@ import { RouterLink } from 'vue-router'
  * El kicker que había encima del `<h1>` («Plataforma de gestión veterinaria»)
  * desaparece: decía lo mismo que el titular y lo decía peor.
  *
- * «Ver los planes» ancla a `#planes` en la misma página, no navega: quien llega
- * a una landing quiere ver el precio sin cambiar de página. El ancla mueve el
- * FOCO además del scroll — con solo el hash, el foco se queda en el `<body>` y
- * la siguiente tabulación devuelve al usuario a la barra de navegación.
+ * ── Qué es ahora la acción principal ────────────────────────────────────────
+ * La caja de arranque (`LandingCotizador`), y no un botón hacia los paquetes.
+ * El producto dice «paga solo lo que uses» y la página ofrecía primero tres
+ * paquetes cerrados: mientras el CTA más prominente diga «ver los planes»,
+ * cualquier caja de texto añadida arriba es decoración. El botón sólido morado
+ * pasa a ser el envío del cotizador; el camino a los paquetes sigue existiendo
+ * —enlace de texto dentro de la propia caja, y la sección `#planes` completa más
+ * abajo—, pero deja de competir por el mismo peso visual.
+ *
+ * <p>El cotizador va **entre** el subtítulo y la fila de botones, en el orden
+ * del DOM, que es el visual: nada se reordena con rejilla. Y sigue dentro del
+ * `<main id="contenido">`, así que el enlace de salto no cambia de destino.
  */
 const señales = [
   { icon: Receipt, label: 'Facturación electrónica DIAN' },
   { icon: Building2, label: 'Varias sedes' },
   { icon: ShieldCheck, label: 'Tus datos cifrados' },
 ]
-
-function irAPlanes(e: Event) {
-  e.preventDefault()
-  const el = document.getElementById('planes')
-  if (!el) return
-  el.scrollIntoView({ block: 'start', behavior: 'smooth' })
-  el.focus({ preventScroll: true })
-}
 </script>
 
 <template>
@@ -40,8 +41,9 @@ function irAPlanes(e: Event) {
       para clínicas veterinarias en Colombia.
     </p>
 
+    <LandingCotizador />
+
     <div class="land-cta-row">
-      <a href="#planes" class="land-cta land-cta--primary" @click="irAPlanes">Ver los planes</a>
       <RouterLink :to="{ name: 'login' }" class="land-cta land-cta--ghost">
         Ya tengo cuenta
       </RouterLink>
@@ -95,11 +97,12 @@ function irAPlanes(e: Event) {
   flex-wrap: wrap;
   justify-content: center;
   gap: 12px;
-  margin-top: 32px;
+  margin-top: 22px;
 }
 
 /* §2.5.8: en los CTA de la landing el listón sube a 44×44 — se usan con el
-   animal delante y con una sola mano. */
+   animal delante y con una sola mano. Solo queda el fantasma: el sólido morado
+   se lo llevó el cotizador, que ahora es la acción principal del hero. */
 .land-cta {
   display: inline-flex;
   align-items: center;
@@ -110,12 +113,6 @@ function irAPlanes(e: Event) {
   font-size: 15px;
   font-weight: 600;
   text-decoration: none;
-}
-
-.land-cta--primary {
-  background: linear-gradient(180deg, var(--pub-ame-600), var(--pub-ame-700));
-  color: var(--pub-surface);
-  box-shadow: var(--pub-btn-shadow);
 }
 
 .land-cta--ghost {

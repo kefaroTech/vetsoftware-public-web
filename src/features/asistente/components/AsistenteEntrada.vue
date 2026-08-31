@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { computed, reactive, ref, useId } from 'vue'
+import { computed, nextTick, reactive, ref, useId, useTemplateRef } from 'vue'
 import ErrorSummary, { toSummaryItems } from '@/components/feedback/ErrorSummary.vue'
 import LegalConsentCheckbox from '../../legal/components/LegalConsentCheckbox.vue'
-import { MAX_DESCRIPCION, MIN_DESCRIPCION } from '../content/copy.content'
+import {
+  EJEMPLOS_COTIZADOR,
+  ERROR_TEXTO_CORTO,
+  MAX_DESCRIPCION,
+  MIN_DESCRIPCION,
+} from '../content/copy.content'
 import type { AceptacionLegal } from '../types/asistente.types'
 
 /**
@@ -11,6 +16,21 @@ import type { AceptacionLegal } from '../types/asistente.types'
  * <p>El `<h1>`, el subtítulo y la línea de moneda los pone la vista, no este
  * componente: monta y desmonta con el estado, y un encabezado que desaparece al
  * llegar la propuesta deja el documento sin nivel 1.
+ *
+ * <p>El `<h2>` **sí** vive aquí, y por el mismo argumento leído al revés: rotula
+ * este estado de la pantalla, así que tiene que desaparecer con él. Antes el
+ * contenido principal de `/planes` no tenía más rótulo que un `<label>` de
+ * 13 px, mientras el bloque secundario lo encabezaba un `<summary>` de 16 px en
+ * negrita; para quien navega por encabezados —que es la forma mayoritaria de
+ * recorrer una página con lector de pantalla— el contenido principal
+ * sencillamente no existía en el esquema del documento (§1.3.1).
+ *
+ * ── El folio en blanco, y los tres ejemplos que lo rompen ───────────────────
+ * La ayuda enumera seis dimensiones en una frase de veinticuatro palabras: eso
+ * es una lista de deberes, no un arranque. Los ejemplos pulsables enseñan la
+ * FORMA de la respuesta con casos amplios que casi cualquier clínica reconoce, y
+ * **rellenan sin enviar**. El patrón ya existía en el cuadro de refinamiento,
+ * es decir, se le ofrecía solo a quien ya había superado el folio en blanco.
  *
  * ── El orden del DOM, y por qué el correo va DEBAJO del texto ───────────────
  * Pedir el correo antes de que el prospecto haya escrito una palabra convierte
@@ -48,6 +68,7 @@ const emit = defineEmits<{
 const uid = useId()
 const idTexto = `${uid}-texto`
 const idAyudaTexto = `${uid}-texto-ayuda`
+const idEjemplos = `${uid}-ejemplos`
 const idErrorTexto = `${uid}-texto-error`
 const idEmail = `${uid}-email`
 const idAyudaEmail = `${uid}-email-ayuda`
@@ -79,7 +100,9 @@ function validarTexto(v: string): string | null {
     return 'Cuéntanos a qué se dedica tu veterinaria para poder proponerte algo.'
   }
   if (limpio.length < MIN_DESCRIPCION) {
-    return 'Con eso no nos alcanza. Escríbenos una o dos frases sobre lo que hace tu veterinaria.'
+    // El literal vive en `copy.content.ts` y no aquí: la caja del hero da el
+    // mismo fallo, y el mismo fallo con dos redacciones se lee como dos fallos.
+    return ERROR_TEXTO_CORTO
   }
   return null
 }
@@ -133,6 +156,39 @@ const itemsResumen = computed(() =>
   ),
 )
 
+const campo = useTemplateRef<HTMLTextAreaElement>('campo')
+
+/**
+ * Los ejemplos, **solo si se llega con el campo vacío**.
+ *
+ * <p>Se decide una vez, al montar, y a propósito no es reactivo. Como
+ * `computed` la fila desaparecería al teclear la primera letra —un salto de
+ * maquetación bajo el cursor— y, peor, se esfumaría en cuanto se pulsara el
+ * primer ejemplo, impidiendo añadir un segundo. Quien llega desde la caja del
+ * hero ya trae su párrafo: los ejemplos cumplieron su función allí y aquí solo
+ * ocuparían el sitio del correo.
+ */
+const mostrarEjemplos = props.texto.trim().length === 0
+
+/**
+ * Añade un ejemplo al final del texto. **Rellena, no envía; añade, no
+ * reemplaza.**
+ *
+ * <p>Un botón que dispara una llamada de pago con un texto que el usuario no ha
+ * leído es un gasto que él no autorizó. Y el texto ya tecleado no se destruye
+ * nunca: es lo más caro que hay en esta pantalla.
+ */
+function usar(ejemplo: string): void {
+  const actual = props.texto.trim()
+  emit('update:texto', actual ? `${actual} ${ejemplo}` : ejemplo)
+  void nextTick(() => {
+    const el = campo.value
+    if (!el) return
+    el.focus()
+    el.setSelectionRange(el.value.length, el.value.length)
+  })
+}
+
 const restantes = computed(() => MAX_DESCRIPCION - props.texto.length)
 
 /**
@@ -170,6 +226,8 @@ function enviar(): void {
   <div class="aen">
     <ErrorSummary ref="resumen" :items="itemsResumen" />
 
+    <h2 class="aen-h2">Cuéntanos qué hace tu veterinaria</h2>
+
     <label :for="idTexto" class="aen-label">¿A qué se dedica tu veterinaria?</label>
     <!-- Los ejemplos van FUERA del `placeholder`: un placeholder desaparece al
          escribir y es texto de bajo contraste que se lee como valor introducido. -->
@@ -179,8 +237,9 @@ function enviar(): void {
     </p>
     <textarea
       :id="idTexto"
-      class="aen-campo"
-      :class="{ 'ds-field-invalid': !!err('texto') }"
+      ref="campo"
+      class="pub-campo"
+      :class="err('texto') ? 'ds-field-invalid' : 'pub-campo-rest'"
       rows="6"
       :maxlength="MAX_DESCRIPCION"
       :value="texto"
@@ -190,6 +249,17 @@ function enviar(): void {
       @blur="touched.texto = true"
     />
     <p v-if="err('texto')" :id="idErrorTexto" class="aen-error">{{ err('texto') }}</p>
+
+    <template v-if="mostrarEjemplos">
+      <p :id="idEjemplos" class="aen-ejemplos-label">O empieza por aquí:</p>
+      <ul class="aen-ejemplos" :aria-labelledby="idEjemplos">
+        <li v-for="ejemplo in EJEMPLOS_COTIZADOR" :key="ejemplo">
+          <button type="button" class="ds-btn ds-btn--ghost aen-ejemplo" @click="usar(ejemplo)">
+            {{ ejemplo }}
+          </button>
+        </li>
+      </ul>
+    </template>
 
     <p v-if="mostrarContador" class="aen-contador" role="status" aria-live="polite">
       Te quedan {{ restantes }} caracteres.
@@ -201,8 +271,8 @@ function enviar(): void {
     </p>
     <input
       :id="idEmail"
-      class="aen-campo aen-campo--linea"
-      :class="{ 'ds-field-invalid': !!err('email') }"
+      class="pub-campo pub-campo--linea"
+      :class="err('email') ? 'ds-field-invalid' : 'pub-campo-rest'"
       type="email"
       autocomplete="email"
       :value="email"
@@ -252,34 +322,42 @@ function enviar(): void {
   color: var(--pub-ink-600);
 }
 
+/* 20 px contra los 17 px del `<h2>` de la sección de paquetes: el rótulo del
+   contenido principal pesa más que el del secundario. */
+.aen-h2 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--pub-ink-900);
+}
+
+.aen-ejemplos-label {
+  margin: 14px 0 8px;
+  font-size: 13px;
+  color: var(--pub-ink-600);
+}
+
+.aen-ejemplos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 44 px de alto: el listón de la zona pública, que se usa con una sola mano. */
+.aen-ejemplo {
+  min-block-size: 44px;
+}
+
 .aen-label {
   display: block;
   margin-block-start: 18px;
   font-size: 13px;
   font-weight: 600;
   color: var(--pub-ink-700);
-}
-
-/* El borde sale de `--pub-ame-600` (5,38:1) y no de `--pub-line` (1,23:1), que
-   no alcanza el mínimo de §1.4.11 para el borde de un control. */
-.aen-campo {
-  inline-size: 100%;
-  padding: 10px 12px;
-  border: 2px solid var(--pub-ame-600);
-  border-radius: 10px;
-  background: var(--pub-surface);
-  font: inherit;
-
-  /* 16 px como mínimo: por debajo, iOS hace zoom al enfocar. */
-  font-size: 16px;
-  line-height: 1.5;
-  color: var(--pub-ink-900);
-  resize: vertical;
-}
-
-.aen-campo--linea {
-  block-size: 46px;
-  resize: none;
 }
 
 .aen-error {

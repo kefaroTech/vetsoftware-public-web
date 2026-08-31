@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { RefreshCw } from 'lucide-vue-next'
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import PublicLayout from '@/components/public/PublicLayout.vue'
+import { useAuth } from '@/features/auth/composables/useAuth'
 import { useContratacion } from '@/features/contratacion/composables/useContratacion'
 import AsistentePanel from '@/features/asistente/components/AsistentePanel.vue'
+import { useAsistente } from '@/features/asistente/composables/useAsistente'
 import PlanesConfigurador from '../components/PlanesConfigurador.vue'
 import { usePlanes } from '../composables/usePlanes'
 import { MONEDA_DE_FACTURACION } from '../composables/planPricing'
@@ -13,9 +15,16 @@ import type { Ciclo } from '../types/plans.types'
 /**
  * Paso 2 del embudo — `/planes`.
  *
- * Lleva `guestOnly` como el resto de la zona pública: un cliente con sesión que
- * entra aquí va al tablero, que es lo correcto — su plan se gestiona desde
- * dentro, no desde el escaparate.
+ * Lleva `guestOnly` **con la excepción `allowClientWithoutPlan`**: quien ya
+ * contrató va al tablero —su plan se gestiona desde dentro, no desde el
+ * escaparate—, pero el cliente con sesión que todavía NO ha contratado entra.
+ * Sin esa excepción, quien llegaba al paso vinculante y quería cambiar lo que
+ * iba a contratar no tenía forma de volver aquí. El motivo largo está en la
+ * ruta y en el guard (`router/index.ts`).
+ *
+ * <p>Por eso esta pantalla tiene dos públicos, y se nota en dos sitios: el
+ * enlace de la esquina (iniciar sesión / volver al tablero) y a dónde lleva
+ * «continuar» (`destinoTrasElegir`).
  *
  * La selección se siembra, en este orden: lo que traiga la URL (un enlace
  * compartido o el CTA de una tarjeta), lo que hubiera en la intención guardada,
@@ -25,9 +34,20 @@ import type { Ciclo } from '../types/plans.types'
  * ── Dos superficies, UNA ruta ───────────────────────────────────────────────
  * Desde el asistente de propuesta a medida, esta ruta tiene dos contenidos: el
  * cuadro de texto libre arriba, como contenido principal, y los tres paquetes
- * debajo en un `<details>`. **No hay ruta nueva**, y es una decisión: una
- * `/planes/asistente` partiría la entrada del embudo en dos URLs, obligaría a
- * mantener dos pantallas de precio y haría ilegible la analítica del paso 2.
+ * debajo, en una `<section>` con su `<h2>`. **No hay ruta nueva**, y es una
+ * decisión: una `/planes/asistente` partiría la entrada del embudo en dos URLs,
+ * obligaría a mantener dos pantallas de precio y haría ilegible la analítica del
+ * paso 2.
+ *
+ * <p>Los paquetes estuvieron dentro de un `<details open>` y ya no: el atributo
+ * era estático porque «abierto en escritorio y cerrado en móvil» no se puede
+ * expresar así, y el resultado era un control de divulgación que solo podía
+ * empeorar la página —cerrarlo destruye el ancla de precio, y quien lo cierra
+ * sin querer pierde los precios sin saber cómo volver—, con un `<summary>` de
+ * 16 px en negrita que **no es un encabezado** haciendo de rótulo del contenido
+ * secundario. Con un `<h2>` de verdad, la jerarquía la hacen el orden, el tipo y
+ * el lenguaje, y quien navega por encabezados encuentra por fin el contenido
+ * principal de esta pantalla en el esquema del documento (§1.3.1).
  *
  * <p>Y los paquetes **no desaparecen**, por conversión y no por comodidad: son
  * el ancla de precio. El flujo a medida pide escribir un párrafo y esperar unos
@@ -40,7 +60,33 @@ import type { Ciclo } from '../types/plans.types'
 const route = useRoute()
 const router = useRouter()
 const { plans, loading, error, refresh } = usePlanes()
-const { vigente, elegir } = useContratacion()
+const { vigente, elegir, destinoTrasElegir } = useContratacion()
+const { isAuthenticated } = useAuth()
+// Se renombra: esta vista ya tiene su propio `texto()`, el lector de la query.
+const { texto: textoLibre } = useAsistente()
+
+const h1 = useTemplateRef<HTMLElement>('h1')
+
+/**
+ * Si el prospecto llega con el texto ya escrito desde la caja del hero.
+ *
+ * <p>Se lee **una vez, al montar**, y no es un `computed`: si siguiera al campo,
+ * el subtítulo cambiaría bajo el cursor en cuanto el usuario escribiera aquí la
+ * primera letra. Lo que describe es de dónde vino, no qué hay en la caja ahora.
+ */
+const llegoSembrado = textoLibre.value.trim().length > 0
+
+/**
+ * Con texto sembrado, el foco va al `<h1>`, **no al campo**.
+ *
+ * <p>Llevarlo al `<textarea>` —o peor, al correo— saltaría el encabezado y el
+ * lector de pantalla no sabría en qué pantalla acaba de aterrizar. Es la misma
+ * convención del paso vinculante. Sin texto sembrado no se mueve nada: la
+ * navegación normal ya deja el foco donde toca.
+ */
+onMounted(() => {
+  if (llegoSembrado) h1.value?.focus()
+})
 
 function texto(v: unknown): string | null {
   return typeof v === 'string' && v ? v : null
@@ -79,14 +125,25 @@ watch(
 const planElegido = computed(() => plans.value.find((p) => p.code === planCode.value) ?? null)
 
 /**
- * Guarda la intención y salta al registro. La elección viaja también en la query
- * —además de en el store— para que el enlace se pueda compartir y para que el
- * carril «Tu selección» del registro no dependa solo del almacenamiento.
+ * Guarda la intención y salta al paso siguiente, que **no es el mismo para
+ * todos**: el registro para un prospecto, el paso vinculante para un cliente que
+ * ya tiene sesión y todavía no ha contratado (ver `destinoTrasElegir`). Empujar
+ * fijo a `signup` mandaba a este último al tablero en silencio, porque `signup`
+ * es `guestOnly`.
+ *
+ * La query solo viaja en la rama del registro: es lo que alimenta el carril «Tu
+ * selección» y hace el enlace compartible. El paso vinculante no la lee —se
+ * sirve de la intención que `elegir()` acaba de guardar— y arrastrarla ahí solo
+ * pondría la elección en la barra de direcciones sin que nadie la use.
  */
 function continuar() {
   const plan = planElegido.value
   if (!plan) return
   elegir(plan, ciclo.value, sedes.value, usuarios.value)
+  if (destinoTrasElegir.value === 'contratar') {
+    void router.push({ name: 'contratar' })
+    return
+  }
   void router.push({
     name: 'signup',
     query: {
@@ -101,8 +158,18 @@ function continuar() {
 
 <template>
   <PublicLayout>
+    <!-- Esta pantalla ya no es solo del visitante: también entra aquí el cliente
+         con sesión que todavía no ha contratado. Ofrecerle «¿Ya tienes cuenta?
+         Inicia sesión» sería la tercera frase falsa del embudo, y además le
+         dejaría sin salida: `PublicLayout` no trae la navegación de la app, así
+         que sin este enlace la única vuelta al tablero es el botón «atrás». -->
     <template #topRight>
-      ¿Ya tienes cuenta? <RouterLink :to="{ name: 'login' }">Inicia sesión</RouterLink>
+      <template v-if="isAuthenticated">
+        <RouterLink :to="{ name: 'home' }">Volver a mi tablero</RouterLink>
+      </template>
+      <template v-else>
+        ¿Ya tienes cuenta? <RouterLink :to="{ name: 'login' }">Inicia sesión</RouterLink>
+      </template>
     </template>
 
     <div class="pl-page">
@@ -111,8 +178,16 @@ function continuar() {
              panel monta y desmonta sus estados, así que un `<h1>` suyo
              desaparecería del documento en cuanto llegara la propuesta y la
              página se quedaría sin encabezado de nivel 1. -->
-        <h1 class="pub-title">Armemos el plan de tu clínica</h1>
-        <p class="pub-sub">
+        <h1 ref="h1" class="pub-title" tabindex="-1">Armemos lo que tu clínica necesita</h1>
+        <!-- Dos subtítulos, uno por procedencia. Quien llega con su párrafo ya
+             escrito necesita que la pantalla reconozca lo que trae —si no, la
+             caja llena se lee como «otro sitio donde escribir lo mismo»— y que
+             nombre lo único que falta. -->
+        <p v-if="llegoSembrado" class="pub-sub">
+          Ya tenemos lo que nos contaste. Revísalo, déjanos un correo y te armamos la propuesta. No
+          te compromete a nada y no pedimos tarjeta.
+        </p>
+        <p v-else class="pub-sub">
           Cuéntanos con tus palabras a qué se dedica tu veterinaria. Te proponemos los módulos que
           te sirven, con su precio. No te compromete a nada y no pedimos tarjeta.
         </p>
@@ -143,12 +218,15 @@ function continuar() {
       <!-- Contenido principal: la propuesta a medida. -->
       <AsistentePanel />
 
-      <!-- Y los tres paquetes, siempre disponibles. `open` en escritorio y
-           cerrado en móvil no se puede expresar con un atributo estático, así
-           que va abierto: en móvil cuesta un scroll; cerrado en escritorio
-           costaría el ancla de precio, que es lo que sostiene la conversión. -->
-      <details class="pl-paquetes" open>
-        <summary class="pl-paquetes-sum">O elige uno de nuestros tres paquetes</summary>
+      <!-- Y los tres paquetes, siempre visibles: son el ancla de precio, y el
+           camino a medida no enseña una cifra hasta el final. Lo que los pone en
+           segundo lugar es el orden, el peso del encabezado y el lenguaje, no el
+           ocultamiento. -->
+      <section class="pl-paquetes" aria-labelledby="paquetes-h2">
+        <h2 id="paquetes-h2" class="pl-paquetes-h2">O empieza por un paquete ya armado</h2>
+        <p class="pl-paquetes-sub">
+          Tres combinaciones cerradas, con su precio. Puedes ajustarlas antes de contratar.
+        </p>
 
         <PlanesConfigurador
           v-if="plans.length > 0"
@@ -159,7 +237,7 @@ function continuar() {
           :plans="plans"
           @continuar="continuar"
         />
-      </details>
+      </section>
     </div>
   </PublicLayout>
 </template>
@@ -199,12 +277,27 @@ function continuar() {
   border-block-start: 1px solid var(--pub-line-strong);
 }
 
-.pl-paquetes-sum {
-  margin-block-end: 16px;
-  font-size: 16px;
+/* 17 px contra los 20 px del `<h2>` de la entrada: el rótulo del contenido
+   secundario nunca pesa más que el del principal. Antes eran 16 px en negrita
+   contra los 13 px del `<label>` de la caja de texto. */
+.pl-paquetes-h2 {
+  margin: 0;
+  font-size: 17px;
   font-weight: 700;
   color: var(--pub-ink-900);
-  cursor: pointer;
+}
+
+.pl-paquetes-sub {
+  margin: 6px 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--pub-ink-600);
+}
+
+/* El `<h1>` solo recibe el foco por programa, al llegar con texto sembrado.
+   Nunca por teclado, así que aquí `outline: none` no esconde nada. */
+.pub-title:focus {
+  outline: none;
 }
 
 .pl-retry {

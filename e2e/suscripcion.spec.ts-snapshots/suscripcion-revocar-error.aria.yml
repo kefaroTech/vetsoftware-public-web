@@ -8,7 +8,7 @@
     - list:
       - listitem:
         - link "Escribe por qué revocas este medio de pago.":
-          - /url: "#v-5"
+          - /url: /#v-\d+/
   - paragraph: /Es tu único medio de pago activo\. Si lo revocas, el cobro del 1 sep \d+ no se podrá hacer y tu plan pasará a pago pendiente\./
   - text: Motivo (obligatorio)
   - textbox "Motivo (obligatorio)" [invalid]:

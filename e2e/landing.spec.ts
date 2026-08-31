@@ -27,11 +27,18 @@ const TITULO_LANDING = 'VetSoftware — Software para clínicas veterinarias en 
 const TITULO_PLANES = 'Planes y precios — VetSoftware'
 
 /**
- * El CTA del hero, distinguido del CTA final —que se llama IGUAL— por su
- * destino: `#planes` ancla en la misma página, `/planes` navega.
+ * El escape de la caja de arranque hacia los paquetes.
+ *
+ * <p>Sustituye a `ctaDelHero`, que buscaba un enlace «Ver los planes» con
+ * `[href="#planes"]` **que ya no existe**. El hero dejó de tener un botón hacia
+ * los paquetes cuando el cotizador pasó a ser su acción principal, y con él se
+ * fue el problema que aquel helper documentaba: dos enlaces con el MISMO rótulo
+ * a cuarenta píxeles uno del otro y con destinos distintos (§2.4.4). Ahora el
+ * rótulo dice a dónde va, así que basta el nombre accesible y el destino se
+ * afirma aparte, en el caso, en vez de esconderse dentro del selector.
  */
-function ctaDelHero(page: Page) {
-  return page.getByRole('link', { name: 'Ver los planes' }).and(page.locator('[href="#planes"]'))
+function anclaAPaquetes(page: Page) {
+  return page.getByRole('link', { name: 'Mira los tres paquetes ya armados.' })
 }
 
 test.describe('Landing comercial', () => {
@@ -68,24 +75,54 @@ test.describe('Landing comercial', () => {
     await expect(page).toHaveTitle(TITULO_PLANES)
   })
 
-  test('«Ver los planes» ancla en la misma página y lleva el foco a la sección', async ({
+  test('la caja de arranque ancla en los paquetes y lleva el foco a la sección', async ({
     page,
   }) => {
     await page.goto('/')
     const seccion = page.locator('#planes')
     await expect(seccion).toBeVisible()
 
-    // Hay DOS enlaces llamados «Ver los planes» —el del hero, que ancla en esta
-    // misma página, y el del CTA final, que navega a `/planes`—, así que el
-    // nombre accesible no basta para distinguirlos y se combina con el destino.
-    // (Que dos enlaces compartan nombre y lleven a sitios distintos es en sí un
-    // problema de §2.4.4: fuera de contexto no se puede saber a cuál se va.)
-    await ctaDelHero(page).click()
+    const escape = anclaAPaquetes(page)
+    // El destino se afirma, no se usa para localizar: si alguien convierte esto
+    // en un `RouterLink`, lo que se lee es «el href dejó de ser #planes» y no
+    // «no encuentro el enlace», que no señalaría a la causa.
+    await expect(escape).toHaveAttribute('href', '#planes')
+    await escape.click()
 
-    // No navega: el ancla es de la misma página. Si alguien la convierte en
-    // `RouterLink`, la URL cambia y esto falla.
+    // No navega: el ancla es de la misma página, y quien está leyendo la landing
+    // no tiene por qué pagar una carga entera para ver una sección que ya tiene
+    // debajo.
     await expect(page).toHaveURL(/\/$/)
     await expect(seccion).toBeFocused()
+  })
+
+  test('el cierre devuelve a la caja de arranque, y le lleva el foco', async ({ page }) => {
+    await page.goto('/')
+
+    // El CTA primario del cierre apuntaba a los paquetes, igual que el del hero
+    // y con el mismo rótulo. Ahora sube al cotizador, que es el camino
+    // principal, y lo hace por ancla —está en esta misma página— llevando el
+    // foco: sin eso la siguiente tabulación devolvería a la barra de navegación.
+    const volver = page.getByRole('link', { name: 'Cuéntanos qué necesitas' })
+    await expect(volver).toHaveAttribute('href', '#cotizador')
+    await volver.click()
+
+    await expect(page).toHaveURL(/\/$/)
+    await expect(page.locator('#cotizador')).toBeFocused()
+  })
+
+  test('ya no hay dos enlaces llamados «Ver los planes» yendo a sitios distintos', async ({
+    page,
+  }) => {
+    await page.goto('/')
+    await expect(page.locator('#planes')).toBeVisible()
+
+    // §2.4.4 Link Purpose (In Context). El rótulo estaba DOS veces en la misma
+    // página —hero y cierre— con destinos distintos (`#planes` y `/planes`), de
+    // modo que en la lista de enlaces de un lector de pantalla eran
+    // indistinguibles. Se retiró de los dos sitios; esta afirmación es lo único
+    // que impide que vuelva de tapadillo con el siguiente retoque de copy.
+    await expect(page.getByRole('link', { name: 'Ver los planes' })).toHaveCount(0)
   })
 
   test('la sección de planes conserva su semántica', async ({ page }) => {
@@ -96,7 +133,12 @@ test.describe('Landing comercial', () => {
     // ── Las tres afirmaciones que fallarían HOY si alguien deshiciera el
     // arreglo, escritas aparte de la instantánea. Una instantánea generada se
     // limita a congelar lo que hubiera; esto dice lo que TIENE que haber.
-    await expect(seccion.getByRole('heading', { level: 2, name: 'Planes' })).toBeVisible()
+    // «Planes» a secas enseñaba que la unidad de compra es el paquete, que es la
+    // negación literal de «paga solo lo que uses». El encabezado nuevo los
+    // nombra por lo que son y deja el camino a medida como el principal.
+    await expect(
+      seccion.getByRole('heading', { level: 2, name: 'Tres paquetes ya armados' }),
+    ).toBeVisible()
 
     for (const nombre of ['Pack Spa', 'Pack Clínica', 'Pack Clínica completa']) {
       const tarjeta = seccion.getByTestId('plan-card').filter({
@@ -194,10 +236,12 @@ test.describe('/planes — el configurador ligero', () => {
     // `TITULO_PLANES` aquí arriba—. La pantalla dejó de ser un catálogo de
     // paquetes cuando el asistente pasó a ser su contenido principal, y ningún
     // enlace de entrada promete ese texto: la topbar dice «Planes», el cierre de
-    // la landing «Ver los planes» y la tarjeta «Comparar los tres planes en
-    // detalle». El encabezado que describe lo que se hace aquí es el de la vista.
+    // la landing «Ver los tres paquetes» y la tarjeta «Comparar los tres planes
+    // en detalle». El encabezado que describe lo que se hace aquí es el de la
+    // vista, y ya no habla de «el plan»: la unidad de compra dejó de ser el
+    // paquete el día que el texto libre pasó a ser lo primero que se toca.
     await expect(
-      page.getByRole('heading', { level: 1, name: 'Armemos el plan de tu clínica' }),
+      page.getByRole('heading', { level: 1, name: 'Armemos lo que tu clínica necesita' }),
     ).toBeVisible()
 
     const sedes = page.getByRole('spinbutton', { name: /sedes/i })

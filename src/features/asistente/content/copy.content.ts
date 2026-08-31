@@ -73,6 +73,45 @@ export const RELLENOS_RAPIDOS: readonly string[] = [
 ]
 
 /**
+ * El fallo de «texto demasiado corto», **una sola redacción**.
+ *
+ * <p>Lo dicen dos pantallas del mismo embudo —la caja del hero y la entrada de
+ * `/planes`— y tienen que decirlo con las mismas palabras: el mismo fallo con
+ * dos redacciones distintas se lee como dos fallos distintos, y quien acaba de
+ * corregirlo en una vuelve a leerlo reformulado en la otra sin entender qué
+ * cambió. GOV.UK lo exige además para el resumen de errores, que repite el texto
+ * del campo literalmente.
+ */
+export const ERROR_TEXTO_CORTO =
+  'Con eso no nos alcanza. Escríbenos una o dos frases sobre lo que hace tu veterinaria.'
+
+/**
+ * Los tres ejemplos pulsables de la caja de arranque.
+ *
+ * <p>**Rellenan el campo, no envían** — la misma regla que {@link
+ * RELLENOS_RAPIDOS}, y por el mismo motivo: un botón que dispara una llamada de
+ * pago con un texto que el usuario no ha leído es un gasto que él no autorizó.
+ * Aquí ni siquiera hay llamada, pero sí una navegación, y navegar con un texto
+ * que el usuario no ha leído es el mismo abuso en pequeño.
+ *
+ * <p>**Son amplios a propósito, no de nicho.** Un ejemplo demasiado específico se
+ * ignora: el usuario no se reconoce en él y descarta la fila entera. Los tres
+ * describen **la clínica**, que es lo que se le pide, y ninguno nombra una
+ * funcionalidad del producto.
+ *
+ * <p>⚠️ **Ninguno puede medir menos que {@link MIN_DESCRIPCION}**, y hay una
+ * prueba que lo afirma. Es exactamente el fallo que el javadoc de {@link
+ * MIN_REFINAMIENTO} documenta como ya ocurrido: la propia interfaz ofreciendo un
+ * botón que su propia validación rechaza. En desarrollo nadie pulsa los botones
+ * de relleno, así que sin la prueba esto vuelve, y vuelve en producción.
+ */
+export const EJEMPLOS_COTIZADOR: readonly string[] = [
+  'Consulta general, vacunas y desparasitación',
+  'Tenemos quirófano y hospitalización',
+  'Vendemos alimento y hacemos peluquería',
+]
+
+/**
  * Las frases de la espera, con el segundo en que entra cada una.
  *
  * <p>Van las tres a la MISMA región `aria-live`, sustituyendo su contenido: tres
@@ -80,10 +119,26 @@ export const RELLENOS_RAPIDOS: readonly string[] = [
  * `role="status"`, no `alert`: no ha fallado nada.
  */
 export const FRASES_ESPERA: readonly { desdeMs: number; texto: string }[] = [
-  { desdeMs: 0, texto: 'Estamos leyendo lo que nos contaste.' },
+  // ⚠️ NO dice «estamos leyendo lo que nos contaste». Esa frase era falsa en el
+  // 100 % de las peticiones con el acceso al modelo deshabilitado, e instalaba
+  // justo la expectativa que el aviso de origen tiene que desmentir después.
+  // «Preparando» es verdad por los dos caminos.
+  { desdeMs: 0, texto: 'Estamos preparando tu propuesta.' },
   { desdeMs: 3000, texto: 'Seguimos armando tu propuesta. Suele tardar unos segundos.' },
   { desdeMs: 8000, texto: 'Está tardando más de lo normal. Puedes cancelar y elegir un paquete.' },
 ]
+
+/**
+ * Cuánto tarda la espera en aparecer. **200 ms, y no cero.**
+ *
+ * <p>El camino determinista responde en decenas de milisegundos, y el `v-if` de
+ * la espera monta y desmonta el bloque entero: eso es un destello con salto de
+ * maquetación en la pantalla que decide la compra. Por debajo de un segundo no
+ * hace falta indicador; 200 ms es el suelo prudente que mata el parpadeo sin
+ * retrasar la percepción cuando sí hay modelo detrás. Es el mismo número que el
+ * velo global usa para lo mismo.
+ */
+export const ESPERA_VISIBLE_DESDE_MS = 200
 
 /** Cuándo aparece «Cancelar». Adelantado a propósito: aparecer en el umbral llega tarde. */
 export const CANCELAR_DESDE_MS = 8000

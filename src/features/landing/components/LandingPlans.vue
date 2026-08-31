@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import CicloFieldset from './CicloFieldset.vue'
 import PlanCard from './PlanCard.vue'
+import { irAAncla } from '../composables/anclaConFoco'
 import { MONEDA_DE_FACTURACION } from '../composables/planPricing'
 import type { Ciclo, PublicPlan } from '../types/plans.types'
 
@@ -20,6 +21,15 @@ import type { Ciclo, PublicPlan } from '../types/plans.types'
  *
  * Lo que NO va aquí: una tabla comparativa de cuarenta filas con checks y
  * cruces. Si hace falta, va detrás del enlace a `/planes`.
+ *
+ * ── El rótulo dice lo que esto ES, no lo que hay que hacer ──────────────────
+ * «Planes» + «Elige por el tamaño de tu clínica, no por una lista de funciones»
+ * era la negación literal de «paga solo lo que uses»: enseñaba que la unidad de
+ * compra es el paquete. Ahora el encabezado los nombra por lo que son —tres
+ * combinaciones ya armadas— y el subtítulo dice para quién sirven y qué hacer si
+ * prefieres lo otro. La sección **no se quita ni se oculta**: es el ancla de
+ * precio, y el camino a medida pide un párrafo y una espera antes de enseñar una
+ * sola cifra.
  */
 defineProps<{
   plans: PublicPlan[]
@@ -38,8 +48,11 @@ const ciclo = ref<Ciclo>('MENSUAL')
 <template>
   <section id="planes" class="pub-section" aria-labelledby="planes-titulo" tabindex="-1">
     <div class="pub-section-head">
-      <h2 id="planes-titulo">Planes</h2>
-      <p>Elige por el tamaño de tu clínica, no por una lista de funciones.</p>
+      <h2 id="planes-titulo">Tres paquetes ya armados</h2>
+      <p>
+        Por si quieres una cifra rápida. Si prefieres pagar solo por lo que uses, cuéntanos arriba
+        qué hace tu clínica.
+      </p>
     </div>
 
     <div class="land-plans-switch">
@@ -83,11 +96,17 @@ const ciclo = ref<Ciclo>('MENSUAL')
          leían como un `$` sin país. -->
     <p class="land-plans-note">
       Los precios son orientativos, en {{ MONEDA_DE_FACTURACION }}, y no incluyen IVA. El precio
-      exacto para tu clínica lo ves antes de confirmar, sin compromiso y sin tarjeta.
+      exacto para tu clínica lo ves antes de confirmar, sin compromiso y sin tarjeta. También puedes
+      <a href="#cotizador" class="pub-enlace" @click="irAAncla('cotizador', $event)">
+        decirnos con tus palabras qué necesitas</a
+      >
+      y te armamos una propuesta.
     </p>
 
     <p class="land-plans-more">
-      <RouterLink :to="{ name: 'planes' }">Comparar los tres planes en detalle</RouterLink>
+      <RouterLink :to="{ name: 'planes' }" class="pub-enlace">
+        Comparar los tres planes en detalle
+      </RouterLink>
     </p>
   </section>
 </template>
@@ -160,12 +179,6 @@ const ciclo = ref<Ciclo>('MENSUAL')
   margin: 14px 0 0;
   text-align: center;
   font-size: 13.5px;
-}
-
-.land-plans-more :deep(a),
-.land-plans-more a {
-  color: var(--pub-ame-700);
-  font-weight: 600;
 }
 
 #planes:focus {

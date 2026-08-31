@@ -364,9 +364,18 @@ export interface Propuesta {
  * negocio no es del dominio. Llegan diferenciados desde el esquema de salida
  * —`out_of_domain` y `understood` son dos booleanos obligatorios— justamente
  * para que la pantalla no tenga que adivinarlo desde una lista vacía.
+ *
+ * <p>`leyoElTexto` es el **tercer** discriminante, y existe porque `PROPOSAL` y
+ * `DETERMINISTIC` colapsan a propósito en la misma clase: las dos son un carrito
+ * correcto y accionable, así que las dos se presentan como propuesta. Lo que
+ * **no** es igual es de dónde salió. Sin este campo la pantalla pinta un carrito
+ * armado con lo más habitual de una clínica bajo el encabezado «Tu propuesta»,
+ * sin un solo aviso, y quien cree que se le leyó el texto no revisa las líneas y
+ * contrata módulos que no va a usar. **No cuesta contrato**: sale de
+ * `presentation`, que ya viaja en la respuesta.
  */
 export type ResultadoAsistente =
-  | { clase: 'PROPUESTA'; propuesta: Propuesta }
+  | { clase: 'PROPUESTA'; propuesta: Propuesta; leyoElTexto: boolean }
   | { clase: 'NO_ENTENDIDO'; propuestaBase: Propuesta }
   | { clase: 'FUERA_DE_DOMINIO' }
   | { clase: 'NO_DISPONIBLE' }

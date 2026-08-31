@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, useId, useTemplateRef } from 'vue'
+import { RouterLink } from 'vue-router'
 import ErrorSummary from '@/components/feedback/ErrorSummary.vue'
 import PawLoader from '@/components/feedback/PawLoader.vue'
 import LegalConsentCheckbox from '@/features/legal/components/LegalConsentCheckbox.vue'
@@ -94,6 +95,53 @@ const itemsResumenError = computed(() =>
   errorTerminos.value ? [{ id: idTerminos, text: errorTerminos.value }] : [],
 )
 
+/**
+ * El rótulo del **único control que compromete el dinero**.
+ *
+ * <p>Ramifica por `resumen.origen` con el mismo criterio que la pantalla de
+ * éxito: esta pantalla sirve por igual un paquete del catálogo y una propuesta
+ * a medida —el h1 dice «Confirma tu contratación» justo por eso—, y decir
+ * «Confirmar mi plan» a quien acaba de describir su clínica con sus palabras le
+ * nombra un paquete que **no eligió**. En el paso vinculante el botón tiene que
+ * decir qué se está firmando; es lo último que se lee antes de firmarlo.
+ *
+ * <p>Se descartó un texto neutro («Confirmar la contratación»): es cierto en
+ * las dos ramas y por eso mismo no nombra ninguna. Todo lo que hay encima del
+ * botón —el resumen, las líneas, la letra pequeña— ya está redactado nombrando
+ * lo elegido; el botón es donde esa concreción más vale, no donde sobra.
+ *
+ * <p>La rama del paquete es el suelo: el bloque de acciones vive tras
+ * `v-if="resumen"`, así que con el resumen todavía a `null` esto no llega a
+ * pintarse, y `PROPUESTA` es la rama que exige una propuesta cargada.
+ */
+const rotuloConfirmar = computed(() =>
+  resumen.value?.origen === 'PROPUESTA' ? 'Confirmar mi propuesta' : 'Confirmar mi plan',
+)
+
+/**
+ * El subtítulo de la rama de recuperación, según **por qué** no hay propuesta.
+ *
+ * <p>Decía «Vamos a elegir el plan de tu clínica», y con `PERDIDA` eso se le
+ * enseñaba a alguien que acababa de perder una propuesta a medida: había
+ * escrito un párrafo sobre su negocio y esperado unos segundos, y la única
+ * salida que la pantalla le ofrecía era el selector de paquetes. Las tres
+ * redacciones nombran **primero** el camino a medida, que es el que se perdió.
+ *
+ * <p>Y ahora las tres son verdad: debajo hay un enlace real a `/planes`. Antes
+ * el aviso de `PERDIDA` prometía «vuelve a armarla desde el mismo equipo» y eso
+ * no se podía hacer ni tecleando la URL, porque `/planes` era `guestOnly` a
+ * secas. Ver el comentario del enlace, en la plantilla.
+ */
+const subtituloRecuperacion = computed(() => {
+  if (motivoSinPropuesta.value === 'PERDIDA') {
+    return 'Puedes volver a contarnos qué necesitas desde este equipo, o elegir uno de nuestros paquetes.'
+  }
+  if (motivoSinPropuesta.value === 'NO_DISPONIBLE') {
+    return 'Puedes volver a contarnos qué necesitas, o elegir uno de nuestros paquetes.'
+  }
+  return 'Cuéntanos qué necesitas y te lo armamos, o elige uno de nuestros paquetes.'
+})
+
 onMounted(entrar)
 </script>
 
@@ -104,7 +152,11 @@ onMounted(entrar)
        apuntar a este sin ambigüedad. Mismo patrón que ya trae
        `consulta/nueva`. -->
   <main class="ds-page ds-page--contained ds-stack ds-stack--16 ct" data-testid="paso-contratar">
-    <h1 ref="h1" class="ds-display ds-display--sm" tabindex="-1">Confirma tu plan</h1>
+    <!-- «Contratación» y no «plan»: esta pantalla sirve por igual a un paquete
+         del catálogo y a una propuesta a medida, y la palabra «plan» como unidad
+         de compra es justo la que el resto del embudo dejó de usar. El `<h1>`
+         recibe el foco al montar, así que es lo primero que se anuncia. -->
+    <h1 ref="h1" class="ds-display ds-display--sm" tabindex="-1">Confirma tu contratación</h1>
 
     <template v-if="cargando || cargandoPlanes">
       <p class="ds-meta">Cargando tu resumen…</p>
@@ -127,8 +179,8 @@ onMounted(entrar)
         data-testid="propuesta-perdida"
       >
         Tu propuesta a medida se armó en otro dispositivo o navegador, así que aquí no podemos
-        recuperarla. Vuelve a armarla desde el mismo equipo, o elige uno de nuestros paquetes aquí
-        abajo.
+        recuperarla. Puedes volver a contárnoslo y te la armamos de nuevo, o elegir uno de nuestros
+        paquetes aquí abajo.
       </p>
       <p
         v-else-if="motivoSinPropuesta === 'NO_DISPONIBLE'"
@@ -141,7 +193,29 @@ onMounted(entrar)
         <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y la rehacemos contigo.
       </p>
 
-      <p class="ds-subtitle">Vamos a elegir el plan de tu clínica. Te lleva un minuto.</p>
+      <p class="ds-subtitle">{{ subtituloRecuperacion }}</p>
+
+      <!-- El enlace que los tres subtítulos prometen, y que hasta ahora NO
+           existía: no por descuido, sino porque no podía funcionar. Esta
+           pantalla cuelga de `/dashboard` (`requiresAuth`), así que quien la ve
+           está autenticado, y `/planes` era `guestOnly` a secas: el guard lo
+           habría devuelto al tablero sin decir nada, igual que hacía al teclear
+           la URL a mano. Con `allowClientWithoutPlan` en la ruta, el cliente que
+           todavía no ha contratado —que es exactamente quien puede estar
+           mirando esta pantalla— sí entra, así que la promesa ya es verdad.
+
+           Va en los tres casos de la rama de recuperación: los tres subtítulos
+           ofrecen volver a contarlo. Lo que `NO_DISPONIBLE` no promete es
+           recuperar LA propuesta perdida, y eso lo dice su propio aviso; armar
+           una nueva sí se puede siempre. -->
+      <RouterLink
+        :to="{ name: 'planes' }"
+        class="ds-btn ds-btn--ghost ct-volver"
+        data-testid="volver-planes"
+      >
+        Volver a contarnos qué necesitas
+      </RouterLink>
+
       <div class="pub-scope ct-picker">
         <PlanesConfigurador
           v-model:plan-code="planCode"
@@ -251,7 +325,7 @@ onMounted(entrar)
             @click="confirmar"
           >
             <PawLoader v-if="enviando" :size="18" :glow="false" :speed="900" />
-            {{ enviando ? 'Confirmando…' : 'Confirmar mi plan' }}
+            {{ enviando ? 'Confirmando…' : rotuloConfirmar }}
           </button>
           <button type="button" class="ds-btn ds-btn--ghost" :disabled="enviando" @click="ahoraNo">
             Ahora no
@@ -294,6 +368,15 @@ onMounted(entrar)
 .ct-picker {
   font-family: var(--font-sans);
   color: var(--warm-900);
+}
+
+/* `.ds-btn` está escrito para `<button>` y esto es un `<a>`: hereda el subrayado
+   del enlace, y dentro de `.ds-stack` (columna flex, `align-items: stretch`) se
+   estiraría a todo el ancho. Los dos ajustes van aquí y NO en `primitives.css`,
+   que es un fichero gemelo de los dos fronts. */
+.ct-volver {
+  align-self: flex-start;
+  text-decoration: none;
 }
 
 /* La pila la pone `.ds-stack` desde `primitives.css`. */

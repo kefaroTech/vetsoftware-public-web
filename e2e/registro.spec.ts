@@ -1,4 +1,11 @@
-import { test, expect, type Page, type BrowserContext, type Browser } from '@playwright/test'
+import {
+  test,
+  expect,
+  type APIRequestContext,
+  type Browser,
+  type BrowserContext,
+  type Page,
+} from '@playwright/test'
 import { login } from './helpers/auth'
 import { exigir } from './helpers/exigir'
 
@@ -292,6 +299,62 @@ function trackHttpErrors(page: Page): { drain: () => { url: string; status: numb
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Preflight: que la falta de backend FALLE, y no cuelgue
+// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Esta suite es la única que conduce un navegador real en su preparación: el
+ * `beforeAll` registra una empresa rellenando el formulario, y todas sus esperas
+ * son de interfaz —`toBeVisible`, `waitForURL`, la cascada geográfica—. Sin
+ * backend ninguna de ellas falla: se agotan una detrás de otra contra pantallas
+ * que nunca se pueblan, y `npx playwright test` se queda ahí hasta que alguien lo
+ * mata. Un test que cuelga es peor que uno que falla: el que falla se ve, y el
+ * que cuelga se lleva por delante la pasada entera —ni siquiera llega a escribir
+ * un código de salida—.
+ *
+ * <p>El patrón correcto ya estaba en el repositorio: `agenda`, `caja` y `kardex`
+ * empiezan su preparación por una petición de API, así que con el backend caído
+ * mueren en segundos con un estado que se lee. Esto es lo mismo, reducido a lo
+ * único que hace falta comprobar: que hay algo escuchando detrás del proxy.
+ */
+const API = '/api/v1'
+
+/** Suficiente para un backend arrancando y despreciable frente a los 240 s del hook. */
+const PREFLIGHT_TIMEOUT_MS = 10_000
+
+const SIN_BACKEND =
+  'Falta el backend. Esta suite registra una empresa REAL contra él (nada mockeado), ' +
+  'así que sin backend no hay nada que probar. Levanta el backend y su base de datos, ' +
+  'y vuelve a correrla.'
+
+/**
+ * Falla —rápido y diciendo por qué— si no hay backend detrás del proxy `/api`
+ * del dev server.
+ *
+ * <p>`GET /auth/me` sin credenciales es la sonda: no escribe nada, no necesita
+ * sesión y distingue las dos cosas que hay que distinguir. Con backend arriba
+ * responde 401/403 —da igual cuál—; con el backend caído, el proxy de Vite no
+ * tiene a quién reenviar y devuelve 5xx, o la petición ni siquiera sale. Por eso
+ * el corte está en 500 y no en «respondió 200».
+ */
+async function exigirBackendArriba(ctx: APIRequestContext): Promise<void> {
+  let status: number
+  try {
+    const res = await ctx.get(`${API}/auth/me`, {
+      failOnStatusCode: false,
+      timeout: PREFLIGHT_TIMEOUT_MS,
+    })
+    status = res.status()
+  } catch (causa) {
+    // El `cause` va adjunto y no interpolado: el informe de Playwright enseña la
+    // cadena entera, así que el ECONNREFUSED con su puerto sobrevive al mensaje.
+    throw new Error(`${SIN_BACKEND} (la petición ni siquiera llegó a salir)`, { cause: causa })
+  }
+  if (status >= 500) {
+    throw new Error(`${SIN_BACKEND} (GET ${API}/auth/me respondió ${status} por el proxy)`)
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Suite (serial: se registra 1 empresa y se reutiliza)
 // ─────────────────────────────────────────────────────────────────────────────
 test.describe('Registro de veterinaria + roles base + visibilidad por permiso', () => {
@@ -307,8 +370,17 @@ test.describe('Registro de veterinaria + roles base + visibilidad por permiso', 
   let adminPerms: Perms
   const employeeByRole: Record<string, { code: string; password: string }> = {}
 
-  test.beforeAll(async ({ browser }) => {
+  test.beforeAll(async ({ browser, playwright }, testInfo) => {
     test.setTimeout(240_000) // registro real + lectura /me + 6 empleados: sube el timeout del hook
+    // Lo PRIMERO, antes de abrir un solo contexto de navegador: ver el comentario
+    // de `exigirBackendArriba`. El contexto de API hereda el `baseURL` del
+    // proyecto, así que la ruta relativa sale por el proxy `/api` del dev server.
+    const sonda = await playwright.request.newContext({ baseURL: testInfo.project.use.baseURL })
+    try {
+      await exigirBackendArriba(sonda)
+    } finally {
+      await sonda.dispose()
+    }
     browserRef = browser
     adminCtx = await browser.newContext()
     adminPage = await adminCtx.newPage()

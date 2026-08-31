@@ -414,6 +414,21 @@ test.describe('§13.9 — el modal de revocar', () => {
     // Y el resumen usa el MISMO texto literal que el error en línea.
     await expect(dialogo.getByRole('link', { name: mensaje })).toBeVisible()
 
+    // ⚠️ SI REGENERAS ESTA INSTANTÁNEA, VUELVE A PONER LA EXPRESIÓN REGULAR EN
+    // EL `/url` DEL ENLACE DEL RESUMEN. Tenía congelado `- /url: "#v-5"`, y ese
+    // `v-5` es un `useId()` (`RevocarMedioModal.vue:44`): un contador de la
+    // APLICACIÓN que se incrementa en orden de montaje, así que su valor depende
+    // de cuántos componentes montaron antes en esa carga. Añadir un `useId()` en
+    // cualquier otra parte del producto lo desplaza, y como el orden de montaje
+    // depende de qué trozos perezosos hayan llegado ya, el número **cambia entre
+    // pasadas**: este caso falló 2 de cada 3 veces con `#v-6` sin que nadie
+    // hubiera tocado ni el modal ni esta prueba.
+    //
+    // El literal no afirmaba nada que no estuviera ya afirmado, y mejor, doce
+    // líneas más arriba: `descrito` comprueba que el `aria-describedby` del campo
+    // resuelve al elemento que lleva el mensaje, que es la RELACIÓN. El número
+    // solo aportaba la parte frágil. La expresión regular conserva lo que sí
+    // significa algo —que es un ancla a un id de esta página— y tira el ruido.
     await expect(dialogo).toMatchAriaSnapshot({ name: 'suscripcion-revocar-error.aria.yml' })
   })
 })

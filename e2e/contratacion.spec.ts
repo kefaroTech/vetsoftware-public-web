@@ -1,12 +1,29 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
 import { subtotalMensualEquivalente } from '../src/features/landing/composables/planPricing'
 import { PLANS_CONTENT } from '../src/features/landing/content/plans.content'
-import { intencion, leerIntencion, sembrarIntencion, type Intencion } from './helpers/contratacion'
+import type { SubscriptionResponse } from '../src/features/suscripcion/types/suscripcion.types'
 import {
+  CATALOGO,
+  ID_PROPUESTA,
+  intencionDePropuesta,
+  noEncontrado,
+  sembrarIntencionDePropuesta,
+  sembrarSesionDelAsistente,
+} from './helpers/asistente'
+import {
+  CLAVE_INTENCION,
+  intencion,
+  leerIntencion,
+  sembrarIntencion,
+  type Intencion,
+} from './helpers/contratacion'
+import {
+  EMPRESA_ID,
   EMPRESA_NOMBRE,
   EMPRESA_RESPUESTA,
   enrutarApi,
   instalarSesion,
+  prohibido,
   responderJson,
 } from './helpers/sesion'
 import { tabularHasta } from './helpers/teclado'
@@ -56,6 +73,18 @@ import { exigir } from './helpers/exigir'
  */
 
 const CONFIRMAR = 'Confirmar mi plan'
+
+/**
+ * El `<h1>` del paso vinculante.
+ *
+ * <p>Era «Confirma tu plan». Esta pantalla sirve por igual a un paquete del
+ * catálogo y a una propuesta a medida —es el mismo acto jurídico y el mismo
+ * marcado—, así que nombrarla por «plan» daba por sentada como unidad de compra
+ * justo la que el resto del embudo dejó de usar. Va en una constante y no
+ * repetido cinco veces porque cinco literales es exactamente como se queda uno
+ * sin cambiar.
+ */
+const TITULO_PASO6 = 'Confirma tu contratación'
 
 /** Lo único que hace falta para que el paso vinculante exista. Ver el encabezado. */
 const PERMISOS_CONTRATAR = ['quote.request']
@@ -115,6 +144,53 @@ const OFERTA = {
   enabled: true,
 }
 
+/**
+ * Los tres estados de `GET /subscriptions/current`, que son TRES y no dos.
+ *
+ * <p>Es la señal que decide si el cliente autenticado puede volver al escaparate
+ * (`allowClientWithoutPlan`, en el guard del router) y si el paso 6 le deja
+ * seguir. `DESCONOCIDO` —un 403 del rol sin `subscription.read`, o un fallo de
+ * red— **no** es «no tiene plan»: colapsarlo con `SIN_PLAN` cerraría la puerta a
+ * quien quizá no lo tiene, y colapsarlo con `CON_PLAN` la abriría a quien ya
+ * contrató. Por eso los tres se enrutan explícitamente y ninguno queda al azar
+ * de lo que devuelva el comodín.
+ */
+type EstadoDelPlan = 'SIN_PLAN' | 'CON_PLAN' | 'DESCONOCIDO'
+
+/** Un plan VIGENTE con la forma del contrato. `ACTIVE` está en `VIGENTES`. */
+const PLAN_VIGENTE: SubscriptionResponse = {
+  id: 55,
+  subscriptionNumber: 'SUS-E2E-0001',
+  companyId: EMPRESA_ID,
+  billingCycle: 'MONTHLY',
+  status: 'ACTIVE',
+  current: true,
+  startDate: '2026-01-01',
+  autoRenew: true,
+  createdDate: '2026-01-01',
+  enabled: true,
+}
+
+/**
+ * El 404 de «esta clínica no tiene plan», que es el estado NORMAL de todo el que
+ * recorre este embudo. Es un desenlace, no una avería: el store lo lee como
+ * `notFound` y `estadoPlanActual` da `SIN_PLAN`.
+ */
+const SIN_PLAN_404 = {
+  status: 404,
+  title: 'Not Found',
+  detail: 'La empresa no tiene una suscripción vigente.',
+}
+
+function suscripcionSegun(estado: EstadoDelPlan) {
+  return (route: Route): Promise<void> => {
+    if (estado === 'CON_PLAN') return responderJson(route, PLAN_VIGENTE)
+    // 403 con `problem+json`: el rol sin `subscription.read`. NO es «sin plan».
+    if (estado === 'DESCONOCIDO') return prohibido(route)
+    return responderJson(route, SIN_PLAN_404, 404)
+  }
+}
+
 /** Lo que el paso 7 pintaría si recompusiera el total en local en vez de creer al servidor. */
 const TOTAL_ESTIMADO_LOCAL = Math.round(CLINICA.monthlyFromAmount * (1 + CLINICA.taxRate / 100))
 
@@ -134,6 +210,16 @@ interface Captura {
 interface OpcionesPaso6 {
   /** Por defecto, el mínimo que hace existir el botón. `[]` es la clínica en mora. */
   permisos?: string[]
+  /**
+   * Por defecto `SIN_PLAN`, que es el estado de todo el que llega hasta aquí.
+   *
+   * <p>Antes esto caía en el comodín, que devuelve una página vacía: un objeto
+   * sin `status`, que `planVigente` lee como «no vigente» y acaba dando
+   * `SIN_PLAN` **por accidente**. Salía el mismo verde, pero por una casualidad
+   * de la forma del comodín y no porque nadie hubiera decidido nada — y el día
+   * que el comodín cambiara, media suite se pondría roja sin motivo aparente.
+   */
+  estadoDelPlan?: EstadoDelPlan
 }
 
 /**
@@ -158,6 +244,7 @@ async function entrarAlPaso6(
     page,
     {
       '/companies/*': EMPRESA_RESPUESTA,
+      '/subscriptions/current': suscripcionSegun(opciones.estadoDelPlan ?? 'SIN_PLAN'),
       // 201 y no 200: es lo que devuelve el endpoint, también en el reintento
       // idempotente con la misma `clientRequestId`.
       '/quotes/self-serve': (route: Route) => {
@@ -169,7 +256,7 @@ async function entrarAlPaso6(
     { permisos: opciones.permisos ?? PERMISOS_CONTRATAR },
   )
   await page.goto('/dashboard/contratar')
-  await expect(page.getByRole('heading', { level: 1, name: 'Confirma tu plan' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: TITULO_PASO6 })).toBeVisible()
 
   return captura
 }
@@ -201,7 +288,7 @@ test.describe('Paso 6 — el paso vinculante', () => {
 
     // Al entrar en el paso el foco va al `<h1>`: tras un `router.push` se queda
     // en el `<body>` y el lector empieza a leer desde la navegación otra vez.
-    await expect(page.getByRole('heading', { level: 1, name: 'Confirma tu plan' })).toBeFocused()
+    await expect(page.getByRole('heading', { level: 1, name: TITULO_PASO6 })).toBeFocused()
   })
 
   test('el aviso de modo demostración no se puede cerrar', async ({ page }) => {
@@ -448,7 +535,7 @@ test.describe('El cuerpo que viaja a POST /quotes/self-serve', () => {
       { permisos: PERMISOS_CONTRATAR },
     )
     await page.goto('/dashboard/contratar')
-    await expect(page.getByRole('heading', { level: 1, name: 'Confirma tu plan' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: TITULO_PASO6 })).toBeVisible()
 
     const paso = page.getByTestId('paso-contratar')
     await paso.getByRole('checkbox').check()
@@ -637,13 +724,39 @@ test.describe('§5 caso 2 — se perdió la intención', () => {
     page,
   }) => {
     await instalarSesion(page)
-    await enrutarApi(page, { '/companies/*': EMPRESA_RESPUESTA }, { permisos: PERMISOS_CONTRATAR })
+    await enrutarApi(
+      page,
+      {
+        '/companies/*': EMPRESA_RESPUESTA,
+        '/subscriptions/current': suscripcionSegun('SIN_PLAN'),
+      },
+      { permisos: PERMISOS_CONTRATAR },
+    )
     await page.goto('/dashboard/contratar')
 
     const paso = page.getByTestId('paso-contratar')
-    await expect(paso).toContainText('Vamos a elegir el plan de tu clínica')
+
+    // El subtítulo nombra PRIMERO el camino a medida y deja el paquete como
+    // alternativa. Decía «Vamos a elegir el plan de tu clínica», y esa frase
+    // daba por sentado que lo que se elige es un paquete — justo la unidad de
+    // compra que el embudo dejó de usar cuando el texto libre pasó a ser lo
+    // primero que se toca.
+    await expect(paso).toContainText(
+      'Cuéntanos qué necesitas y te lo armamos, o elige uno de nuestros paquetes.',
+    )
     // Nada de banner rojo: quien perdió un borrador no cometió ningún fallo.
     await expect(paso.getByRole('alert')).toHaveCount(0)
+
+    // Y esta es la TERCERA rama de `subtituloRecuperacion`, la de «no había
+    // ninguna intención». Las otras dos —la propuesta perdida y la que el
+    // servidor ya no devuelve— tienen su propio aviso, y aquí no se pinta
+    // ninguno: sin esto, un `v-if` mal escrito enseñaría «tu propuesta se armó
+    // en otro dispositivo» a quien nunca armó ninguna.
+    await expect(paso.getByTestId('propuesta-perdida')).toHaveCount(0)
+    await expect(paso.getByTestId('propuesta-no-disponible')).toHaveCount(0)
+
+    // La salida a medida está también aquí: los tres subtítulos la ofrecen.
+    await expect(paso.getByTestId('volver-planes')).toBeVisible()
 
     // Y el selector funciona: eligiendo aquí se llega al resumen.
     await paso.getByRole('button', { name: /^Continuar con / }).click()
@@ -724,13 +837,16 @@ test.describe('Recorrido de solo teclado', () => {
     await page.keyboard.press('Enter')
     await expect(page.getByRole('main')).toBeFocused()
 
-    // Desde el contenido, hasta el CTA del hero. Cada parada: visible, sin
-    // perder el foco y sin retroceder en el documento.
-    // El del hero, no el del CTA final: se llaman igual y van a sitios distintos.
-    const verPlanes = page
-      .getByRole('link', { name: 'Ver los planes' })
-      .and(page.locator('[href="#planes"]'))
-    await tabularHasta(page, verPlanes)
+    // Desde el contenido, atravesando la caja de arranque —que ahora es lo
+    // primero que se toca en el hero: `<textarea>`, tres ejemplos y el envío—,
+    // hasta su escape hacia los paquetes. Cada parada: visible, sin perder el
+    // foco y sin retroceder en el documento, que es lo que `tabularHasta`
+    // comprueba en cada tecla y lo que hace que este tramo valga.
+    //
+    // Ya no hace falta desambiguar por `href`: el rótulo «Ver los planes» estaba
+    // en el hero y en el cierre con destinos distintos, y se retiró de los dos.
+    const verPaquetes = page.getByRole('link', { name: 'Mira los tres paquetes ya armados.' })
+    await tabularHasta(page, verPaquetes)
     await page.keyboard.press('Enter')
     await expect(page.locator('#planes')).toBeFocused()
 
@@ -756,7 +872,7 @@ test.describe('Recorrido de solo teclado', () => {
     const paso = page.getByTestId('paso-contratar')
 
     // El foco arranca en el `<h1>`, que es donde lo dejó la pantalla al montar.
-    await expect(page.getByRole('heading', { level: 1, name: 'Confirma tu plan' })).toBeFocused()
+    await expect(page.getByRole('heading', { level: 1, name: TITULO_PASO6 })).toBeFocused()
 
     const casilla = paso.getByRole('checkbox')
     await tabularHasta(page, casilla)
@@ -769,5 +885,305 @@ test.describe('Recorrido de solo teclado', () => {
 
     await expect(page).toHaveURL(/\/dashboard\/contratar\/exito$/)
     expect(captura.llamadas, 'el teclado tiene que pedir la oferta igual que el ratón').toBe(1)
+  })
+})
+
+/** El `<h1>` de `/planes`, que es a donde salen TODAS las salidas del paso 6. */
+const TITULO_PLANES = 'Armemos lo que tu clínica necesita'
+
+/**
+ * LOS CUATRO «CAMBIAR» DEL PASO VINCULANTE, PULSADOS.
+ *
+ * <p>Estaban **fotografiados en la instantánea ARIA y no los pulsaba nadie**, y
+ * eso no es una laguna cualquiera: durante meses apuntaron a una ruta que
+ * devolvía al usuario al tablero **en silencio**. `/planes` era `guestOnly` a
+ * secas y esta pantalla cuelga de `/dashboard`, así que quien la ve está
+ * autenticado y el guard lo rebotaba sin decir una palabra. La instantánea
+ * seguía verde todo ese tiempo, y no por descuido de quien la generó: una
+ * instantánea de accesibilidad comprueba que el enlace EXISTE y tiene nombre
+ * —las dos cosas eran ciertas— y no puede comprobar a dónde te deja al pulsarlo.
+ *
+ * <p>Son además la mitad de *corregir* de WCAG §3.3.4 Error Prevention (Legal,
+ * Financial, Data): la vía «Confirmed» exige un mecanismo para revisar,
+ * confirmar y **corregir** antes de finalizar. Un «Cambiar» que echa del embudo
+ * no corrige nada; es el mecanismo de corrección roto, en la pantalla que decide
+ * el dinero.
+ *
+ * <p>El control positivo de estos cuatro casos es el bloque siguiente: ahí se
+ * demuestra que el guard SÍ sabe rebotar, con `CON_PLAN`. Sin eso, «no acabé en
+ * el tablero» podría estar pasando porque el guard no llega a correr.
+ */
+test.describe('Los cuatro «Cambiar» — pulsados, no fotografiados', () => {
+  const CAMBIAR = [
+    'Cambiar el plan',
+    'Cambiar el ciclo de pago',
+    'Cambiar el número de sedes',
+    'Cambiar el número de personas',
+  ] as const
+
+  for (const nombre of CAMBIAR) {
+    test(`«${nombre}» deja al cliente en /planes con su selección puesta`, async ({ page }) => {
+      await entrarAlPaso6(page)
+      const paso = page.getByTestId('paso-contratar')
+
+      // `exact: true` porque el nombre accesible se compone del «Cambiar»
+      // visible más el resto en `.ds-sr-only`, y el emparejamiento por nombre de
+      // rol es por subcadena: sin él, el día que alguien añada una quinta fila
+      // que empiece igual, esto resolvería dos enlaces y fallaría con «strict
+      // mode violation», que no señala a la causa.
+      await paso.getByRole('link', { name: nombre, exact: true }).click()
+
+      // LA AFIRMACIÓN QUE FALTABA. Si el guard vuelve a rebotar, esto dice
+      // «esperaba /planes y estoy en /dashboard», que sí señala a la causa.
+      await expect(page).toHaveURL(/\/planes\?plan=PACK_CLINIC&ciclo=MENSUAL&sedes=1&usuarios=1$/)
+
+      // Y la pantalla llegó a PINTARSE, que es lo segundo que una instantánea
+      // del origen no podía decir: una URL correcta sobre un árbol que no monta
+      // es exactamente igual de inútil que un rebote.
+      await expect(page.getByRole('heading', { level: 1, name: TITULO_PLANES })).toBeVisible()
+
+      // Con la selección dentro: volver a elegir sin lo ya elegido obliga a
+      // rehacer el trabajo, que es la otra forma de que «Cambiar» no corrija.
+      await expect(page.getByRole('spinbutton', { name: /sedes/i })).toHaveValue('1')
+      await expect(page.getByRole('spinbutton', { name: /personas|usuarios/i })).toHaveValue('1')
+    })
+  }
+})
+
+/**
+ * EL RODEO DECLARADO DEL GUARD: `guestOnly` + `allowClientWithoutPlan`.
+ *
+ * <p>Tres ramas, y las tres tienen que probarse **porque un guardián que deja
+ * pasar a todo el mundo también «funciona» si solo se prueba la rama que pasa**.
+ * La de `CON_PLAN` es además el control positivo de las otras dos: demuestra que
+ * este mismo guard sabe rebotar, así que cuando `SIN_PLAN` y `DESCONOCIDO` no
+ * rebotan es porque se decidió, y no porque nadie esté mirando.
+ */
+test.describe('/planes con sesión — las tres ramas del guard', () => {
+  async function irAPlanes(page: Page, estado: EstadoDelPlan, consulta = ''): Promise<Captura> {
+    const captura: Captura = { cuerpo: null, llamadas: 0 }
+    await instalarSesion(page)
+    await enrutarApi(
+      page,
+      {
+        '/companies/*': EMPRESA_RESPUESTA,
+        '/subscriptions/current': suscripcionSegun(estado),
+        // El asistente vive en esta pantalla y pide el catálogo al montar. Sin
+        // esto cae en el comodín, pinta un banner de error que no tiene nada que
+        // ver con lo que estos casos comprueban, y el fallo no señala a la causa.
+        '/catalog*': (route: Route) => responderJson(route, CATALOGO),
+        '/quotes/self-serve': (route: Route) => {
+          captura.llamadas += 1
+          captura.cuerpo = route.request().postDataJSON() as CuerpoEnviado
+          return responderJson(route, OFERTA, 201)
+        },
+      },
+      { permisos: PERMISOS_CONTRATAR },
+    )
+    await page.goto(`/planes${consulta}`)
+    return captura
+  }
+
+  test('SIN_PLAN entra: es el caso que este rodeo existe para arreglar', async ({ page }) => {
+    await irAPlanes(page, 'SIN_PLAN')
+
+    await expect(page).toHaveURL(/\/planes$/)
+    await expect(page.getByRole('heading', { level: 1, name: TITULO_PLANES })).toBeVisible()
+
+    // Y la pantalla reconoce que quien la mira tiene sesión: ofrecerle «¿Ya
+    // tienes cuenta? Inicia sesión» sería falso, y sin este enlace su única
+    // vuelta al tablero sería el botón «atrás» del navegador — `PublicLayout` no
+    // trae la navegación de la aplicación.
+    await expect(page.getByRole('link', { name: 'Volver a mi tablero' })).toBeVisible()
+  })
+
+  test('CON_PLAN rebota al tablero, y lo DICE', async ({ page }) => {
+    await irAPlanes(page, 'CON_PLAN')
+
+    await expect(page).toHaveURL(/\/dashboard$/)
+
+    // El silencio era la mitad del defecto: el usuario pulsaba y aterrizaba en
+    // otro sitio sin ninguna explicación, así que volvía a pulsar. El aviso va
+    // como `info` —no ha fallado nada— y nombra la pantalla donde SÍ puede ver
+    // su plan, que solo es una promesa cierta porque `CON_PLAN` implica que la
+    // lectura respondió OK y por tanto el rol tiene `subscription.read`.
+    const aviso = page.getByRole('status').filter({ hasText: 'Tu clínica ya tiene un plan activo' })
+    await expect(aviso).toBeVisible()
+    await expect(aviso).toContainText('Puedes verlo en «Mi suscripción».')
+
+    // Y no se coló ni un trozo del escaparate.
+    await expect(page.getByRole('heading', { level: 1, name: TITULO_PLANES })).toHaveCount(0)
+  })
+
+  test('DESCONOCIDO entra: un 403 del rol NO es «no tiene plan»', async ({ page }) => {
+    await irAPlanes(page, 'DESCONOCIDO')
+
+    // Es la tercera rama, deliberada: echar de aquí a quien quizá no tiene plan
+    // por un dato que no podemos leer es peor que dejarle pasar. Que el caso de
+    // arriba SÍ rebote es lo que demuestra que esto no es el guard sin ejecutar.
+    await expect(page).toHaveURL(/\/planes$/)
+    await expect(page.getByRole('heading', { level: 1, name: TITULO_PLANES })).toBeVisible()
+
+    // Y sin el aviso del caso anterior: no se afirma lo que no se sabe.
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Tu clínica ya tiene un plan activo' }),
+    ).toHaveCount(0)
+  })
+
+  test('el cliente sin plan elige un paquete aquí y CONTRATA, sin pasar por el registro', async ({
+    page,
+  }) => {
+    // El embudo entero del cliente a medio camino, en un solo caso: el guard le
+    // deja entrar, `destinoTrasElegir` le manda al paso vinculante en vez de a
+    // `signup` —que es `guestOnly` y le habría devuelto al tablero, el mismo
+    // callejón movido un paso más adelante— y el paso vinculante acepta.
+    const captura = await irAPlanes(
+      page,
+      'SIN_PLAN',
+      '?plan=PACK_CLINIC&ciclo=MENSUAL&sedes=1&usuarios=1',
+    )
+
+    await page.getByRole('button', { name: /^Continuar con / }).click()
+
+    // NO a `/registro`: ya tiene cuenta. Esta es la afirmación que separa el
+    // arreglo completo de una versión que solo hubiera tocado el guard.
+    await expect(page).toHaveURL(/\/dashboard\/contratar$/)
+    await expect(page.getByRole('heading', { level: 1, name: TITULO_PASO6 })).toBeVisible()
+
+    await confirmar(page)
+    expect(captura.llamadas, 'el camino del cliente autenticado tiene que pedir la oferta').toBe(1)
+    expect(captura.cuerpo?.lines).toEqual([{ code: CLINICA.code, quantity: 1 }])
+  })
+})
+
+/**
+ * §5, CASO 2b — LA PROPUESTA A MEDIDA QUE NO SE PUEDE PINTAR.
+ *
+ * <p>No aparecía en ninguna spec, y es donde vivía el aviso que **prometía una
+ * salida imposible**: «puedes volver a contárnoslo desde este equipo» encima de
+ * una pantalla que no tenía ningún enlace a `/planes`, y que aunque lo hubiera
+ * tenido habría rebotado al tablero por el mismo guard del bloque de arriba.
+ *
+ * <p>Son DOS ramas y no una porque las salidas del usuario son distintas:
+ * `PERDIDA` se arregla volviendo a armarla en este dispositivo —la propuesta
+ * sigue viva en el servidor, lo que falta es la credencial local—, y
+ * `NO_DISPONIBLE` no, porque el servidor ya no la devuelve. Cada caso comprueba
+ * que la OTRA no se pinta: colapsarlas mandaría a la mitad de la gente a repetir
+ * un camino que no lleva a ningún sitio.
+ */
+test.describe('§5 caso 2b — la propuesta a medida que no se puede pintar', () => {
+  /** Lo que hay hoy en el espejo de la intención, sin fingir que trae `planCode`. */
+  async function intencionCruda(page: Page): Promise<{ descartada: boolean } | null> {
+    const crudo = await page.evaluate(
+      (clave) => window.localStorage.getItem(clave),
+      CLAVE_INTENCION,
+    )
+    return crudo ? (JSON.parse(crudo) as { descartada: boolean }) : null
+  }
+
+  /**
+   * Entra al paso 6 con una intención de PROPUESTA que el servidor no va a
+   * devolver, y cuenta cuántas veces se le preguntó. Esa cuenta es la mitad de
+   * cada uno de los dos casos: es lo que separa «la guarda local cortó antes de
+   * la red» de «nadie está mirando».
+   */
+  async function entrarConPropuesta(
+    page: Page,
+    { conSesion }: { conSesion: boolean },
+  ): Promise<{ llamadas: number }> {
+    const asistente = { llamadas: 0 }
+
+    await instalarSesion(page)
+    await sembrarIntencionDePropuesta(page, intencionDePropuesta())
+    if (conSesion) await sembrarSesionDelAsistente(page, { id: ID_PROPUESTA })
+
+    await enrutarApi(
+      page,
+      {
+        '/companies/*': EMPRESA_RESPUESTA,
+        '/subscriptions/current': suscripcionSegun('SIN_PLAN'),
+        '/catalog*': (route: Route) => responderJson(route, CATALOGO),
+        // 404: «no existe» y «caducó» colapsados a propósito por el servidor,
+        // para no ser un oráculo de tokens.
+        '/assistant/proposal*': (route: Route) => {
+          asistente.llamadas += 1
+          return noEncontrado(route)
+        },
+      },
+      { permisos: PERMISOS_CONTRATAR },
+    )
+    await page.goto('/dashboard/contratar')
+    await expect(page.getByRole('heading', { level: 1, name: TITULO_PASO6 })).toBeVisible()
+
+    return asistente
+  }
+
+  test('PERDIDA: sin el token en este equipo no se pregunta al servidor, y la salida existe de verdad', async ({
+    page,
+  }) => {
+    const asistente = await entrarConPropuesta(page, { conSesion: false })
+    const paso = page.getByTestId('paso-contratar')
+
+    const aviso = paso.getByTestId('propuesta-perdida')
+    await expect(aviso).toBeVisible()
+    await expect(aviso).toContainText('se armó en otro dispositivo o navegador')
+
+    // `status` y no `alert`: el usuario no cometió ningún fallo y el sistema no
+    // se rompió. Un banner rojo aquí es la forma más rápida de que se vaya.
+    await expect(aviso).toHaveAttribute('role', 'status')
+    await expect(paso.getByRole('alert')).toHaveCount(0)
+
+    // Y NO la otra rama. Las dos frases prometen cosas distintas, así que
+    // pintarlas indistintamente sería peor que no pintar ninguna.
+    await expect(paso.getByTestId('propuesta-no-disponible')).toHaveCount(0)
+
+    // La pregunta es LOCAL y va antes del viaje: sin token no hay petición que
+    // hacer. El control positivo de este cero es el caso siguiente, donde con
+    // token la cuenta vale 1 — «no llamó» y «no lo compruebo» dan el mismo verde.
+    expect(asistente.llamadas, 'se preguntó por una propuesta sin tener con qué').toBe(0)
+
+    // ── LO QUE HASTA HOY ERA UNA PROMESA IMPOSIBLE ──────────────────────────
+    // El subtítulo ofrece volver a contarlo, y hasta ahora eso no se podía hacer
+    // ni tecleando la URL: `/planes` era `guestOnly` y esta pantalla exige
+    // sesión, así que el guard devolvía al tablero en silencio. El enlace existe
+    // y FUNCIONA — y pulsarlo es la única forma de saberlo.
+    await expect(paso).toContainText('Puedes volver a contarnos qué necesitas desde este equipo')
+    await paso.getByTestId('volver-planes').click()
+    await expect(page).toHaveURL(/\/planes$/)
+    await expect(page.getByRole('heading', { level: 1, name: TITULO_PLANES })).toBeVisible()
+  })
+
+  test('NO_DISPONIBLE: el servidor ya no la devuelve, y la intención NO se descarta', async ({
+    page,
+  }) => {
+    const asistente = await entrarConPropuesta(page, { conSesion: true })
+    const paso = page.getByTestId('paso-contratar')
+
+    const aviso = paso.getByTestId('propuesta-no-disponible')
+    await expect(aviso).toBeVisible()
+    await expect(aviso).toContainText('ya no está disponible')
+    await expect(aviso).toHaveAttribute('role', 'status')
+    await expect(paso.getByRole('alert')).toHaveCount(0)
+    await expect(paso.getByTestId('propuesta-perdida')).toHaveCount(0)
+
+    // El CONTROL POSITIVO del cero del caso anterior: con el token en el equipo
+    // sí se sale a la red, exactamente una vez.
+    expect(asistente.llamadas, 'con token en el equipo tiene que preguntarse').toBe(1)
+
+    // Esta rama no promete recuperar LA propuesta perdida, así que ofrece la
+    // salida que sí existe: escribir a soporte.
+    await expect(aviso.getByRole('link', { name: 'soporte@vetsoftware.co' })).toBeVisible()
+
+    // Y la intención sigue viva. Descartarla apagaría además el enganche del
+    // login para siempre: el prospecto no ha renunciado a nada, solo ha caducado
+    // una propuesta.
+    const guardada = await intencionCruda(page)
+    expect(guardada, 'una propuesta caducada no borra la intención').not.toBeNull()
+    expect(guardada?.descartada, 'no renunció a nada: no se descarta').toBe(false)
+
+    // La misma salida real que la otra rama: armar una nueva sí se puede siempre.
+    await paso.getByTestId('volver-planes').click()
+    await expect(page).toHaveURL(/\/planes$/)
+    await expect(page.getByRole('heading', { level: 1, name: TITULO_PLANES })).toBeVisible()
   })
 })

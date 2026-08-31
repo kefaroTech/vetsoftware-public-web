@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import PawLoader from '@/components/feedback/PawLoader.vue'
-import { CANCELAR_DESDE_MS, FRASES_ESPERA } from '../content/copy.content'
+import { CANCELAR_DESDE_MS, ESPERA_VISIBLE_DESDE_MS, FRASES_ESPERA } from '../content/copy.content'
 
 /**
  * Los tres a ocho segundos de espera.
@@ -30,6 +30,15 @@ import { CANCELAR_DESDE_MS, FRASES_ESPERA } from '../content/copy.content'
  * <p>Y nada de barra de progreso con porcentaje: no sabemos el porcentaje. Una
  * barra inventada es una mentira que además se detecta — cuando llega al 90 % y
  * se queda, el usuario aprende que la aplicación miente.
+ *
+ * ── La guarda de los 200 ms ─────────────────────────────────────────────────
+ * Nada se pinta durante los primeros {@link ESPERA_VISIBLE_DESDE_MS}. El camino
+ * determinista vuelve en decenas de milisegundos y el `v-if` del panel monta y
+ * desmonta este bloque entero: sin guarda, un destello con salto de maquetación.
+ * Va **aquí dentro** y no en la condición del panel a propósito, para que el
+ * panel siga teniendo un solo predicado de espera; y el cronómetro arranca en el
+ * montaje, no en la aparición, así que las marcas de 3 s y 8 s siguen contando
+ * desde que la petición salió y no desde que el usuario vio algo.
  */
 defineProps<{ refinando?: boolean }>()
 
@@ -38,14 +47,22 @@ defineEmits<{ cancelar: [] }>()
 const transcurrido = ref(0)
 let intervalo: ReturnType<typeof setInterval> | null = null
 
+/** `false` hasta pasar la guarda. Ver la cabecera. */
+const visible = ref(false)
+let aparicion: ReturnType<typeof setTimeout> | null = null
+
 onMounted(() => {
   intervalo = setInterval(() => {
     transcurrido.value += 500
   }, 500)
+  aparicion = setTimeout(() => {
+    visible.value = true
+  }, ESPERA_VISIBLE_DESDE_MS)
 })
 
 onBeforeUnmount(() => {
   if (intervalo) clearInterval(intervalo)
+  if (aparicion) clearTimeout(aparicion)
 })
 
 const frase = computed(() => {
@@ -57,7 +74,7 @@ const mostrarCancelar = computed(() => transcurrido.value >= CANCELAR_DESDE_MS)
 </script>
 
 <template>
-  <div class="aesp" aria-busy="true">
+  <div v-if="visible" class="aesp" aria-busy="true">
     <PawLoader :size="48" :glow="false" :speed="900" label="" />
 
     <p class="aesp-frase" role="status" aria-live="polite">

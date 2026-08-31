@@ -1,6 +1,6 @@
-- region "Planes":
-  - heading "Planes" [level=2]
-  - paragraph: Elige por el tamaño de tu clínica, no por una lista de funciones.
+- region "Tres paquetes ya armados":
+  - heading "Tres paquetes ya armados" [level=2]
+  - paragraph: Por si quieres una cifra rápida. Si prefieres pagar solo por lo que uses, cuéntanos arriba qué hace tu clínica.
   - group "Cómo prefieres pagar":
     - text: ""
     - radio "Mes a mes" [checked]
@@ -59,7 +59,11 @@
       - listitem: Facturación electrónica DIAN
     - link "Empezar con Pack Clínica completa":
       - /url: /planes?plan=PACK_FULL&ciclo=MENSUAL
-  - paragraph: Los precios son orientativos, en pesos colombianos (COP), y no incluyen IVA. El precio exacto para tu clínica lo ves antes de confirmar, sin compromiso y sin tarjeta.
+  - paragraph:
+    - text: Los precios son orientativos, en pesos colombianos (COP), y no incluyen IVA. El precio exacto para tu clínica lo ves antes de confirmar, sin compromiso y sin tarjeta. También puedes
+    - link "decirnos con tus palabras qué necesitas":
+      - /url: "#cotizador"
+    - text: y te armamos una propuesta.
   - paragraph:
     - link "Comparar los tres planes en detalle":
       - /url: /planes
