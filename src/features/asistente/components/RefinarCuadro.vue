@@ -92,7 +92,7 @@ function enviar(): void {
       <textarea
         :id="idCampo"
         v-model="texto"
-        class="ref-campo"
+        class="pub-campo pub-campo-rest"
         rows="3"
         :maxlength="MAX_REFINAMIENTO"
         :aria-describedby="idAyuda"
@@ -152,22 +152,6 @@ function enviar(): void {
    excepción de espaciado, que es más frágil ante un cambio de tipografía. */
 .ref-relleno {
   min-block-size: 40px;
-}
-
-.ref-campo {
-  inline-size: 100%;
-  padding: 10px 12px;
-  border: 2px solid var(--pub-ame-600);
-  border-radius: 10px;
-  background: var(--pub-surface);
-  font: inherit;
-
-  /* 16 px como mínimo: por debajo, iOS hace zoom al enfocar y descoloca la
-     página entera. */
-  font-size: 16px;
-  line-height: 1.5;
-  color: var(--pub-ink-900);
-  resize: vertical;
 }
 
 .ref-enviar {

@@ -266,6 +266,56 @@
   outline-offset: 2px;
 }
 
+/* ===========================================================================
+   SUPERFICIE DE CAMPO PÚBLICA — la geometría, sin tono
+   Dos capas por el mismo motivo que `.ds-field` / `.ds-field-rest` en
+   `primitives.css`: el color de reposo va en OTRA clase, y esa clase viaja
+   desde el marcado. Así `.ds-field-invalid` —mismo peso, (0,1,0)— puede
+   ganarle sin duplicar la geometría. Con el tono aquí dentro no podría: este
+   fichero se carga DESPUÉS de `primitives.css`, y a igual especificidad manda
+   el que llega último, con lo que el borde rojo del campo inválido no se
+   pintaba nunca.
+
+   Vivía copiada en cuatro componentes del asistente y la landing, que es
+   justo lo que `css:budget` cuenta como «una primitiva que falta».
+   =========================================================================== */
+
+.pub-campo {
+  inline-size: 100%;
+  padding: 10px 12px;
+  border-width: 2px;
+  border-style: solid;
+  border-radius: 10px;
+  font: inherit;
+
+  /* 16 px como mínimo: por debajo, iOS hace zoom al enfocar y descoloca la
+     página entera. */
+  font-size: 16px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+/* El tono en reposo. El borde sale de `--pub-ame-600` (5,38:1) y no de
+   `--pub-line` (1,23:1), que no alcanza el mínimo de §1.4.11 para el borde de
+   un control. */
+.pub-campo-rest {
+  border-color: var(--pub-ame-600);
+  background: var(--pub-surface);
+  color: var(--pub-ink-900);
+}
+
+/* Una línea, no un área: el correo y equivalentes. */
+.pub-campo--linea {
+  block-size: 46px;
+  resize: none;
+}
+
+/* Enlace destacado sobre texto de la zona pública. */
+.pub-enlace {
+  color: var(--pub-ame-700);
+  font-weight: 600;
+}
+
 /* Ritmo vertical de una sección de la landing (§B, §C, §D, §E, §F). */
 .pub-section {
   position: relative;

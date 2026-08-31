@@ -179,8 +179,8 @@ function enviar(): void {
     </p>
     <textarea
       :id="idTexto"
-      class="aen-campo"
-      :class="{ 'ds-field-invalid': !!err('texto') }"
+      class="pub-campo"
+      :class="err('texto') ? 'ds-field-invalid' : 'pub-campo-rest'"
       rows="6"
       :maxlength="MAX_DESCRIPCION"
       :value="texto"
@@ -201,8 +201,8 @@ function enviar(): void {
     </p>
     <input
       :id="idEmail"
-      class="aen-campo aen-campo--linea"
-      :class="{ 'ds-field-invalid': !!err('email') }"
+      class="pub-campo pub-campo--linea"
+      :class="err('email') ? 'ds-field-invalid' : 'pub-campo-rest'"
       type="email"
       autocomplete="email"
       :value="email"
@@ -258,28 +258,6 @@ function enviar(): void {
   font-size: 13px;
   font-weight: 600;
   color: var(--pub-ink-700);
-}
-
-/* El borde sale de `--pub-ame-600` (5,38:1) y no de `--pub-line` (1,23:1), que
-   no alcanza el mínimo de §1.4.11 para el borde de un control. */
-.aen-campo {
-  inline-size: 100%;
-  padding: 10px 12px;
-  border: 2px solid var(--pub-ame-600);
-  border-radius: 10px;
-  background: var(--pub-surface);
-  font: inherit;
-
-  /* 16 px como mínimo: por debajo, iOS hace zoom al enfocar. */
-  font-size: 16px;
-  line-height: 1.5;
-  color: var(--pub-ink-900);
-  resize: vertical;
-}
-
-.aen-campo--linea {
-  block-size: 46px;
-  resize: none;
 }
 
 .aen-error {

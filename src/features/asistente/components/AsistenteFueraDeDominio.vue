@@ -75,7 +75,7 @@ onMounted(async () => {
     </p>
     <textarea
       id="fd-texto"
-      class="afd-campo"
+      class="pub-campo pub-campo-rest"
       rows="5"
       :maxlength="MAX_DESCRIPCION"
       :value="texto"
@@ -125,19 +125,6 @@ onMounted(async () => {
   font-size: 12.5px;
   line-height: 1.5;
   color: var(--pub-ink-600);
-}
-
-.afd-campo {
-  inline-size: 100%;
-  padding: 10px 12px;
-  border: 2px solid var(--pub-ame-600);
-  border-radius: 10px;
-  background: var(--pub-surface);
-  font: inherit;
-  font-size: 16px;
-  line-height: 1.5;
-  color: var(--pub-ink-900);
-  resize: vertical;
 }
 
 .afd-acciones {
