@@ -74,6 +74,18 @@ import { exigir } from './helpers/exigir'
 
 const CONFIRMAR = 'Confirmar mi plan'
 
+/**
+ * El `<h1>` del paso vinculante.
+ *
+ * <p>Era «Confirma tu plan». Esta pantalla sirve por igual a un paquete del
+ * catálogo y a una propuesta a medida —es el mismo acto jurídico y el mismo
+ * marcado—, así que nombrarla por «plan» daba por sentada como unidad de compra
+ * justo la que el resto del embudo dejó de usar. Va en una constante y no
+ * repetido cinco veces porque cinco literales es exactamente como se queda uno
+ * sin cambiar.
+ */
+const TITULO_PASO6 = 'Confirma tu contratación'
+
 /** Lo único que hace falta para que el paso vinculante exista. Ver el encabezado. */
 const PERMISOS_CONTRATAR = ['quote.request']
 
@@ -244,7 +256,7 @@ async function entrarAlPaso6(
     { permisos: opciones.permisos ?? PERMISOS_CONTRATAR },
   )
   await page.goto('/dashboard/contratar')
-  await expect(page.getByRole('heading', { level: 1, name: 'Confirma tu plan' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: TITULO_PASO6 })).toBeVisible()
 
   return captura
 }
@@ -276,7 +288,7 @@ test.describe('Paso 6 — el paso vinculante', () => {
 
     // Al entrar en el paso el foco va al `<h1>`: tras un `router.push` se queda
     // en el `<body>` y el lector empieza a leer desde la navegación otra vez.
-    await expect(page.getByRole('heading', { level: 1, name: 'Confirma tu plan' })).toBeFocused()
+    await expect(page.getByRole('heading', { level: 1, name: TITULO_PASO6 })).toBeFocused()
   })
 
   test('el aviso de modo demostración no se puede cerrar', async ({ page }) => {
@@ -523,7 +535,7 @@ test.describe('El cuerpo que viaja a POST /quotes/self-serve', () => {
       { permisos: PERMISOS_CONTRATAR },
     )
     await page.goto('/dashboard/contratar')
-    await expect(page.getByRole('heading', { level: 1, name: 'Confirma tu plan' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: TITULO_PASO6 })).toBeVisible()
 
     const paso = page.getByTestId('paso-contratar')
     await paso.getByRole('checkbox').check()
@@ -860,7 +872,7 @@ test.describe('Recorrido de solo teclado', () => {
     const paso = page.getByTestId('paso-contratar')
 
     // El foco arranca en el `<h1>`, que es donde lo dejó la pantalla al montar.
-    await expect(page.getByRole('heading', { level: 1, name: 'Confirma tu plan' })).toBeFocused()
+    await expect(page.getByRole('heading', { level: 1, name: TITULO_PASO6 })).toBeFocused()
 
     const casilla = paso.getByRole('checkbox')
     await tabularHasta(page, casilla)

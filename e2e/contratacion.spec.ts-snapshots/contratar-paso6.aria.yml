@@ -1,5 +1,5 @@
 - main:
-  - heading "Confirma tu plan" [level=1]
+  - heading "Confirma tu contratación" [level=1]
   - paragraph:
     - text: Estás contratando para
     - strong: Clínica E2E de prueba

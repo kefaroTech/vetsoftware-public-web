@@ -189,6 +189,21 @@ describe('la puerta del permiso `quote.request`', () => {
     expect(botonConfirmar(wrapper)).toHaveLength(1)
     expect(wrapper.find('input[type="checkbox"]').exists()).toBe(true)
   })
+
+  it('el botón vinculante nombra el PAQUETE cuando el cliente eligió un paquete', async () => {
+    // La otra mitad de la ramificación del rótulo (la de la propuesta la afirma
+    // `contratacion-propuesta.spec.ts`). Hacen falta las dos: quien «arreglara»
+    // el rótulo poniendo «Confirmar mi propuesta» a secas, o un neutro
+    // «Confirmar la contratación», dejaría la otra prueba en verde y solo esta
+    // lo cazaría.
+    const wrapper = await montar()
+
+    const boton = elemento(botonConfirmar(wrapper), 0, 'botonConfirmar(wrapper)')
+    expect(boton.text().trim()).toBe('Confirmar mi plan')
+    expect(wrapper.text(), 'no se le ofrece una propuesta que no pidió').not.toContain(
+      'Confirmar mi propuesta',
+    )
+  })
 })
 
 describe('la casilla de términos es una puerta, no un adorno', () => {

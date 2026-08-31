@@ -96,6 +96,29 @@ const itemsResumenError = computed(() =>
 )
 
 /**
+ * El rótulo del **único control que compromete el dinero**.
+ *
+ * <p>Ramifica por `resumen.origen` con el mismo criterio que la pantalla de
+ * éxito: esta pantalla sirve por igual un paquete del catálogo y una propuesta
+ * a medida —el h1 dice «Confirma tu contratación» justo por eso—, y decir
+ * «Confirmar mi plan» a quien acaba de describir su clínica con sus palabras le
+ * nombra un paquete que **no eligió**. En el paso vinculante el botón tiene que
+ * decir qué se está firmando; es lo último que se lee antes de firmarlo.
+ *
+ * <p>Se descartó un texto neutro («Confirmar la contratación»): es cierto en
+ * las dos ramas y por eso mismo no nombra ninguna. Todo lo que hay encima del
+ * botón —el resumen, las líneas, la letra pequeña— ya está redactado nombrando
+ * lo elegido; el botón es donde esa concreción más vale, no donde sobra.
+ *
+ * <p>La rama del paquete es el suelo: el bloque de acciones vive tras
+ * `v-if="resumen"`, así que con el resumen todavía a `null` esto no llega a
+ * pintarse, y `PROPUESTA` es la rama que exige una propuesta cargada.
+ */
+const rotuloConfirmar = computed(() =>
+  resumen.value?.origen === 'PROPUESTA' ? 'Confirmar mi propuesta' : 'Confirmar mi plan',
+)
+
+/**
  * El subtítulo de la rama de recuperación, según **por qué** no hay propuesta.
  *
  * <p>Decía «Vamos a elegir el plan de tu clínica», y con `PERDIDA` eso se le
@@ -129,7 +152,11 @@ onMounted(entrar)
        apuntar a este sin ambigüedad. Mismo patrón que ya trae
        `consulta/nueva`. -->
   <main class="ds-page ds-page--contained ds-stack ds-stack--16 ct" data-testid="paso-contratar">
-    <h1 ref="h1" class="ds-display ds-display--sm" tabindex="-1">Confirma tu plan</h1>
+    <!-- «Contratación» y no «plan»: esta pantalla sirve por igual a un paquete
+         del catálogo y a una propuesta a medida, y la palabra «plan» como unidad
+         de compra es justo la que el resto del embudo dejó de usar. El `<h1>`
+         recibe el foco al montar, así que es lo primero que se anuncia. -->
+    <h1 ref="h1" class="ds-display ds-display--sm" tabindex="-1">Confirma tu contratación</h1>
 
     <template v-if="cargando || cargandoPlanes">
       <p class="ds-meta">Cargando tu resumen…</p>
@@ -298,7 +325,7 @@ onMounted(entrar)
             @click="confirmar"
           >
             <PawLoader v-if="enviando" :size="18" :glow="false" :speed="900" />
-            {{ enviando ? 'Confirmando…' : 'Confirmar mi plan' }}
+            {{ enviando ? 'Confirmando…' : rotuloConfirmar }}
           </button>
           <button type="button" class="ds-btn ds-btn--ghost" :disabled="enviando" @click="ahoraNo">
             Ahora no

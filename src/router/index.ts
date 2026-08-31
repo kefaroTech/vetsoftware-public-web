@@ -240,7 +240,11 @@ const router = createRouter({
           path: 'contratar',
           name: 'contratar',
           component: () => import('@/features/contratacion/views/ContratarView.vue'),
-          meta: { fullBleed: true, hideTopbar: true, title: 'Confirma tu plan — VetSoftware' },
+          meta: {
+            fullBleed: true,
+            hideTopbar: true,
+            title: 'Confirma tu contratación — VetSoftware',
+          },
         },
         {
           path: 'contratar/exito',
