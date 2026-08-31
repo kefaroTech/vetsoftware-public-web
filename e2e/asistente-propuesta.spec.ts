@@ -60,13 +60,14 @@ import { responderJson } from './helpers/sesion'
  * está habilitado, así que `DETERMINISTIC` **es el camino real de hoy**. Una
  * suite que solo cubriera `PROPOSAL` no cubriría nada de lo que se ejecuta.
  *
- * ── Los controles positivos, y por qué hay tres ────────────────────────────
- * Tres de estos casos afirman una AUSENCIA —el token no está en la URL, el
- * historial no creció, no salió ninguna petición—, y una ausencia mal escrita da
- * exactamente la misma salida verde que no haber mirado. Cada una lleva al lado
- * la demostración de que el instrumento detecta lo contrario: una URL que sí
- * conserva el token, una navegación que sí empuja historial, y un token bien
- * formado que sí llega al servidor.
+ * ── Los controles positivos, y por qué hay cuatro ──────────────────────────
+ * Cuatro de estos casos afirman una AUSENCIA —el token no está en la URL, el
+ * historial no creció, no salió ninguna petición, el aviso de «punto de partida»
+ * no se pinta—, y una ausencia mal escrita da exactamente la misma salida verde
+ * que no haber mirado. Cada una lleva al lado la demostración de que el
+ * instrumento detecta lo contrario: una URL que sí conserva el token, una
+ * navegación que sí empuja historial, un token bien formado que sí llega al
+ * servidor, y una respuesta `PROPOSAL` sobre la que ese mismo aviso sí aparece.
  *
  * ── Sin backend, y por qué aquí eso es una ventaja y no una trampa ─────────
  * Ver la cabecera de `helpers/asistente.ts`. En una frase: contra un servidor
@@ -183,7 +184,9 @@ test.describe('El enlace del correo — la llegada', () => {
     const control = await context.newPage()
     await enrutarEmbudo(control, {})
     await control.goto('/')
-    await expect(control.getByRole('heading', { level: 2, name: 'Planes' })).toBeVisible()
+    await expect(
+      control.getByRole('heading', { level: 2, name: 'Tres paquetes ya armados' }),
+    ).toBeVisible()
     const salida = await historial(control)
 
     await control
@@ -306,7 +309,9 @@ test.describe('La banda de continuación de la landing', () => {
     const red = await enrutarEmbudo(page, {})
 
     await page.goto('/')
-    await expect(page.getByRole('heading', { level: 2, name: 'Planes' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { level: 2, name: 'Tres paquetes ya armados' }),
+    ).toBeVisible()
 
     await expect(page.getByTestId('banda-continuacion')).toHaveCount(0)
     expect(red.llamadas).toEqual([])
@@ -471,6 +476,24 @@ test.describe('El camino determinista — el que corre HOY', () => {
     // servidor no llamó propuesta, este texto aparecería y esto se pondría rojo.
     await expect(page.getByText(MOTIVO_AGENDA)).toHaveCount(0)
 
+    // ── El bloqueante del embudo ────────────────────────────────────────────
+    // Las dos chips «Base» son correctas y NO bastan: están dentro de la tabla,
+    // en letra pequeña, y hay que saber qué significan. Encima del carrito, con
+    // el encabezado «Tu propuesta» inmediatamente antes, tiene que decirse en
+    // una frase que esto NO salió de leer su texto. Sin ella, quien escribió un
+    // párrafo sobre su clínica ve el resultado, concluye que se le leyó, no
+    // revisa las líneas y contrata módulos que no va a usar — y con el acceso al
+    // modelo deshabilitado eso le pasa al 100 % de los que llegan hoy.
+    const aviso = page.getByTestId('propuesta-origen-base')
+    await expect(aviso).toBeVisible()
+    await expect(aviso).toContainText('Este es un punto de partida, no una recomendación.')
+    await expect(aviso).toContainText('sin leer todavía lo que nos escribiste')
+
+    // `status` y NO `alert`: hay una propuesta y se puede contratar, así que
+    // nada ha fallado. Un `alert` cortaría la locución en curso justo después de
+    // que el foco acabe de saltar al `<h2>`.
+    await expect(aviso).toHaveAttribute('role', 'status')
+
     // Los importes, también aquí: 89.000 + 39.000, y todo de prueba el primer mes.
     await expect(page.getByTestId('propuesta-subtotal')).toHaveText(dinero('128.000'))
     await expect(page.getByTestId('propuesta-total')).toHaveText(dinero('152.320'))
@@ -491,6 +514,48 @@ test.describe('El camino determinista — el que corre HOY', () => {
     expect(exigir(llaves[0], 'una llave de idempotencia en la cabecera de la petición')).not.toBe(
       '',
     )
+
+    sinPeticionesImprevistas(red)
+  })
+
+  /**
+   * ── CONTROL POSITIVO del aviso de origen ──────────────────────────────────
+   *
+   * <p>El caso de arriba afirma que el aviso ESTÁ; este afirma que NO está
+   * cuando el servidor sí leyó el texto. Las dos mitades son necesarias y por el
+   * motivo de siempre: un aviso pintado incondicionalmente pasaría el caso de
+   * arriba en verde y estaría mintiéndole a quien SÍ recibió una recomendación,
+   * que es la única persona a la que este embudo puede decirle «lo armamos con
+   * lo que nos contaste». Un banner que sale siempre se aprende a ignorar en dos
+   * visitas, y entonces deja de proteger al 100 % de hoy.
+   *
+   * <p>El recorrido es idéntico al de arriba **carácter por carácter** salvo la
+   * respuesta del servidor: lo único que cambia es `presentation`, que es
+   * exactamente la variable de la que este aviso debe depender.
+   */
+  test('con el modelo leyendo el texto, el aviso de «punto de partida» NO se pinta', async ({
+    page,
+  }) => {
+    const red = await enrutarEmbudo(page, {
+      '/assistant/proposal*': (route) => responderJson(route, propuestaViva()),
+    })
+
+    await page.goto('/planes')
+    await contarleAlAsistente(page)
+    await page.getByRole('button', { name: 'Ver mi propuesta' }).click()
+
+    // Se espera al MONTAJE de la propuesta antes de afirmar la ausencia: antes de
+    // que el panel pinte no hay ningún banner, así que `toHaveCount(0)` pasaría
+    // sin que nada se hubiera decidido. Es la trampa clásica de afirmar sobre lo
+    // que no está, y la razón de que esta línea vaya primero.
+    await expect(encabezadoDePropuesta(page)).toBeVisible()
+    await expect(page.getByTestId('propuesta-origen-base')).toHaveCount(0)
+
+    // Y la otra mitad, que demuestra que ESTA respuesta sí es la del camino con
+    // modelo: las líneas van rotuladas y el motivo que el servidor escribió se
+    // pinta. Sin esto, un fixture mal montado daría el mismo verde por no haber
+    // llegado nunca a la rama que se quería probar.
+    await expect(page.getByText(MOTIVO_AGENDA)).toBeVisible()
 
     sinPeticionesImprevistas(red)
   })

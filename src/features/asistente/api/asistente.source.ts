@@ -419,7 +419,11 @@ function comoResultado(
 
   const propuesta = adoptarRespuesta(respuesta, manuales)
   if (respuesta.presentation === 'PROPOSAL' || respuesta.presentation === 'DETERMINISTIC') {
-    return { clase: 'PROPUESTA', propuesta }
+    // El tercer dato del desenlace, y el que hace honesta la pantalla: las dos
+    // ramas son un carrito válido, pero solo una salió de leer el texto. Va aquí
+    // —y no en el componente— porque `presentation` no cruza el seam: si la
+    // pantalla tuviera que mirarlo, tendría que conocer el contrato.
+    return { clase: 'PROPUESTA', propuesta, leyoElTexto: respuesta.presentation === 'PROPOSAL' }
   }
   if (respuesta.presentation === 'NOT_UNDERSTOOD') {
     return { clase: 'NO_ENTENDIDO', propuestaBase: propuesta }

@@ -12,6 +12,7 @@ import AsistenteFueraDeDominio from './AsistenteFueraDeDominio.vue'
 import CatalogoManual from './CatalogoManual.vue'
 import ComparadorPaquete from './ComparadorPaquete.vue'
 import PropuestaCapacidades from './PropuestaCapacidades.vue'
+import PropuestaOrigenAviso from './PropuestaOrigenAviso.vue'
 import PropuestaRecomendados from './PropuestaRecomendados.vue'
 import PropuestaRestaurables from './PropuestaRestaurables.vue'
 import PropuestaTabla from './PropuestaTabla.vue'
@@ -51,6 +52,7 @@ import RefinarCuadro from './RefinarCuadro.vue'
 const {
   estado,
   propuesta,
+  leyoElTexto,
   texto,
   email,
   ciclo,
@@ -273,6 +275,7 @@ watch(estado, async (nuevo, anterior) => {
     <!-- RESULTADO -->
     <section v-if="conPropuesta && propuesta" class="apan-resultado" aria-labelledby="prop-h2">
       <h2 id="prop-h2" ref="encabezado" tabindex="-1" class="apan-h2">Tu propuesta</h2>
+      <PropuestaOrigenAviso :leyo-el-texto="leyoElTexto" />
 
       <p
         v-if="estado === 'NO_ENTENDIDO'"

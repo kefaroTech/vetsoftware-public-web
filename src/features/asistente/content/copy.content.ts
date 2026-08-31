@@ -80,10 +80,26 @@ export const RELLENOS_RAPIDOS: readonly string[] = [
  * `role="status"`, no `alert`: no ha fallado nada.
  */
 export const FRASES_ESPERA: readonly { desdeMs: number; texto: string }[] = [
-  { desdeMs: 0, texto: 'Estamos leyendo lo que nos contaste.' },
+  // ⚠️ NO dice «estamos leyendo lo que nos contaste». Esa frase era falsa en el
+  // 100 % de las peticiones con el acceso al modelo deshabilitado, e instalaba
+  // justo la expectativa que el aviso de origen tiene que desmentir después.
+  // «Preparando» es verdad por los dos caminos.
+  { desdeMs: 0, texto: 'Estamos preparando tu propuesta.' },
   { desdeMs: 3000, texto: 'Seguimos armando tu propuesta. Suele tardar unos segundos.' },
   { desdeMs: 8000, texto: 'Está tardando más de lo normal. Puedes cancelar y elegir un paquete.' },
 ]
+
+/**
+ * Cuánto tarda la espera en aparecer. **200 ms, y no cero.**
+ *
+ * <p>El camino determinista responde en decenas de milisegundos, y el `v-if` de
+ * la espera monta y desmonta el bloque entero: eso es un destello con salto de
+ * maquetación en la pantalla que decide la compra. Por debajo de un segundo no
+ * hace falta indicador; 200 ms es el suelo prudente que mata el parpadeo sin
+ * retrasar la percepción cuando sí hay modelo detrás. Es el mismo número que el
+ * velo global usa para lo mismo.
+ */
+export const ESPERA_VISIBLE_DESDE_MS = 200
 
 /** Cuándo aparece «Cancelar». Adelantado a propósito: aparecer en el umbral llega tarde. */
 export const CANCELAR_DESDE_MS = 8000

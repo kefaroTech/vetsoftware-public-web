@@ -56,6 +56,21 @@ export const usePropuestaStore = defineStore('asistentePropuesta', () => {
   const estado = ref<EstadoAsistente>('INICIAL')
   const propuesta = ref<Propuesta | null>(null)
 
+  /**
+   * Si la propuesta que hay en {@link propuesta} salió de **leer el texto**.
+   *
+   * <p>Arranca en `false` a propósito, y no es pesimismo: el valor por defecto de
+   * un discriminante de honestidad tiene que ser el que no promete nada. Un
+   * camino que adoptara una propuesta sin pasar por aquí pintaría «Tu propuesta»
+   * sobre un carrito que nadie leyó —que es exactamente el defecto que este campo
+   * existe para cerrar—, mientras que el fallo en la dirección contraria solo
+   * pide revisar algo que ya está bien.
+   *
+   * <p>`NOT_UNDERSTOOD` lo pone en `true`: el modelo **sí** leyó el texto, no lo
+   * entendió. Su aviso es otro, y así los dos nunca coinciden en pantalla.
+   */
+  const leyoElTexto = ref(false)
+
   /** El texto libre del prospecto. **Intocable en todo camino de error.** */
   const texto = ref('')
   const email = ref('')
@@ -125,6 +140,7 @@ export const usePropuestaStore = defineStore('asistentePropuesta', () => {
   function reiniciar(): void {
     estado.value = 'INICIAL'
     propuesta.value = null
+    leyoElTexto.value = false
     retirados.value = []
     sugerenciasDescartadas.value = []
     delta.value = null
@@ -219,9 +235,11 @@ export const usePropuestaStore = defineStore('asistentePropuesta', () => {
       fallos.value = 0
       if (resultado.clase === 'PROPUESTA') {
         adoptar(resultado.propuesta, false)
+        leyoElTexto.value = resultado.leyoElTexto
         estado.value = 'PROPUESTA_LISTA'
       } else if (resultado.clase === 'NO_ENTENDIDO') {
         adoptar(resultado.propuestaBase, false)
+        leyoElTexto.value = true
         estado.value = 'NO_ENTENDIDO'
       } else if (resultado.clase === 'FUERA_DE_DOMINIO') {
         // Ni una línea de catálogo. El error caro aquí no es perder el lead —no
@@ -278,9 +296,11 @@ export const usePropuestaStore = defineStore('asistentePropuesta', () => {
   function adoptarRecuperada(resultado: ResultadoAsistente): void {
     if (resultado.clase === 'PROPUESTA') {
       adoptar(resultado.propuesta, false)
+      leyoElTexto.value = resultado.leyoElTexto
       estado.value = 'PROPUESTA_LISTA'
     } else if (resultado.clase === 'NO_ENTENDIDO') {
       adoptar(resultado.propuestaBase, false)
+      leyoElTexto.value = true
       estado.value = 'NO_ENTENDIDO'
     } else if (resultado.clase === 'FUERA_DE_DOMINIO') {
       propuesta.value = null
@@ -347,6 +367,7 @@ export const usePropuestaStore = defineStore('asistentePropuesta', () => {
       // se leería como un cambio nulo, se leería como un éxito.
       if (resultado.clase === 'PROPUESTA' && resultado.propuesta.recalculado) {
         adoptar(resultado.propuesta, true)
+        leyoElTexto.value = resultado.leyoElTexto
         estado.value = 'PROPUESTA_LISTA'
       } else {
         // Un ajuste que el modelo no entendió NO invalida la propuesta anterior:
@@ -495,6 +516,7 @@ export const usePropuestaStore = defineStore('asistentePropuesta', () => {
   return {
     estado,
     propuesta,
+    leyoElTexto,
     texto,
     email,
     ciclo,
