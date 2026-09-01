@@ -101,6 +101,7 @@ async function panelTrasResponder(presentation: AssistantProposalResponse['prese
 
   const wrapper = mount(AsistentePanel, {
     shallow: true,
+    props: { sinPaquetes: false },
     global: { stubs: { PropuestaOrigenAviso: false } },
   })
   await flushPromises()

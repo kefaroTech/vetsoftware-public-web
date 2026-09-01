@@ -243,7 +243,7 @@ function continuar() {
            su precio» sobre la nada. Ahora está donde está el hueco. -->
 
       <!-- Contenido principal: la propuesta a medida. -->
-      <AsistentePanel />
+      <AsistentePanel :sin-paquetes="sinPaquetes" />
 
       <!-- Y los tres paquetes, siempre visibles: son el ancla de precio, y el
            camino a medida no enseña una cifra hasta el final. Lo que los pone en

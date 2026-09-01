@@ -196,27 +196,81 @@ describe('El catálogo manual dice cuándo no tiene nada que ofrecer', () => {
 
 describe('El aviso del asistente caído no promete lo que no hay', () => {
   it('sin catálogo retira la salida que no existe y conserva la que sí', () => {
-    const wrapper = mount(AsistenteCaidoAviso, { props: { catalogoVacio: true } })
+    const wrapper = mount(AsistenteCaidoAviso, {
+      props: { catalogoVacio: true, sinPaquetes: false },
+    })
 
     const texto = wrapper.get('[data-testid="asistente-caido"]').text()
     expect(texto).not.toContain('armar tu plan tú mismo')
     expect(texto).toContain('todavía no hay módulos publicados')
-    // Los paquetes SIGUEN ahí —se sirven de `PLANS_CONTENT`, contenido local del
-    // front, no de `GET /catalog`—, así que retirarlos «por simetría» dejaría al
-    // visitante sin la única compra que en ese momento puede hacer.
+    // Los paquetes siguen ahí en esta rama porque `sinPaquetes` es `false`: hay
+    // lista publicada. Retirarlos «por simetría» dejaría al visitante sin la
+    // única compra que en ese momento puede hacer.
     expect(texto).toContain('paquetes')
   })
 
-  it('con catálogo conserva las dos salidas, tal como estaban', () => {
-    const wrapper = mount(AsistenteCaidoAviso, { props: { catalogoVacio: false } })
+  it('con catálogo ofrece la lista de precios, y NO promete armar nada', () => {
+    const wrapper = mount(AsistenteCaidoAviso, {
+      props: { catalogoVacio: false, sinPaquetes: false },
+    })
 
     const texto = wrapper.get('[data-testid="asistente-caido"]').text()
-    expect(texto).toContain('armar tu plan tú mismo aquí abajo')
+    // Sin propuesta, marcar una casilla del catálogo no hace nada:
+    // `empujarCarrito` sale en su primera línea por `if (!actual ...) return`.
+    // El catálogo de la degradación es una lista de precios, no un
+    // configurador, y el texto no puede prometer lo contrario.
+    expect(texto).not.toContain('armar tu plan tú mismo')
+    expect(texto).toContain('los módulos con su precio')
     expect(texto).toContain('paquetes')
+  })
+
+  it('sin paquetes publicados deja de mandar a una sección vacía', () => {
+    // El defecto que reintrodujo la puerta de al lado: desde `e48e9e0` los
+    // planes vienen de `GET /plans` y pueden llegar vacíos, así que «empieza por
+    // uno de nuestros paquetes, aquí abajo» podía leerse justo encima de
+    // «Todavía no hay paquetes publicados».
+    const wrapper = mount(AsistenteCaidoAviso, {
+      props: { catalogoVacio: true, sinPaquetes: true },
+    })
+
+    const texto = wrapper.get('[data-testid="asistente-caido"]').text()
+    expect(texto).not.toContain('empezar por uno de nuestros paquetes')
+    expect(texto).not.toContain('los módulos con su precio')
+    // La frase habla de lo que se puede CONTRATAR y no de lo que hay publicado,
+    // y esa palabra es la que la hace cierta también en la combinación que sí
+    // ocurre: sin paquetes pero con módulos publicados abajo. «No hay nada
+    // publicado con precio» sería mentira ahí; esto no, porque en la
+    // degradación esos módulos no se pueden contratar solos.
+    expect(texto).toContain('ningún paquete que puedas contratar por aquí')
+    // La salida que sí existe cuando no queda ninguna otra: una persona.
+    expect(
+      wrapper
+        .find('[data-testid="asistente-caido"] a[href="mailto:soporte@vetsoftware.co"]')
+        .exists(),
+    ).toBe(true)
+  })
+
+  it('con módulos publicados pero sin paquetes, la frase sigue siendo cierta', () => {
+    // La combinación que obligó a redactarla así, y NO es teórica:
+    // `plans.source.ts` descarta entero (`publicable`) el paquete tarifado en un
+    // solo ciclo, así que puede haber tarifa con módulos y sin paquetes. Con la
+    // frase anterior —«todavía no hay nada publicado con precio»— este caso
+    // decía una mentira comprobable: los módulos con su precio están ahí abajo.
+    const wrapper = mount(AsistenteCaidoAviso, {
+      props: { catalogoVacio: false, sinPaquetes: true },
+    })
+
+    const texto = wrapper.get('[data-testid="asistente-caido"]').text()
+    expect(texto).toContain('ningún paquete que puedas contratar por aquí')
+    expect(texto).not.toContain('nada publicado con precio')
+    // Y tampoco los ofrece: sin propuesta, marcar una casilla no hace nada.
+    expect(texto).not.toContain('los módulos con su precio')
   })
 
   it('es `status` y no `alert`: no ha fallado nada que atender ahora mismo', () => {
-    const wrapper = mount(AsistenteCaidoAviso, { props: { catalogoVacio: true } })
+    const wrapper = mount(AsistenteCaidoAviso, {
+      props: { catalogoVacio: true, sinPaquetes: false },
+    })
 
     expect(wrapper.get('[data-testid="asistente-caido"]').attributes('role')).toBe('status')
   })
@@ -239,6 +293,7 @@ describe('La pantalla entera, con el asistente caído y el catálogo sin publica
 
     const wrapper = mount(AsistentePanel, {
       shallow: true,
+      props: { sinPaquetes: false },
       global: { stubs: { AsistenteCaidoAviso: false, CatalogoManual: false } },
     })
     await flushPromises()
@@ -261,7 +316,7 @@ describe('La pantalla entera, con el asistente caído y el catálogo sin publica
 
     expect(usePropuestaStore().estado).toBe('ASISTENTE_CAIDO')
     expect(wrapper.get('[data-testid="asistente-caido"]').text()).toContain(
-      'armar tu plan tú mismo aquí abajo',
+      'los módulos con su precio',
     )
     expect(wrapper.find('[data-testid="catalogo-vacio"]').exists()).toBe(false)
   })
