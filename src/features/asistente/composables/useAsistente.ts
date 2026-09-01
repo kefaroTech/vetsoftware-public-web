@@ -31,6 +31,7 @@ export function useAsistente() {
     nuevos,
     guardando,
     traceId,
+    esperaLimite,
     lineas,
     codigosEnCarrito,
   } = storeToRefs(store)
@@ -87,6 +88,7 @@ export function useAsistente() {
     sugerenciasDescartadas,
     guardando,
     traceId,
+    esperaLimite,
     lineas,
     nuevos,
     lineasSugeridas,

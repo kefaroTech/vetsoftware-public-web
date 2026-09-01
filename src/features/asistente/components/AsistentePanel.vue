@@ -10,6 +10,7 @@ import AsistenteCaidoAviso from './AsistenteCaidoAviso.vue'
 import AsistenteEntrada from './AsistenteEntrada.vue'
 import AsistenteEspera from './AsistenteEspera.vue'
 import AsistenteFueraDeDominio from './AsistenteFueraDeDominio.vue'
+import AsistenteLimiteAviso from './AsistenteLimiteAviso.vue'
 import CatalogoManual from './CatalogoManual.vue'
 import ComparadorPaquete from './ComparadorPaquete.vue'
 import PropuestaCapacidades from './PropuestaCapacidades.vue'
@@ -71,6 +72,7 @@ const {
   sugerenciasDescartadas,
   guardando,
   traceId,
+  esperaLimite,
   nuevos,
   lineasSugeridas,
   lineasManuales,
@@ -207,7 +209,8 @@ watch(estado, async (nuevo, anterior) => {
         estado === 'INICIAL' ||
         estado === 'ERROR_MODELO' ||
         estado === 'ASISTENTE_CAIDO' ||
-        estado === 'ENLACE_CADUCADO'
+        estado === 'ENLACE_CADUCADO' ||
+        estado === 'LIMITE_ALCANZADO'
       "
       v-model:texto="texto"
       v-model:email="email"
@@ -243,6 +246,17 @@ watch(estado, async (nuevo, anterior) => {
       v-if="estado === 'ASISTENTE_CAIDO'"
       :catalogo-vacio="catalogoVacio"
       :sin-paquetes="sinPaquetes"
+    />
+
+    <!-- LÍMITE ALCANZADO. **No es la degradación y no se dice con sus palabras**:
+         el asistente funciona, lo que se agotó es un cupo. Y no suma a `fallos`,
+         así que dos límites seguidos ya no degradan la pantalla (ver el store).
+         El porqué de cada frase —y de que no haya botón de reintentar— vive en
+         el componente. -->
+    <AsistenteLimiteAviso
+      v-if="estado === 'LIMITE_ALCANZADO'"
+      :sin-paquetes="sinPaquetes"
+      :espera="esperaLimite"
     />
 
     <!-- RECUPERANDO. Es una relectura, no una invocación al modelo: ni las

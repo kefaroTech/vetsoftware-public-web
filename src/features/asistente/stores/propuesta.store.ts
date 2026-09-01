@@ -2,9 +2,16 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { useToast } from '@/composables/useToast'
 import type { Ciclo } from '../../landing/types/plans.types'
-import { actualizarLineas, generarPropuesta, refinarPropuesta } from '../api/asistente.source'
+import {
+  actualizarLineas,
+  esLimiteAlcanzado,
+  esperaDelLimite,
+  generarPropuesta,
+  refinarPropuesta,
+} from '../api/asistente.source'
 import type {
   AceptacionLegal,
+  EsperaLimite,
   EstadoAsistente,
   Propuesta,
   PropuestaLinea,
@@ -102,6 +109,17 @@ export const usePropuestaStore = defineStore('asistentePropuesta', () => {
   const fallos = ref(0)
 
   /**
+   * El plazo que dijo el servidor al agotarse el cupo, si es que lo dijo.
+   *
+   * <p>`null` mientras no llegue `Retry-After`, y esa es la vida normal hoy: la
+   * cabecera se emite pero el navegador no la ve hasta que el CORS la exponga
+   * (ver `esperaDelLimite` en el seam). La pantalla dice entonces «más tarde»,
+   * que es lo único cierto: hay tres límites a la vez y desde aquí no se sabe
+   * cuál saltó.
+   */
+  const esperaLimite = ref<EsperaLimite>(null)
+
+  /**
    * La llave de idempotencia. Se genera al **entrar** en la pantalla, no al
    * pulsar: es lo que hace que un doble clic —o el reintento tras cancelar— no
    * pague dos invocaciones ni cree dos propuestas huérfanas que consumen cupo.
@@ -146,6 +164,7 @@ export const usePropuestaStore = defineStore('asistentePropuesta', () => {
     delta.value = null
     nuevos.value = []
     traceId.value = null
+    esperaLimite.value = null
   }
 
   /**
@@ -220,6 +239,7 @@ export const usePropuestaStore = defineStore('asistentePropuesta', () => {
     aceptacionesUsadas.value = aceptaciones
     estado.value = 'CARGANDO'
     traceId.value = null
+    esperaLimite.value = null
     const controlador = new AbortController()
     abortoActual = controlador
     try {
@@ -251,8 +271,21 @@ export const usePropuestaStore = defineStore('asistentePropuesta', () => {
         estado.value = 'ASISTENTE_CAIDO'
       }
     } catch (e) {
+      // El texto del usuario NO se toca en ninguna de las dos ramas. Sigue ahí
+      // arriba, tal como lo dejó.
+      if (esLimiteAlcanzado(e)) {
+        // ⚠️ **No suma a `fallos`**, y es lo que impide que vuelva la
+        // degradación. Un 429 no es una avería: es un cupo que existe a
+        // propósito y se agotó. Mientras contaba como fallo, dos límites
+        // seguidos ponían `ASISTENTE_CAIDO` —«el asistente no está disponible»
+        // sobre un asistente que funcionaba perfectamente, y encima mandando al
+        // catálogo por una causa falsa—. Es el mismo criterio que
+        // {@link marcarEnlaceCaducado} ya sostiene para el 404.
+        esperaLimite.value = esperaDelLimite(e)
+        estado.value = 'LIMITE_ALCANZADO'
+        return
+      }
       fallos.value += 1
-      // El texto del usuario NO se toca. Sigue ahí abajo, tal como lo dejó.
       estado.value = fallos.value >= 2 ? 'ASISTENTE_CAIDO' : 'ERROR_MODELO'
       registrarFallo(e)
     } finally {
@@ -529,6 +562,7 @@ export const usePropuestaStore = defineStore('asistentePropuesta', () => {
     guardando,
     traceId,
     fallos,
+    esperaLimite,
     clientRequestId,
     lineas,
     codigosEnCarrito,
