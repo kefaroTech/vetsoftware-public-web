@@ -71,6 +71,19 @@ import type { Ciclo } from '../../landing/types/plans.types'
  *    decía por escrito. Pintarlo como avería manda al prospecto a reintentar
  *    un camino que no lleva a ningún sitio, y de paso nos acusa de un fallo que
  *    no hubo.
+ *
+ * <p>`LIMITE_ALCANZADO` es el 429, y **tampoco es `ERROR_MODELO` ni
+ * `ASISTENTE_CAIDO`**. Es el mismo razonamiento que `ENLACE_CADUCADO` ya dejó
+ * escrito: no ha fallado nada, se ha agotado un cupo que existe a propósito.
+ * Mientras no tuvo estado propio, un 429 caía en el `catch` genérico de
+ * `generar`, **sumaba a `fallos`**, y dos límites seguidos degradaban la
+ * pantalla a `ASISTENTE_CAIDO` — al prospecto se le contaba una avería que no
+ * hubo y se le mandaba al catálogo por una causa falsa.
+ *
+ * <p>Y es **un** estado, no cuatro: que haya o no paquetes publicados es una
+ * propiedad ortogonal de la pantalla (`useCatalogoComercial.vacio`,
+ * `PlanesView.sinPaquetes`), no una causa. Cruzar causas con condiciones daría
+ * el producto cartesiano de las dos para expresar una variación de frase.
  */
 export type EstadoAsistente =
   | 'INICIAL'
@@ -83,6 +96,21 @@ export type EstadoAsistente =
   | 'FUERA_DE_DOMINIO'
   | 'RECUPERANDO'
   | 'ENLACE_CADUCADO'
+  | 'LIMITE_ALCANZADO'
+
+/**
+ * Cuánto hay que esperar tras un `LIMITE_ALCANZADO`, **solo si el servidor lo
+ * dijo**.
+ *
+ * <p>`null` es el caso por defecto y no es un hueco: significa «no lo sabemos»,
+ * y la pantalla dice entonces «más tarde». Hay tres límites simultáneos —5/h por
+ * IP, 3/día por correo, N/día por IP— y el front **no sabe cuál saltó**, así que
+ * cualquier plazo inventado sería mentira en dos de los tres casos.
+ *
+ * <p>Solo se puebla desde la cabecera `Retry-After` de la respuesta 429. Ver
+ * `esperaDelLimite` en el seam, que también explica por qué hoy puede no llegar.
+ */
+export type EsperaLimite = 'HORA' | 'DIA' | null
 
 /**
  * De dónde salió una línea. Son cuatro y **ninguna es prescindible**.

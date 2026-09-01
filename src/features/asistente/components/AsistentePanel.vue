@@ -10,6 +10,7 @@ import AsistenteCaidoAviso from './AsistenteCaidoAviso.vue'
 import AsistenteEntrada from './AsistenteEntrada.vue'
 import AsistenteEspera from './AsistenteEspera.vue'
 import AsistenteFueraDeDominio from './AsistenteFueraDeDominio.vue'
+import AsistenteLimiteAviso from './AsistenteLimiteAviso.vue'
 import CatalogoManual from './CatalogoManual.vue'
 import ComparadorPaquete from './ComparadorPaquete.vue'
 import PropuestaCapacidades from './PropuestaCapacidades.vue'
@@ -47,6 +48,14 @@ import RefinarCuadro from './RefinarCuadro.vue'
  * casillas seguidas (§3.2.2). Ese cambio se comunica por `aria-live`, que es
  * exactamente para lo que existe §4.1.3.
  */
+/**
+ * No hay ni un paquete publicado. Baja desde `PlanesView`, que ya lo tiene
+ * calculado con su `loaded`: los dos avisos de degradación ofrecen «uno de
+ * nuestros paquetes, aquí abajo» y esa sección puede estar vacía desde que los
+ * planes son un endpoint (`e48e9e0`). Sin este dato la ofrecerían igual.
+ */
+defineProps<{ sinPaquetes: boolean }>()
+
 // Se desestructura para que la plantilla desenvuelva los `ref` sola. Con el
 // objeto entero habría que escribir `.value` en cada interpolación, y un `.value`
 // olvidado en un `v-if` no falla: pinta la rama contraria en silencio.
@@ -63,6 +72,7 @@ const {
   sugerenciasDescartadas,
   guardando,
   traceId,
+  esperaLimite,
   nuevos,
   lineasSugeridas,
   lineasManuales,
@@ -199,7 +209,8 @@ watch(estado, async (nuevo, anterior) => {
         estado === 'INICIAL' ||
         estado === 'ERROR_MODELO' ||
         estado === 'ASISTENTE_CAIDO' ||
-        estado === 'ENLACE_CADUCADO'
+        estado === 'ENLACE_CADUCADO' ||
+        estado === 'LIMITE_ALCANZADO'
       "
       v-model:texto="texto"
       v-model:email="email"
@@ -231,7 +242,22 @@ watch(estado, async (nuevo, anterior) => {
          manual pasa a ser el contenido principal. La ausencia del asistente
          nunca puede impedir comprar — pero tampoco puede mandar a un sitio
          vacío, y por eso el aviso sabe si hay catálogo (ver el componente). -->
-    <AsistenteCaidoAviso v-if="estado === 'ASISTENTE_CAIDO'" :catalogo-vacio="catalogoVacio" />
+    <AsistenteCaidoAviso
+      v-if="estado === 'ASISTENTE_CAIDO'"
+      :catalogo-vacio="catalogoVacio"
+      :sin-paquetes="sinPaquetes"
+    />
+
+    <!-- LÍMITE ALCANZADO. **No es la degradación y no se dice con sus palabras**:
+         el asistente funciona, lo que se agotó es un cupo. Y no suma a `fallos`,
+         así que dos límites seguidos ya no degradan la pantalla (ver el store).
+         El porqué de cada frase —y de que no haya botón de reintentar— vive en
+         el componente. -->
+    <AsistenteLimiteAviso
+      v-if="estado === 'LIMITE_ALCANZADO'"
+      :sin-paquetes="sinPaquetes"
+      :espera="esperaLimite"
+    />
 
     <!-- RECUPERANDO. Es una relectura, no una invocación al modelo: ni las
          frases escalonadas de la espera ni el botón de cancelar tienen sentido

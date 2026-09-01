@@ -6,6 +6,7 @@ import type {
   AssistantProposalLineResponse,
   AssistantProposalResponse,
   EditProposalLinesRequest,
+  EsperaLimite,
   GenerarArgs,
   GenerateProposalRequest,
   LineaRecomendada,
@@ -698,6 +699,55 @@ export async function recuperarPorToken(
  */
 export function esPropuestaNoEncontrada(error: unknown): boolean {
   return (error as { response?: { status?: number } })?.response?.status === 404
+}
+
+/**
+ * ¿El servidor dijo que se agotó el cupo de propuestas?
+ *
+ * <p>**Por el `status`, nunca por el mensaje**, y aquí la razón pesa el doble
+ * que en {@link esPropuestaNoEncontrada}: además de que el texto es copy del
+ * servidor y cambiarlo apagaría esta rama en silencio, **el `detail` viene en
+ * inglés** («Too many proposal requests. Try again later.»). No se compara y
+ * tampoco se pinta: es la única frase de toda la pantalla que el visitante no
+ * podría leer.
+ *
+ * <p>Un 429 **no es un fallo del sistema**. Es el mismo criterio que
+ * `marcarEnlaceCaducado` ya sostiene para el 404: no incrementa el contador de
+ * fallos del store, porque sumarlo degradaría la pantalla a `ASISTENTE_CAIDO`
+ * al segundo límite y le contaría una avería a quien solo agotó su cupo.
+ */
+export function esLimiteAlcanzado(error: unknown): boolean {
+  return (error as { response?: { status?: number } })?.response?.status === 429
+}
+
+/**
+ * Cuánto pide esperar el servidor, leído de `Retry-After`.
+ *
+ * <p>**Tolerante a que la cabecera no llegue, y hoy es lo normal.** El servidor
+ * la emite y es correcta, pero un navegador solo puede leer las cabeceras que el
+ * CORS expone; mientras `Retry-After` no esté en `Access-Control-Expose-Headers`
+ * esto devuelve `null` y la pantalla dice «más tarde». Cuando se exponga, la
+ * misma pantalla empieza a decir el plazo sin tocar una línea: el orden de
+ * despliegue de los dos repositorios deja de importar.
+ *
+ * <p>Los tramos **nunca son optimistas**, y esa es toda la decisión. Un plazo
+ * más corto que el real invita a un reintento que va a fallar de forma
+ * determinista, que es justo lo que esta pantalla evita al no poner botón de
+ * reintentar. Por eso se redondea hacia arriba al tramo que el servidor emite
+ * (3600 → «dentro de una hora», 86400 → «mañana») y cualquier otra cosa —una
+ * fecha HTTP, un valor mayor que un día, un cero, basura— cae a `null`, es
+ * decir a «más tarde», que no promete nada.
+ */
+export function esperaDelLimite(error: unknown): EsperaLimite {
+  const cabeceras = (error as { response?: { headers?: Record<string, string | undefined> } })
+    ?.response?.headers
+  const crudo = cabeceras?.['retry-after']
+  if (!crudo) return null
+  const segundos = Number.parseInt(crudo, 10)
+  if (!Number.isFinite(segundos) || segundos <= 0) return null
+  if (segundos <= 3600) return 'HORA'
+  if (segundos <= 86400) return 'DIA'
+  return null
 }
 
 /** Solo para las pruebas: vacía el registro de sesiones entre casos. */
