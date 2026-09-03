@@ -16,12 +16,27 @@ import type { Page } from '@playwright/test'
  */
 export const CLAVE_INTENCION = 'vs.contratacion.intencion.v1'
 
+/**
+ * La forma que persiste `contratacion.store`, con sus dos discriminadores.
+ *
+ * <p>`origen` y `modulos` no son opcionales aunque `parseIntencion` sepa migrar
+ * una intención escrita antes de que existieran: lo que se siembra desde una
+ * prueba tiene que ser lo que este front ESCRIBE hoy, no lo que todavía sabe
+ * leer. Sembrar la forma vieja probaría la migración y llamaría a eso «el caso
+ * normal».
+ *
+ * <p>`planCode` es nulable porque la selección modular no reproduce ningún
+ * paquete, y `importeVistoMensual` porque hay selecciones sin cifra que ver.
+ */
 export interface Intencion {
-  planCode: string
+  origen: 'PLAN'
+  planCode: string | null
+  /** Los códigos de módulo marcados. Vacío cuando se eligió un paquete cerrado. */
+  modulos: string[]
   ciclo: 'MENSUAL' | 'ANUAL'
   sedes: number
   usuarios: number
-  importeVistoMensual: number
+  importeVistoMensual: number | null
   selloRevisadoEl: string
   creadaEn: string
   descartada: boolean
@@ -34,16 +49,21 @@ export interface Intencion {
  * `CLINICA` que había aquí no existía en ninguna parte y el servidor no podía
  * resolverlo.
  *
+ * `modulos` va vacío y eso ES la rama del paquete: con `planCode` puesto, quien
+ * dice qué se contrata es el paquete y las casillas no existieron.
+ *
  * `importeVistoMensual` tiene que ser EXACTAMENTE el subtotal mensual que
  * `calcularEstimado` da para esta selección (189.000 = precio de entrada de
  * `PACK_CLINIC`, sin extras: 1 sede y 1 persona caben en lo incluido). Si no lo
- * es, `ContratarView` detecta deriva de precio, pinta `PriceDriftNotice` y
- * DESMARCA la casilla de términos — y entonces media spec falla por un motivo
- * que no tiene nada que ver con lo que cada caso dice comprobar.
+ * es, `ContratarView` detecta deriva de precio y pinta `PriceDriftNotice` — y
+ * entonces media spec falla por un motivo que no tiene nada que ver con lo que
+ * cada caso dice comprobar.
  */
 export function intencion(over: Partial<Intencion> = {}): Intencion {
   return {
+    origen: 'PLAN',
     planCode: 'PACK_CLINIC',
+    modulos: [],
     ciclo: 'MENSUAL',
     sedes: 1,
     usuarios: 1,
@@ -53,6 +73,27 @@ export function intencion(over: Partial<Intencion> = {}): Intencion {
     descartada: false,
     ...over,
   }
+}
+
+/**
+ * Una selección de módulos SUELTA: sin paquete que la nombre.
+ *
+ * <p>Es la otra rama de `IntencionPlan`, y la que decide qué cesta viaja a
+ * `POST /quotes/self-serve`: con `planCode` a `null`, `lineasDeContratacion`
+ * arma `CORE` + cada módulo marcado en vez de una línea de paquete.
+ *
+ * @param importeVistoMensual
+ *            el subtotal que la pantalla anterior tenía delante. Se pide en vez
+ *            de dejarlo por defecto porque en esta rama no hay lista de precio
+ *            con la que recalcularlo: lo pone `POST /quotes/preview`, y darle un
+ *            valor cualquiera dispararía el aviso de deriva en cada caso.
+ */
+export function intencionDeModulos(
+  modulos: string[],
+  importeVistoMensual: number | null,
+  over: Partial<Intencion> = {},
+): Intencion {
+  return intencion({ planCode: null, modulos, importeVistoMensual, ...over })
 }
 
 /** Siembra el espejo ANTES del arranque: el store lo hidrata al crearse. */

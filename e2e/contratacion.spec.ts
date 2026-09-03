@@ -3,7 +3,6 @@ import { subtotalMensualEquivalente } from '../src/features/landing/composables/
 import { PLANS_CONTENT } from '../src/features/landing/content/plans.content'
 import type { SubscriptionResponse } from '../src/features/suscripcion/types/suscripcion.types'
 import {
-  CATALOGO,
   ID_PROPUESTA,
   intencionDePropuesta,
   noEncontrado,
@@ -11,8 +10,15 @@ import {
   sembrarSesionDelAsistente,
 } from './helpers/asistente'
 import {
+  enrutarEmbudoPublico,
+  modulosQueReproducen,
+  RUTAS_DEL_EMBUDO,
+  subtotalDeSeleccion,
+} from './helpers/catalogo'
+import {
   CLAVE_INTENCION,
   intencion,
+  intencionDeModulos,
   leerIntencion,
   sembrarIntencion,
   type Intencion,
@@ -36,10 +42,12 @@ import { exigir } from './helpers/exigir'
  *
  * ── Qué se simula y qué no ─────────────────────────────────────────────────
  * Se simulan la sesión, `GET /companies/{id}` y **`POST /quotes/self-serve`**
- * (ver `helpers/sesion.ts`). El catálogo NO se simula: `plans.source.ts` sigue
- * sirviendo `plans.content.ts`, así que el plan que se contrata es el de verdad
- * y esta spec puede importarlo para derivar de él lo que espera, en vez de
- * transcribir cifras que caducan.
+ * (ver `helpers/sesion.ts`), más los tres endpoints públicos del embudo (ver
+ * `helpers/catalogo.ts`). `GET /plans` sirve `plans.content.ts` **tal cual**, así
+ * que el plan que se contrata sigue siendo el de verdad y esta spec puede
+ * importarlo para derivar de él lo que espera, en vez de transcribir cifras que
+ * caducan; lo que cambió es que ahora ese contenido viaja por el cable en vez de
+ * salir de un `import` dentro del seam.
  *
  * ── Lo que cambió, y por qué esta spec se reescribió entera ────────────────
  * `activarPlan()` YA SALE A LA RED. Hasta que la línea de la oferta se nombró
@@ -73,6 +81,15 @@ import { exigir } from './helpers/exigir'
  */
 
 const CONFIRMAR = 'Confirmar mi plan'
+
+/**
+ * El mismo botón cuando lo que se contrata NO es un paquete.
+ *
+ * <p>El rótulo ramifica por `resumen.planCode`, y no es cosmética: llamar «mi
+ * plan» a una selección que el prospecto armó casilla a casilla le pone nombre de
+ * paquete a algo que no eligió, en el último texto que se lee antes de firmar.
+ */
+const CONFIRMAR_SELECCION = 'Confirmar mi selección'
 
 /**
  * El `<h1>` del paso vinculante.
@@ -243,6 +260,13 @@ async function entrarAlPaso6(
   await enrutarApi(
     page,
     {
+      // Los tres públicos van SIEMPRE, incluso en los casos que no salen de esta
+      // pantalla: la rama del paquete resuelve el plan con `GET /plans`, la
+      // modular pide además `GET /catalog` y `POST /quotes/preview`, y los cuatro
+      // «Cambiar» acaban en `/planes`, que necesita los tres. Sin ellos caen en el
+      // comodín, que devuelve una página vacía, y el fallo que se ve es «no
+      // encuentro el resumen» en una pantalla que sí montó.
+      ...RUTAS_DEL_EMBUDO,
       '/companies/*': EMPRESA_RESPUESTA,
       '/subscriptions/current': suscripcionSegun(opciones.estadoDelPlan ?? 'SIN_PLAN'),
       // 201 y no 200: es lo que devuelve el endpoint, también en el reintento
@@ -262,10 +286,10 @@ async function entrarAlPaso6(
 }
 
 /** Marca los términos y confirma. Espera al paso 7, que es el estado observable. */
-async function confirmar(page: Page): Promise<void> {
+async function confirmar(page: Page, rotulo: string = CONFIRMAR): Promise<void> {
   const paso = page.getByTestId('paso-contratar')
   await paso.getByRole('checkbox').check()
-  await paso.getByRole('button', { name: CONFIRMAR }).click()
+  await paso.getByRole('button', { name: rotulo }).click()
   await expect(page).toHaveURL(/\/dashboard\/contratar\/exito$/)
 }
 
@@ -302,9 +326,20 @@ test.describe('Paso 6 — el paso vinculante', () => {
 
   test('conserva la semántica del paso', async ({ page }) => {
     await entrarAlPaso6(page)
-    await expect(page.getByTestId('paso-contratar')).toMatchAriaSnapshot({
-      name: 'contratar-paso6.aria.yml',
-    })
+    const paso = page.getByTestId('paso-contratar')
+
+    // ── El indicador de progreso, AFIRMADO aparte de la instantánea ─────────
+    // Y no por redundancia: la instantánea ARIA de Playwright **no serializa
+    // `aria-current`**, así que un indicador con los cuatro pasos marcados como
+    // actual —o con ninguno— la deja idéntica. Lo que convierte una fila de
+    // puntos en un progreso para un lector de pantalla es exactamente ese
+    // atributo, y esto es lo único que puede verlo.
+    const progreso = paso.getByRole('navigation', { name: 'Progreso de la contratación' })
+    await expect(progreso.getByRole('listitem')).toHaveCount(4)
+    await expect(progreso.locator('li[aria-current="step"]')).toHaveCount(1)
+    await expect(progreso.locator('li[aria-current="step"]')).toContainText('Confirmar')
+
+    await expect(paso).toMatchAriaSnapshot({ name: 'contratar-paso6.aria.yml' })
   })
 
   test('sin aceptar los términos no activa, y el resumen de errores lo dice igual que el campo', async ({
@@ -344,8 +379,19 @@ test.describe('Paso 6 — el paso vinculante', () => {
     await confirmar(page)
 
     const exito = page.getByTestId('contratacion-exito')
-    await expect(exito.getByRole('heading', { level: 1 })).toContainText('Clínica')
-    await expect(exito.getByRole('heading', { level: 1 })).toBeFocused()
+    const titulo = exito.getByRole('heading', { level: 1 })
+
+    // El `<h1>` CUENTA los módulos en vez de nombrar el paquete, porque sirve
+    // por igual a la rama modular, donde no hay ninguno que nombrar. El número
+    // se deriva de los `includes` del contenido y no se transcribe: un módulo
+    // más en el paquete cambiaría la frase, y un «5» quemado dejaría este caso
+    // rojo por algo que no es un fallo.
+    await expect(titulo).toContainText(`Reservaste ${CLINICA.includes.length} módulos`)
+    await expect(titulo).toBeFocused()
+
+    // El paquete se nombra ahora en la bajada. Que siga estando en algún sitio es
+    // lo que impide que la pantalla de éxito deje de decir QUÉ se compró.
+    await expect(exito).toContainText(CLINICA.name)
     await expect(exito).toContainText(EMPRESA_NOMBRE)
 
     // «activo» era mentira y la propia pantalla la desmentía dos párrafos más abajo. Aceptar una
@@ -353,7 +399,11 @@ test.describe('Paso 6 — el paso vinculante', () => {
     // que de verdad pasó es que la elección quedó reservada. El título de la pestaña dice lo
     // mismo que el `<h1>`.
     await expect(page).toHaveTitle('Tu plan está reservado — VetSoftware')
-    await expect(exito.getByRole('heading', { level: 1 })).toContainText('reservado')
+    // «Reservaste», nunca «activo» ni «activado»: aceptar una oferta no enciende
+    // ningún módulo, y la afirmación va contra el verbo prohibido y no a favor de
+    // uno concreto, que es lo que la deja en pie al siguiente retoque de copy.
+    await expect(titulo).toContainText(/Reservaste/)
+    await expect(titulo).not.toContainText(/activ/i)
 
     // Lo que todavía NO es verdad, dicho donde se puede leer. La frase vieja —«no ha viajado al
     // servidor»— se borró porque dejó de ser cierta el día que `activarPlan` empezó a llamar al
@@ -514,6 +564,7 @@ test.describe('El cuerpo que viaja a POST /quotes/self-serve', () => {
     await enrutarApi(
       page,
       {
+        ...RUTAS_DEL_EMBUDO,
         '/companies/*': EMPRESA_RESPUESTA,
         // La respuesta REAL del backend ante un código que no cuelga de ningún
         // paquete. El mensaje es el mismo que para un código inventado: ni
@@ -613,6 +664,137 @@ test.describe('El cuerpo que viaja a POST /quotes/self-serve', () => {
       'clientRequestId',
       'lines',
     ])
+  })
+})
+
+/**
+ * LA RAMA MODULAR — `CORE` + cada módulo marcado, o el paquete cuando coincide.
+ *
+ * <p>Hasta aquí, los tres casos del bloque de arriba cubrían la MISMA rama: la
+ * del paquete. La modular —la que el rediseño acaba de abrir y la única que
+ * existe cuando el prospecto marca casillas una a una— no la tocaba ningún caso
+ * de extremo a extremo, y sí la cubría un unitario
+ * (`tests/unit/contratacion-lineas.spec.ts`). La diferencia entre los dos es
+ * exactamente lo que este bloque añade: el unitario comprueba que la función
+ * devuelve las líneas buenas, y esto comprueba que **la pantalla la llama con lo
+ * que el usuario eligió**.
+ *
+ * <p>El escenario concreto que protege: alguien cambia la condición con la que
+ * se elige rama —hoy es `planCode`— y la modular empieza a mandar el paquete
+ * **y** sus componentes. El servidor lo rechaza con un `INVALID_INPUT` cuyo
+ * cuerpo no dice qué línea sobró, así que el prospecto ve «No pudimos registrar
+ * tu contratación» en el clic vinculante, después de haberse registrado y
+ * verificado el correo.
+ */
+test.describe('El cuerpo modular que viaja a POST /quotes/self-serve', () => {
+  /**
+   * Los módulos que reproducen `PACK_CLINIC`, DERIVADOS del catálogo.
+   *
+   * <p>Transcribir los cuatro códigos dejaría este bloque verde el día que el
+   * paquete gane un componente: la selección dejaría de coincidir, la cesta
+   * pasaría a ser modular y el caso que afirma «esto se cotiza como paquete»
+   * estaría probando justo lo contrario sin decirlo.
+   */
+  const MODULOS_DEL_PAQUETE = modulosQueReproducen('PACK_CLINIC')
+
+  /** Los códigos de los tres paquetes publicados. Ninguno puede aparecer en la rama modular. */
+  const PAQUETES = PLANS_CONTENT.plans.map((p) => p.code)
+
+  /**
+   * Entra al paso 6 con una intención SIN paquete.
+   *
+   * <p>`importeVistoMensual` se deriva de la misma cesta que el doble va a
+   * cotizar. Es lo que evita que salte el aviso de deriva de precio, que aquí no
+   * sería un hallazgo sino ruido: en esta rama no hay lista de precio local con
+   * la que recalcular el importe, así que una cifra escrita a mano diverge del
+   * servidor en cuanto se toca un precio del catálogo de prueba.
+   */
+  function entrarConModulos(page: Page, modulos: string[]): Promise<Captura> {
+    const seleccion = { modulos, sedes: 1, usuarios: 1 }
+    return entrarAlPaso6(
+      page,
+      intencionDeModulos(modulos, subtotalDeSeleccion(seleccion, 'MENSUAL')),
+    )
+  }
+
+  test('sin paquete viajan el núcleo y cada módulo marcado, y ningún código de paquete', async ({
+    page,
+  }) => {
+    const captura = await entrarConModulos(page, ['SCHEDULING', 'CASH_REGISTER'])
+    const paso = page.getByTestId('paso-contratar')
+
+    // El botón lo dice antes de pulsarlo: no hay ningún plan que nombrar.
+    await expect(paso.getByRole('button', { name: CONFIRMAR_SELECCION })).toBeVisible()
+    // Y el importe que se pinta es el del servidor, no uno recalculado en local:
+    // si lo fuera, no coincidiría con el que se sembró y saltaría el aviso.
+    await expect(page.getByRole('alert').filter({ hasText: 'El precio cambió' })).toHaveCount(0)
+
+    await confirmar(page, CONFIRMAR_SELECCION)
+
+    expect(captura.llamadas).toBe(1)
+    const lineas = captura.cuerpo?.lines ?? []
+
+    // El núcleo entra SIEMPRE, aunque nadie lo marque: es el mínimo estructural
+    // (`is_core`), y sin él el servidor cotizaría módulos sueltos sobre nada.
+    expect(lineas).toContainEqual({ code: 'CORE', quantity: 1 })
+    expect(lineas).toContainEqual({ code: 'SCHEDULING', quantity: 1 })
+    expect(lineas).toContainEqual({ code: 'CASH_REGISTER', quantity: 1 })
+
+    // Ni un código de paquete. Un paquete junto a una pieza suya son dos cobros
+    // por lo mismo, y aquí ni siquiera hay paquete que reproducir: mandarlo
+    // cobraría trece módulos a quien marcó dos.
+    const codigos = lineas.map((l) => l.code)
+    for (const paquete of PAQUETES) {
+      expect(
+        codigos,
+        `«${paquete}» no lo eligió nadie: la selección no lo reproduce`,
+      ).not.toContain(paquete)
+    }
+
+    // Y nada más: 1 sede y 1 persona caben en lo incluido, así que no hay línea
+    // de capacidad. Sin esta cuenta, una línea de más pasaría desapercibida.
+    expect(lineas).toHaveLength(3)
+  })
+
+  test('cuando los módulos reproducen un paquete viaja el paquete, y ni una pieza suya', async ({
+    page,
+  }) => {
+    // El modelo híbrido (decisión D4): los paquetes llevan entre un 14 % y un
+    // 18 % de descuento sobre la suma de sus piezas, así que cotizar las piezas
+    // de una combinación que existe como paquete le subiría el precio al cliente
+    // en silencio. Quien lo decide es `paqueteQueCoincide`, LA MISMA función que
+    // compuso la cesta que se cotizó: dos criterios distintos —uno para cotizar y
+    // otro para contratar— enseñarían un precio y cobrarían otro.
+    const captura = await entrarConModulos(page, [...MODULOS_DEL_PAQUETE])
+    await confirmar(page, CONFIRMAR_SELECCION)
+
+    expect(captura.cuerpo?.lines).toEqual([{ code: 'PACK_CLINIC', quantity: 1 }])
+
+    // Explícito además de la igualdad de arriba: es la afirmación que se leería
+    // en el informe el día que alguien añada los componentes «para que el
+    // servidor sepa qué activar».
+    const codigos = (captura.cuerpo?.lines ?? []).map((l) => l.code)
+    for (const modulo of MODULOS_DEL_PAQUETE) {
+      expect(codigos, `«${modulo}» ya está dentro del precio de entrada del paquete`).not.toContain(
+        modulo,
+      )
+    }
+    expect(codigos).not.toContain('CORE')
+  })
+
+  test('conserva la semántica del paso, con el desglose que solo tiene esta rama', async ({
+    page,
+  }) => {
+    // `ELECTRONIC_INVOICING` es `NEVER_FREE` en el catálogo, y es el único
+    // artículo que hace aparecer la fila «Sin prueba · se cobra desde el primer
+    // día». Sin él, la instantánea no fotografiaría la distinción entre «no tiene
+    // prueba» y «su prueba acaba hoy», que es la promesa que la tabla existe para
+    // no hacer en falso.
+    await entrarConModulos(page, ['SCHEDULING', 'CASH_REGISTER', 'ELECTRONIC_INVOICING'])
+
+    await expect(page.getByTestId('paso-contratar')).toMatchAriaSnapshot({
+      name: 'contratar-paso6-modular.aria.yml',
+    })
   })
 })
 
@@ -727,6 +909,7 @@ test.describe('§5 caso 2 — se perdió la intención', () => {
     await enrutarApi(
       page,
       {
+        ...RUTAS_DEL_EMBUDO,
         '/companies/*': EMPRESA_RESPUESTA,
         '/subscriptions/current': suscripcionSegun('SIN_PLAN'),
       },
@@ -830,6 +1013,11 @@ test.describe('Recorrido de solo teclado', () => {
    * continuos y sin ratón, que es lo que la especificación pide comprobar.
    */
   test('tramo público: del enlace de salto hasta elegir plan en /planes', async ({ page }) => {
+    // Este tramo no pasa por `entrarAlPaso6`, así que se enruta aparte: la
+    // portada pide los tres endpoints públicos al montar y sin ellos no pinta ni
+    // una tarjeta, con lo que el fallo sería «no encuentro el enlace» en una
+    // pantalla que sí montó.
+    await enrutarEmbudoPublico(page)
     await page.goto('/')
 
     const salto = page.getByRole('link', { name: 'Saltar al contenido' })
@@ -837,31 +1025,31 @@ test.describe('Recorrido de solo teclado', () => {
     await page.keyboard.press('Enter')
     await expect(page.getByRole('main')).toBeFocused()
 
-    // Desde el contenido, atravesando la caja de arranque —que ahora es lo
-    // primero que se toca en el hero: `<textarea>`, tres ejemplos y el envío—,
-    // hasta su escape hacia los paquetes. Cada parada: visible, sin perder el
-    // foco y sin retroceder en el documento, que es lo que `tabularHasta`
-    // comprueba en cada tecla y lo que hace que este tramo valga.
+    // Desde el contenido, atravesando el cotizador —que es lo primero que se
+    // toca en el hero: `<textarea>`, las áreas plegables, los dos contadores y el
+    // envío—, hasta el CTA de la combinación recomendada. Cada parada: visible,
+    // sin perder el foco y sin retroceder en el documento, que es lo que
+    // `tabularHasta` comprueba en cada tecla y lo que hace que este tramo valga.
     //
-    // Ya no hace falta desambiguar por `href`: el rótulo «Ver los planes» estaba
-    // en el hero y en el cierre con destinos distintos, y se retiró de los dos.
-    const verPaquetes = page.getByRole('link', { name: 'Mira los tres paquetes ya armados.' })
-    await tabularHasta(page, verPaquetes)
-    await page.keyboard.press('Enter')
-    await expect(page.locator('#planes')).toBeFocused()
-
-    // Y desde la sección de planes, hasta el CTA de la tarjeta recomendada.
-    // `exact: true` NO es adorno: «Empezar con Pack Clínica» es PREFIJO de
-    // «Empezar con Pack Clínica completa», y el emparejamiento por nombre de rol
-    // es por subcadena. Sin esto el selector resuelve DOS enlaces y falla con
-    // «strict mode violation», que no señala a la causa.
-    const cta = page.getByRole('link', { name: 'Empezar con Pack Clínica', exact: true })
+    // El CTA se acota por TARJETA y no por rótulo: las tres dicen «Marcar estos
+    // módulos» a propósito —lo que las distingue es su `aria-describedby`— así
+    // que localizar por nombre resolvería tres enlaces y fallaría con «strict
+    // mode violation», que no señala a la causa.
+    const cta = page
+      .locator('#planes')
+      .getByTestId('plan-card')
+      .filter({ has: page.getByRole('heading', { level: 3, name: 'Pack Clínica', exact: true }) })
+      .getByRole('link')
     await tabularHasta(page, cta)
     await page.keyboard.press('Enter')
 
     await expect(page).toHaveURL(/\/planes\?plan=PACK_CLINIC/)
 
-    const continuar = page.getByRole('button', { name: /^Continuar con / })
+    const continuar = page.getByRole('button', { name: 'Continuar' })
+    // El botón lleva `aria-disabled` y NO `disabled`, para seguir siendo
+    // enfocable: pulsarlo antes de que llegue el catálogo es un clic que no hace
+    // nada, y el fallo se leería como «no navegó».
+    await expect(continuar).not.toHaveAttribute('aria-disabled', 'true')
     await tabularHasta(page, continuar)
     await page.keyboard.press('Enter')
     await expect(page).toHaveURL(/\/registro\?plan=PACK_CLINIC/)
@@ -888,8 +1076,14 @@ test.describe('Recorrido de solo teclado', () => {
   })
 })
 
-/** El `<h1>` de `/planes`, que es a donde salen TODAS las salidas del paso 6. */
-const TITULO_PLANES = 'Armemos lo que tu clínica necesita'
+/**
+ * El `<h1>` de `/planes`, que es a donde salen TODAS las salidas del paso 6.
+ *
+ * <p>Va en una constante y no repetido en los ocho casos que entran aquí porque
+ * ocho literales es exactamente como se queda uno sin cambiar, que es el mismo
+ * criterio de {@link TITULO_PASO6}.
+ */
+const TITULO_PLANES = 'Esto es lo que te armamos'
 
 /**
  * LOS CUATRO «CAMBIAR» DEL PASO VINCULANTE, PULSADOS.
@@ -948,6 +1142,54 @@ test.describe('Los cuatro «Cambiar» — pulsados, no fotografiados', () => {
       await expect(page.getByRole('spinbutton', { name: /personas|usuarios/i })).toHaveValue('1')
     })
   }
+
+  /**
+   * ⚠️ DESACTIVADO PORQUE DESCRIBE UN DEFECTO ABIERTO, no porque sea inestable.
+   * https://github.com/kefaroTech/vetsoftware-public-web/issues/298
+   *
+   * <p>Lo que afirma es lo correcto y hoy NO se cumple: la vuelta descarta los
+   * módulos marcados y siembra los del paquete recomendado, así que quien pulsa
+   * «Cambiar» acaba comprando `PACK_CLINIC` a 189.000 en vez de núcleo + dos
+   * módulos a 140.000. Medido: la intención vuelve con los cuatro códigos del
+   * paquete en vez de los dos que se sembraron.
+   *
+   * <p>Se queda escrito y no se borra: es el criterio de cierre de #298 —quitarle
+   * el `fixme` es la comprobación— y es la otra mitad de §3.3.4 «corregir», la que
+   * la rama del paquete no puede cubrir porque allí la consulta sí lleva código.
+   */
+  test.fixme('«Cambiar» desde una selección MODULAR vuelve con los módulos que se eligieron', async ({
+    page,
+  }) => {
+    const modulos = ['SCHEDULING', 'CASH_REGISTER']
+    await entrarAlPaso6(
+      page,
+      intencionDeModulos(
+        modulos,
+        subtotalDeSeleccion({ modulos, sedes: 1, usuarios: 1 }, 'MENSUAL'),
+      ),
+    )
+
+    await page
+      .getByTestId('paso-contratar')
+      .getByRole('link', { name: 'Cambiar el número de sedes', exact: true })
+      .click()
+    await expect(page.getByRole('heading', { level: 1, name: TITULO_PLANES })).toBeVisible()
+
+    // Se afirma sobre la intención y no sobre las casillas: lo que se guarda es
+    // exactamente lo que va a viajar en la oferta del paso vinculante, así que
+    // una casilla bien pintada sobre una intención mal guardada seguiría siendo
+    // una compra distinta de la que el prospecto ve.
+    const continuar = page.getByRole('button', { name: 'Continuar' })
+    await expect(continuar).not.toHaveAttribute('aria-disabled', 'true')
+    await continuar.click()
+    await expect(page.getByRole('heading', { level: 1, name: TITULO_PASO6 })).toBeVisible()
+
+    const guardada = await leerIntencion(page)
+    expect(
+      exigir(guardada, 'guardada').modulos.slice().sort(),
+      'volver a corregir no puede cambiar lo que se compra',
+    ).toEqual([...modulos].sort())
+  })
 })
 
 /**
@@ -966,12 +1208,12 @@ test.describe('/planes con sesión — las tres ramas del guard', () => {
     await enrutarApi(
       page,
       {
+        // `/planes` pide los tres al montar y sin ellos no pinta ni una casilla:
+        // el fallo sería un banner de error que no tiene nada que ver con lo que
+        // estos casos comprueban, y no señalaría a la causa.
+        ...RUTAS_DEL_EMBUDO,
         '/companies/*': EMPRESA_RESPUESTA,
         '/subscriptions/current': suscripcionSegun(estado),
-        // El asistente vive en esta pantalla y pide el catálogo al montar. Sin
-        // esto cae en el comodín, pinta un banner de error que no tiene nada que
-        // ver con lo que estos casos comprueban, y el fallo no señala a la causa.
-        '/catalog*': (route: Route) => responderJson(route, CATALOGO),
         '/quotes/self-serve': (route: Route) => {
           captura.llamadas += 1
           captura.cuerpo = route.request().postDataJSON() as CuerpoEnviado
@@ -1043,7 +1285,9 @@ test.describe('/planes con sesión — las tres ramas del guard', () => {
       '?plan=PACK_CLINIC&ciclo=MENSUAL&sedes=1&usuarios=1',
     )
 
-    await page.getByRole('button', { name: /^Continuar con / }).click()
+    const continuar = page.getByRole('button', { name: 'Continuar' })
+    await expect(continuar).not.toHaveAttribute('aria-disabled', 'true')
+    await continuar.click()
 
     // NO a `/registro`: ya tiene cuenta. Esta es la afirmación que separa el
     // arreglo completo de una versión que solo hubiera tocado el guard.
@@ -1100,9 +1344,9 @@ test.describe('§5 caso 2b — la propuesta a medida que no se puede pintar', ()
     await enrutarApi(
       page,
       {
+        ...RUTAS_DEL_EMBUDO,
         '/companies/*': EMPRESA_RESPUESTA,
         '/subscriptions/current': suscripcionSegun('SIN_PLAN'),
-        '/catalog*': (route: Route) => responderJson(route, CATALOGO),
         // 404: «no existe» y «caducó» colapsados a propósito por el servidor,
         // para no ser un oráculo de tokens.
         '/assistant/proposal*': (route: Route) => {

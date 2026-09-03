@@ -4,8 +4,14 @@ import {
   lineasDePrueba,
   pruebaUniforme,
 } from '@/features/contratacion/api/contratacion.source'
+import type { FuenteDeLineas } from '@/features/contratacion/api/contratacion.source'
+import {
+  cestaDeCotizacion,
+  modulosDelPaquete,
+} from '@/features/landing/composables/cotizadorLineas'
 import { PLANS_CONTENT } from '@/features/landing/content/plans.content'
 import type { PublicPlan } from '@/features/landing/types/plans.types'
+import { PACK_BARRIO, catalogoEmbudo } from '../helpers/catalogo-embudo'
 import { exigir } from '../helpers/exigir'
 
 /**
@@ -16,6 +22,13 @@ import { exigir } from '../helpers/exigir'
  * justo donde se manifestaba el defecto de los códigos, porque
  * `lineasDeContratacion` manda el `code` del plan al servidor tal cual.
  */
+
+function paquete(p: PublicPlan): FuenteDeLineas {
+  return { clase: 'PAQUETE', plan: p }
+}
+
+const CATALOGO = catalogoEmbudo()
+const MODULOS: FuenteDeLineas = { clase: 'MODULOS', catalogo: CATALOGO }
 
 function plan(code: string): PublicPlan {
   const encontrado = PLANS_CONTENT.plans.find((p) => p.code === code)
@@ -30,7 +43,7 @@ describe('lineasDeContratacion · lo que de verdad viaja en la oferta', () => {
     // se rechazaba con «Unknown or unavailable catalog item code» después de que
     // el prospecto ya se hubiera registrado.
     for (const p of PLANS_CONTENT.plans) {
-      const lineas = lineasDeContratacion(p, { sedes: 1, usuarios: 1 })
+      const lineas = lineasDeContratacion({ modulos: [], sedes: 1, usuarios: 1 }, paquete(p))
       expect(lineas[0], `la primera línea de «${p.code}»`).toEqual({ code: p.code, quantity: 1 })
       expect(p.code).toMatch(/^PACK_/)
     }
@@ -50,7 +63,7 @@ describe('lineasDeContratacion · lo que de verdad viaja en la oferta', () => {
       "p.capacities.find((c) => c.unit === 'USER')",
     ).included
 
-    expect(lineasDeContratacion(p, { sedes, usuarios })).toEqual([
+    expect(lineasDeContratacion({ modulos: [], sedes, usuarios }, paquete(p))).toEqual([
       { code: 'PACK_CLINIC', quantity: 1 },
     ])
   })
@@ -70,7 +83,9 @@ describe('lineasDeContratacion · lo que de verdad viaja en la oferta', () => {
         "p.capacities.find((c) => c.unit === 'USER')",
       ).included + 2
 
-    const codigos = lineasDeContratacion(p, { sedes, usuarios }).map((l) => l.code)
+    const codigos = lineasDeContratacion({ modulos: [], sedes, usuarios }, paquete(p)).map(
+      (l) => l.code,
+    )
     expect(codigos).toContain('EXTRA_USER')
     expect(codigos).toContain('EXTRA_BRANCH')
     expect(codigos).not.toContain('USER')
@@ -103,7 +118,10 @@ describe('lineasDeContratacion · lo que de verdad viaja en la oferta', () => {
     const sedes = incluidasSedes + 3
 
     const porCodigo = new Map(
-      lineasDeContratacion(p, { sedes, usuarios }).map((l) => [l.code, l.quantity]),
+      lineasDeContratacion({ modulos: [], sedes, usuarios }, paquete(p)).map((l) => [
+        l.code,
+        l.quantity,
+      ]),
     )
 
     expect(porCodigo.get('EXTRA_USER'), 'lo contratado, no lo extra').toBe(usuarios)
@@ -134,7 +152,9 @@ describe('lineasDeContratacion · lo que de verdad viaja en la oferta', () => {
       const sedes = (capacidades.find((c) => c.unit === 'BRANCH')?.included ?? 0) + 5
       const usuarios = (capacidades.find((c) => c.unit === 'USER')?.included ?? 0) + 5
 
-      const codigos = lineasDeContratacion(p, { sedes, usuarios }).map((l) => l.code)
+      const codigos = lineasDeContratacion({ modulos: [], sedes, usuarios }, paquete(p)).map(
+        (l) => l.code,
+      )
       const modulos = p.includes.map((i) => i.code)
 
       expect(p.includes.length, `«${p.code}» debería traer módulos`).toBeGreaterThan(0)
@@ -147,6 +167,102 @@ describe('lineasDeContratacion · lo que de verdad viaja en la oferta', () => {
       // Y no hay ninguna línea de más: paquete + los dos ejes que la pantalla
       // pregunta, y nada más. Un `code` inesperado tumbaría la oferta entera.
       expect([...codigos].sort()).toEqual([p.code, 'EXTRA_BRANCH', 'EXTRA_USER'].sort())
+    }
+  })
+})
+
+describe('lineasDeContratacion · la rama de los módulos sueltos', () => {
+  it('sin paquete, cada módulo marcado viaja como línea propia junto al núcleo', () => {
+    // Es la inversión exacta de la regla de la rama del paquete, y tiene que
+    // serlo: sin un paquete que los contenga, no mandar los módulos contrataría
+    // un núcleo pelado cobrando lo que el prospecto vio por su selección.
+    const lineas = lineasDeContratacion(
+      { modulos: ['CASH_REGISTER'], sedes: 1, usuarios: 1 },
+      MODULOS,
+    )
+
+    expect(lineas).toContainEqual({ code: 'CORE', quantity: 1 })
+    expect(lineas).toContainEqual({ code: 'CASH_REGISTER', quantity: 1 })
+    // Y ni un módulo que nadie marcó: cada línea es una afirmación sobre lo que
+    // la clínica compra.
+    expect(lineas.map((l) => l.code)).not.toContain('SCHEDULING')
+  })
+
+  it('solo el núcleo es una compra válida, no una cesta vacía', () => {
+    expect(lineasDeContratacion({ modulos: [], sedes: 1, usuarios: 1 }, MODULOS)).toEqual([
+      { code: 'CORE', quantity: 1 },
+    ])
+  })
+
+  it('cuando la selección reproduce un paquete, vuelve a viajar la línea de PAQUETE', () => {
+    // El modelo híbrido (decisión D4): los paquetes sembrados llevan entre un
+    // 14 % y un 18 % de descuento sobre la suma de sus piezas, así que cotizar
+    // las piezas de una combinación que existe como paquete le subiría el precio
+    // al cliente en silencio.
+    const modulos = modulosDelPaquete(PACK_BARRIO, CATALOGO)
+    const lineas = lineasDeContratacion({ modulos, sedes: 1, usuarios: 1 }, MODULOS)
+
+    expect(lineas).toContainEqual({ code: PACK_BARRIO.code, quantity: 1 })
+  })
+
+  /**
+   * La regla que el docblock de `lineasDeContratacion` protege en las DOS
+   * ramas, y la única que no se puede perder al abrir la modular: un paquete
+   * junto a un componente suyo son dos cobros por lo mismo, y el servidor los
+   * rechaza con un 400 cuyo cuerpo no dice cuál línea sobró.
+   */
+  it('nunca manda un paquete y una pieza suya en la misma cesta', () => {
+    const modulos = modulosDelPaquete(PACK_BARRIO, CATALOGO)
+    const codigos = lineasDeContratacion({ modulos, sedes: 1, usuarios: 1 }, MODULOS).map(
+      (l) => l.code,
+    )
+
+    expect(modulos.length, 'el paquete de prueba debería traer módulos').toBeGreaterThan(0)
+    expect(codigos).toContain(PACK_BARRIO.code)
+    for (const modulo of [...modulos, 'CORE']) {
+      expect(
+        codigos,
+        `«${modulo}» cuelga de ${PACK_BARRIO.code} y se cobraría dos veces`,
+      ).not.toContain(modulo)
+    }
+  })
+
+  it('la capacidad viaja con las unidades que PASAN de lo incluido, no con el total', () => {
+    // Y no contradice la regla de la rama del paquete: son dos artículos. El
+    // `EXTRA_*` tiene `included_quantity = 0` —lo incluido vive en el
+    // `CAPACITY_*` del mismo eje—, así que el servidor cobra todas las unidades
+    // que reciba en esa línea. Ver `unidadesExtra`.
+    const porCodigo = new Map(
+      lineasDeContratacion({ modulos: [], sedes: 1, usuarios: 5 }, MODULOS).map((l) => [
+        l.code,
+        l.quantity,
+      ]),
+    )
+
+    // El catálogo de prueba incluye 1 usuario en el `CAPACITY_USER` y el núcleo
+    // contrata uno más: dos incluidos, así que de cinco se cobran tres.
+    expect(porCodigo.get('EXTRA_USER')).toBe(3)
+    expect(porCodigo.get('EXTRA_USER')).not.toBe(5)
+    // Una sede, que es justo lo incluido: no viaja ninguna línea.
+    expect(porCodigo.has('EXTRA_BRANCH')).toBe(false)
+  })
+
+  /**
+   * La condición de la que depende que la pantalla y la factura digan lo mismo.
+   * Si alguien reimplementara aquí las reglas de la cesta «con el mismo
+   * criterio» en vez de llamar a la misma función, el día que una de las dos
+   * cambie el prospecto vería un precio y se le cobraría otro — y nada se
+   * pondría rojo.
+   */
+  it('la cesta que se contrata es EXACTAMENTE la que se cotizó', () => {
+    for (const seleccion of [
+      { modulos: [], sedes: 1, usuarios: 1 },
+      { modulos: ['CASH_REGISTER', 'INVOICING'], sedes: 2, usuarios: 7 },
+      { modulos: modulosDelPaquete(PACK_BARRIO, CATALOGO), sedes: 1, usuarios: 1 },
+    ]) {
+      expect(lineasDeContratacion(seleccion, MODULOS)).toEqual(
+        cestaDeCotizacion(seleccion, CATALOGO).lineas,
+      )
     }
   })
 })

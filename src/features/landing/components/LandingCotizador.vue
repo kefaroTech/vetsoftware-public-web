@@ -1,62 +1,74 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, useId, useTemplateRef } from 'vue'
+import { computed, ref, useId, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAsistente } from '@/features/asistente/composables/useAsistente'
 import {
-  EJEMPLOS_COTIZADOR,
   ERROR_TEXTO_CORTO,
   MAX_DESCRIPCION,
   MIN_DESCRIPCION,
 } from '@/features/asistente/content/copy.content'
-import { irAAncla } from '../composables/anclaConFoco'
+import BloquePrecioVivo from './BloquePrecioVivo.vue'
+import ContadorCantidad from './ContadorCantidad.vue'
+import LandingSelectorModulos from './LandingSelectorModulos.vue'
+import { incluidasDelEje } from '../composables/cotizadorLineas'
+import type { useCotizador } from '../composables/useCotizador'
 
 /**
- * La caja de arranque del hero: lo primero que un prospecto puede tocar.
+ * La tarjeta del hero: se describe la clínica, se marcan módulos y sale un precio.
  *
- * ── Qué es y, sobre todo, qué NO es ─────────────────────────────────────────
- * Es un campo que **siembra el store y navega**. No llama a ninguna API, no pide
- * correo, no pide consentimiento y no genera propuesta. Las tres cosas tienen el
- * mismo motivo y ninguno es de simplicidad:
- *
- *  · **Legal.** El texto libre viaja a un encargado en EE. UU., y eso exige dos
- *    autorizaciones separadas (Ley 1581, art. 9 y art. 26 lit. a) que ya están
- *    implementadas y razonadas en `AsistenteEntrada`. Duplicarlas aquí sería un
- *    muro de consentimiento sobre el primer pliegue; **no duplicarlas y enviar
- *    sería ilegal.** Por eso el texto no sale del navegador hasta `/planes`.
- *  · **Conversión.** Pedir el correo antes de que el prospecto haya escrito una
- *    palabra convierte la pantalla en un muro de captura de lead.
- *  · **Arquitectura.** El embudo tiene **una sola URL** para el paso 2. Esto no
- *    es una segunda pantalla del asistente: es su pórtico.
- *
- * ── Formulario, no conversación ─────────────────────────────────────────────
- * Etiqueta visible, ayuda, `<textarea>` y botón de envío. Nada de burbujas ni de
- * preguntas encadenadas: en el ensayo comparado de formularios digitales el
- * formato conversacional quedó último en usabilidad y cuadruplicó los errores.
- * Lo único que se toma del mundo conversacional es la caja de texto libre como
- * puerta principal.
+ * ── Qué sale del navegador y qué no ─────────────────────────────────────────
+ * El `<textarea>` **no sale**. Viaja a un encargado en EE. UU. y eso exige dos
+ * autorizaciones separadas (Ley 1581, art. 9 y art. 26 lit. a) que ya están
+ * implementadas y razonadas en `AsistenteEntrada`; duplicarlas aquí sería un muro
+ * de consentimiento sobre el primer pliegue, y no duplicarlas y enviar sería
+ * ilegal. Lo que sí viaja a `/quotes/preview` son códigos de módulo y dos
+ * cantidades, que no son dato personal.
  *
  * ── Validación: al enviar, y NUNCA al `blur` ────────────────────────────────
  * Es una desviación consciente de la convención `@blur` del repositorio, y está
  * forzada por el sitio: en una caja del primer pliegue el `blur` ocurre
  * constantemente —el usuario mira la página— y marcaría el campo como tocado sin
- * que haya intentado nada. Un error rojo por haber mirado hacia abajo es la
- * forma más rápida de perder a quien todavía no había decidido escribir.
+ * que haya intentado nada.
  *
  * ── La caja vacía NO es un error ────────────────────────────────────────────
  * Vacío + enviar navega igual, sin queja. El hero no puede ser una puerta
  * cerrada: quien solo mira debe poder avanzar, y el mismo campo —más grande y
  * con su contexto— le espera en el destino. El error solo aparece cuando **lo
- * intentó** y se quedó corto, porque ahí arreglarlo cuesta un segundo y hacerlo
- * tras una navegación sería una regañina en otra pantalla.
+ * intentó** y se quedó corto.
  */
+const props = defineProps<{ cotizador: ReturnType<typeof useCotizador> }>()
+
+const {
+  catalogo,
+  modulos,
+  sedes,
+  usuarios,
+  ciclo,
+  estado,
+  lento,
+  importe,
+  mensajeDeFallo,
+  regionViva,
+  saltoDePaquete,
+  alternarModulo,
+  volverAlPaquete,
+} = props.cotizador
+
 const { texto } = useAsistente()
 const router = useRouter()
+
+const EJEMPLO_SEMBRADO =
+  'Somos una clínica de barrio: consulta general, vacunación y algo de estética los sábados. ' +
+  'Dos personas en mostrador y una sola sede.'
+
+// Solo sobre un campo vacío: quien vuelve de `/planes` trae su propio relato, y
+// pisarlo con el ejemplo destruiría lo más caro que hay en esta pantalla.
+if (!texto.value.trim()) texto.value = EJEMPLO_SEMBRADO
 
 const uid = useId()
 const idTexto = `${uid}-texto`
 const idAyuda = `${uid}-ayuda`
 const idError = `${uid}-error`
-const idEjemplos = `${uid}-ejemplos`
 
 const campo = useTemplateRef<HTMLTextAreaElement>('campo')
 
@@ -66,10 +78,27 @@ const enviado = ref(false)
 const error = computed(() => {
   if (!enviado.value) return null
   const limpio = texto.value.trim()
-  // Vacío NO es error, y esa es la decisión entera de este componente.
+  // Vacío NO es error, y esa es una decisión entera de este componente.
   if (limpio.length === 0 || limpio.length >= MIN_DESCRIPCION) return null
   return ERROR_TEXTO_CORTO
 })
+
+const vendibles = computed(
+  () => catalogo.value?.articulos.filter((a) => !a.obligatorio && a.vendible).length ?? 0,
+)
+
+/** Se calla el conteo mientras el catálogo no ha llegado: «los otros 0» miente. */
+const resto = computed(() =>
+  vendibles.value > 0 ? `los otros ${vendibles.value} módulos` : 'los demás módulos',
+)
+
+const sedesIncluidas = computed(() =>
+  catalogo.value ? incluidasDelEje(catalogo.value, 'BRANCH') : null,
+)
+
+const personasIncluidas = computed(() =>
+  catalogo.value ? incluidasDelEje(catalogo.value, 'USER') : null,
+)
 
 function enviar(): void {
   enviado.value = true
@@ -79,60 +108,32 @@ function enviar(): void {
   }
   void router.push({ name: 'planes' })
 }
-
-/**
- * Un ejemplo pulsable: **rellena, no envía**.
- *
- * <p>Y **añade, no reemplaza.** El texto que el usuario ya tecleó es lo más caro
- * que hay en esta pantalla y no se destruye nunca; si el campo estaba vacío,
- * simplemente lo escribe. El foco salta al final del `<textarea>` porque es lo
- * que hace que un lector de pantalla anuncie el valor nuevo y que quien lo pulsó
- * pueda seguir escribiendo. Es un cambio de contexto provocado por una acción
- * explícita del usuario, así que no infringe §3.2.2.
- */
-function usar(ejemplo: string): void {
-  const actual = texto.value.trim()
-  texto.value = actual ? `${actual} ${ejemplo}` : ejemplo
-  void nextTick(() => {
-    const el = campo.value
-    if (!el) return
-    el.focus()
-    el.setSelectionRange(el.value.length, el.value.length)
-  })
-}
 </script>
 
 <template>
   <!-- `tabindex="-1"` para que los anclajes que apuntan aquí muevan el foco
-       además del scroll. Mismo patrón que `#planes`.
+       además del scroll. Mismo patrón que `#planes`. -->
+  <section id="cotizador" class="lcot" tabindex="-1" aria-labelledby="cotizador-h2">
+    <h2 id="cotizador-h2" class="lcot-h2">Arma tu plan y mira el precio</h2>
 
-       Y `aria-label`, que aquí no es adorno: un `<section>` SIN nombre accesible
-       no se expone como `region`. Dos enlaces traen el foco hasta aquí, y quien
-       seguía «Cuéntanos qué necesitas» aterrizaba en un contenedor mudo mientras
-       el camino simétrico —`#planes`, con su `aria-labelledby`— sí anunciaba el
-       suyo: el camino que la landing quiere destacar era el peor tratado.
+    <p class="lcot-encuadre pub-tinted">
+      Arma tu propio plan. <strong>Solo el núcleo es obligatorio</strong> — {{ resto }} los
+      enciendes uno a uno.
+    </p>
 
-       El nombre repite el rótulo del enlace que trae hasta aquí, para que lo que
-       se anuncia al llegar sea lo que se prometió al pulsar. Va como `aria-label`
-       y no como `aria-labelledby` al `<label>` del campo porque ese texto es el
-       nombre accesible del `<textarea>`: reusarlo haría que el lector leyera la
-       misma frase larga dos veces seguidas, primero como región y luego como
-       campo. -->
-  <section id="cotizador" class="lcot" tabindex="-1" aria-label="Cuéntanos qué necesitas">
     <form novalidate @submit.prevent="enviar">
-      <label :for="idTexto" class="lcot-label">
-        Cuéntanos qué hace tu veterinaria y te decimos qué necesitas.
-      </label>
+      <label :for="idTexto" class="lcot-label">Cuéntanos qué hace tu veterinaria</label>
       <!-- La ayuda va FUERA del `placeholder`: un placeholder desaparece al
            escribir y se lee como un valor ya introducido. -->
       <p :id="idAyuda" class="lcot-ayuda">
-        Una o dos frases bastan. Qué atiendes, qué vendes, cuántas sedes.
+        Está escrito un ejemplo: bórralo y cuéntanos lo tuyo. Si prefieres ir a lo concreto, abre el
+        área que te interese y marca lo que uses.
       </p>
       <textarea
         :id="idTexto"
         ref="campo"
         v-model="texto"
-        class="pub-campo"
+        class="pub-campo lcot-texto"
         :class="error ? 'ds-field-invalid' : 'pub-campo-rest'"
         rows="3"
         :maxlength="MAX_DESCRIPCION"
@@ -141,34 +142,68 @@ function usar(ejemplo: string): void {
       />
       <p v-if="error" :id="idError" class="lcot-error" role="alert">{{ error }}</p>
 
-      <p :id="idEjemplos" class="lcot-ejemplos-label">O empieza por aquí:</p>
-      <ul class="lcot-ejemplos" :aria-labelledby="idEjemplos">
-        <li v-for="ejemplo in EJEMPLOS_COTIZADOR" :key="ejemplo">
-          <button type="button" class="ds-btn ds-btn--ghost lcot-ejemplo" @click="usar(ejemplo)">
-            {{ ejemplo }}
-          </button>
-        </li>
-      </ul>
+      <LandingSelectorModulos
+        class="lcot-selector"
+        :catalogo="catalogo"
+        :modulos="modulos"
+        @alternar="alternarModulo"
+      />
 
-      <button type="submit" class="ds-btn ds-btn--primary lcot-enviar">Ver qué necesito</button>
-      <p class="lcot-tranquilidad">
-        Todavía no lo enviamos. En el siguiente paso lo revisas y decides.
+      <div class="lcot-cantidades">
+        <ContadorCantidad
+          v-model="sedes"
+          etiqueta="Sedes"
+          unidad-singular="sede"
+          unidad-plural="sedes"
+          :incluidas="sedesIncluidas"
+        />
+        <ContadorCantidad
+          v-model="usuarios"
+          etiqueta="Personas que lo usan"
+          unidad-singular="persona"
+          unidad-plural="personas"
+          :incluidas="personasIncluidas"
+        />
+      </div>
+
+      <BloquePrecioVivo
+        class="lcot-precio"
+        :catalogo="catalogo"
+        :modulos="modulos"
+        :sedes="sedes"
+        :usuarios="usuarios"
+        :ciclo="ciclo"
+        :estado="estado"
+        :lento="lento"
+        :importe="importe"
+        :mensaje-de-fallo="mensajeDeFallo"
+        :region-viva="regionViva"
+        :salto-de-paquete="saltoDePaquete"
+        @volver-al-paquete="volverAlPaquete"
+      />
+
+      <button type="submit" class="ds-btn ds-btn--primary lcot-enviar">
+        Ver mi propuesta y las fechas de prueba
+      </button>
+      <p class="lcot-pie">
+        Prueba gratis, sin tarjeta. Precio orientativo en pesos colombianos: el exacto lo ves antes
+        de confirmar.
       </p>
     </form>
-
-    <p class="lcot-alterna">
-      ¿Prefieres no escribir?
-      <a href="#planes" class="pub-enlace" @click="irAAncla('planes', $event)"
-        >Mira los tres paquetes ya armados.</a
-      >
-    </p>
   </section>
 </template>
 
 <style scoped>
+/* Un formulario NO se centra: la tarjeta va alineada a la izquierda dentro del
+   hero centrado. Lo único centrado por dentro es el pie. */
 .lcot {
   max-inline-size: 560px;
-  margin: 30px auto 0;
+  margin: 34px auto 0;
+  padding: 26px;
+  border: 1px solid var(--pub-line-strong);
+  border-radius: 18px;
+  background: var(--pub-surface);
+  box-shadow: var(--pub-card-shadow);
   text-align: start;
 }
 
@@ -176,19 +211,40 @@ function usar(ejemplo: string): void {
   outline: none;
 }
 
+.lcot-h2 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--pub-ink-900);
+}
+
+.lcot-encuadre {
+  margin: 0 0 16px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--pub-ink-600);
+}
+
+.lcot-encuadre strong {
+  color: var(--pub-ink-900);
+}
+
 .lcot-label {
   display: block;
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.3;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--pub-ink-900);
 }
 
 .lcot-ayuda {
-  margin: 6px 0 10px;
+  margin: 5px 0 12px;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--pub-ink-600);
+  color: var(--pub-ink-500);
+}
+
+.lcot-texto {
+  resize: vertical;
 }
 
 .lcot-error {
@@ -198,42 +254,43 @@ function usar(ejemplo: string): void {
   color: var(--pub-err-tx-2);
 }
 
-.lcot-ejemplos-label {
-  margin: 14px 0 8px;
-  font-size: 13px;
-  color: var(--pub-ink-600);
+.lcot-selector {
+  margin-block-start: 24px;
 }
 
-.lcot-ejemplos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.lcot-cantidades {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-block-start: 20px;
 }
 
-/* 44 px de alto: el listón de la landing, que se usa con el animal delante. */
-.lcot-ejemplo {
-  min-block-size: 44px;
+.lcot-precio {
+  margin-block-start: 20px;
 }
 
 .lcot-enviar {
   inline-size: 100%;
-  margin-block-start: 16px;
-  min-block-size: 48px;
+  margin-block-start: 18px;
+  min-block-size: 52px;
+  font-size: 15.5px;
 }
 
-.lcot-tranquilidad {
-  margin: 8px 0 0;
+.lcot-pie {
+  margin: 11px 0 0;
   font-size: 12.5px;
   line-height: 1.5;
-  color: var(--pub-ink-600);
+  color: var(--pub-ink-500);
+  text-align: center;
 }
 
-.lcot-alterna {
-  margin: 14px 0 0;
-  font-size: 13.5px;
-  color: var(--pub-ink-600);
+@media (width <= 600px) {
+  .lcot {
+    padding: 20px 16px;
+  }
+
+  .lcot-cantidades {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 </style>

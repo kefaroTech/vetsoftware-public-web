@@ -70,3 +70,13 @@ export function seRecorta(valor: unknown): boolean {
   const n = Math.trunc(Number(valor))
   return Number.isFinite(n) && n > MAX_CANTIDAD_LINEA
 }
+
+/**
+ * El aviso de que el número tecleado se recortó, con el límite DENTRO: un tope
+ * que no se nombra no se puede respetar.
+ *
+ * <p>Vive junto al límite que nombra por el mismo motivo que
+ * {@link MAX_CANTIDAD_LINEA_TXT}: un mensaje que cita un número distinto del que
+ * se aplica es peor que no citar ninguno.
+ */
+export const AVISO_TECHO = `Como máximo ${MAX_CANTIDAD_LINEA_TXT} por campo. Si tu grupo es más grande, escríbenos y lo cotizamos contigo.`

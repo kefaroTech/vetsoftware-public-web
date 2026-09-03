@@ -25,6 +25,7 @@ function intencion(over: Partial<IntencionPlan> = {}): IntencionPlan {
   return {
     origen: 'PLAN',
     planCode: 'PACK_CLINIC',
+    modulos: [],
     ciclo: 'MENSUAL',
     sedes: 1,
     usuarios: 1,
@@ -41,7 +42,7 @@ function escribirEspejo(valor: unknown): void {
 }
 
 /** El `planCode` de la intención vigente, o `undefined` si no la hay o no es de plan. */
-function planVigente(store: ReturnType<typeof useContratacionStore>): string | undefined {
+function planVigente(store: ReturnType<typeof useContratacionStore>): string | null | undefined {
   const i = store.vigente
   return i && i.origen === 'PLAN' ? i.planCode : undefined
 }
@@ -110,10 +111,53 @@ describe('lo que se lee del almacenamiento', () => {
     expect(store.intencion).toBeNull()
   })
 
-  it('una entrada sin plan no se acepta', () => {
-    escribirEspejo({ ...intencion(), planCode: '' })
+  it('la forma VIEJA sin `planCode` no se acepta: sin discriminador es basura', () => {
+    // Antes de que existiera `origen`, el `planCode` era la única señal de que
+    // esto era una intención y no un objeto cualquiera con un `ciclo` dentro.
+    // Esa forma sigue exigiéndolo.
+    const { origen: _origen, ...vieja } = intencion()
+    escribirEspejo({ ...vieja, planCode: '' })
     useContratacionStore().hidratar()
     expect(useContratacionStore().intencion).toBeNull()
+  })
+
+  it('una intención de PLAN sin `planCode` es una selección modular, y se acepta', () => {
+    // El defecto de #290 al revés: descartarla aquí dejaría sin reanudación a
+    // quien armó su selección módulo a módulo, que es justo el camino que el
+    // rediseño abrió. `planCode` nulo significa «no reproduce ningún paquete»,
+    // no «entrada corrupta».
+    escribirEspejo({
+      ...intencion(),
+      planCode: null,
+      modulos: ['SCHEDULING', 'CASH_REGISTER'],
+    })
+    const store = useContratacionStore()
+    store.hidratar()
+
+    const leida = store.intencion
+    expect(leida?.origen).toBe('PLAN')
+    expect(planVigente(store)).toBeNull()
+    expect(leida && leida.origen === 'PLAN' ? leida.modulos : null).toEqual([
+      'SCHEDULING',
+      'CASH_REGISTER',
+    ])
+  })
+
+  it('una intención escrita antes de que existiera `modulos` se migra a `[]`, no se descarta', () => {
+    // La clave sigue siendo `v1` justamente por esto: con `planCode` puesto,
+    // quien dice qué se contrata es el paquete, así que la intención vieja y la
+    // que este front escribe hoy para un paquete cerrado producen la MISMA
+    // oferta. Subir a `v2` habría tirado todas las intenciones vivas para no
+    // ganar nada, y quien eligió ayer y verificó su correo hoy se encontraría el
+    // selector otra vez.
+    const { modulos: _modulos, ...sinModulos } = intencion()
+    escribirEspejo(sinModulos)
+    const store = useContratacionStore()
+    store.hidratar()
+
+    expect(planVigente(store)).toBe('PACK_CLINIC')
+    const leida = store.intencion
+    expect(leida && leida.origen === 'PLAN' ? leida.modulos : null).toEqual([])
   })
 
   it('una entrada con un ciclo inventado tampoco', () => {
@@ -148,7 +192,11 @@ describe('lo que se lee del almacenamiento', () => {
 describe('descartar, limpiar y volver a elegir', () => {
   it('«ahora no» marca, no borra', () => {
     const store = useContratacionStore()
-    store.guardar({ planCode: 'PACK_CLINIC', ciclo: 'MENSUAL', sedes: 1, usuarios: 1 }, 179000, 'x')
+    store.guardar(
+      { planCode: 'PACK_CLINIC', modulos: [], ciclo: 'MENSUAL', sedes: 1, usuarios: 1 },
+      179000,
+      'x',
+    )
 
     store.descartar()
 
@@ -162,17 +210,29 @@ describe('descartar, limpiar y volver a elegir', () => {
 
   it('«empezar de nuevo» sí borra', () => {
     const store = useContratacionStore()
-    store.guardar({ planCode: 'PACK_CLINIC', ciclo: 'MENSUAL', sedes: 1, usuarios: 1 }, 179000, 'x')
+    store.guardar(
+      { planCode: 'PACK_CLINIC', modulos: [], ciclo: 'MENSUAL', sedes: 1, usuarios: 1 },
+      179000,
+      'x',
+    )
     store.limpiar()
     expect(leerEspejo()).toBeNull()
   })
 
   it('reescribir la selección la «desdescarta»', () => {
     const store = useContratacionStore()
-    store.guardar({ planCode: 'PACK_CLINIC', ciclo: 'MENSUAL', sedes: 1, usuarios: 1 }, 179000, 'x')
+    store.guardar(
+      { planCode: 'PACK_CLINIC', modulos: [], ciclo: 'MENSUAL', sedes: 1, usuarios: 1 },
+      179000,
+      'x',
+    )
     store.descartar()
 
-    store.guardar({ planCode: 'PACK_FULL', ciclo: 'ANUAL', sedes: 3, usuarios: 8 }, 329000, 'y')
+    store.guardar(
+      { planCode: 'PACK_FULL', modulos: [], ciclo: 'ANUAL', sedes: 3, usuarios: 8 },
+      329000,
+      'y',
+    )
 
     expect(planVigente(store)).toBe('PACK_FULL')
     expect(store.vigente?.descartada).toBe(false)
@@ -180,7 +240,11 @@ describe('descartar, limpiar y volver a elegir', () => {
 
   it('contratar descarta la intención, para que el guard no reabra el embudo', () => {
     const store = useContratacionStore()
-    store.guardar({ planCode: 'PACK_CLINIC', ciclo: 'MENSUAL', sedes: 1, usuarios: 1 }, 179000, 'x')
+    store.guardar(
+      { planCode: 'PACK_CLINIC', modulos: [], ciclo: 'MENSUAL', sedes: 1, usuarios: 1 },
+      179000,
+      'x',
+    )
 
     store.marcarContratada()
 
@@ -197,7 +261,11 @@ describe('el espejo sobrevive a que se vaya la pestaña', () => {
   it('`pagehide` vuelve a escribir lo que hay en memoria', () => {
     const store = useContratacionStore()
     store.hidratar()
-    store.guardar({ planCode: 'PACK_CLINIC', ciclo: 'MENSUAL', sedes: 2, usuarios: 5 }, 200000, 'x')
+    store.guardar(
+      { planCode: 'PACK_CLINIC', modulos: [], ciclo: 'MENSUAL', sedes: 2, usuarios: 5 },
+      200000,
+      'x',
+    )
 
     // Alguien (otra pestaña, una limpieza) se llevó el espejo por delante.
     window.localStorage.removeItem(CONTRATACION_INTENCION_KEY)
@@ -221,7 +289,11 @@ describe('almacenamiento bloqueado (modo privado)', () => {
     try {
       const store = useContratacionStore()
       expect(() =>
-        store.guardar({ planCode: 'PACK_CLINIC', ciclo: 'MENSUAL', sedes: 1, usuarios: 1 }, 1, 'x'),
+        store.guardar(
+          { planCode: 'PACK_CLINIC', modulos: [], ciclo: 'MENSUAL', sedes: 1, usuarios: 1 },
+          1,
+          'x',
+        ),
       ).not.toThrow()
       // Lo que se pierde es la reanudación, no la compra.
       expect(planVigente(store)).toBe('PACK_CLINIC')

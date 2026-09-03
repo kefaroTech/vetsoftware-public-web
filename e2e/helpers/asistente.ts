@@ -4,6 +4,8 @@ import type {
   AssistantProposalResponse,
 } from '../../src/features/asistente/types/asistente.types'
 import type { PublicCatalogResponse } from '../../src/features/asistente/types/catalogo.types'
+import { PLANS_CONTENT } from '../../src/features/landing/content/plans.content'
+import { cotizadorDe } from './catalogo'
 import { CLAVE_INTENCION } from './contratacion'
 import { responderJson } from './sesion'
 
@@ -290,6 +292,8 @@ export const CATALOGO: PublicCatalogResponse = {
       taxRate: null,
       taxTreatment: null,
       selfServiceEligible: true,
+      areaCode: null,
+      shortLabel: 'Núcleo',
     },
     {
       code: CODIGO_AGENDA,
@@ -303,6 +307,8 @@ export const CATALOGO: PublicCatalogResponse = {
       taxRate: null,
       taxTreatment: null,
       selfServiceEligible: true,
+      areaCode: 'PATIENT_CARE',
+      shortLabel: 'Agenda de citas',
     },
     {
       code: CODIGO_RECOMENDADO,
@@ -316,6 +322,8 @@ export const CATALOGO: PublicCatalogResponse = {
       taxRate: null,
       taxTreatment: null,
       selfServiceEligible: true,
+      areaCode: 'HOSPITAL',
+      shortLabel: 'Laboratorio',
     },
   ],
   capacities: [
@@ -337,6 +345,10 @@ export const CATALOGO: PublicCatalogResponse = {
   oneTimeItems: [],
   packs: [],
   requirements: [],
+  areas: [
+    { code: 'PATIENT_CARE', name: 'Atención a los pacientes' },
+    { code: 'HOSPITAL', name: 'Hospital y quirófano' },
+  ],
 }
 
 /** Clave del espejo de sesiones del seam. Ver `constants/storageKeys.ts`. */
@@ -507,6 +519,13 @@ export async function enrutarEmbudo(
   // así que un patrón sin comodín final no casa con `?ciclo=…` si algún día lo
   // lleva, y la petición caería en el comodín de 500 sin decir por qué.
   await page.route(`${API}/catalog*`, (route) => responderJson(route, CATALOGO))
+
+  // La portada y `/planes` piden además el catálogo de paquetes y la cotización:
+  // el precio del embudo lo calcula el servidor, no este front. Se cotiza contra
+  // `CATALOGO` —el que sirve la ruta de arriba— y no contra el del embudo, para
+  // que el desglose no nombre artículos que estas pantallas no tienen.
+  await page.route(`${API}/plans`, (route) => responderJson(route, PLANS_CONTENT))
+  await page.route(`${API}/quotes/preview`, cotizadorDe(CATALOGO))
 
   await page.route(`${API}/assistant/**`, (route) => {
     if (route.request().method() !== 'OPTIONS') {

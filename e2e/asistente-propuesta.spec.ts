@@ -113,9 +113,11 @@ async function contarleAlAsistente(page: Page): Promise<void> {
     .fill('Clínica veterinaria E2E de prueba: consultas, vacunación, baños y una sola sede.')
   await page.getByLabel('¿A qué correo te mandamos tu propuesta?').fill('e2e@vetsoftware.invalid')
 
-  // Dos casillas y ni una más: en `INICIAL` el catálogo manual todavía no está
-  // montado, así que las únicas casillas de la pantalla son las legales.
-  const consentimientos = page.getByRole('checkbox')
+  // Dos casillas y ni una más DENTRO del bloque de entrada. El alcance dejó de
+  // poder ser la página entera cuando `/planes` pasó a montar siempre el
+  // selector de módulos: sus casillas contarían aquí y el fallo diría «esperaba
+  // 2 y hay 3» sobre un consentimiento que está perfectamente.
+  const consentimientos = page.getByTestId('asistente-entrada').getByRole('checkbox')
   await expect(consentimientos).toHaveCount(2)
   // Arrancan las DOS desmarcadas. El silencio no autoriza, y una casilla premarcada
   // no es un consentimiento: es un valor por defecto disfrazado.
@@ -185,15 +187,23 @@ test.describe('El enlace del correo — la llegada', () => {
     await enrutarEmbudo(control, {})
     await control.goto('/')
     await expect(
-      control.getByRole('heading', { level: 2, name: 'Tres paquetes ya armados' }),
+      control.getByRole('heading', { level: 2, name: 'Combinaciones que se piden mucho' }),
     ).toBeVisible()
     const salida = await historial(control)
 
+    // El CTA de una tarjeta de combinación, que es hoy el único `RouterLink`
+    // corriente de la portada hacia `/planes`: los dos primeros enlaces de la
+    // barra superior dejaron de navegar cuando sus destinos pasaron a estar en
+    // esta misma página, y un ancla no empuja entrada de historial — que es
+    // justo lo que este control positivo necesita que ocurra.
     await control
-      .getByRole('navigation', { name: 'Principal' })
-      .getByRole('link', { name: 'Planes' })
+      .getByTestId('plan-card')
+      .filter({
+        has: control.getByRole('heading', { level: 3, name: 'Pack Clínica', exact: true }),
+      })
+      .getByRole('link')
       .click()
-    await expect(control).toHaveURL(/\/planes$/)
+    await expect(control).toHaveURL(/\/planes\?plan=PACK_CLINIC/)
     expect(await historial(control), 'el contador de historial no se mueve nunca').toBe(salida + 1)
 
     // Y el enlace del correo, que hace una navegación de la misma clase, NO mueve
@@ -310,7 +320,7 @@ test.describe('La banda de continuación de la landing', () => {
 
     await page.goto('/')
     await expect(
-      page.getByRole('heading', { level: 2, name: 'Tres paquetes ya armados' }),
+      page.getByRole('heading', { level: 2, name: 'Combinaciones que se piden mucho' }),
     ).toBeVisible()
 
     await expect(page.getByTestId('banda-continuacion')).toHaveCount(0)

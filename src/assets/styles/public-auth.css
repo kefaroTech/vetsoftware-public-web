@@ -16,6 +16,11 @@
   --pub-ink-700: #3d2e57;
   --pub-ink-600: #4a3d63;
   --pub-ink-500: #6b5b80;
+
+  /* SOLO ICONO, NUNCA TEXTO. Mide 4,05:1 sobre blanco: pasa el umbral de 3:1 de
+     §1.4.11 para un glifo no textual (el chevron del selector de módulos) y falla
+     el de 4,5:1 de §1.4.3 para cualquier texto. Para texto apagado va
+     `--pub-ink-500` (6,12:1 sobre blanco, 5,65:1 sobre `--pub-tint-mute`). */
   --pub-ink-400: #8578a0;
   --pub-ink-300: #a89bbd;
   --pub-line: #ece5f4;
@@ -26,6 +31,16 @@
      que ninguna auditoría de contraste lo veía. Mismo valor exacto: cero cambio visual. */
   --pub-line-strong: #e6ddf0;
   --pub-surface: #fff;
+
+  /* Los cinco tintes del embudo. Estaban escritos a pelo en el prototipo y el
+     rediseño los usa en más de tres sitios cada uno: sin token, ninguna
+     auditoría de contraste los ve. Mismo argumento con el que nació
+     `--pub-line-strong`, y mismos valores exactos: cero cambio visual. */
+  --pub-tint-50: #f9f4fe;
+  --pub-tint-100: #f3e8ff;
+  --pub-tint-bd: #efe2fc;
+  --pub-tint-sep: #f4eefb;
+  --pub-tint-mute: #f7f5fa;
 
   /* `--pub-err-tx: #dc2626` se retira: medía 4,41:1 sobre `--pub-err-bg` y fallaba
      §1.4.3 AA para texto normal. Sus dos últimos consumidores (`RestablecerContrasenaView`,
@@ -680,4 +695,103 @@
   margin: 0.375rem 0 0;
   font-size: 0.8125rem;
   color: var(--pub-err-tx-2);
+}
+
+/* ===========================================================================
+   EMBUDO PÚBLICO — las piezas que se repiten en el cotizador de la portada y
+   en las cuatro pantallas del embudo.
+
+   Viven aquí y no en un `<style scoped>` porque `scripts/css-budget.mjs`
+   rechaza el árbol entero cuando un cuerpo de dos o más declaraciones aparece
+   idéntico en cuatro SFC (`maxDuplicateBodies: 3`, `maxDuplicateGroups: 0`), y
+   normaliza antes de comparar: renombrar la clase no evita el rojo. Cada una de
+   estas caía en cuatro sitios o más.
+   =========================================================================== */
+
+/* La caja lila: fila del núcleo, bloque de precio, primer cobro, resumen. */
+.pub-tinted {
+  padding: 14px;
+  border-radius: 11px;
+  background: var(--pub-tint-50);
+  border: 1px solid var(--pub-tint-bd);
+}
+
+.pub-row-split {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--pub-tint-sep);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Los dos tonos apagados de `.pub-badge`. La base es la pastilla morada llena
+   de «La que más eligen»; estos dos son la insignia de conteo, que acompaña a
+   un texto y no debe competir con él.
+
+   `--pub-ink-500` sobre `--pub-tint-mute` mide 5,65:1. El `#8578a0` del diseño
+   medía 3,74:1 sobre ese mismo fondo y fallaba §1.4.3 AA. */
+.pub-badge--on {
+  padding: 5px 11px;
+  background: var(--pub-tint-100);
+  color: var(--pub-ame-800);
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.pub-badge--off {
+  padding: 5px 11px;
+  background: var(--pub-tint-mute);
+  color: var(--pub-ink-500);
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+/* Toda cifra grande del embudo. `tabular-nums` para que el importe no baile de
+   ancho mientras se recalcula. */
+.pub-num {
+  font-family: 'Instrument Serif', serif;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.pub-card-t {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pub-ink-900);
+}
+
+.pub-card-sub {
+  margin: 5px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--pub-ink-500);
+}
+
+/* ===========================================================================
+   EL ANILLO DE FOCO DE LA ZONA PÚBLICA — declarado UNA vez.
+
+   Ningún SFC del embudo escribe un `outline` propio: con siete controles
+   nuevos repartidos en cuatro pantallas, un anillo por componente es un anillo
+   que en algún sitio se queda sin escribir.
+
+   `--pub-ame-600` mide 5,38:1 sobre blanco y 4,56:1 sobre el más oscuro de los
+   fondos claros de estas pantallas (`--pub-tint-100`), así que §1.4.11 y
+   §2.4.11 se cumplen en todos ellos. Sobre un fondo de acento NO: el mismo
+   morado sobre `--pub-ame-700` mide 1,30:1 y el anillo desaparece. Por eso el
+   modificador invierte los tonos —anillo blanco por dentro (6,98:1 sobre
+   `--pub-ame-700`) y halo morado por fuera— en vez de subir el grosor.
+   =========================================================================== */
+.pub-focus-ring:focus-visible {
+  outline: 2px solid var(--pub-ame-600);
+  outline-offset: 2px;
+}
+
+.pub-focus-ring--on-accent:focus-visible {
+  outline: 2px solid var(--pub-surface);
+  outline-offset: -4px;
+  box-shadow: 0 0 0 4px var(--pub-ame-600);
 }

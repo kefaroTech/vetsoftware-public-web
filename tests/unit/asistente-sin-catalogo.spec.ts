@@ -69,6 +69,7 @@ const CATALOGO_VACIO: PublicCatalogResponse = {
   oneTimeItems: [],
   packs: [],
   requirements: [],
+  areas: [],
 }
 
 const CATALOGO_CON_MODULO: PublicCatalogResponse = {
@@ -87,8 +88,11 @@ const CATALOGO_CON_MODULO: PublicCatalogResponse = {
       taxRate: 19,
       taxTreatment: null,
       selfServiceEligible: true,
+      areaCode: 'PATIENT_CARE',
+      shortLabel: 'Historia clínica',
     },
   ],
+  areas: [{ code: 'PATIENT_CARE', name: 'Atención a los pacientes' }],
 }
 
 /** El cuerpo del asistente sin tarifa: token nulo y el rótulo nuevo. */
@@ -119,6 +123,8 @@ const ARTICULO: ArticuloCatalogo = {
   trialDays: null,
   obligatorio: false,
   vendible: true,
+  areaCode: 'PATIENT_CARE',
+  shortLabel: 'Historia clínica',
 }
 
 function catalogo(articulos: ArticuloCatalogo[]): CatalogoComercial {
@@ -129,6 +135,7 @@ function catalogo(articulos: ArticuloCatalogo[]): CatalogoComercial {
     capacidades: [],
     paquetes: [],
     arcos: [],
+    areas: [],
   }
 }
 

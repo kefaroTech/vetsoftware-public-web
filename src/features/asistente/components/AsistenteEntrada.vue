@@ -223,7 +223,10 @@ function enviar(): void {
 </script>
 
 <template>
-  <div class="aen">
+  <!-- El ancla con la que se acotan las dos casillas legales de este bloque:
+       `/planes` monta además el selector de módulos, así que contarlas en toda
+       la pantalla cuenta también las casillas del catálogo. -->
+  <div class="aen" data-testid="asistente-entrada">
     <ErrorSummary ref="resumen" :items="itemsResumen" />
 
     <h2 class="aen-h2">Cuéntanos qué hace tu veterinaria</h2>

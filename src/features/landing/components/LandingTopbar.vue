@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { PawPrint } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
+import { irAAncla } from '../composables/anclaConFoco'
 
 /**
  * Barra superior de la landing: marca + navegación.
@@ -10,6 +11,10 @@ import { RouterLink } from 'vue-router'
  * concatenación de todo lo que lleva dentro, y así es como un lector de pantalla
  * acaba anunciando un párrafo completo como si fuera el rótulo del botón — que
  * es justo el defecto que traía la landing anterior.
+ *
+ * <p>Los dos primeros enlaces son anclas de ESTA página, no rutas: sus dos
+ * destinos están debajo, y hacerlos navegar costaría una carga entera para
+ * llegar a una sección que el visitante ya tiene delante.
  */
 </script>
 
@@ -23,9 +28,11 @@ import { RouterLink } from 'vue-router'
     </RouterLink>
 
     <nav class="land-nav" aria-label="Principal">
-      <RouterLink :to="{ name: 'planes' }" class="land-nav-link">Planes</RouterLink>
+      <a href="#planes" class="land-nav-link" @click="irAAncla('planes', $event)">Paquetes</a>
+      <a href="#preguntas" class="land-nav-link" @click="irAAncla('preguntas', $event)">
+        Preguntas
+      </a>
       <RouterLink :to="{ name: 'login' }" class="land-nav-link">Iniciar sesión</RouterLink>
-      <RouterLink :to="{ name: 'signup' }" class="land-nav-cta">Crear cuenta</RouterLink>
     </nav>
   </header>
 </template>
@@ -74,8 +81,7 @@ import { RouterLink } from 'vue-router'
 }
 
 /* §2.5.8 Target Size (Minimum): 24×24 px CSS es el suelo de todo control. */
-.land-nav-link,
-.land-nav-cta {
+.land-nav-link {
   display: inline-flex;
   align-items: center;
   min-height: 40px;
@@ -84,19 +90,10 @@ import { RouterLink } from 'vue-router'
   font-size: 13.5px;
   font-weight: 600;
   text-decoration: none;
-}
-
-.land-nav-link {
   color: var(--pub-ink-700);
 }
 
 .land-nav-link:hover {
   color: var(--pub-ame-700);
-}
-
-.land-nav-cta {
-  color: var(--pub-surface);
-  background: linear-gradient(180deg, var(--pub-ame-600), var(--pub-ame-700));
-  box-shadow: var(--pub-btn-shadow);
 }
 </style>

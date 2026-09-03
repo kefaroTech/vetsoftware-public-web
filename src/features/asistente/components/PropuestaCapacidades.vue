@@ -11,12 +11,10 @@ import type { CapacidadPropuesta } from '../types/asistente.types'
  * Sedes y personas: **dato, no línea cotizada**.
  *
  * ── Por qué no son casillas ni líneas de precio ─────────────────────────────
- * Los cuatro `EXTRA_*` tienen `selfServiceEligible = false` porque no cuelgan de
- * ningún `BUNDLE` activo. Una propuesta que los cotiza produce un
- * `ARTICULO_NO_CONTRATABLE` en el paso vinculante, con un mensaje que a
- * propósito **no dice qué línea sobró** —es la defensa contra el oráculo de
- * enumeración— después de que el prospecto se haya registrado y verificado el
- * correo. Es decir: el error aparece en el peor momento posible y sin pista.
+ * Porque el precio de una capacidad no se decide aquí. Los cuatro `EXTRA_*` son
+ * contratables —llevan `self_service` y el catálogo los publica con
+ * `selfServiceEligible = true`—, pero quien pone una línea de capacidad en la
+ * oferta es la propuesta del servidor, no este formulario.
  *
  * ── LA FRASE QUE ESTE BLOQUE TENÍA Y ERA FALSA ──────────────────────────────
  * Decía «Se ajusta al contratar», y nada se ajusta al contratar. Estos dos

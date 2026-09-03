@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { CalendarDays, Users, Wallet } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
 import { PERMISSIONS } from '@/constants/permissions'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
@@ -21,21 +20,18 @@ const { hasPermission } = useAuthorization()
 
 const TODOS = [
   {
-    icon: Users,
     titulo: 'Invita a tu equipo',
     texto: 'Para que cada persona entre con su usuario',
     ruta: 'empleados',
     permiso: PERMISSIONS.EMPLOYEE_READ,
   },
   {
-    icon: CalendarDays,
     titulo: 'Crea tu primera cita',
     texto: 'La agenda del día empieza aquí',
     ruta: 'agenda',
     permiso: PERMISSIONS.APPOINTMENT_READ,
   },
   {
-    icon: Wallet,
     titulo: 'Configura tu caja',
     texto: 'Antes del primer cobro del mostrador',
     ruta: 'caja',
@@ -62,7 +58,6 @@ const pasos = computed(() => TODOS.filter((p) => hasPermission(p.permiso)))
   </p>
   <div v-else class="pasos">
     <article v-for="p in pasos" :key="p.titulo" class="ds-card pasos-card">
-      <component :is="p.icon" :size="20" :stroke-width="1.7" aria-hidden="true" />
       <h3 class="pasos-title">{{ p.titulo }}</h3>
       <p class="ds-meta pasos-text">{{ p.texto }}</p>
       <RouterLink :to="{ name: p.ruta }" class="ds-btn ds-btn--ghost pasos-cta">

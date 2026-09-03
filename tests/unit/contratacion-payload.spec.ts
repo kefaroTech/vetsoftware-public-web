@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { activarPlan, lineasDeContratacion } from '@/features/contratacion/api/contratacion.source'
+import type { FuenteDeLineas } from '@/features/contratacion/api/contratacion.source'
 import { PLANS_CONTENT } from '@/features/landing/content/plans.content'
 import { calcularEstimado } from '@/features/landing/composables/planPricing'
 import type { PublicPlan } from '@/features/landing/types/plans.types'
@@ -37,6 +38,11 @@ vi.mock('@/features/suscripcion/api/cotizaciones.api', () => ({
   },
 }))
 
+/** La fuente de líneas de la rama del paquete, que es la que este fichero cubre. */
+function FUENTE_PAQUETE(p: PublicPlan): FuenteDeLineas {
+  return { clase: 'PAQUETE', plan: p }
+}
+
 function plan(code: string): PublicPlan {
   const encontrado = PLANS_CONTENT.plans.find((p) => p.code === code)
   if (!encontrado) throw new Error(`El catálogo transcrito no tiene «${code}»`)
@@ -56,6 +62,8 @@ function resumenDe(p: PublicPlan, over: Partial<ResumenPlan> = {}): ResumenPlan 
     empresaNombre: 'Clínica de prueba',
     empresaIdentificador: '900123456',
     planCode: p.code,
+    modulos: [],
+    lineas: [],
     titulo: p.name,
     ...seleccion,
     subtotal: desglose.subtotal,
@@ -104,14 +112,14 @@ describe('activarPlan · el cuerpo que se manda', () => {
     // pudimos registrar tu contratación», sin más pistas.
     const p = plan('PACK_CLINIC')
 
-    await activarPlan({ resumen: resumenDe(p), plan: p, clientRequestId: 'k-1' })
+    await activarPlan({ resumen: resumenDe(p), fuente: FUENTE_PAQUETE(p), clientRequestId: 'k-1' })
     expect(elemento(selfServe.mock.calls, 0, 'selfServe.mock.calls')[0]).toMatchObject({
       billingCycle: 'MONTHLY',
     })
 
     await activarPlan({
       resumen: resumenDe(p, { ciclo: 'ANUAL' }),
-      plan: p,
+      fuente: FUENTE_PAQUETE(p),
       clientRequestId: 'k-2',
     })
     expect(elemento(selfServe.mock.calls, 1, 'selfServe.mock.calls')[0]).toMatchObject({
@@ -125,7 +133,11 @@ describe('activarPlan · el cuerpo que se manda', () => {
     // reintento sería una llave nueva y la idempotencia del servidor no serviría
     // de nada — el defecto se vería como dos ofertas por un clic doble.
     const p = plan('PACK_SPA')
-    await activarPlan({ resumen: resumenDe(p), plan: p, clientRequestId: 'llave-fija-123' })
+    await activarPlan({
+      resumen: resumenDe(p),
+      fuente: FUENTE_PAQUETE(p),
+      clientRequestId: 'llave-fija-123',
+    })
 
     expect(elemento(selfServe.mock.calls, 0, 'selfServe.mock.calls')[0]).toMatchObject({
       clientRequestId: 'llave-fija-123',
@@ -138,7 +150,7 @@ describe('activarPlan · el cuerpo que se manda', () => {
     // camino de plataforma. Un campo de más aquí es una escritura que el tenant
     // no debería poder proponer.
     const p = plan('PACK_CLINIC')
-    await activarPlan({ resumen: resumenDe(p), plan: p, clientRequestId: 'k' })
+    await activarPlan({ resumen: resumenDe(p), fuente: FUENTE_PAQUETE(p), clientRequestId: 'k' })
 
     const cuerpo = elemento(selfServe.mock.calls, 0, 'selfServe.mock.calls')[0] as Record<
       string,
@@ -156,8 +168,8 @@ describe('activarPlan · el cuerpo que se manda', () => {
   })
 
   it('las líneas son las de `lineasDeContratacion`, con el plan ENTERO y no solo su código', async () => {
-    // El resumen no lleva los `capacities[].code`: por eso `activarPlan` recibe el
-    // plan completo. Si alguien reconstruyera las líneas a partir del resumen, las
+    // El resumen no lleva los `capacities[].code`: por eso `activarPlan` recibe la
+    // fuente entera. Si alguien reconstruyera las líneas a partir del resumen, las
     // capacidades saldrían sin código y el servidor rechazaría la oferta.
     const p = plan('PACK_CLINIC')
     const sedes =
@@ -173,13 +185,13 @@ describe('activarPlan · el cuerpo que se manda', () => {
 
     await activarPlan({
       resumen: resumenDe(p, { sedes, usuarios }),
-      plan: p,
+      fuente: FUENTE_PAQUETE(p),
       clientRequestId: 'k',
     })
 
     expect(
       (elemento(selfServe.mock.calls, 0, 'selfServe.mock.calls')[0] as { lines: unknown }).lines,
-    ).toEqual(lineasDeContratacion(p, { sedes, usuarios }))
+    ).toEqual(lineasDeContratacion({ modulos: [], sedes, usuarios }, FUENTE_PAQUETE(p)))
   })
 })
 
@@ -195,7 +207,11 @@ describe('activarPlan · de quién son los importes de la pantalla de éxito', (
     expect(OFERTA_DEL_SERVIDOR.taxAmount).not.toBe(resumen.impuesto)
     expect(OFERTA_DEL_SERVIDOR.totalAmount).not.toBe(resumen.total)
 
-    const resultado = await activarPlan({ resumen, plan: p, clientRequestId: 'k' })
+    const resultado = await activarPlan({
+      resumen,
+      fuente: FUENTE_PAQUETE(p),
+      clientRequestId: 'k',
+    })
 
     expect(resultado.subtotal).toBe(777_321)
     expect(resultado.impuesto).toBe(147_690)
@@ -214,7 +230,11 @@ describe('activarPlan · de quién son los importes de la pantalla de éxito', (
     const resumen = resumenDe(p)
     selfServe.mockResolvedValue({ id: 9, quoteNumber: 'COT-1', status: 'SENT' })
 
-    const resultado = await activarPlan({ resumen, plan: p, clientRequestId: 'k' })
+    const resultado = await activarPlan({
+      resumen,
+      fuente: FUENTE_PAQUETE(p),
+      clientRequestId: 'k',
+    })
 
     expect(resultado.subtotal).toBe(resumen.subtotal)
     expect(resultado.total).toBe(resumen.total)
@@ -237,7 +257,7 @@ describe('activarPlan · de quién son los importes de la pantalla de éxito', (
 
     const resultado = await activarPlan({
       resumen: resumenDe(p),
-      plan: p,
+      fuente: FUENTE_PAQUETE(p),
       clientRequestId: 'k',
     })
 
@@ -254,7 +274,7 @@ describe('activarPlan · de quién son los importes de la pantalla de éxito', (
     selfServe.mockRejectedValue(fallo)
 
     await expect(
-      activarPlan({ resumen: resumenDe(p), plan: p, clientRequestId: 'k' }),
+      activarPlan({ resumen: resumenDe(p), fuente: FUENTE_PAQUETE(p), clientRequestId: 'k' }),
     ).rejects.toBe(fallo)
   })
 })

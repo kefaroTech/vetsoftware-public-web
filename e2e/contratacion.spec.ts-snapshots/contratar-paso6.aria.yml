@@ -1,41 +1,49 @@
 - main:
+  - navigation "Progreso de la contratación":
+    - list:
+      - listitem: Tu clínica , completado
+      - listitem: Tu cuenta , completado
+      - listitem: Verifica tu correo , completado
+      - listitem: Confirmar , paso actual
   - heading "Confirma tu contratación" [level=1]
   - paragraph:
     - text: Estás contratando para
     - strong: Clínica E2E de prueba
     - text: /\(NIT \d+-7\)\./
-  - paragraph:
-    - text: Cada módulo tiene su propia prueba, y no terminan todas el mismo día.
-    - strong: "Caja y punto de venta termina antes:"
-    - text: /el \d+ de \w+, \d+ empezamos a cobrar Caja y punto de venta, y Vacunación y desparasitación sigue gratis hasta el \d+ de \w+, \d+\./
-  - table "Fecha de fin de la prueba de cada módulo, de la que termina antes a la que termina después":
-    - caption: Fecha de fin de la prueba de cada módulo, de la que termina antes a la que termina después
-    - rowgroup:
-      - row "Módulo Gratis hasta Después":
-        - columnheader "Módulo"
-        - columnheader "Gratis hasta"
-        - columnheader "Después"
-    - rowgroup:
-      - row /Caja y punto de venta \d+ de \w+, \d+ Se cobra dentro del total del plan/:
-        - cell "Caja y punto de venta"
-        - cell /\d+ de \w+, \d+/
-        - cell "Se cobra dentro del total del plan"
-      - 'row /Núcleo: clientes y mascotas \d+ de \w+, \d+ Se cobra dentro del total del plan/':
-        - 'cell "Núcleo: clientes y mascotas"'
-        - cell /\d+ de \w+, \d+/
-        - cell "Se cobra dentro del total del plan"
-      - row /Agenda de citas \d+ de \w+, \d+ Se cobra dentro del total del plan/:
-        - cell "Agenda de citas"
-        - cell /\d+ de \w+, \d+/
-        - cell "Se cobra dentro del total del plan"
-      - row /Historia clínica y consultas \d+ de \w+, \d+ Se cobra dentro del total del plan/:
-        - cell "Historia clínica y consultas"
-        - cell /\d+ de \w+, \d+/
-        - cell "Se cobra dentro del total del plan"
-      - row /Vacunación y desparasitación \d+ de \w+, \d+ Se cobra dentro del total del plan/:
-        - cell "Vacunación y desparasitación"
-        - cell /\d+ de \w+, \d+/
-        - cell "Se cobra dentro del total del plan"
+  - region "Los 5 módulos que activas, y cuándo empieza a costar cada uno":
+    - heading "Los 5 módulos que activas, y cuándo empieza a costar cada uno" [level=2]
+    - paragraph:
+      - text: Cada módulo tiene su propia prueba, y no terminan todas el mismo día.
+      - strong: "Caja y punto de venta termina antes:"
+      - text: /el \d+ de \w+, \d+ empezamos a cobrar Caja y punto de venta, y Vacunación y desparasitación sigue gratis hasta el \d+ de \w+, \d+\./
+    - table "Fecha de fin de la prueba de cada módulo, de la que termina antes a la que termina después":
+      - caption: Fecha de fin de la prueba de cada módulo, de la que termina antes a la que termina después
+      - rowgroup:
+        - row "Módulo Gratis hasta Después":
+          - columnheader "Módulo"
+          - columnheader "Gratis hasta"
+          - columnheader "Después"
+      - rowgroup:
+        - row /Caja y punto de venta \d+ de \w+, \d+ Se cobra dentro del total del plan/:
+          - cell "Caja y punto de venta"
+          - cell /\d+ de \w+, \d+/
+          - cell "Se cobra dentro del total del plan"
+        - 'row /Núcleo: clientes y mascotas \d+ de \w+, \d+ Se cobra dentro del total del plan/':
+          - 'cell "Núcleo: clientes y mascotas"'
+          - cell /\d+ de \w+, \d+/
+          - cell "Se cobra dentro del total del plan"
+        - row /Agenda de citas \d+ de \w+, \d+ Se cobra dentro del total del plan/:
+          - cell "Agenda de citas"
+          - cell /\d+ de \w+, \d+/
+          - cell "Se cobra dentro del total del plan"
+        - row /Historia clínica y consultas \d+ de \w+, \d+ Se cobra dentro del total del plan/:
+          - cell "Historia clínica y consultas"
+          - cell /\d+ de \w+, \d+/
+          - cell "Se cobra dentro del total del plan"
+        - row /Vacunación y desparasitación \d+ de \w+, \d+ Se cobra dentro del total del plan/:
+          - cell "Vacunación y desparasitación"
+          - cell /\d+ de \w+, \d+/
+          - cell "Se cobra dentro del total del plan"
   - table "Lo que vas a contratar, con un enlace para cambiar cada dato":
     - caption: Lo que vas a contratar, con un enlace para cambiar cada dato
     - rowgroup:
@@ -82,6 +90,13 @@
     - 'heading "Modo demostración: no vamos a cobrarte nada" [level=2]'
     - paragraph: Todavía no tenemos conectada la pasarela de pago. Al confirmar, tu contratación queda registrada con estos importes y nosotros dejamos los módulos listos.
     - paragraph: No se te va a cobrar, no vamos a pedirte una tarjeta y no guardamos ningún dato de pago. Cuando conectemos la pasarela te escribiremos por correo antes del primer cobro, y podrás decidir entonces.
+  - complementary "Lo que confirmas":
+    - heading "Lo que confirmas" [level=2]
+    - paragraph: 5 módulos
+    - paragraph: Mes a mes · 1 sede · 1 persona
+    - paragraph:
+      - strong: Hoy pagas $ 0.
+      - text: /El primer cobro sería el \d+ de \w+, \d+, y te avisamos por correo antes\./
   - 'checkbox /He leído y acepto los Términos del Servicio \(se abre en una pestaña nueva\) y la Política de Tratamiento de Datos Personales \(se abre en una pestaña nueva\) \. Términos del Servicio: versión 1, vigente desde el 1 de septiembre, \d+ · Política de Tratamiento de Datos Personales: versión 1, vigente desde el 1 de septiembre, \d+/'
   - text: He leído y acepto los
   - link "Términos del Servicio (se abre en una pestaña nueva)":

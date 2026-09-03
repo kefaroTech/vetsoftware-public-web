@@ -314,8 +314,14 @@ import type {
   PublicCatalog,
   PublicPlanContract,
 } from '../features/landing/types/plans.types'
+import type {
+  PreviewQuoteRequest,
+  QuotePreviewLineResponse,
+  QuotePreviewResponse,
+} from '../features/landing/types/cotizacion.types'
 import type { PublicLegalDocumentResponse } from '../features/legal/types/legal.types'
 import type {
+  PublicCatalogAreaResponse,
   PublicCatalogCapacityResponse,
   PublicCatalogItemResponse,
   PublicCatalogPackResponse,
@@ -810,6 +816,14 @@ export type ContractAssertions = [
   // puede quedarse sin centinela.
   Expect<MatchesContract<SelfServeQuoteRequest, 'SelfServeQuoteRequest'>>,
   Expect<MatchesContract<SelfServeQuoteLineRequest, 'SelfServeQuoteLineRequest'>>,
+  // La calculadora publica de la portada. Es el UNICO origen del importe que se
+  // publica ahi, asi que un campo renombrado en el desglose no puede degradarse a
+  // `undefined`: se pintaria un guion donde hay una cifra, o peor, un total sin una
+  // de sus lineas. La linea va atada APARTE por el mismo motivo que la de
+  // autoservicio -`MismatchedFields` no mira dentro de un array-.
+  Expect<MatchesContract<PreviewQuoteRequest, 'PreviewQuoteRequest'>>,
+  Expect<MatchesContract<QuotePreviewResponse, 'QuotePreviewResponse'>>,
+  Expect<MatchesContract<QuotePreviewLineResponse, 'QuotePreviewLineResponse'>>,
   // El catálogo público de la landing. `PublicPlan` NO se ata: es
   // `PublicPlanContract` más `recommended`, que es una decisión comercial de la
   // portada y no un campo del contrato. Atar el que lleva el añadido daría un
@@ -818,7 +832,7 @@ export type ContractAssertions = [
   Expect<MatchesContract<PublicPlanContract, 'PublicPlanResponse'>>,
   Expect<MatchesContract<PlanInclude, 'PublicPlanIncludedResponse'>>,
   Expect<MatchesContract<PlanCapacity, 'PublicPlanCapacityResponse'>>,
-  // El catalogo comercial de los 26 articulos, atado por sus CINCO esquemas.
+  // El catalogo comercial de los 26 articulos, atado por sus SEIS esquemas.
   // `GET /catalog` es publico y existe hoy, asi que TR-01 aplica entero: si el
   // backend renombra un campo o anade uno, este build deja de compilar antes de
   // que la pantalla que decide una compra empiece a leer `undefined`.
@@ -828,6 +842,7 @@ export type ContractAssertions = [
   Expect<MatchesContract<PublicCatalogCapacityResponse, 'PublicCatalogCapacityResponse'>>,
   Expect<MatchesContract<PublicCatalogPackResponse, 'PublicCatalogPackResponse'>>,
   Expect<MatchesContract<PublicCatalogRequirementResponse, 'PublicCatalogRequirementResponse'>>,
+  Expect<MatchesContract<PublicCatalogAreaResponse, 'PublicCatalogAreaResponse'>>,
   // El ASISTENTE COMERCIAL. Las cuatro rutas de `/assistant/proposal` existen
   // desde el contrato de agosto de 2026, asi que los tipos que viajan por el
   // cable dejan de ser palabra de nadie y pasan por aqui.
