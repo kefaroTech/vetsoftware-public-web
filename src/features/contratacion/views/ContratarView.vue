@@ -4,8 +4,10 @@ import { RouterLink } from 'vue-router'
 import ErrorSummary from '@/components/feedback/ErrorSummary.vue'
 import PawLoader from '@/components/feedback/PawLoader.vue'
 import LegalConsentCheckbox from '@/features/legal/components/LegalConsentCheckbox.vue'
+import PasosEmbudo from '@/features/landing/components/PasosEmbudo.vue'
 import PlanesConfigurador from '@/features/landing/components/PlanesConfigurador.vue'
 import ConfirmarBloqueadoNotice from '../components/ConfirmarBloqueadoNotice.vue'
+import ContratarResumenAside from '../components/ContratarResumenAside.vue'
 import ContratarResumenTabla from '../components/ContratarResumenTabla.vue'
 import DemoModeNotice from '../components/DemoModeNotice.vue'
 import LetraPequenaPaso6 from '../components/LetraPequenaPaso6.vue'
@@ -57,6 +59,8 @@ const {
   plans,
   cargandoPlanes,
   resumen,
+  catalogo,
+  primerCobro,
   cargando,
   aceptaTerminos,
   terminosTocado,
@@ -114,9 +118,25 @@ const itemsResumenError = computed(() =>
  * `v-if="resumen"`, así que con el resumen todavía a `null` esto no llega a
  * pintarse, y `PROPUESTA` es la rama que exige una propuesta cargada.
  */
-const rotuloConfirmar = computed(() =>
-  resumen.value?.origen === 'PROPUESTA' ? 'Confirmar mi propuesta' : 'Confirmar mi plan',
-)
+const rotuloConfirmar = computed(() => {
+  const r = resumen.value
+  if (r?.origen === 'PROPUESTA') return 'Confirmar mi propuesta'
+  // Sin paquete no hay ningún plan que nombrar, y llamarlo «mi plan» le pondría
+  // nombre de paquete a una selección que el prospecto armó casilla a casilla.
+  return r?.planCode ? 'Confirmar mi plan' : 'Confirmar mi selección'
+})
+
+/**
+ * El título de la tabla de pruebas, con el conteo dentro.
+ *
+ * <p>El número sale de las propias filas y no de la selección guardada: es lo
+ * que se está leyendo debajo, así que no puede discrepar de ello.
+ */
+const tituloModulos = computed(() => {
+  const n = resumen.value?.lineasPrueba.length ?? 0
+  const cuantos = n === 1 ? '1 módulo que activas' : `${n} módulos que activas`
+  return `Los ${cuantos}, y cuándo empieza a costar cada uno`
+})
 
 /**
  * El subtítulo de la rama de recuperación, según **por qué** no hay propuesta.
@@ -156,6 +176,13 @@ onMounted(entrar)
          del catálogo y a una propuesta a medida, y la palabra «plan» como unidad
          de compra es justo la que el resto del embudo dejó de usar. El `<h1>`
          recibe el foco al montar, así que es lo primero que se anuncia. -->
+    <!-- Los mismos CUATRO pasos que `/planes`, en el último: la verificación de
+         correo es un paso propio porque el alta y la confirmación no se
+         fusionan. `.pub-scope` porque el indicador se pinta con los tokens
+         `--pub-*`, que solo existen bajo esa clase; su tipografía sí se
+         devuelve a la de la app, que es donde vive esta pantalla. -->
+    <div class="pub-scope ct-pasos"><PasosEmbudo :actual="4" /></div>
+
     <h1 ref="h1" class="ds-display ds-display--sm" tabindex="-1">Confirma tu contratación</h1>
 
     <template v-if="cargando || cargandoPlanes">
@@ -264,11 +291,28 @@ onMounted(entrar)
            cobrará cuando la prueba termine. Antes la pantalla abría con «Total del primer mes:
            $105.910» y lo desmentía dos bloques más abajo, en el momento exacto en que alguien
            decide una compra: tres afirmaciones incompatibles y ninguna jerarquía. -->
-      <TrialLinesTable :lineas="resumen.lineasPrueba" />
+      <div class="ct-grid">
+        <div class="ct-col ds-stack ds-stack--16">
+          <section class="ds-stack ds-stack--10" aria-labelledby="modulos-h2">
+            <h2 id="modulos-h2" class="ds-title">{{ tituloModulos }}</h2>
+            <TrialLinesTable :lineas="resumen.lineasPrueba" />
+          </section>
 
-      <ContratarResumenTabla :resumen="resumen" />
+          <ContratarResumenTabla :resumen="resumen" />
 
-      <DemoModeNotice />
+          <DemoModeNotice />
+        </div>
+
+        <!-- Después del contenido en el DOM y no antes: en pantalla estrecha la
+             rejilla se apila y el orden de lectura es el mismo que el visual, sin
+             ningún `order` que los separe (§1.3.2, §2.4.3). -->
+        <ContratarResumenAside
+          class="ct-aside"
+          :resumen="resumen"
+          :catalogo="catalogo"
+          :primer-cobro="primerCobro"
+        />
+      </div>
 
       <ErrorSummary v-if="itemsResumenError.length > 0" ref="errorRef" :items="itemsResumenError" />
 
@@ -342,7 +386,7 @@ onMounted(entrar)
 
 <style scoped>
 .ct {
-  max-width: 780px;
+  max-width: 1080px;
 
   /* Bajo `fullBleed` el contenedor de la app es `overflow: hidden` y una
      columna flexible: quien rueda tiene que ser esta pantalla. */
@@ -377,6 +421,28 @@ onMounted(entrar)
 .ct-volver {
   align-self: flex-start;
   text-decoration: none;
+}
+
+.ct-pasos {
+  font-family: var(--font-sans);
+  color: var(--warm-900);
+}
+
+.ct-grid {
+  display: grid;
+  gap: var(--space-20);
+  align-items: start;
+}
+
+.ct-col,
+.ct-aside {
+  min-inline-size: 0;
+}
+
+@media (width >= 901px) {
+  .ct-grid {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
 }
 
 /* La pila la pone `.ds-stack` desde `primitives.css`. */

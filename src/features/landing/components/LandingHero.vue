@@ -1,59 +1,49 @@
 <script setup lang="ts">
-import { Building2, Receipt, ShieldCheck } from 'lucide-vue-next'
-import { RouterLink } from 'vue-router'
 import LandingCotizador from './LandingCotizador.vue'
+import type { useCotizador } from '../composables/useCotizador'
 
 /**
- * §A — el hero.
+ * §A — el hero, a una columna centrada.
  *
- * El kicker que había encima del `<h1>` («Plataforma de gestión veterinaria»)
- * desaparece: decía lo mismo que el titular y lo decía peor.
+ * <p>No hay capturas de producto, así que **no se pinta la columna derecha**: un
+ * rectángulo rayado con «captura: la agenda del día» en producción es peor que
+ * no tener imagen, y un hueco vacío con su `sticky` es peor todavía.
  *
- * ── Qué es ahora la acción principal ────────────────────────────────────────
- * La caja de arranque (`LandingCotizador`), y no un botón hacia los paquetes.
- * El producto dice «paga solo lo que uses» y la página ofrecía primero tres
- * paquetes cerrados: mientras el CTA más prominente diga «ver los planes»,
- * cualquier caja de texto añadida arriba es decoración. El botón sólido morado
- * pasa a ser el envío del cotizador; el camino a los paquetes sigue existiendo
- * —enlace de texto dentro de la propia caja, y la sección `#planes` completa más
- * abajo—, pero deja de competir por el mismo peso visual.
+ * <p>La acción principal es la tarjeta del cotizador y no un botón hacia los
+ * paquetes: mientras el CTA más prominente diga «ver los planes», cualquier caja
+ * añadida arriba es decoración. El camino a las combinaciones sigue existiendo en
+ * la barra superior y en la sección `#planes`.
  *
- * <p>El cotizador va **entre** el subtítulo y la fila de botones, en el orden
- * del DOM, que es el visual: nada se reordena con rejilla. Y sigue dentro del
- * `<main id="contenido">`, así que el enlace de salto no cambia de destino.
+ * <p>El titular sube a 26ch y la bajada baja a 52ch porque el texto centrado
+ * tolera menos medida que el alineado a la izquierda; la tarjeta, en cambio, va
+ * alineada a la izquierda por dentro.
  */
-const señales = [
-  { icon: Receipt, label: 'Facturación electrónica DIAN' },
-  { icon: Building2, label: 'Varias sedes' },
-  { icon: ShieldCheck, label: 'Tus datos cifrados' },
+defineProps<{ cotizador: ReturnType<typeof useCotizador> }>()
+
+const CONFIANZA = [
+  'Enciendes y apagas módulos cuando quieras',
+  'Sin plan mínimo ni módulos atados',
+  'Tus datos en Colombia, cifrados',
 ]
 </script>
 
 <template>
   <section class="land-hero">
     <h1 class="land-h1">
-      Tu clínica, de la sala de espera a la caja,
-      <span class="land-h1-em">en un solo sitio.</span>
+      Paga solo los módulos que tu clínica usa.
+      <span class="land-h1-em">Ni uno más.</span>
     </h1>
 
     <p class="land-sub">
-      Agenda, historia clínica, hospitalización, inventario y facturación electrónica DIAN. Hecho
-      para clínicas veterinarias en Colombia.
+      Agenda, historia clínica, hospitalización, inventario y facturación DIAN son módulos
+      separados, cada uno con su precio. Marca los que uses y verás el total ahora mismo. Si dejas
+      de usar uno, lo apagas.
     </p>
 
-    <LandingCotizador />
-
-    <div class="land-cta-row">
-      <RouterLink :to="{ name: 'login' }" class="land-cta land-cta--ghost">
-        Ya tengo cuenta
-      </RouterLink>
-    </div>
+    <LandingCotizador :cotizador="cotizador" />
 
     <ul class="land-trust">
-      <li v-for="s in señales" :key="s.label" class="land-trust-item">
-        <component :is="s.icon" :size="16" :stroke-width="1.7" aria-hidden="true" />
-        {{ s.label }}
-      </li>
+      <li v-for="punto in CONFIANZA" :key="punto" class="land-trust-item">{{ punto }}</li>
     </ul>
   </section>
 </template>
@@ -62,19 +52,20 @@ const señales = [
 .land-hero {
   position: relative;
   z-index: 1;
-  max-width: 860px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: clamp(28px, 6vw, 72px) clamp(20px, 5vw, 44px) clamp(36px, 6vw, 76px);
+  padding: 56px 24px 8px;
   text-align: center;
 }
 
 .land-h1 {
   font-family: 'Instrument Serif', serif;
   font-weight: 400;
-  font-size: clamp(36px, 5.2vw, 62px);
-  line-height: 1.1;
+  font-size: clamp(34px, 5vw, 52px);
+  line-height: 1.06;
   letter-spacing: -0.02em;
-  margin: 0;
+  max-width: 26ch;
+  margin: 0 auto;
   text-wrap: balance;
   color: var(--pub-ink-900);
 }
@@ -85,50 +76,22 @@ const señales = [
 }
 
 .land-sub {
-  font-size: 16.5px;
+  font-size: 17px;
   line-height: 1.55;
+  max-width: 52ch;
+  margin: 22px auto 0;
   color: var(--pub-ink-600);
-  margin: 20px auto 0;
-  max-width: 560px;
-}
-
-.land-cta-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 22px;
-}
-
-/* §2.5.8: en los CTA de la landing el listón sube a 44×44 — se usan con el
-   animal delante y con una sola mano. Solo queda el fantasma: el sólido morado
-   se lo llevó el cotizador, que ahora es la acción principal del hero. */
-.land-cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 48px;
-  padding: 0 26px;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.land-cta--ghost {
-  background: rgb(255 255 255 / 70%);
-  border: 1px solid var(--pub-line-strong);
-  color: var(--pub-ink-700);
+  text-wrap: pretty;
 }
 
 .land-trust {
   list-style: none;
-  margin: 30px 0 0;
+  margin: 26px 0 0;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px 26px;
+  gap: 10px 28px;
   font-size: 13px;
   color: var(--pub-ink-600);
 }
@@ -136,10 +99,20 @@ const señales = [
 .land-trust-item {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
 }
 
-.land-trust-item svg {
-  color: var(--pub-ame-700);
+.land-trust-item::before {
+  content: '';
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 50%;
+  background: var(--pub-ame-600);
+}
+
+@media (width <= 600px) {
+  .land-hero {
+    padding: 36px 16px 8px;
+  }
 }
 </style>

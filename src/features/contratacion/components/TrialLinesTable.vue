@@ -101,7 +101,9 @@ const nombresSinPrueba = computed(() => {
             <!-- Sin prueba NO lleva fecha: `trialEndDate` sería el día de alta y
                  se leería como una prueba de un día. Ver el encabezado. -->
             <td>
-              <span v-if="l.trialDays == null || l.trialDays <= 0">Sin prueba</span>
+              <span v-if="l.trialDays == null || l.trialDays <= 0">
+                Sin prueba · se cobra desde el primer día
+              </span>
               <span v-else>{{ formatDateLong(l.trialEndDate) }}</span>
             </td>
             <!-- «Incluido en tu plan» se leía como «gratis para siempre», que es lo contrario

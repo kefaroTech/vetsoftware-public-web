@@ -7,9 +7,10 @@ export type { EstadoPlanActual }
  * QUÉ eligió el prospecto. Es el discriminador de la unión, y existe porque el
  * embudo dejó de tener una sola forma de entrada.
  *
- *  · `PLAN` — uno de los tres paquetes del catálogo, elegido en la landing o en
- *    `/planes`. Lo identifica un `planCode` y sus importes los recalcula la
- *    lista de precio transcrita.
+ *  · `PLAN` — lo que el prospecto armó con el catálogo público en la landing o
+ *    en `/planes`: un paquete, o los módulos que marcó uno a uno. Con paquete
+ *    lo identifica su `planCode` y sus importes los recalcula la lista de
+ *    precio transcrita; sin él, los pone `POST /quotes/preview`.
  *  · `PROPUESTA` — una propuesta a medida del asistente comercial: **N líneas**,
  *    no un plan. La identifica una referencia opaca y sus importes **los tiene
  *    el servidor y solo el servidor**.
@@ -47,10 +48,36 @@ interface IntencionBase {
   descartada: boolean
 }
 
-/** Un paquete del catálogo. La forma que el embudo tuvo siempre. */
+/**
+ * Lo que el prospecto armó con el catálogo: un paquete publicado, o los módulos
+ * que marcó uno a uno.
+ *
+ * <p>Las dos cosas son la misma rama y no dos, porque son el mismo acto: marcar
+ * una casilla más convierte una en la otra sin que el prospecto cambie de
+ * pantalla ni de intención. Lo que las distingue es {@link planCode}.
+ */
 export interface IntencionPlan extends IntencionBase {
   origen: 'PLAN'
-  planCode: string
+  /**
+   * El paquete que la selección reproduce EXACTAMENTE, o `null` cuando no
+   * reproduce ninguno y se contrata suelta.
+   *
+   * <p>Quien lo pone es `paqueteQueCoincide`, la misma función que decide la
+   * cesta que se cotiza: mientras coincida se manda la línea de paquete, que es
+   * lo que conserva su descuento (decisión D4). Nulo no es un hueco — es la
+   * selección modular, que el catálogo cotiza y la autocontratación acepta.
+   */
+  planCode: string | null
+  /**
+   * Los códigos de módulo marcados. **El núcleo no va aquí**: entra siempre.
+   *
+   * <p>Vacío cuando la elección se hizo sobre un paquete cerrado —una tarjeta de
+   * la portada, el selector de la rama de recuperación—: ahí no hubo casillas
+   * que marcar y quien dice qué lleva dentro es `planCode`. Con `planCode` a
+   * `null`, `[]` significa literalmente «solo el núcleo», que es una compra
+   * válida.
+   */
+  modulos: string[]
 }
 
 /**
@@ -86,17 +113,20 @@ export interface IntencionPropuesta extends IntencionBase {
  * que el modelo exige como prueba y que pone el SERVIDOR desde la petición, no
  * el formulario.
  *
- * <p>Unión discriminada y no un `planCode` opcional: la mitad de los sitios que
- * la consumen tienen que hacer una cosa distinta en cada rama —el resumen se
- * calcula de una fuente o de la otra, las líneas de la oferta salen del paquete
- * o de la propuesta—, y un campo nulable los habría dejado compilando con la
- * rama que falta sin escribir.
+ * <p>Unión discriminada y no una `propuestaId` opcional: la mitad de los sitios
+ * que la consumen tienen que hacer una cosa distinta en cada rama —el resumen
+ * se relee del servidor o se arma del catálogo, las líneas de la oferta salen
+ * de la propuesta o de la selección—, y un campo nulable los habría dejado
+ * compilando con la rama que falta sin escribir.
  */
 export type IntencionContratacion = IntencionPlan | IntencionPropuesta
 
 /** La selección tal como la manipulan la landing y `/planes`, sin metadatos. */
 export interface SeleccionContratacion {
-  planCode: string
+  /** El paquete que la selección reproduce, o `null`. Ver {@link IntencionPlan.planCode}. */
+  planCode: string | null
+  /** Los módulos marcados. Ver {@link IntencionPlan.modulos}. */
+  modulos: string[]
   ciclo: Ciclo
   sedes: number
   usuarios: number
@@ -228,11 +258,27 @@ interface ResumenBase {
   estadoPlanActual: EstadoPlanActual
 }
 
-/** El resumen de un paquete del catálogo. */
+/** El resumen de un paquete del catálogo, o de una selección de módulos. */
 export interface ResumenPlan extends ResumenBase {
   origen: 'PLAN'
-  /** Con esto se resuelve el plan entero (`findByCode`) para armar las líneas de la oferta. */
-  planCode: string
+  /**
+   * Con esto se resuelve el plan entero (`findByCode`) para armar las líneas de
+   * la oferta. `null` cuando la selección no reproduce ningún paquete: entonces
+   * las líneas salen del catálogo comercial y los importes de
+   * `POST /quotes/preview`. Ver {@link IntencionPlan.planCode}.
+   */
+  planCode: string | null
+  /** Los módulos marcados, tal como los guardó la intención. */
+  modulos: string[]
+  /**
+   * El desglose que devolvió el servidor, **solo en la rama modular**.
+   *
+   * <p>Vacío en la del paquete, y no por descuido: un paquete es UNA línea con
+   * un precio de entrada con descuento, y sus componentes no tienen importe
+   * propio que enseñar (`bundle_components`). Repartirlo entre los módulos sería
+   * inventar un desglose que ninguna fuente publica.
+   */
+  lineas: LineaContratada[]
   /**
    * Las cantidades contratadas de cada eje, y **solo de esta rama**.
    *

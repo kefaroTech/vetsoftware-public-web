@@ -6,6 +6,8 @@ import { PERMISSIONS } from '@/constants/permissions'
 import { getTraceId } from '@/services/http/http.client'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
+import { useCatalogoStore } from '@/features/asistente/stores/catalogo.store'
+import type { CatalogoComercial } from '@/features/asistente/types/catalogo.types'
 import { usePlanes } from '@/features/landing/composables/usePlanes'
 import type { Ciclo, PublicPlan } from '@/features/landing/types/plans.types'
 import { useSuscripcion } from '@/features/suscripcion/composables/useSuscripcion'
@@ -13,9 +15,16 @@ import {
   activarPlan,
   fetchResumenContratacion,
   fetchResumenPropuesta,
+  fetchResumenSeleccion,
+  sumarDias,
 } from '../api/contratacion.source'
+import type { FuenteDeLineas } from '../api/contratacion.source'
 import { useResultadoContratacionStore } from '../stores/resultadoContratacion.store'
-import type { ResumenPropuesta, ResumenContratacion } from '../types/contratacion.types'
+import type {
+  ResumenPlan,
+  ResumenPropuesta,
+  ResumenContratacion,
+} from '../types/contratacion.types'
 import { useContratacion } from './useContratacion'
 
 /**
@@ -98,6 +107,7 @@ export function usePasoContratar(focos: FocosPaso6) {
   const { plans, findByCode, loading: cargandoPlanes, refresh: recargarPlanes } = usePlanes()
   const { vigente, elegir, descartar, marcarContratada } = useContratacion()
   const { estadoPlanActual, load: cargarSuscripcion } = useSuscripcion()
+  const catalogoStore = useCatalogoStore()
   const resultadoStore = useResultadoContratacionStore()
 
   const resumen = ref<ResumenContratacion | null>(null)
@@ -111,6 +121,20 @@ export function usePasoContratar(focos: FocosPaso6) {
 
   /** `null` mientras la propuesta se pueda pintar, que es el caso normal. */
   const motivoSinPropuesta = ref<MotivoSinPropuesta | null>(null)
+
+  /**
+   * El catálogo comercial, **sólo cuando esta pantalla lo ha necesitado**: lo
+   * pide la rama modular para armar las líneas. En la del paquete se queda a
+   * `null` y el resumen de al lado deja de afirmar cuántos módulos quedan fuera,
+   * que es lo correcto — sin catálogo esa cuenta no existe.
+   */
+  const catalogo = ref<CatalogoComercial | null>(null)
+
+  /** El día siguiente al final de la prueba que termina antes. */
+  const primerCobro = computed(() => {
+    const primera = resumen.value?.lineasPrueba[0]
+    return primera ? sumarDias(primera.trialEndDate, 1) : null
+  })
 
   /** La deriva, con SUS DOS CIFRAS dentro: sin las dos, el aviso no puede ser verdad. */
   const drift = ref<{ antes: number; ahora: number } | null>(null)
@@ -183,11 +207,18 @@ export function usePasoContratar(focos: FocosPaso6) {
 
     // El catálogo solo hace falta en la rama del plan, y se resuelve ANTES de
     // preguntar por la suscripción para no gastar un viaje cuando ya se sabe que
-    // no hay nada que resumir.
+    // no hay nada que resumir. Con paquete es la lista de planes; sin él, el
+    // catálogo comercial, que se relee siempre al abrir la pantalla.
     let plan: PublicPlan | null = null
+    catalogo.value = null
     if (intencion.origen === 'PLAN') {
-      plan = findByCode(intencion.planCode) ?? null
-      if (!plan) {
+      if (intencion.planCode) {
+        plan = findByCode(intencion.planCode) ?? null
+      } else {
+        await catalogoStore.load(intencion.ciclo, true)
+        catalogo.value = catalogoStore.catalogo(intencion.ciclo)
+      }
+      if (!plan && !catalogo.value) {
         resumen.value = null
         cargando.value = false
         return
@@ -205,6 +236,24 @@ export function usePasoContratar(focos: FocosPaso6) {
         companyId: companyId.value,
         estadoPlanActual: estadoPlanActual.value,
       })
+    } else if (intencion.origen === 'PLAN' && catalogo.value) {
+      try {
+        resumen.value = await fetchResumenSeleccion({
+          intencion,
+          catalogo: catalogo.value,
+          companyId: companyId.value,
+          estadoPlanActual: estadoPlanActual.value,
+        })
+      } catch (e) {
+        // Los importes de esta rama los pone el servidor y no hay estimado local
+        // con el que suplirlos, así que sin cotización no hay resumen que pintar.
+        // La intención NO se descarta: la selección sigue guardada y `/planes` la
+        // vuelve a cotizar. Por `errorFrom`, que es lo que conserva la traza.
+        toast.errorFrom('No pudimos calcular el precio de tu selección', e)
+        resumen.value = null
+        cargando.value = false
+        return
+      }
     } else if (intencion.origen === 'PROPUESTA') {
       const resultado = await fetchResumenPropuesta({
         intencion,
@@ -292,8 +341,26 @@ export function usePasoContratar(focos: FocosPaso6) {
   async function elegirAqui() {
     const plan = plans.value.find((p) => p.code === planCode.value) ?? plans.value[0]
     if (!plan) return
-    elegir(plan, ciclo.value, sedes.value, usuarios.value)
+    // Sin `modulos`: aquí se eligió un paquete cerrado, no una casilla. Quien
+    // dice qué lleva dentro es el paquete. Ver `IntencionPlan.modulos`.
+    elegir({ plan, ciclo: ciclo.value, sedes: sedes.value, usuarios: usuarios.value })
     await cargar()
+  }
+
+  /**
+   * De dónde salen las líneas de la oferta, o `null` si esa fuente ya no está.
+   *
+   * <p>Decide por `planCode`, que es la misma condición con la que
+   * `lineasDeContratacion` elige rama. Escrita dos veces con dos criterios es
+   * como la cesta cotizada y la contratada acaban divergiendo.
+   */
+  function fuenteDeLineas(actual: ResumenPlan): FuenteDeLineas | null {
+    if (actual.planCode) {
+      const plan = findByCode(actual.planCode)
+      return plan ? { clase: 'PAQUETE', plan } : null
+    }
+    const catalogo = catalogoStore.catalogo(actual.ciclo)
+    return catalogo ? { clase: 'MODULOS', catalogo } : null
   }
 
   async function confirmar() {
@@ -312,18 +379,19 @@ export function usePasoContratar(focos: FocosPaso6) {
     }
 
     if (actual.origen === 'PLAN') {
-      // El plan ENTERO, no solo su código: los rótulos de las capacidades son lo que viaja en las
-      // líneas de la oferta y el resumen no los lleva. Si el catálogo se movió y el plan ya no
-      // está, no se inventa un cuerpo: se dice y no se envía nada.
-      const plan = findByCode(actual.planCode)
-      if (!plan) {
+      // La fuente ENTERA, no solo los códigos del resumen: los rótulos que viajan en las líneas
+      // de la oferta —las capacidades del paquete, los módulos del catálogo— están ahí y el
+      // resumen no los lleva. Si el catálogo se movió y ya no están, no se inventa un cuerpo: se
+      // dice y no se envía nada.
+      const fuente = fuenteDeLineas(actual)
+      if (!fuente) {
         errorEnvio.value =
           'El catálogo de planes cambió mientras confirmabas. Recarga la página y vuelve a elegir; no se ha hecho ningún cambio en tu clínica.'
         await nextTick()
         focos.errorEnvio.value?.focus()
         return
       }
-      await enviar({ resumen: actual, plan, clientRequestId: clientRequestId.value })
+      await enviar({ resumen: actual, fuente, clientRequestId: clientRequestId.value })
       return
     }
 
@@ -373,6 +441,8 @@ export function usePasoContratar(focos: FocosPaso6) {
     plans,
     cargandoPlanes,
     resumen,
+    catalogo,
+    primerCobro,
     cargando,
     aceptaTerminos,
     terminosTocado,

@@ -31,19 +31,25 @@ export const INTENCION_MAX_DIAS = 30
 const MS_POR_DIA = 86_400_000
 
 /** Lo que las dos formas comparten, ya validado. */
-type Comun = Omit<IntencionContratacion, 'origen' | 'planCode' | 'propuestaId'>
+type Comun = Omit<IntencionContratacion, 'origen' | 'planCode' | 'propuestaId' | 'modulos'>
 
 /**
  * Valida la forma leída del almacenamiento. Una entrada corrupta se descarta.
  *
- * ── La migración, que NO es opcional ────────────────────────────────────────
+ * ── Las DOS migraciones, que no son opcionales ──────────────────────────────
  * Hay navegadores con una intención escrita antes de que existiera `origen`:
  * un objeto con `planCode` y sin discriminador. Descartarla haría que quien
  * eligió su plan ayer y vuelve hoy tras verificar el correo se encontrara el
  * selector otra vez — la conversión exacta que el enganche del login existe para
- * no perder. Se lee como lo que es, `PLAN`, sin subir la versión de la clave:
- * la forma vieja sigue siendo legible sin ambigüedad porque `planCode` solo
- * existe en esa rama.
+ * no perder. Se lee como lo que es, `PLAN`.
+ *
+ * <p>Y hay navegadores con una intención de plan escrita antes de que existiera
+ * `modulos`. Se lee con `modulos: []`, que es la forma con la que este front
+ * escribe hoy cualquier elección hecha sobre un paquete cerrado: con `planCode`
+ * puesto, quien dice qué se contrata es el paquete, así que la intención vieja y
+ * la nueva producen la misma oferta. Por eso la clave sigue siendo `v1` y no se
+ * sube a `v2` — subirla habría descartado en silencio todas las intenciones
+ * vivas para no ganar nada.
  */
 function parseIntencion(raw: string | null): IntencionContratacion | null {
   if (!raw) return null
@@ -77,8 +83,18 @@ function parseIntencion(raw: string | null): IntencionContratacion | null {
       return { ...comun, origen: 'PROPUESTA', propuestaId: o.propuestaId }
     }
 
-    if (typeof o.planCode !== 'string' || !o.planCode) return null
-    return { ...comun, origen: 'PLAN', planCode: o.planCode }
+    const planCode = typeof o.planCode === 'string' && o.planCode ? o.planCode : null
+
+    // Sin discriminador la única señal de que esto era una intención y no basura
+    // es el `planCode`, así que la forma vieja sigue exigiéndolo. La nueva no
+    // puede: una selección modular no tiene paquete que nombrar.
+    if (o.origen !== 'PLAN' && !planCode) return null
+
+    const modulos = Array.isArray(o.modulos)
+      ? o.modulos.filter((m): m is string => typeof m === 'string' && m.length > 0)
+      : []
+
+    return { ...comun, origen: 'PLAN', planCode, modulos }
   } catch {
     return null
   }
@@ -164,7 +180,10 @@ export const useContratacionStore = defineStore('contratacion', () => {
 
   const hayIntencionVigente = computed(() => vigente.value !== null)
 
-  /** Crea o actualiza la intención con un PLAN. Reescribir la selección la «desdescarta». */
+  /**
+   * Crea o actualiza la intención con una selección del catálogo —un paquete o
+   * los módulos sueltos—. Reescribir la selección la «desdescarta».
+   */
   function guardar(
     seleccion: SeleccionContratacion,
     importeVistoMensual: number | null,

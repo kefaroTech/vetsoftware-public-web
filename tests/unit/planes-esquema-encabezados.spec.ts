@@ -61,7 +61,7 @@ describe('El contenido principal de /planes existe en el esquema de la página',
     const wrapper = montarVista()
     const h1 = wrapper.findAll('h1')
     expect(h1).toHaveLength(1)
-    expect(wrapper.get('h1').text()).toBe('Armemos lo que tu clínica necesita')
+    expect(wrapper.get('h1').text()).toBe('Esto es lo que te armamos')
   })
 
   it('la sección de paquetes la encabeza un `h2` real, no un `summary`', () => {
@@ -69,7 +69,7 @@ describe('El contenido principal de /planes existe en el esquema de la página',
 
     const h2 = wrapper.get('#paquetes-h2')
     expect(h2.element.tagName).toBe('H2')
-    expect(h2.text()).toBe('O empieza por un paquete ya armado')
+    expect(h2.text()).toBe('O parte de una combinación conocida')
 
     // El `<details open>` estático era un control de divulgación sin ningún
     // estado plegado que valiera la pena: cerrarlo destruía el ancla de precio y

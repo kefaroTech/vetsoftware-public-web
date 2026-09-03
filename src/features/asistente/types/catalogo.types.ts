@@ -1,10 +1,10 @@
 /**
  * El catálogo comercial público, `GET /catalog`.
  *
- * ── Por qué estos cinco tipos se llaman EXACTAMENTE como los esquemas ───────
+ * ── Por qué estos seis tipos se llaman EXACTAMENTE como los esquemas ────────
  * TR-01: no se declara a mano un tipo que el contrato ya describe. `GET /catalog`
  * **existe hoy** —`PublicCatalogResponse` está en `api.generated.d.ts`— así que
- * los cinco tipos de abajo llevan el nombre del esquema y `api.contract.ts` los
+ * los seis tipos de abajo llevan el nombre del esquema y `api.contract.ts` los
  * ata. `api-contract.spec.ts` comprueba esa cobertura por NOMBRE: si alguien
  * renombrara uno para «que quede más bonito», la atadura se perdería sin que
  * nada fallara. Por eso el nombre es el del contrato y no el del dominio.
@@ -15,7 +15,7 @@
  * servidor manda y el front ignora es como se pierden datos en silencio.
  *
  * ── Lo que el contrato NO trae, y por eso vive aparte ───────────────────────
- * Tres cosas que el diseño necesita y `GET /catalog` no publica:
+ * Dos cosas que el diseño necesita y `GET /catalog` no publica:
  *
  *  1. **El tipo de arco.** `PublicCatalogRequirementResponse` solo trae
  *     `itemCode` → `requiredItemCode`. Los cuatro `RECOMMENDS` de la semilla 309
@@ -24,13 +24,16 @@
  *     requisito técnico.
  *  2. **La `note` en español** que el negocio escribió en `catalog_item_dependencies`.
  *     Es la frase que explica POR QUÉ se añadió un módulo.
- *  3. **La agrupación temática.** El backend no tiene categorías: los 26
- *     artículos llevan `sort_order` y tipo, nada más.
  *
- * Las tres son decisiones editoriales **mientras el contrato no las publique**,
+ * Las dos son decisiones editoriales **mientras el contrato no las publique**,
  * y viven en `content/catalogo.content.ts` con el mismo criterio con el que
  * `recommended` vive fuera de `PublicPlanContract` (ver `plans.types.ts`). El
  * seam las compone; ningún componente sabe de dónde salió cada mitad.
+ *
+ * <p>La agrupación de los módulos SÍ viaja: `areas` con su orden de
+ * presentación, y `PublicCatalogItemResponse.areaCode` para decir bajo qué
+ * cabecera va cada uno. `GrupoCatalogo`, más abajo, es otra cosa —los cuatro
+ * grupos temáticos que hoy pinta esta pantalla— y no se deriva de `areaCode`.
  */
 
 /** Cómo tributa el artículo. Unión cerrada del contrato. */
@@ -64,16 +67,24 @@ export interface PublicCatalogItemResponse {
   taxTreatment: CatalogoTaxTreatment | null
   /** Si la autocontratación lo aceptaría como línea. Ver §2.3 del plan. */
   selfServiceEligible: boolean
+  /**
+   * Cabecera bajo la que va el módulo; casa con `areas[].code`. `null` en todo
+   * lo que no se agrupa: los cargos únicos y `CORE`, que va en fila propia.
+   */
+  areaCode: string | null
+  /** Rótulo corto para la casilla. `null` mientras nadie lo escriba: se pinta `name`. */
+  shortLabel: string | null
 }
 
 /**
  * Un contador que se compra por unidades.
  *
- * <p>Los cuatro `EXTRA_*` llegan aquí con `selfServiceEligible = false`, y esa
- * bandera es la que impide cotizarlos: una línea de capacidad en la oferta
- * produce un `ARTICULO_NO_CONTRATABLE` en el paso 6 con un mensaje que
- * deliberadamente no dice qué línea sobró (§2.3, §6.5 del plan). Se muestran
- * como DATO, nunca como línea cotizada.
+ * <p>`selfServiceEligible` hay que LEERLO, no suponerlo: el servidor lo pone a
+ * cierto cuando la capacidad cuelga de un paquete activo **o** lleva su propia
+ * marca de autoservicio, así que una capacidad sí puede ser contratable.
+ * Cotizar una que llegue con `false` produce un `ARTICULO_NO_CONTRATABLE` en el
+ * paso 6, con un mensaje que deliberadamente no dice qué línea sobró (§2.3,
+ * §6.5 del plan).
  */
 export interface PublicCatalogCapacityResponse {
   code: string
@@ -112,6 +123,11 @@ export interface PublicCatalogPackResponse {
   taxTreatment: CatalogoTaxTreatment | null
   /** Rótulos de los artículos que incluye. Ninguno se puede comprar además del paquete. */
   componentCodes: string[]
+  /**
+   * La combinación que el negocio destaca. Es comercial y editable, no el
+   * mínimo estructural de `mandatory`; a lo sumo un paquete vivo la lleva.
+   */
+  recommended: boolean
 }
 
 /**
@@ -126,6 +142,20 @@ export interface PublicCatalogPackResponse {
 export interface PublicCatalogRequirementResponse {
   itemCode: string
   requiredItemCode: string
+}
+
+/**
+ * Una cabecera funcional del configurador.
+ *
+ * <p>**El orden de la lista ES el orden de presentación** y no se reordena en el
+ * cliente: el criterio lo fija el `ORDER BY` del servidor, igual que en
+ * `modules`, `capacities` y `packs`. No viaja ningún `sortOrder` con el que
+ * rehacerlo.
+ */
+export interface PublicCatalogAreaResponse {
+  /** El valor que traen los módulos en `areaCode`. */
+  code: string
+  name: string
 }
 
 /**
@@ -145,6 +175,8 @@ export interface PublicCatalogResponse {
   oneTimeItems: PublicCatalogItemResponse[]
   packs: PublicCatalogPackResponse[]
   requirements: PublicCatalogRequirementResponse[]
+  /** Vacía si no hay tarifa vigente: sin módulos que agrupar, una cabecera es un título sobre la nada. */
+  areas: PublicCatalogAreaResponse[]
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -154,7 +186,7 @@ export interface PublicCatalogResponse {
  * Ningún componente conoce `PublicCatalog*Response`: consumen esto.
  * ──────────────────────────────────────────────────────────────────────────── */
 
-/** Los cuatro grupos temáticos. Decisión editorial del front, como `recommended`. */
+/** Los cuatro grupos temáticos. Decisión editorial del front, como `PublicPlan.recommended`. */
 export type GrupoCatalogo = 'CLINICA' | 'AGENDA' | 'DINERO' | 'EXISTENCIAS'
 
 /**
@@ -208,6 +240,16 @@ export interface ArticuloCatalogo {
   obligatorio: boolean
   /** Si la autocontratación lo aceptaría como línea (§2.3 del plan). */
   vendible: boolean
+  /**
+   * El área bajo la que se agrupa, o `null` si no se agrupa.
+   *
+   * <p>**No es {@link ArticuloCatalogo.grupo}.** Los cuatro grupos del asistente
+   * son un reparto editorial del front y este es el del servidor; conviven a
+   * propósito hasta que la convergencia (public-web#272) decida cuál queda.
+   */
+  areaCode: string | null
+  /** Rótulo corto para donde no cabe el nombre. `null` si nadie lo escribió. */
+  shortLabel: string | null
 }
 
 /**
@@ -230,6 +272,20 @@ export interface PaqueteCatalogo {
   tagline: string | null
   importe: number | null
   componentes: string[]
+  /** La combinación que el negocio destaca. A lo sumo una la lleva. */
+  recommended: boolean
+}
+
+/**
+ * Una cabecera funcional, en el orden en que la publica el servidor.
+ *
+ * <p>Ese orden **es** el de presentación y no se reordena aquí: no viaja ningún
+ * criterio con el que rehacerlo (ver `PublicCatalogAreaResponse`).
+ */
+export interface AreaCatalogo {
+  /** El valor que traen los artículos en `areaCode`. */
+  code: string
+  nombre: string
 }
 
 /** El catálogo compuesto que consumen las pantallas. */
@@ -242,4 +298,6 @@ export interface CatalogoComercial {
   capacidades: CapacidadCatalogo[]
   paquetes: PaqueteCatalogo[]
   arcos: ArcoDependencia[]
+  /** Vacía cuando no hay tarifa vigente: sin artículos, una cabecera titula la nada. */
+  areas: AreaCatalogo[]
 }

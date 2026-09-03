@@ -4,7 +4,10 @@ import {
   releerPropuesta,
 } from '@/features/asistente/api/asistente.source'
 import type { Propuesta } from '@/features/asistente/types/asistente.types'
+import type { CatalogoComercial } from '@/features/asistente/types/catalogo.types'
 import { companyApi } from '@/features/empresa/api/company.api'
+import { previsualizarCotizacion } from '@/features/landing/api/cotizacion.source'
+import { cestaDeCotizacion } from '@/features/landing/composables/cotizadorLineas'
 import {
   calcularEstimado,
   subtotalMensualEquivalente,
@@ -122,6 +125,33 @@ export function lineasDePrueba(plan: PublicPlan, desdeISO: string = todayISO()):
     .sort((a, b) => a.trialEndDate.localeCompare(b.trialEndDate))
 }
 
+/**
+ * Las líneas de prueba de una selección de módulos, con el mismo orden y la
+ * misma regla que las de un paquete.
+ *
+ * <p>El núcleo entra siempre porque es el mínimo estructural (`is_core`), no
+ * porque nadie lo marque. `precioDespues` queda en `null` aunque el catálogo
+ * publique un importe por artículo: la columna que lo pinta rotula «al mes», y
+ * en el ciclo anual esa frase sería falsa.
+ */
+export function lineasDePruebaDeSeleccion(
+  modulos: readonly string[],
+  catalogo: CatalogoComercial,
+  desdeISO: string = todayISO(),
+): LineaPrueba[] {
+  const marcados = new Set(modulos)
+  return catalogo.articulos
+    .filter((a) => a.obligatorio || marcados.has(a.code))
+    .map<LineaPrueba>((a) => ({
+      code: a.code,
+      name: a.nombre,
+      trialEndDate: sumarDias(desdeISO, a.trialDays ?? 0),
+      trialDays: a.trialDays,
+      precioDespues: null,
+    }))
+    .sort((a, b) => a.trialEndDate.localeCompare(b.trialEndDate))
+}
+
 /** `true` cuando todas las líneas terminan el mismo día: el caso simple no paga el precio del complejo. */
 export function pruebaUniforme(lineas: readonly LineaPrueba[]): boolean {
   const primera = lineas[0]?.trialEndDate
@@ -159,6 +189,10 @@ export async function fetchResumenContratacion(args: ResumenArgs): Promise<Resum
 
   return {
     origen: 'PLAN',
+    modulos: intencion.modulos,
+    // El paquete es UNA línea con su precio de entrada; sus componentes no
+    // tienen importe propio que desglosar. Ver `ResumenPlan.lineas`.
+    lineas: [],
     // `findById` devuelve null sin permiso `company.read` o con 404, y la vista
     // degrada con gracia: se sigue pudiendo contratar sin ver el NIT, pero no se
     // inventa un nombre de clínica.
@@ -180,6 +214,82 @@ export async function fetchResumenContratacion(args: ResumenArgs): Promise<Resum
     subtotalMensualEquivalente: subtotalMensualEquivalente(plan, seleccion),
     sinPrecio: desglose.sinPrecio,
     lineasPrueba: lineasDePrueba(plan),
+    estadoPlanActual,
+  }
+}
+
+/** Qué se está contratando cuando la selección no reproduce ningún paquete. */
+export const TITULO_SELECCION = 'Tu selección de módulos'
+
+export interface ResumenSeleccionArgs {
+  intencion: IntencionPlan
+  catalogo: CatalogoComercial
+  companyId: number | null
+  estadoPlanActual: EstadoPlanActual
+}
+
+/**
+ * El resumen del paso 6 cuando lo que se contrata son módulos sueltos.
+ *
+ * <p>**Aquí no se suma ni un peso.** La cesta la compone `cestaDeCotizacion` —la
+ * misma que `/planes` acaba de cotizar, no una copia— y los importes los pone
+ * `POST /quotes/preview`, que resuelve tarifa vigente, tramos por volumen e
+ * impuesto con el mismo código que congela la oferta. Recalcularlos con la lista
+ * transcrita, como hace la rama del paquete, daría una segunda cifra: la
+ * escalera de descuentos por volumen no se publica, así que multiplicar el tramo
+ * de entrada se separa de lo que se cobra en cuanto hay unidades de más.
+ *
+ * <p>`tasaImpuesto` se queda en `null` a propósito. La respuesta trae el importe
+ * del impuesto y un `taxRate` POR LÍNEA sin escala declarada; deducir de ahí un
+ * «IVA 19 %» para la pantalla que decide una compra es equivocarse por un factor
+ * de cien. El importe sí se pinta, porque ese sí lo dijo el servidor.
+ */
+export async function fetchResumenSeleccion(args: ResumenSeleccionArgs): Promise<ResumenPlan> {
+  const { intencion, catalogo, companyId, estadoPlanActual } = args
+
+  const cesta = cestaDeCotizacion(
+    { modulos: intencion.modulos, sedes: intencion.sedes, usuarios: intencion.usuarios },
+    catalogo,
+  )
+
+  const [empresa, cotizacion] = await Promise.all([
+    companyId != null ? companyApi.findById(companyId) : Promise.resolve(null),
+    previsualizarCotizacion({ ciclo: intencion.ciclo, lineas: cesta.lineas }),
+  ])
+
+  const lineas: LineaContratada[] = cotizacion.lineas.map((l) => ({
+    code: l.code,
+    nombre: l.nombre,
+    tipo: null,
+    cantidad: l.cobradas,
+    importe: l.importe,
+  }))
+
+  return {
+    origen: 'PLAN',
+    empresaNombre: empresa?.name ?? 'tu clínica',
+    empresaIdentificador: empresa?.identifier ?? '',
+    // Nulo porque no hay paquete: es lo que hace que `lineasDeContratacion`
+    // arme la cesta con el catálogo en vez de con una línea de paquete.
+    planCode: null,
+    modulos: intencion.modulos,
+    titulo: TITULO_SELECCION,
+    ciclo: intencion.ciclo,
+    sedes: intencion.sedes,
+    usuarios: intencion.usuarios,
+    lineas,
+    subtotal: cotizacion.subtotal,
+    impuesto: cotizacion.impuesto,
+    tasaImpuesto: null,
+    total: cotizacion.total,
+    // El equivalente mensual solo se puede afirmar cuando el ciclo YA es
+    // mensual: dividir un importe anual entre doce es aritmética de dinero en el
+    // cliente sobre la cifra que además dispara el aviso de deriva.
+    subtotalMensualEquivalente: intencion.ciclo === 'MENSUAL' ? cotizacion.subtotal : null,
+    // La cotización respondió, así que hay precio para todo lo que lleva la
+    // cesta. Lo que no tiene precio en el ciclo pedido lo rechaza el servidor.
+    sinPrecio: [],
+    lineasPrueba: lineasDePruebaDeSeleccion(intencion.modulos, catalogo),
     estadoPlanActual,
   }
 }
@@ -370,9 +480,31 @@ function cantidadContratada(unit: CapacityUnit, sedes: number, usuarios: number)
 }
 
 /**
- * Las líneas de la oferta: **el paquete, y una capacidad solo cuando se pasa de
- * lo incluido**. Nunca los módulos.
+ * De dónde salen las líneas, que es lo único que separa las dos ramas.
  *
+ * <p>Unión y no dos argumentos nulables: con `plan` y `catalogo` opcionales las
+ * dos ramas compilarían con el argumento equivocado, que es el mismo motivo por
+ * el que {@link ActivarArgs} está escrito así.
+ */
+export type FuenteDeLineas =
+  { clase: 'PAQUETE'; plan: PublicPlan } | { clase: 'MODULOS'; catalogo: CatalogoComercial }
+
+/**
+ * Las líneas de la oferta, en las dos formas que la autocontratación acepta.
+ *
+ * ── Cuál de las dos, y por qué nunca las dos a la vez ──────────────────────
+ * Manda `planCode`: si la selección reproducía un paquete publicado, la
+ * intención lo guardó y aquí viaja **una línea de paquete**; si no, viaja
+ * `CORE` + cada módulo marcado. Un paquete junto a un componente suyo son dos
+ * cobros por lo mismo y el servidor los rechaza con un 400 que no dice cuál
+ * línea sobró, así que el conflicto se evita aquí y no se descubre allí.
+ *
+ * <p>Quien decidió que había paquete es `paqueteQueCoincide`, **la misma función
+ * que compuso la cesta que se cotizó**. Es la condición de la que depende que la
+ * pantalla y la factura digan lo mismo: dos criterios distintos —uno para
+ * cotizar y otro para contratar— enseñarían un precio y cobrarían otro.
+ *
+ * ── RAMA `PAQUETE` — el paquete, y una capacidad solo si se pasa ────────────
  * Tres decisiones, las tres con una cifra detrás:
  *
  *  1. **Los `includes` NO son líneas.** Son componentes del paquete
@@ -399,11 +531,33 @@ function cantidadContratada(unit: CapacityUnit, sedes: number, usuarios: number)
  *     lo que de verdad se cobra reduce esa superficie al caso en el que la
  *     capacidad extra es justamente lo que se está comprando, donde el fallo sí
  *     es el resultado correcto: sin precio anual no hay nada que cobrar.
+ *
+ * ── RAMA `MODULOS` — aquí los módulos SÍ son líneas ─────────────────────────
+ * Y tienen que serlo: sin paquete que los contenga, no mandarlos sería contratar
+ * un núcleo pelado cobrando lo que el prospecto vio por trece módulos. La cesta
+ * la compone `cestaDeCotizacion`, **la misma llamada que `/quotes/preview`**, no
+ * una reimplementación con las mismas reglas: la cesta que se cotiza y la que se
+ * contrata son el mismo objeto o acaban divergiendo.
+ *
+ * <p>La capacidad de esta rama sí viaja con las unidades que PASAN de lo
+ * incluido, y no es una contradicción con la decisión 2: son dos artículos
+ * distintos. Bajo un paquete la cantidad se cobra contra el tramo del propio
+ * paquete, que ya trae lo incluido; suelta se cobra contra el `EXTRA_*`, que
+ * tiene `included_quantity = 0` porque lo incluido vive en el `CAPACITY_*` del
+ * mismo eje. Quien lo resuelve es `unidadesExtra`, y su cabecera lo explica.
  */
 export function lineasDeContratacion(
-  plan: PublicPlan,
-  resumen: Pick<ResumenPlan, 'sedes' | 'usuarios'>,
+  resumen: Pick<ResumenPlan, 'modulos' | 'sedes' | 'usuarios'>,
+  fuente: FuenteDeLineas,
 ): SelfServeQuoteLineRequest[] {
+  if (fuente.clase === 'MODULOS') {
+    return cestaDeCotizacion(
+      { modulos: resumen.modulos, sedes: resumen.sedes, usuarios: resumen.usuarios },
+      fuente.catalogo,
+    ).lineas
+  }
+
+  const { plan } = fuente
   const lineas: SelfServeQuoteLineRequest[] = [{ code: plan.code, quantity: 1 }]
   for (const capacidad of plan.capacities) {
     const cantidad = cantidadContratada(capacidad.unit, resumen.sedes, resumen.usuarios)
@@ -444,15 +598,15 @@ interface ConLlave {
 /**
  * Las dos formas de contratar, como unión y no como un `plan` opcional.
  *
- * <p>La rama del PLAN necesita el plan **entero** —y no solo su `code`— porque
- * los rótulos de las capacidades (`capacities[].code`) son lo que el servidor
- * traduce, y el resumen no los lleva: el resumen es lo que se PINTA, no lo que
- * se envía. La rama de la PROPUESTA no necesita ninguno: sus líneas ya vienen
- * con el código que el servidor entiende. Con un campo opcional las dos ramas
- * compilarían con el argumento equivocado.
+ * <p>La rama del PLAN necesita la fuente de los códigos —el plan entero, o el
+ * catálogo comercial— y no solo el resumen: los rótulos que el servidor traduce
+ * (`capacities[].code`, los códigos de módulo) están ahí y no en el resumen, que
+ * es lo que se PINTA y no lo que se envía. La rama de la PROPUESTA no necesita
+ * ninguna: sus líneas ya vienen con el código que el servidor entiende. Con un
+ * campo opcional las dos ramas compilarían con el argumento equivocado.
  */
 export type ActivarArgs =
-  | (ConLlave & { resumen: ResumenPlan; plan: PublicPlan })
+  | (ConLlave & { resumen: ResumenPlan; fuente: FuenteDeLineas })
   | (ConLlave & { resumen: ResumenPropuesta })
 
 /**
@@ -472,12 +626,14 @@ export type ActivarArgs =
 export async function activarPlan(args: ActivarArgs): Promise<ResultadoContratacion> {
   const { resumen, clientRequestId } = args
 
-  // `'plan' in args` y NO `resumen.origen === 'PLAN'`: estrechar por una
+  // `'fuente' in args` y NO `resumen.origen === 'PLAN'`: estrechar por una
   // propiedad del miembro no estrecha la unión de fuera, así que el segundo
-  // compila la rama del plan sin `args.plan` a la vista. Es el mismo hecho
+  // compila la rama del plan sin `args.fuente` a la vista. Es el mismo hecho
   // escrito donde TypeScript puede comprobarlo.
   const lines =
-    'plan' in args ? lineasDeContratacion(args.plan, args.resumen) : lineasDePropuesta(args.resumen)
+    'fuente' in args
+      ? lineasDeContratacion(args.resumen, args.fuente)
+      : lineasDePropuesta(args.resumen)
 
   const cotizacion = await cotizacionesApi.selfServe({
     clientRequestId,

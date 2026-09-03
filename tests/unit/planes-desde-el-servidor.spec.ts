@@ -220,9 +220,9 @@ describe('`/planes` dice la verdad cuando el servidor no tiene tarifa', () => {
     const wrapper = montarVista()
     await flushPromises()
 
-    expect(wrapper.get('#paquetes-h2').text()).toBe('O empieza por un paquete ya armado')
+    expect(wrapper.get('#paquetes-h2').text()).toBe('O parte de una combinación conocida')
     expect(wrapper.find('[data-testid="planes-vacio"]').exists()).toBe(false)
-    expect(wrapper.findComponent({ name: 'PlanesConfigurador' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'PlanesCombinaciones' }).exists()).toBe(true)
   })
 
   it('sin tarifa, no promete un precio ni manda a contratar', async () => {
@@ -231,7 +231,7 @@ describe('`/planes` dice la verdad cuando el servidor no tiene tarifa', () => {
     const wrapper = montarVista()
     await flushPromises()
 
-    // El encabezado también cambia: «O empieza por un paquete ya armado» sobre un
+    // El encabezado también cambia: «O parte de una combinación conocida» sobre un
     // hueco es una instrucción que la pantalla no puede cumplir.
     expect(wrapper.get('#paquetes-h2').text()).toBe('Todavía no hay paquetes publicados')
 
@@ -241,7 +241,7 @@ describe('`/planes` dice la verdad cuando el servidor no tiene tarifa', () => {
     expect(aviso.text()).toContain('soporte@vetsoftware.co')
 
     // Y no queda ni un camino a contratar un importe que nadie puede honrar.
-    expect(wrapper.findComponent({ name: 'PlanesConfigurador' }).exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'PlanesCombinaciones' }).exists()).toBe(false)
   })
 
   it('mientras la petición está en vuelo NO afirma que no haya paquetes', async () => {
@@ -255,7 +255,7 @@ describe('`/planes` dice la verdad cuando el servidor no tiene tarifa', () => {
     await flushPromises()
 
     expect(wrapper.find('[data-testid="planes-vacio"]').exists()).toBe(false)
-    expect(wrapper.get('#paquetes-h2').text()).toBe('O empieza por un paquete ya armado')
+    expect(wrapper.get('#paquetes-h2').text()).toBe('O parte de una combinación conocida')
   })
 
   it('un fallo de red manda su propio mensaje, no el del vacío', async () => {

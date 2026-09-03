@@ -3,91 +3,120 @@ import { Check } from 'lucide-vue-next'
 import { computed, useId } from 'vue'
 import { RouterLink } from 'vue-router'
 import { formatMoney } from '@/composables/money'
-import { ahorroAnual, precioBase, sufijoCiclo } from '../composables/planPricing'
-import {
-  CAPACITY_UNIT_LABEL,
-  CAPACITY_UNIT_LABEL_ONE,
-  type Ciclo,
-  type PublicPlan,
-} from '../types/plans.types'
+import type { ArticuloCatalogo } from '@/features/asistente/types/catalogo.types'
+import { importeEstimado, precioBase, sufijoCiclo } from '../composables/planPricing'
+import type { Ciclo, PublicPlan } from '../types/plans.types'
 
 /**
- * Una tarjeta de plan.
+ * Una combinación frecuente. **Es un atajo de selección, no un paquete cerrado**:
+ * lo que el CTA hace es marcar de golpe unos módulos que después se pueden quitar.
  *
  * Reglas que la forma tiene que cumplir, y por qué:
  *
  *  - Es un `<article>` con `<h3>` y **un único** control. Nunca un `RouterLink`
  *    que envuelva la tarjeta entera: el nombre accesible de ese enlace sería la
- *    concatenación del título, el precio, los cinco puntos y el CTA.
- *  - El CTA **nombra el plan** («Empezar con Esencial»), no dice «Elegir». En una
- *    lista de enlaces —como la que produce un lector de pantalla— tres enlaces
- *    llamados «Elegir» son indistinguibles.
+ *    concatenación del título, el precio, los puntos y el CTA.
+ *  - El CTA dice lo mismo en todas las tarjetas, así que lo que las distingue en
+ *    la lista de enlaces de un lector es el `aria-describedby` al `<h3>`. Un
+ *    `aria-label` que nombrara la combinación rompería §2.5.3: el nombre
+ *    accesible dejaría de contener el texto visible.
  *  - La recomendada lleva insignia con TEXTO VISIBLE, no solo un borde de color:
  *    `--pub-line` mide 1,23:1 contra blanco, muy por debajo del 3:1 que §1.4.11
  *    exige a un indicador de estado, y §1.4.1 prohíbe que el color sea el único
- *    canal. El `<h3>` la apunta con `aria-describedby`.
- *  - El precio se rotula **siempre «desde»**: es contenido del front, no una
- *    cifra vinculante.
+ *    canal.
  */
 const props = defineProps<{
   plan: PublicPlan
   ciclo: Ciclo
+  /**
+   * Sale de `packs[].recommended` del catálogo del servidor, no de
+   * `PublicPlan.recommended`, que es una decisión editorial del front.
+   */
+  recomendada: boolean
+  /** Los módulos del paquete, en el orden del catálogo y con su precio. */
+  modulos: ArticuloCatalogo[]
+  /** Lo que costarían el núcleo y esos módulos sueltos; `null` si no se sabe. */
+  sumaSuelta: number | null
 }>()
 
-const emit = defineEmits<(e: 'elegir', plan: PublicPlan) => void>()
+const emit = defineEmits<(e: 'marcar') => void>()
 
 const uid = useId()
 const badgeId = `${uid}-badge`
+const tituloId = `${uid}-titulo`
 
 const precio = computed(() => precioBase(props.plan, props.ciclo))
-const ahorro = computed(() => ahorroAnual(props.plan))
 
-/** Los cuatro o cinco puntos de la tarjeta: capacidades primero, módulos después. */
-const puntos = computed<string[]>(() => {
-  const capacidades = props.plan.capacities.map((c) => {
-    const uno = c.included === 1
-    const etiqueta = uno ? CAPACITY_UNIT_LABEL_ONE[c.unit] : CAPACITY_UNIT_LABEL[c.unit]
-    return `${c.included} ${etiqueta} ${uno ? 'incluida' : 'incluidas'}`
-  })
-  return [...capacidades, ...props.plan.includes.map((i) => i.name)]
+const conteo = computed<string | null>(() => {
+  const n = props.modulos.length
+  if (n === 0) return null
+  return `Núcleo + ${n} ${n === 1 ? 'módulo' : 'módulos'}`
+})
+
+/**
+ * El aviso preventivo del modelo híbrido: quitar una casilla rompe la
+ * coincidencia con el paquete, se pierde su descuento y el precio SUBE. Sin
+ * decirlo antes, ese salto se lee como un error de cálculo.
+ *
+ * <p>Con un solo módulo no hay paquete que romper, y si la suma no supera al
+ * precio de la combinación no hay descuento que anunciar.
+ */
+const avisoDescuento = computed<string | null>(() => {
+  const n = props.modulos.length
+  const suelto = props.sumaSuelta
+  if (n < 2 || suelto === null || suelto <= precio.value) return null
+  return (
+    `Los ${n} juntos salen más baratos: ${formatMoney(precio.value)} en vez de ` +
+    `${formatMoney(suelto)}. Si quitas uno, se cobran por separado.`
+  )
 })
 </script>
 
 <template>
   <article
     class="pub-plan-card"
-    :class="{ 'pub-plan-card--featured': plan.recommended }"
+    :class="{ 'pub-plan-card--featured': recomendada }"
     data-testid="plan-card"
   >
-    <p v-if="plan.recommended" :id="badgeId" class="pub-badge">La que más eligen</p>
+    <p v-if="recomendada" :id="badgeId" class="pub-badge">La que más eligen</p>
 
-    <h3 class="land-plan-name" :aria-describedby="plan.recommended ? badgeId : undefined">
+    <h3 :id="tituloId" class="land-plan-name" :aria-describedby="recomendada ? badgeId : undefined">
       {{ plan.name }}
     </h3>
     <p class="land-plan-tagline">{{ plan.tagline }}</p>
 
     <p class="land-plan-price">
-      <span class="land-plan-desde">desde</span>
+      <span v-if="conteo" class="land-plan-conteo" data-testid="plan-card-conteo">
+        {{ conteo }}
+      </span>
       <span class="pub-price">{{ formatMoney(precio) }}</span>
       <span class="land-plan-suffix">+ IVA {{ sufijoCiclo(ciclo) }}</span>
     </p>
-    <p v-if="ciclo === 'ANUAL'" class="land-plan-save">
-      {{ formatMoney(plan.annualFromAmount) }} al año — ahorras {{ formatMoney(ahorro) }}
+
+    <p v-if="avisoDescuento" class="land-plan-descuento" data-testid="plan-card-descuento">
+      {{ avisoDescuento }}
     </p>
 
     <ul class="land-plan-list">
-      <li v-for="p in puntos" :key="p">
+      <li v-for="m in modulos" :key="m.code">
         <Check :size="14" :stroke-width="2" aria-hidden="true" />
-        <span>{{ p }}</span>
+        <span>{{ m.nombre }} · {{ importeEstimado(m.importe) }}</span>
+      </li>
+      <li>
+        <Check :size="14" :stroke-width="2" aria-hidden="true" />
+        <span>Quita en el siguiente paso lo que no uses</span>
       </li>
     </ul>
 
     <RouterLink
       :to="{ name: 'planes', query: { plan: plan.code, ciclo } }"
       class="land-plan-cta"
-      @click="emit('elegir', plan)"
+      :class="{ 'land-plan-cta--suave': !recomendada }"
+      :aria-describedby="tituloId"
+      data-testid="plan-card-cta"
+      @click="emit('marcar')"
     >
-      Empezar con {{ plan.name }}
+      Marcar estos módulos
     </RouterLink>
   </article>
 </template>
@@ -115,10 +144,10 @@ const puntos = computed<string[]>(() => {
   gap: 2px;
 }
 
-.land-plan-desde {
-  font-size: 12px;
+.land-plan-conteo {
+  font-size: 11.5px;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--pub-ink-500);
 }
@@ -128,11 +157,11 @@ const puntos = computed<string[]>(() => {
   color: var(--pub-ink-600);
 }
 
-.land-plan-save {
-  margin: -8px 0 0;
+.land-plan-descuento {
+  margin: -6px 0 0;
   font-size: 12.5px;
-  font-weight: 600;
-  color: var(--pub-ok-tx);
+  line-height: 1.5;
+  color: var(--pub-ink-500);
 }
 
 .land-plan-list {
@@ -173,5 +202,14 @@ const puntos = computed<string[]>(() => {
   background: linear-gradient(180deg, var(--pub-ame-600), var(--pub-ame-700));
   color: var(--pub-surface);
   box-shadow: var(--pub-btn-shadow);
+}
+
+/* El borde sale de `--pub-ame-600` (5,38:1) y no de `--pub-line-strong`
+   (1,29:1): esto es un control, y §1.4.11 le exige 3:1 al contorno. */
+.land-plan-cta--suave {
+  border: 1px solid var(--pub-ame-600);
+  background: var(--pub-surface);
+  color: var(--pub-ame-700);
+  box-shadow: none;
 }
 </style>

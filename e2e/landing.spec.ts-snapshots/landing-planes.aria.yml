@@ -1,6 +1,6 @@
-- region "Tres paquetes ya armados":
-  - heading "Tres paquetes ya armados" [level=2]
-  - paragraph: Por si quieres una cifra rápida. Si prefieres pagar solo por lo que uses, cuéntanos arriba qué hace tu clínica.
+- region "Combinaciones que se piden mucho":
+  - heading "Combinaciones que se piden mucho" [level=2]
+  - paragraph: Atajos para marcar varios módulos de una vez, no paquetes cerrados. Al elegir uno puedes quitar lo que no uses y el precio baja.
   - group "Cómo prefieres pagar":
     - text: ""
     - radio "Mes a mes" [checked]
@@ -10,60 +10,50 @@
   - article:
     - heading "Pack Spa" [level=3]
     - paragraph: Núcleo, agenda, servicios, spa y caja
-    - paragraph: /desde \$ \d+\.\d+ \+ IVA al mes/
+    - paragraph: /Núcleo \+ 4 módulos \$ \d+\.\d+ \+ IVA al mes/
+    - paragraph: "/Los 4 juntos salen más baratos: \\$ \\d+\\.\\d+ en vez de \\$ \\d+\\.\\d+\\. Si quitas uno, se cobran por separado\\./"
     - list:
-      - listitem: 2 personas incluidas
-      - listitem: 1 sede incluida
-      - listitem: "Núcleo: clientes y mascotas"
-      - listitem: Agenda de citas
-      - listitem: Spa, estética y guardería
-      - listitem: Servicios, tarifas y promociones
-      - listitem: Caja y punto de venta
-    - link "Empezar con Pack Spa":
+      - listitem: /Agenda de citas · \$ \d+\.\d+/
+      - listitem: /Spa, estética y guardería · \$ \d+\.\d+/
+      - listitem: /Servicios, tarifas y promociones · \$ \d+\.\d+/
+      - listitem: /Caja y punto de venta · \$ \d+\.\d+/
+      - listitem: Quita en el siguiente paso lo que no uses
+    - link "Marcar estos módulos":
       - /url: /planes?plan=PACK_SPA&ciclo=MENSUAL
   - article:
     - paragraph: La que más eligen
     - heading "Pack Clínica" [level=3]
     - paragraph: Núcleo, agenda, historia clínica, vacunación y caja
-    - paragraph: /desde \$ \d+\.\d+ \+ IVA al mes/
+    - paragraph: /Núcleo \+ 4 módulos \$ \d+\.\d+ \+ IVA al mes/
+    - paragraph: "/Los 4 juntos salen más baratos: \\$ \\d+\\.\\d+ en vez de \\$ \\d+\\.\\d+\\. Si quitas uno, se cobran por separado\\./"
     - list:
-      - listitem: 2 personas incluidas
-      - listitem: 1 sede incluida
-      - listitem: "Núcleo: clientes y mascotas"
-      - listitem: Agenda de citas
-      - listitem: Historia clínica y consultas
-      - listitem: Vacunación y desparasitación
-      - listitem: Caja y punto de venta
-    - link "Empezar con Pack Clínica":
+      - listitem: /Agenda de citas · \$ \d+\.\d+/
+      - listitem: /Historia clínica y consultas · \$ \d+\.\d+/
+      - listitem: /Vacunación y desparasitación · \$ \d+\.\d+/
+      - listitem: /Caja y punto de venta · \$ \d+\.\d+/
+      - listitem: Quita en el siguiente paso lo que no uses
+    - link "Marcar estos módulos":
       - /url: /planes?plan=PACK_CLINIC&ciclo=MENSUAL
   - article:
     - heading "Pack Clínica completa" [level=3]
     - paragraph: Todo el producto, de la historia clínica a la facturación DIAN
-    - paragraph: /desde \$ \d+\.\d+ \+ IVA al mes/
+    - paragraph: /Núcleo \+ \d+ módulos \$ \d+\.\d+ \+ IVA al mes/
+    - paragraph: "/Los \\d+ juntos salen más baratos: \\$ \\d+\\.\\d+ en vez de \\$ \\d+\\.\\d+\\. Si quitas uno, se cobran por separado\\./"
     - list:
-      - listitem: 2 personas incluidas
-      - listitem: 1 sede incluida
-      - listitem: "Núcleo: clientes y mascotas"
-      - listitem: Agenda de citas
-      - listitem: Historia clínica y consultas
-      - listitem: Vacunación y desparasitación
-      - listitem: Hospitalización
-      - listitem: Cirugía
-      - listitem: Laboratorio e imagen diagnóstica
-      - listitem: Spa, estética y guardería
-      - listitem: Servicios, tarifas y promociones
-      - listitem: Caja y punto de venta
-      - listitem: Inventario y kardex
-      - listitem: Compras y proveedores
-      - listitem: Cuentas abiertas y cartera
-      - listitem: Facturación electrónica DIAN
-    - link "Empezar con Pack Clínica completa":
+      - listitem: /Agenda de citas · \$ \d+\.\d+/
+      - listitem: /Historia clínica y consultas · \$ \d+\.\d+/
+      - listitem: /Vacunación y desparasitación · \$ \d+\.\d+/
+      - listitem: /Spa, estética y guardería · \$ \d+\.\d+/
+      - listitem: /Hospitalización · \$ \d+\.\d+/
+      - listitem: /Cirugía · \$ \d+\.\d+/
+      - listitem: /Laboratorio e imagen diagnóstica · \$ \d+\.\d+/
+      - listitem: /Servicios, tarifas y promociones · \$ \d+\.\d+/
+      - listitem: /Caja y punto de venta · \$ \d+\.\d+/
+      - listitem: /Cuentas abiertas y cartera · \$ \d+\.\d+/
+      - listitem: /Facturación electrónica DIAN · \$ \d+\.\d+/
+      - listitem: /Inventario y kardex · \$ \d+\.\d+/
+      - listitem: /Compras y proveedores · \$ \d+\.\d+/
+      - listitem: Quita en el siguiente paso lo que no uses
+    - link "Marcar estos módulos":
       - /url: /planes?plan=PACK_FULL&ciclo=MENSUAL
-  - paragraph:
-    - text: Los precios son orientativos, en pesos colombianos (COP), y no incluyen IVA. El precio exacto para tu clínica lo ves antes de confirmar, sin compromiso y sin tarjeta. También puedes
-    - link "decirnos con tus palabras qué necesitas":
-      - /url: "#cotizador"
-    - text: y te armamos una propuesta.
-  - paragraph:
-    - link "Comparar los tres planes en detalle":
-      - /url: /planes
+  - paragraph: /Todas parten del núcleo \(\$ \d+\.\d+ al mes\) con 2 personas y 1 sede\. Cada sede adicional cuesta \$ \d+\.\d+ al mes y cada persona adicional \$ \d+\.\d+ al mes\./

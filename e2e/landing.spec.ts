@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
+import { enrutarEmbudoPublico } from './helpers/catalogo'
 import { CLAVE_INTENCION, intencion, leerIntencion, sembrarIntencion } from './helpers/contratacion'
 import { exigir } from './helpers/exigir'
 
@@ -6,11 +7,13 @@ import { exigir } from './helpers/exigir'
  * La landing comercial y el paso 2 del embudo (`/planes`).
  *
  * ── Por qué esta suite no necesita backend, ni sesión, ni credenciales ─────
- * El catálogo público NO viaja por red: `fetchPlans()` devuelve el contenido de
- * `content/plans.content.ts` (es el «seam» que el día de `GET /plans` cambia de
- * cuerpo y nada más). Así que estos casos corren en cualquier máquina, sin
- * `E2E_PASSWORD` y sin base de datos, y fallan **solo** cuando cambia el
- * marcado. Es la propiedad que hace que valga la pena tenerlos.
+ * Porque la frontera HTTP está simulada en `helpers/catalogo.ts`. La portada
+ * pide `GET /plans`, `GET /catalog` y `POST /quotes/preview` —el precio lo
+ * calcula el servidor, decisión D5, y no este front—, así que sin doble no monta
+ * con datos. Lo que se sustituye es la respuesta; router, guardas, stores, seams
+ * y componentes son los de producción, así que estos casos corren en cualquier
+ * máquina sin `E2E_PASSWORD` ni base de datos, y fallan **solo** cuando cambia
+ * la aplicación.
  *
  * ── Qué sujeta, y contra qué defecto concreto ──────────────────────────────
  * La instantánea ARIA de `<section id="planes">` es regresión de SEMÁNTICA, no
@@ -20,6 +23,14 @@ import { exigir } from './helpers/exigir'
  * párrafo entero leído como si fuera el rótulo de un botón. Una captura de
  * píxeles de esa versión sale IDÉNTICA: el cambio es invisible a la vista y
  * demoledor al oído.
+ *
+ * ── Lo que los casos de ancla protegen, que no es el rótulo ────────────────
+ * Los tres enlaces de esta página que apuntan a una sección propia mueven el
+ * FOCO además del scroll (`irAAncla`). Con solo el hash el navegador desplaza la
+ * vista y deja el foco en el `<body>`, de modo que la siguiente tabulación
+ * devuelve a la barra de navegación: §2.4.3 roto por omisión, invisible con el
+ * ratón. Los rótulos han cambiado dos veces ya; la afirmación de foco es lo que
+ * no puede perderse al reescribirlos.
  */
 
 /** El texto del `<title>` de cada ruta, tal como lo declara `meta.title`. */
@@ -27,19 +38,49 @@ const TITULO_LANDING = 'VetSoftware — Software para clínicas veterinarias en 
 const TITULO_PLANES = 'Planes y precios — VetSoftware'
 
 /**
- * El escape de la caja de arranque hacia los paquetes.
- *
- * <p>Sustituye a `ctaDelHero`, que buscaba un enlace «Ver los planes» con
- * `[href="#planes"]` **que ya no existe**. El hero dejó de tener un botón hacia
- * los paquetes cuando el cotizador pasó a ser su acción principal, y con él se
- * fue el problema que aquel helper documentaba: dos enlaces con el MISMO rótulo
- * a cuarenta píxeles uno del otro y con destinos distintos (§2.4.4). Ahora el
- * rótulo dice a dónde va, así que basta el nombre accesible y el destino se
- * afirma aparte, en el caso, en vez de esconderse dentro del selector.
+ * El `<h1>` de `/planes`, que NO es su `<title>`: son dos textos distintos y los
+ * dos correctos, y confundirlos es lo que hace que un caso afirme el de la
+ * pestaña creyendo que afirma el de la pantalla.
  */
-function anclaAPaquetes(page: Page) {
-  return page.getByRole('link', { name: 'Mira los tres paquetes ya armados.' })
+const H1_PLANES = 'Esto es lo que te armamos'
+
+/**
+ * El único control de cada tarjeta de combinación.
+ *
+ * <p>Dice lo MISMO en las tres a propósito: lo que las distingue en la lista de
+ * enlaces de un lector es el `aria-describedby` al `<h3>`, no el rótulo. Por eso
+ * localizar por nombre resuelve tres enlaces y hay que acotar por tarjeta.
+ */
+const CTA_TARJETA = 'Marcar estos módulos'
+
+/** Las tres combinaciones publicadas, por el nombre que enseña su `<h3>`. */
+const COMBINACIONES = ['Pack Spa', 'Pack Clínica', 'Pack Clínica completa'] as const
+
+function tarjeta(page: Page, nombre: string): Locator {
+  return page
+    .locator('#planes')
+    .getByTestId('plan-card')
+    .filter({
+      has: page.getByRole('heading', { level: 3, name: nombre, exact: true }),
+    })
 }
+
+/**
+ * El texto del elemento que DESCRIBE a un control.
+ *
+ * <p>Se resuelve el `aria-describedby` de verdad en vez de comprobar que el
+ * atributo existe: un identificador que no apunta a nada se lee igual de bien en
+ * el marcado y no describe nada en el lector.
+ */
+async function descripcionDe(page: Page, control: Locator): Promise<string> {
+  const id = await control.getAttribute('aria-describedby')
+  expect(id, 'el control tiene que estar descrito por algo').toBeTruthy()
+  return (await page.locator(`#${id}`).textContent())?.trim() ?? ''
+}
+
+test.beforeEach(async ({ page }) => {
+  await enrutarEmbudoPublico(page)
+})
 
 test.describe('Landing comercial', () => {
   test('el primer elemento tabulable es el enlace de salto, y salta de verdad', async ({
@@ -63,47 +104,48 @@ test.describe('Landing comercial', () => {
     await expect(page.getByRole('main')).toBeFocused()
   })
 
-  test('el título del documento identifica la ruta', async ({ page }) => {
+  test('el título del documento identifica cada ruta', async ({ page }) => {
     await page.goto('/')
     await expect(page).toHaveTitle(TITULO_LANDING)
 
-    await page
-      .getByRole('navigation', { name: 'Principal' })
-      .getByRole('link', { name: 'Planes' })
-      .click()
-    await expect(page).toHaveURL(/\/planes$/)
+    // `/planes` se comprueba entrando por la URL y no pulsando: desde la portada
+    // no hay ningún enlace que navegue allí sin llevar consulta —los dos primeros
+    // de la barra superior son anclas de esta misma página— y los tres que sí
+    // navegan aterrizan en `/planes?plan=…`, que es otra URL.
+    await page.goto('/planes')
     await expect(page).toHaveTitle(TITULO_PLANES)
   })
 
-  test('la caja de arranque ancla en los paquetes y lleva el foco a la sección', async ({
+  test('los dos enlaces de la barra superior anclan en esta página y llevan el foco', async ({
     page,
   }) => {
     await page.goto('/')
-    const seccion = page.locator('#planes')
-    await expect(seccion).toBeVisible()
+    const nav = page.getByRole('navigation', { name: 'Principal' })
 
-    const escape = anclaAPaquetes(page)
-    // El destino se afirma, no se usa para localizar: si alguien convierte esto
-    // en un `RouterLink`, lo que se lee es «el href dejó de ser #planes» y no
-    // «no encuentro el enlace», que no señalaría a la causa.
-    await expect(escape).toHaveAttribute('href', '#planes')
-    await escape.click()
+    // El destino se AFIRMA, no se usa para localizar: si alguien convierte uno de
+    // estos en un `RouterLink`, lo que se lee es «el href dejó de ser #planes» y
+    // no «no encuentro el enlace», que no señalaría a la causa.
+    for (const [rotulo, ancla] of [
+      ['Paquetes', 'planes'],
+      ['Preguntas', 'preguntas'],
+    ] as const) {
+      const enlace = nav.getByRole('link', { name: rotulo })
+      await expect(enlace).toHaveAttribute('href', `#${ancla}`)
+      await enlace.click()
 
-    // No navega: el ancla es de la misma página, y quien está leyendo la landing
-    // no tiene por qué pagar una carga entera para ver una sección que ya tiene
-    // debajo.
-    await expect(page).toHaveURL(/\/$/)
-    await expect(seccion).toBeFocused()
+      // No navega: el destino está debajo, y quien está leyendo la landing no
+      // tiene por qué pagar una carga entera para ver una sección que ya tiene.
+      await expect(page).toHaveURL(/\/$/)
+      await expect(page.locator(`#${ancla}`)).toBeFocused()
+    }
   })
 
-  test('el cierre devuelve a la caja de arranque, y le lleva el foco', async ({ page }) => {
+  test('el cierre sube al cotizador, y le lleva el foco', async ({ page }) => {
     await page.goto('/')
 
-    // El CTA primario del cierre apuntaba a los paquetes, igual que el del hero
-    // y con el mismo rótulo. Ahora sube al cotizador, que es el camino
-    // principal, y lo hace por ancla —está en esta misma página— llevando el
-    // foco: sin eso la siguiente tabulación devolvería a la barra de navegación.
-    const volver = page.getByRole('link', { name: 'Cuéntanos qué necesitas' })
+    // El cierre tiene UN solo control y es el mismo camino que el hero: quien
+    // leyó la página entera no necesita volver arriba a buscarlo.
+    const volver = page.getByRole('link', { name: 'Armar mi propuesta' })
     await expect(volver).toHaveAttribute('href', '#cotizador')
     await volver.click()
 
@@ -111,45 +153,48 @@ test.describe('Landing comercial', () => {
     await expect(page.locator('#cotizador')).toBeFocused()
   })
 
-  test('ya no hay dos enlaces llamados «Ver los planes» yendo a sitios distintos', async ({
+  test('las tres tarjetas comparten rótulo y se distinguen por su descripción', async ({
     page,
   }) => {
     await page.goto('/')
     await expect(page.locator('#planes')).toBeVisible()
 
-    // §2.4.4 Link Purpose (In Context). El rótulo estaba DOS veces en la misma
-    // página —hero y cierre— con destinos distintos (`#planes` y `/planes`), de
-    // modo que en la lista de enlaces de un lector de pantalla eran
-    // indistinguibles. Se retiró de los dos sitios; esta afirmación es lo único
-    // que impide que vuelva de tapadillo con el siguiente retoque de copy.
-    await expect(page.getByRole('link', { name: 'Ver los planes' })).toHaveCount(0)
+    // §2.4.4 Link Purpose (In Context) y §2.5.3 Label in Name a la vez. Un
+    // `aria-label` que nombrara la combinación —«Marcar los módulos de Pack
+    // Spa»— dejaría el nombre accesible sin el texto visible y rompería §2.5.3;
+    // tres enlaces con el mismo nombre y sin descripción los dejaría
+    // indistinguibles en la lista de enlaces del lector. La salida es esta, y es
+    // la que se rompería sola con el siguiente retoque de copy.
+    for (const nombre of COMBINACIONES) {
+      const cta = tarjeta(page, nombre).getByRole('link')
+      await expect(cta).toHaveCount(1)
+      await expect(cta).toHaveAccessibleName(CTA_TARJETA)
+      expect(await descripcionDe(page, cta)).toBe(nombre)
+    }
   })
 
-  test('la sección de planes conserva su semántica', async ({ page }) => {
+  test('la sección de combinaciones conserva su semántica', async ({ page }) => {
     await page.goto('/')
     const seccion = page.locator('#planes')
     await expect(seccion.getByTestId('plan-card')).toHaveCount(3)
 
-    // ── Las tres afirmaciones que fallarían HOY si alguien deshiciera el
-    // arreglo, escritas aparte de la instantánea. Una instantánea generada se
-    // limita a congelar lo que hubiera; esto dice lo que TIENE que haber.
-    // «Planes» a secas enseñaba que la unidad de compra es el paquete, que es la
-    // negación literal de «paga solo lo que uses». El encabezado nuevo los
-    // nombra por lo que son y deja el camino a medida como el principal.
+    // ── Las afirmaciones que fallarían HOY si alguien deshiciera el arreglo,
+    // escritas aparte de la instantánea. Una instantánea generada se limita a
+    // congelar lo que hubiera; esto dice lo que TIENE que haber.
+    //
+    // El encabezado no puede prometer un paquete cerrado: la unidad de compra es
+    // el módulo y estas tarjetas solo marcan varios de golpe. Un rótulo que
+    // hablara de paquetes sería la negación literal de «paga solo lo que uses»,
+    // que es lo que dice el titular tres pliegues más arriba.
     await expect(
-      seccion.getByRole('heading', { level: 2, name: 'Tres paquetes ya armados' }),
+      seccion.getByRole('heading', { level: 2, name: 'Combinaciones que se piden mucho' }),
     ).toBeVisible()
 
-    for (const nombre of ['Pack Spa', 'Pack Clínica', 'Pack Clínica completa']) {
-      const tarjeta = seccion.getByTestId('plan-card').filter({
-        has: page.getByRole('heading', { level: 3, name: nombre, exact: true }),
-      })
-      // UN solo control por tarjeta, y su nombre accesible NOMBRA EL PLAN. Con
-      // la tarjeta envuelta en un enlace habría dos, y el de fuera se llamaría
-      // «Pack Spa Núcleo, agenda, servicios, spa y caja desde $179.000 + IVA al
-      // mes 2 personas incluidas…».
-      await expect(tarjeta.getByRole('link')).toHaveCount(1)
-      await expect(tarjeta.getByRole('link')).toHaveAccessibleName(`Empezar con ${nombre}`)
+    // UN solo control por tarjeta. Con la tarjeta envuelta en un enlace habría
+    // dos, y el de fuera se llamaría «Pack Spa Núcleo, agenda, servicios, spa y
+    // caja desde $179.000 + IVA al mes 2 personas incluidas…».
+    for (const nombre of COMBINACIONES) {
+      await expect(tarjeta(page, nombre).getByRole('link')).toHaveCount(1)
     }
 
     // Y la instantánea completa, que coge lo que las afirmaciones de arriba no
@@ -158,20 +203,22 @@ test.describe('Landing comercial', () => {
     await expect(seccion).toMatchAriaSnapshot({ name: 'landing-planes.aria.yml' })
   })
 
-  test('elegir un plan guarda la intención y la lleva a /planes por la URL', async ({ page }) => {
+  test('marcar una combinación guarda la intención y lleva a /planes por la URL', async ({
+    page,
+  }) => {
     await page.goto('/')
-
-    // `exact: true` NO es adorno: «Empezar con Pack Clínica» es PREFIJO de
-    // «Empezar con Pack Clínica completa», y el emparejamiento por nombre de rol
-    // es por subcadena. Sin esto el selector resuelve DOS enlaces y falla con
-    // «strict mode violation», que no señala a la causa.
-    await page.getByRole('link', { name: 'Empezar con Pack Clínica', exact: true }).click()
+    await tarjeta(page, 'Pack Clínica').getByRole('link').click()
 
     await expect(page).toHaveURL(/\/planes\?plan=PACK_CLINIC&ciclo=MENSUAL$/)
 
     const leida = await leerIntencion(page)
     expect(leida, 'la elección tiene que sobrevivir al cierre del navegador').not.toBeNull()
     expect(exigir(leida, 'leida').planCode).toBe('PACK_CLINIC')
+    // Sin módulos, y eso ES la rama del paquete: la tarjeta ofrece la
+    // combinación entera, no casillas. Guardar aquí los componentes haría que el
+    // paso vinculante mandara el paquete Y sus piezas, que el servidor rechaza
+    // con un cuerpo que no dice cuál sobró.
+    expect(exigir(leida, 'leida').modulos).toEqual([])
     // El importe que se VIO viaja con la elección: es la mitad de la regla de
     // «se confirma el importe que se mostró» (§5, caso 3).
     expect(exigir(leida, 'leida').importeVistoMensual).toBeGreaterThan(0)
@@ -224,39 +271,43 @@ test.describe('Landing comercial', () => {
   })
 })
 
-test.describe('/planes — el configurador ligero', () => {
+test.describe('/planes — el paso de la propuesta', () => {
+  /**
+   * El botón vive en el carril del importe y NO se deshabilita: lleva
+   * `aria-disabled` para seguir siendo enfocable. Así que esperar a que exista no
+   * basta —pulsarlo antes de que llegue el catálogo es un clic que no hace nada
+   * y el fallo se leería como «no navegó»—, y lo que se espera es su estado real.
+   */
+  async function continuar(page: Page): Promise<Locator> {
+    const boton = page.getByRole('button', { name: 'Continuar' })
+    await expect(boton).not.toHaveAttribute('aria-disabled', 'true')
+    return boton
+  }
+
   test('siembra la selección desde la URL y continúa al registro con ella', async ({ page }) => {
     // 3 sedes y 8 personas se pasan de verdad de lo incluido (1 sede, 2
-    // personas): antes el contenido inventaba que `CADENA` traía 5 sedes y 20
-    // personas y esta selección no cobraba ni un extra.
+    // personas), así que la cesta lleva sus dos líneas de capacidad.
     await page.goto('/planes?plan=PACK_FULL&ciclo=ANUAL&sedes=3&usuarios=8')
 
     // El `<h1>` NO es «Planes y precios»: ese es el `<title>` de la ruta, que es
     // otra cosa y sigue siendo correcto —lo afirman `a11y-publicas.spec.ts` y
-    // `TITULO_PLANES` aquí arriba—. La pantalla dejó de ser un catálogo de
-    // paquetes cuando el asistente pasó a ser su contenido principal, y ningún
-    // enlace de entrada promete ese texto: la topbar dice «Planes», el cierre de
-    // la landing «Ver los tres paquetes» y la tarjeta «Comparar los tres planes
-    // en detalle». El encabezado que describe lo que se hace aquí es el de la
-    // vista, y ya no habla de «el plan»: la unidad de compra dejó de ser el
-    // paquete el día que el texto libre pasó a ser lo primero que se toca.
-    await expect(
-      page.getByRole('heading', { level: 1, name: 'Armemos lo que tu clínica necesita' }),
-    ).toBeVisible()
+    // `TITULO_PLANES` aquí arriba—. El de la vista describe lo que se hace aquí,
+    // y ya no habla de armar: cuando se llega, lo armado está delante.
+    await expect(page.getByRole('heading', { level: 1, name: H1_PLANES })).toBeVisible()
 
     const sedes = page.getByRole('spinbutton', { name: /sedes/i })
     await expect(sedes).toHaveValue('3')
     const usuarios = page.getByRole('spinbutton', { name: /personas|usuarios/i })
     await expect(usuarios).toHaveValue('8')
 
-    await page.getByRole('button', { name: /^Continuar con / }).click()
+    await (await continuar(page)).click()
 
     await expect(page).toHaveURL(/\/registro\?plan=PACK_FULL&ciclo=ANUAL&sedes=3&usuarios=8$/)
   })
 
   test('el carril «Tu selección» acompaña al registro', async ({ page }) => {
     await page.goto('/planes?plan=PACK_CLINIC&ciclo=MENSUAL&sedes=2&usuarios=4')
-    await page.getByRole('button', { name: /^Continuar con / }).click()
+    await (await continuar(page)).click()
 
     // Lo que evita que el salto de verificación por correo mate la conversión:
     // el prospecto ve durante todo el registro lo que ya eligió.

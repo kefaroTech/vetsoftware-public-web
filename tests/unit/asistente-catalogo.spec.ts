@@ -47,6 +47,8 @@ function articulo(over: Partial<PublicCatalogItemResponse> = {}): PublicCatalogI
     taxRate: 19,
     taxTreatment: null,
     selfServiceEligible: true,
+    areaCode: null,
+    shortLabel: 'Núcleo',
     ...over,
   }
 }
@@ -69,21 +71,39 @@ const MUESTRA: PublicCatalogResponse = {
       monthlyAmount: 49000,
       annualAmount: 500000,
       trialDays: 30,
+      areaCode: 'PATIENT_CARE',
+      shortLabel: 'Historia clínica',
     }),
     articulo({
       code: 'CASH_REGISTER',
       name: 'Caja',
       mandatory: false,
       trialDays: 14,
+      areaCode: 'FRONT_DESK',
+      shortLabel: 'Caja y mostrador',
     }),
     articulo({
       code: 'ELECTRONIC_INVOICING',
       name: 'Facturación electrónica',
       mandatory: false,
       trialDays: null,
+      areaCode: 'FRONT_DESK',
+      shortLabel: 'Facturación DIAN',
     }),
-    articulo({ code: 'OPEN_ACCOUNTS', name: 'Cuentas abiertas', mandatory: false }),
-    articulo({ code: 'INVENTORY', name: 'Inventario', mandatory: false }),
+    articulo({
+      code: 'OPEN_ACCOUNTS',
+      name: 'Cuentas abiertas',
+      mandatory: false,
+      areaCode: 'FRONT_DESK',
+      shortLabel: 'Cartera',
+    }),
+    articulo({
+      code: 'INVENTORY',
+      name: 'Inventario',
+      mandatory: false,
+      areaCode: 'WAREHOUSE',
+      shortLabel: 'Inventario',
+    }),
   ],
   oneTimeItems: [
     // ⚠️ No es relleno. `DATA_MIGRATION` llega con `selfServiceEligible = false`
@@ -96,6 +116,7 @@ const MUESTRA: PublicCatalogResponse = {
       name: 'Migración de datos',
       mandatory: false,
       selfServiceEligible: false,
+      shortLabel: null,
     }),
   ],
   capacities: [
@@ -125,11 +146,17 @@ const MUESTRA: PublicCatalogResponse = {
       taxRate: 19,
       taxTreatment: null,
       componentCodes: ['CORE', 'CLINICAL_HISTORY', 'CASH_REGISTER'],
+      recommended: true,
     },
   ],
   requirements: [
     { itemCode: 'OPEN_ACCOUNTS', requiredItemCode: 'CASH_REGISTER' },
     { itemCode: 'ELECTRONIC_INVOICING', requiredItemCode: 'CASH_REGISTER' },
+  ],
+  areas: [
+    { code: 'PATIENT_CARE', name: 'Atención a los pacientes' },
+    { code: 'FRONT_DESK', name: 'Mostrador y dinero' },
+    { code: 'WAREHOUSE', name: 'Bodega y compras' },
   ],
 }
 

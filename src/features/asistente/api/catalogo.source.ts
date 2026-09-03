@@ -3,6 +3,7 @@ import type { Ciclo } from '../../landing/types/plans.types'
 import { ARCOS_EDITORIALES, GRUPO_POR_CODIGO, NOTA_DE_ARCO } from '../content/catalogo.content'
 import type {
   ArcoDependencia,
+  AreaCatalogo,
   ArticuloCatalogo,
   CapacidadCatalogo,
   CatalogoComercial,
@@ -61,6 +62,8 @@ export function componer(respuesta: PublicCatalogResponse, ciclo: Ciclo): Catalo
     trialDays: m.trialDays,
     obligatorio: m.mandatory,
     vendible: m.selfServiceEligible,
+    areaCode: m.areaCode,
+    shortLabel: m.shortLabel,
   })
 
   // ⚠️ Los DOS bloques, y `oneTimeItems` no es un adorno. `ONBOARDING` y
@@ -92,6 +95,7 @@ export function componer(respuesta: PublicCatalogResponse, ciclo: Ciclo): Catalo
     tagline: p.tagline,
     importe: importeDelCiclo(ciclo, p.monthlyAmount, p.annualAmount),
     componentes: p.componentCodes,
+    recommended: p.recommended,
   }))
 
   // Los REQUIRES del servidor, más los RECOMMENDS editoriales. El orden importa
@@ -107,6 +111,10 @@ export function componer(respuesta: PublicCatalogResponse, ciclo: Ciclo): Catalo
     ...ARCOS_EDITORIALES,
   ]
 
+  // El orden de `areas` llega resuelto por el `ORDER BY` del servidor y se copia
+  // tal cual: no viaja ningún criterio con el que reordenarlo aquí.
+  const areas: AreaCatalogo[] = respuesta.areas.map((a) => ({ code: a.code, nombre: a.name }))
+
   return {
     currency: respuesta.currency,
     priceValidFrom: respuesta.priceValidFrom,
@@ -114,6 +122,7 @@ export function componer(respuesta: PublicCatalogResponse, ciclo: Ciclo): Catalo
     capacidades,
     paquetes,
     arcos,
+    areas,
   }
 }
 

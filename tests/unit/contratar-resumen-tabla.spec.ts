@@ -32,7 +32,10 @@ vi.mock('vue-router', () => ({
   RouterLink: { props: ['to'], template: '<a :href="JSON.stringify(to)"><slot /></a>' },
 }))
 
-const COMUN: Omit<ResumenPlan, 'origen' | 'titulo' | 'planCode' | 'sedes' | 'usuarios'> = {
+const COMUN: Omit<
+  ResumenPlan,
+  'origen' | 'titulo' | 'planCode' | 'sedes' | 'usuarios' | 'modulos'
+> = {
   empresaNombre: 'Clínica de prueba',
   empresaIdentificador: '900123456-7',
   ciclo: 'MENSUAL',
@@ -42,6 +45,7 @@ const COMUN: Omit<ResumenPlan, 'origen' | 'titulo' | 'planCode' | 'sedes' | 'usu
   total: 119_000,
   subtotalMensualEquivalente: 100_000,
   sinPrecio: [],
+  lineas: [],
   lineasPrueba: [],
   estadoPlanActual: 'SIN_PLAN',
 }
@@ -51,6 +55,7 @@ const PLAN: ResumenPlan = {
   origen: 'PLAN',
   titulo: 'Pack Clínica',
   planCode: 'PACK_CLINIC',
+  modulos: [],
   sedes: 3,
   usuarios: 8,
 }

@@ -27,6 +27,14 @@ const { resultado } = storeToRefs(useResultadoContratacionStore())
 
 const h1 = ref<HTMLElement | null>(null)
 
+/**
+ * Cuántos módulos quedaron reservados, contados sobre las líneas que se pintan
+ * debajo. Se dice el número y no «el núcleo y N»: distinguir cuál de esas
+ * líneas es el mínimo estructural exige el catálogo, y esta pantalla no lo
+ * tiene — inventarlo sería contar mal en la frase que resume una compra.
+ */
+const cuantosModulos = computed(() => resultado.value?.modulosActivados.length ?? 0)
+
 const modulos = computed(() => {
   const nombres = resultado.value?.modulosActivados ?? []
   if (nombres.length <= 1) return nombres[0] ?? ''
@@ -65,20 +73,23 @@ onMounted(async () => {
          anteponerle «Tu plan» produciría «Tu plan Tu propuesta a medida». Es la
          primera frase que lee quien acaba de comprar: tiene que estar escrita en
          castellano, no en plantilla. -->
+    <p class="ex-insignia ds-pill ds-tone--accent-soft">Reservado</p>
+
     <h1 ref="h1" class="ds-display ds-display--sm" tabindex="-1">
       <template v-if="resultado.origen === 'PLAN'">
-        Listo. Tu plan {{ resultado.titulo }} está reservado.
+        Listo. Reservaste {{ cuantosModulos }} {{ cuantosModulos === 1 ? 'módulo' : 'módulos' }}.
       </template>
       <template v-else> Listo. {{ resultado.titulo }} está reservada. </template>
     </h1>
     <p class="ds-subtitle">
+      <template v-if="resultado.origen === 'PLAN'">{{ resultado.titulo }}. </template>
       {{ modulos }} son los módulos que quedan reservados para
       <strong>{{ resultado.empresaNombre }}</strong
       >.
     </p>
 
     <section class="ds-stack ds-stack--10" aria-labelledby="cobro-titulo">
-      <h2 id="cobro-titulo" class="ds-title">Qué se va a cobrar y cuándo</h2>
+      <h2 id="cobro-titulo" class="ds-title">Qué se va a cobrar, módulo por módulo</h2>
 
       <TrialLinesTable :lineas="resultado.lineasPrueba" />
 
@@ -130,6 +141,11 @@ onMounted(async () => {
   flex: 1;
   min-height: 0;
   overflow: auto;
+}
+
+.ex-insignia {
+  align-self: flex-start;
+  margin: 0;
 }
 
 .ex h1:focus,

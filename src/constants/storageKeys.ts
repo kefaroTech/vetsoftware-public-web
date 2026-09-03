@@ -32,8 +32,8 @@ export const SELECTED_BRANCH_KEY = 'vetsoft.branch'
 export const RECEIPT_WIDTH_KEY = 'vetrina:receipt-width'
 
 /**
- * Intención de contratación del embudo comercial: el plan, el ciclo y las
- * cantidades que el prospecto eligió en la landing.
+ * Intención de contratación del embudo comercial: el paquete o los módulos
+ * marcados, el ciclo y las cantidades que el prospecto eligió en la landing.
  *
  * **NO es volátil, y es deliberado.** Aplicando la regla de arriba —¿depende de
  * QUIÉN inició sesión?— la respuesta es que no: esta clave se escribe **antes de
@@ -42,10 +42,14 @@ export const RECEIPT_WIDTH_KEY = 'vetrina:receipt-width'
  * verificación por correo que puede durar días; si un cierre de sesión se la
  * llevara, quien entrase a comprobar algo con otra cuenta perdería la elección
  * que hizo antes de registrarse, que es justo lo que este dato existe para
- * evitar. No lleva ningún dato clínico ni personal: plan, ciclo y dos números.
+ * evitar. No lleva ningún dato clínico ni personal: códigos de catálogo, ciclo y
+ * dos números.
  *
- * El `v1` no es adorno: cuando la forma cambie, una clave nueva evita leer un
- * objeto viejo con campos que ya no existen.
+ * El `v1` no es adorno: cuando la forma cambie **de manera que la anterior deje
+ * de ser legible**, una clave nueva evita leer un objeto viejo con campos que ya
+ * no existen. Un campo AÑADIDO no es ese caso —`parseIntencion` lo rellena con
+ * su defecto y la intención vieja sigue produciendo la misma oferta—, y subir la
+ * versión por él descartaría en silencio todas las intenciones vivas.
  */
 export const CONTRATACION_INTENCION_KEY = 'vs.contratacion.intencion.v1'
 

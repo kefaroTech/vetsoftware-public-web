@@ -12,6 +12,8 @@ import LandingPlans from '../components/LandingPlans.vue'
 import LandingTopbar from '../components/LandingTopbar.vue'
 import LandingValueGrid from '../components/LandingValueGrid.vue'
 import ResumeIntentBanner from '../components/ResumeIntentBanner.vue'
+import { irAAncla } from '../composables/anclaConFoco'
+import { useCotizador } from '../composables/useCotizador'
 import { usePlanes } from '../composables/usePlanes'
 import type { Ciclo, PublicPlan } from '../types/plans.types'
 
@@ -30,8 +32,7 @@ import type { Ciclo, PublicPlan } from '../types/plans.types'
  * mayor coste de INP de la página —y la landing es donde el INP se mide— y la
  * guarda global de `prefers-reduced-motion` **no lo apagaba**: esa guarda actúa
  * sobre `animation`/`transition`, y aquello era un `:style` reactivo que la
- * regla no ve. Los blobs y la cuadrícula se quedan: son CSS, y `.pub-drift` sí
- * cae bajo la guarda.
+ * regla no ve.
  *
  * Y las dos tarjetas-enlace de la página de decisión. Un `RouterLink` que
  * envuelve icono, kicker, título, descripción y CTA tiene como nombre accesible
@@ -44,6 +45,14 @@ const router = useRouter()
 const { plans, loading, error, loaded, refresh, findByCode } = usePlanes()
 const { vigente, elegir, limpiar } = useContratacion()
 const { recuperarDeEnlace, recuperarGuardada, conocePropuesta } = useRecuperarPropuesta()
+
+/**
+ * El cotizador es de la VISTA, y por eso vive aquí y no en Pinia: nace con la
+ * portada y muere con ella. Está en la vista y no dentro del hero porque las
+ * tarjetas de combinación —que están en otra sección— siembran su selección, y
+ * el estado tiene que ser el mismo para las dos.
+ */
+const cotizador = useCotizador()
 
 /**
  * Aquí aterriza el enlace del correo de la propuesta.
@@ -100,7 +109,24 @@ const datosDeLaBanda = computed(() => {
  */
 function onElegir(plan: PublicPlan, ciclo: Ciclo) {
   const previa = vigente.value
-  elegir(plan, ciclo, previa?.sedes ?? 1, previa?.usuarios ?? 1)
+  // Sin `modulos`: la tarjeta ofrece el paquete cerrado, no casillas. Quien dice
+  // qué lleva dentro es el propio paquete. Ver `IntencionPlan.modulos`.
+  elegir({ plan, ciclo, sedes: previa?.sedes ?? 1, usuarios: previa?.usuarios ?? 1 })
+}
+
+/**
+ * Una combinación marca sus módulos en el cotizador del hero **y se lleva el
+ * foco hasta allí**. Sin el salto, el atajo cambia unas casillas que están fuera
+ * de la pantalla y desde donde se pulsó no ocurre nada visible.
+ *
+ * <p>El evento es sintético porque quien dispara esto es el botón de una
+ * tarjeta, no un ancla: `irAAncla` solo lo usa para cancelar la navegación por
+ * `href`, y aquí no hay ninguna que cancelar.
+ */
+function onSembrar(modulos: string[], ciclo: Ciclo) {
+  cotizador.sembrarModulos(modulos)
+  cotizador.ciclo.value = ciclo
+  irAAncla('cotizador', new Event('sembrar'))
 }
 
 /**
@@ -132,12 +158,6 @@ function empezarDeNuevo() {
   <div class="pub-scope land-stage">
     <a class="pub-skip" href="#contenido">Saltar al contenido</a>
 
-    <div class="land-decor" aria-hidden="true">
-      <div class="pub-blob pub-drift land-blob-a" />
-      <div class="pub-blob pub-drift land-blob-b" />
-      <div class="pub-grid-bg" />
-    </div>
-
     <LandingTopbar />
 
     <ResumeIntentBanner
@@ -151,7 +171,7 @@ function empezarDeNuevo() {
     />
 
     <main id="contenido" class="land-main" tabindex="-1">
-      <LandingHero />
+      <LandingHero :cotizador="cotizador" />
       <LandingValueGrid />
       <LandingDayFlow />
       <LandingPlans
@@ -160,6 +180,7 @@ function empezarDeNuevo() {
         :error="error"
         :loaded="loaded"
         @elegir="onElegir"
+        @sembrar="onSembrar"
         @reintentar="refresh"
       />
       <LandingFaq />
@@ -176,32 +197,8 @@ function empezarDeNuevo() {
   width: 100%;
   min-height: 100vh;
   overflow-x: hidden;
-  background: radial-gradient(ellipse at top, #f3e8ff 0%, #f5f1fa 48%, #ede8f4 100%);
+  background: #fbf9fd;
   color: var(--pub-ink-900);
-}
-
-.land-decor {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.land-blob-a {
-  top: -160px;
-  right: -120px;
-  width: 480px;
-  height: 480px;
-  background: radial-gradient(circle, rgb(192 132 252 / 30%), transparent 60%);
-}
-
-.land-blob-b {
-  bottom: -180px;
-  left: -140px;
-  width: 520px;
-  height: 520px;
-  animation-delay: -7s;
-  background: radial-gradient(circle, rgb(147 51 234 / 20%), transparent 62%);
 }
 
 .land-main {

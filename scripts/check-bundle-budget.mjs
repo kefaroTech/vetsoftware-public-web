@@ -78,11 +78,28 @@ const DIST = path.resolve(import.meta.dirname, '../dist')
  * para un par de features y obliga a volver a mirar pronto. Con una metrica que
  * solo puede subir, la holgura generosa es una forma elegante de apagar la
  * alarma.
+ *
+ * -- JS total sube de 560 a 605 KB (2 de septiembre de 2026) ----------------
+ *
+ * Medida al subirlo: 565,65 KB gzip (issue #288), tras el rediseno de la
+ * landing y el embudo: cuatro componentes nuevos en el cotizador, cinco en
+ * `/planes` y uno en la contratacion. Antes de comprobar peso legitimo se
+ * descarto lo obvio: Lucide ya no lo importan `LandingHero.vue`,
+ * `LandingValueGrid.vue` ni `LandingDayFlow.vue` (los tres consumidores
+ * publicos que la especificacion del rediseno retiraba), asi que no hay nada
+ * que sacar ahi; y `/planes`, la contratacion y su pantalla de exito ya
+ * cuelgan de `component: () => import(...)` en `router/index.ts`, no de un
+ * import estatico. El crecimiento es codigo nuevo, no deriva.
+ *
+ * 605 mantiene el mismo 7 % de holgura que la subida anterior sobre la
+ * medida real (565,65 × 1,07 ≈ 605), no el 21 % de costumbre, por la misma
+ * razon: con `sum(allJs())` la holgura generosa apaga la alarma en vez de
+ * hacerla sonar cuando toca.
  */
 const BUDGET_GZIP = {
   criticalJs: 130 * 1024,
   criticalCss: 45 * 1024,
-  totalJs: 560 * 1024,
+  totalJs: 605 * 1024,
 }
 
 const KB = (bytes) => `${(bytes / 1024).toFixed(1)} KB`
