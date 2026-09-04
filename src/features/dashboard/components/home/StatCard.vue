@@ -2,8 +2,8 @@
 defineProps<{
   label: string
   value: string | number
-  sub: string
-  tone: 'ok' | 'amatista' | 'neutral'
+  sub?: string
+  tone: 'amatista' | 'neutral'
 }>()
 </script>
 
@@ -11,7 +11,7 @@ defineProps<{
   <div class="stat-card">
     <div class="label ds-hint">{{ label }}</div>
     <div class="value">{{ value }}</div>
-    <div class="sub" :class="`sub-${tone}`">{{ sub }}</div>
+    <div v-if="sub" class="sub" :class="`sub-${tone}`">{{ sub }}</div>
   </div>
 </template>
 
@@ -38,10 +38,6 @@ defineProps<{
 .sub {
   font-size: 11.5px;
   margin-top: 4px;
-}
-
-.sub-ok {
-  color: oklch(50% 0.13 145deg);
 }
 
 .sub-amatista {

@@ -230,9 +230,15 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
         options.onKeepOwner?.()
         return
       }
+      const ownerId = owner ? Number(owner.id) : null
+      const animalId = Number(pet.id)
+      const petName = pet.name
       const successState = {
+        consultationId,
+        ownerId,
+        petId: animalId,
         ownerName: owner?.name ?? '',
-        petName: pet.name,
+        petName,
         consultationType: consultationType.name,
         date,
         // Recetas guardadas → la pantalla de éxito ofrece imprimir su fórmula. Se lee ANTES
@@ -241,17 +247,14 @@ export function useConsultationSave(options: { onKeepOwner?: () => void } = {}) 
           .filter((p) => p.savedId)
           .map((p) => ({ id: p.savedId as number, label: p.medicaments[0]?.name ?? 'Receta' })),
       }
-      const billOwnerId = owner ? Number(owner.id) : null
-      const billAnimalId = Number(pet.id)
-      const billPetName = pet.name
       draft.reset()
       // Tras guardar, ofrecer facturación a cuenta (§18.2). Al cerrar el modal
       // (facturar o "solo guardar"), navegar a la pantalla de éxito.
       openBilling({
-        ownerId: billOwnerId,
+        ownerId,
         ownerName: successState.ownerName,
-        animalId: billAnimalId,
-        animalName: billPetName,
+        animalId,
+        animalName: petName,
         heading: 'Facturación · Consulta',
         // Tras guardar, la facturación es una decisión forzada: sin X, sin Cancelar y
         // sin cierre por backdrop/Escape. El usuario sale eligiendo una acción del footer.
