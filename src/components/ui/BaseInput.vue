@@ -98,7 +98,6 @@ const toneClass = computed(() => {
       v-if="isPassword"
       type="button"
       class="reveal ds-icon-muted"
-      tabindex="-1"
       :aria-label="show ? 'Ocultar contraseña' : 'Mostrar contraseña'"
       @click.stop="show = !show"
     >
@@ -198,6 +197,11 @@ input:disabled {
   background: transparent;
   cursor: pointer;
   transition: color 0.15s ease;
+
+  /* §2.5.8 Target Size (Minimum), AA en 2.2: el ojo es un icono de 15 px sin caja
+     propia, así que el objetivo necesita este suelo de 24×24. */
+  min-width: 24px;
+  min-height: 24px;
 }
 
 .reveal:hover {

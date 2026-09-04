@@ -355,7 +355,7 @@ function cancelCreate() {
 }
 
 .value.placeholder {
-  color: var(--warm-400);
+  color: var(--text-placeholder);
 }
 
 /* Teletransportado a <body> y posicionado con estilo inline (position: fixed).

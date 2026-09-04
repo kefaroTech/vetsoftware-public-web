@@ -17,6 +17,13 @@ const props = withDefaults(
     disabled?: boolean
     invalid?: boolean
     readonly?: boolean
+    /**
+     * Suelo en px para el ancho del panel, que por defecto copia el del
+     * disparador. Lo necesita quien vive en un contenedor más estrecho que sus
+     * propias opciones —el raíl colapsado del armazón mide 52 px—, donde la
+     * lista saldría truncada a un par de caracteres.
+     */
+    panelMinWidth?: number
   }>(),
   { placeholder: 'Selecciona una opción' },
 )
@@ -81,7 +88,7 @@ function updatePosition() {
   panelStyle.value = {
     position: 'fixed',
     left: `${Math.round(r.left)}px`,
-    width: `${Math.round(r.width)}px`,
+    width: `${Math.max(Math.round(r.width), props.panelMinWidth ?? 0)}px`,
     maxHeight: `${Math.max(160, Math.round((openUp ? spaceAbove : spaceBelow) - 12))}px`,
     ...(openUp
       ? { bottom: `${Math.round(window.innerHeight - r.top + 4)}px` }
@@ -115,9 +122,11 @@ function toggle() {
   open.value ? close(true) : openPanel()
 }
 
+// `close(true)` y no `close()`: al activar con `@click` el `mousedown` previo ya
+// ha movido el foco fuera del disparador, y sin devolverlo acabaría en `<body>`.
 function pick(opt: Option) {
   emit('update:modelValue', opt.value)
-  close()
+  close(true)
   emit('blur')
 }
 
@@ -275,7 +284,7 @@ onBeforeUnmount(() => {
           role="option"
           :aria-selected="o.value === modelValue"
           :data-idx="i"
-          @mousedown.prevent="pick(o)"
+          @click="pick(o)"
           @mousemove="highlighted = i"
         >
           <span class="ds-flex-fill ds-truncate">{{ o.label }}</span>
@@ -366,7 +375,14 @@ onBeforeUnmount(() => {
 }
 
 .value.placeholder {
-  color: var(--warm-400);
+  color: var(--text-placeholder);
+}
+
+/* El contrato de `--text-placeholder` (`tokens.css`) lo prohíbe sobre
+   `--warm-150`, que es el fondo que trae `.ds-field-readonly`: ahí cae a 4,38:1
+   y §1.4.3 pide 4,5:1. `--warm-500` da 4,78:1 sobre ese mismo fondo. */
+.ds-field-readonly .value.placeholder {
+  color: var(--warm-500);
 }
 
 .chev {
@@ -442,7 +458,7 @@ onBeforeUnmount(() => {
 .panel[role='listbox'] .empty {
   padding: 12px 11px;
   font-size: 12.5px;
-  color: var(--warm-400);
+  color: var(--text-placeholder);
   text-align: center;
 }
 </style>
