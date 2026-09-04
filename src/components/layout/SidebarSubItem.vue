@@ -11,7 +11,13 @@ defineProps<{
 </script>
 
 <template>
-  <RouterLink :to="to" class="sub-item" :class="{ active }" :title="label">
+  <RouterLink
+    :to="to"
+    class="sub-item"
+    :class="{ active }"
+    :title="label"
+    :aria-current="active ? 'page' : undefined"
+  >
     <component :is="icon" :size="14" :stroke-width="1.5" />
     <span>{{ label }}</span>
   </RouterLink>

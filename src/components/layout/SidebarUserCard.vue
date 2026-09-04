@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { ChevronRight, LogOut } from 'lucide-vue-next'
 import { useAuth } from '@/features/auth/composables/useAuth'
 
@@ -28,10 +28,26 @@ const fullName = computed(() => `${props.firstName} ${props.lastName}`.trim() ||
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
+const trigger = ref<HTMLButtonElement | null>(null)
+const menu = ref<HTMLElement | null>(null)
 const loggingOut = ref(false)
 
+const menuItems = () =>
+  Array.from(menu.value?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])
+
+function openMenu() {
+  open.value = true
+  nextTick(() => menuItems()[0]?.focus())
+}
+
+function closeMenu(refocus = false) {
+  if (!open.value) return
+  open.value = false
+  if (refocus) trigger.value?.focus()
+}
+
 function toggle() {
-  open.value = !open.value
+  open.value ? closeMenu(true) : openMenu()
 }
 
 async function onLogout() {
@@ -47,8 +63,35 @@ function onClickOutside(e: MouseEvent) {
     open.value = false
   }
 }
+
 function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') open.value = false
+  if (!open.value) return
+  if (e.key === 'Escape') {
+    e.preventDefault()
+    closeMenu(true)
+    return
+  }
+  const items = menuItems()
+  if (items.length === 0) return
+  const actual = items.indexOf(document.activeElement as HTMLElement)
+  switch (e.key) {
+    case 'ArrowDown':
+      e.preventDefault()
+      items[(actual + 1) % items.length]?.focus()
+      break
+    case 'ArrowUp':
+      e.preventDefault()
+      items[(actual - 1 + items.length) % items.length]?.focus()
+      break
+    case 'Home':
+      e.preventDefault()
+      items[0]?.focus()
+      break
+    case 'End':
+      e.preventDefault()
+      items[items.length - 1]?.focus()
+      break
+  }
 }
 
 onMounted(() => {
@@ -63,16 +106,9 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="root" class="user-wrap">
-    <transition name="menu-fade">
-      <div v-if="open" class="user-menu" role="menu">
-        <button type="button" class="menu-item logout" role="menuitem" @click="onLogout">
-          <LogOut :size="15" :stroke-width="1.7" />
-          <span>Cerrar sesión</span>
-        </button>
-      </div>
-    </transition>
-
     <button
+      id="user-card-trigger"
+      ref="trigger"
       type="button"
       class="user-card"
       :class="{ open }"
@@ -85,8 +121,25 @@ onBeforeUnmount(() => {
         <div class="name ds-truncate">{{ fullName }}</div>
         <div v-if="role" class="role">{{ role }}</div>
       </div>
+      <!-- §4.1.2: en el raíl `.info` se oculta y el botón queda nombrado solo por las
+           iniciales del avatar, que no identifican a nadie. Este rótulo de repuesto solo entra
+           en el árbol ahí, para que fuera del raíl el nombre no se anuncie dos veces. -->
+      <span class="rail-name ds-sr-only">{{ fullName }}</span>
       <ChevronRight :size="14" :stroke-width="1.5" class="chev" />
     </button>
+
+    <!-- §2.4.3: el menú va DESPUÉS del disparador en el DOM aunque se pinte encima.
+         Al revés, «Cerrar sesión» solo se alcanzaba con Shift+Tab, en la dirección
+         contraria a la que abre el menú. La posición la fija `.user-menu`, que es
+         absoluta: el orden del documento no mueve un píxel. -->
+    <transition name="menu-fade">
+      <div v-if="open" ref="menu" class="user-menu" role="menu" aria-labelledby="user-card-trigger">
+        <button type="button" class="menu-item logout" role="menuitem" @click="onLogout">
+          <LogOut :size="15" :stroke-width="1.7" />
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -139,6 +192,10 @@ onBeforeUnmount(() => {
   font-size: 11px;
   opacity: 0.6;
   margin-top: 1px;
+}
+
+.rail-name {
+  display: none;
 }
 
 .chev {
@@ -209,6 +266,10 @@ onBeforeUnmount(() => {
   .info,
   .chev {
     display: none;
+  }
+
+  .rail-name {
+    display: block;
   }
 
   /* En modo colapsado el menú necesita ancho propio para el texto. */
