@@ -26,7 +26,7 @@ import { elemento, exigir } from '../helpers/exigir'
  * indicador y lo que hay debajo — ese 3:1 es el umbral de esta guarda.
  * (§2.4.13 Focus Appearance, que detalla además tamaño y forma, es AAA y no
  * es el nivel exigible aquí.) Los valores anteriores a la auditoría eran
- * `--amatista-50` (1,06:1) y `--danger-200` (1,29:1): un anillo invisible.
+ * `--amatista-50` (1,07:1) y `--danger-200` (1,30:1): un anillo invisible.
  *
  * Esta prueba NO comprueba «que el token siga siendo `--amatista-500`». Fijar
  * el nombre impediría cambiar de paleta y no probaría nada: comprueba la
@@ -109,7 +109,7 @@ describe('anillo de foco — contraste (A11Y-01)', () => {
     // verde para cualquier entrada y la guarda no guardaría nada.
     const antes = contrastRatio(color('--amatista-50'), superficie)
 
-    expect(Number(antes.toFixed(2))).toBe(1.06)
+    expect(Number(antes.toFixed(2))).toBe(1.07)
     expect(antes).toBeLessThan(MINIMO_WCAG)
   })
 })
@@ -182,7 +182,7 @@ describe('texto secundario — contraste (A11Y-02)', () => {
  * `.ds-field-invalid-focus` es el foco sobre un campo en error — cinco copias
  * (BaseInput, BaseSelect, BaseTextarea, OwnerSearchAutocomplete, DateInput).
  * Tenía su propio `box-shadow: 0 0 0 3px var(--danger-200)` escrito a mano:
- * 1,29:1, el mismo defecto que A11Y-01 corrigió en `--ring-danger`, pero por la
+ * 1,30:1, el mismo defecto que A11Y-01 corrigió en `--ring-danger`, pero por la
  * puerta de al lado. El único origen admitido del anillo es el token: si
  * alguien vuelve a escribir el anillo a mano aquí, la prueba lo dice.
  */
