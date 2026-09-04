@@ -94,8 +94,8 @@ const SHOTS = [
  * ── Las fuentes son las REALES, y llegan por disco ─────────────────────────
  * Antes esto reescribía `--font-sans/serif/mono` a las DejaVu del contenedor,
  * así que las capturas fotografiaban una tipografía que la aplicación no usa:
- * la migración a Geist no habría movido un solo píxel, y una caída de Geist a
- * la pila de respaldo habría pasado en verde para siempre.
+ * un cambio de familia no habría movido un solo píxel, y una caída al respaldo
+ * del sistema habría pasado en verde para siempre.
  *
  * Ahora `gallery.html` enlaza `visual/fonts.css`, que declara las familias del
  * producto desde ficheros `.woff2` versionados en `visual/fonts/`. Se sigue
@@ -104,11 +104,14 @@ const SHOTS = [
  * compara es la MISMA fuente, la de verdad, en ambos lados.
  */
 const CARAS = [
-  '400 16px Geist',
-  '500 16px Geist',
-  '600 16px Geist',
-  '400 16px "Instrument Serif"',
-  'italic 400 16px "Instrument Serif"',
+  '400 16px Inter',
+  '500 16px Inter',
+  '600 16px Inter',
+  '700 16px Inter',
+  '400 16px Poppins',
+  '500 16px Poppins',
+  '600 16px Poppins',
+  '700 16px Poppins',
   '400 16px "JetBrains Mono"',
   '500 16px "JetBrains Mono"',
 ] as const
@@ -145,10 +148,10 @@ async function estabilizar(page: Page) {
     [...CARAS],
   )
 
-  // La guarda que faltaba. Sin ella, que Geist no cargue se manifiesta como un
-  // diff de píxeles enigmático —o como nada en absoluto, que es lo que pasaba—
-  // en vez de como un fallo que se explica solo. Se comprueba ANTES de comparar
-  // un solo píxel.
+  // La guarda que faltaba. Sin ella, que una familia no cargue se manifiesta
+  // como un diff de píxeles enigmático —o como nada en absoluto, que es lo que
+  // pasaba— en vez de como un fallo que se explica solo. Se comprueba ANTES de
+  // comparar un solo píxel.
   expect(fuentes.fallidas, 'no se pudieron descargar de visual/fonts/').toEqual([])
   expect(fuentes.sinCargar, 'declaradas en visual/fonts.css pero sin cargar').toEqual([])
   expect(
