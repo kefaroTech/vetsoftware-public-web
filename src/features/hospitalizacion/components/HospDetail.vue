@@ -198,7 +198,7 @@ function fmtStamp(iso: string): string {
   font-size: 24px;
   font-weight: 500;
   flex-shrink: 0;
-  box-shadow: 0 6px 18px -10px oklch(50% 0.18 var(--hue));
+  box-shadow: 0 6px 18px -10px var(--amatista-600);
 }
 
 .name-row {
@@ -373,8 +373,8 @@ function fmtStamp(iso: string): string {
 }
 
 .entry-text.obs {
-  background: oklch(96% 0.04 80deg);
-  border-left: 2px solid oklch(70% 0.13 75deg);
+  background: var(--warning-50);
+  border-left: 2px solid var(--warning-border);
   padding: 7px 11px;
   border-radius: 0 6px 6px 0;
 }

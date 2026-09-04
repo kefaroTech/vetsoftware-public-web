@@ -48,7 +48,7 @@ defineEmits<{ open: [] }>()
    `--amatista-450` da 3,69:1. */
 .card:hover {
   border-color: var(--amatista-450);
-  box-shadow: 0 6px 18px -10px rgb(20 15 30 / 25%);
+  box-shadow: 0 6px 18px -10px color-mix(in oklch, var(--warm-900) 25%, transparent);
 }
 
 /* Resto sobre `.ds-block-head`: aquí el hueco lo pone el `gap` de `.ds-stack` de

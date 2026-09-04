@@ -20,12 +20,16 @@ interface ColumnMeta {
 
 const COLUMN_META: Record<string, ColumnMeta> = {
   PENDING_COLLECTION: { icon: Syringe, bg: 'var(--warm-200)', fg: 'var(--warm-700)' },
-  PENDING_PROCESSING: { icon: Inbox, bg: 'oklch(94% 0.07 80)', fg: 'oklch(45% 0.13 70)' },
-  IN_PROGRESS: { icon: Microscope, bg: 'oklch(94% 0.04 240)', fg: 'oklch(40% 0.15 240)' },
+  PENDING_PROCESSING: { icon: Inbox, bg: 'var(--warning-50)', fg: 'var(--warning-900)' },
+  IN_PROGRESS: {
+    icon: Microscope,
+    bg: 'var(--navy-100, var(--amatista-50))',
+    fg: 'var(--navy-700, var(--amatista-600))',
+  },
   PENDING_VALIDATION: {
     icon: ClipboardCheck,
-    bg: 'oklch(94% 0.05 280)',
-    fg: 'oklch(40% 0.16 280)',
+    bg: 'var(--violet-100, var(--amatista-200))',
+    fg: 'var(--violet-700, var(--amatista-900))',
   },
 }
 
@@ -98,13 +102,13 @@ const columns = computed(() =>
   border-top-color: var(--warm-400);
 }
 .column[data-status='PENDING_PROCESSING'] {
-  border-top-color: oklch(65% 0.15 75deg);
+  border-top-color: var(--warning-border);
 }
 .column[data-status='IN_PROGRESS'] {
-  border-top-color: oklch(55% 0.16 240deg);
+  border-top-color: var(--navy-600, var(--amatista-500));
 }
 .column[data-status='PENDING_VALIDATION'] {
-  border-top-color: oklch(55% 0.18 280deg);
+  border-top-color: var(--violet-600, var(--amatista-700));
 }
 
 .col-head {

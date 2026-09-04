@@ -69,6 +69,6 @@ const emit = defineEmits<{ confirm: []; close: [] }>()
 
 /* Acción de aviso: ámbar en lugar del amatista por defecto. */
 .ds-btn--solid {
-  --ds-btn-solid-bg: oklch(55% 0.16 80deg);
+  --ds-btn-solid-bg: var(--warning-900);
 }
 </style>

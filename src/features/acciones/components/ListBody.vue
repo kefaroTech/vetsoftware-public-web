@@ -149,7 +149,7 @@ defineExpose({
           v-model="query"
           type="text"
           :placeholder="placeholder"
-          class="input"
+          class="input ds-focus-ring"
         />
       </div>
       <slot name="actions" />
@@ -253,11 +253,6 @@ defineExpose({
   transition:
     border-color 0.15s,
     box-shadow 0.15s;
-}
-
-.input:focus {
-  border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px color-mix(in oklch, var(--amatista-500) 16%, transparent);
 }
 
 .state {

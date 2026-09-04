@@ -208,7 +208,7 @@ function clashRange(appt: AppointmentResponse): string {
 }
 
 .req {
-  color: oklch(60% 0.2 25deg);
+  color: var(--danger-border);
 }
 
 .fhint {

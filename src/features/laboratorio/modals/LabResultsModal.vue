@@ -218,7 +218,7 @@ async function submit() {
 
 .rm:hover {
   background: var(--danger-100);
-  color: oklch(45% 0.18 25deg);
+  color: var(--danger-800);
 }
 
 /* El estado deshabilitado lo cubre `.ds-btn:disabled` (primitives.css), y el

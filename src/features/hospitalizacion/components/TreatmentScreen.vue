@@ -412,7 +412,7 @@ function onSuspendConfirm() {
   font-size: 11px;
   font-weight: 600;
   vertical-align: middle;
-  background: oklch(94% 0.05 25deg);
+  background: var(--danger-150);
   color: var(--danger-700);
   border: 1px solid var(--danger-border);
 }

@@ -464,7 +464,7 @@ async function doSave() {
 
 .remove:hover {
   background: var(--danger-100);
-  color: oklch(45% 0.18 25deg);
+  color: var(--danger-800);
   border-color: var(--danger-border);
 }
 
