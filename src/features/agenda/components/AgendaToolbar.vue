@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import SegmentedRadio from '@/components/ui/SegmentedRadio.vue'
 import {
   addDays,
   formatDayLong,
@@ -21,6 +22,12 @@ const emit = defineEmits<{
   'update:cursor': [d: Date]
   'set-view': [v: ViewMode]
 }>()
+
+const VIEW_OPTIONS = [
+  { value: 'month', label: 'Mes' },
+  { value: 'week', label: 'Semana' },
+  { value: 'day', label: 'Día' },
+]
 
 const cursorLabel = computed(() => {
   if (props.view === 'month') return formatMonthLong(props.cursor)
@@ -72,32 +79,12 @@ function selectView(v: ViewMode) {
       <div class="cursor-label">{{ cursorLabel }}</div>
     </div>
     <div class="right">
-      <div class="view-toggle">
-        <button
-          type="button"
-          class="view-btn"
-          :class="{ active: view === 'month' }"
-          @click="selectView('month')"
-        >
-          Mes
-        </button>
-        <button
-          type="button"
-          class="view-btn"
-          :class="{ active: view === 'week' }"
-          @click="selectView('week')"
-        >
-          Semana
-        </button>
-        <button
-          type="button"
-          class="view-btn"
-          :class="{ active: view === 'day' }"
-          @click="selectView('day')"
-        >
-          Día
-        </button>
-      </div>
+      <SegmentedRadio
+        :model-value="view"
+        :options="VIEW_OPTIONS"
+        aria-label="Escala de la agenda"
+        @update:model-value="(v: string) => selectView(v as ViewMode)"
+      />
     </div>
   </div>
 </template>
@@ -168,42 +155,6 @@ function selectView(v: ViewMode) {
   letter-spacing: -0.01em;
 }
 
-/* A11Y-09 · mismo defecto que el conmutador de sujeto de la cita (issue #208),
-   aquí en el selector Mes/Semana/Día. Además le faltaba la frontera del grupo
-   entero: la pista `--warm-150` mide 1,12:1 contra la página, así que ni el
-   conjunto se leía como control. `--warm-450` da 3,54:1. */
-.view-toggle {
-  display: inline-flex;
-  background: var(--warm-150);
-  border: 1px solid var(--warm-450);
-  border-radius: 9px;
-  padding: 3px;
-  gap: 2px;
-}
-
-/* Borde transparente: reserva el sitio del que marca el segmento elegido. */
-.view-btn {
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  padding: 6px 14px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--warm-700);
-  border-radius: 7px;
-  cursor: pointer;
-}
-
-/* El segmento elegido se marcaba con relleno `--warm-50` sobre `--warm-150`:
-   1,12:1. `--amatista-500` da 4,44:1 contra su relleno y 3,95:1 contra la
-   pista. */
-.view-btn.active {
-  background: var(--warm-50);
-  color: var(--warm-900);
-  border-color: var(--amatista-500);
-  box-shadow: 0 1px 2px rgb(20 15 30 / 8%);
-}
-
 @media (width <= 760px) {
   .left {
     flex-wrap: wrap;
@@ -215,14 +166,8 @@ function selectView(v: ViewMode) {
     text-align: center;
   }
 
-  .right,
-  .view-toggle {
+  .right {
     width: 100%;
-  }
-
-  .view-btn {
-    flex: 1;
-    padding: 6px 8px;
   }
 }
 </style>

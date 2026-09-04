@@ -1,3 +1,15 @@
+import type { Component } from 'vue'
+import {
+  Bath,
+  BedDouble,
+  Bug,
+  FlaskConical,
+  Pill,
+  ScanLine,
+  Scissors,
+  Stethoscope,
+  Syringe,
+} from 'lucide-vue-next'
 import type { ClinicalEventType } from '../types/historia'
 
 export type EventTypeColor =
@@ -6,19 +18,26 @@ export type EventTypeColor =
 export interface EventTypeMeta {
   label: string
   color: EventTypeColor
-  icon: string
+  /**
+   * Componente Lucide, no un literal de emoji: el glifo de un emoji lo elige la
+   * fuente del sistema operativo, así que no es el mismo dibujo en Windows, en
+   * Android y en el kiosco de recepción — y el de radiografía (U+1FA7B, Unicode
+   * 14.0) ni siquiera tiene glifo en equipos sin actualizar, que pintan una caja
+   * vacía.
+   */
+  icon: Component
 }
 
 export const EVENT_TYPES: Record<ClinicalEventType, EventTypeMeta> = {
-  CONSULTATION: { label: 'Consulta', color: 'amatista', icon: '🩺' },
-  SURGERY: { label: 'Cirugía', color: 'red', icon: '🔪' },
-  VACCINATION: { label: 'Vacunación', color: 'green', icon: '💉' },
-  DEWORMING: { label: 'Desparasitación', color: 'teal', icon: '🪱' },
-  HOSPITALIZATION: { label: 'Hospitalización', color: 'amber', icon: '🏥' },
-  LABORATORY_TEST: { label: 'Laboratorio', color: 'blue', icon: '🧪' },
-  DIAGNOSTIC_IMAGING: { label: 'Imagen Dx', color: 'indigo', icon: '🩻' },
-  PRESCRIPTION: { label: 'Plan terapéutico', color: 'pink', icon: '💊' },
-  SPA: { label: 'Spa', color: 'gray', icon: '🛁' },
+  CONSULTATION: { label: 'Consulta', color: 'amatista', icon: Stethoscope },
+  SURGERY: { label: 'Cirugía', color: 'red', icon: Scissors },
+  VACCINATION: { label: 'Vacunación', color: 'green', icon: Syringe },
+  DEWORMING: { label: 'Desparasitación', color: 'teal', icon: Bug },
+  HOSPITALIZATION: { label: 'Hospitalización', color: 'amber', icon: BedDouble },
+  LABORATORY_TEST: { label: 'Laboratorio', color: 'blue', icon: FlaskConical },
+  DIAGNOSTIC_IMAGING: { label: 'Imagen Dx', color: 'indigo', icon: ScanLine },
+  PRESCRIPTION: { label: 'Plan terapéutico', color: 'pink', icon: Pill },
+  SPA: { label: 'Spa', color: 'gray', icon: Bath },
 }
 
 export interface EventTypeColorTokens {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { Download, Eye, FileText } from 'lucide-vue-next'
+import PawLoader from '@/components/feedback/PawLoader.vue'
 import { laboratoryTestFileApi } from '@/features/laboratorio/api/laboratoryTestFile.api'
 import type { LaboratoryTestFileResponse } from '@/features/laboratorio/types/laboratoryTestFile.types'
 import { getProblemDetailMessage } from '@/services/http/http.client'
@@ -59,7 +60,9 @@ async function downloadFile(att: LaboratoryTestFileResponse) {
 <template>
   <div v-if="loading || error || attachments.length" class="attachments">
     <div class="att-label">Resultados adjuntos</div>
-    <p v-if="loading" class="att-state ds-meta ds-meta--sm">Cargando adjuntos…</p>
+    <p v-if="loading" class="att-state ds-meta ds-meta--sm">
+      <PawLoader :size="22" :glow="false" :speed="900" label="Cargando adjuntos" />
+    </p>
     <p v-else-if="error" class="att-state error ds-meta ds-meta--sm">{{ error }}</p>
     <ul v-else class="att-list ds-list-reset ds-stack">
       <li v-for="att in attachments" :key="att.id" class="att ds-flex-row">

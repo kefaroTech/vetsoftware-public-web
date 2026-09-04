@@ -15,7 +15,14 @@ const tokens = computed(() => TYPE_COLORS[meta.value.color])
 
 <template>
   <span class="event-chip ds-pill" :style="{ background: tokens.bg, color: tokens.fg }">
-    <span v-if="showIcon" class="icon">{{ meta.icon }}</span>
+    <component
+      :is="meta.icon"
+      v-if="showIcon"
+      :size="12"
+      :stroke-width="1.8"
+      class="icon"
+      aria-hidden="true"
+    />
     <span>{{ meta.label }}</span>
   </span>
 </template>
@@ -28,7 +35,6 @@ const tokens = computed(() => TYPE_COLORS[meta.value.color])
 }
 
 .icon {
-  font-size: 12px;
-  line-height: 1;
+  flex-shrink: 0;
 }
 </style>

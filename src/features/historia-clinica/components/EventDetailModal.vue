@@ -134,11 +134,10 @@ watch(
   { immediate: true },
 )
 
-const title = computed(() => {
-  if (!props.event) return ''
-  const meta = EVENT_TYPES[props.event.eventType]
-  return `${meta.icon}  ${meta.label}`
-})
+const title = computed(() => (props.event ? EVENT_TYPES[props.event.eventType].label : ''))
+const titleIcon = computed(() =>
+  props.event ? EVENT_TYPES[props.event.eventType].icon : undefined,
+)
 
 const subtitle = computed(() => {
   if (!props.event) return ''
@@ -153,7 +152,14 @@ function printReceta() {
 </script>
 
 <template>
-  <ModalShell :open="open" :title="title" :subtitle="subtitle" :width="1120" @close="emit('close')">
+  <ModalShell
+    :open="open"
+    :title="title"
+    :subtitle="subtitle"
+    :icon="titleIcon"
+    :width="1120"
+    @close="emit('close')"
+  >
     <template #body>
       <div v-if="loading" class="state-row">
         <PawLoader :size="56" :glow="false" :speed="900" />

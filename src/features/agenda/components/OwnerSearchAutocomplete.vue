@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Search } from 'lucide-vue-next'
+import PawLoader from '@/components/feedback/PawLoader.vue'
 import { useOwnerSearch } from '@/features/dashboard/views/consulta/nueva/composables/useOwnerSearch'
 import { apptInitials } from '../types/appointment'
 import type { Owner } from '@/types/domain'
@@ -110,7 +111,9 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
       />
     </div>
     <div v-if="open" class="combo-list">
-      <div v-if="loading" class="combo-empty">Buscando…</div>
+      <div v-if="loading" class="combo-empty">
+        <PawLoader :size="22" :glow="false" :speed="900" label="Buscando propietarios" />
+      </div>
       <div v-else-if="query && results.length === 0" class="combo-empty">
         Sin resultados para “{{ query }}”.
       </div>

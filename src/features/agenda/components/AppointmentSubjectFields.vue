@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useId } from 'vue'
 import { AlertTriangle } from 'lucide-vue-next'
+import SegmentedRadio from '@/components/ui/SegmentedRadio.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseTextarea from '@/components/ui/BaseTextarea.vue'
@@ -42,6 +43,18 @@ const {
   clientEmailInvalid,
 } = props.form
 
+type SubjectMode = 'registered' | 'free'
+
+/**
+ * `<label for>` no puede nombrar a un `role="radiogroup"`, así que el rótulo se
+ * ata por `aria-labelledby` (ver `SegmentedRadio.vue`).
+ */
+const subjectLabelId = useId()
+const SUBJECT_OPTIONS = [
+  { value: 'registered', label: 'Cliente registrado' },
+  { value: 'free', label: 'Contacto libre' },
+]
+
 const petOptions = computed(() => [
   { value: '', label: ownerId.value ? '— Por confirmar —' : 'Elige un dueño primero' },
   ...props.pets.map((p) => ({
@@ -56,23 +69,13 @@ const petOptions = computed(() => [
   <div class="cols ds-grid-2">
     <div class="col ds-stack ds-stack--16">
       <div class="field ds-stack">
-        <label class="flabel ds-label">¿A quién es la cita?</label>
-        <div class="subject-toggle">
-          <button
-            type="button"
-            :class="{ active: subjectMode === 'registered' }"
-            @click="subjectMode = 'registered'"
-          >
-            Cliente registrado
-          </button>
-          <button
-            type="button"
-            :class="{ active: subjectMode === 'free' }"
-            @click="subjectMode = 'free'"
-          >
-            Contacto libre
-          </button>
-        </div>
+        <span :id="subjectLabelId" class="flabel ds-label">¿A quién es la cita?</span>
+        <SegmentedRadio
+          :model-value="subjectMode"
+          :options="SUBJECT_OPTIONS"
+          :aria-labelledby="subjectLabelId"
+          @update:model-value="(v: string) => (subjectMode = v as SubjectMode)"
+        />
         <div class="fhint ds-hint">
           {{
             subjectMode === 'registered'
@@ -181,40 +184,5 @@ const petOptions = computed(() => [
   font-size: 11px;
   color: var(--warm-400);
   text-align: right;
-}
-
-.subject-toggle {
-  display: inline-flex;
-  background: var(--warm-150);
-  border: 1px solid var(--warm-450);
-  border-radius: 8px;
-  padding: 3px;
-  gap: 2px;
-}
-
-/* El borde transparente reserva el sitio del que pinta el segmento elegido, para
-   que marcarlo no desplace el conmutador 1px. */
-.subject-toggle button {
-  border: 1px solid transparent;
-  background: transparent;
-  cursor: pointer;
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--warm-600);
-  padding: 6px 12px;
-  border-radius: 6px;
-}
-
-/* A11Y-09 (issue #208) · el segmento elegido se marcaba sólo con relleno
-   `--warm-50` sobre la pista `--warm-150`: 1,12:1. La sombra tampoco lo
-   rescataba (negro al 5%). El borde `--amatista-500` da 4,44:1 contra el propio
-   relleno del segmento y 3,95:1 contra la pista, y deja el estado elegido por
-   encima del marco del conmutador en reposo (`--warm-450`, 3,54:1). */
-.subject-toggle button.active {
-  background: var(--warm-50);
-  color: var(--warm-900);
-  border-color: var(--amatista-500);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
 }
 </style>

@@ -1,3 +1,15 @@
+import type { Component } from 'vue'
+import {
+  Asterisk,
+  Bath,
+  Bug,
+  ClipboardCheck,
+  FlaskConical,
+  ScanLine,
+  Scissors,
+  Stethoscope,
+  Syringe,
+} from 'lucide-vue-next'
 import type { EventTypeColor } from '@/features/historia-clinica/constants/eventTypes'
 import {
   TYPE_COLORS,
@@ -137,20 +149,21 @@ export interface CancelAppointmentRequest {
 // ── Modelo de UI (portado de appt-model.jsx) ─────────────────────────
 export interface AppointmentTypeMeta {
   label: string
-  icon: string
+  /** Componente Lucide. El porqué, en `EventTypeMeta.icon` de `eventTypes.ts`. */
+  icon: Component
   color: EventTypeColor
 }
 
 export const APPT_TYPES: Record<AppointmentType, AppointmentTypeMeta> = {
-  CONSULTATION: { label: 'Consulta', icon: '🩺', color: 'amatista' },
-  CONTROL: { label: 'Control', icon: '📋', color: 'pink' },
-  VACCINATION: { label: 'Vacunación', icon: '💉', color: 'green' },
-  DEWORMING: { label: 'Desparasitación', icon: '🪱', color: 'teal' },
-  SURGERY: { label: 'Cirugía', icon: '🔪', color: 'red' },
-  IMAGING: { label: 'Imagen Dx', icon: '🩻', color: 'indigo' },
-  LABORATORY: { label: 'Laboratorio', icon: '🧪', color: 'blue' },
-  GROOMING: { label: 'Spa / Estética', icon: '🛁', color: 'amber' },
-  OTHER: { label: 'Otro', icon: '✳️', color: 'gray' },
+  CONSULTATION: { label: 'Consulta', icon: Stethoscope, color: 'amatista' },
+  CONTROL: { label: 'Control', icon: ClipboardCheck, color: 'pink' },
+  VACCINATION: { label: 'Vacunación', icon: Syringe, color: 'green' },
+  DEWORMING: { label: 'Desparasitación', icon: Bug, color: 'teal' },
+  SURGERY: { label: 'Cirugía', icon: Scissors, color: 'red' },
+  IMAGING: { label: 'Imagen Dx', icon: ScanLine, color: 'indigo' },
+  LABORATORY: { label: 'Laboratorio', icon: FlaskConical, color: 'blue' },
+  GROOMING: { label: 'Spa / Estética', icon: Bath, color: 'amber' },
+  OTHER: { label: 'Otro', icon: Asterisk, color: 'gray' },
 }
 
 export interface AppointmentStatusMeta {
