@@ -246,9 +246,9 @@ function onAccountCreated(account: OpenAccountResponse) {
 /* El banner de error usa `.ds-banner--error` (primitives.css). Este otro tiene
    tonos propios (hue 70/80 distintos a los del sistema) y se deja como está. */
 .banner.branch-warning {
-  background: oklch(96% 0.04 80deg);
-  border: 1px solid oklch(88% 0.08 80deg);
-  color: oklch(42% 0.09 70deg);
+  background: var(--warning-50);
+  border: 1px solid var(--warning-200);
+  color: var(--warning-900);
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 13px;
@@ -300,10 +300,10 @@ function onAccountCreated(account: OpenAccountResponse) {
   border: 1px solid var(--warning-border);
   border-radius: 10px;
   font-size: 13px;
-  color: oklch(40% 0.1 70deg);
+  color: var(--warning-900);
 }
 .alert strong {
-  color: oklch(35% 0.13 70deg);
+  color: var(--warning-900);
 }
 
 .search {

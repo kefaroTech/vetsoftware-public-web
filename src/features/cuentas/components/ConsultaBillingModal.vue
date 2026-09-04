@@ -197,7 +197,7 @@ async function onConfirm() {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  background: color-mix(in oklch, var(--success-bg), white 35%);
+  background: var(--success-50);
   color: var(--success-fg);
 }
 .ac-title {
@@ -238,7 +238,7 @@ async function onConfirm() {
   font-size: 13px;
   background: var(--warning-50);
   border: 1px solid var(--warning-border);
-  color: oklch(40% 0.1 70deg);
+  color: var(--warning-900);
   border-radius: 10px;
 }
 .acct-none strong {

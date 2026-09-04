@@ -114,7 +114,7 @@ const regimeOptions = (Object.keys(TAX_REGIME_LABEL) as TaxRegime[]).map((k) => 
   padding: 2px 8px;
   border-radius: var(--radius-pill);
   background: var(--warning-50);
-  color: oklch(45% 0.11 70deg);
+  color: var(--warning-900);
 }
 .opttag {
   font-size: 10px;
@@ -139,8 +139,8 @@ const regimeOptions = (Object.keys(TAX_REGIME_LABEL) as TaxRegime[]).map((k) => 
   border: 1px solid var(--warm-200);
 }
 .fiscalbox.req {
-  background: oklch(98.5% 0.01 80deg);
-  border-color: oklch(90% 0.05 80deg);
+  background: var(--warning-50);
+  border-color: var(--warning-200);
 }
 .juridica-hint {
   margin: 12px 0 0;
@@ -223,7 +223,7 @@ const regimeOptions = (Object.keys(TAX_REGIME_LABEL) as TaxRegime[]).map((k) => 
   place-items: center;
   flex-shrink: 0;
   margin-top: 1px;
-  color: white;
+  color: var(--warm-50);
 }
 .agentbox-off {
   border-color: var(--warm-300);

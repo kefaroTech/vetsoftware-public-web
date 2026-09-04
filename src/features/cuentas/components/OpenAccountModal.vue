@@ -368,7 +368,7 @@ function goToExistingAccount(): void {
 
   /* Nota: este tono es propio de `.dup-warn` (hue 70), no el `--warning-fg`
      del sistema (hue 80). Se deja tal cual para no cambiar el aspecto. */
-  color: oklch(40% 0.1 70deg);
+  color: var(--warning-900);
 }
 .dup-warn strong {
   font-weight: 600;

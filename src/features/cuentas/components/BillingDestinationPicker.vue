@@ -127,7 +127,7 @@ const emit = defineEmits<{ 'update:modelValue': [destino: BillingDestino] }>()
   place-items: center;
   border-width: 1px;
   border-style: solid;
-  color: white;
+  color: var(--warm-50);
 }
 .do-check-off {
   background: var(--warm-50);

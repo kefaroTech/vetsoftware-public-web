@@ -99,6 +99,6 @@ async function submit() {
   font-size: 12.5px;
   background: var(--danger-100);
   border: 1px solid var(--danger-border);
-  color: oklch(48% 0.16 25deg);
+  color: var(--danger-700);
 }
 </style>

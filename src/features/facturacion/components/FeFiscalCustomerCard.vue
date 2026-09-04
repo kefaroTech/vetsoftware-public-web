@@ -102,12 +102,12 @@ const docLabel = computed(() => {
   padding: 14px;
   border-radius: 12px;
   background: var(--warm-50);
-  border: 1.5px solid oklch(88% 0.06 25deg);
+  border: 1.5px solid var(--danger-300);
   gap: 12px;
 }
 
 .custcard.ok {
-  border-color: oklch(85% 0.08 150deg);
+  border-color: var(--compras-ok-bg);
 }
 
 .custcard-av {
@@ -151,11 +151,11 @@ const docLabel = computed(() => {
 }
 
 .clitem.ok {
-  color: oklch(42% 0.12 150deg);
+  color: var(--compras-ok-fg);
 }
 
 .clitem.bad {
-  color: oklch(52% 0.16 25deg);
+  color: var(--danger-600);
 }
 
 .clitem :deep(svg) {
@@ -171,7 +171,7 @@ const docLabel = computed(() => {
   border-radius: 9px;
   border: none;
   background: var(--amatista-600);
-  color: white;
+  color: var(--warm-50);
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 600;

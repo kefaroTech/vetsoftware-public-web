@@ -10,9 +10,9 @@ const LABEL: Record<StockState, string> = {
   AGOTADO: 'Agotado',
 }
 const TONE: Record<StockState, { bg: string; fg: string; dot: string }> = {
-  OK: { bg: 'oklch(94% 0.06 150)', fg: 'oklch(40% 0.13 150)', dot: 'oklch(55% 0.15 150)' },
-  BAJO: { bg: 'oklch(95% 0.07 80)', fg: 'oklch(45% 0.13 70)', dot: 'oklch(65% 0.15 75)' },
-  AGOTADO: { bg: 'oklch(95% 0.05 25)', fg: 'oklch(48% 0.18 25)', dot: 'oklch(60% 0.18 25)' },
+  OK: { bg: 'var(--success-50)', fg: 'var(--compras-ok-fg)', dot: 'var(--success-dot)' },
+  BAJO: { bg: 'var(--warning-50)', fg: 'var(--warning-900)', dot: 'var(--warning-border)' },
+  AGOTADO: { bg: 'var(--danger-50)', fg: 'var(--danger-700)', dot: 'var(--danger-border)' },
 }
 </script>
 

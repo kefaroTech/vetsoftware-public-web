@@ -150,15 +150,15 @@ async function submit() {
 }
 .blocked {
   padding: 14px 16px;
-  background: oklch(96% 0.04 25deg);
-  border: 1px solid oklch(88% 0.09 25deg);
+  background: var(--danger-50);
+  border: 1px solid var(--danger-300);
   border-radius: 11px;
 }
 .blocked-title {
   margin: 0 0 6px;
   font-size: 14px;
   font-weight: 600;
-  color: oklch(45% 0.18 25deg);
+  color: var(--danger-800);
 }
 .blocked-desc {
   margin: 0;
@@ -167,6 +167,6 @@ async function submit() {
   color: var(--warm-700);
 }
 .blocked-desc strong {
-  color: oklch(45% 0.18 25deg);
+  color: var(--danger-800);
 }
 </style>

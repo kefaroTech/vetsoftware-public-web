@@ -50,16 +50,22 @@ const GR_STATUS: Record<GoodsReceiptStatus, string> = {
 }
 
 /**
- * El verde de "acción positiva" (`.ds-tone--compras-ok`, primitives.css) va
- * como clase aparte, no fusionada en el nombre de estado: `PO_STATUS`/
- * `GR_STATUS` ya usan el propio valor del enum como clase (`.pill.received`,
- * `.pill.confirmed`), y las dos comparten el mismo tono sin compartir nombre.
+ * El tono va en una clase aparte del nombre de estado porque dos estados de
+ * nombre distinto comparten tono (`RECEIVED` y `CONFIRMED`) y porque `placed` y
+ * `cancelled` no tienen primitiva: siguen pintándose desde el CSS local.
  */
-function poPillClass(status: PurchaseOrderStatus): (string | false)[] {
-  return [status.toLowerCase().replaceAll('_', '-'), status === 'RECEIVED' && 'ds-tone--compras-ok']
+const STATUS_TONE: Partial<Record<PurchaseOrderStatus | GoodsReceiptStatus, string>> = {
+  DRAFT: 'ds-tone--neutral',
+  PARTIALLY_RECEIVED: 'ds-tone--warning',
+  RECEIVED: 'ds-tone--compras-ok',
+  CONFIRMED: 'ds-tone--compras-ok',
 }
-function grPillClass(status: GoodsReceiptStatus): (string | false)[] {
-  return [status.toLowerCase(), status === 'CONFIRMED' && 'ds-tone--compras-ok']
+
+function poPillClass(status: PurchaseOrderStatus): (string | undefined)[] {
+  return [status.toLowerCase().replaceAll('_', '-'), STATUS_TONE[status]]
+}
+function grPillClass(status: GoodsReceiptStatus): (string | undefined)[] {
+  return [status.toLowerCase(), STATUS_TONE[status]]
 }
 
 function poTotal(po: PurchaseOrder): number {
@@ -429,34 +435,21 @@ onMounted(refresh)
   width: 150px;
 }
 
+/* Sin tono propio a propósito: el de cada estado llega desde el marcado, y una
+   primitiva global (0,1,0) no podría ganarle a esta regla base, que con el
+   atributo de `scoped` pesa (0,2,0). */
 .pill {
   display: inline-block;
   padding: 2px 10px;
   border-radius: var(--radius-pill);
   font-size: 11.5px;
   font-weight: 600;
-  background: var(--warm-100);
-  color: var(--warm-600);
-}
-
-.pill.draft {
-  background: oklch(93% 0.03 260deg);
-  color: var(--warm-600);
 }
 
 .pill.placed {
   background: oklch(92% 0.07 250deg);
   color: oklch(45% 0.14 250deg);
 }
-
-.pill.partially-received {
-  background: oklch(93% 0.07 75deg);
-  color: oklch(45% 0.12 75deg);
-}
-
-/* El verde de "recibida"/"confirmada" lo pone `.ds-tone--compras-ok`
-   (primitives.css), añadida desde `poPillClass`/`grPillClass` — ya no queda
-   CSS local para `.pill.received`/`.pill.confirmed`. */
 
 .pill.cancelled {
   background: var(--warm-100);

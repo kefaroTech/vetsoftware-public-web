@@ -119,7 +119,7 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
                 :style="{
                   width: consumo(resolutionByType[dt]!).pct + '%',
                   background: consumo(resolutionByType[dt]!).low
-                    ? 'oklch(60% 0.18 25)'
+                    ? 'var(--danger-border)'
                     : 'var(--amatista-500)',
                 }"
               />
@@ -220,7 +220,7 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
 
 .badge.ok {
   background: var(--success-50);
-  color: oklch(40% 0.13 150deg);
+  color: var(--compras-ok-fg);
 }
 
 .rescard-meta {

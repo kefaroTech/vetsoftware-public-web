@@ -273,10 +273,10 @@ async function submit() {
 .branch-warning {
   margin: -8px 0 0;
   padding: 10px 12px;
-  border: 1px solid #e6b84f;
+  border: 1px solid var(--warning-border);
   border-radius: 8px;
-  background: #fff8df;
-  color: #75540d;
+  background: var(--warning-50);
+  color: var(--warning-900);
   font-size: 13px;
   line-height: 1.45;
 }

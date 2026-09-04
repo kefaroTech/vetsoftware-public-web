@@ -345,7 +345,7 @@ function onShellClose() {
   place-items: center;
   border-width: 1px;
   border-style: solid;
-  color: white;
+  color: var(--warm-50);
 }
 .do-check-off {
   background: var(--warm-50);
@@ -412,7 +412,7 @@ function onShellClose() {
   line-height: 1.4;
   background: var(--warning-50);
   border: 1px solid var(--warning-border);
-  color: oklch(40% 0.1 70deg);
+  color: var(--warning-900);
 }
 .retry-hint strong {
   font-weight: 600;

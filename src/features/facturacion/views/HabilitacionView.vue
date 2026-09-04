@@ -78,7 +78,7 @@ function openWizard(step: number) {
   border-radius: 10px;
   background: var(--danger-50);
   border: 1px solid var(--danger-border);
-  color: oklch(45% 0.16 25deg);
+  color: var(--danger-800);
   font-size: 13px;
 }
 

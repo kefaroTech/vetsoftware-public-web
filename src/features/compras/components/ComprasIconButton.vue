@@ -95,9 +95,9 @@ withDefaults(
   color: var(--compras-ok-fg);
 }
 
-/* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- `.ds-tone--danger` sólo existe en forma plana: colgarla del botón lo teñiría en reposo, y aquí el tono es exclusivo del `:hover`. La primitiva de icono que sí es `:hover` (`.ds-icon-btn--danger`) es otra pieza y otros valores (danger-100/900/400 frente a danger-200 + oklch(50% 0.2 25deg)): adoptarla cambiaría el color de cinco pantallas. */
+/* `.ds-tone--danger` sólo existe en forma plana: colgarla del botón lo teñiría en reposo, y aquí el tono es exclusivo del `:hover`. La primitiva de icono que sí es `:hover` (`.ds-icon-btn--danger`) es otra pieza y otros valores (danger-100/900/400 frente a danger-200 + danger-600): adoptarla cambiaría el color de cinco pantallas. */
 .icon-btn--danger:hover {
   background: var(--danger-200);
-  color: oklch(50% 0.2 25deg);
+  color: var(--danger-600);
 }
 </style>

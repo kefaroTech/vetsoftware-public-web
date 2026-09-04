@@ -148,7 +148,7 @@ function submit() {
 
 .add-btn.solid {
   background: var(--gradient-primary);
-  color: white;
+  color: var(--warm-50);
   border: none;
   padding: 9px 16px;
   font-size: 13px;

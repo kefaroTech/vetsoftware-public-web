@@ -247,7 +247,7 @@ function confirm() {
   line-height: 1.4;
   background: var(--warning-50);
   border: 1px solid var(--warning-border);
-  color: oklch(40% 0.1 70deg);
+  color: var(--warning-900);
 }
 .change {
   display: flex;

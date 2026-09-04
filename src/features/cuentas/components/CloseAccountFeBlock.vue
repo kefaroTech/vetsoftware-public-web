@@ -122,7 +122,7 @@ const finalConsumer = defineModel<boolean>('finalConsumer', { required: true })
   cursor: pointer;
   padding: 8px 12px;
   border-radius: 9px;
-  background: white;
+  background: var(--warm-50);
   border: 1px solid var(--warm-450);
   color: var(--warm-800);
 }
@@ -143,10 +143,10 @@ const finalConsumer = defineModel<boolean>('finalConsumer', { required: true })
   place-items: center;
   border-width: 1px;
   border-style: solid;
-  color: white;
+  color: var(--warm-50);
 }
 .fc-box-off {
-  background: white;
+  background: var(--warm-50);
   border-color: var(--warm-300);
 }
 .fe-hint {
@@ -219,9 +219,9 @@ const finalConsumer = defineModel<boolean>('finalConsumer', { required: true })
   padding: 9px 12px;
   border-radius: 10px;
   font-size: 12px;
-  background: oklch(96% 0.05 25deg);
-  border: 1px solid oklch(89% 0.07 25deg);
-  color: oklch(46% 0.16 25deg);
+  background: var(--danger-50);
+  border: 1px solid var(--danger-300);
+  color: var(--danger-800);
 }
 .fe-loaderr button {
   font-family: inherit;

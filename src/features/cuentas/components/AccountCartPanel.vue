@@ -180,7 +180,7 @@ const emit = defineEmits<{
 }
 
 .cl-remove:hover {
-  background: oklch(94% 0.05 25deg);
+  background: var(--danger-150);
   color: var(--danger-700);
 }
 

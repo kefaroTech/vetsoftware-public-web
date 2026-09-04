@@ -8,7 +8,7 @@ export interface CategoryTone {
 }
 
 const PRODUCT_TONES: Record<string, CategoryTone> = {
-  alimento: { bg: 'oklch(94% 0.06 80)', fg: 'oklch(45% 0.13 70)' },
+  alimento: { bg: 'var(--warning-50)', fg: 'var(--warning-900)' },
   accesorio: { bg: 'oklch(94% 0.04 240)', fg: 'oklch(40% 0.15 240)' },
   higiene: { bg: 'oklch(94% 0.05 200)', fg: 'oklch(42% 0.12 200)' },
   medicamento: { bg: 'oklch(94% 0.05 340)', fg: 'oklch(42% 0.15 340)' },
@@ -18,20 +18,20 @@ const PRODUCT_TONES: Record<string, CategoryTone> = {
 const SERVICE_TONES: Record<string, CategoryTone> = {
   consulta: { bg: 'var(--amatista-100)', fg: 'var(--amatista-700)' },
   laboratorio: { bg: 'oklch(94% 0.04 240)', fg: 'oklch(40% 0.15 240)' },
-  imagen: { bg: 'oklch(94% 0.05 280)', fg: 'oklch(45% 0.16 280)' },
+  imagen: { bg: 'var(--amatista-100)', fg: 'var(--amatista-700)' },
   procedimiento: { bg: 'oklch(94% 0.05 200)', fg: 'oklch(42% 0.12 200)' },
   estetica: { bg: 'oklch(94% 0.05 340)', fg: 'oklch(42% 0.15 340)' },
-  hospital: { bg: 'oklch(94% 0.07 80)', fg: 'oklch(45% 0.13 70)' },
+  hospital: { bg: 'var(--warning-50)', fg: 'var(--warning-900)' },
 }
 
 // Tupla no-vacía, no `CategoryTone[]`: el reparto por módulo depende de que haya
 // al menos un tono, y así esa condición la sostiene el tipo y no un comentario.
 const FALLBACK: [CategoryTone, ...CategoryTone[]] = [
-  { bg: 'oklch(94% 0.06 80)', fg: 'oklch(45% 0.13 70)' },
+  { bg: 'var(--warning-50)', fg: 'var(--warning-900)' },
   { bg: 'oklch(94% 0.04 240)', fg: 'oklch(40% 0.15 240)' },
   { bg: 'oklch(94% 0.05 200)', fg: 'oklch(42% 0.12 200)' },
   { bg: 'oklch(94% 0.05 340)', fg: 'oklch(42% 0.15 340)' },
-  { bg: 'oklch(94% 0.05 280)', fg: 'oklch(45% 0.16 280)' },
+  { bg: 'var(--amatista-100)', fg: 'var(--amatista-700)' },
   { bg: 'var(--amatista-100)', fg: 'var(--amatista-700)' },
 ]
 

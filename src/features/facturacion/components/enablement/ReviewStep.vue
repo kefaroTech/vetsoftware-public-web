@@ -127,15 +127,15 @@ const missing = computed(() => {
   place-items: center;
   font-size: 12px;
   font-weight: 700;
-  color: #fff;
+  color: var(--warm-50);
 }
 
 .review-badge.ok {
-  background: oklch(55% 0.15 150deg);
+  background: var(--success-dot);
 }
 
 .review-badge.pend {
-  background: oklch(70% 0.14 75deg);
+  background: var(--warning-border);
 }
 
 .editlink {
@@ -180,8 +180,8 @@ const missing = computed(() => {
   gap: 16px;
   padding: 20px 22px;
   border-radius: 14px;
-  background: linear-gradient(135deg, oklch(95% 0.05 150deg), var(--warm-50));
-  border: 1px solid oklch(80% 0.09 150deg);
+  background: linear-gradient(135deg, var(--success-50), var(--warm-50));
+  border: 1px solid var(--compras-ok-bg);
 }
 
 .success-ic {
@@ -190,8 +190,8 @@ const missing = computed(() => {
   border-radius: 12px;
   display: grid;
   place-items: center;
-  background: oklch(92% 0.08 150deg);
-  color: oklch(40% 0.13 150deg);
+  background: var(--compras-ok-bg);
+  color: var(--compras-ok-fg);
   flex-shrink: 0;
 }
 
@@ -209,14 +209,14 @@ const missing = computed(() => {
 .blockbox {
   padding: 18px 22px;
   border-radius: 14px;
-  border: 1px solid oklch(88% 0.06 80deg);
-  background: oklch(97% 0.03 80deg);
+  border: 1px solid var(--warning-200);
+  background: var(--warning-50);
 }
 
 .block-title {
   font-weight: 600;
   font-size: 13.5px;
-  color: oklch(45% 0.13 70deg);
+  color: var(--warning-900);
   margin-bottom: 8px;
 }
 

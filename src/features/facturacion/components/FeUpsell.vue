@@ -74,7 +74,7 @@ const benefits = [
 }
 
 .upsell-item :deep(svg) {
-  color: oklch(50% 0.13 150deg);
+  color: var(--success-dot);
 }
 
 .upsell-cta {
@@ -83,7 +83,7 @@ const benefits = [
   border-radius: 10px;
   border: none;
   background: var(--gradient-primary);
-  color: #fff;
+  color: var(--warm-50);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
