@@ -1,68 +1,80 @@
 /* ===========================================================================
    Zona pública / autenticación — tokens y utilidades del handoff
    (design_handoff_vetsoftware_completo). Aplica SOLO bajo `.pub-scope` para no
-   alterar el resto de la app (que usa la paleta warm). Paleta amatista + Inter.
+   alterar la geometría del resto de la app. Paleta amatista + Inter.
+
+   Cada `--pub-*` es un ALIAS de un token de `tokens.css`, nunca un valor
+   propio: así mover `--hue` o `--hue-neutral` recolorea también estas
+   pantallas en vez de dejarlas descolgadas de la app.
    =========================================================================== */
 
 .pub-scope {
-  --pub-ame-300: #bcc0ff;
-  --pub-ame-400: #9698ff;
-  --pub-ame-500: #7770ff;
-  --pub-ame-600: #654bff;
-  --pub-ame-700: #563ae1;
-  --pub-ame-800: #4733ba;
-  --pub-ame-900: #392b96;
-  --pub-ink-900: #0c1827;
-  --pub-ink-700: #1d385c;
-  --pub-ink-600: #2d4667;
-  --pub-ink-500: #4d6586;
+  --pub-ame-300: var(--amatista-300);
+  --pub-ame-400: var(--amatista-400);
 
-  /* SOLO ICONO Y BORDE DE CONTROL, NUNCA TEXTO. Mide 3,94:1 sobre blanco: pasa
-     el umbral de 3:1 de §1.4.11 para un elemento no textual (el chevron del
-     selector de módulos, el borde de `.login-secondary`) y falla el de 4,5:1 de
-     §1.4.3 para cualquier texto. Para texto apagado va `--pub-ink-500` (5,96:1
-     sobre blanco, 5,53:1 sobre `--pub-tint-mute`). */
-  --pub-ink-400: #6882a5;
-  --pub-ink-300: #8ea4c2;
-  --pub-line: #dfe9f7;
-  --pub-line-2: #e5eefa;
+  /* `--amatista-450` es el escalón del sistema para el borde de un control
+     (§1.4.11). No vale `--amatista-500`: es el mismo valor al que apunta
+     `--pub-ame-600`, y el foco dejaría de distinguirse del reposo. */
+  --pub-ame-500: var(--amatista-450);
+  --pub-ame-600: var(--amatista-600);
+  --pub-ame-700: var(--amatista-700);
+  --pub-ame-800: var(--amatista-800);
+  --pub-ame-900: var(--amatista-900);
+  --pub-ink-900: var(--text);
+  --pub-ink-700: var(--warm-700);
+  --pub-ink-600: var(--text-muted);
+  --pub-ink-500: var(--text-subtle);
 
-  /* El borde de las tarjetas secundarias de la portada. Estaba escrito a pelo en dos SFC
-     (`LandingHero`, `LandingFinalCta`) con el mismo valor y ningún token equivalente, así
-     que ninguna auditoría de contraste lo veía. Mismo valor exacto: cero cambio visual. */
-  --pub-line-strong: #d6e3f4;
-  --pub-surface: #fff;
+  /* SOLO ICONO Y BORDE DE CONTROL, NUNCA TEXTO. Cubre el 3:1 de §1.4.11 para
+     un elemento no textual (el chevron del selector de módulos, el borde de
+     `.login-secondary`) y no llega al 4,5:1 de §1.4.3 para ningún texto: el
+     apagado de texto es `--pub-ink-500`. */
+  --pub-ink-400: var(--warm-450);
+  --pub-ink-300: var(--warm-400);
 
-  /* Los cinco tintes del embudo. Estaban escritos a pelo en el prototipo y el
-     rediseño los usa en más de tres sitios cada uno: sin token, ninguna
-     auditoría de contraste los ve. Mismo argumento con el que nació
-     `--pub-line-strong`, y mismos valores exactos: cero cambio visual. */
-  --pub-tint-50: #f5f6ff;
-  --pub-tint-100: #eaecff;
-  --pub-tint-bd: #e4e6ff;
-  --pub-tint-sep: #eef0fe;
-  --pub-tint-mute: #f5f6fb;
+  /* Los tres tonos de línea son separadores: ninguno alcanza el 3:1 que
+     §1.4.11 exige al contorno de un control. Un control cuyo borde es lo único
+     que lo delimita o que marca su estado va con `--pub-ame-600`. */
+  --pub-line: var(--border);
+  --pub-line-2: var(--warm-150);
+  --pub-line-strong: var(--border-strong);
+  --pub-surface: var(--surface);
+  --pub-tint-50: var(--amatista-50);
+  --pub-tint-100: var(--amatista-100);
 
-  /* `--pub-err-tx: #dc2626` se retira: medía 4,41:1 sobre `--pub-err-bg` y fallaba
-     §1.4.3 AA para texto normal. Sus dos últimos consumidores (`RestablecerContrasenaView`,
-     `VerifyEmailView`) pasan a `-tx-2`, que es lo que el resto de la zona pública ya usaba.
-     Dejarlo declarado invitaba a volver a elegirlo. */
-  --pub-err-tx-2: #b91c1c;
-  --pub-err-bg: #fef2f2;
-  --pub-err-bd: #fecaca;
-
-  /* #16a34a medía 3,12:1 sobre `--pub-ok-bg` y fallaba §1.4.3 AA para texto
-     normal. #15803d mide 4,76:1 sobre el mismo fondo. */
-  --pub-ok-tx: #15803d;
-  --pub-ok-bg: #ecfdf3;
-  --pub-ok-bd: #bbf7d0;
-  --pub-warn-tx: #92600a;
-  --pub-warn-bg: #fffbeb;
-  --pub-warn-bd: #fde68a;
-  --pub-card-shadow: 0 24px 48px -18px rgb(70 45 190 / 18%), 0 4px 12px -4px rgb(70 45 190 / 7%);
-  --pub-btn-shadow: 0 4px 12px -2px rgb(86 58 225 / 40%), inset 0 1px 0 rgb(255 255 255 / 15%);
+  /* Un escalón más oscuro que el relleno que bordea: con el mismo valor que
+     `--pub-tint-100` la caja lila no tendría contorno. */
+  --pub-tint-bd: var(--amatista-200);
+  --pub-tint-sep: var(--amatista-100);
+  --pub-tint-mute: var(--surface-muted);
+  --pub-err-tx-2: var(--danger-fg);
+  --pub-err-bg: var(--danger-bg);
+  --pub-err-bd: var(--danger-border);
+  --pub-ok-tx: var(--success-fg);
+  --pub-ok-bg: var(--success-bg);
+  --pub-ok-bd: var(--success-border);
+  --pub-warn-tx: var(--warning-fg);
+  --pub-warn-bg: var(--warning-bg);
+  --pub-warn-bd: var(--warning-border);
+  --pub-card-shadow:
+    0 24px 48px -18px color-mix(in oklch, var(--amatista-700) 18%, transparent),
+    0 4px 12px -4px color-mix(in oklch, var(--amatista-700) 7%, transparent);
+  --pub-btn-shadow:
+    0 4px 12px -2px color-mix(in oklch, var(--amatista-600) 40%, transparent),
+    inset 0 1px 0 color-mix(in oklch, var(--pub-surface) 15%, transparent);
   --pub-btn-shadow-hover:
-    0 8px 20px -4px rgb(86 58 225 / 50%), inset 0 1px 0 rgb(255 255 255 / 15%);
+    0 8px 20px -4px color-mix(in oklch, var(--amatista-600) 50%, transparent),
+    inset 0 1px 0 color-mix(in oklch, var(--pub-surface) 15%, transparent);
+
+  /* Un solo token para dos lienzos (`.pub-shell` y `.pub-doc-stage`): escrito
+     en cada uno, un retoque de tono deja las páginas legales descolgadas del
+     resto. */
+  --pub-shell-bg: radial-gradient(
+    ellipse at top,
+    var(--pub-tint-100) 0%,
+    var(--pub-tint-50) 50%,
+    var(--pub-tint-100) 100%
+  );
 
   font-family: Inter, system-ui, sans-serif;
   color: var(--pub-ink-900);
@@ -76,7 +88,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: radial-gradient(ellipse at top, #eaecff 0%, #f1f2fc 50%, #e8eaf6 100%);
+  background: var(--pub-shell-bg);
 }
 
 .pub-blob {
@@ -92,10 +104,17 @@
   pointer-events: none;
   opacity: 0.5;
   background-image:
-    linear-gradient(rgb(86 58 225 / 4.5%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(86 58 225 / 4.5%) 1px, transparent 1px);
+    linear-gradient(color-mix(in oklch, var(--pub-ame-600) 4.5%, transparent) 1px, transparent 1px),
+    linear-gradient(
+      90deg,
+      color-mix(in oklch, var(--pub-ame-600) 4.5%, transparent) 1px,
+      transparent 1px
+    );
   background-size: 56px 56px;
-  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 78%);
+
+  /* `black` aquí es el canal alfa de la máscara, no una decisión de color: por
+     eso es el único valor de esta hoja que no sale de un token. */
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 78%);
 }
 
 /* Grids responsivos del formulario de registro */
@@ -175,9 +194,10 @@
    PRIMITIVAS de la zona pública.
 
    Mismo papel que `primitives.css` para la app, pero con ESTE lenguaje: Inter,
-   paleta `--pub-*` y sombras propias. No se usan las clases `ds-*` aquí a
-   propósito — mezclarlas traería la paleta warm a las pantallas de
-   acceso, que el handoff mantiene deliberadamente aparte.
+   nombres `--pub-*` y sombras propias. No se usan las clases `ds-*` aquí a
+   propósito: su geometría —radios, alturas de control, ritmo tipográfico— es la
+   de la app autenticada, y el handoff mantiene la de acceso aparte. El color sí
+   es el mismo.
 
    Reemplazan las copias que estaban repetidas en los 6 SFC de `auth` con
    prefijo por pantalla (`.login-`, `.cp-`, `.rc-`, `.rp-`).
@@ -189,7 +209,7 @@
   padding: 40px 44px;
   border: 1px solid var(--pub-line);
   border-radius: 16px;
-  background: #fff;
+  background: var(--pub-surface);
   box-shadow: var(--pub-card-shadow);
 }
 
@@ -248,9 +268,6 @@
   font-family: Inter, sans-serif;
 }
 
-/* `--pub-err-tx` (#dc2626) sobre `--pub-err-bg` mide 4,41:1 y falla §1.4.3 AA
-   por 0,09. `--pub-err-tx-2` (#b91c1c) ya estaba declarado arriba y mide
-   5,91:1 sobre ese mismo fondo. Es un cambio de token, no un color nuevo. */
 .pub-error {
   padding: 9px 12px;
   border: 1px solid var(--pub-err-bd);
@@ -283,7 +300,7 @@
 /* §2.4.1 Bypass Blocks (A). Primer elemento focalizable del documento, fuera de
    pantalla hasta recibir el foco. No se oculta con `display: none` ni con
    `visibility: hidden`: eso lo sacaría del orden de tabulación y entonces no
-   habría nada que saltar. Blanco sobre `--pub-ame-700` mide 6,80:1. */
+   habría nada que saltar. */
 .pub-skip {
   position: absolute;
   left: 12px;
@@ -292,7 +309,7 @@
   padding: 10px 16px;
   border-radius: 0 0 9px 9px;
   background: var(--pub-ame-700);
-  color: #fff;
+  color: var(--pub-surface);
   font-size: 13.5px;
   font-weight: 600;
   text-decoration: none;
@@ -334,9 +351,6 @@
   resize: vertical;
 }
 
-/* El tono en reposo. El borde sale de `--pub-ame-600` (5,25:1) y no de
-   `--pub-line` (1,23:1), que no alcanza el mínimo de §1.4.11 para el borde de
-   un control. */
 .pub-campo-rest {
   border-color: var(--pub-ame-600);
   background: var(--pub-surface);
@@ -404,17 +418,14 @@
   border-radius: 16px;
   border: 1px solid var(--pub-line);
   background: var(--pub-surface);
-  box-shadow: 0 8px 20px -14px rgb(70 45 190 / 18%);
+  box-shadow: 0 8px 20px -14px color-mix(in oklch, var(--amatista-700) 18%, transparent);
 }
 
-/* §1.4.11 Non-text Contrast (AA): `--pub-line` mide 1,23:1 contra blanco, así
-   que un borde de ese color NO puede ser lo que distingue a la recomendada.
-   `--pub-ame-600` mide 5,25:1 sobre blanco y 4,48:1 sobre el fondo de la
-   landing. Y aun así el color no es el único canal (§1.4.1): la tarjeta lleva
-   además `.pub-badge` con texto visible. */
+/* El borde de acento no es el único canal que distingue a la recomendada
+   (§1.4.1): la tarjeta lleva además `.pub-badge` con texto visible. */
 .pub-plan-card--featured {
   border: 2px solid var(--pub-ame-600);
-  box-shadow: 0 20px 40px -20px rgb(86 58 225 / 42%);
+  box-shadow: 0 20px 40px -20px color-mix(in oklch, var(--amatista-600) 42%, transparent);
 }
 
 /* La cifra grande. `tabular-nums` para que «$89.000» y «$129.000» no bailen al
@@ -437,7 +448,7 @@
   padding: 4px 11px;
   border-radius: 999px;
   background: var(--pub-ame-700);
-  color: #fff;
+  color: var(--pub-surface);
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -623,7 +634,7 @@
   padding: 0.875rem 1.125rem;
   border-left: 3px solid var(--pub-ame-600);
   border-radius: 0 0.5rem 0.5rem 0;
-  background: #faf5ff;
+  background: var(--pub-tint-50);
   color: var(--pub-ink-700);
 }
 
@@ -656,7 +667,7 @@
   width: 100%;
   min-height: 100vh;
   overflow-x: hidden;
-  background: radial-gradient(ellipse at top, #eaecff 0%, #f1f2fc 48%, #e8eaf6 100%);
+  background: var(--pub-shell-bg);
 }
 
 .pub-doc-topbar {
@@ -756,10 +767,8 @@
 
 /* Los dos tonos apagados de `.pub-badge`. La base es la pastilla morada llena
    de «La que más eligen»; estos dos son la insignia de conteo, que acompaña a
-   un texto y no debe competir con él.
-
-   `--pub-ink-500` sobre `--pub-tint-mute` mide 5,53:1. `--pub-ink-400`, que es el
-   tono que pedía el diseño, mide 3,65:1 sobre ese mismo fondo y falla §1.4.3 AA. */
+   un texto y no debe competir con él. Aun así son texto, y por eso el apagado
+   es `--pub-ink-500` y no el `--pub-ink-400` que pedía el diseño. */
 .pub-badge--on {
   padding: 5px 11px;
   background: var(--pub-tint-100);
@@ -807,12 +816,11 @@
    nuevos repartidos en cuatro pantallas, un anillo por componente es un anillo
    que en algún sitio se queda sin escribir.
 
-   `--pub-ame-600` mide 5,25:1 sobre blanco y 4,48:1 sobre el más oscuro de los
-   fondos claros de estas pantallas (`--pub-tint-100`), así que §1.4.11 y
-   §2.4.11 se cumplen en todos ellos. Sobre un fondo de acento NO: el mismo
-   morado sobre `--pub-ame-700` mide 1,30:1 y el anillo desaparece. Por eso el
-   modificador invierte los tonos —anillo blanco por dentro (6,80:1 sobre
-   `--pub-ame-700`) y halo morado por fuera— en vez de subir el grosor.
+   `--pub-ame-600` cumple §1.4.11 y §2.4.11 sobre todos los fondos claros de
+   estas pantallas, pero sobre un fondo de acento NO: el mismo morado sobre
+   `--pub-ame-700` se pierde y el anillo desaparece. Por eso el modificador
+   invierte los tonos —anillo claro por dentro y halo morado por fuera— en vez
+   de subir el grosor.
    =========================================================================== */
 .pub-focus-ring:focus-visible {
   outline: 2px solid var(--pub-ame-600);

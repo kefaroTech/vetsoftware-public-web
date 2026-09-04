@@ -119,13 +119,11 @@ defineExpose({ enfocar: () => boton.value?.focus() })
 }
 
 .lsm-area-btn:hover {
-  background: #fdfaff;
+  background: var(--pub-tint-50);
 }
 
-/* `--pub-ink-400` mide 3,94:1 sobre blanco: pasa el umbral de 3:1 de §1.4.11
-   para un glifo no textual y no sería válido para texto. Y no es el único canal
-   del estado —lo son `aria-expanded` y la presencia del cuerpo—, así que §1.4.1
-   queda cubierto. */
+/* El color del chevron no es el único canal del estado —lo son `aria-expanded`
+   y la presencia del cuerpo—, así que §1.4.1 queda cubierto. */
 .lsm-chevron {
   display: grid;
   place-items: center;

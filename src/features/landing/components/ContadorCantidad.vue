@@ -163,7 +163,7 @@ function mas() {
   flex: none;
   border: none;
   border-radius: 8px;
-  background: #f7f2fc;
+  background: var(--pub-tint-50);
   color: var(--pub-ink-700);
   font-size: 18px;
   line-height: 1;
@@ -171,15 +171,16 @@ function mas() {
 }
 
 .lct-paso:hover:not(.is-tope) {
-  background: #efe4fb;
+  background: var(--pub-tint-100);
 }
 
 /* Dos canales, relleno Y contorno, nunca solo opacidad (§1.4.1): el diseño
    pedía «sin cambio de estilo» en el límite y un botón que no responde y no lo
-   parece es un botón roto. `--pub-ink-500` mide 5,96:1 sobre blanco. */
+   parece es un botón roto. El contorno es lo que marca el estado, así que le
+   aplica el 3:1 de §1.4.11 y ningún token de línea lo cubre. */
 .lct-paso.is-tope {
   background: var(--pub-surface);
-  border: 1px solid var(--pub-line-strong);
+  border: 1px solid var(--pub-ink-400);
   color: var(--pub-ink-500);
   cursor: default;
 }

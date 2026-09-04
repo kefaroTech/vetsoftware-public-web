@@ -204,8 +204,6 @@ const avisoDescuento = computed<string | null>(() => {
   box-shadow: var(--pub-btn-shadow);
 }
 
-/* El borde sale de `--pub-ame-600` (5,25:1) y no de `--pub-line-strong`
-   (1,30:1): esto es un control, y §1.4.11 le exige 3:1 al contorno. */
 .land-plan-cta--suave {
   border: 1px solid var(--pub-ame-600);
   background: var(--pub-surface);

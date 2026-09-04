@@ -93,7 +93,7 @@ const avisoSinPrecio = computed(() => textoSinPrecio(estimado.value.sinPrecio, p
   padding: 18px 20px;
   border-radius: 14px;
   border: 1px solid var(--pub-ame-300);
-  background: rgb(255 255 255 / 85%);
+  background: color-mix(in oklch, var(--pub-surface) 85%, transparent);
 }
 
 .sel-summary {

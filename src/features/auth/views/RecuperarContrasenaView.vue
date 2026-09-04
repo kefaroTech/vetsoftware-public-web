@@ -172,7 +172,7 @@ async function resend() {
 }
 
 .rc-resend-wait {
-  color: var(--pub-ink-400, #a08bbd);
+  color: var(--pub-ink-500);
   font-weight: 500;
 }
 

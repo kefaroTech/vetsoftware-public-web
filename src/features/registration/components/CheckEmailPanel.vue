@@ -32,7 +32,7 @@ const router = useRouter()
   width: 100%;
   max-width: 560px;
   text-align: center;
-  background: #fff;
+  background: var(--pub-surface);
   border-radius: 16px;
   border: 1px solid var(--pub-line);
   box-shadow: var(--pub-card-shadow);
@@ -44,8 +44,8 @@ const router = useRouter()
   height: 74px;
   margin: 0 auto;
   border-radius: 18px;
-  background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
-  border: 1px solid #ecd9fb;
+  background: linear-gradient(135deg, var(--pub-tint-50), var(--pub-tint-100));
+  border: 1px solid var(--pub-tint-bd);
   display: grid;
   place-items: center;
   color: var(--pub-ame-700);

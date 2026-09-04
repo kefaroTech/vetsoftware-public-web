@@ -40,9 +40,6 @@ import { irAAncla } from '../composables/anclaConFoco'
   justify-content: space-between;
   gap: 20px;
   font-size: 13px;
-
-  /* `--pub-ink-400` mide 3,94:1 sobre blanco: falla §1.4.3 AA para texto
-     normal. `--pub-ink-500` mide 5,96:1. */
   color: var(--pub-ink-500);
 }
 

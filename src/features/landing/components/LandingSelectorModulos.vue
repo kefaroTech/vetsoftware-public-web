@@ -192,9 +192,6 @@ watch(
   cursor: pointer;
 }
 
-/* Mismo criterio y mismo token que `CatalogoGrupo.vue`: `--pub-ame-600` mide
-   5,25:1 sobre blanco y `--pub-line` 1,23:1, que no vale como borde de control
-   (§1.4.11). */
 .lsm-fila.is-on {
   border-color: var(--pub-ame-600);
 }
@@ -218,8 +215,6 @@ watch(
   color: var(--pub-ink-900);
 }
 
-/* `--pub-ink-500` (5,96:1 sobre blanco) y no `--pub-ink-400`, que mide 3,94:1 y
-   falla §1.4.3 AA para texto normal — y 13,5px lo es. */
 .lsm-precio {
   margin-left: auto;
   flex: none;

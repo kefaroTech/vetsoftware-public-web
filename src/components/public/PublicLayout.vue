@@ -27,7 +27,11 @@ withDefaults(
         right: -140px;
         width: 500px;
         height: 500px;
-        background: radial-gradient(circle, rgb(150 152 255 / 24%), transparent 60%);
+        background: radial-gradient(
+          circle,
+          color-mix(in oklch, var(--pub-ame-400) 24%, transparent),
+          transparent 60%
+        );
       "
     />
     <div
@@ -37,7 +41,11 @@ withDefaults(
         left: -140px;
         width: 460px;
         height: 460px;
-        background: radial-gradient(circle, rgb(119 112 255 / 16%), transparent 62%);
+        background: radial-gradient(
+          circle,
+          color-mix(in oklch, var(--pub-ame-500) 16%, transparent),
+          transparent 62%
+        );
       "
     />
 
@@ -126,10 +134,6 @@ withDefaults(
   align-items: center;
   justify-content: space-between;
   font-size: 12px;
-
-  /* `--pub-ink-400` mide 3,94:1 sobre blanco y 3,37:1 sobre el fondo de la
-     zona pública: falla §1.4.3 AA para texto normal, y este pie es de 12 px.
-     `--pub-ink-500` mide 5,96:1 y 5,09:1. */
   color: var(--pub-ink-500);
   flex-shrink: 0;
 }
