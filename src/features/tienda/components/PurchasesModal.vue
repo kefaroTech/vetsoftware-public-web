@@ -87,9 +87,9 @@ watch(
           <tr>
             <th>Fecha</th>
             <th>Producto</th>
-            <th>Cantidad</th>
-            <th>Costo unit.</th>
-            <th>Total</th>
+            <th class="ds-num">Cantidad</th>
+            <th class="ds-num">Costo unit.</th>
+            <th class="ds-num">Total</th>
           </tr>
         </thead>
         <tbody>
@@ -135,9 +135,9 @@ watch(
    con ella. El `.ds-empty` del `<td colspan>` vacío lo resuelve la excepción
    `.ds-table td.ds-empty` de `primitives.css` (0,2,1), que le gana a
    `.ds-table--dense td` (0,1,1).
-   Ningún `<th>` lleva `.num` aquí, así que la cifra es sólo cosa de las celdas
-   de datos: son `.ds-num` (primitives.css) y de la regla local sólo sobrevive
-   el `white-space`, que la primitiva no declara. */
+   La cifra la marcan `.ds-num` (primitives.css) tanto en el `<th>` —donde la
+   alinea la excepción `.ds-table th.ds-num`— como en el `<td>`; de la regla
+   local sólo sobrevive el `white-space`, que la primitiva no declara. */
 .num,
 .date {
   white-space: nowrap;

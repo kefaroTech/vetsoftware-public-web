@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, useTemplateRef, watch } from 'vue'
 import { BarChart3, ShieldCheck } from 'lucide-vue-next'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { useScrollableRegion } from '@/composables/useScrollableRegion'
 import { useBranches } from '@/features/branches/composables/useBranches'
 import { useFacturacionAccess } from '../composables/useFacturacionAccess'
 import { salesReportApi } from '../api/salesReport.api'
@@ -74,6 +75,15 @@ function meansLabel(m: string): string {
   return PAYMENT_MEANS_LABEL[m as PaymentMeans] ?? m
 }
 
+const porTarifa = useTemplateRef<HTMLElement>('porTarifa')
+const porTarifaDesborda = useScrollableRegion(porTarifa)
+const porMedio = useTemplateRef<HTMLElement>('porMedio')
+const porMedioDesborda = useScrollableRegion(porMedio)
+const documentos = useTemplateRef<HTMLElement>('documentos')
+const documentosDesborda = useScrollableRegion(documentos)
+const atencion = useTemplateRef<HTMLElement>('atencion')
+const atencionDesborda = useScrollableRegion(atencion)
+
 // Multi-sucursal: recargar el reporte al cambiar la sede seleccionada.
 watch(selectedBranchId, () => {
   if (hasModule) void load()
@@ -110,7 +120,7 @@ onMounted(() => {
     </div>
 
     <BaseTabPanel name="reportes" :value="tab" class="ds-stack ds-stack--18">
-      <p v-if="error" class="error-banner">{{ error }}</p>
+      <div v-if="error" class="ds-banner ds-banner--error" role="alert">{{ error }}</div>
       <div v-if="loading" class="loading">Cargando reporte…</div>
 
       <!-- Libro de ventas -->
@@ -133,22 +143,28 @@ onMounted(() => {
         <div class="cols">
           <div class="ds-card">
             <div class="card-title">Impuestos por tarifa</div>
-            <div class="ds-table-scroll">
+            <div
+              ref="porTarifa"
+              class="ds-table-scroll ds-focus-ring"
+              role="region"
+              aria-label="Impuestos por tarifa"
+              :tabindex="porTarifaDesborda ? 0 : undefined"
+            >
               <table class="minitable">
                 <thead>
                   <tr>
                     <th>Esquema</th>
                     <th>Tarifa</th>
-                    <th style="text-align: right">Base</th>
-                    <th style="text-align: right">Impuesto</th>
+                    <th class="ds-num">Base</th>
+                    <th class="ds-num">Impuesto</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="(r, i) in book.taxByRate" :key="i">
                     <td>{{ r.taxScheme }}</td>
                     <td>{{ r.taxRate }}%</td>
-                    <td style="text-align: right">{{ feMoney(r.taxableAmount) }}</td>
-                    <td style="text-align: right">{{ feMoney(r.taxAmount) }}</td>
+                    <td class="ds-num">{{ feMoney(r.taxableAmount) }}</td>
+                    <td class="ds-num">{{ feMoney(r.taxAmount) }}</td>
                   </tr>
                   <tr v-if="book.taxByRate.length === 0">
                     <td colspan="4" class="ds-empty">Sin datos</td>
@@ -159,18 +175,24 @@ onMounted(() => {
           </div>
           <div class="ds-card">
             <div class="card-title">Recaudo por medio de pago</div>
-            <div class="ds-table-scroll">
+            <div
+              ref="porMedio"
+              class="ds-table-scroll ds-focus-ring"
+              role="region"
+              aria-label="Recaudo por medio de pago"
+              :tabindex="porMedioDesborda ? 0 : undefined"
+            >
               <table class="minitable">
                 <thead>
                   <tr>
                     <th>Medio</th>
-                    <th style="text-align: right">Monto</th>
+                    <th class="ds-num">Monto</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="(r, i) in book.recaudoByMeans" :key="i">
                     <td>{{ meansLabel(r.paymentMeans) }}</td>
-                    <td style="text-align: right">{{ feMoney(r.amount) }}</td>
+                    <td class="ds-num">{{ feMoney(r.amount) }}</td>
                   </tr>
                   <tr v-if="book.recaudoByMeans.length === 0">
                     <td colspan="2" class="ds-empty">Sin datos</td>
@@ -183,7 +205,13 @@ onMounted(() => {
 
         <div class="ds-card">
           <div class="card-title">Documentos del periodo</div>
-          <div class="ds-table-scroll">
+          <div
+            ref="documentos"
+            class="ds-table-scroll ds-focus-ring"
+            role="region"
+            aria-label="Documentos del periodo"
+            :tabindex="documentosDesborda ? 0 : undefined"
+          >
             <table class="minitable">
               <thead>
                 <tr>
@@ -191,9 +219,9 @@ onMounted(() => {
                   <th>Tipo</th>
                   <th>Fecha</th>
                   <th>Cliente</th>
-                  <th style="text-align: right">Base</th>
-                  <th style="text-align: right">IVA</th>
-                  <th style="text-align: right">Total</th>
+                  <th class="ds-num">Base</th>
+                  <th class="ds-num">IVA</th>
+                  <th class="ds-num">Total</th>
                   <th>Estado</th>
                 </tr>
               </thead>
@@ -205,9 +233,9 @@ onMounted(() => {
                   <td>{{ docTypeLabel(e.documentType) }}</td>
                   <td class="date">{{ e.issueDate }}</td>
                   <td>{{ e.customerName || '—' }}</td>
-                  <td style="text-align: right">{{ feMoney(e.base) }}</td>
-                  <td style="text-align: right">{{ feMoney(e.iva) }}</td>
-                  <td style="text-align: right; font-weight: 600">{{ feMoney(e.total) }}</td>
+                  <td class="ds-num">{{ feMoney(e.base) }}</td>
+                  <td class="ds-num">{{ feMoney(e.iva) }}</td>
+                  <td class="ds-num ds-strong">{{ feMoney(e.total) }}</td>
                   <td><FeStatusPill :status="e.dianStatus" /></td>
                 </tr>
                 <tr v-if="book.entries.length === 0">
@@ -245,7 +273,14 @@ onMounted(() => {
           <div v-if="recon.needsAttention.length === 0" class="ds-empty pad">
             Todos los documentos del periodo están validados.
           </div>
-          <div v-else class="ds-table-scroll">
+          <div
+            v-else
+            ref="atencion"
+            class="ds-table-scroll ds-focus-ring"
+            role="region"
+            aria-label="Documentos que requieren atención"
+            :tabindex="atencionDesborda ? 0 : undefined"
+          >
             <table class="minitable">
               <thead>
                 <tr>
@@ -323,16 +358,6 @@ onMounted(() => {
   width: 170px;
 }
 
-.error-banner {
-  margin: 0;
-  padding: 12px 16px;
-  border-radius: 10px;
-  background: var(--danger-50);
-  border: 1px solid var(--danger-border);
-  color: var(--danger-800);
-  font-size: 13px;
-}
-
 .loading {
   padding: 30px;
   text-align: center;
@@ -395,6 +420,12 @@ onMounted(() => {
   color: var(--warm-500);
   padding: 6px 8px;
   border-bottom: 1px solid var(--warm-200);
+}
+
+/* `.minitable th` (0,2,1) le gana a `.ds-num` (0,1,0): la excepción nombra la
+   clase para pesar (0,2,2) y que la cabecera caiga sobre sus cifras. */
+.minitable th.ds-num {
+  text-align: right;
 }
 
 .minitable td {

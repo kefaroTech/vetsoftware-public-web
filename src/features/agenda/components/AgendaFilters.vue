@@ -64,7 +64,13 @@ function select(value: ClinicalEventType | 'ALL') {
       "
       @click="select(type)"
     >
-      <span class="icon" aria-hidden="true">{{ EVENT_TYPES[type].icon }}</span>
+      <component
+        :is="EVENT_TYPES[type].icon"
+        :size="13"
+        :stroke-width="1.7"
+        class="icon"
+        aria-hidden="true"
+      />
       <span class="label">{{ EVENT_TYPES[type].label }}</span>
       <span class="count">{{ countByType.get(type) ?? 0 }}</span>
     </button>
@@ -125,8 +131,7 @@ function select(value: ClinicalEventType | 'ALL') {
 }
 
 .icon {
-  font-size: 12.5px;
-  line-height: 1;
+  flex-shrink: 0;
 }
 
 .count {

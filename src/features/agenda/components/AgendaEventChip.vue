@@ -26,7 +26,13 @@ const tokens = computed(() => TYPE_COLORS[meta.value.color])
     :title="`${meta.label}${event.subtitle ? ' · ' + event.subtitle : ''}`"
     @click.stop="$emit('click', event)"
   >
-    <span class="icon" aria-hidden="true">{{ meta.icon }}</span>
+    <component
+      :is="meta.icon"
+      :size="dense ? 12 : 14"
+      :stroke-width="1.7"
+      class="icon"
+      aria-hidden="true"
+    />
     <span class="label ds-stack">
       <span class="ds-truncate">{{ event.title }}</span>
       <span v-if="!dense && event.subtitle" class="subtitle ds-truncate">{{ event.subtitle }}</span>
@@ -61,12 +67,6 @@ const tokens = computed(() => TYPE_COLORS[meta.value.color])
 
 .icon {
   flex-shrink: 0;
-  font-size: 13px;
-  line-height: 1;
-}
-
-.chip-dense .icon {
-  font-size: 11px;
 }
 
 .label {

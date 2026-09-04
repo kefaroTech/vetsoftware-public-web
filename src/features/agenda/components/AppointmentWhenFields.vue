@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, useId, useTemplateRef } from 'vue'
 import { AlertTriangle } from 'lucide-vue-next'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import DateInput from '@/components/ui/DateInput.vue'
@@ -50,6 +50,61 @@ const typeEntries = Object.entries(APPT_TYPES) as [
   AppointmentType,
   (typeof APPT_TYPES)[AppointmentType],
 ][]
+
+/**
+ * El grupo de tipo de cita implementa el patrón APG *Radio Group* aquí dentro en
+ * vez de montar `SegmentedRadio`: la primitiva pinta opciones de solo texto y
+ * estas nueve llevan icono.
+ *
+ * `<label for>` no puede nombrar a un `role="radiogroup"` —`for` solo alcanza a
+ * elementos etiquetables—, de ahí que el rótulo viaje por `aria-labelledby`.
+ */
+const typeLabelId = useId()
+const typeButtons = useTemplateRef<HTMLButtonElement[]>('typeButtons')
+
+/** Tabindex móvil: el grupo entero consume UNA tabulación, no una por opción. */
+const activeTypeIndex = computed(() => {
+  const i = typeEntries.findIndex(([key]) => key === type.value)
+  return i >= 0 ? i : 0
+})
+
+/** En un grupo de radios la selección SIGUE al foco: mover con las flechas marca. */
+function selectType(index: number) {
+  const entry = typeEntries[index]
+  if (!entry) return
+  type.value = entry[0]
+  nextTick(() => typeButtons.value?.[index]?.focus())
+}
+
+function onTypeKeydown(event: KeyboardEvent, index: number) {
+  const n = typeEntries.length
+  switch (event.key) {
+    case 'ArrowRight':
+    case 'ArrowDown':
+      event.preventDefault()
+      selectType((index + 1) % n)
+      break
+    case 'ArrowLeft':
+    case 'ArrowUp':
+      event.preventDefault()
+      selectType((index - 1 + n) % n)
+      break
+    case 'Home':
+      event.preventDefault()
+      selectType(0)
+      break
+    case 'End':
+      event.preventDefault()
+      selectType(n - 1)
+      break
+    case ' ':
+      // Evita el `click` que el navegador dispararía después sobre el <button>,
+      // que marcaría dos veces. Enter no se intercepta: `type="button"` no envía.
+      event.preventDefault()
+      selectType(index)
+      break
+  }
+}
 
 // ── Duración ─────────────────────────────────────────────────────────
 /**
@@ -151,18 +206,29 @@ function clashRange(appt: AppointmentResponse): string {
 
   <!-- Tipo (oculto en reprogramación) -->
   <div v-if="!isReschedule" class="field ds-stack">
-    <label class="flabel ds-label">Tipo de cita <span class="req">*</span></label>
-    <div class="typegrid">
+    <span :id="typeLabelId" class="flabel ds-label">Tipo de cita <span class="req">*</span></span>
+    <div class="typegrid" role="radiogroup" :aria-labelledby="typeLabelId">
       <button
-        v-for="[key, m] in typeEntries"
+        v-for="([key, m], i) in typeEntries"
         :key="key"
+        ref="typeButtons"
         type="button"
         class="typebtn"
         :class="{ sel: type === key }"
-        @click="type = key"
+        role="radio"
+        :aria-checked="type === key"
+        :tabindex="i === activeTypeIndex ? 0 : -1"
+        @click="selectType(i)"
+        @keydown="onTypeKeydown($event, i)"
       >
-        <span class="typebtn-ic" aria-hidden="true">{{ m.icon }}</span
-        >{{ m.label }}
+        <component
+          :is="m.icon"
+          :size="17"
+          :stroke-width="1.7"
+          class="typebtn-ic"
+          aria-hidden="true"
+        />
+        {{ m.label }}
       </button>
     </div>
   </div>
@@ -254,6 +320,6 @@ function clashRange(appt: AppointmentResponse): string {
 }
 
 .typebtn-ic {
-  font-size: 18px;
+  flex-shrink: 0;
 }
 </style>

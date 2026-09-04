@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Plus } from 'lucide-vue-next'
+import { CalendarOff, Plus } from 'lucide-vue-next'
 import AppointmentCard from './AppointmentCard.vue'
 import { EVENT_TYPES, TYPE_COLORS } from '@/features/historia-clinica/constants/eventTypes'
 import { isoFromDate } from '../composables/dateUtils'
@@ -46,7 +46,7 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
 <template>
   <div class="day-view">
     <div v-if="isEmpty" class="day-empty ds-empty">
-      <div class="empty-emoji" aria-hidden="true">📭</div>
+      <CalendarOff :size="32" :stroke-width="1.5" class="empty-icon" aria-hidden="true" />
       <div class="empty-text">No hay citas para este día.</div>
       <button
         v-if="canCreate"
@@ -90,7 +90,13 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
                 class="dot"
                 :style="{ background: TYPE_COLORS[EVENT_TYPES[ev.type].color].dot }"
               />
-              <span class="icon" aria-hidden="true">{{ EVENT_TYPES[ev.type].icon }}</span>
+              <component
+                :is="EVENT_TYPES[ev.type].icon"
+                :size="18"
+                :stroke-width="1.7"
+                class="icon"
+                aria-hidden="true"
+              />
               <span class="text ds-stack">
                 <span class="title">{{ ev.title }}</span>
                 <span v-if="ev.subtitle" class="subtitle">{{ ev.subtitle }}</span>
@@ -117,9 +123,9 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
   padding: 60px var(--space-20);
 }
 
-.empty-emoji {
-  font-size: 32px;
+.empty-icon {
   margin-bottom: 8px;
+  color: var(--warm-400);
 }
 
 .empty-text {
@@ -208,8 +214,7 @@ const isEmpty = computed(() => appointments.value.length === 0 && clinicalEvents
 }
 
 .icon {
-  font-size: 18px;
-  line-height: 1;
+  flex-shrink: 0;
 }
 
 .text {

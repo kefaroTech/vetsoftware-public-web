@@ -90,6 +90,8 @@ const emit = defineEmits<(e: 'close') => void>()
   display: grid;
   place-items: center;
   flex-shrink: 0;
+  min-width: 24px;
+  min-height: 24px;
 }
 
 .pub-banner-close:hover {

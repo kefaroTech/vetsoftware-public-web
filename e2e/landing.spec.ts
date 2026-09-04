@@ -45,13 +45,17 @@ const TITULO_PLANES = 'Planes y precios — Lumbre'
 const H1_PLANES = 'Esto es lo que te armamos'
 
 /**
- * El único control de cada tarjeta de combinación.
+ * El rótulo del único control de cada tarjeta de combinación.
  *
- * <p>Dice lo MISMO en las tres a propósito: lo que las distingue en la lista de
- * enlaces de un lector es el `aria-describedby` al `<h3>`, no el rótulo. Por eso
- * localizar por nombre resuelve tres enlaces y hay que acotar por tarjeta.
+ * <p>Nombra el plan, que es lo que `landing-comercial-y-contratacion.md:826`
+ * pide por escrito. El texto visible y el nombre accesible son el mismo, así que
+ * §2.5.3 Label in Name se cumple sin `aria-label`, y el `aria-describedby` al
+ * `<h3>` se conserva porque sigue siendo lo que da contexto en la lista de
+ * enlaces.
  */
-const CTA_TARJETA = 'Marcar estos módulos'
+function ctaDe(nombre: string): string {
+  return `Marcar los de ${nombre}`
+}
 
 /** Las tres combinaciones publicadas, por el nombre que enseña su `<h3>`. */
 const COMBINACIONES = ['Pack Spa', 'Pack Clínica', 'Pack Clínica completa'] as const
@@ -153,24 +157,30 @@ test.describe('Landing comercial', () => {
     await expect(page.locator('#cotizador')).toBeFocused()
   })
 
-  test('las tres tarjetas comparten rótulo y se distinguen por su descripción', async ({
+  test('cada tarjeta nombra su plan en el rótulo y lo repite en la descripción', async ({
     page,
   }) => {
     await page.goto('/')
     await expect(page.locator('#planes')).toBeVisible()
 
-    // §2.4.4 Link Purpose (In Context) y §2.5.3 Label in Name a la vez. Un
-    // `aria-label` que nombrara la combinación —«Marcar los módulos de Pack
-    // Spa»— dejaría el nombre accesible sin el texto visible y rompería §2.5.3;
-    // tres enlaces con el mismo nombre y sin descripción los dejaría
-    // indistinguibles en la lista de enlaces del lector. La salida es esta, y es
-    // la que se rompería sola con el siguiente retoque de copy.
+    // §2.4.4 Link Purpose (In Context) y §2.5.3 Label in Name a la vez. El
+    // nombre del plan va en el TEXTO VISIBLE, no en un `aria-label`: ponerlo
+    // solo en el atributo dejaría el nombre accesible sin el texto visible y
+    // rompería §2.5.3. El `aria-describedby` al `<h3>` sigue puesto porque el
+    // rótulo por sí solo no dice qué módulos entran.
+    const nombresAccesibles: string[] = []
     for (const nombre of COMBINACIONES) {
       const cta = tarjeta(page, nombre).getByRole('link')
       await expect(cta).toHaveCount(1)
-      await expect(cta).toHaveAccessibleName(CTA_TARJETA)
+      await expect(cta).toHaveAccessibleName(ctaDe(nombre))
       expect(await descripcionDe(page, cta)).toBe(nombre)
+      nombresAccesibles.push(ctaDe(nombre))
     }
+
+    // Lo que el rótulo compartido costaba: en la lista de enlaces del lector las
+    // tres entradas eran la misma cadena. Si vuelven a coincidir, este aserto es
+    // el que lo dice, y no la instantánea —que se regenera sin leerla.
+    expect(new Set(nombresAccesibles).size).toBe(COMBINACIONES.length)
   })
 
   test('la sección de combinaciones conserva su semántica', async ({ page }) => {

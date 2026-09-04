@@ -263,8 +263,7 @@ function continuar() {
              desaparecería del documento en cuanto llegara la propuesta. -->
         <h1 ref="h1" class="pub-title" tabindex="-1">Esto es lo que te armamos</h1>
         <p class="pub-sub">
-          Ajusta lo que quieras. El importe de la derecha se mueve contigo, y no te compromete a
-          nada.
+          Ajusta lo que quieras. El importe se actualiza mientras eliges, y no te compromete a nada.
         </p>
         <!-- El indicador de moneda va AQUÍ, una vez por pantalla, y no pegado a
              cada cifra: ver `MONEDA_DE_FACTURACION`. -->

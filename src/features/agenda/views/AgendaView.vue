@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { ArrowLeft, Plus } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
+import PawLoader from '@/components/feedback/PawLoader.vue'
 import AgendaToolbar from '../components/AgendaToolbar.vue'
 import AppointmentFilters from '../components/AppointmentFilters.vue'
 import AppointmentSummary from '../components/AppointmentSummary.vue'
@@ -323,8 +324,6 @@ async function onRemove(appt: AppointmentResponse) {
       </template>
     </PageHeader>
 
-    <div v-if="error" class="ds-banner ds-banner--error ds-banner--flush">{{ error }}</div>
-
     <AgendaToolbar
       :view="view"
       :cursor="cursor"
@@ -335,7 +334,7 @@ async function onRemove(appt: AppointmentResponse) {
 
     <AppointmentFilters />
 
-    <AppointmentSummary v-if="view === 'day'" :appointments="dayAppointments" />
+    <AppointmentSummary v-if="view === 'day' && !error" :appointments="dayAppointments" />
 
     <button
       v-if="view === 'day' && previousView"
@@ -348,7 +347,12 @@ async function onRemove(appt: AppointmentResponse) {
     </button>
 
     <div class="body">
-      <div v-if="loading && items.length === 0" class="loading ds-empty">Cargando citas…</div>
+      <div v-if="loading && items.length === 0" class="loading ds-empty">
+        <PawLoader :size="42" :glow="false" :speed="900" label="Cargando citas" />
+      </div>
+      <!-- EST-01: la rama de error va ANTES que los tres cuerpos. Detrás de ellos, un 500
+           reaparece como «No hay citas para este día» con su botón de agendar. -->
+      <div v-else-if="error" class="ds-banner ds-banner--error" role="alert">{{ error }}</div>
       <AgendaMonthView
         v-else-if="view === 'month'"
         :cursor="cursor"

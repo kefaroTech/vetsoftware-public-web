@@ -49,6 +49,10 @@ const idMotivoBloqueo = useId()
 
 const firme = computed(() => props.estado === 'LISTO')
 
+const sufijo = computed(() =>
+  props.estado === 'CALCULANDO' ? 'calculando…' : `+ IVA ${sufijoCiclo(props.ciclo)}`,
+)
+
 const conteo = computed(() => {
   const n = props.modulos.length
   if (n === 0) return 'Solo el núcleo'
@@ -108,9 +112,7 @@ const MOTIVO_BLOQUEO =
 
     <p class="pra-cifra">
       <span class="pub-num pra-num" :aria-hidden="firme ? undefined : 'true'">{{ importe }}</span>
-      <span class="pra-suf">
-        {{ estado === 'CALCULANDO' ? 'calculando…' : `+ IVA ${sufijoCiclo(ciclo)}` }}
-      </span>
+      <span class="pra-suf">{{ sufijo }}</span>
     </p>
 
     <!-- La ÚNICA región viva de la pantalla. Su contenido lo compone
@@ -139,15 +141,25 @@ const MOTIVO_BLOQUEO =
       Prueba gratis y sin tarjeta. El primer cobro sería el {{ formatDateLong(primerCobro) }}.
     </p>
 
-    <button
-      type="button"
-      class="pra-continuar pub-focus-ring--on-accent"
-      :aria-disabled="puedeContinuar ? undefined : 'true'"
-      :aria-describedby="puedeContinuar ? undefined : idMotivoBloqueo"
-      @click="puedeContinuar && $emit('continuar')"
-    >
-      Continuar
-    </button>
+    <!-- `.pub-barra-accion` no duplica el botón: lo reubica en una barra anclada
+         abajo cuando la rejilla colapsa y este resumen pasa a ser el último
+         bloque de la página. El importe que la acompaña sí es un eco visual del
+         de arriba, y por eso va `aria-hidden`. -->
+    <div class="pub-barra-accion">
+      <p class="pub-barra-cifra" aria-hidden="true">
+        <span class="pub-num">{{ importe }}</span>
+        <span class="pub-barra-suf">{{ sufijo }}</span>
+      </p>
+      <button
+        type="button"
+        class="pra-continuar pub-focus-ring--on-accent"
+        :aria-disabled="puedeContinuar ? undefined : 'true'"
+        :aria-describedby="puedeContinuar ? undefined : idMotivoBloqueo"
+        @click="puedeContinuar && $emit('continuar')"
+      >
+        Continuar
+      </button>
+    </div>
 
     <!-- El motivo es VISIBLE, no sólo para el lector: quien ve el botón apagado
          merece la misma información que quien lo oye. Y `aria-disabled` en vez

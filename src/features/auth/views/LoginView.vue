@@ -39,9 +39,9 @@ onMounted(() => {
           loading="eager"
         />
       </picture>
-      <div class="pub-eyebrow">Panel administrativo</div>
+      <div class="pub-eyebrow">Tu clínica</div>
       <h1 class="pub-title">Inicia sesión</h1>
-      <p class="pub-sub">Accede al panel para administrar Lumbre.</p>
+      <p class="pub-sub">Entra con tu código de empleado y tu contraseña.</p>
       <v-alert v-if="sessionNotice" class="mb-5" type="warning" variant="tonal" density="compact">
         {{ sessionNotice }}
       </v-alert>

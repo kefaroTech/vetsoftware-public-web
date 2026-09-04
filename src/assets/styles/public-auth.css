@@ -47,6 +47,11 @@
   --pub-tint-bd: var(--amatista-200);
   --pub-tint-sep: var(--amatista-100);
   --pub-tint-mute: var(--surface-muted);
+
+  /* El canal lateral de la portada, en un único sitio: las secciones y el pie de
+     la landing tienen que sangrar lo mismo en los seis anchos, y con el valor
+     escrito dos veces dejan de hacerlo en cuanto uno de los dos se toca. */
+  --pub-gutter: clamp(20px, 5vw, 44px);
   --pub-err-tx-2: var(--danger-fg);
   --pub-err-bg: var(--danger-bg);
   --pub-err-bd: var(--danger-border);
@@ -372,7 +377,7 @@
 /* Ritmo vertical de una sección de la landing (§B, §C, §D, §E, §F). */
 .pub-section {
   position: relative;
-  padding: clamp(48px, 7vw, 88px) clamp(20px, 5vw, 44px);
+  padding: clamp(48px, 7vw, 88px) var(--pub-gutter);
   margin: 0 auto;
   width: 100%;
   max-width: 1120px;
@@ -408,11 +413,19 @@
 }
 
 /* Geometría y superficie de la tarjeta de plan. El realce de la recomendada NO
-   viaja aquí: va en el modificador, para que se pueda medir por separado. */
+   viaja aquí: va en el modificador, para que se pueda medir por separado.
+
+   Las siete filas son `subgrid` sobre las que declara `.land-plans-grid`: el
+   precio es el ancla con la que se comparan las tres tarjetas y tiene que
+   quedar a la misma altura en todas, aunque solo una lleve insignia y los
+   subtítulos ocupen una o dos líneas. Quien cambie el número de filas tiene que
+   cambiarlo también allí y en `PlanCard.vue`, que coloca cada hijo en su fila
+   de forma explícita. */
 .pub-plan-card {
   position: relative;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-row: span 7;
+  grid-template-rows: subgrid;
   gap: 14px;
   padding: 26px 24px 24px;
   border-radius: 16px;
@@ -807,6 +820,74 @@
   font-size: 13px;
   line-height: 1.55;
   color: var(--pub-ink-500);
+}
+
+/* La barra de acción del embudo en pantallas estrechas.
+ *
+ * En ancho el resumen es una columna propia y `position: sticky` lo mantiene a
+ * la vista; al colapsar la rejilla pasa a ser el ÚLTIMO bloque de la página, y
+ * un elemento pegajoso que no tiene nada debajo no se pega a nada: el importe y
+ * la acción que cierra la compra quedan a cinco pantallas de scroll.
+ *
+ * `display: contents` es lo que evita duplicar el control: en ancho la envoltura
+ * desaparece del árbol de cajas y el botón cae exactamente donde lo pone su
+ * componente; por debajo del corte la misma envoltura pasa a ser la barra fija y
+ * se lleva ESE botón consigo. Hay un solo «Continuar» en el documento en los dos
+ * casos. */
+.pub-barra-accion {
+  display: contents;
+}
+
+.pub-barra-cifra {
+  display: none;
+}
+
+@media (width <= 900px) {
+  .pub-barra-accion {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: var(--z-sticky);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    background: var(--pub-surface);
+    border-block-start: 1px solid var(--pub-line-strong);
+    box-shadow: 0 -8px 22px -14px color-mix(in oklch, var(--amatista-700) 35%, transparent);
+  }
+
+  .pub-barra-cifra {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 21px;
+    color: var(--pub-ink-900);
+  }
+
+  .pub-barra-suf {
+    font-size: 11.5px;
+    color: var(--pub-ink-600);
+  }
+
+  /* La barra decide la caja del control que aloja, y por eso lo alcanza por
+     elemento: la clase del botón es del componente que lo declara, no suya. */
+  .pub-scope .pub-barra-accion > button {
+    margin: 0;
+    inline-size: auto;
+    min-block-size: 44px;
+    padding-inline: 22px;
+    font-size: 14px;
+    border-radius: 11px;
+  }
+
+  /* El pie del armazón cae por debajo de la barra, y su enlace de vuelta dejaría
+     de ser pulsable. */
+  .pub-shell:has(.pub-barra-accion) .pub-footer {
+    padding-block-end: calc(74px + env(safe-area-inset-bottom));
+  }
 }
 
 /* ===========================================================================

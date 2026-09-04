@@ -91,6 +91,8 @@ watch(
 
 const isSearching = computed(() => filtros.q.trim().length > 0)
 
+const errorDeCarga = computed(() => store.error.value ?? listError.value)
+
 // Contadores y saldo pendiente vienen del servidor: sumarlos sobre la página cargada daría
 // el total de lo que se ha scrolleado, no el de la empresa.
 const summary = store.summary
@@ -145,8 +147,11 @@ function onAccountCreated(account: OpenAccountResponse) {
     </template>
   </PageHeader>
 
-  <div v-if="store.error.value || listError" class="ds-banner ds-banner--error">
-    {{ store.error.value ?? listError }}
+  <!-- EST-01: la rama de error va ANTES que la de vacío; las de abajo se
+       apagan mientras esté puesta, o la pantalla que falló afirma que la
+       empresa no tiene cuentas. -->
+  <div v-if="errorDeCarga" class="ds-banner ds-banner--error" role="alert">
+    {{ errorDeCarga }}
   </div>
   <div
     v-if="canCreate && branchStore.selectedBranchId == null"
@@ -193,14 +198,14 @@ function onAccountCreated(account: OpenAccountResponse) {
         <div class="ds-skeleton ds-skeleton--text sk-line sk-line--short"></div>
       </div>
     </div>
-    <div v-else-if="isEmpty && isSearching" class="empty-state">
+    <div v-else-if="!errorDeCarga && isEmpty && isSearching" class="empty-state">
       <div class="empty-ic ds-tone--accent-soft"><Search :size="28" :stroke-width="1.5" /></div>
       <div class="empty-title">Sin resultados</div>
       <p class="empty-desc ds-meta-dark">
         Ninguna cuenta {{ tab === 'activas' ? 'activa' : 'cerrada' }} coincide con tu búsqueda.
       </p>
     </div>
-    <div v-else-if="isEmpty" class="empty-state">
+    <div v-else-if="!errorDeCarga && isEmpty" class="empty-state">
       <div class="empty-ic ds-tone--accent-soft"><Receipt :size="28" :stroke-width="1.5" /></div>
       <div class="empty-title">
         {{ tab === 'activas' ? 'Sin cuentas activas' : 'Sin cuentas cerradas' }}

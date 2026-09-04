@@ -49,9 +49,11 @@ const tarjetas = [
 </template>
 
 <style scoped>
+/* Los 220 px son la medida legible de la tarjeta, no un corte de viewport: con sus
+   20 px de relleno propio, por debajo el texto no llega a 30 caracteres por línea. */
 .land-value-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   gap: 16px;
 }
 
@@ -77,11 +79,5 @@ const tarjetas = [
   line-height: 1.6;
   color: var(--pub-ink-600);
   text-wrap: pretty;
-}
-
-@media (width <= 720px) {
-  .land-value-grid {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

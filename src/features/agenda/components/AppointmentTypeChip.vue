@@ -9,8 +9,8 @@ const tokens = computed(() => apptTypeTokens(props.type))
 
 <template>
   <span class="type-chip ds-pill" :style="{ background: tokens.bg, color: tokens.fg }">
-    <span aria-hidden="true">{{ meta.icon }}</span
-    >{{ meta.label }}
+    <component :is="meta.icon" :size="12" :stroke-width="1.8" aria-hidden="true" />
+    {{ meta.label }}
   </span>
 </template>
 

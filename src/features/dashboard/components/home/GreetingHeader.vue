@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 const props = defineProps<{
   firstName: string
-  scheduledToday: number
+  scheduledToday: number | null
 }>()
 
 const greeting = computed(() => {
@@ -24,14 +24,18 @@ const today = computed(() => {
 })
 
 const subtitle = computed(() => {
-  return `${today.value} · ${props.scheduledToday} ${props.scheduledToday === 1 ? 'consulta prevista' : 'consultas previstas'} hoy`
+  const n = props.scheduledToday
+  if (n === null) return today.value
+  return `${today.value} · ${n} ${n === 1 ? 'cita prevista' : 'citas previstas'} hoy`
 })
 </script>
 
 <template>
   <header class="greeting">
     <h1 class="title">
-      {{ greeting }}, <em>{{ firstName }}</em
+      {{ greeting
+      }}<span v-if="firstName"
+        >, <em>{{ firstName }}</em></span
       >.
     </h1>
     <p class="subtitle">{{ subtitle }}</p>

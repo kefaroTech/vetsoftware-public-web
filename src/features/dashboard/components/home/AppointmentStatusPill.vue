@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { ConsultationStatus } from '../../data/mock'
+import { APPT_STATUS, type AppointmentStatus } from '@/features/agenda/types/appointment'
 
 const props = defineProps<{
-  status: ConsultationStatus
+  status: AppointmentStatus
 }>()
 
 /**
@@ -13,15 +13,15 @@ const props = defineProps<{
  * (warm-150/warm-700 frente al warm-200/warm-600 de `.ds-tone--neutral`).
  */
 const meta = computed(() => {
+  const label = APPT_STATUS[props.status].label
   switch (props.status) {
-    case 'en_curso':
-      return { label: 'En curso', tone: 'amatista' as const, ds: 'ds-tone--accent' }
-    case 'programada':
-      return { label: 'Programada', tone: 'wait' as const, ds: '' }
-    case 'completada':
-      return { label: 'Completada', tone: 'ok' as const, ds: 'ds-tone--success' }
+    case 'IN_PROGRESS':
+      return { label, tone: 'amatista' as const, ds: 'ds-tone--accent' }
+    case 'COMPLETED':
+      return { label, tone: 'ok' as const, ds: 'ds-tone--success' }
+    default:
+      return { label, tone: 'wait' as const, ds: '' }
   }
-  return { label: props.status, tone: 'wait' as const, ds: '' }
 })
 </script>
 

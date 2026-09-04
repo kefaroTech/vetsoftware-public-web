@@ -15,7 +15,7 @@ import { useToast } from '@/composables/useToast'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
-import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
+import { isConcurrencyConflict } from '@/services/http/http.client'
 import type { ServiceResponse } from '../types/tienda'
 
 const CONFLICT_MESSAGE =
@@ -49,8 +49,29 @@ const categoriesOpen = ref(false)
 
 onMounted(() => store.reload())
 
+const searchTerm = computed(() => query.value.trim())
+const filterOn = computed(() => searchTerm.value !== '' || cat.value !== '')
+const emptyFilterTitle = computed(() =>
+  searchTerm.value
+    ? `Sin resultados para “${searchTerm.value}”`
+    : 'Sin servicios en esta categoría',
+)
+
+// Sin `SERVICE_CREATE` no hay botón de alta en la cabecera, así que «Crea el
+// primero» sería una instrucción que la pantalla no deja seguir.
+const emptyText = computed(() =>
+  canCreate.value
+    ? 'Sin servicios. Crea el primero.'
+    : 'Sin servicios. Tu rol no incluye crearlos.',
+)
+
+function clearFilters() {
+  query.value = ''
+  cat.value = ''
+}
+
 const filtered = computed(() => {
-  const q = query.value.trim().toLowerCase()
+  const q = searchTerm.value.toLowerCase()
   return store.services.value.filter((s) => {
     if (cat.value && String(s.serviceCategory.id) !== cat.value) return false
     if (q && !s.name.toLowerCase().includes(q)) return false
@@ -87,10 +108,7 @@ async function switchMode(m: 'active' | 'paused') {
     try {
       await store.loadPausedServices()
     } catch (e) {
-      toast.error(
-        'Ocurrió un error',
-        getProblemDetailMessage(e, 'No se pudieron cargar los pausados'),
-      )
+      toast.errorFrom('Ocurrió un error', e, 'No se pudieron cargar los pausados')
     } finally {
       pausedLoading.value = false
     }
@@ -214,10 +232,14 @@ async function onCategoryRemove(id: number) {
       </div>
     </header>
 
-    <div v-if="store.error.value" class="ds-banner ds-banner--error">{{ store.error.value }}</div>
+    <!-- EST-01: la rama de error va ANTES que la de vacío. Si conviven, la
+         pantalla que falló afirma «Sin servicios. Crea el primero». -->
+    <div v-if="store.error.value" class="ds-banner ds-banner--error" role="alert">
+      {{ store.error.value }}
+    </div>
 
     <!-- ─────────── Modo ACTIVOS ─────────── -->
-    <template v-if="mode === 'active'">
+    <template v-if="!store.error.value && mode === 'active'">
       <div class="filters ds-stack-mobile">
         <SearchField v-model="query" fill placeholder="Buscar servicio…" />
         <FilterSelect v-model="cat">
@@ -229,9 +251,16 @@ async function onCategoryRemove(id: number) {
       </div>
 
       <div v-if="store.loading.value" class="state ds-empty">Cargando…</div>
-      <div v-else-if="groups.length === 0" class="state ds-empty">
-        Sin servicios para el filtro.
+      <!-- El término se cita tal cual lo escribió el usuario: ahí es donde se
+           descubren el espacio de más y el pegado con salto de línea. -->
+      <div v-else-if="groups.length === 0 && filterOn" class="state ds-empty">
+        <p class="ds-strong">{{ emptyFilterTitle }}</p>
+        <p v-if="searchTerm">Revisa la escritura o prueba con menos palabras.</p>
+        <button type="button" class="ds-btn ds-btn--neutral ds-btn--snug" @click="clearFilters">
+          Limpiar filtros
+        </button>
       </div>
+      <div v-else-if="groups.length === 0" class="state ds-empty">{{ emptyText }}</div>
 
       <section v-for="g in groups" v-else :key="g.id" class="svc-group">
         <div class="svc-group-head">
@@ -271,7 +300,7 @@ async function onCategoryRemove(id: number) {
     </template>
 
     <!-- ─────────── Modo PAUSADOS ─────────── -->
-    <template v-else>
+    <template v-else-if="!store.error.value">
       <p class="paused-hint">
         Servicios pausados (ocultos del punto de venta). Reactívalos para volver a ofrecerlos.
       </p>

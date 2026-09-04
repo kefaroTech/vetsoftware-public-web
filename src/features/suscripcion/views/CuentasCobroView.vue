@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, useTemplateRef } from 'vue'
 import { Receipt, Wallet } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import SectionCard from '@/components/ui/SectionCard.vue'
 import Pagination from '@/components/ui/Pagination.vue'
+import { useScrollableRegion } from '@/composables/useScrollableRegion'
 import { useServerPaged } from '@/composables/useServerPaged'
 import { formatDateShort } from '@/composables/format'
 import { formatMoney } from '@/composables/money'
@@ -77,6 +78,9 @@ function abrirAvisos() {
   const id = subscription.value?.id
   if (avisosAbiertos.value && !dunningLoaded.value && id != null) void loadDunning(id)
 }
+
+const tabla = useTemplateRef<HTMLElement>('tabla')
+const desborda = useScrollableRegion(tabla)
 </script>
 
 <template>
@@ -115,15 +119,22 @@ function abrirAvisos() {
         <p v-else-if="documentos.isEmpty.value" class="ds-empty ds-empty--tight">
           {{ SIN_DOCUMENTOS }}
         </p>
-        <div v-else class="ds-table-scroll">
+        <div
+          v-else
+          ref="tabla"
+          class="ds-table-scroll ds-focus-ring"
+          role="region"
+          aria-label="Facturas de la suscripción"
+          :tabindex="desborda ? 0 : undefined"
+        >
           <table class="ds-table">
             <thead>
               <tr>
                 <th scope="col">Factura</th>
                 <th scope="col">Periodo</th>
                 <th scope="col">Vence</th>
-                <th scope="col">Total</th>
-                <th scope="col">Pendiente</th>
+                <th scope="col" class="ds-num">Total</th>
+                <th scope="col" class="ds-num">Pendiente</th>
                 <th scope="col">Estado</th>
               </tr>
             </thead>

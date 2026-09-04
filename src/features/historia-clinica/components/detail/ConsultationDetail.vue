@@ -148,7 +148,12 @@ const childrenCountLabel = computed(() =>
             @click="openChild(c)"
           >
             <span class="child-icon" :aria-label="EVENT_TYPES[c.eventType].label">
-              {{ EVENT_TYPES[c.eventType].icon }}
+              <component
+                :is="EVENT_TYPES[c.eventType].icon"
+                :size="17"
+                :stroke-width="1.7"
+                aria-hidden="true"
+              />
             </span>
             <div class="ds-flex-fill">
               <div class="child-head ds-flex-row">
@@ -213,7 +218,6 @@ const childrenCountLabel = computed(() =>
 }
 
 .child-icon {
-  font-size: 18px;
   line-height: 1;
   margin-top: 2px;
   flex-shrink: 0;

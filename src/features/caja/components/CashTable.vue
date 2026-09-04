@@ -54,9 +54,14 @@ defineProps<{ minWidth: number }>()
 }
 
 /* La cifra ya no se declara aquí: las tres tablas de caja marcan sus celdas con
-   `.ds-num` (primitives.css), que es ese mismo par. El reparto de pesos no
-   cambia — `.movs :deep(th)` (0,2,1) le sigue ganando en los encabezados, que
-   por eso siguen alineados a la izquierda, y en las celdas no compite nadie. */
+   `.ds-num` (primitives.css), que es ese mismo par. En las celdas no compite
+   nadie; en la cabecera `.movs :deep(th)` (0,2,1) le ganaría a `.ds-num`
+   (0,1,0), y una cabecera a la izquierda sobre una columna de cifras a la
+   derecha deja el rótulo más cerca de la columna vecina que de la suya: por eso
+   la excepción de abajo nombra la clase y pesa (0,2,2). */
+.movs :deep(th.ds-num) {
+  text-align: right;
+}
 
 :deep(.empty-row) {
   padding: var(--space-22);

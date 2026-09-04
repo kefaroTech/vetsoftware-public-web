@@ -12,6 +12,9 @@ interface SavedPrescription {
   label: string
 }
 interface SuccessState {
+  consultationId?: number
+  ownerId?: number | null
+  petId?: number
   ownerName?: string
   petName?: string
   consultationType?: string
@@ -23,17 +26,31 @@ const state = ref<SuccessState>({})
 const { exporting: printing, exportPdf } = usePrescriptionExport()
 const prescriptions = computed<SavedPrescription[]>(() => state.value.prescriptions ?? [])
 
-const code = computed(() => {
-  const n = String(Math.floor(Math.random() * 9000) + 1000)
-  const y = new Date().getFullYear()
-  return `#C-${y}-${n}`
+const metaParts = computed(() => {
+  const s = state.value
+  const parts: string[] = []
+  if (s.date) parts.push(formatDateLong(s.date))
+  if (s.consultationType) parts.push(s.consultationType)
+  if (s.consultationId) parts.push(`Consulta #${s.consultationId}`)
+  return parts
 })
+
+const canOpenDetail = computed(() => state.value.ownerId != null && state.value.petId != null)
 
 onMounted(() => {
   const s = (history.state ?? {}) as SuccessState
+  // Sin el id de la consulta creada no se llegó aquí guardando, sino por un
+  // enlace directo o un marcador: no hay guardado que confirmar.
+  if (typeof s.consultationId !== 'number') {
+    router.replace({ name: 'consulta-historial' })
+    return
+  }
   state.value = {
-    ownerName: s.ownerName ?? '—',
-    petName: s.petName ?? '—',
+    consultationId: s.consultationId,
+    ownerId: s.ownerId ?? null,
+    petId: s.petId,
+    ownerName: s.ownerName ?? '',
+    petName: s.petName ?? '',
     consultationType: s.consultationType ?? '',
     date: s.date ?? '',
     prescriptions: Array.isArray(s.prescriptions) ? s.prescriptions : [],
@@ -41,7 +58,12 @@ onMounted(() => {
 })
 
 function goDetail() {
-  router.push({ name: 'consulta-historial' })
+  const { ownerId, petId } = state.value
+  if (ownerId == null || petId == null) return
+  router.push({
+    name: 'consulta-historial-detail',
+    params: { ownerId: String(ownerId), petId: String(petId) },
+  })
 }
 function createAnother() {
   router.push({ name: 'consulta-nueva' })
@@ -55,14 +77,10 @@ function createAnother() {
         <Check :size="34" :stroke-width="2" />
       </div>
       <h1 class="title">Consulta guardada</h1>
-      <p class="who">
+      <p v-if="state.petName" class="who">
         {{ state.petName }}<span v-if="state.ownerName"> · {{ state.ownerName }}</span>
       </p>
-      <p class="meta ds-view-subtitle">
-        <span v-if="state.date">{{ formatDateLong(state.date) }}</span>
-        <span v-if="state.consultationType"> · {{ state.consultationType }}</span>
-        <span> · {{ code }}</span>
-      </p>
+      <p v-if="metaParts.length" class="meta ds-view-subtitle">{{ metaParts.join(' · ') }}</p>
       <div v-if="prescriptions.length" class="rx-block">
         <div class="rx-title ds-label">
           {{ prescriptions.length === 1 ? 'Receta de esta consulta' : 'Recetas de esta consulta' }}
@@ -86,7 +104,7 @@ function createAnother() {
       </div>
 
       <div class="actions">
-        <button type="button" class="ds-btn ds-btn--solid" @click="goDetail">
+        <button v-if="canOpenDetail" type="button" class="ds-btn ds-btn--solid" @click="goDetail">
           <span>Ver detalle</span>
           <ArrowRight :size="13" :stroke-width="1.8" />
         </button>

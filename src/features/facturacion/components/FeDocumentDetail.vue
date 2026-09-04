@@ -4,11 +4,11 @@ import { ArrowLeft, Check, History, FileText, FilePlus, ScanLine, X } from 'luci
 import { useToast } from '@/composables/useToast'
 import { useFacturacionAccess } from '../composables/useFacturacionAccess'
 import { useFacturacionDocs } from '../composables/useFacturacionDocs'
-import { feMoney } from '../composables/feFormat'
 import FeStatusPill from './FeStatusPill.vue'
 import FeNoteModal from './FeNoteModal.vue'
 import FeDocumentParties from './FeDocumentParties.vue'
 import FeDocumentTotals from './FeDocumentTotals.vue'
+import FeDocumentLines from './FeDocumentLines.vue'
 import {
   DOC_TYPE_LABEL,
   type CreditNoteReason,
@@ -193,7 +193,7 @@ function copyId() {
         <button type="button" class="copybtn" @click="copyId">
           <FileText :size="12" :stroke-width="1.8" /> Copiar {{ idLabel }}
         </button>
-        <div class="meta ds-meta ds-meta--sm" style="margin-top: 6px">
+        <div class="meta ds-meta ds-meta--sm">
           <template v-if="doc.dianValidationDate"
             >Validado {{ doc.dianValidationDate.replace('T', ' ').slice(0, 16) }} · </template
           >UUID {{ doc.uuid }}
@@ -203,33 +203,7 @@ function copyId() {
 
     <div v-if="doc.lines.length" class="ds-card">
       <div class="card-title">Detalle</div>
-      <div class="ds-table-scroll">
-        <table class="lines">
-          <thead>
-            <tr>
-              <th>Descripción</th>
-              <th>Cant.</th>
-              <th style="text-align: right">V. unit.</th>
-              <th>Imp.</th>
-              <th style="text-align: right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="l in doc.lines" :key="l.lineNumber">
-              <td>{{ l.description }}</td>
-              <td>{{ l.quantity }}</td>
-              <td style="text-align: right">{{ feMoney(l.unitPrice) }}</td>
-              <td>
-                <span v-if="l.taxScheme" class="taxchip ds-tone--accent-soft"
-                  >{{ l.taxScheme }} {{ l.taxRate }}%</span
-                >
-                <span v-else class="taxchip muted">{{ l.taxCategory }}</span>
-              </td>
-              <td style="text-align: right; font-weight: 600">{{ feMoney(l.totalAmount) }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <FeDocumentLines :lines="doc.lines" />
     </div>
 
     <FeDocumentTotals :doc="doc" />
@@ -254,8 +228,8 @@ function copyId() {
 
 <style scoped>
 /* Layout via primitivas: .ds-stack(--8/--18), .ds-flex-row(--6), .ds-wrap-row,
-   .ds-flex-fill, .ds-strong, .ds-meta(--sm), .ds-table-scroll y
-   .ds-tone--neutral / --accent-soft. Aquí sólo lo propio del documento. */
+   .ds-flex-fill, .ds-meta(--sm) y .ds-tone--neutral. Aquí sólo lo propio del
+   documento. */
 .back {
   align-self: flex-start;
   display: inline-flex;
@@ -445,38 +419,6 @@ function copyId() {
   font-size: 11.5px;
   color: var(--warm-700);
   cursor: pointer;
-}
-
-.lines {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12.5px;
-}
-
-.lines th {
-  text-align: left;
-  font-weight: 500;
-  color: var(--warm-500);
-  padding: 6px 8px;
-  border-bottom: 1px solid var(--warm-200);
-}
-
-.lines td {
-  padding: 8px;
-  border-bottom: 1px solid var(--warm-100);
-  color: var(--warm-800);
-}
-
-.taxchip {
-  font-size: 11px;
-  padding: 2px 7px;
-  border-radius: 6px;
-  font-weight: 600;
-}
-
-.taxchip.muted {
-  background: var(--warm-150, var(--warm-100));
-  color: var(--warm-600);
 }
 
 .noteactions {

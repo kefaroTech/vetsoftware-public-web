@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { Plus, History, ChevronRight } from 'lucide-vue-next'
+import { useScrollableRegion } from '@/composables/useScrollableRegion'
 import { useInfiniteList } from '@/composables/useInfiniteList'
 import { useFacturacionAccess } from '../composables/useFacturacionAccess'
 import { useFacturacionDocs } from '../composables/useFacturacionDocs'
@@ -76,6 +77,9 @@ function shortId(cufe: string | null, cude: string | null): string {
   const v = cufe || cude
   return v ? v.slice(0, 16) + '…' : '—'
 }
+
+const tabla = useTemplateRef<HTMLElement>('tabla')
+const desborda = useScrollableRegion(tabla)
 </script>
 
 <template>
@@ -118,9 +122,15 @@ function shortId(cufe: string | null, cude: string | null): string {
       </span>
     </div>
 
-    <p v-if="error" class="error-banner">{{ error }}</p>
+    <div v-if="error" class="ds-banner ds-banner--error" role="alert">{{ error }}</div>
 
-    <div class="ds-table-scroll">
+    <div
+      ref="tabla"
+      class="ds-table-scroll ds-focus-ring"
+      role="region"
+      aria-label="Documentos electrónicos emitidos"
+      :tabindex="desborda ? 0 : undefined"
+    >
       <table class="table">
         <thead>
           <tr>
@@ -128,7 +138,7 @@ function shortId(cufe: string | null, cude: string | null): string {
             <th>Tipo</th>
             <th>Fecha</th>
             <th>Cliente</th>
-            <th style="text-align: right">Total</th>
+            <th class="ds-num">Total</th>
             <th>Estado</th>
             <th>CUFE/CUDE</th>
             <th />
@@ -156,16 +166,16 @@ function shortId(cufe: string | null, cude: string | null): string {
               {{ d.customer.legalName || d.customer.name }}
               <span v-if="d.reversed" class="reversed">Anulada</span>
             </td>
-            <td style="text-align: right; font-variant-numeric: tabular-nums">
-              {{ feMoney(d.payableAmount) }}
-            </td>
+            <td class="ds-num">{{ feMoney(d.payableAmount) }}</td>
             <td><FeStatusPill :status="d.dianStatus" /></td>
             <td>
               <span class="cufe ds-hint">{{ shortId(d.cufe, d.cude) }}</span>
             </td>
             <td><ChevronRight :size="15" :stroke-width="1.6" class="ds-icon-muted--dim" /></td>
           </tr>
-          <tr v-if="isEmpty">
+          <!-- EST-01: la rama de error va ANTES que la de vacío. Sin `!error`,
+               la pantalla que falló afirma que no hay documentos. -->
+          <tr v-if="!error && isEmpty">
             <td colspan="8" class="ds-empty">Sin documentos para los filtros aplicados.</td>
           </tr>
         </tbody>
@@ -245,16 +255,6 @@ function shortId(cufe: string | null, cude: string | null): string {
   color: var(--warm-700);
 }
 
-.error-banner {
-  margin: 0;
-  padding: 12px 16px;
-  border-radius: 10px;
-  background: var(--danger-50);
-  border: 1px solid var(--danger-border);
-  color: var(--danger-800);
-  font-size: 13px;
-}
-
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -279,6 +279,12 @@ function shortId(cufe: string | null, cude: string | null): string {
   color: var(--warm-500);
   padding: 8px 12px;
   border-bottom: 1px solid var(--warm-200);
+}
+
+/* `.table th` (0,2,1) le gana a `.ds-num` (0,1,0): la excepción nombra la clase
+   para pesar (0,2,2). */
+.table th.ds-num {
+  text-align: right;
 }
 
 .table td {

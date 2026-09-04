@@ -92,7 +92,7 @@ function onBlur() {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 0 12px;
   background: var(--pub-surface);
 
   /* §1.4.11 Non-text Contrast (AA): el campo no tiene relleno diferenciado, así
@@ -132,6 +132,8 @@ function onBlur() {
   color: var(--pub-ame-700);
 }
 
+/* El relleno vertical va en el `<input>` y no en la caja de fuera: puesto en la
+   caja, sus 10 px de arriba y de abajo se ven como campo y no enfocan (§2.5.8). */
 .pub-input input {
   flex: 1;
   border: none;
@@ -141,6 +143,7 @@ function onBlur() {
   color: var(--pub-ink-900);
   min-width: 0;
   outline: none;
+  padding-block: 10px;
 }
 
 .pub-input-eye {

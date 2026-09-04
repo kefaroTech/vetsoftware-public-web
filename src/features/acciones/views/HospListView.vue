@@ -179,6 +179,7 @@ function isActive(item: HospitalizationResponse): boolean {
         :fetch-page="fetchPage"
         placeholder="Buscar razón…"
         empty-text="Este paciente aún no tiene hospitalizaciones registradas."
+        table-label="Hospitalizaciones"
       >
         <template #header>
           <tr>

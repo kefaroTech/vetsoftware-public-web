@@ -268,10 +268,17 @@ function reintentar() {
   box-shadow: 0 1px 3px color-mix(in oklch, var(--amatista-700) 12%, transparent);
 }
 
+/* Las siete filas que `.pub-plan-card` consume como `subgrid`: insignia,
+   título, subtítulo, precio, aviso de descuento, lista y CTA. La sexta se lleva
+   el sobrante para que la lista más larga no desplace el CTA de las otras dos.
+   El `row-gap` iguala al `gap` interno de la tarjeta: en un eje subdividido las
+   dos separaciones tienen que coincidir para que no dependa del navegador cuál
+   se aplica. */
 .land-plans-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-rows: auto auto auto auto auto 1fr auto;
+  gap: 14px 18px;
   align-items: stretch;
 }
 
@@ -328,8 +335,19 @@ function reintentar() {
 }
 
 @media (width <= 980px) {
+  /* En una sola columna no hay barrido horizontal que anclar, y compartir filas
+     entre tarjetas apiladas solo abriría huecos. La tarjeta vuelve a apilar su
+     propio contenido. */
   .land-plans-grid {
     grid-template-columns: 1fr;
+    grid-template-rows: none;
+    row-gap: 18px;
+  }
+
+  .land-plans-grid > .pub-plan-card {
+    display: flex;
+    flex-direction: column;
+    grid-row: auto;
   }
 }
 </style>

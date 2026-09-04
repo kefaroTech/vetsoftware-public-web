@@ -35,7 +35,7 @@ const rangeLabel = computed(() => {
       <div v-if="event && meta && tokens" class="ds-stack ds-stack--14">
         <div class="header-row ds-flex-row">
           <span class="badge ds-pill" :style="{ background: tokens.bg, color: tokens.fg }">
-            <span aria-hidden="true">{{ meta.icon }}</span>
+            <component :is="meta.icon" :size="13" :stroke-width="1.7" aria-hidden="true" />
             {{ meta.label }}
           </span>
         </div>

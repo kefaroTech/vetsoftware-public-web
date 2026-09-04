@@ -164,6 +164,7 @@ async function requestDelete(target: SpaResponse) {
         :fetch-page="fetchPage"
         placeholder="Buscar servicio, motivo o detalles…"
         empty-text="Este paciente aún no tiene servicios de spa registrados."
+        table-label="Spa"
       >
         <template #header>
           <tr>

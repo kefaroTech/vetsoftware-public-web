@@ -43,6 +43,13 @@
   border-bottom: 1px solid var(--warm-200);
 }
 
+/* `.grid-table :deep(th)` (0,2,1) le gana a `.ds-num` (0,1,0), así que la
+   cabecera de una columna de dinero quedaba a la izquierda sobre cifras
+   alineadas a la derecha. La excepción nombra la clase para pesar (0,2,2). */
+.grid-table :deep(th.ds-num) {
+  text-align: right;
+}
+
 .grid-table :deep(td) {
   padding: 9px 8px;
   border-bottom: 1px solid var(--warm-100);

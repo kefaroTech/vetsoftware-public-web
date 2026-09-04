@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, useTemplateRef } from 'vue'
 import { BookText, FileDown, RefreshCw } from 'lucide-vue-next'
 import DateInput from '@/components/ui/DateInput.vue'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
@@ -7,6 +7,7 @@ import { useToast } from '@/composables/useToast'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { purchaseReportApi } from '../api/purchaseReport.api'
 import { formatDateNumeric } from '@/composables/format'
+import { useScrollableRegion } from '@/composables/useScrollableRegion'
 import { formatMoney } from '@/features/tienda/composables/pricing'
 import type { PurchaseBook } from '../types/compras'
 
@@ -43,6 +44,9 @@ async function download(format: 'csv' | 'pdf') {
 }
 
 onMounted(load)
+
+const scroller = useTemplateRef<HTMLElement>('scroller')
+const desborda = useScrollableRegion(scroller)
 </script>
 
 <template>
@@ -86,9 +90,19 @@ onMounted(load)
       </button>
     </div>
 
-    <p v-if="error" class="ds-server-error">{{ error }}</p>
+    <!-- EST-01: la rama de error va ANTES que la de vacío. Si se invierten, un
+         500 vuelve a disfrazarse de «sin compras en el periodo», que sobre un
+         libro contable es una afirmación falsa sobre el mes. -->
+    <div v-if="error" class="ds-banner ds-banner--error" role="alert">{{ error }}</div>
 
-    <div class="ds-table-scroll">
+    <div
+      v-else
+      ref="scroller"
+      class="ds-table-scroll ds-focus-ring"
+      role="region"
+      aria-label="Libro de compras del periodo"
+      :tabindex="desborda ? 0 : undefined"
+    >
       <table class="grid-table">
         <thead>
           <tr>
@@ -187,6 +201,12 @@ onMounted(load)
   padding: 7px;
   border-bottom: 1px solid var(--warm-200);
   white-space: nowrap;
+}
+
+/* `.grid-table th` (0,2,1) le gana a `.ds-num` (0,1,0): sin nombrar la clase
+   la cabecera de una columna de dinero queda a la izquierda sobre sus cifras. */
+.grid-table th.ds-num {
+  text-align: right;
 }
 
 .grid-table td {

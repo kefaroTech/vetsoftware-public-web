@@ -51,7 +51,13 @@ const secondary = computed(() => {
     >
       <span class="hh">{{ apptTime(appt.startAt) }}</span>
       <span class="hh-end">–{{ endTime }}</span>
-      <span class="type-ic" aria-hidden="true">{{ typeMeta.icon }}</span>
+      <component
+        :is="typeMeta.icon"
+        :size="15"
+        :stroke-width="1.7"
+        class="type-ic"
+        aria-hidden="true"
+      />
     </div>
     <div class="card-main">
       <div class="line1 ds-flex-row">
@@ -139,7 +145,6 @@ const secondary = computed(() => {
 }
 
 .type-ic {
-  font-size: 15px;
   margin-top: 1px;
 }
 

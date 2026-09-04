@@ -1,0 +1,11 @@
+- navigation "Navegación principal":
+  - text: Lumbre Sede
+  - combobox "Sede": Sede E2E de prueba - Bogotá D.C.
+  - button "Tablero"
+  - text: TRABAJO
+  - button "Agenda"
+  - button "Consulta":
+    - text: ""
+    - img
+  - button "Notificaciones"
+  - button "EP Empleado prueba"

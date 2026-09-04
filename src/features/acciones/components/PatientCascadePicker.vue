@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, useId, watch } from 'vue'
 import { Search, User, PawPrint, X, Plus } from 'lucide-vue-next'
+import PawLoader from '@/components/feedback/PawLoader.vue'
 import { useOwnerSearch } from '@/features/dashboard/views/consulta/nueva/composables/useOwnerSearch'
 import { animalApi } from '@/features/dashboard/views/consulta/nueva/api/animal.api'
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
@@ -19,7 +20,10 @@ const emit = defineEmits<{
 }>()
 
 const ownerQuery = ref('')
-const { results: ownerResults, loading: searching } = useOwnerSearch(ownerQuery)
+const { results: ownerResults, loading: searching, error: ownerError } = useOwnerSearch(ownerQuery)
+
+const ownerInputId = useId()
+const petGroupId = useId()
 
 const selectedOwner = ref<Owner | null>(null)
 const animals = ref<AnimalResponse[]>([])
@@ -120,23 +124,31 @@ watch(
 
       <!-- Búsqueda de propietario -->
       <template v-else>
-        <label class="hint">Propietario</label>
+        <label class="hint" :for="ownerInputId">Propietario</label>
         <div class="search">
           <Search :size="14" :stroke-width="1.7" class="search-icon" />
           <input
+            :id="ownerInputId"
             v-model="ownerQuery"
             type="text"
             class="input ds-focus-ring"
             placeholder="Buscar por nombre, documento o email…"
           />
         </div>
-        <div v-if="searching" class="results ds-stack state">Buscando…</div>
+        <div v-if="searching" class="results ds-empty ds-empty--tight">
+          <PawLoader :size="22" :glow="false" :speed="900" label="Buscando propietarios" />
+        </div>
+        <!-- EST-01: la rama de error va ANTES que la de vacío. Invertidas, una búsqueda
+             caída ofrece «Crear propietario nuevo» y el duplicado parte el historial. -->
+        <div v-else-if="ownerError" class="ds-banner ds-banner--error" role="alert">
+          {{ ownerError }}
+        </div>
         <div v-else-if="ownerQuery && ownerResults.length === 0" class="empty ds-stack">
           <span
             >Sin resultados para "<strong>{{ ownerQuery }}</strong
             >"</span
           >
-          <button type="button" class="create-btn" @click="startCreateOwner">
+          <button type="button" class="ds-btn ds-btn--solid ds-btn--snug" @click="startCreateOwner">
             <Plus :size="15" :stroke-width="2.2" /> Crear propietario nuevo
           </button>
         </div>
@@ -176,7 +188,7 @@ watch(
         </button>
       </div>
 
-      <label class="hint">Mascota</label>
+      <div :id="petGroupId" class="hint">Mascota</div>
 
       <!-- Crear mascota nueva -->
       <InlinePetCreate
@@ -188,16 +200,20 @@ watch(
 
       <!-- Selección de mascota -->
       <template v-else>
-        <div v-if="loadingAnimals" class="results ds-stack state">Cargando mascotas…</div>
-        <div v-else-if="animalsError" class="results ds-stack state error">{{ animalsError }}</div>
+        <div v-if="loadingAnimals" class="results ds-empty ds-empty--tight">
+          <PawLoader :size="22" :glow="false" :speed="900" label="Cargando mascotas" />
+        </div>
+        <div v-else-if="animalsError" class="ds-banner ds-banner--error" role="alert">
+          {{ animalsError }}
+        </div>
         <div v-else-if="animals.length === 0" class="empty ds-stack">
           <span>Este propietario no tiene mascotas registradas</span>
-          <button type="button" class="create-btn" @click="startCreatePet">
+          <button type="button" class="ds-btn ds-btn--solid ds-btn--snug" @click="startCreatePet">
             <Plus :size="15" :stroke-width="2.2" /> Registrar mascota nueva
           </button>
         </div>
         <template v-else>
-          <div class="animals-grid">
+          <div class="animals-grid" role="group" :aria-labelledby="petGroupId">
             <button
               v-for="a in animals"
               :key="a.id"
@@ -288,17 +304,6 @@ watch(
   background: var(--warm-50);
 }
 
-.state {
-  padding: 14px;
-  text-align: center;
-  font-size: 12.5px;
-  color: var(--warm-500);
-}
-
-.state.error {
-  color: var(--danger-800);
-}
-
 .result {
   display: flex;
   align-items: center;
@@ -349,26 +354,6 @@ watch(
   border: 1px dashed var(--warm-300);
   border-radius: 9px;
   background: var(--warm-50);
-}
-
-/* Botón "crear" primario (dentro de estado vacío) */
-.create-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: none;
-  background: var(--amatista-700);
-  color: var(--warm-50);
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.create-btn:hover {
-  filter: brightness(1.05);
 }
 
 /* Enlace "crear" secundario (ghost, siempre visible bajo resultados) */

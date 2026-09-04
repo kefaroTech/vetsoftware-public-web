@@ -4,13 +4,13 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   BarChart3,
   BedDouble,
-  Bell,
   Building2,
   Calendar,
   CreditCard,
   FilePlus,
   FileText,
   FlaskConical,
+  LayoutDashboard,
   Pill,
   ShieldCheck,
   ShoppingBag,
@@ -21,13 +21,13 @@ import {
 } from 'lucide-vue-next'
 import SidebarBrand from './SidebarBrand.vue'
 import SidebarNavItem from './SidebarNavItem.vue'
+import SidebarNotifications from './SidebarNotifications.vue'
 import SidebarSubItem from './SidebarSubItem.vue'
 import SidebarUserCard from './SidebarUserCard.vue'
 import BranchSelector from '@/features/branches/components/BranchSelector.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { useNuevaConsultaDraft } from '@/features/dashboard/views/consulta/nueva/composables/useNuevaConsultaDraft'
 import { showResumeOrNewDialog } from '@/composables/useConsultaResumeGuard'
-import { useToast } from '@/composables/useToast'
 import { useSidebarNav } from '@/composables/useSidebarNav'
 
 const route = useRoute()
@@ -110,17 +110,10 @@ const firstName = computed(() => nameParts.value[0] ?? '')
 const lastName = computed(() =>
   nameParts.value.length > 1 ? (nameParts.value[nameParts.value.length - 1] ?? '') : '',
 )
-
-const toast = useToast()
-const notificationCount = ref(0)
-
-function onNotifications() {
-  toast.info('Notificaciones', 'No tienes notificaciones nuevas.')
-}
 </script>
 
 <template>
-  <aside class="sidebar ds-stack">
+  <nav class="sidebar ds-stack" aria-label="Navegación principal">
     <!-- Sin `clinic`: el nombre de la empresa no viaja en `/auth/me`, y el único sitio
          de donde sale (`GET /companies/{id}`) exige el permiso `company.read`, que la
          mayoría de empleados no tiene. Antes esto decía «Clínica Norte» para todo el
@@ -129,6 +122,16 @@ function onNotifications() {
     <SidebarBrand app-name="Lumbre" />
 
     <BranchSelector />
+
+    <!-- Entrada propia en vez de convertir la marca en enlace: el nombre del control es el que
+         el lector anuncia junto a `aria-current` al estar en el tablero, y «Lumbre» ahí no dice
+         a dónde lleva. Sin `v-if` porque `home` es la única ruta del armazón sin permiso. -->
+    <SidebarNavItem
+      label="Tablero"
+      :icon="LayoutDashboard"
+      :active="route.name === 'home'"
+      @click="router.push({ name: 'home' })"
+    />
 
     <div class="section-label">TRABAJO</div>
     <SidebarNavItem
@@ -153,10 +156,12 @@ function onNotifications() {
         type="button"
         class="sub-item-btn"
         :class="{ active: route.name === 'consulta-nueva' }"
+        :aria-current="route.name === 'consulta-nueva' ? 'page' : undefined"
         @click="goNuevaConsulta"
       >
         <FilePlus :size="14" :stroke-width="1.5" />
         <span>Nueva consulta</span>
+        <span class="rail-label ds-sr-only">Nueva consulta</span>
       </button>
       <SidebarSubItem
         v-for="item in subItems"
@@ -340,16 +345,12 @@ function onNotifications() {
 
     <div class="spacer" />
 
-    <button type="button" class="notif-item" @click="onNotifications">
-      <Bell :size="17" :stroke-width="1.6" />
-      <span class="notif-label">Notificaciones</span>
-      <span v-if="notificationCount > 0" class="notif-badge">{{ notificationCount }}</span>
-    </button>
+    <SidebarNotifications />
 
     <!-- Sin `role`: `MeResponse` entrega `permissions`, no el nombre del rol. Antes
          decía «Veterinaria» a todo el mundo, auxiliares y administradores incluidos. -->
     <SidebarUserCard :first-name="firstName" :last-name="lastName" />
-  </aside>
+  </nav>
 </template>
 
 <style scoped>
@@ -371,44 +372,6 @@ function onNotifications() {
 
 .spacer {
   margin-top: auto;
-}
-
-.notif-item {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 9px 11px;
-  margin-bottom: 4px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: oklch(88% 0.03 var(--hue) / 82%);
-  font-family: inherit;
-  font-size: 13px;
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.12s ease;
-}
-
-.notif-item:hover {
-  background: oklch(70% 0.04 var(--hue) / 10%);
-}
-
-.notif-label {
-  flex: 1;
-}
-
-.notif-badge {
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: var(--radius-pill);
-  background: oklch(58% 0.2 25deg);
-  color: white;
-  font-size: 11px;
-  font-weight: 600;
-  display: grid;
-  place-items: center;
 }
 
 .section-label {
@@ -441,6 +404,12 @@ function onNotifications() {
   cursor: pointer;
   text-align: left;
   transition: background 0.12s ease;
+}
+
+/* §4.1.2: rótulo de repuesto para el raíl, donde el visible se oculta. Solo entra en el árbol
+   de accesibilidad ahí, para que fuera del raíl el nombre no se anuncie dos veces. */
+.rail-label {
+  display: none;
 }
 
 .sub-item-btn:hover:not(.active) {
@@ -479,8 +448,7 @@ function onNotifications() {
     margin: 3px 0 0;
   }
 
-  .sub-item-btn,
-  .notif-item {
+  .sub-item-btn {
     width: 44px;
     height: 38px;
     justify-content: center;
@@ -488,10 +456,12 @@ function onNotifications() {
     gap: 0;
   }
 
-  .sub-item-btn span,
-  .notif-label,
-  .notif-badge {
+  .sub-item-btn span:not(.rail-label) {
     display: none;
+  }
+
+  .rail-label {
+    display: block;
   }
 }
 </style>

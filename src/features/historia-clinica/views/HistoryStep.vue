@@ -272,7 +272,13 @@ function goNuevaConsulta() {
           "
           @click="filter = row.eventType"
         >
-          <span class="chip-icon">{{ EVENT_TYPES[row.eventType].icon }}</span>
+          <component
+            :is="EVENT_TYPES[row.eventType].icon"
+            :size="13"
+            :stroke-width="1.7"
+            class="chip-icon"
+            aria-hidden="true"
+          />
           {{ EVENT_TYPES[row.eventType].label }} · {{ row.count }}
         </button>
       </div>
@@ -422,7 +428,7 @@ function goNuevaConsulta() {
 }
 
 .chip-icon {
-  font-size: 13px;
+  flex-shrink: 0;
 }
 
 .search-box {

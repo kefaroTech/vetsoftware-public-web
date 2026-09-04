@@ -44,7 +44,7 @@ export const useEmployeesStore = defineStore('employees', () => {
       }
     } catch (e) {
       if (seq !== reqSeq) return
-      error.value = getProblemDetailMessage(e, 'Error al cargar empleados')
+      error.value = getProblemDetailMessage(e, 'No pudimos cargar los empleados')
       throw e
     } finally {
       if (seq === reqSeq) loading.value = false

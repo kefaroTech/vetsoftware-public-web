@@ -23,6 +23,8 @@ defineEmits<{
     :class="{ active, disabled }"
     :disabled="disabled"
     :title="label"
+    :aria-current="active && !expandable ? 'page' : undefined"
+    :aria-expanded="expandable ? expanded : undefined"
     @click="!disabled && $emit('click')"
   >
     <component :is="icon" :size="17" :stroke-width="1.5" />

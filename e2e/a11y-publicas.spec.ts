@@ -90,9 +90,7 @@ test.describe('§2.4.2 Page Titled — el título por ruta', () => {
     })
   }
 
-  test('al volver a una ruta sin título propio, el anterior no se queda pegado', async ({
-    page,
-  }) => {
+  test('al navegar, el título de la pantalla anterior no se queda pegado', async ({ page }) => {
     // El defecto clásico de este arreglo: se pone el título de la ruta que lo
     // declara y no se repone al salir, así que /login se llama «Planes y
     // precios» para siempre.
@@ -101,7 +99,25 @@ test.describe('§2.4.2 Page Titled — el título por ruta', () => {
 
     await page.getByRole('link', { name: 'Inicia sesión' }).click()
     await expect(page).toHaveURL(/\/login$/)
-    await expect(page).toHaveTitle('Lumbre')
+    await expect(page).toHaveTitle('Iniciar sesión — Lumbre')
+  })
+
+  test('una ruta sin título propio repone el del documento, no hereda el anterior', async ({
+    page,
+  }) => {
+    // La otra mitad del mismo defecto, y la que no tiene ruta con la que
+    // probarse desde que TODAS declaran `meta.title`: se ejercita el
+    // comportamiento por defecto forzando una ruta inexistente, que el router
+    // manda a `/login` sin pasar por ninguna pantalla intermedia. Si el
+    // `afterEach` dejara de reponer el valor por defecto, el título anterior
+    // seguiría en la pestaña. La guarda de que ninguna ruta se quede SIN título
+    // es `tests/unit/router-titulos.spec.ts`, no esta.
+    await page.goto('/planes')
+    await expect(page).toHaveTitle('Planes y precios — Lumbre')
+
+    await page.goto('/no-existe-esta-ruta')
+    await expect(page).toHaveURL(/\/login$/)
+    await expect(page).not.toHaveTitle('Planes y precios — Lumbre')
   })
 })
 
@@ -115,7 +131,16 @@ test.describe('§1.3.1 / §3.3.1 — etiqueta y error atados al control', () => 
     const empleado = page.getByLabel('Empleado')
     await expect(empleado).toBeVisible()
 
-    await page.getByText('Empleado', { exact: false }).first().click()
+    // Se pulsa el `<label>` ATADO al campo, resuelto por su `for`, y no el
+    // primer nodo de la pantalla que contenga la palabra: la bajada del login
+    // dice «Entra con tu código de empleado…», así que un localizador por texto
+    // resuelve un párrafo que no enfoca nada y el rojo no señala a la causa.
+    const id = await empleado.getAttribute('id')
+    expect(id, 'sin `id` no puede haber `<label for>` que atar').toBeTruthy()
+
+    const etiqueta = page.locator(`label[for="${id}"]`)
+    await expect(etiqueta).toHaveCount(1)
+    await etiqueta.click()
     await expect(empleado).toBeFocused()
   })
 

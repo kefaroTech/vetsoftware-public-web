@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useTemplateRef } from 'vue'
 import { ArrowLeftRight, Boxes, PauseCircle, SlidersHorizontal, Syringe } from 'lucide-vue-next'
 import StockStatePill from './StockStatePill.vue'
 import CategoryPill from './CategoryPill.vue'
@@ -8,6 +8,7 @@ import PagerBar from './PagerBar.vue'
 import SearchField from './SearchField.vue'
 import { formatMoney, stateOf, stockOf, taxTreatmentLabel } from '../composables/pricing'
 import { productCategoryTone } from '../composables/categoryTone'
+import { useScrollableRegion } from '@/composables/useScrollableRegion'
 import type { CategoryResponse, ProductResponse, StockState } from '../types/tienda'
 import type { StockView } from '../types/inventory'
 
@@ -88,6 +89,9 @@ function rowStock(p: ProductResponse) {
 function onStateFilter(value: string) {
   stState.value = value as '' | StockState | 'REPONER'
 }
+
+const scroller = useTemplateRef<HTMLElement>('scroller')
+const desborda = useScrollableRegion(scroller)
 </script>
 
 <template>
@@ -108,121 +112,129 @@ function onStateFilter(value: string) {
     </FilterSelect>
   </div>
 
-  <table class="ds-table">
-    <thead>
-      <tr>
-        <th>Producto</th>
-        <th>Categoría</th>
-        <th>SKU</th>
-        <th>Precio venta</th>
-        <th>IVA</th>
-        <th>Stock</th>
-        <th>Mínimo</th>
-        <th>Estado</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-if="loading">
-        <td colspan="9" class="ds-empty ds-empty--lg">Cargando…</td>
-      </tr>
-      <tr v-else-if="slice.length === 0">
-        <td colspan="9" class="ds-empty ds-empty--lg">Sin productos para el filtro.</td>
-      </tr>
-      <tr
-        v-for="p in slice"
-        v-else
-        :key="p.id"
-        class="trow ds-row-hover"
-        @click="emit('rowClick', p)"
-      >
-        <td class="tname ds-text-strong">{{ p.name }}</td>
-        <td>
-          <CategoryPill
-            :tone="productCategoryTone(p.productCategory)"
-            :label="p.productCategory.name"
-          />
-        </td>
-        <td class="tsku">{{ p.code }}</td>
-        <td>{{ formatMoney(p.salePrice) }}</td>
-        <td class="ttax">{{ taxTreatmentLabel(p.taxTreatment) }}</td>
-        <td class="tstock">{{ showStock ? `${rowStock(p).quantity} u` : '—' }}</td>
-        <td class="tmin" @click.stop>
-          <input
-            v-if="showStock && canAdjust"
-            class="min-input ds-focus-ring"
-            type="number"
-            min="0"
-            :value="rowStock(p).minStock"
-            @change="emit('minStockCommit', p, $event)"
-          />
-          <span v-else>{{ showStock ? rowStock(p).minStock : '—' }}</span>
-        </td>
-        <td>
-          <StockStatePill v-if="showStock" :state="stateOf(stockByProduct, p.id)" /><span
-            v-else
-            class="muted"
-            >—</span
-          >
-        </td>
-        <td class="tactions" @click.stop>
-          <button
-            v-if="showStock"
-            type="button"
-            class="iconbtn ds-icon-btn ds-icon-btn--accent"
-            title="Ver lotes y kardex"
-            @click="emit('detail', p)"
-          >
-            <Boxes :size="15" :stroke-width="1.7" />
-          </button>
-          <button
-            v-if="canAdjust && showStock"
-            type="button"
-            class="restock ds-hover-accent"
-            @click="emit('restock', p)"
-          >
-            Entrada
-          </button>
-          <button
-            v-if="canAdjust && showStock"
-            type="button"
-            class="iconbtn ds-icon-btn ds-icon-btn--accent"
-            title="Ajustar"
-            @click="emit('adjust', p)"
-          >
-            <SlidersHorizontal :size="15" :stroke-width="1.7" />
-          </button>
-          <button
-            v-if="canTransfer && showStock && hasTransferTargets"
-            type="button"
-            class="iconbtn ds-icon-btn ds-icon-btn--accent"
-            title="Transferir"
-            @click="emit('transfer', p)"
-          >
-            <ArrowLeftRight :size="15" :stroke-width="1.7" />
-          </button>
-          <button
-            v-if="canAdjust && showStock"
-            type="button"
-            class="iconbtn ds-icon-btn ds-icon-btn--accent"
-            title="Consumo clínico"
-            @click="emit('consume', p)"
-          >
-            <Syringe :size="15" :stroke-width="1.7" />
-          </button>
-          <button
-            v-if="canDelete"
-            type="button"
-            class="pause ds-icon-btn"
-            title="Pausar"
-            @click="emit('pause', p)"
-          >
-            <PauseCircle :size="15" :stroke-width="1.7" />
-          </button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div
+    ref="scroller"
+    class="ds-table-scroll ds-focus-ring"
+    role="region"
+    aria-label="Productos del inventario"
+    :tabindex="desborda ? 0 : undefined"
+  >
+    <table class="ds-table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Categoría</th>
+          <th>SKU</th>
+          <th class="ds-num">Precio venta</th>
+          <th>IVA</th>
+          <th class="ds-num">Stock</th>
+          <th class="ds-num">Mínimo</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-if="loading">
+          <td colspan="9" class="ds-empty ds-empty--lg">Cargando…</td>
+        </tr>
+        <tr v-else-if="slice.length === 0">
+          <td colspan="9" class="ds-empty ds-empty--lg">Sin productos para el filtro.</td>
+        </tr>
+        <tr
+          v-for="p in slice"
+          v-else
+          :key="p.id"
+          class="trow ds-row-hover"
+          @click="emit('rowClick', p)"
+        >
+          <td class="tname ds-text-strong">{{ p.name }}</td>
+          <td>
+            <CategoryPill
+              :tone="productCategoryTone(p.productCategory)"
+              :label="p.productCategory.name"
+            />
+          </td>
+          <td class="tsku">{{ p.code }}</td>
+          <td class="ds-num">{{ formatMoney(p.salePrice) }}</td>
+          <td class="ttax">{{ taxTreatmentLabel(p.taxTreatment) }}</td>
+          <td class="tstock ds-num">{{ showStock ? `${rowStock(p).quantity} u` : '—' }}</td>
+          <td class="tmin ds-num" @click.stop>
+            <input
+              v-if="showStock && canAdjust"
+              class="min-input ds-focus-ring"
+              type="number"
+              min="0"
+              :value="rowStock(p).minStock"
+              @change="emit('minStockCommit', p, $event)"
+            />
+            <span v-else>{{ showStock ? rowStock(p).minStock : '—' }}</span>
+          </td>
+          <td>
+            <StockStatePill v-if="showStock" :state="stateOf(stockByProduct, p.id)" /><span
+              v-else
+              class="muted"
+              >—</span
+            >
+          </td>
+          <td class="tactions" @click.stop>
+            <button
+              v-if="showStock"
+              type="button"
+              class="iconbtn ds-icon-btn ds-icon-btn--accent"
+              title="Ver lotes y kardex"
+              @click="emit('detail', p)"
+            >
+              <Boxes :size="15" :stroke-width="1.7" />
+            </button>
+            <button
+              v-if="canAdjust && showStock"
+              type="button"
+              class="restock ds-hover-accent"
+              @click="emit('restock', p)"
+            >
+              Entrada
+            </button>
+            <button
+              v-if="canAdjust && showStock"
+              type="button"
+              class="iconbtn ds-icon-btn ds-icon-btn--accent"
+              title="Ajustar"
+              @click="emit('adjust', p)"
+            >
+              <SlidersHorizontal :size="15" :stroke-width="1.7" />
+            </button>
+            <button
+              v-if="canTransfer && showStock && hasTransferTargets"
+              type="button"
+              class="iconbtn ds-icon-btn ds-icon-btn--accent"
+              title="Transferir"
+              @click="emit('transfer', p)"
+            >
+              <ArrowLeftRight :size="15" :stroke-width="1.7" />
+            </button>
+            <button
+              v-if="canAdjust && showStock"
+              type="button"
+              class="iconbtn ds-icon-btn ds-icon-btn--accent"
+              title="Consumo clínico"
+              @click="emit('consume', p)"
+            >
+              <Syringe :size="15" :stroke-width="1.7" />
+            </button>
+            <button
+              v-if="canDelete"
+              type="button"
+              class="pause ds-icon-btn"
+              title="Pausar"
+              @click="emit('pause', p)"
+            >
+              <PauseCircle :size="15" :stroke-width="1.7" />
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <PagerBar
     v-if="pageCount > 1"
@@ -371,10 +383,6 @@ function onStateFilter(value: string) {
   }
   .search {
     max-width: none;
-  }
-  .ds-table {
-    display: block;
-    overflow-x: auto;
   }
 }
 </style>

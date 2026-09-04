@@ -71,9 +71,10 @@ const subject = computed(() => props.appt.animal?.name || props.appt.clientName 
       <span class="w-time-end">–{{ endTime }}</span>
     </span>
     <span class="ds-flex-fill">
-      <span class="w-line ds-truncate"
-        ><strong>{{ typeMeta.icon }} {{ subject }}</strong></span
-      >
+      <span class="w-line ds-flex-row">
+        <component :is="typeMeta.icon" :size="11" :stroke-width="1.8" aria-hidden="true" />
+        <strong class="ds-truncate">{{ subject }}</strong>
+      </span>
       <span class="w-sub">{{ typeMeta.label }}</span>
     </span>
   </button>
@@ -145,7 +146,7 @@ const subject = computed(() => props.appt.animal?.name || props.appt.clientName 
 }
 
 .w-line {
-  display: block;
+  gap: var(--space-4);
   font-size: var(--text-xs);
 }
 

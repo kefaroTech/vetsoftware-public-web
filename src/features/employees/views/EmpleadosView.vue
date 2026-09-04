@@ -327,11 +327,11 @@ async function onConfirmChangeBranches(data: ChangeBranchesConfirm) {
       </template>
     </PageHeader>
 
-    <div v-if="error" class="ds-banner ds-banner--error">{{ error }}</div>
-    <div v-if="submitError" class="ds-banner ds-banner--error">{{ submitError }}</div>
+    <div v-if="submitError" class="ds-banner ds-banner--error" role="alert">{{ submitError }}</div>
 
     <EmpleadosTable
       :employees="employees"
+      :error="error"
       :selected-id="selectedId"
       :query="query"
       :loading="loading"

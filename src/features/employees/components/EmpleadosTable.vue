@@ -7,6 +7,8 @@ import Pagination from '@/components/ui/Pagination.vue'
 // La búsqueda es server-side: no filtramos localmente, renderizamos la página que llega del backend.
 defineProps<{
   employees: Employee[]
+  /** Fallo de la última carga. Sustituye al estado vacío: ver EST-01 en el template. */
+  error?: string | null
   selectedId: number | null
   query: string
   loading?: boolean
@@ -50,6 +52,11 @@ const emit = defineEmits<{
       </div>
 
       <div v-if="loading && employees.length === 0" class="empty ds-empty">Cargando empleados…</div>
+      <!-- EST-01: la rama de error va ANTES que la de vacío. Si se invierten, un
+           500 vuelve a disfrazarse de «no hay registros». -->
+      <div v-else-if="error" class="ds-banner ds-banner--error ds-banner--flush" role="alert">
+        {{ error }}
+      </div>
       <div v-else-if="employees.length === 0" class="empty ds-empty">
         {{
           query.trim()

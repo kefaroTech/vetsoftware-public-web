@@ -239,15 +239,16 @@ async function onDischarge(reason: ReasonLeaving) {
 
 <template>
   <div class="ds-page">
-    <div v-if="boardError" class="ds-banner ds-banner--error">{{ boardError }}</div>
-
     <template v-if="mode === 'board'">
       <PageHeader
         kicker="Hospitalización"
         title="Pacientes internados"
         lead="Animales hospitalizados: plan de tratamiento, administración de dosis y evolución."
       />
-      <HospBoard :items="board" :loading="boardLoading" @open="openPatient" />
+      <!-- EST-01: la rama de error va ANTES que el tablero. Detrás de él, un 500 se
+           lee como «Sin pacientes internados», que en una UCI es lo contrario. -->
+      <div v-if="boardError" class="ds-banner ds-banner--error" role="alert">{{ boardError }}</div>
+      <HospBoard v-else :items="board" :loading="boardLoading" @open="openPatient" />
     </template>
 
     <HospDetail

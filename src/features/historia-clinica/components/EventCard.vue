@@ -30,7 +30,7 @@ function handleClick() {
       :style="{ background: tokens.bg, color: tokens.fg }"
       :aria-label="meta.label"
     >
-      {{ meta.icon }}
+      <component :is="meta.icon" :size="15" :stroke-width="1.8" aria-hidden="true" />
     </div>
     <button
       type="button"
@@ -70,7 +70,6 @@ function handleClick() {
   border-radius: 8px;
   display: grid;
   place-items: center;
-  font-size: 14px;
   border: 3px solid var(--warm-100);
   box-shadow: 0 2px 6px -2px color-mix(in oklch, var(--warm-900) 12%, transparent);
 }

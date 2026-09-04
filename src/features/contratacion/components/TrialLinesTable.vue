@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useTemplateRef } from 'vue'
 import { formatDateLong } from '@/composables/format'
 import { formatMoney } from '@/composables/money'
 import { pruebaUniforme } from '../api/contratacion.source'
+import { useScrollableRegion } from '@/composables/useScrollableRegion'
 import type { LineaPrueba } from '../types/contratacion.types'
 
 /**
@@ -58,6 +59,9 @@ const nombresSinPrueba = computed(() => {
   if (nombres.length <= 1) return nombres.join('')
   return `${nombres.slice(0, -1).join(', ')} y ${nombres[nombres.length - 1]}`
 })
+
+const tabla = useTemplateRef<HTMLElement>('tabla')
+const desborda = useScrollableRegion(tabla)
 </script>
 
 <template>
@@ -83,7 +87,13 @@ const nombresSinPrueba = computed(() => {
       {{ sinPrueba.length === 1 ? 'se cobra' : 'se cobran' }} desde el primer día.
     </p>
 
-    <div class="ds-table-scroll">
+    <div
+      ref="tabla"
+      class="ds-table-scroll ds-focus-ring"
+      role="region"
+      aria-label="Fin de la prueba de cada módulo"
+      :tabindex="desborda ? 0 : undefined"
+    >
       <table class="ds-table ds-table--dense">
         <caption class="ds-sr-only">
           Fecha de fin de la prueba de cada módulo, de la que termina antes a la que termina después

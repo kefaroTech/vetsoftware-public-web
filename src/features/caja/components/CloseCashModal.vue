@@ -252,6 +252,12 @@ function diffClass(diff: number | null): string {
   border-bottom: 1px solid var(--warm-200);
 }
 
+/* `.arqueo th` (0,2,1) le gana a `.ds-num` (0,1,0): la cabecera del arqueo se
+   alinea con sus cifras nombrando la clase, que sube el peso a (0,2,2). */
+.arqueo th.ds-num {
+  text-align: right;
+}
+
 .arqueo td {
   padding: 8px;
   border-bottom: 1px solid var(--warm-100);

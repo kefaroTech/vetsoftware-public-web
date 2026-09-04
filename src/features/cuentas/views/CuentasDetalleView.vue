@@ -9,6 +9,7 @@ import { animalApi } from '@/features/dashboard/views/consulta/nueva/api/animal.
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
+import { getProblemDetailMessage } from '@/services/http/http.client'
 import type { OpenAccountResponse } from '../types/cuentas'
 
 const props = defineProps<{ accountId: string }>()
@@ -33,6 +34,12 @@ const ownerPets = ref<{ id: number; name: string }[]>([])
  */
 const notFound = ref(false)
 const loading = ref(false)
+/**
+ * Fallo de la carga, que NO es lo mismo que «no existe»: `fetchAccount` solo
+ * devuelve `null` en 404/403 y propaga el resto, así que sin este estado las
+ * tres ramas del template quedan en falso y la pantalla sale en blanco.
+ */
+const loadError = ref<string | null>(null)
 
 async function load(rawId: string): Promise<void> {
   const id = Number(rawId)
@@ -43,6 +50,7 @@ async function load(rawId: string): Promise<void> {
   }
   loading.value = true
   notFound.value = false
+  loadError.value = null
   ownerPets.value = []
   try {
     // Regla del repo: al abrir la pantalla se relee del backend, no se sirve
@@ -63,6 +71,9 @@ async function load(rawId: string): Promise<void> {
       animalApi.listByOwner(fresh.owner.id).catch(() => []),
     ])
     ownerPets.value = animals.map((a) => ({ id: a.id, name: a.name }))
+  } catch (e) {
+    loadError.value = getProblemDetailMessage(e, 'No pudimos cargar la cuenta')
+    account.value = null
   } finally {
     loading.value = false
   }
@@ -88,7 +99,9 @@ function backToList() {
 </script>
 
 <template>
-  <div v-if="store.error.value" class="ds-banner ds-banner--error">{{ store.error.value }}</div>
+  <div v-if="loadError ?? store.error.value" class="ds-banner ds-banner--error" role="alert">
+    {{ loadError ?? store.error.value }}
+  </div>
 
   <template v-if="notFound">
     <PageHeader

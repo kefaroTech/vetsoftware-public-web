@@ -85,9 +85,14 @@ const traePropuesta = computed(() => vigente.value?.origen === 'PROPUESTA')
       ¿Ya tienes cuenta? <RouterLink :to="{ name: 'login' }">Inicia sesión</RouterLink>
     </template>
 
-    <div v-if="screen === 'form'" class="reg-lane">
-      <!-- El carril va PRIMERO en el DOM. En escritorio la rejilla lo coloca a
-           la derecha; en móvil se apila arriba, que es donde tiene que estar. -->
+    <div
+      v-if="screen === 'form'"
+      class="reg-lane"
+      :class="{ 'reg-lane--carril': seleccion || traePropuesta }"
+    >
+      <!-- El carril es condicional, y por eso la rejilla solo abre su columna
+           cuando la clase lo confirma: reservada siempre, el formulario se
+           quedaría dentro de los 300 px que le tocan al carril. -->
       <SeleccionAside
         v-if="seleccion"
         :plan="seleccion.plan"
@@ -112,7 +117,6 @@ const traePropuesta = computed(() => vigente.value?.origen === 'PROPUESTA')
 <style scoped>
 .reg-lane {
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
   gap: 22px;
   align-items: start;
   width: 100%;
@@ -125,9 +129,9 @@ const traePropuesta = computed(() => vigente.value?.origen === 'PROPUESTA')
   align-self: start;
 }
 
-@media (width <= 960px) {
-  .reg-lane {
-    grid-template-columns: 1fr;
+@media (width > 960px) {
+  .reg-lane--carril {
+    grid-template-columns: 300px minmax(0, 1fr);
   }
 }
 </style>

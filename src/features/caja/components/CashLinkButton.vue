@@ -17,6 +17,10 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
+
+  /* WCAG 2.2 §2.5.8: con solo el relleno vertical de `--space-2` el objetivo no
+     llega a los 24 px de alto que exige el criterio. */
+  min-height: var(--space-24);
   padding: var(--space-2) var(--space-6);
   border: none;
   background: none;
