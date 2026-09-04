@@ -1,29 +1,28 @@
 <script setup lang="ts">
 /**
- * Diferencia de un conteo físico (contado − sistema), en verde si cuadra, en
- * rojo si falta y en ámbar si sobra. Idéntica en la hoja de conteo y en el
- * detalle del historial.
+ * Diferencia de un conteo físico: contado − sistema. El cero va en neutro: en
+ * una columna de conteo el verde es el importe positivo de `.ds-amount--pos`,
+ * así que un cero verde se lee como una entrada de mercancía.
  */
 defineProps<{ value: number }>()
 </script>
 
 <template>
-  <span class="diff" :class="{ zero: value === 0, neg: value < 0, pos: value > 0 }"
+  <span
+    class="diff"
+    :class="[{ zero: value === 0, neg: value < 0, pos: value > 0 }, value < 0 && 'ds-amount--neg']"
     >{{ value > 0 ? '+' : '' }}{{ value }}</span
   >
 </template>
 
 <style scoped>
 .diff {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .diff.zero {
-  color: oklch(55% 0.12 150deg);
-}
-.diff.neg {
-  color: oklch(52% 0.18 25deg);
+  color: var(--text-muted);
 }
 .diff.pos {
-  color: oklch(52% 0.12 70deg);
+  color: var(--warning-900);
 }
 </style>

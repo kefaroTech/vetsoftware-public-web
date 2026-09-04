@@ -224,9 +224,9 @@ const showAttachments = computed(
 .validated {
   margin-top: 16px;
   font-size: 12.5px;
-  color: oklch(40% 0.13 150deg);
-  background: oklch(95% 0.05 150deg);
-  border: 1px solid oklch(85% 0.08 150deg);
+  color: var(--success-fg);
+  background: var(--success-bg);
+  border: 1px solid var(--success-200, var(--compras-ok-bg));
   border-radius: 8px;
   padding: 8px 12px;
 }
@@ -250,7 +250,7 @@ const showAttachments = computed(
 }
 
 .att-state.error {
-  color: oklch(45% 0.18 25deg);
+  color: var(--danger-800);
 }
 
 .att-list {

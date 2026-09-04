@@ -53,39 +53,47 @@ export const TYPE_COLORS: Record<EventTypeColor, EventTypeColorTokens> = {
     dot: 'var(--amatista-600)',
   },
   red: {
-    bg: 'oklch(94% 0.05 25)',
-    fg: 'oklch(48% 0.18 25)',
-    dot: 'oklch(60% 0.20 25)',
+    bg: 'var(--danger-150)',
+    fg: 'var(--danger-700)',
+    dot: 'var(--danger-border)',
   },
   green: {
-    bg: 'oklch(94% 0.06 150)',
-    fg: 'oklch(40% 0.13 150)',
-    dot: 'oklch(55% 0.16 150)',
+    bg: 'var(--success-bg)',
+    fg: 'var(--success-fg)',
+    dot: 'var(--success-dot)',
   },
   teal: {
-    bg: 'oklch(94% 0.05 200)',
-    fg: 'oklch(42% 0.12 200)',
-    dot: 'oklch(58% 0.14 200)',
+    bg: 'var(--teal-100, var(--compras-ok-bg))',
+    fg: 'var(--teal-700, var(--compras-ok-fg))',
+    dot: 'var(--teal-600, var(--success-border))',
   },
   amber: {
-    bg: 'oklch(94% 0.07 80)',
-    fg: 'oklch(45% 0.13 70)',
-    dot: 'oklch(65% 0.13 75)',
+    bg: 'var(--warning-50)',
+    fg: 'var(--warning-900)',
+    dot: 'var(--warning-border)',
   },
   blue: {
-    bg: 'oklch(94% 0.04 240)',
-    fg: 'oklch(40% 0.15 240)',
-    dot: 'oklch(55% 0.16 240)',
+    bg: 'var(--navy-100, var(--amatista-50))',
+    fg: 'var(--navy-700, var(--amatista-600))',
+    dot: 'var(--navy-600, var(--amatista-500))',
   },
+
+  /* Ancla violet (292,6°) y no la indigo (277°): a 1° de `--hue` este chip
+     queda indistinguible del estado primario y del seleccionado, que son los
+     dos únicos colores con los que no puede confundirse. */
   indigo: {
-    bg: 'oklch(94% 0.05 280)',
-    fg: 'oklch(40% 0.16 280)',
-    dot: 'oklch(55% 0.18 280)',
+    bg: 'var(--violet-100, var(--amatista-200))',
+    fg: 'var(--violet-700, var(--amatista-900))',
+    dot: 'var(--violet-600, var(--amatista-700))',
   },
+
+  /* Escalón profundo del ancla indigo, no un tono propio: la marca declara
+     cuatro anclas cromáticas y esta tabla necesita nueve tonos distinguibles,
+     así que el noveno se separa por claridad sobre un ancla que ya existe. */
   pink: {
-    bg: 'oklch(94% 0.05 340)',
-    fg: 'oklch(42% 0.15 340)',
-    dot: 'oklch(60% 0.17 340)',
+    bg: 'var(--amatista-200)',
+    fg: 'var(--amatista-800)',
+    dot: 'var(--amatista-500)',
   },
   gray: {
     bg: 'var(--warm-200)',

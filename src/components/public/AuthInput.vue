@@ -93,8 +93,12 @@ function onBlur() {
   align-items: center;
   gap: 10px;
   padding: 0 12px;
-  background: #fff;
-  border: 1px solid var(--pub-line-control);
+  background: var(--pub-surface);
+
+  /* §1.4.11 Non-text Contrast (AA): el campo no tiene relleno diferenciado, así
+     que el borde es lo único que lo delimita y ningún token de línea le sirve.
+     Mismo criterio que `.pub-campo-rest` en `public-auth.css`. */
+  border: 1px solid var(--pub-ame-600);
   border-radius: 8px;
   transition:
     border-color 0.15s,
@@ -103,7 +107,7 @@ function onBlur() {
 
 .pub-input.is-focused {
   border-color: var(--pub-ame-500);
-  box-shadow: 0 0 0 3px rgb(168 85 247 / 14%);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--pub-ame-500) 14%, transparent);
 }
 
 .pub-input.is-invalid {
@@ -111,11 +115,11 @@ function onBlur() {
 }
 
 .pub-input.is-invalid.is-focused {
-  box-shadow: 0 0 0 3px rgb(185 28 28 / 12%);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--pub-err-tx-2) 12%, transparent);
 }
 
 .pub-input.is-disabled {
-  background: #faf8fc;
+  background: var(--pub-tint-mute);
   opacity: 0.6;
 }
 

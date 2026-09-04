@@ -389,7 +389,7 @@ function doEmit(forceOverlap = false) {
    cromo del modal: separador, banner de error de guardado y el asterisco del pie. */
 
 .req {
-  color: oklch(60% 0.2 25deg);
+  color: var(--danger-border);
 }
 
 .divider {
@@ -413,7 +413,7 @@ function doEmit(forceOverlap = false) {
 }
 
 .force-btn:hover {
-  background: oklch(96% 0.04 25deg);
+  background: var(--danger-50);
 }
 
 .force-hint {

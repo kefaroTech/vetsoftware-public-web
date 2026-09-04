@@ -127,7 +127,7 @@ function select(value: ClinicalEventType | 'ALL') {
 
 .all-chip.active {
   background: var(--amatista-700);
-  color: white;
+  color: var(--warm-50);
 }
 
 .icon {
@@ -145,12 +145,12 @@ function select(value: ClinicalEventType | 'ALL') {
 }
 
 .chip.active .count {
-  background: oklch(0% 0 0deg / 8%);
+  background: color-mix(in oklch, var(--warm-900) 8%, transparent);
   color: inherit;
 }
 
 .all-chip.active .count {
-  background: oklch(100% 0 0deg / 18%);
-  color: white;
+  background: color-mix(in oklch, var(--warm-50) 18%, transparent);
+  color: var(--warm-50);
 }
 </style>

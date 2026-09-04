@@ -18,7 +18,7 @@ defineProps<{
 
 <template>
   <div class="receipt ds-stack">
-    <div class="badge ds-tone--success" :class="{ cancel: cancelled }">
+    <div class="badge" :class="cancelled ? 'ds-tone--warning' : 'ds-tone--success'">
       <X v-if="cancelled" :size="26" :stroke-width="2.4" />
       <Check v-else :size="26" :stroke-width="2.4" />
     </div>
@@ -43,7 +43,6 @@ defineProps<{
 </template>
 
 <style scoped>
-/* Layout via primitivas: .ds-stack, .ds-strong, .ds-tone--success. */
 .receipt {
   align-items: center;
   text-align: center;
@@ -56,10 +55,6 @@ defineProps<{
   border-radius: 16px;
   display: grid;
   place-items: center;
-}
-.badge.cancel {
-  background: oklch(92% 0.06 60deg);
-  color: oklch(50% 0.1 60deg);
 }
 .rec-title {
   font-size: 15px;

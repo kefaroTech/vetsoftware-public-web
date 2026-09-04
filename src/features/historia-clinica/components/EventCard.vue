@@ -71,7 +71,7 @@ function handleClick() {
   display: grid;
   place-items: center;
   border: 3px solid var(--warm-100);
-  box-shadow: 0 2px 6px -2px rgb(20 15 30 / 12%);
+  box-shadow: 0 2px 6px -2px color-mix(in oklch, var(--warm-900) 12%, transparent);
 }
 
 .card {

@@ -91,6 +91,6 @@ const dose = computed(() => (props.order?.kind === 'med' ? (props.order.dose ?? 
 
 /* Acción de confirmación: verde en lugar del amatista por defecto. */
 .ds-btn--solid {
-  --ds-btn-solid-bg: oklch(48% 0.16 150deg);
+  --ds-btn-solid-bg: var(--success-fg);
 }
 </style>

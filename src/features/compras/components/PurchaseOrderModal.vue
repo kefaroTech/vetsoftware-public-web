@@ -361,7 +361,7 @@ async function submit() {
 }
 
 .line-error {
-  color: oklch(50% 0.2 25deg);
+  color: var(--danger-600);
   font-size: 12.5px;
   margin: 0 0 8px;
 }

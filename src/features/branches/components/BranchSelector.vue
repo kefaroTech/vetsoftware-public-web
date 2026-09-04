@@ -30,14 +30,14 @@ const { options, selectedValue, hasBranches, loading } = useBranches()
   gap: 5px;
   padding: 4px 10px 12px;
   margin-bottom: 4px;
-  border-bottom: 1px solid oklch(75% 0.04 var(--hue) / 14%);
+  border-bottom: 1px solid color-mix(in oklch, var(--amatista-300) 14%, transparent);
 }
 
 .bs-label {
   font-size: 10.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: oklch(75% 0.04 var(--hue) / 55%);
+  color: color-mix(in oklch, var(--amatista-300) 55%, transparent);
   font-weight: 500;
 }
 

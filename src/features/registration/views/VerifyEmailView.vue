@@ -89,7 +89,7 @@ onMounted(async () => {
   width: 100%;
   max-width: 520px;
   text-align: center;
-  background: #fff;
+  background: var(--pub-surface);
   border-radius: 16px;
   border: 1px solid var(--pub-line);
   box-shadow: var(--pub-card-shadow);
@@ -115,8 +115,6 @@ onMounted(async () => {
   color: var(--pub-ok-tx);
 }
 
-/* `--pub-err-tx` sobre `--pub-err-bg` mide 4,41:1 y falla §1.4.3 AA por 0,09.
-   `--pub-err-tx-2` mide 5,91:1 sobre el mismo fondo. */
 .verify-icon--err {
   background: var(--pub-err-bg);
   border: 1px solid var(--pub-err-bd);

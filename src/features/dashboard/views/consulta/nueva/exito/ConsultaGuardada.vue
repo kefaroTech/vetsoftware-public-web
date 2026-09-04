@@ -138,12 +138,12 @@ function createAnother() {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: oklch(92% 0.06 145deg);
-  color: oklch(45% 0.15 145deg);
+  background: var(--success-bg);
+  color: var(--success-fg);
   display: grid;
   place-items: center;
   margin: 0 auto 20px;
-  box-shadow: 0 8px 32px -8px oklch(50% 0.15 145deg / 40%);
+  box-shadow: 0 8px 32px -8px color-mix(in oklch, var(--success-dot) 40%, transparent);
 }
 
 .title {
@@ -193,7 +193,7 @@ function createAnother() {
    cambia entre estados a propósito: el indicador nunca se debilita y el hover
    aporta su señal por relleno. */
 .rx {
-  background: white;
+  background: var(--warm-50);
   border-color: var(--amatista-500);
   color: var(--amatista-700);
 }

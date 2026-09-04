@@ -326,7 +326,7 @@ async function submit() {
   border-radius: 9px;
   background: var(--danger-100);
   border: 1px solid var(--danger-border);
-  color: oklch(48% 0.16 25deg);
+  color: var(--danger-700);
   font-size: 12.5px;
   margin-bottom: 12px;
 }

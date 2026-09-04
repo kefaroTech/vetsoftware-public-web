@@ -54,8 +54,8 @@ const model = defineModel<boolean>({ required: true })
 }
 
 .sample-collected.checked {
-  background: linear-gradient(135deg, var(--warning-50), oklch(96% 0.02 var(--hue)));
-  border-color: oklch(70% 0.13 75deg);
+  background: linear-gradient(135deg, var(--warning-50), var(--amatista-50));
+  border-color: var(--warning-border);
 }
 
 /* A11Y-09 · una casilla es el caso de manual de §1.4.11: sin marcar, su borde
@@ -71,7 +71,7 @@ const model = defineModel<boolean>({ required: true })
   place-items: center;
   flex-shrink: 0;
   margin-top: 1px;
-  color: white;
+  color: var(--warm-50);
   transition:
     background 0.12s ease,
     border-color 0.12s ease;
@@ -84,8 +84,8 @@ const model = defineModel<boolean>({ required: true })
 }
 
 .cb-box.checked {
-  background: oklch(58% 0.16 75deg);
-  border-color: oklch(58% 0.16 75deg);
+  background: var(--warning-border);
+  border-color: var(--warning-border);
 }
 
 /* Residuo sobre `.ds-text-strong` + `--md` (warm-900 / peso medio / 13,5px). */
@@ -101,7 +101,7 @@ const model = defineModel<boolean>({ required: true })
 }
 
 .desc strong {
-  color: oklch(40% 0.13 75deg);
+  color: var(--warning-900);
   font-weight: 600;
 }
 </style>

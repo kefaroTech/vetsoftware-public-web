@@ -309,7 +309,7 @@ function confirmRemove(id: number) {
   cursor: pointer;
   border: none;
   background: var(--danger-500);
-  color: white;
+  color: var(--warm-50);
 }
 
 .btn-ghost-sm {

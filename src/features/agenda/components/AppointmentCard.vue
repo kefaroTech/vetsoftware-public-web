@@ -106,7 +106,7 @@ const secondary = computed(() => {
 }
 
 .card:hover {
-  box-shadow: 0 4px 16px -8px rgb(40 20 60 / 25%);
+  box-shadow: var(--shadow-sm);
 }
 
 .card:active {
@@ -168,8 +168,8 @@ const secondary = computed(() => {
   font-weight: 500;
   padding: 2px 7px;
   border-radius: 5px;
-  background: oklch(95% 0.07 80deg);
-  color: oklch(45% 0.14 60deg);
+  background: var(--warning-50);
+  color: var(--warning-900);
 }
 
 /* Resto sobre `.ds-flex-row`: gap propio (7px, fuera del catálogo 8/12). */

@@ -218,7 +218,7 @@ const cells = computed(() =>
   height: 22px;
   border-radius: 50%;
   background: var(--amatista-700);
-  color: white;
+  color: var(--warm-50);
   font-weight: 600;
 }
 

@@ -363,9 +363,9 @@ function confirmImpact() {
   padding: 10px 13px;
   font-size: 12.5px;
   line-height: 1.45;
-  color: oklch(45% 0.13 70deg);
-  background: oklch(96% 0.04 80deg);
-  border-left: 3px solid oklch(70% 0.13 75deg);
+  color: var(--warning-900);
+  background: var(--warning-50);
+  border-left: 3px solid var(--warning-border);
   border-radius: 0 8px 8px 0;
 }
 

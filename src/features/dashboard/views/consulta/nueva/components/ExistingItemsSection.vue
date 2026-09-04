@@ -142,8 +142,8 @@ function keyOf(item: T): number {
   padding: 5px 10px;
   border-radius: var(--radius-pill);
   background: var(--success-50);
-  color: oklch(40% 0.15 150deg);
-  border: 1px solid oklch(85% 0.1 150deg);
+  color: var(--success-fg);
+  border: 1px solid var(--success-200, var(--compras-ok-bg));
   white-space: nowrap;
 }
 
@@ -178,12 +178,12 @@ function keyOf(item: T): number {
 .edit-existing.active {
   background: var(--amatista-700);
   border-color: var(--amatista-700);
-  color: white;
+  color: var(--warm-50);
 }
 
 .remove-existing:hover:not(:disabled) {
   background: var(--danger-150);
   border-color: var(--danger-border);
-  color: oklch(35% 0.15 25deg);
+  color: var(--danger-950);
 }
 </style>

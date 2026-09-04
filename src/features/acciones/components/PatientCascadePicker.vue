@@ -131,7 +131,7 @@ watch(
             :id="ownerInputId"
             v-model="ownerQuery"
             type="text"
-            class="input"
+            class="input ds-focus-ring"
             placeholder="Buscar por nombre, documento o email…"
           />
         </div>
@@ -255,8 +255,8 @@ watch(
 }
 
 .picker.invalid {
-  border-color: oklch(60% 0.2 25deg);
-  background: oklch(98.5% 0.02 25deg);
+  border-color: var(--danger-border);
+  background: var(--danger-50);
 }
 
 .hint {
@@ -292,11 +292,6 @@ watch(
   transition:
     border-color 0.15s,
     box-shadow 0.15s;
-}
-
-.input:focus {
-  border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px color-mix(in oklch, var(--amatista-500) 16%, transparent);
 }
 
 /* Añadidos sobre `.ds-stack`: gap mínimo entre resultados y la caja con scroll. */

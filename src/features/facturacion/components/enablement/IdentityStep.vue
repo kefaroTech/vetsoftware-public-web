@@ -339,7 +339,7 @@ async function save() {
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 10px;
-  box-shadow: 0 12px 30px -10px rgb(20 15 30 / 25%);
+  box-shadow: var(--shadow-modal);
   overflow: hidden;
   max-height: 240px;
   overflow-y: auto;
@@ -421,7 +421,7 @@ async function save() {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  color: #fff;
+  color: var(--warm-50);
 }
 
 .respbox-off {

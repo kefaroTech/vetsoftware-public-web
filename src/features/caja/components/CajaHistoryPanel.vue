@@ -182,11 +182,10 @@ const to = defineModel<string>('to', { required: true })
 /* El rótulo de cada filtro es `.ds-label ds-label--xs` (primitives.css): la
    regla `.filter-field > span` coincidía con ella en las cinco declaraciones. */
 
-/* Anillo propio, más oscuro que el `--ring` del sistema: no es `.ds-focus-ring`.
-   Ver informe FE-08 del slice de caja. */
+/* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- `.ds-focus-ring` no se puede aplicar desde el marcado: su `border-color` pesa (0,2,0) y la regla base `.filter-field select` de este SFC, con el atributo de `scoped`, pesa (0,2,1) — la clase pintaría el anillo pero no el borde, medio indicador. */
 .filter-field select:focus {
-  border-color: var(--amatista-500, #76519d);
-  box-shadow: 0 0 0 3px rgb(92 45 140 / 10%);
+  border-color: var(--amatista-500);
+  box-shadow: var(--ring);
 }
 
 .filter-field select:disabled {

@@ -256,9 +256,9 @@ function onSave() {
 }
 
 .banner.warn {
-  background: oklch(95% 0.05 80deg);
-  border: 1px solid oklch(85% 0.08 80deg);
-  color: oklch(35% 0.1 80deg);
+  background: var(--warning-50);
+  border: 1px solid var(--warning-200);
+  color: var(--warning-900);
 }
 
 .banner-head {
@@ -280,7 +280,7 @@ function onSave() {
 }
 
 .diff-add {
-  color: oklch(45% 0.13 145deg);
+  color: var(--success-fg);
 }
 
 .diff-remove {

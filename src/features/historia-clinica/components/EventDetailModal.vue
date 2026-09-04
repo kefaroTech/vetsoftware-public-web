@@ -220,9 +220,9 @@ function printReceta() {
   padding: 12px 14px;
   font-size: 13px;
   border-radius: 10px;
-  background: oklch(97% 0.02 25deg);
+  background: var(--danger-50);
   color: var(--danger-700);
-  border: 1px solid oklch(85% 0.06 25deg);
+  border: 1px solid var(--danger-300);
 }
 
 /* A11Y-09 · el borde era `--amatista-300`: 1,99:1 en reposo, y el hover lo

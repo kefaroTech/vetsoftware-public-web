@@ -91,7 +91,7 @@ async function save() {
   font-size: 12.5px;
   background: var(--danger-150);
   border: 1px solid var(--danger-border);
-  color: oklch(35% 0.15 25deg);
+  color: var(--danger-950);
 }
 
 /* Único añadido sobre `.ds-actions`: estos dos botones respiran algo más. */

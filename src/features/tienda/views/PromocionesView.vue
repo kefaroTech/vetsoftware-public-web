@@ -262,14 +262,14 @@ async function requestDelete(target: PromotionResponse) {
   gap: 9px;
   padding: 11px 14px;
   margin-bottom: 16px;
-  background: oklch(95% 0.05 150deg);
-  border: 1px solid oklch(86% 0.07 150deg);
+  background: var(--success-50);
+  border: 1px solid var(--compras-ok-bg);
   border-radius: 10px;
   font-size: 13px;
-  color: oklch(38% 0.13 150deg);
+  color: var(--compras-ok-fg);
 }
 .alert strong {
-  color: oklch(34% 0.14 150deg);
+  color: var(--compras-ok-fg);
 }
 .switch {
   width: 34px;
@@ -284,7 +284,7 @@ async function requestDelete(target: PromotionResponse) {
   transition: background 0.15s ease;
 }
 .switch.on {
-  background: oklch(55% 0.16 150deg);
+  background: var(--success-dot);
 }
 .knob {
   position: absolute;
@@ -293,12 +293,12 @@ async function requestDelete(target: PromotionResponse) {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--warm-50);
   display: grid;
   place-items: center;
-  color: oklch(45% 0.15 150deg);
+  color: var(--compras-ok-fg);
   transition: left 0.15s ease;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+  box-shadow: var(--shadow-xs);
 }
 .switch.on .knob {
   left: 16px;

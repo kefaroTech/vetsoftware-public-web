@@ -176,10 +176,6 @@ async function resend() {
 }
 
 .rc-resend-wait {
-  /* `--pub-ink-400` mide 3,94:1 sobre blanco y falla §1.4.3 AA; `--pub-ink-500` mide 5,96:1.
-     El respaldo `#a08bbd` era además PEOR que el token que respaldaba (3,03:1), así que una
-     cascada rota empeoraba el contraste en vez de conservarlo. Sin respaldo: el token está
-     declarado en `.pub-scope`, que es el ámbito de esta pantalla. */
   color: var(--pub-ink-500);
   font-weight: 500;
 }

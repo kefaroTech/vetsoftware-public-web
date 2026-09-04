@@ -82,7 +82,7 @@ const orderedRoles = computed(() =>
 
 .option.selected {
   border-color: var(--amatista-600);
-  background: linear-gradient(135deg, var(--amatista-50) 0%, oklch(98% 0.01 var(--hue)) 100%);
+  background: linear-gradient(135deg, var(--amatista-50) 0%, var(--amatista-50) 100%);
 }
 
 /* A11Y-09 · sin marcar, el borde ES la casilla entera: `--warm-300` daba
@@ -96,7 +96,7 @@ const orderedRoles = computed(() =>
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  color: white;
+  color: var(--warm-50);
   transition:
     background 0.12s ease,
     border-color 0.12s ease;

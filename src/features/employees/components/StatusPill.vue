@@ -18,9 +18,9 @@ const state = computed<'active' | 'invited' | 'inactive'>(() =>
 const tokens = computed(() => {
   switch (state.value) {
     case 'active':
-      return { bg: 'oklch(94% 0.06 150)', fg: 'oklch(40% 0.13 150)', dot: 'oklch(55% 0.16 150)' }
+      return { bg: 'var(--success-bg)', fg: 'var(--success-fg)', dot: 'var(--success-dot)' }
     case 'invited':
-      return { bg: 'oklch(95% 0.06 85)', fg: 'oklch(45% 0.13 85)', dot: 'oklch(62% 0.15 85)' }
+      return { bg: 'var(--warning-50)', fg: 'var(--warning-900)', dot: 'var(--warning-border)' }
     default:
       return { bg: 'var(--warm-200)', fg: 'var(--warm-600)', dot: 'var(--warm-500)' }
   }

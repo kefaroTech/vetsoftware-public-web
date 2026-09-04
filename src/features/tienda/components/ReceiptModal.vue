@@ -237,7 +237,7 @@ function onPrint() {
   color: var(--warm-700);
 }
 .srow.saving {
-  color: oklch(45% 0.13 150deg);
+  color: var(--compras-ok-fg);
 }
 .srow.total {
   font-size: 16px;
@@ -266,7 +266,7 @@ function onPrint() {
      —el escalón que `tokens.css` reserva a bordes de control— da 3,63:1 y
      3,54:1, así que el mismo borde sirve en los dos estados. */
   border: 1px solid var(--warm-450);
-  background: white;
+  background: var(--warm-50);
   color: var(--warm-800);
 }
 .btn-ghost:hover {

@@ -79,7 +79,7 @@ const actions = computed<CardAction[]>(() => {
    (3,54:1). `--amatista-450` da 3,69:1. */
 .card:hover {
   border-color: var(--amatista-450);
-  box-shadow: 0 2px 8px -4px rgb(20 15 30 / 14%);
+  box-shadow: 0 2px 8px -4px color-mix(in oklch, var(--warm-900) 14%, transparent);
 }
 
 .top {

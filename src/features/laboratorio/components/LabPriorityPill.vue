@@ -9,7 +9,7 @@ const LABEL: Record<LaboratoryTestPriority, string> = {
 }
 const TONE: Record<LaboratoryTestPriority, { bg: string; fg: string }> = {
   NORMAL: { bg: 'var(--warm-200)', fg: 'var(--warm-700)' },
-  URGENTE: { bg: 'oklch(94% 0.09 70)', fg: 'oklch(45% 0.16 55)' },
+  URGENTE: { bg: 'var(--warning-50)', fg: 'var(--warning-900)' },
 }
 </script>
 

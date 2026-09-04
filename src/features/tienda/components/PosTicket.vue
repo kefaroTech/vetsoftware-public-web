@@ -283,7 +283,7 @@ const emit = defineEmits<{
 }
 
 .line-x:hover {
-  background: oklch(94% 0.05 25deg);
+  background: var(--danger-150);
   color: var(--danger-700);
 }
 
@@ -302,7 +302,7 @@ const emit = defineEmits<{
 }
 
 .srow.savings {
-  color: oklch(45% 0.13 150deg);
+  color: var(--compras-ok-fg);
 }
 
 .srow.grand {
@@ -320,7 +320,7 @@ const emit = defineEmits<{
   border-radius: 10px;
   border: none;
   background: var(--gradient-primary);
-  color: #fff;
+  color: var(--warm-50);
   font-family: inherit;
   font-size: 14px;
   font-weight: 600;

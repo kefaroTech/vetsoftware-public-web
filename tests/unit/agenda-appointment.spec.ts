@@ -13,7 +13,8 @@ import {
   apptTime,
   apptTimeRange,
   apptTypeTokens,
-  apptVetHue,
+  apptVetTone,
+  APPT_VET_TONES,
   toIsoLocalDateTime,
   type AppointmentResponse,
   type AppointmentStatus,
@@ -140,20 +141,24 @@ describe('apptInitials', () => {
   })
 })
 
-describe('apptVetHue', () => {
-  it('es determinista por empleado y cae siempre en [0, 360)', () => {
-    expect(apptVetHue(1)).toBe(57)
-    expect(apptVetHue(1)).toBe(apptVetHue(1))
-    expect(apptVetHue(0)).toBe(0)
+describe('apptVetTone', () => {
+  it('es determinista por empleado y no sale de la paleta cerrada', () => {
+    expect(apptVetTone(1)).toBe(APPT_VET_TONES[1])
+    expect(apptVetTone(1)).toBe(apptVetTone(1))
+    expect(apptVetTone(0)).toBe(APPT_VET_TONES[0])
     for (const id of [1, 7, 42, 999, 123456]) {
-      const hue = apptVetHue(id)
-      expect(hue).toBeGreaterThanOrEqual(0)
-      expect(hue).toBeLessThan(360)
+      expect(APPT_VET_TONES).toContain(apptVetTone(id))
     }
   })
 
   it('normaliza el negativo (el doble módulo no es decorativo)', () => {
-    expect(apptVetHue(-1)).toBe(303)
+    expect(apptVetTone(-1)).toBe(APPT_VET_TONES[3])
+  })
+
+  it('todos los tonos son tokens del design system, ninguno un color literal', () => {
+    for (const tone of APPT_VET_TONES) {
+      expect(tone).toMatch(/^var\(--[a-z0-9-]+\)$/)
+    }
   })
 })
 

@@ -322,13 +322,13 @@ function copyId() {
 }
 
 .tlstep.done .tldot {
-  background: oklch(55% 0.15 150deg);
-  color: #fff;
+  background: var(--success-dot);
+  color: var(--warm-50);
 }
 
 .tlstep.err .tldot {
-  background: oklch(58% 0.2 25deg);
-  color: #fff;
+  background: var(--danger-500);
+  color: var(--warm-50);
 }
 
 .tllbl {
@@ -351,7 +351,7 @@ function copyId() {
   border-radius: 12px;
   background: var(--danger-50);
   border: 1px solid var(--danger-border);
-  color: oklch(45% 0.16 25deg);
+  color: var(--danger-800);
   font-size: 13px;
   line-height: 1.45;
 }
@@ -395,7 +395,7 @@ function copyId() {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  background: #fff;
+  background: var(--warm-50);
   padding: 6px;
   border-radius: 12px;
 }

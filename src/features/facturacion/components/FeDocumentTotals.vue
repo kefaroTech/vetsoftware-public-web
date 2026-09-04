@@ -83,7 +83,7 @@ const hasReten = computed(
 }
 
 .tot-row.reten {
-  color: oklch(50% 0.16 25deg);
+  color: var(--danger-600);
 }
 
 .tot-row.net {

@@ -75,8 +75,8 @@ function onBlur() {
   font-family: inherit;
   font-size: 14px;
   color: var(--pub-ink-900);
-  background: #fff;
-  border: 1px solid var(--pub-line-control);
+  background: var(--pub-surface);
+  border: 1px solid var(--pub-ame-600);
   border-radius: 8px;
   cursor: pointer;
   outline: none;
@@ -85,22 +85,22 @@ function onBlur() {
     box-shadow 0.15s;
 }
 
-/* `--pub-ink-300` mide 2,55:1 sobre blanco. El placeholder de este select NO es
-   decorativo: en los tres selects de la cascada geográfica dice «Cargando…»
-   mientras baja el catálogo, y ese es el único canal que informa de la espera. */
+/* El marcador de posición de este select no es decorativo: en la cascada
+   geográfica dice «Cargando…» mientras baja el catálogo, y es el único canal
+   que informa de la espera. Necesita contraste de texto, no de marcador. */
 .pub-select select.is-placeholder {
   color: var(--pub-ink-500);
 }
 
 .pub-select select:disabled {
-  background: #faf8fc;
+  background: var(--pub-tint-mute);
   cursor: not-allowed;
   opacity: 0.6;
 }
 
 .pub-select.is-focused select {
   border-color: var(--pub-ame-500);
-  box-shadow: 0 0 0 3px rgb(168 85 247 / 14%);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--pub-ame-500) 14%, transparent);
 }
 
 .pub-select.is-invalid select {
@@ -108,7 +108,7 @@ function onBlur() {
 }
 
 .pub-select.is-invalid.is-focused select {
-  box-shadow: 0 0 0 3px rgb(185 28 28 / 12%);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--pub-err-tx-2) 12%, transparent);
 }
 
 .pub-select-tail {
@@ -125,7 +125,10 @@ function onBlur() {
 .pub-select-spin {
   width: 14px;
   height: 14px;
-  border: 2px solid #e9d5ff;
+
+  /* La pista del anillo es el contorno de un indicador de estado, no un
+     adorno: le aplica el 3:1 de §1.4.11. */
+  border: 2px solid var(--pub-ame-500);
   border-top-color: var(--pub-ame-700);
   border-radius: 50%;
   display: block;

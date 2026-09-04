@@ -80,20 +80,20 @@ export const STATUS_META: Record<
 > = {
   ESTABLE: {
     label: 'Estable',
-    bg: 'oklch(94% 0.06 150)',
-    fg: 'oklch(40% 0.13 150)',
-    dot: 'oklch(55% 0.15 150)',
+    bg: 'var(--success-bg)',
+    fg: 'var(--success-fg)',
+    dot: 'var(--success-dot)',
   },
   OBSERVACION: {
     label: 'En observación',
-    bg: 'oklch(94% 0.07 80)',
-    fg: 'oklch(45% 0.13 70)',
-    dot: 'oklch(65% 0.15 75)',
+    bg: 'var(--warning-50)',
+    fg: 'var(--warning-900)',
+    dot: 'var(--warning-border)',
   },
   CRITICO: {
     label: 'Crítico',
-    bg: 'oklch(93% 0.06 25)',
-    fg: 'oklch(48% 0.18 25)',
-    dot: 'oklch(60% 0.18 25)',
+    bg: 'var(--danger-150)',
+    fg: 'var(--danger-700)',
+    dot: 'var(--danger-border)',
   },
 }

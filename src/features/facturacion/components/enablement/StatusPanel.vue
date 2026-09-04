@@ -118,7 +118,10 @@ function alertText(
         class="checkrow ds-hover-accent"
         @click="emit('openWizard', r.step)"
       >
-        <div class="check-ic" :class="r.ok ? 'ok' : r.attention ? 'att' : 'pend'">
+        <div
+          class="check-ic"
+          :class="r.ok ? 'ds-tone--compras-ok' : r.attention ? 'ds-tone--warning' : 'pend'"
+        >
           <Check v-if="r.ok" :size="16" :stroke-width="2.4" />
           <Bell v-else-if="r.attention" :size="15" :stroke-width="1.9" />
           <component :is="r.icon" v-else :size="15" :stroke-width="1.8" />
@@ -126,7 +129,10 @@ function alertText(
         <div class="ds-flex-fill">
           <div class="check-title ds-flex-row ds-strong">
             {{ r.title }}
-            <span class="reqbadge" :class="r.ok ? 'ok' : r.attention ? 'att' : 'ds-tone--neutral'">
+            <span
+              class="reqbadge"
+              :class="r.ok ? 'ok' : r.attention ? 'ds-tone--warning' : 'ds-tone--neutral'"
+            >
               {{ r.ok ? 'Listo' : r.attention ? 'Atención' : 'Pendiente' }}
             </span>
           </div>
@@ -138,7 +144,7 @@ function alertText(
       </button>
 
       <button type="button" class="checkrow ds-hover-accent" @click="emit('openRetenciones')">
-        <div class="check-ic" :class="withholding ? 'ok' : 'opt'">
+        <div class="check-ic" :class="withholding ? 'ds-tone--compras-ok' : 'opt'">
           <Check v-if="withholding" :size="16" :stroke-width="2.4" />
           <Receipt v-else :size="15" :stroke-width="1.8" />
         </div>
@@ -173,8 +179,8 @@ function alertText(
 }
 
 .readycard.ready {
-  background: linear-gradient(135deg, oklch(95% 0.05 150deg), var(--warm-50));
-  border-color: oklch(80% 0.09 150deg);
+  background: linear-gradient(135deg, var(--success-50), var(--warm-50));
+  border-color: var(--compras-ok-bg);
 }
 
 .readycard-ic {
@@ -188,9 +194,10 @@ function alertText(
   flex-shrink: 0;
 }
 
+/* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- `.ds-tone--compras-ok` no se puede colgar del template: `.readycard-ic` ya declara `background`/`color` en su regla base y, al ser `scoped` (0,2,0), gana a la clase global (0,1,0); el tono quedaría sin pintar. */
 .readycard.ready .readycard-ic {
-  background: oklch(92% 0.08 150deg);
-  color: oklch(40% 0.13 150deg);
+  background: var(--compras-ok-bg);
+  color: var(--compras-ok-fg);
 }
 
 .readycard-title {
@@ -209,10 +216,10 @@ function alertText(
   gap: 10px;
   padding: 11px 16px;
   border-radius: 12px;
-  background: oklch(97% 0.03 80deg);
-  border: 1px solid oklch(88% 0.06 80deg);
+  background: var(--warning-50);
+  border: 1px solid var(--warning-200);
   font-size: 12.5px;
-  color: oklch(40% 0.1 70deg);
+  color: var(--warning-900);
 }
 
 .alertrow > span {
@@ -222,7 +229,7 @@ function alertText(
 .alertcta {
   background: transparent;
   border: none;
-  color: oklch(45% 0.13 70deg);
+  color: var(--warning-900);
   font-weight: 600;
   font-size: 12.5px;
   cursor: pointer;
@@ -259,19 +266,9 @@ function alertText(
   flex-shrink: 0;
 }
 
-.check-ic.ok {
-  background: oklch(92% 0.08 150deg);
-  color: oklch(40% 0.13 150deg);
-}
-
 .check-ic.pend {
   background: var(--warm-150, var(--warm-100));
   color: var(--warm-600);
-}
-
-.check-ic.att {
-  background: oklch(94% 0.07 80deg);
-  color: oklch(45% 0.13 70deg);
 }
 
 .check-ic.opt {
@@ -292,12 +289,7 @@ function alertText(
 
 .reqbadge.ok {
   background: var(--success-50);
-  color: oklch(40% 0.13 150deg);
-}
-
-.reqbadge.att {
-  background: oklch(94% 0.07 80deg);
-  color: oklch(45% 0.13 70deg);
+  color: var(--compras-ok-fg);
 }
 
 .opt-tag {

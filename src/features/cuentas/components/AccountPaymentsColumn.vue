@@ -131,11 +131,11 @@ const store = useCuentas()
   display: block;
   margin-top: 3px;
   font-size: 11.5px;
-  color: oklch(48% 0.16 25deg);
+  color: var(--danger-700);
 }
 
 .pago-banned {
-  color: oklch(55% 0.16 25deg);
+  color: var(--danger-500);
   flex-shrink: 0;
 }
 

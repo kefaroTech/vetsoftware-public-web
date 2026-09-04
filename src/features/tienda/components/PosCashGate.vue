@@ -93,7 +93,7 @@ const emit = defineEmits<{ retry: []; goToCash: []; useCashBranch: [] }>()
   border: 1px solid var(--warm-200);
   border-radius: 18px;
   padding: 32px;
-  background: linear-gradient(145deg, var(--warm-50), var(--amatista-50, #f7f1fb));
+  background: linear-gradient(145deg, var(--warm-50), var(--amatista-50));
 }
 
 .cash-gate::before {
@@ -120,10 +120,10 @@ const emit = defineEmits<{ retry: []; goToCash: []; useCashBranch: [] }>()
   align-items: center;
   text-align: center;
   padding: 38px 34px;
-  border: 1px solid color-mix(in srgb, var(--amatista-300, #c9a9df) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--amatista-300) 55%, transparent);
   border-radius: 18px;
   background: color-mix(in srgb, var(--warm-50) 94%, transparent);
-  box-shadow: 0 22px 55px -34px rgb(40 24 55 / 45%);
+  box-shadow: var(--shadow-modal);
   backdrop-filter: blur(8px);
 }
 
@@ -135,14 +135,14 @@ const emit = defineEmits<{ retry: []; goToCash: []; useCashBranch: [] }>()
   margin-bottom: 18px;
   border-radius: 18px;
   color: var(--amatista-700);
-  background: var(--amatista-100, #efe6f7);
-  box-shadow: inset 0 0 0 1px var(--amatista-200, #ddc9eb);
+  background: var(--amatista-100);
+  box-shadow: inset 0 0 0 1px var(--amatista-200);
 }
 
 .cash-lock-icon.error {
   color: var(--danger-700);
-  background: oklch(94% 0.05 25deg);
-  box-shadow: inset 0 0 0 1px oklch(84% 0.1 25deg);
+  background: var(--danger-150);
+  box-shadow: inset 0 0 0 1px var(--danger-300);
 }
 
 /* El rótulo de acento de marca es `.ds-kicker-accent ds-kicker-accent--wide`
@@ -174,12 +174,12 @@ const emit = defineEmits<{ retry: []; goToCash: []; useCashBranch: [] }>()
   border-radius: 10px;
   padding: 11px 18px;
   background: var(--amatista-700);
-  color: #fff;
+  color: var(--warm-50);
   font-family: inherit;
   font-size: 13.5px;
   font-weight: 650;
   cursor: pointer;
-  box-shadow: 0 8px 20px -12px var(--amatista-900, #3e1d61);
+  box-shadow: 0 8px 20px -12px var(--amatista-900);
 }
 
 .cash-gate-btn:hover {

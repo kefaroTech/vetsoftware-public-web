@@ -319,14 +319,14 @@ async function remove(id: number) {
   padding: 10px 12px;
   font-size: 12.5px;
   border-radius: 9px;
-  background: oklch(97% 0.02 25deg);
+  background: var(--danger-50);
   color: var(--danger-700);
-  border: 1px solid oklch(85% 0.06 25deg);
+  border: 1px solid var(--danger-300);
   margin-bottom: 12px;
 }
 
 .wp-form {
-  background: white;
+  background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 12px;
   padding: 16px;
@@ -431,8 +431,8 @@ async function remove(id: number) {
 }
 
 .src-hospitalization {
-  background: oklch(93% 0.05 250deg);
-  color: oklch(45% 0.15 250deg);
+  background: var(--navy-100, var(--amatista-50));
+  color: var(--navy-700, var(--amatista-600));
 }
 
 .wp-del {
@@ -447,6 +447,6 @@ async function remove(id: number) {
 
 .wp-del:hover {
   color: var(--danger-500);
-  background: oklch(96% 0.02 25deg);
+  background: var(--danger-50);
 }
 </style>

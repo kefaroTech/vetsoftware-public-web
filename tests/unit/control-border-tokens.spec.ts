@@ -77,7 +77,19 @@ const ALLOWLIST: readonly { file: string; selector: string; reason: string }[] =
     file: 'src/features/dashboard/components/home/CtaPrimary.vue',
     selector: '.btn-ghost',
     reason:
-      'Borde translúcido sobre el gradiente de marca del hero: ningún escalón de la rampa sirve porque el color efectivo es el del píxel compuesto, no el declarado. Compuesto el alfa en sRGB lineal en los dos extremos del gradiente y contra las dos caras (el gradiente por fuera, el relleno translúcido del botón por dentro), `oklch(90% 0.06 var(--hue) / 70%)` mide 3,35:1 en el peor caso —stop claro `oklch(45% 0.18 var(--hue))`, `:hover`, cara interior contra el relleno— y 6,10:1 en el mejor. Medido con `tests/helpers/wcag-contrast.ts` (cuantización a 8 bits).',
+      'Borde sobre el gradiente de marca del hero, no sobre una superficie del sistema: la lista blanca está calibrada contra `--warm-50` y aquí el fondo es indigo→violet. `--amatista-200` mide 4,36:1 contra la parada clara del gradiente (`#4F46E5`) y 4,93:1 contra la oscura (`#6D28D9`), las dos por encima del 3:1 de §1.4.11. Opaco sobre opaco: sin alfa que componer, así que el número no depende de si se compone en gamma o en lineal (public-web#334).',
+  },
+  {
+    file: 'src/features/dashboard/components/home/CtaPrimary.vue',
+    selector: '.btn-ghost:hover',
+    reason:
+      'Mismo fondo de gradiente que `.btn-ghost`. `--warm-50` es casi blanco y por eso está fuera de la lista blanca, que mide contra superficie clara; aquí la superficie es el gradiente y mide 6,12:1 contra la parada clara y 6,91:1 contra la oscura (§1.4.11). Sigue siendo un token de la rampa neutra, no un color a mano.',
+  },
+  {
+    file: 'src/features/dashboard/components/home/CtaPrimary.vue',
+    selector: '.btn-primary:focus-visible,\n.btn-ghost:focus-visible',
+    reason:
+      'El anillo de foco de los dos CTA va sobre el gradiente de marca y tiene que ser claro y opaco para verse, igual que `.pub-focus-ring--on-accent` en la zona pública: `--warm-50` mide 6,12:1 y 6,91:1 contra las dos paradas (§1.4.11 y §2.4.7). Un escalón de la lista blanca —calibrada contra superficie clara— sería el error aquí, no la corrección.',
   },
   {
     file: 'src/assets/styles/public-auth.css',

@@ -117,7 +117,7 @@ const emit = defineEmits<{ close: []; retry: [session: CashSessionView] }>()
 }
 
 .cash-detail-state.error {
-  color: #b4453a;
+  color: var(--danger-fg);
 }
 
 .cash-detail-state p {

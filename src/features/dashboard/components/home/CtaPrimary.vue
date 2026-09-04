@@ -58,13 +58,13 @@ function goHistorial() {
 .cta-primary {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, oklch(45% 0.18 var(--hue)), oklch(38% 0.18 295deg));
-  color: white;
+  background: var(--gradient-primary);
+  color: var(--warm-50);
   border-radius: 16px;
   padding: 28px 30px;
   box-shadow:
-    0 1px 2px rgb(50 20 80 / 8%),
-    0 8px 24px -8px oklch(40% 0.18 var(--hue) / 50%);
+    var(--shadow-xs),
+    0 8px 24px -8px color-mix(in oklch, var(--amatista-700) 50%, transparent);
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease;
@@ -73,8 +73,8 @@ function goHistorial() {
 .cta-primary:hover {
   transform: translateY(-1px);
   box-shadow:
-    0 1px 2px rgb(50 20 80 / 10%),
-    0 12px 28px -8px oklch(40% 0.18 var(--hue) / 55%);
+    var(--shadow-xs),
+    0 12px 28px -8px color-mix(in oklch, var(--amatista-700) 55%, transparent);
 }
 
 .decor {
@@ -83,7 +83,11 @@ function goHistorial() {
   right: -60px;
   width: 220px;
   height: 220px;
-  background: radial-gradient(circle, oklch(70% 0.18 var(--hue) / 40%), transparent 60%);
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--amatista-400) 40%, transparent),
+    transparent 60%
+  );
   pointer-events: none;
 }
 
@@ -125,19 +129,22 @@ function goHistorial() {
 .btn-ghost {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 9px 16px;
-  border-radius: 8px;
+  gap: var(--space-6);
+  padding: var(--space-9) var(--space-16);
+  border-radius: var(--radius-md);
   font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
   cursor: pointer;
   border: 1px solid transparent;
-  transition: filter 0.12s ease;
+  transition:
+    filter var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .btn-primary {
-  background: white;
+  background: var(--warm-50);
   color: var(--amatista-700);
 }
 
@@ -145,23 +152,33 @@ function goHistorial() {
   filter: brightness(0.96);
 }
 
+/* Sin relleno a propósito. El fondo de este botón no es una superficie del
+   sistema sino el gradiente de marca, así que un velo translúcido metería un
+   píxel compuesto bajo el texto y bajo el borde, y §1.4.3 y §1.4.11 de WCAG 2.2
+   miden ese compuesto y no el color declarado. Opaco sobre opaco, el contraste
+   deja de depender de dónde caiga el degradado bajo el botón. */
 .btn-ghost {
-  background: oklch(60% 0.1 var(--hue) / 25%);
-  color: white;
-
-  /* A11Y-09 · WCAG 2.2 §1.4.11: borde translúcido sobre el gradiente de marca,
-     así que lo que hay que medir es el píxel COMPUESTO —el alfa resuelto en
-     sRGB lineal sobre el relleno del botón, que a su vez es translúcido sobre
-     el gradiente—, no el color declarado. Ningún escalón de la rampa sirve
-     aquí: el fondo no es una superficie del sistema. Medido en los dos extremos
-     del gradiente y contra las dos caras (el gradiente por fuera, el relleno
-     por dentro), el peor de los cuatro casos —stop claro
-     `oklch(45% 0.18 var(--hue))`, `:hover`, cara interior— da 3,35:1 y el mejor
-     6,10:1. Al 30 % ese peor caso medía 1,65:1. */
-  border-color: oklch(90% 0.06 var(--hue) / 70%);
+  background: transparent;
+  color: var(--warm-50);
+  border-color: var(--amatista-200);
 }
 
+/* El realce del hover va por FUERA del botón, para no reintroducir un velo
+   bajo el texto. */
 .btn-ghost:hover {
-  background: oklch(60% 0.1 var(--hue) / 35%);
+  border-color: var(--warm-50);
+  box-shadow: 0 0 0 3px var(--overlay-light-10);
+}
+
+/* Anillo propio y no `var(--ring)`: la banda exterior de ese token es
+   `--amatista-500`, que sobre el gradiente de marca queda casi al mismo tono
+   que la tarjeta y se pierde. Sobre superficie de acento el indicador tiene que
+   ser claro y opaco, igual que hace `.pub-focus-ring--on-accent` en la zona
+   pública. Va en `outline` y no en `box-shadow` para que no compita con el
+   realce del `:hover`, que sí usa esa propiedad. */
+.btn-primary:focus-visible,
+.btn-ghost:focus-visible {
+  outline: 2px solid var(--warm-50);
+  outline-offset: 2px;
 }
 </style>

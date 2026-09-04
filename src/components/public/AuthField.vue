@@ -133,8 +133,6 @@ provide(FieldKey, field)
   display: contents;
 }
 
-/* `--pub-err-tx` sobre `--pub-err-bg` mide 4,41:1 y falla §1.4.3 por 0,09.
-   `--pub-err-tx-2` ya estaba declarado y mide 5,91:1. */
 .pub-field-error {
   margin: 0;
   font-size: 11.5px;
@@ -145,10 +143,9 @@ provide(FieldKey, field)
   gap: 5px;
 }
 
-/* `--pub-ink-400` mide 3,94:1 sobre blanco y falla §1.4.3 para texto normal.
-   La pista PORTA información (formato del documento, para qué sirve el correo
-   fiscal) y ahora además la anuncia `aria-describedby`: no puede quedarse por
-   debajo del umbral. `--pub-ink-500` mide 5,96:1. */
+/* La pista PORTA información (formato del documento, para qué sirve el correo
+   fiscal) y la anuncia `aria-describedby`: no es texto decorativo, así que le
+   aplica el 4,5:1 de §1.4.3 y no puede ir en `--pub-ink-400`. */
 .pub-field-hint {
   margin: 0;
   font-size: 11.5px;

@@ -113,7 +113,7 @@ async function downloadFile(att: LaboratoryTestFileResponse) {
 /* El par color+tamaño lo ponen `.ds-meta` + `--sm`; `.att-state.error` (0,2,0)
    le sigue ganando el color al fallar la carga. */
 .att-state.error {
-  color: oklch(45% 0.18 25deg);
+  color: var(--danger-800);
 }
 
 /* Único añadido sobre `.ds-list-reset` + `.ds-stack`: el gap de 6px, más

@@ -59,10 +59,8 @@ watch(tab, (t) => {
   if (t === 'cxp') void loadAging()
 })
 
-/* El verde de "acción positiva" (`.ds-tone--compras-ok`, primitives.css) va
-   como clase aparte de `paid`: la primera decide el tono, la segunda sigue
-   siendo el nombre de estado que usa `.pill.paid` para lo que no comparte con
-   el resto (ver más abajo). */
+/* El tono va en una clase aparte del nombre de estado: `partial` y `cancelled`
+   no tienen primitiva y se siguen pintando desde el CSS local. */
 function statusClass(s: SupplierInvoiceStatus): (string | false)[] {
   return [
     s === 'PAID'
@@ -73,6 +71,7 @@ function statusClass(s: SupplierInvoiceStatus): (string | false)[] {
           ? 'partial'
           : 'pending',
     s === 'PAID' && 'ds-tone--compras-ok',
+    s === 'PENDING' && 'ds-tone--warning',
   ]
 }
 
@@ -402,18 +401,10 @@ onMounted(refresh)
   font-weight: 600;
 }
 
-.pill.pending {
-  background: oklch(93% 0.07 75deg);
-  color: oklch(45% 0.12 75deg);
-}
-
 .pill.partial {
   background: oklch(92% 0.07 250deg);
   color: oklch(45% 0.14 250deg);
 }
-
-/* El verde de "pagada" lo pone `.ds-tone--compras-ok` (primitives.css),
-   añadida desde `statusClass` — ya no queda CSS local para `.pill.paid`. */
 
 .pill.cancelled {
   background: var(--warm-100);

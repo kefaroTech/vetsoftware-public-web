@@ -62,15 +62,15 @@ export const STATUS_META: Record<DianStatus, { label: string; tone: StatusTone }
   },
   VALIDADO: {
     label: 'Validado',
-    tone: { bg: 'oklch(94% 0.06 150)', fg: 'oklch(40% 0.13 150)', dot: 'oklch(55% 0.15 150)' },
+    tone: { bg: 'var(--success-50)', fg: 'var(--compras-ok-fg)', dot: 'var(--success-dot)' },
   },
   RECHAZADO: {
     label: 'Rechazado',
-    tone: { bg: 'oklch(94% 0.06 25)', fg: 'oklch(48% 0.19 25)', dot: 'oklch(58% 0.20 25)' },
+    tone: { bg: 'var(--danger-150)', fg: 'var(--danger-700)', dot: 'var(--danger-500)' },
   },
   CONTINGENCIA: {
     label: 'En contingencia',
-    tone: { bg: 'oklch(94% 0.07 80)', fg: 'oklch(45% 0.13 70)', dot: 'oklch(65% 0.14 75)' },
+    tone: { bg: 'var(--warning-50)', fg: 'var(--warning-900)', dot: 'var(--warning-border)' },
   },
   NO_ELECTRONICO: {
     label: 'No electrónico',

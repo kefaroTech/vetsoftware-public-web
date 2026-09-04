@@ -387,7 +387,7 @@ onUnmounted(() => {
   padding: 12px 18px;
   background: var(--danger-150);
   border-top: 1px solid var(--danger-border);
-  color: oklch(35% 0.15 25deg);
+  color: var(--danger-950);
 }
 
 .discard-extra {

@@ -360,8 +360,8 @@ const desborda = useScrollableRegion(scroller)
    de `.ds-icon-btn` es `--warm-450` (3,54:1) y este hover lo dejaba muy por
    debajo del 3:1 de WCAG 2.2 §1.4.11. */
 .ds-icon-btn.pause:hover {
-  background: oklch(96% 0.04 80deg);
-  color: oklch(45% 0.12 70deg);
+  background: var(--warning-50);
+  color: var(--warning-900);
   border-color: var(--warning-border);
 }
 

@@ -99,7 +99,7 @@ function saldoValue(acc: OpenAccountResponse): number {
    el hover lo apagaba. `--amatista-450` da 3,69:1. */
 .acct-card:hover {
   border-color: var(--amatista-450);
-  box-shadow: 0 4px 14px -8px rgb(20 15 30 / 18%);
+  box-shadow: var(--shadow-sm);
 }
 .acct-top {
   display: flex;
@@ -139,7 +139,7 @@ function saldoValue(acc: OpenAccountResponse): number {
   border-top: 1px dashed var(--warm-200);
 }
 .acct-totals .row.saldo strong {
-  color: oklch(45% 0.13 70deg);
+  color: var(--warning-900);
   font-size: 15px;
 }
 .acct-totals .row.saldo strong.zero {
