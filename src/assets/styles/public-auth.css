@@ -855,7 +855,7 @@
     padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
     background: var(--pub-surface);
     border-block-start: 1px solid var(--pub-line-strong);
-    box-shadow: 0 -8px 22px -14px rgb(70 45 190 / 35%);
+    box-shadow: 0 -8px 22px -14px color-mix(in oklch, var(--amatista-700) 35%, transparent);
   }
 
   .pub-barra-cifra {
