@@ -161,7 +161,7 @@ const activeModel = computed({
 }
 
 .name-input::placeholder {
-  color: var(--warm-400);
+  color: var(--text-placeholder);
 }
 
 .name-input:read-only {
