@@ -288,6 +288,7 @@ La convergencia no es gratis. Lo que cambia respecto a hoy, medido con
 | Modales de acciones       | `opacity` deshabilitado 0.55 → 0.5 | Un solo valor de deshabilitado                                            |
 | Diálogo de roles          | Radio 7 → 9px                      | Un solo radio de control                                                  |
 | **Primario de `employees`** | **Hover: oscurecía, ahora aclara** | Usaba `background: --amatista-800` (oscurecer) contra el `filter: brightness(1.05)` (aclarar) del resto de la app. Es el único cambio de *comportamiento*, no de estética, de toda la migración. |
+| **Ghost/outline (6 patrones)** | **Borde `--warm-200` → `--warm-450`** | A11Y-09 · WCAG 2.2 §1.4.11: `--warm-200` medía 1,23:1 sobre `--warm-50` y 1,16:1 sobre `--warm-100`; `--warm-450` da 3,54:1 y 3,33:1. Único delta que **aleja** la primitiva del original en vez de acercarla, porque el original era inaccesible y converger hacia él sería el defecto. Suma 45 diferencias: es la subida del techo de `ds:audit` de 320 a 365. |
 
 El del primario **corrige** una desalineación existente: hoy un par
 "Cancelar / Guardar" mide 40px y 38px de alto respectivamente.
