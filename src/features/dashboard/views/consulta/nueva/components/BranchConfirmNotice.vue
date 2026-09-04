@@ -39,13 +39,13 @@ defineProps<{
   gap: 12px;
   padding: 16px 18px;
   border-radius: 11px;
-  background: oklch(96% 0.05 80deg);
+  background: var(--warning-50);
   border: 1px solid var(--warning-border);
 }
 
 .bc-ic {
   flex-shrink: 0;
-  color: oklch(55% 0.14 60deg);
+  color: var(--warning-border);
   margin-top: 2px;
 }
 
@@ -53,7 +53,7 @@ defineProps<{
   margin: 0 0 4px;
   font-size: 14px;
   font-weight: 600;
-  color: oklch(38% 0.13 60deg);
+  color: var(--warning-900);
 }
 
 .bc-text {

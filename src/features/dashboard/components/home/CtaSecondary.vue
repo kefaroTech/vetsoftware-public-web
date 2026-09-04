@@ -35,7 +35,7 @@ import { History, ArrowRight } from 'lucide-vue-next'
 
 .cta-secondary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px -10px rgb(0 0 0 / 12%);
+  box-shadow: 0 6px 18px -10px color-mix(in oklch, var(--warm-900) 12%, transparent);
 }
 
 /* Único añadido sobre `.ds-flex-row--12`: el hueco hacia la descripción. */

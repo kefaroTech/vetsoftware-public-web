@@ -154,7 +154,7 @@ function pick(action: QuickAction) {
 
 .ic.filled {
   background: var(--amatista-700);
-  color: white;
+  color: var(--warm-50);
 }
 
 .count-badge {
@@ -166,7 +166,7 @@ function pick(action: QuickAction) {
   padding: 0 6px;
   border-radius: 10px;
   background: var(--amatista-700);
-  color: white;
+  color: var(--warm-50);
   font-size: 11px;
   font-weight: 600;
   display: grid;

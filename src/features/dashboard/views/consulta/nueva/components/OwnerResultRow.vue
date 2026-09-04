@@ -61,8 +61,8 @@ defineEmits<{ select: [] }>()
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: linear-gradient(135deg, oklch(78% 0.14 30deg), oklch(65% 0.16 350deg));
-  color: white;
+  background: linear-gradient(135deg, var(--amatista-600), var(--amatista-800));
+  color: var(--warm-50);
   font-weight: 600;
   font-size: 13px;
   display: grid;

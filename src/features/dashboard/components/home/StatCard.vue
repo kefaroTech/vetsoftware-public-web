@@ -41,7 +41,7 @@ defineProps<{
 }
 
 .sub-ok {
-  color: oklch(50% 0.13 145deg);
+  color: var(--success-fg);
 }
 
 .sub-amatista {

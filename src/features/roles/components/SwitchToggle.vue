@@ -61,8 +61,8 @@ function toggle() {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+  background: var(--warm-50);
+  box-shadow: var(--shadow-xs);
   transform: translateX(0);
   transition: transform 0.15s ease;
 }

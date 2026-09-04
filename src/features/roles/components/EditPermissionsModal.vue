@@ -337,7 +337,7 @@ async function save() {
 .overlay {
   position: fixed;
   inset: 0;
-  background: oklch(15% 0.05 var(--hue) / 45%);
+  background: color-mix(in oklch, var(--amatista-900) 45%, transparent);
   backdrop-filter: blur(3px);
   display: grid;
   place-items: center;
@@ -362,7 +362,7 @@ async function save() {
   max-height: calc(100vh - 48px);
   background: var(--warm-50);
   border-radius: 16px;
-  box-shadow: 0 30px 80px oklch(15% 0.05 var(--hue) / 35%);
+  box-shadow: 0 30px 80px color-mix(in oklch, var(--amatista-900) 35%, transparent);
   overflow: hidden;
 }
 
@@ -411,9 +411,9 @@ async function save() {
 
 .error {
   font-size: 12.5px;
-  color: oklch(45% 0.18 25deg);
-  background: oklch(96% 0.04 25deg);
-  border: 1px solid oklch(85% 0.06 25deg);
+  color: var(--danger-800);
+  background: var(--danger-50);
+  border: 1px solid var(--danger-300);
   padding: 4px 10px;
   border-radius: 7px;
 }

@@ -151,7 +151,7 @@ function isHighlighted(text: string): boolean {
 }
 
 .name.hl {
-  background: oklch(96% 0.08 80deg);
+  background: var(--warning-50);
   border-radius: 3px;
   padding: 0 3px;
   margin: 0 -3px;
@@ -215,7 +215,7 @@ function isHighlighted(text: string): boolean {
 }
 
 .perm-name.hl {
-  background: oklch(96% 0.08 80deg);
+  background: var(--warning-50);
   border-radius: 3px;
   padding: 0 3px;
   margin: 0 -3px;

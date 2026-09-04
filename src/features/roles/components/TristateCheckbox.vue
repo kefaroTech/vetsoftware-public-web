@@ -69,7 +69,7 @@ function onClick() {
 .mark {
   font-size: 10px;
   line-height: 1;
-  color: #fff;
+  color: var(--warm-50);
   font-weight: 700;
 }
 

@@ -201,7 +201,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .drawer-root {
   position: fixed;
   inset: 0;
-  background: oklch(20% 0.05 var(--hue) / 35%);
+  background: color-mix(in oklch, var(--amatista-900) 35%, transparent);
   backdrop-filter: blur(2px);
   z-index: var(--z-drawer);
   font-family: var(--font-sans);
@@ -216,7 +216,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   max-width: 100vw;
   background: var(--warm-50);
   border-left: 1px solid var(--warm-200);
-  box-shadow: -20px 0 60px -20px oklch(20% 0.05 var(--hue) / 25%);
+  box-shadow: -20px 0 60px -20px color-mix(in oklch, var(--amatista-900) 25%, transparent);
 }
 
 .drawer-enter-active,
@@ -334,22 +334,22 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
    1,20:1 con el `--amatista-100` del hover — el botón no tenía frontera.
    `--amatista-500` da 4,17:1 y 3,80:1. */
 .accent {
-  border-color: var(--amatista-500, oklch(58% 0.18 300deg));
+  border-color: var(--amatista-500);
 }
 
 .accent:hover:not(:disabled) {
-  background: var(--amatista-100, oklch(94% 0.04 300deg));
+  background: var(--amatista-100);
 }
 
 .danger {
   font-weight: 500;
-  background: oklch(94% 0.05 25deg);
+  background: var(--danger-150);
   color: var(--danger-700);
   border-color: var(--danger-700);
 }
 
 .danger:hover:not(:disabled) {
-  background: oklch(91% 0.07 25deg);
+  background: var(--danger-200);
 }
 
 /* La opacidad la pone `.ds-is-disabled--60` desde el template; el cursor no

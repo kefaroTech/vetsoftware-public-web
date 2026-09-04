@@ -197,9 +197,9 @@ const hasError = computed(() => roles.error.value ?? permissionsCatalog.error.va
 }
 
 .banner-error {
-  background: oklch(96% 0.04 25deg);
-  border: 1px solid oklch(85% 0.06 25deg);
-  color: oklch(40% 0.16 25deg);
+  background: var(--danger-50);
+  border: 1px solid var(--danger-300);
+  color: var(--danger-900);
   border-radius: 9px;
   padding: 10px 14px;
   font-size: 13px;

@@ -32,7 +32,7 @@ const initial = computed(() => props.legalName.trim()[0]?.toUpperCase() || 'E')
         <span v-else-if="idDisplay" class="tag mono tag-neutral">{{ idDisplay }}</span>
         <span v-if="taxRegimeLabel" class="tag ds-tone--accent">{{ taxRegimeLabel }}</span>
         <span v-if="personType" class="tag tag-neutral">{{ personType }}</span>
-        <span v-if="profileMissing" class="tag warn">Perfil fiscal sin configurar</span>
+        <span v-if="profileMissing" class="tag ds-tone--warning">Perfil fiscal sin configurar</span>
       </div>
     </div>
     <div v-if="createdDate" class="herometa ds-stack">
@@ -62,11 +62,11 @@ const initial = computed(() => props.legalName.trim()[0]?.toUpperCase() || 'E')
   display: grid;
   place-items: center;
   background: linear-gradient(135deg, var(--amatista-500), var(--amatista-700));
-  color: white;
+  color: var(--warm-50);
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 30px;
-  box-shadow: 0 6px 16px -6px oklch(45% 0.18 var(--hue) / 50%);
+  box-shadow: var(--shadow-primary);
 }
 
 .heroname {
@@ -103,11 +103,6 @@ const initial = computed(() => props.legalName.trim()[0]?.toUpperCase() || 'E')
 .tag-neutral {
   background: var(--warm-150);
   color: var(--warm-700);
-}
-
-.tag.warn {
-  background: var(--warning-50);
-  color: oklch(45% 0.13 80deg);
 }
 
 .herometa {

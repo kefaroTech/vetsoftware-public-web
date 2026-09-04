@@ -189,6 +189,6 @@ function handleEnter() {
 }
 
 .search-error {
-  color: oklch(45% 0.15 25deg);
+  color: var(--danger-800);
 }
 </style>

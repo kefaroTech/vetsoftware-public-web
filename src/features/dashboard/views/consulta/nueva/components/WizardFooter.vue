@@ -71,7 +71,7 @@ defineEmits<{ back: []; next: [] }>()
 }
 
 .next.success {
-  background: oklch(50% 0.15 145deg);
+  background: var(--success-dot);
 }
 
 .next:disabled {
