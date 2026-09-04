@@ -101,7 +101,7 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
 
 .card:hover {
   border-color: var(--warm-450);
-  box-shadow: 0 4px 14px -8px rgb(20 15 30 / 18%);
+  box-shadow: var(--shadow-sm);
 }
 
 .card.inactive {

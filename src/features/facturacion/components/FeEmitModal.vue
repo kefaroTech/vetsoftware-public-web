@@ -230,7 +230,7 @@ async function submit() {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  color: #fff;
+  color: var(--warm-50);
 }
 
 .acc-check-off {
@@ -284,7 +284,7 @@ async function submit() {
   border-style: solid;
   display: grid;
   place-items: center;
-  color: #fff;
+  color: var(--warm-50);
 }
 
 .toggle-box-off {
@@ -298,10 +298,10 @@ async function submit() {
   margin-top: 16px;
   padding: 11px 14px;
   border-radius: 10px;
-  background: oklch(97% 0.03 80deg);
-  border: 1px solid oklch(88% 0.06 80deg);
+  background: var(--warning-50);
+  border: 1px solid var(--warning-200);
   font-size: 12.5px;
-  color: oklch(40% 0.1 70deg);
+  color: var(--warning-900);
   line-height: 1.45;
 }
 

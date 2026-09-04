@@ -430,9 +430,10 @@ const notesCancellation = computed(() =>
 /* `--danger-border` (3,65:1) y no `oklch(75% 0.12 25deg)` (1,99:1): sobre el
    relleno rojo que el propio hover pinta, ese tono quedaba por debajo del 3:1
    de WCAG 2.2 §1.4.11 y por debajo del reposo `--warm-450` (3,54:1). */
+/* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- el cuerpo coincide con `.ds-btn--danger`, pero esa primitiva es el tono en REPOSO de un `.ds-btn`: aplicarla desde el template pintaría de rojo una transición que aquí sólo se tiñe al pasar el ratón, y arrastraría la base de `.ds-btn` sobre una fila propia con su relleno, su radio y su punto de estado. */
 .trans-btn.danger:hover {
   border-color: var(--danger-border);
-  background: oklch(96% 0.04 25deg);
+  background: var(--danger-50);
   color: var(--danger-700);
 }
 

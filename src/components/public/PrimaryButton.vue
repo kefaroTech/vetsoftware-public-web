@@ -31,8 +31,8 @@ const emit = defineEmits<(e: 'click') => void>()
   width: 100%;
   padding: 13px 16px;
   border-radius: 9px;
-  background: linear-gradient(180deg, #9333ea, #7e22ce);
-  color: #fff;
+  background: linear-gradient(180deg, var(--pub-ame-600), var(--pub-ame-700));
+  color: var(--pub-surface);
   border: none;
   cursor: pointer;
   font-family: inherit;
@@ -54,8 +54,12 @@ const emit = defineEmits<(e: 'click') => void>()
   box-shadow: var(--pub-btn-shadow-hover);
 }
 
+/* El botón está `:disabled` mientras carga y §1.4.3 exime a los controles
+   inactivos, pero aquí no se toma esa exención: el texto que lleva es
+   «Cargando…» y es el único canal que dice que el envío está en curso, así que
+   quien no lo lee vuelve a pulsar. */
 .pub-btn--loading {
-  background: #a78bce;
+  background: var(--pub-ame-600);
   box-shadow: none;
   cursor: wait;
 }
@@ -63,8 +67,8 @@ const emit = defineEmits<(e: 'click') => void>()
 .pub-btn-spin {
   width: 15px;
   height: 15px;
-  border: 2px solid rgb(255 255 255 / 40%);
-  border-top-color: #fff;
+  border: 2px solid color-mix(in oklch, var(--pub-surface) 40%, transparent);
+  border-top-color: var(--pub-surface);
   border-radius: 50%;
   display: block;
   animation: pub-spin 0.7s linear infinite;

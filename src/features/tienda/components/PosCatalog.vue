@@ -202,7 +202,7 @@ const emit = defineEmits<{
 .modetab.active {
   background: var(--warm-50);
   color: var(--amatista-700);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
+  box-shadow: var(--shadow-xs);
 }
 
 .cats {
@@ -233,7 +233,7 @@ const emit = defineEmits<{
 
 .cat.active {
   background: var(--amatista-700);
-  color: #fff;
+  color: var(--warm-50);
   border-color: var(--amatista-700);
   font-weight: 500;
 }
@@ -328,13 +328,13 @@ const emit = defineEmits<{
 }
 
 .pcard-stock.st-bajo {
-  background: oklch(94% 0.07 80deg);
-  color: oklch(45% 0.13 70deg);
+  background: var(--warning-50);
+  color: var(--warning-900);
 }
 
 .pcard-stock.st-agotado {
-  background: oklch(93% 0.06 25deg);
-  color: oklch(48% 0.19 25deg);
+  background: var(--danger-200);
+  color: var(--danger-700);
 }
 
 .pcard-svc {
@@ -356,8 +356,8 @@ const emit = defineEmits<{
   letter-spacing: 0.04em;
   padding: 2px 7px;
   border-radius: var(--radius-pill);
-  background: oklch(58% 0.18 25deg);
-  color: #fff;
+  background: var(--danger-500);
+  color: var(--warm-50);
 }
 
 @media (width <= 760px) {

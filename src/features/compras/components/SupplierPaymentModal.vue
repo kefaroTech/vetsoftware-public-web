@@ -146,7 +146,7 @@ async function submit() {
   margin-bottom: 16px;
   padding: 10px 14px;
   border-radius: 10px;
-  background: var(--amatista-50, #f3edfa);
+  background: var(--amatista-50);
   font-size: 14px;
   color: var(--warm-700);
 }

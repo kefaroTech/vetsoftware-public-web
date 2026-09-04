@@ -127,12 +127,12 @@ function go(n: number) {
 
 .wstep.cur .wstep-dot {
   background: var(--amatista-600);
-  color: #fff;
+  color: var(--warm-50);
 }
 
 .wstep.done .wstep-dot {
-  background: oklch(55% 0.15 150deg);
-  color: #fff;
+  background: var(--success-dot);
+  color: var(--warm-50);
 }
 
 .wstep-lbl {
@@ -153,6 +153,6 @@ function go(n: number) {
 }
 
 .wstep-bar.done {
-  background: oklch(70% 0.12 150deg);
+  background: var(--success-border);
 }
 </style>

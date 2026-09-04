@@ -29,14 +29,11 @@ import { irAAncla } from '../composables/anclaConFoco'
 </template>
 
 <style scoped>
-/* `#faf5ff` es el único tinte de esta caja sin token en `public-auth.css`, y no
-   se inventa uno aquí: crear paleta es una decisión del sistema de diseño, no de
-   un componente. */
 .land-cierre {
   padding: 52px 40px;
   border-radius: 20px;
   border: 1px solid var(--pub-tint-bd);
-  background: linear-gradient(160deg, #faf5ff, var(--pub-tint-100));
+  background: linear-gradient(160deg, var(--pub-tint-50), var(--pub-tint-100));
   text-align: center;
 }
 

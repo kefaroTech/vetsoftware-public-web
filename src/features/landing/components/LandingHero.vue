@@ -80,13 +80,26 @@ const CONFIANZA = [
   text-align: center;
 }
 
+/* El lockup se posa sobre `--brand-canvas` y no sobre el lienzo de la landing,
+   igual que `.pub-brand-lockup`: los PNG transparentes llevan ese lienzo quemado
+   en su antialiasing y sobre cualquier otro fondo el isotipo queda con un halo
+   lila alrededor. */
+.land-lockup {
+  display: inline-grid;
+  place-items: center;
+  padding: 18px 26px;
+  margin: 0 auto 22px;
+  border-radius: 20px;
+  background: var(--brand-canvas);
+}
+
 /* Los `width`/`height` del marcado siguen ahí aunque aquí se fije otro ancho:
    el navegador los usa para reservar la caja por relación de aspecto antes de
    la descarga, y sin ellos el titular salta en el primer pintado. */
 .land-lockup img {
   width: clamp(200px, 26vw, 320px);
   height: auto;
-  margin: 0 auto 22px;
+  display: block;
 }
 
 .land-h1 {

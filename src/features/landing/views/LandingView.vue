@@ -197,7 +197,7 @@ function empezarDeNuevo() {
   width: 100%;
   min-height: 100vh;
   overflow-x: hidden;
-  background: #fbf9fd;
+  background: var(--pub-tint-50);
   color: var(--pub-ink-900);
 }
 

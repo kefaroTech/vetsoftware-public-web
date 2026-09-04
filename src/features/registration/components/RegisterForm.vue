@@ -355,7 +355,7 @@ async function submit() {
 }
 
 .reg-card {
-  background: #fff;
+  background: var(--pub-surface);
   border-radius: 16px;
   border: 1px solid var(--pub-line);
   box-shadow: var(--pub-card-shadow);

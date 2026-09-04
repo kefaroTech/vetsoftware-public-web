@@ -215,6 +215,6 @@ const petOptions = computed(() => [
   background: var(--warm-50);
   color: var(--warm-900);
   border-color: var(--amatista-500);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
+  box-shadow: var(--shadow-xs);
 }
 </style>

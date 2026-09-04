@@ -76,7 +76,7 @@ const usuariosTexto = computed(
   gap: 12px;
   border: 1px solid var(--pub-ame-300);
   border-radius: 12px;
-  background: rgb(255 255 255 / 80%);
+  background: color-mix(in oklch, var(--pub-surface) 80%, transparent);
 }
 
 .land-resume-text {

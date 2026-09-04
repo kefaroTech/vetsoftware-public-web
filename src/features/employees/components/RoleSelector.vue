@@ -60,7 +60,7 @@ const currentId = computed(() => props.currentCode.trim().toLowerCase())
   font-size: 12px;
   color: var(--warm-500);
   background: var(--warning-50);
-  border: 1px solid oklch(85% 0.08 80deg);
+  border: 1px solid var(--warning-200);
   border-radius: 8px;
   padding: 8px 12px;
   margin-bottom: 14px;

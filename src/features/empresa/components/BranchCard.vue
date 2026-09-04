@@ -72,7 +72,7 @@ defineEmits<{
 
 .branchcard:hover {
   border-color: var(--amatista-450);
-  box-shadow: 0 6px 18px -12px oklch(45% 0.12 var(--hue) / 40%);
+  box-shadow: 0 6px 18px -12px color-mix(in oklch, var(--amatista-700) 40%, transparent);
 }
 
 .branchcard.inactive {
@@ -190,7 +190,7 @@ defineEmits<{
    `oklch(75% 0.12 25deg)` (1,95:1), que dejaba el hover por debajo del 3:1 de
    WCAG 2.2 §1.4.11 y del propio reposo `--warm-450` (3,54:1). */
 .act.toggle.danger:hover {
-  background: oklch(95% 0.04 25deg);
+  background: var(--danger-50);
   border-color: var(--danger-border);
   color: var(--danger-600);
 }

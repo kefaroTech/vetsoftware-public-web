@@ -95,7 +95,7 @@ const branchNames = computed(() => props.employee.branches.map((b) => b.name).jo
 }
 
 .row.zebra {
-  background: oklch(98% 0.005 60deg);
+  background: var(--warm-100);
 }
 
 .row:hover:not(.selected) {

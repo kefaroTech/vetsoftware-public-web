@@ -197,7 +197,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   background: var(--warm-50);
   border: 1px solid var(--warm-200);
   border-radius: 10px;
-  box-shadow: 0 14px 34px -10px rgb(20 15 30 / 28%);
+  box-shadow: 0 14px 34px -10px color-mix(in oklch, var(--warm-900) 28%, transparent);
   overflow: hidden auto;
   max-height: 260px;
   padding: 4px;
@@ -241,8 +241,8 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   height: 34px;
   border-radius: 50%;
   flex-shrink: 0;
-  background: linear-gradient(135deg, oklch(78% 0.14 30deg), oklch(65% 0.16 350deg));
-  color: white;
+  background: linear-gradient(135deg, var(--amatista-600), var(--amatista-800));
+  color: var(--warm-50);
   display: grid;
   place-items: center;
   font-size: 12px;

@@ -224,7 +224,7 @@ onMounted(() => {
         <div class="cards">
           <div class="rep-card ds-stack">
             <span>Validados</span
-            ><strong style="color: oklch(50% 0.15 150deg)">{{ recon.validados }}</strong>
+            ><strong style="color: var(--success-dot)">{{ recon.validados }}</strong>
           </div>
           <div class="rep-card ds-stack">
             <span>Pendientes</span
@@ -232,11 +232,11 @@ onMounted(() => {
           </div>
           <div class="rep-card ds-stack">
             <span>En contingencia</span
-            ><strong style="color: oklch(58% 0.14 75deg)">{{ recon.contingencia }}</strong>
+            ><strong style="color: var(--warning-border)">{{ recon.contingencia }}</strong>
           </div>
           <div class="rep-card ds-stack">
             <span>Rechazados</span
-            ><strong style="color: oklch(55% 0.2 25deg)">{{ recon.rechazados }}</strong>
+            ><strong style="color: var(--danger-500)">{{ recon.rechazados }}</strong>
           </div>
         </div>
 
@@ -329,7 +329,7 @@ onMounted(() => {
   border-radius: 10px;
   background: var(--danger-50);
   border: 1px solid var(--danger-border);
-  color: oklch(45% 0.16 25deg);
+  color: var(--danger-800);
   font-size: 13px;
 }
 

@@ -168,7 +168,7 @@ defineExpose({ reset })
   font-family: inherit;
   border: none;
   background: var(--gradient-primary);
-  color: white;
+  color: var(--warm-50);
   align-self: flex-start;
 }
 .add-btn:hover:not(:disabled) {

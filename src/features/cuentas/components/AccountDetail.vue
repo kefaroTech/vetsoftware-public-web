@@ -386,7 +386,7 @@ async function onChargeVoided() {
 }
 
 .sum-box.alert .sum-val {
-  color: oklch(45% 0.13 70deg);
+  color: var(--warning-900);
 }
 
 /* Columnas asimétricas a propósito (cargos 1.5fr / abonos 1fr). */

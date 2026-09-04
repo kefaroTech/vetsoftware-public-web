@@ -265,7 +265,7 @@ function reintentar() {
 .land-plans-ciclo :deep(.land-ciclo-opt.is-on) {
   background: var(--pub-surface);
   color: var(--pub-ink-900);
-  box-shadow: 0 1px 3px rgb(91 33 182 / 12%);
+  box-shadow: 0 1px 3px color-mix(in oklch, var(--amatista-700) 12%, transparent);
 }
 
 .land-plans-grid {

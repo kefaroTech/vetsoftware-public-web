@@ -87,7 +87,7 @@ function handleClick(disabled: boolean | undefined) {
 
 .crumb.active .badge {
   background: var(--amatista-700);
-  color: white;
+  color: var(--warm-50);
 }
 
 .label {

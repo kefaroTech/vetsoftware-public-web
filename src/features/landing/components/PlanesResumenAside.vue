@@ -259,9 +259,8 @@ const MOTIVO_BLOQUEO =
   box-shadow: var(--pub-btn-shadow);
 }
 
-/* `--pub-ink-700` sobre `--pub-tint-100` mide 10,12:1. El gris del prototipo
-   sobre ese mismo fondo se queda en 2,23:1 y el rótulo, que es lo único que
-   identifica el botón, deja de leerse. */
+/* El rótulo es lo único que identifica el botón, así que el bloqueo no lo
+   apaga: conserva contraste de texto sobre el relleno inactivo. */
 .pra-continuar[aria-disabled='true'] {
   background: var(--pub-tint-100);
   color: var(--pub-ink-700);

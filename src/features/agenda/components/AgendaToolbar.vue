@@ -201,7 +201,7 @@ function selectView(v: ViewMode) {
   background: var(--warm-50);
   color: var(--warm-900);
   border-color: var(--amatista-500);
-  box-shadow: 0 1px 2px rgb(20 15 30 / 8%);
+  box-shadow: var(--shadow-xs);
 }
 
 @media (width <= 760px) {

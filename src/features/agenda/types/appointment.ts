@@ -163,21 +163,21 @@ export interface AppointmentStatusMeta {
 export const APPT_STATUS: Record<AppointmentStatus, AppointmentStatusMeta> = {
   REQUESTED: {
     label: 'Solicitada',
-    dot: 'oklch(65% 0.13 75)',
-    bg: 'oklch(95% 0.06 80)',
-    fg: 'oklch(45% 0.13 70)',
+    dot: 'var(--warning-border)',
+    bg: 'var(--warning-50)',
+    fg: 'var(--warning-900)',
   },
   CONFIRMED: {
     label: 'Confirmada',
-    dot: 'oklch(55% 0.16 240)',
-    bg: 'oklch(95% 0.04 240)',
-    fg: 'oklch(40% 0.15 240)',
+    dot: 'var(--navy-600, var(--amatista-500))',
+    bg: 'var(--navy-100, var(--amatista-50))',
+    fg: 'var(--navy-700, var(--amatista-600))',
   },
   ARRIVED: {
     label: 'Llegó',
-    dot: 'oklch(58% 0.14 200)',
-    bg: 'oklch(95% 0.05 200)',
-    fg: 'oklch(42% 0.12 200)',
+    dot: 'var(--teal-600, var(--success-border))',
+    bg: 'var(--teal-100, var(--compras-ok-bg))',
+    fg: 'var(--teal-700, var(--compras-ok-fg))',
   },
   IN_PROGRESS: {
     label: 'En curso',
@@ -187,15 +187,15 @@ export const APPT_STATUS: Record<AppointmentStatus, AppointmentStatusMeta> = {
   },
   COMPLETED: {
     label: 'Completada',
-    dot: 'oklch(55% 0.16 150)',
-    bg: 'oklch(95% 0.06 150)',
-    fg: 'oklch(40% 0.13 150)',
+    dot: 'var(--success-dot)',
+    bg: 'var(--success-bg)',
+    fg: 'var(--success-fg)',
   },
   NO_SHOW: {
     label: 'No asistió',
-    dot: 'oklch(62% 0.14 40)',
-    bg: 'oklch(95% 0.04 40)',
-    fg: 'oklch(48% 0.15 40)',
+    dot: 'var(--danger-border)',
+    bg: 'var(--danger-150)',
+    fg: 'var(--danger-700)',
   },
   CANCELLED: {
     label: 'Cancelada',
@@ -258,9 +258,27 @@ export function apptInitials(name: string): string {
     .toUpperCase()
 }
 
-/** Hue determinista por empleado para colorear el badge del vet. */
-export function apptVetHue(employeeId: number): number {
-  return (((employeeId * 57) % 360) + 360) % 360
+/**
+ * Paleta cerrada del avatar de veterinario. Es cerrada y no generada porque el
+ * avatar lleva las iniciales encima en `--warm-50`: cada entrada tiene que dar
+ * 4,5:1 contra ese texto (WCAG 2.2 §1.4.3, AA) y quedar separada de las otras
+ * tres. Los cuatro valores dan 6,23 · 12,81 · 7,23 · 18,86:1 y su distancia
+ * perceptual mínima es ΔE OKLab 0,170. Añadir un tono exige rehacer las dos
+ * medidas: un tono de claridad media rompe el contraste antes que la
+ * separación.
+ */
+export const APPT_VET_TONES = [
+  'var(--amatista-600)',
+  'var(--amatista-800)',
+  'var(--warm-600)',
+  'var(--warm-900)',
+] as const
+
+/** Tono estable por empleado: el mismo veterinario siempre con el mismo color. */
+export function apptVetTone(employeeId: number): string {
+  const size = APPT_VET_TONES.length
+  const index = (((employeeId % size) + size) % size) | 0
+  return APPT_VET_TONES[index] ?? APPT_VET_TONES[0]
 }
 
 /** Combina fecha (yyyy-MM-dd) + hora (HH:mm) en un ISO LocalDateTime. */

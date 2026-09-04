@@ -72,7 +72,7 @@ function handleClick() {
   place-items: center;
   font-size: 14px;
   border: 3px solid var(--warm-100);
-  box-shadow: 0 2px 6px -2px rgb(20 15 30 / 12%);
+  box-shadow: 0 2px 6px -2px color-mix(in oklch, var(--warm-900) 12%, transparent);
 }
 
 .card {

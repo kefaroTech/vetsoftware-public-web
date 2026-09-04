@@ -243,7 +243,7 @@ defineExpose({ clearQty })
   flex-shrink: 0;
 }
 .qty-input.invalid {
-  border-color: oklch(60% 0.18 25deg);
+  border-color: var(--danger-border);
   box-shadow: 0 0 0 3px var(--danger-100);
 }
 

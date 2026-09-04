@@ -154,7 +154,7 @@ onBeforeUnmount(() => observer?.disconnect())
 }
 
 .result-row.striped {
-  background: oklch(98% 0.005 60deg);
+  background: var(--warm-100);
 }
 
 .result-row:hover {
@@ -222,8 +222,8 @@ onBeforeUnmount(() => observer?.disconnect())
 
 .status.error {
   color: var(--danger-700);
-  background: oklch(97% 0.02 25deg);
-  border-color: oklch(85% 0.06 25deg);
+  background: var(--danger-50);
+  border-color: var(--danger-300);
 }
 
 .hint {

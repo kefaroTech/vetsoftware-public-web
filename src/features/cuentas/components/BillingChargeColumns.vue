@@ -221,7 +221,7 @@ const emit = defineEmits<{
   background: var(--warm-50);
   color: var(--amatista-700);
   border-color: var(--amatista-500);
-  box-shadow: 0 1px 2px rgb(20 15 30 / 8%);
+  box-shadow: var(--shadow-xs);
 }
 .search {
   width: 100%;
@@ -426,7 +426,7 @@ const emit = defineEmits<{
   place-items: center;
 }
 .sel-remove:hover {
-  background: oklch(94% 0.05 25deg);
+  background: var(--danger-150);
   color: var(--danger-700);
 }
 .sel-empty {

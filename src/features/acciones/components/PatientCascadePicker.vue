@@ -126,7 +126,7 @@ watch(
           <input
             v-model="ownerQuery"
             type="text"
-            class="input"
+            class="input ds-focus-ring"
             placeholder="Buscar por nombre, documento o email…"
           />
         </div>
@@ -239,8 +239,8 @@ watch(
 }
 
 .picker.invalid {
-  border-color: oklch(60% 0.2 25deg);
-  background: oklch(98.5% 0.02 25deg);
+  border-color: var(--danger-border);
+  background: var(--danger-50);
 }
 
 .hint {
@@ -278,11 +278,6 @@ watch(
     box-shadow 0.15s;
 }
 
-.input:focus {
-  border-color: var(--amatista-500);
-  box-shadow: 0 0 0 3px color-mix(in oklch, var(--amatista-500) 16%, transparent);
-}
-
 /* Añadidos sobre `.ds-stack`: gap mínimo entre resultados y la caja con scroll. */
 .results {
   gap: 2px;
@@ -301,7 +296,7 @@ watch(
 }
 
 .state.error {
-  color: oklch(45% 0.18 25deg);
+  color: var(--danger-800);
 }
 
 .result {
@@ -365,7 +360,7 @@ watch(
   border-radius: 8px;
   border: none;
   background: var(--amatista-700);
-  color: #fff;
+  color: var(--warm-50);
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 500;

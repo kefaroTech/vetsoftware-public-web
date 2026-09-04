@@ -255,7 +255,7 @@ function onDrop(dayIso: string, hour: number) {
 }
 
 .cell.today {
-  background: oklch(98% 0.02 var(--hue));
+  background: var(--amatista-50);
 }
 
 .cell.dropover {
@@ -278,7 +278,7 @@ function onDrop(dayIso: string, hour: number) {
 
 .chip.aplicada {
   background: var(--success-50);
-  color: oklch(40% 0.13 150deg);
+  color: var(--success-fg);
   cursor: default;
 }
 
@@ -303,9 +303,9 @@ function onDrop(dayIso: string, hour: number) {
 /* Procedimientos pendientes: tinte teal para distinguirlos de los medicamentos.
    Aplicada (verde) y atrasada (rojo) usan el color de estado, igual que los meds. */
 .chip.proc.pendiente {
-  background: oklch(94% 0.05 200deg);
-  color: oklch(42% 0.1 220deg);
-  border-color: oklch(85% 0.07 210deg);
+  background: var(--teal-100, var(--amatista-100));
+  color: var(--teal-700, var(--amatista-700));
+  border-color: var(--teal-200, var(--amatista-200));
 }
 
 .legend {
@@ -330,16 +330,16 @@ function onDrop(dayIso: string, hour: number) {
   display: inline-block;
 }
 .sw.aplicada {
-  background: oklch(80% 0.1 150deg);
+  background: var(--success-border);
 }
 .sw.pendiente {
   background: var(--warm-50);
   border: 1px solid var(--warm-300);
 }
 .sw.atrasada {
-  background: oklch(80% 0.12 25deg);
+  background: var(--danger-border);
 }
 .sw.proc {
-  background: oklch(80% 0.07 210deg);
+  background: var(--teal-600, var(--amatista-450));
 }
 </style>

@@ -31,8 +31,8 @@ defineProps<{
   width: 34px;
   height: 34px;
   border-radius: 9px;
-  background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
-  border: 1px solid #ecd9fb;
+  background: linear-gradient(135deg, var(--pub-tint-50), var(--pub-tint-100));
+  border: 1px solid var(--pub-tint-bd);
   display: grid;
   place-items: center;
   color: var(--pub-ame-700);
@@ -48,10 +48,6 @@ defineProps<{
 
 .pub-sechead-desc {
   font-size: 12px;
-
-  /* `--pub-ink-400` mide 3,94:1 sobre blanco: falla §1.4.3 AA para texto normal, y esta
-     bajada es de 12 px. `--pub-ink-500` mide 5,96:1. Superviviente de la tabla de
-     contraste que ya corrigió `PublicLayout`. */
   color: var(--pub-ink-500);
   margin-top: 1px;
 }

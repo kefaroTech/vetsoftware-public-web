@@ -56,8 +56,8 @@ withDefaults(
 }
 
 .banner.warn {
-  background: oklch(95% 0.07 80deg);
-  color: oklch(42% 0.13 60deg);
+  background: var(--warning-50);
+  color: var(--warning-900);
   border: 1px solid var(--warning-border);
 }
 

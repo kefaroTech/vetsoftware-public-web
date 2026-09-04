@@ -189,7 +189,7 @@ async function submit() {
 
 .login-divider-word {
   font-size: 11px;
-  color: #a08bbd;
+  color: var(--pub-ink-500);
   font-weight: 500;
 }
 
@@ -201,13 +201,11 @@ async function submit() {
   padding: 11px 16px;
   border-radius: 9px;
 
-  /* A11Y-09 · WCAG 2.2 §1.4.11: `--pub-line` medía 1,23:1 sobre el blanco del
-     botón y el `#d6c8ea` del hover 1,48:1 sobre su relleno. `--pub-ink-400` es
-     el escalón de la rampa pública reservado a glifos y bordes no textuales:
-     3,94:1 en reposo y 3,70:1 sobre el relleno del hover, que por eso conserva
-     el mismo borde. */
+  /* A11Y-09 · WCAG 2.2 §1.4.11: `--pub-ink-400` cubre el 3:1 tanto sobre el
+     relleno en reposo como sobre el del hover, que por eso conserva este mismo
+     borde en vez de oscurecerlo. */
   border: 1px solid var(--pub-ink-400);
-  background: #fff;
+  background: var(--pub-surface);
   color: var(--pub-ink-700);
   font-size: 14px;
   font-weight: 600;
@@ -216,7 +214,7 @@ async function submit() {
 }
 
 .login-secondary:hover {
-  background: #faf6ff;
+  background: var(--pub-tint-50);
 }
 
 .login-secondary :deep(.v-icon) {

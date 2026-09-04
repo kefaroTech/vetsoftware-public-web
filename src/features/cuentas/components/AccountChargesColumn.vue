@@ -250,11 +250,11 @@ const CHARGE_ICON: Record<ChargeKind, typeof Package> = {
   margin-left: 6px;
   font-size: 11px;
   font-weight: 500;
-  color: oklch(48% 0.16 25deg);
+  color: var(--danger-700);
 }
 
 .c-banned {
-  color: oklch(55% 0.16 25deg);
+  color: var(--danger-500);
   flex-shrink: 0;
 }
 

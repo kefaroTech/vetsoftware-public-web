@@ -78,9 +78,13 @@ export const ROLES: readonly RoleDefinition[] = [
 
 export const ROLE_COLORS: Record<RoleColor, RoleColorTokens> = {
   amatista: { bg: 'var(--amatista-100)', fg: 'var(--amatista-700)', dot: 'var(--amatista-600)' },
-  green: { bg: 'oklch(94% 0.06 150)', fg: 'oklch(40% 0.13 150)', dot: 'oklch(55% 0.16 150)' },
-  blue: { bg: 'oklch(94% 0.04 240)', fg: 'oklch(40% 0.15 240)', dot: 'oklch(55% 0.16 240)' },
-  amber: { bg: 'oklch(94% 0.07 80)', fg: 'oklch(45% 0.13 70)', dot: 'oklch(65% 0.13 75)' },
+  green: { bg: 'var(--success-bg)', fg: 'var(--success-fg)', dot: 'var(--success-dot)' },
+  blue: {
+    bg: 'var(--navy-100, var(--amatista-50))',
+    fg: 'var(--navy-700, var(--amatista-600))',
+    dot: 'var(--navy-600, var(--amatista-500))',
+  },
+  amber: { bg: 'var(--warning-50)', fg: 'var(--warning-900)', dot: 'var(--warning-border)' },
   gray: { bg: 'var(--warm-200)', fg: 'var(--warm-700)', dot: 'var(--warm-500)' },
 }
 

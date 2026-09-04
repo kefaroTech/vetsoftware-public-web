@@ -351,7 +351,7 @@ function save() {
   place-items: center;
   flex-shrink: 0;
   margin-top: 1px;
-  color: white;
+  color: var(--warm-50);
 }
 
 .agentbox-off {

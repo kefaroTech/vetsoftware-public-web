@@ -141,7 +141,7 @@ const trend = computed(() => {
 }
 
 .wp-trend.up {
-  color: oklch(52% 0.16 150deg);
+  color: var(--success-fg);
 }
 
 .wp-trend.down {

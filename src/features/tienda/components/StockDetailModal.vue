@@ -262,11 +262,11 @@ watch(
   white-space: nowrap;
 }
 .num.in {
-  color: oklch(45% 0.13 150deg);
+  color: var(--compras-ok-fg);
   font-weight: 600;
 }
 .num.out {
-  color: oklch(48% 0.16 25deg);
+  color: var(--danger-700);
   font-weight: 600;
 }
 

@@ -102,7 +102,7 @@ const activeModel = computed({
 }
 
 .close:hover:not(:disabled) {
-  background: rgb(255 255 255 / 60%);
+  background: color-mix(in oklch, var(--warm-50) 60%, transparent);
 }
 
 /* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- el cuerpo coincide con `.ds-btn:disabled`, pero `.close` NO es un `.ds-btn`: es un cuadrado de 32px sin borde, centrado con `place-items`, posicionado sobre el gradiente del header. Adoptar la clase sólo para heredar su `:disabled` arrastraría toda la base (padding 9/16, borde, radio, tipografía) y le cambiaría la forma. */

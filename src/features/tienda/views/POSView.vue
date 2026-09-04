@@ -413,15 +413,16 @@ function openFiscalPicker() {
 /* El contenedor usa `.ds-page` (primitives.css). El bloqueo por caja y el ticket
    se fueron a `PosCashGate` y `PosTicket` con su CSS. */
 
-/* El banner de error usa `.ds-banner--error` (primitives.css). El de aviso
-   tiene tonos propios (hue 85/70) y se mantiene local. */
+/* El banner de error usa `.ds-banner--error` (primitives.css). El de aviso se
+   queda local por su armazón —icono, texto y CTA en la misma fila—, que la
+   primitiva no contempla. */
 .banner.warn {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: oklch(97% 0.05 85deg);
-  border: 1px solid oklch(85% 0.11 85deg);
-  color: oklch(40% 0.09 70deg);
+  background: var(--warning-50);
+  border: 1px solid var(--warning-200);
+  color: var(--warning-900);
   border-radius: 8px;
   padding: 12px 14px;
   margin-bottom: 14px;
@@ -430,7 +431,7 @@ function openFiscalPicker() {
 .banner.warn .warn-icon {
   flex: 0 0 auto;
   margin-top: 1px;
-  color: oklch(60% 0.15 70deg);
+  color: var(--warning-border);
 }
 
 .banner.warn .warn-text {
@@ -443,17 +444,13 @@ function openFiscalPicker() {
   font-weight: 600;
 }
 
-.banner.warn .warn-text span {
-  color: oklch(45% 0.05 70deg);
-}
-
 .banner.warn .warn-cta {
   flex: 0 0 auto;
   margin-left: auto;
   align-self: center;
-  border: 1px solid oklch(60% 0.15 70deg);
-  background: oklch(99% 0.02 85deg);
-  color: oklch(40% 0.12 70deg);
+  border: 1px solid var(--warning-border);
+  background: var(--warning-50);
+  color: var(--warning-900);
   border-radius: 7px;
   padding: 7px 14px;
   font-size: 13px;
@@ -462,7 +459,7 @@ function openFiscalPicker() {
 }
 
 .banner.warn .warn-cta:hover {
-  background: oklch(95% 0.06 85deg);
+  background: var(--warning-200);
 }
 
 .banner.warn .warn-hint {
@@ -470,7 +467,6 @@ function openFiscalPicker() {
   margin-left: auto;
   align-self: center;
   font-size: 12.5px;
-  color: oklch(50% 0.05 70deg);
 }
 
 /* NO es `.ds-grid-auto`: no son dos columnas iguales que colapsan, es el
