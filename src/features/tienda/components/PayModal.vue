@@ -246,7 +246,7 @@ function confirm() {
   font-size: 12.5px;
   line-height: 1.4;
   background: var(--warning-50);
-  border: 1px solid var(--warning-200);
+  border: 1px solid var(--warning-border);
   color: oklch(40% 0.1 70deg);
 }
 .change {
@@ -278,9 +278,12 @@ function confirm() {
   font-weight: 600;
   position: relative;
 }
+
+/* A11Y-09 · WCAG 2.2 §1.4.11: `--amatista-450` da 3,47:1 sobre este mismo
+   fondo `--amatista-50`; `--amatista-400` medía 2,74:1. */
 .doctype.on {
   background: var(--amatista-50);
-  border: 1.5px solid var(--amatista-400);
+  border: 1.5px solid var(--amatista-450);
   color: var(--amatista-700);
 }
 .doctype.off {

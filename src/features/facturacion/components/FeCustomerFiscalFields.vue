@@ -157,12 +157,21 @@ const regimeOptions = (Object.keys(TAX_REGIME_LABEL) as TaxRegime[]).map((k) => 
   gap: 4px;
   padding: 3px;
   background: var(--warm-150, var(--warm-100));
+
+  /* A11Y-09 · WCAG 2.2 §1.4.11: el grupo no declaraba ningún límite visible.
+     `--warm-450` —el escalón que `tokens.css` reserva a bordes de control— da
+     3,54:1 contra el `--warm-50` que lo rodea (la caja fiscal y el cuerpo del
+     modal) y 3,14:1 contra su propia pista `--warm-150`. */
+  border: 1px solid var(--warm-450);
   border-radius: 9px;
 }
 .seg {
   padding: 7px 16px;
   border-radius: 7px;
-  border: none;
+
+  /* Reserva el sitio del borde de la posición puesta: sin él, activar un
+     segmento lo ensancharía 2px y el grupo daría un salto al conmutar. */
+  border: 1px solid transparent;
   background: none;
   font-family: inherit;
   font-size: 13px;
@@ -170,11 +179,16 @@ const regimeOptions = (Object.keys(TAX_REGIME_LABEL) as TaxRegime[]).map((k) => 
   color: var(--warm-600);
   cursor: pointer;
 }
+
+/* A11Y-09 · WCAG 2.2 §1.4.11: el relleno `--warm-50` mide 1,12:1 sobre la pista
+   `--warm-150`, así que la posición puesta no tenía ningún límite propio; el
+   `box-shadow` que llevaba tampoco llegaba a 3:1. El borde `--warm-450` le da
+   3,14:1 contra la pista y 3,54:1 contra su propio relleno. */
 .seg.on {
   background: var(--warm-50);
+  border-color: var(--warm-450);
   color: var(--amatista-700);
   font-weight: 600;
-  box-shadow: 0 1px 2px rgb(20 15 30 / 8%);
 }
 
 /* Mismo criterio que `.agentbox`: el tono llega del template

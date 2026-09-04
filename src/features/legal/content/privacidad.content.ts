@@ -51,7 +51,7 @@ export const PRIVACIDAD: LegalDocument = {
           kind: 'p',
           text:
             'El Responsable del Tratamiento de los datos personales recogidos a través de este ' +
-            'sitio y de la aplicación VetSoftware es:',
+            'sitio y de la aplicación Lumbre es:',
         },
         {
           kind: 'dl',
@@ -269,7 +269,7 @@ export const PRIVACIDAD: LegalDocument = {
         {
           kind: 'nota',
           text:
-            'Puedes usar VetSoftware sin que ningún dato tuyo salga de Colombia: basta con no ' +
+            'Puedes usar Lumbre sin que ningún dato tuyo salga de Colombia: basta con no ' +
             'marcar esta autorización y no usar el asistente de propuesta. Rechazarla no te ' +
             'impide registrarte, ver los precios ni contratar.',
         },

@@ -175,7 +175,7 @@ describe('El aviso del límite lo dice con su nombre', () => {
     expect(texto).toContain('No es un fallo')
     expect(texto).toContain('te armamos el plan a mano')
     expect(texto).not.toContain('paquetes, aquí abajo')
-    expect(wrapper.find('a[href="mailto:soporte@vetsoftware.co"]').exists()).toBe(true)
+    expect(wrapper.find('a[href="mailto:soporte@kefaro.tech"]').exists()).toBe(true)
   })
 
   it('es `status` y no `alert`: no hay nada que atender ahora mismo', () => {

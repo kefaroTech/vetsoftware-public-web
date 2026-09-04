@@ -255,7 +255,7 @@ async function toggle(terminal: CashTerminal) {
   align-items: center;
   gap: 7px;
   margin: 0;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 19px;
   font-weight: 400;
   color: var(--warm-900);

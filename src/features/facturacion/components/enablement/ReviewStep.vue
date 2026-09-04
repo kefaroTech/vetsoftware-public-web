@@ -196,7 +196,7 @@ const missing = computed(() => {
 }
 
 .success-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 19px;
   color: var(--warm-900);
 }

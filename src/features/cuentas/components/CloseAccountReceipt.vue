@@ -65,7 +65,7 @@ defineProps<{
   font-size: 15px;
 }
 .rec-amt {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 34px;
   color: var(--warm-900);
   letter-spacing: -0.02em;

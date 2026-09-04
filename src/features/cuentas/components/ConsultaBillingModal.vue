@@ -222,7 +222,7 @@ async function onConfirm() {
   color: var(--warm-500);
 }
 .ac-saldo-val {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 22px;
   color: var(--success-fg);
   letter-spacing: -0.02em;
@@ -237,7 +237,7 @@ async function onConfirm() {
   margin-bottom: 16px;
   font-size: 13px;
   background: var(--warning-50);
-  border: 1px solid var(--warning-200);
+  border: 1px solid var(--warning-border);
   color: oklch(40% 0.1 70deg);
   border-radius: 10px;
 }

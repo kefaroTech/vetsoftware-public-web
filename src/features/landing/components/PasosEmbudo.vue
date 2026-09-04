@@ -64,8 +64,9 @@ const pasos = computed(() =>
   gap: 14px;
 }
 
-/* `--pub-ink-500` mide 6,12:1 sobre blanco. El `#8578a0` del prototipo se queda
-   en 3,74:1 y falla §1.4.3 para texto normal, que es lo que son 13,5 px. */
+/* `--pub-ink-500` mide 5,96:1 sobre blanco. `--pub-ink-400`, que es el apagado
+   al que se tiende para una fila de pasos, se queda en 3,94:1 y falla §1.4.3
+   para texto normal — que es lo que son 13,5 px. */
 .pas-paso {
   display: inline-flex;
   align-items: center;

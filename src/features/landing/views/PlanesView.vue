@@ -337,8 +337,8 @@ function continuar() {
                  una lista de precios que nunca va a llegar. -->
             <p v-if="sinPaquetes" class="pub-card-sub" role="status" data-testid="planes-vacio">
               Todavía no hay paquetes con precio publicado. Escríbenos a
-              <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y te decimos qué
-              podemos montarte hoy.
+              <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a> y te decimos qué podemos
+              montarte hoy.
             </p>
             <PlanesCombinaciones
               v-else

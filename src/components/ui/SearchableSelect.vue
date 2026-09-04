@@ -315,7 +315,7 @@ function cancelCreate() {
    peso y la posición del trío que declaraba `.trigger`. */
 
 /* A11Y-09 · WCAG 2.2 §1.4.11 (AA): --warm-200 medía 1,23:1 sobre --warm-50 y
-   el límite del campo era invisible con poca luz. --warm-450 da 3,55:1. Es el
+   el límite del campo era invisible con poca luz. --warm-450 da 3,54:1. Es el
    escalón que tokens.css reserva para bordes de control e icono; --warm-200 se
    queda para separadores y divisores, que §1.4.11 exime por decorativos. */
 .tone-border {
@@ -342,7 +342,7 @@ function cancelCreate() {
    que hacía la regla `.ss.invalid .trigger` retirada. */
 .ss.invalid.open .trigger,
 .ss.invalid .trigger:focus-visible {
-  border-color: oklch(60% 0.2 25deg);
+  border-color: var(--danger-border);
 }
 
 .ss.invalid.open .trigger {

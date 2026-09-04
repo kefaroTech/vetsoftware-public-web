@@ -320,7 +320,7 @@ function confirmRemove(id: number) {
   border-radius: 7px;
   cursor: pointer;
   background: transparent;
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   color: var(--warm-700);
 }
 </style>

@@ -19,9 +19,29 @@ onMounted(() => {
     </template>
 
     <div class="pub-card pub-reveal">
+      <picture class="pub-brand-lockup">
+        <source
+          type="image/webp"
+          srcset="
+            /brand/lumbre-lockup-transparent-480.webp   480w,
+            /brand/lumbre-lockup-transparent-768.webp   768w,
+            /brand/lumbre-lockup-transparent-1024.webp 1024w
+          "
+          sizes="160px"
+        />
+        <img
+          class="ds-brand-mark"
+          src="/brand/lumbre-lockup-transparent-480.png"
+          alt="Lumbre — Gestiona lo que cuidas"
+          width="160"
+          height="160"
+          decoding="async"
+          loading="eager"
+        />
+      </picture>
       <div class="pub-eyebrow">Panel administrativo</div>
       <h1 class="pub-title">Inicia sesión</h1>
-      <p class="pub-sub">Accede al panel para administrar VetSoftware.</p>
+      <p class="pub-sub">Accede al panel para administrar Lumbre.</p>
       <v-alert v-if="sessionNotice" class="mb-5" type="warning" variant="tonal" density="compact">
         {{ sessionNotice }}
       </v-alert>

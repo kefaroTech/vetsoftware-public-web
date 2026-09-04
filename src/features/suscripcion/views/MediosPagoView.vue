@@ -118,7 +118,7 @@ async function confirmarRevocar(reason: string) {
         -->
         <div class="ds-empty ds-empty--boxed alta">
           <p>{{ ALTA_MEDIO_PAGO }}</p>
-          <a class="ds-btn ds-btn--neutral" href="mailto:soporte@vetsoftware.co">Escríbenos</a>
+          <a class="ds-btn ds-btn--neutral" href="mailto:soporte@kefaro.tech">Escríbenos</a>
         </div>
       </SectionCard>
     </div>

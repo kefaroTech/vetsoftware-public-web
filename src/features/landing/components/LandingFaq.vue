@@ -77,11 +77,11 @@ const preguntas = computed(() => [
   },
   {
     q: '¿Puedo quitar un módulo si dejo de usarlo?',
-    a: 'Sí. Hoy el ajuste lo hacemos nosotros: escríbenos a soporte@vetsoftware.co, nos dices cuál y lo damos de baja.',
+    a: 'Sí. Hoy el ajuste lo hacemos nosotros: escríbenos a soporte@kefaro.tech, nos dices cuál y lo damos de baja.',
   },
   {
     q: '¿Y si más adelante necesito uno más?',
-    a: 'Igual: nos escribes a soporte@vetsoftware.co y lo activamos. Antes de encenderlo te confirmamos qué cuesta.',
+    a: 'Igual: nos escribes a soporte@kefaro.tech y lo activamos. Antes de encenderlo te confirmamos qué cuesta.',
   },
   {
     q: '¿Tengo que poner una tarjeta para probarlo?',

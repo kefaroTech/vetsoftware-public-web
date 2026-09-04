@@ -148,7 +148,17 @@ function goHistorial() {
 .btn-ghost {
   background: oklch(60% 0.1 var(--hue) / 25%);
   color: white;
-  border-color: oklch(80% 0.06 var(--hue) / 30%);
+
+  /* A11Y-09 · WCAG 2.2 §1.4.11: borde translúcido sobre el gradiente de marca,
+     así que lo que hay que medir es el píxel COMPUESTO —el alfa resuelto en
+     sRGB lineal sobre el relleno del botón, que a su vez es translúcido sobre
+     el gradiente—, no el color declarado. Ningún escalón de la rampa sirve
+     aquí: el fondo no es una superficie del sistema. Medido en los dos extremos
+     del gradiente y contra las dos caras (el gradiente por fuera, el relleno
+     por dentro), el peor de los cuatro casos —stop claro
+     `oklch(45% 0.18 var(--hue))`, `:hover`, cara interior— da 3,35:1 y el mejor
+     6,10:1. Al 30 % ese peor caso medía 1,65:1. */
+  border-color: oklch(90% 0.06 var(--hue) / 70%);
 }
 
 .btn-ghost:hover {

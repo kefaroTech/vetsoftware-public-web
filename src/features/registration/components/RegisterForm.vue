@@ -29,6 +29,7 @@ import {
   type RegisterFormState,
   type RegisterOption as Opt,
 } from '../types/register-form.types'
+import { ArrowRight, CircleAlert } from 'lucide-vue-next'
 
 const emit = defineEmits<(e: 'success', email: string) => void>()
 
@@ -251,7 +252,26 @@ async function submit() {
 <template>
   <div ref="cardRef" class="reg-scroll">
     <form class="reg-card" novalidate @submit.prevent="submit">
-      <div class="reg-eyebrow">VetSoftware</div>
+      <picture class="pub-brand-lockup">
+        <source
+          type="image/webp"
+          srcset="
+            /brand/lumbre-lockup-transparent-480.webp   480w,
+            /brand/lumbre-lockup-transparent-768.webp   768w,
+            /brand/lumbre-lockup-transparent-1024.webp 1024w
+          "
+          sizes="160px"
+        />
+        <img
+          class="ds-brand-mark"
+          src="/brand/lumbre-lockup-transparent-480.png"
+          alt="Lumbre — Gestiona lo que cuidas"
+          width="160"
+          height="160"
+          decoding="async"
+          loading="eager"
+        />
+      </picture>
       <h1 class="reg-title">Crear cuenta</h1>
       <p class="reg-sub">Registra tu empresa y tu primer usuario administrador.</p>
 
@@ -301,7 +321,7 @@ async function submit() {
       <div :id="REGISTER_RECAPTCHA_ID" class="reg-recaptcha" tabindex="-1">
         <div ref="recaptchaEl" class="reg-recaptcha-widget"></div>
         <p v-if="recaptchaMissing" class="reg-recaptcha-err">
-          <v-icon size="12">mdi-alert-circle-outline</v-icon>
+          <CircleAlert :size="12" aria-hidden="true" />
           Completa la verificación para continuar.
         </p>
         <div v-if="recaptchaUnavailable" class="reg-recaptcha-warn">
@@ -313,7 +333,7 @@ async function submit() {
 
       <div class="reg-submit">
         <PrimaryButton type="submit" :loading="submitting" loading-text="Creando cuenta…">
-          Crear cuenta <v-icon size="14">mdi-arrow-right</v-icon>
+          Crear cuenta <ArrowRight :size="14" aria-hidden="true" />
         </PrimaryButton>
       </div>
 
@@ -342,17 +362,8 @@ async function submit() {
   padding: clamp(24px, 4vw, 40px);
 }
 
-.reg-eyebrow {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--pub-ame-700);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
 .reg-title {
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-display);
   font-size: 30px;
   font-weight: 400;
   margin: 0;

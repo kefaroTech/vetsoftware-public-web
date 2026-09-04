@@ -98,8 +98,8 @@ watch(
 
     <p v-if="catalogo && areas.length === 0" class="lsm-vacio" role="status">
       Todavía no hay módulos publicados para armar un plan a medida. Escríbenos a
-      <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y te decimos qué podemos
-      montarte hoy.
+      <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a> y te decimos qué podemos montarte
+      hoy.
     </p>
 
     <AreaPlegable
@@ -193,7 +193,7 @@ watch(
 }
 
 /* Mismo criterio y mismo token que `CatalogoGrupo.vue`: `--pub-ame-600` mide
-   5,38:1 sobre blanco y `--pub-line` 1,23:1, que no vale como borde de control
+   5,25:1 sobre blanco y `--pub-line` 1,23:1, que no vale como borde de control
    (§1.4.11). */
 .lsm-fila.is-on {
   border-color: var(--pub-ame-600);
@@ -218,7 +218,7 @@ watch(
   color: var(--pub-ink-900);
 }
 
-/* `--pub-ink-500` (6,12:1 sobre blanco) y no `--pub-ink-400`, que mide 4,05:1 y
+/* `--pub-ink-500` (5,96:1 sobre blanco) y no `--pub-ink-400`, que mide 3,94:1 y
    falla §1.4.3 AA para texto normal — y 13,5px lo es. */
 .lsm-precio {
   margin-left: auto;

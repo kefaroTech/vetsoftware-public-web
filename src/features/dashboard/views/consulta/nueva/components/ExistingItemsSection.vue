@@ -183,7 +183,7 @@ function keyOf(item: T): number {
 
 .remove-existing:hover:not(:disabled) {
   background: var(--danger-150);
-  border-color: var(--danger-300);
+  border-color: var(--danger-border);
   color: oklch(35% 0.15 25deg);
 }
 </style>

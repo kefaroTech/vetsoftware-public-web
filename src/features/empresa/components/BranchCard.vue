@@ -71,7 +71,7 @@ defineEmits<{
 }
 
 .branchcard:hover {
-  border-color: var(--amatista-200);
+  border-color: var(--amatista-450);
   box-shadow: 0 6px 18px -12px oklch(45% 0.12 var(--hue) / 40%);
 }
 
@@ -180,14 +180,18 @@ defineEmits<{
    (0,5,0) le sigue ganando a la primitiva (0,3,0) igual que antes.
 
    A11Y-09: el override local de `.act.toggle:hover` que había aquí se retira.
-   Existía porque la primitiva pintaba el hover con `--warm-300` (1,54:1) y
-   apagaba el borde de reposo, ya migrado a `--warm-450` (3,55:1). La causa está
+   Existía porque la primitiva pintaba el hover con `--warm-300` (1,40:1) y
+   apagaba el borde de reposo, ya migrado a `--warm-450` (3,33:1). La causa está
    corregida en `primitives.css`: `.ds-tone--neutral-soft` es hoy `--warm-450`
-   en reposo y `--warm-500` en hover (5,36:1), así que la primitiva ya refuerza
-   el borde y el parche sobraba. */
+   en reposo y `--warm-500` en hover (5,07:1), así que la primitiva ya refuerza
+   el borde y el parche sobraba.
+
+   La variante destructiva seguía sin corregir: `--danger-border` (3,57:1) y no
+   `oklch(75% 0.12 25deg)` (1,95:1), que dejaba el hover por debajo del 3:1 de
+   WCAG 2.2 §1.4.11 y del propio reposo `--warm-450` (3,54:1). */
 .act.toggle.danger:hover {
   background: oklch(95% 0.04 25deg);
-  border-color: oklch(75% 0.12 25deg);
+  border-color: var(--danger-border);
   color: var(--danger-600);
 }
 </style>

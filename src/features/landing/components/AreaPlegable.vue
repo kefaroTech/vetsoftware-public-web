@@ -122,7 +122,7 @@ defineExpose({ enfocar: () => boton.value?.focus() })
   background: #fdfaff;
 }
 
-/* `--pub-ink-400` mide 4,05:1 sobre blanco: pasa el umbral de 3:1 de §1.4.11
+/* `--pub-ink-400` mide 3,94:1 sobre blanco: pasa el umbral de 3:1 de §1.4.11
    para un glifo no textual y no sería válido para texto. Y no es el único canal
    del estado —lo son `aria-expanded` y la presencia del cuerpo—, así que §1.4.1
    queda cubierto. */

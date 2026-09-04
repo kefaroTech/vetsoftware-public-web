@@ -398,7 +398,7 @@ test.describe('Paso 6 — el paso vinculante', () => {
     // oferta no enciende hoy los módulos —nadie reacciona a `QuoteStatus.ACCEPTED`—, así que lo
     // que de verdad pasó es que la elección quedó reservada. El título de la pestaña dice lo
     // mismo que el `<h1>`.
-    await expect(page).toHaveTitle('Tu plan está reservado — VetSoftware')
+    await expect(page).toHaveTitle('Tu plan está reservado — Lumbre')
     // «Reservaste», nunca «activo» ni «activado»: aceptar una oferta no enciende
     // ningún módulo, y la afirmación va contra el verbo prohibido y no a favor de
     // uno concreto, que es lo que la deja en pie al siguiente retoque de copy.
@@ -979,7 +979,7 @@ test.describe('Sin `quote.request` no hay paso vinculante', () => {
     // En su lugar, quién puede hacerlo y qué hacer, sin nombrar el código del
     // permiso, que al usuario no le dice nada.
     await expect(paso.getByText('Tu usuario no puede confirmar la contratación')).toBeVisible()
-    await expect(paso.getByRole('link', { name: 'soporte@vetsoftware.co' }).first()).toBeVisible()
+    await expect(paso.getByRole('link', { name: 'soporte@kefaro.tech' }).first()).toBeVisible()
 
     // `role="status"`, NUNCA `alert`: no ha fallado nada, es el estado de la
     // cuenta. Un `alert` corta la locución en curso para dar una noticia que no
@@ -1416,7 +1416,7 @@ test.describe('§5 caso 2b — la propuesta a medida que no se puede pintar', ()
 
     // Esta rama no promete recuperar LA propuesta perdida, así que ofrece la
     // salida que sí existe: escribir a soporte.
-    await expect(aviso.getByRole('link', { name: 'soporte@vetsoftware.co' })).toBeVisible()
+    await expect(aviso.getByRole('link', { name: 'soporte@kefaro.tech' })).toBeVisible()
 
     // Y la intención sigue viva. Descartarla apagaría además el enganche del
     // login para siempre: el prospecto no ha renunciado a nada, solo ha caducado

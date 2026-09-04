@@ -57,7 +57,7 @@ defineProps<{
   gap: var(--space-6);
   margin: var(--space-8) 0 var(--space-10);
   color: var(--warm-800);
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 16px;
   font-weight: var(--weight-normal);
 }

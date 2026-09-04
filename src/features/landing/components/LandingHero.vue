@@ -29,6 +29,28 @@ const CONFIANZA = [
 
 <template>
   <section class="land-hero">
+    <picture class="land-lockup">
+      <source
+        type="image/webp"
+        srcset="
+          /brand/lumbre-lockup-transparent-480.webp   480w,
+          /brand/lumbre-lockup-transparent-768.webp   768w,
+          /brand/lumbre-lockup-transparent-1024.webp 1024w
+        "
+        sizes="(width <= 768px) 200px, 320px"
+      />
+      <img
+        class="ds-brand-mark"
+        src="/brand/lumbre-lockup-transparent-480.png"
+        alt="Lumbre — Gestiona lo que cuidas"
+        width="320"
+        height="320"
+        decoding="async"
+        loading="eager"
+        fetchpriority="high"
+      />
+    </picture>
+
     <h1 class="land-h1">
       Paga solo los módulos que tu clínica usa.
       <span class="land-h1-em">Ni uno más.</span>
@@ -58,8 +80,17 @@ const CONFIANZA = [
   text-align: center;
 }
 
+/* Los `width`/`height` del marcado siguen ahí aunque aquí se fije otro ancho:
+   el navegador los usa para reservar la caja por relación de aspecto antes de
+   la descarga, y sin ellos el titular salta en el primer pintado. */
+.land-lockup img {
+  width: clamp(200px, 26vw, 320px);
+  height: auto;
+  margin: 0 auto 22px;
+}
+
 .land-h1 {
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-display);
   font-weight: 400;
   font-size: clamp(34px, 5vw, 52px);
   line-height: 1.06;
@@ -71,7 +102,7 @@ const CONFIANZA = [
 }
 
 .land-h1-em {
-  font-style: italic;
+  font-weight: 700;
   color: var(--pub-ame-700);
 }
 

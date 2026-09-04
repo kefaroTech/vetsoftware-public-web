@@ -45,7 +45,7 @@ const subtitle = computed(() => {
 
 .title {
   margin: 0;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 44px;
   line-height: 1.05;
   letter-spacing: -0.015em;
@@ -53,8 +53,11 @@ const subtitle = computed(() => {
   color: var(--warm-900);
 }
 
+/* El énfasis va en color y peso, no en cursiva: Poppins es geométrica y su
+   cursiva es una oblicua tan leve que a 44 px no se lee como énfasis, y cargar
+   sus dos caras cursivas solo para esto entra en la ruta crítica. */
 .title em {
-  font-style: italic;
+  font-weight: 600;
   color: var(--amatista-700);
 }
 

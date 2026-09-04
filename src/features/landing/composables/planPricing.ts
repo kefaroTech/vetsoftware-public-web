@@ -275,6 +275,6 @@ export function textoSinPrecio(unidades: readonly CapacityUnit[], ciclo: Ciclo):
     `Con ${CICLO_EN_FRASE[ciclo]} no hay precio publicado para las ${ejes} que pasan de lo ` +
     `incluido, así que no podemos estimar ese importe y esta combinación no se puede contratar. ` +
     `Las incluidas siguen estándolo. Prueba con ${CICLO_EN_FRASE[otro]} o escríbenos a ` +
-    `soporte@vetsoftware.co.`
+    `soporte@kefaro.tech.`
   )
 }

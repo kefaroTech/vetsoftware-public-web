@@ -61,12 +61,12 @@ onMounted(async () => {
 <template>
   <section class="afd" aria-labelledby="fd-h2">
     <h2 id="fd-h2" ref="encabezado" tabindex="-1" class="afd-h2">
-      Creemos que VetSoftware no es para tu negocio
+      Creemos que Lumbre no es para tu negocio
     </h2>
 
     <p class="ds-banner ds-banner--info afd-aviso" role="status">
-      Parece que tu negocio no es una veterinaria ni un centro de cuidado animal. VetSoftware está
-      hecho solo para eso, así que preferimos decírtelo ahora y no después de que pagues.
+      Parece que tu negocio no es una veterinaria ni un centro de cuidado animal. Lumbre está hecho
+      solo para eso, así que preferimos decírtelo ahora y no después de que pagues.
     </p>
 
     <label for="fd-texto" class="afd-label">Esto es lo que nos contaste</label>
@@ -94,7 +94,7 @@ onMounted(async () => {
 
     <p class="afd-soporte">
       ¿Crees que sí encajas y no lo estamos viendo? Escríbenos a
-      <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a>.
+      <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a>.
     </p>
   </section>
 </template>

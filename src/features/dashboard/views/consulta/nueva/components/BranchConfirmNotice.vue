@@ -40,7 +40,7 @@ defineProps<{
   padding: 16px 18px;
   border-radius: 11px;
   background: oklch(96% 0.05 80deg);
-  border: 1px solid var(--warning-200);
+  border: 1px solid var(--warning-border);
 }
 
 .bc-ic {

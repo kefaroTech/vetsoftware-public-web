@@ -212,7 +212,7 @@ const emit = defineEmits<{
 }
 
 /* A11Y-09 · píldora de categoría pulsable: `--warm-200` daba 1,23:1, así que el
-   control no tenía frontera. `--warm-450` da 3,55:1. La tanda anterior de
+   control no tenía frontera. `--warm-450` da 3,54:1. La tanda anterior de
    A11Y-09 buscó por token y no llegó aquí. */
 .cat {
   padding: 6px 13px;
@@ -257,7 +257,7 @@ const emit = defineEmits<{
 }
 
 /* A11Y-09 · la tarjeta de producto es pulsable: `--warm-200` daba 1,23:1.
-   `--warm-450` da 3,55:1. */
+   `--warm-450` da 3,54:1. */
 .pcard {
   position: relative;
   background: var(--warm-50);

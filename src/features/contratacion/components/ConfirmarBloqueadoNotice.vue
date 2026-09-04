@@ -45,7 +45,7 @@ const texto = computed(() => textoSinPrecio(props.sinPrecio, props.ciclo))
   <p v-if="motivo === 'PERMISO'" class="ds-banner ds-banner--warning" role="status">
     Tu usuario no puede confirmar la contratación. Puede hacerlo quien administre la cuenta de tu
     clínica; si tu clínica tiene pagos pendientes, escríbenos a
-    <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y lo resolvemos.
+    <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a> y lo resolvemos.
   </p>
 
   <p v-else class="ds-banner ds-banner--warning" role="status">{{ texto }}</p>

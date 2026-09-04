@@ -288,7 +288,7 @@ describe('El camino no se corta cuando no hay combinaciones', () => {
     const aviso = (await montar({ plans: [] })).get('[data-testid="landing-planes-vacio"]')
 
     expect(aviso.attributes('role')).toBe('status')
-    expect(aviso.text()).toContain('soporte@vetsoftware.co')
+    expect(aviso.text()).toContain('soporte@kefaro.tech')
   })
 
   it('sin el catálogo comercial la tarjeta sigue en pie, sin desglose', async () => {

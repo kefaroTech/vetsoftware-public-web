@@ -43,6 +43,6 @@ defineProps<{
 
   <p class="ds-meta ds-meta--sm">
     Durante la prueba no se cobra nada. Si quieres darte de baja antes de que empiece el cobro,
-    escríbenos a <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y lo hacemos.
+    escríbenos a <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a> y lo hacemos.
   </p>
 </template>

@@ -145,10 +145,10 @@ provide(FieldKey, field)
   gap: 5px;
 }
 
-/* `--pub-ink-400` mide 4,05:1 sobre blanco y falla §1.4.3 para texto normal.
+/* `--pub-ink-400` mide 3,94:1 sobre blanco y falla §1.4.3 para texto normal.
    La pista PORTA información (formato del documento, para qué sirve el correo
    fiscal) y ahora además la anuncia `aria-describedby`: no puede quedarse por
-   debajo del umbral. `--pub-ink-500` mide 6,12:1. */
+   debajo del umbral. `--pub-ink-500` mide 5,96:1. */
 .pub-field-hint {
   margin: 0;
   font-size: 11.5px;

@@ -204,7 +204,7 @@ function reintentar() {
       data-testid="landing-planes-vacio"
     >
       Todavía no hay paquetes con precio publicado. Escríbenos a
-      <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y te contamos.
+      <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a> y te contamos.
     </p>
 
     <div v-else class="land-plans-grid">

@@ -145,7 +145,7 @@ const weightLabel = computed(() => {
   font-weight: 600;
   font-size: 22px;
   flex-shrink: 0;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
 }
 
 .patient-name {

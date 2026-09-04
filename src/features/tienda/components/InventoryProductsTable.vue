@@ -343,10 +343,14 @@ function onStateFilter(value: string) {
    de inserción del bundle. Nombrando las dos clases esta desviación sube a
    (0,4,0) y gana siempre — es el mismo recurso que usa `CountSheetModal` para
    acotar su densidad de celda. */
+
+/* `--warning-border` (3,56:1) y no `oklch(88% 0.08 80deg)` (1,28:1): el reposo
+   de `.ds-icon-btn` es `--warm-450` (3,54:1) y este hover lo dejaba muy por
+   debajo del 3:1 de WCAG 2.2 §1.4.11. */
 .ds-icon-btn.pause:hover {
   background: oklch(96% 0.04 80deg);
   color: oklch(45% 0.12 70deg);
-  border-color: oklch(88% 0.08 80deg);
+  border-color: var(--warning-border);
 }
 
 @media (width <= 760px) {

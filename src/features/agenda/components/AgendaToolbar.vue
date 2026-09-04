@@ -161,7 +161,7 @@ function selectView(v: ViewMode) {
 
 .cursor-label {
   margin-left: 8px;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 20px;
   text-transform: capitalize;
   color: var(--warm-900);
@@ -170,8 +170,8 @@ function selectView(v: ViewMode) {
 
 /* A11Y-09 · mismo defecto que el conmutador de sujeto de la cita (issue #208),
    aquí en el selector Mes/Semana/Día. Además le faltaba la frontera del grupo
-   entero: la pista `--warm-150` mide 1,13:1 contra la página, así que ni el
-   conjunto se leía como control. `--warm-450` da 3,55:1. */
+   entero: la pista `--warm-150` mide 1,12:1 contra la página, así que ni el
+   conjunto se leía como control. `--warm-450` da 3,54:1. */
 .view-toggle {
   display: inline-flex;
   background: var(--warm-150);
@@ -195,7 +195,7 @@ function selectView(v: ViewMode) {
 }
 
 /* El segmento elegido se marcaba con relleno `--warm-50` sobre `--warm-150`:
-   1,13:1. `--amatista-500` da 4,50:1 contra su relleno y 4,00:1 contra la
+   1,12:1. `--amatista-500` da 4,44:1 contra su relleno y 3,95:1 contra la
    pista. */
 .view-btn.active {
   background: var(--warm-50);

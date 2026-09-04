@@ -33,7 +33,7 @@ withDefaults(
   font-weight: 500;
   color: var(--amatista-700);
   background: var(--amatista-50);
-  border: 1px solid var(--amatista-200);
+  border: 1px solid var(--amatista-450);
   cursor: pointer;
 }
 .acc-btn--sm {

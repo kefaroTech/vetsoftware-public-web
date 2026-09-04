@@ -283,7 +283,12 @@ onMounted(() => {
   gap: 7px;
   padding: 9px 15px;
   border-radius: 9px;
-  border: 1px solid var(--warm-300);
+
+  /* A11Y-09 · WCAG 2.2 §1.4.11: `--warm-300` medía 1,48:1 sobre el relleno del
+     botón y 1,40:1 contra la página, y el `--warm-400` del hover 2,27:1.
+     `--warm-450` —el escalón que `tokens.css` reserva a bordes de control— da
+     3,54:1 y 3,33:1, así que el mismo borde sirve en los dos estados. */
+  border: 1px solid var(--warm-450);
   background: var(--warm-50);
   color: var(--warm-800);
   font-family: inherit;
@@ -292,14 +297,11 @@ onMounted(() => {
   cursor: pointer;
   height: fit-content;
   white-space: nowrap;
-  transition:
-    background 0.14s ease,
-    border-color 0.14s ease;
+  transition: background 0.14s ease;
 }
 
 .editbtn:hover {
   background: var(--warm-100);
-  border-color: var(--warm-400);
 }
 
 /* La cabecera de identidad vive en `EmpresaHero.vue` con su propio CSS. */
@@ -379,8 +381,8 @@ onMounted(() => {
   padding: 6px 12px;
   border-radius: 8px;
 
-  /* A11Y-09: `--amatista-300` daba 1,90:1 sobre el `--amatista-50` que pone
-     `.ds-tone--accent-soft`. `--amatista-500` da 4,24:1. */
+  /* A11Y-09: `--amatista-300` daba 1,87:1 sobre el `--amatista-50` que pone
+     `.ds-tone--accent-soft`. `--amatista-500` da 4,17:1. */
   border: 1px solid var(--amatista-500);
   font-family: inherit;
   font-size: 12.5px;
@@ -395,7 +397,7 @@ onMounted(() => {
 
 .sedestitle h3 {
   margin: 0;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 22px;
   font-weight: 400;
   letter-spacing: -0.015em;

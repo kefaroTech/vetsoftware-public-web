@@ -76,7 +76,7 @@ function onPrint() {
   }
   printReceipt({
     width: width.value,
-    brand: { name: 'Vetrina' },
+    brand: { name: 'Lumbre' },
     docType: 'Comprobante de venta',
     docNumber: '—',
     meta: [
@@ -154,14 +154,18 @@ function onPrint() {
       <div class="w-seg" role="group" aria-label="Ancho del tiquete">
         <button
           type="button"
+          class="ds-hover-neutral"
           :class="width === '80' ? 'on ds-text-strong' : null"
+          :aria-pressed="width === '80'"
           @click="setWidth('80')"
         >
           80mm
         </button>
         <button
           type="button"
+          class="ds-hover-neutral"
           :class="width === '58' ? 'on ds-text-strong' : null"
+          :aria-pressed="width === '58'"
           @click="setWidth('58')"
         >
           58mm
@@ -256,29 +260,39 @@ function onPrint() {
   padding: 10px 16px;
   border-radius: 9px;
   cursor: pointer;
-  border: 1px solid var(--warm-300);
+
+  /* A11Y-09 · WCAG 2.2 §1.4.11: `--warm-300` medía 1,52:1 sobre el blanco del
+     botón y el `--warm-400` del hover 2,41:1 sobre su relleno. `--warm-450`
+     —el escalón que `tokens.css` reserva a bordes de control— da 3,63:1 y
+     3,54:1, así que el mismo borde sirve en los dos estados. */
+  border: 1px solid var(--warm-450);
   background: white;
   color: var(--warm-800);
 }
 .btn-ghost:hover {
-  border-color: var(--warm-400);
   background: var(--warm-50);
 }
 .w-seg {
   display: inline-flex;
-  border: 1px solid var(--warm-300);
+
+  /* A11Y-09 · WCAG 2.2 §1.4.11: este borde es el único límite visible del
+     conmutador de ancho, y el `padding: 2px` lo mantiene sobre el `--warm-50`
+     del pie del modal también con un segmento activo. `--warm-300` daba ahí
+     1,48:1; `--warm-450` —el escalón que `tokens.css` reserva a bordes de
+     control— da 3,54:1. */
+  border: 1px solid var(--warm-450);
   border-radius: 8px;
   padding: 2px;
   gap: 2px;
 }
 
 /* La regla base se queda con la GEOMETRÍA; el color viaja aparte. `.ds-hover-
-   neutral` no sirve aquí (sólo pinta en `:hover` y esto es un ESTADO activo:
-   el ancho de tiquete elegido), así que el tono fuerte lo pone
+   neutral` sólo pinta en `:hover`, así que lleva el hover y no el ESTADO
+   activo (el ancho de tiquete elegido): el tono fuerte lo pone
    `.ds-text-strong` desde el marcado — con el `color` fuera de esta regla la
-   primitiva (0,1,0) ya no pierde contra `.w-seg button[data-v]` (0,2,1). El
-   `font-weight: 500` coincide con el de la primitiva, así que activar y
-   apagar no cambia el peso. */
+   primitiva (0,1,0) ya no pierde contra `.w-seg button[data-v]` (0,2,1). De la
+   primitiva se aprovecha sólo el `color`: el peso de la posición puesta lo
+   fija `.w-seg button.on`, que sí le gana. */
 .w-seg button {
   font-family: inherit;
   font-size: 12px;
@@ -286,13 +300,24 @@ function onPrint() {
   padding: 5px 10px;
   border-radius: 6px;
   cursor: pointer;
-  border: none;
+
+  /* Reserva el sitio del borde que marca la posición puesta: sin él, activar
+     un segmento lo ensancharía 2px y el grupo daría un salto al conmutar. */
+  border: 1px solid transparent;
   background: transparent;
 }
 .w-seg button:not(.on) {
   color: var(--warm-600);
 }
+
+/* A11Y-09 · WCAG 2.2 §1.4.1 y §1.4.11: el relleno `--warm-100` mide 1,06:1
+   sobre el `--warm-50` que lo rodea, así que solo no señala nada, y el tono
+   del rótulo es información cromática. El peso distingue la posición puesta
+   sin recurrir al color; el borde `--warm-450` le da los 3,33:1 sobre ese
+   relleno y 3,54:1 sobre el fondo del pie. */
 .w-seg button.on {
   background: var(--warm-100);
+  border-color: var(--warm-450);
+  font-weight: var(--weight-semibold);
 }
 </style>

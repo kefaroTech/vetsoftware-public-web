@@ -78,7 +78,7 @@ const nextExpiring = computed(() => props.expiringLots[0] ?? null)
   padding: 11px 14px;
   margin-bottom: 16px;
   background: oklch(96% 0.04 80deg);
-  border: 1px solid oklch(88% 0.08 80deg);
+  border: 1px solid var(--warning-border);
   border-radius: 10px;
   font-size: 13px;
   color: oklch(40% 0.1 70deg);
@@ -89,13 +89,13 @@ const nextExpiring = computed(() => props.expiringLots[0] ?? null)
 }
 .alert.info {
   background: var(--amatista-50);
-  border-color: var(--amatista-200);
+  border-color: var(--info-border);
   color: var(--amatista-700);
   cursor: default;
 }
 .alert.expire {
   background: var(--danger-50);
-  border-color: var(--danger-400);
+  border-color: var(--danger-border);
   color: oklch(45% 0.16 25deg);
   cursor: default;
 }

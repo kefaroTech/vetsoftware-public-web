@@ -14,6 +14,7 @@ import PrimaryButton from '@/components/public/PrimaryButton.vue'
 import AuthBanner from '@/components/public/AuthBanner.vue'
 import AuthField from '@/components/public/AuthField.vue'
 import AuthInput from '@/components/public/AuthInput.vue'
+import { ArrowRight, IdCard, Lock, Sparkles } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
@@ -95,7 +96,7 @@ async function submit() {
       <AuthField label="Empleado" required :error="err('employeeCode')">
         <AuthInput
           v-model="form.employeeCode"
-          icon="mdi-card-account-details-outline"
+          :icon="IdCard"
           placeholder="ADMIN-001"
           :maxlength="50"
           autocomplete="username"
@@ -108,7 +109,7 @@ async function submit() {
         <AuthInput
           v-model="form.password"
           type="password"
-          icon="mdi-lock-outline"
+          :icon="Lock"
           placeholder="••••••••"
           :maxlength="100"
           autocomplete="current-password"
@@ -124,7 +125,7 @@ async function submit() {
       </div>
 
       <PrimaryButton type="submit" :loading="submitting" loading-text="Ingresando…">
-        Iniciar sesión <v-icon size="14">mdi-arrow-right</v-icon>
+        Iniciar sesión <ArrowRight :size="14" aria-hidden="true" />
       </PrimaryButton>
     </div>
 
@@ -135,7 +136,7 @@ async function submit() {
     </div>
 
     <RouterLink :to="{ name: 'signup' }" class="login-secondary">
-      <v-icon size="15">mdi-star-four-points-outline</v-icon>
+      <Sparkles :size="15" aria-hidden="true" />
       Crear una cuenta nueva
     </RouterLink>
   </form>
@@ -199,7 +200,13 @@ async function submit() {
   gap: 8px;
   padding: 11px 16px;
   border-radius: 9px;
-  border: 1px solid var(--pub-line);
+
+  /* A11Y-09 · WCAG 2.2 §1.4.11: `--pub-line` medía 1,23:1 sobre el blanco del
+     botón y el `#d6c8ea` del hover 1,48:1 sobre su relleno. `--pub-ink-400` es
+     el escalón de la rampa pública reservado a glifos y bordes no textuales:
+     3,94:1 en reposo y 3,70:1 sobre el relleno del hover, que por eso conserva
+     el mismo borde. */
+  border: 1px solid var(--pub-ink-400);
   background: #fff;
   color: var(--pub-ink-700);
   font-size: 14px;
@@ -209,7 +216,6 @@ async function submit() {
 }
 
 .login-secondary:hover {
-  border-color: #d6c8ea;
   background: #faf6ff;
 }
 

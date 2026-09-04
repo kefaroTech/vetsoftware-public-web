@@ -328,7 +328,7 @@ onMounted(() => {
   padding: 12px 16px;
   border-radius: 10px;
   background: var(--danger-50);
-  border: 1px solid var(--danger-250);
+  border: 1px solid var(--danger-border);
   color: oklch(45% 0.16 25deg);
   font-size: 13px;
 }
@@ -358,7 +358,7 @@ onMounted(() => {
 
 .rep-card strong {
   font-size: 24px;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-weight: 400;
   color: var(--warm-900);
 }

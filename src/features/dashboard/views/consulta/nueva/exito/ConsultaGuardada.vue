@@ -130,7 +130,7 @@ function createAnother() {
 
 .title {
   margin: 0 0 8px;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 36px;
   font-weight: 400;
   line-height: 1.1;
@@ -170,8 +170,8 @@ function createAnother() {
   flex-wrap: wrap;
 }
 
-/* A11Y-09 · `--amatista-300` daba 2,08:1 sobre el blanco de reposo y 1,90:1 al
-   pasar el ratón. `--amatista-500` da 4,64:1 y 4,24:1. El color del borde NO
+/* A11Y-09 · `--amatista-300` daba 2,04:1 sobre el blanco de reposo y 1,87:1 al
+   pasar el ratón. `--amatista-500` da 4,56:1 y 4,17:1. El color del borde NO
    cambia entre estados a propósito: el indicador nunca se debilita y el hover
    aporta su señal por relleno. */
 .rx {

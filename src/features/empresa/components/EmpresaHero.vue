@@ -63,15 +63,14 @@ const initial = computed(() => props.legalName.trim()[0]?.toUpperCase() || 'E')
   place-items: center;
   background: linear-gradient(135deg, var(--amatista-500), var(--amatista-700));
   color: white;
-  font-family: var(--font-serif);
-  font-style: italic;
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: 30px;
   box-shadow: 0 6px 16px -6px oklch(45% 0.18 var(--hue) / 50%);
 }
 
 .heroname {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 24px;
   font-weight: 400;
   letter-spacing: -0.015em;

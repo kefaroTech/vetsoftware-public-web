@@ -6,6 +6,7 @@ import AuthField from '@/components/public/AuthField.vue'
 import AuthInput from '@/components/public/AuthInput.vue'
 import { authApi } from '../api/auth.api'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { ArrowRight, Mail, MailCheck } from 'lucide-vue-next'
 
 const RESEND_COOLDOWN_SECONDS = 60
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
@@ -106,7 +107,7 @@ async function resend() {
             <AuthInput
               v-model="form.email"
               type="email"
-              icon="mdi-email-outline"
+              :icon="Mail"
               placeholder="tu@correo.com"
               :maxlength="100"
               autocomplete="email"
@@ -116,18 +117,18 @@ async function resend() {
           </AuthField>
 
           <PrimaryButton type="submit" :loading="submitting" loading-text="Enviando…">
-            Enviar código <v-icon size="14">mdi-arrow-right</v-icon>
+            Enviar código <ArrowRight :size="14" aria-hidden="true" />
           </PrimaryButton>
         </form>
       </template>
 
       <template v-else>
         <div class="rc-icon">
-          <v-icon size="38">mdi-email-check-outline</v-icon>
+          <MailCheck :size="38" aria-hidden="true" />
         </div>
         <h1 class="pub-title">Revisa tu correo</h1>
         <p class="pub-sub">
-          Si <strong>{{ form.email.trim() }}</strong> tiene cuentas en Vetrina, te enviamos tu(s)
+          Si <strong>{{ form.email.trim() }}</strong> tiene cuentas en Lumbre, te enviamos tu(s)
           código(s) de usuario.
         </p>
 
@@ -175,8 +176,8 @@ async function resend() {
 }
 
 .rc-resend-wait {
-  /* `--pub-ink-400` mide 4,05:1 sobre blanco y falla §1.4.3 AA; `--pub-ink-500` mide 6,12:1.
-     El respaldo `#a08bbd` era además PEOR que el token que respaldaba (3,4:1), así que una
+  /* `--pub-ink-400` mide 3,94:1 sobre blanco y falla §1.4.3 AA; `--pub-ink-500` mide 5,96:1.
+     El respaldo `#a08bbd` era además PEOR que el token que respaldaba (3,03:1), así que una
      cascada rota empeoraba el contraste en vez de conservarlo. Sin respaldo: el token está
      declarado en `.pub-scope`, que es el ámbito de esta pantalla. */
   color: var(--pub-ink-500);

@@ -187,8 +187,8 @@ const anuncioArrastre = computed(() => {
          nunca va a llegar, porque nada le dijo que no venía (§4.1.3). -->
     <p v-else-if="vacio" class="cman-vacio" role="status" data-testid="catalogo-vacio">
       Todavía no hay módulos publicados para armar un plan a medida. Escríbenos a
-      <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y te decimos qué podemos
-      montarte hoy.
+      <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a> y te decimos qué podemos montarte
+      hoy.
     </p>
 
     <div v-else class="cman-grupos">
@@ -237,7 +237,7 @@ const anuncioArrastre = computed(() => {
 
     <p class="cman-onetime">
       ¿Necesitas que migremos tus datos del sistema que usas hoy, o capacitación para tu equipo?
-      Escríbenos a <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y lo cotizamos
+      Escríbenos a <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a> y lo cotizamos
       aparte.
     </p>
 

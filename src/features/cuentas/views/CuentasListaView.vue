@@ -297,7 +297,7 @@ function onAccountCreated(account: OpenAccountResponse) {
   padding: 11px 14px;
   margin-bottom: 16px;
   background: var(--warning-50);
-  border: 1px solid var(--warning-200);
+  border: 1px solid var(--warning-border);
   border-radius: 10px;
   font-size: 13px;
   color: oklch(40% 0.1 70deg);

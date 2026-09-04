@@ -407,10 +407,10 @@ function onFormClose() {
    `:focus` del componente y el desempate lo decidiría el orden del bundle; con
    las dos reglas en este archivo, el borde de foco gana siempre por orden. */
 
-/* A11Y-09: el tinte dejaba el borde del selector en `--amatista-200`, 1,34:1
+/* A11Y-09: el tinte dejaba el borde del selector en `--amatista-200`, 1,32:1
    sobre su propio relleno `--amatista-50` — un `select` sin frontera.
-   `--amatista-450` da 3,55:1 y se queda por debajo del `--amatista-500` del
-   `:focus` de abajo (4,24:1), que sigue siendo el estado más marcado. */
+   `--amatista-450` da 3,47:1 y se queda por debajo del `--amatista-500` del
+   `:focus` de abajo (4,17:1), que sigue siendo el estado más marcado. */
 .fsel.branch {
   color: var(--amatista-700);
   border-color: var(--amatista-450);

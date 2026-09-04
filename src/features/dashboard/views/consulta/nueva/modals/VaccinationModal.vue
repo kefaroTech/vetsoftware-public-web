@@ -399,7 +399,7 @@ function save() {
   margin-top: 10px;
   width: 100%;
   background: transparent;
-  border: 1.5px dashed var(--warm-300);
+  border: 1.5px dashed var(--warm-450);
   border-radius: 10px;
   padding: 10px 12px;
   font-size: 13px;

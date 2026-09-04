@@ -103,7 +103,7 @@ const router = createRouter({
       component: () => import('@/features/landing/views/LandingView.vue'),
       meta: {
         guestOnly: true,
-        title: 'VetSoftware — Software para clínicas veterinarias en Colombia',
+        title: 'Lumbre — Software para clínicas veterinarias en Colombia',
       },
     },
     {
@@ -127,7 +127,7 @@ const router = createRouter({
       meta: {
         guestOnly: true,
         allowClientWithoutPlan: true,
-        title: 'Planes y precios — VetSoftware',
+        title: 'Planes y precios — Lumbre',
       },
     },
     {
@@ -144,13 +144,13 @@ const router = createRouter({
       path: '/legal/privacidad',
       name: 'legal-privacidad',
       component: () => import('@/features/legal/views/PoliticaPrivacidadView.vue'),
-      meta: { title: 'Política de Tratamiento de Datos Personales — VetSoftware' },
+      meta: { title: 'Política de Tratamiento de Datos Personales — Lumbre' },
     },
     {
       path: '/legal/terminos',
       name: 'legal-terminos',
       component: () => import('@/features/legal/views/TerminosView.vue'),
-      meta: { title: 'Términos del Servicio — VetSoftware' },
+      meta: { title: 'Términos del Servicio — Lumbre' },
     },
     {
       path: '/login',
@@ -243,7 +243,7 @@ const router = createRouter({
           meta: {
             fullBleed: true,
             hideTopbar: true,
-            title: 'Confirma tu contratación — VetSoftware',
+            title: 'Confirma tu contratación — Lumbre',
           },
         },
         {
@@ -255,7 +255,7 @@ const router = createRouter({
           meta: {
             fullBleed: true,
             hideTopbar: true,
-            title: 'Tu plan está reservado — VetSoftware',
+            title: 'Tu plan está reservado — Lumbre',
           },
         },
         {
@@ -721,7 +721,7 @@ router.beforeEach(async (to, from) => {
  * cuando la ruta destino no declara el suyo — si no, el título de la pantalla
  * anterior se quedaría pegado, que es el defecto clásico de este arreglo.
  */
-const TITULO_POR_DEFECTO = 'VetSoftware'
+const TITULO_POR_DEFECTO = 'Lumbre'
 
 router.afterEach((to) => {
   const titulo = to.meta.title

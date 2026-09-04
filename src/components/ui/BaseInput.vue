@@ -138,7 +138,7 @@ const toneClass = computed(() => {
    `.ds-focus-ring:focus-within` no cambia. */
 
 /* A11Y-09 · WCAG 2.2 §1.4.11 (AA): --warm-200 medía 1,23:1 sobre --warm-50 y
-   el límite del campo era invisible con poca luz. --warm-450 da 3,55:1. Es el
+   el límite del campo era invisible con poca luz. --warm-450 da 3,54:1. Es el
    escalón que tokens.css reserva para bordes de control e icono; --warm-200 se
    queda para separadores y divisores, que §1.4.11 exime por decorativos. */
 .tone-border {
@@ -149,7 +149,7 @@ const toneClass = computed(() => {
   background: var(--warm-50);
 }
 
-/* --warm-500 (5,36:1) y no --warm-300 (1,49:1): con el reposo ya en --warm-450
+/* --warm-500 (5,38:1) y no --warm-300 (1,48:1): con el reposo ya en --warm-450
    el tono viejo de hover era MÁS CLARO que el de reposo, así que pasar el ratón
    aclaraba el borde en vez de reforzarlo. */
 .input:hover:not(.disabled, .readonly, .invalid, :focus-within) {

@@ -74,8 +74,8 @@ defineEmits<{ select: [] }>()
 }
 
 .pet-card:hover:not(.selected) {
-  /* A11Y-09: era --warm-300 (1,54:1), más claro que el reposo ya migrado a
-     --warm-450 (3,55:1). El estado seleccionado lo sigue ganando
+  /* A11Y-09: era --warm-300 (1,48:1), más claro que el reposo ya migrado a
+     --warm-450 (3,54:1). El estado seleccionado lo sigue ganando
      `.pet-card.selected` (0,2,0) con su `border` completo en amatista-700. */
   border-color: var(--warm-500);
 }
@@ -121,7 +121,7 @@ defineEmits<{ select: [] }>()
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 18px;
   font-weight: 500;
 }

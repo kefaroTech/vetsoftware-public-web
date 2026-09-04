@@ -189,8 +189,8 @@ const emit = defineEmits<{
 /* Catálogo */
 
 /* A11Y-09 · mismo conmutador segmentado que el de la cita (issue #208): la
-   pista medía 1,13:1 contra la página, así que el grupo no se leía como
-   control. `--warm-450` da 3,55:1. */
+   pista medía 1,12:1 contra la página, así que el grupo no se leía como
+   control. `--warm-450` da 3,54:1. */
 .srcseg {
   display: inline-flex;
   background: var(--warm-150);
@@ -215,7 +215,7 @@ const emit = defineEmits<{
 }
 
 /* El segmento elegido se marcaba con relleno `--warm-50` sobre `--warm-150`:
-   1,13:1. `--amatista-500` da 4,50:1 contra su relleno y 4,00:1 contra la
+   1,12:1. `--amatista-500` da 4,44:1 contra su relleno y 3,95:1 contra la
    pista. */
 .srcbtn.active {
   background: var(--warm-50);
@@ -284,7 +284,7 @@ const emit = defineEmits<{
   font-family: inherit;
   background: var(--amatista-50);
   color: var(--amatista-700);
-  border: 1px solid var(--amatista-200);
+  border: 1px solid var(--amatista-450);
 }
 .cr-add:hover:not(:disabled) {
   background: var(--amatista-100);
@@ -299,7 +299,7 @@ const emit = defineEmits<{
 
 /* Cargos seleccionados */
 .selected {
-  border: 1px solid var(--warm-200);
+  border: 1px solid var(--warm-450);
   border-radius: 12px;
   background: var(--warm-50);
   overflow: hidden;

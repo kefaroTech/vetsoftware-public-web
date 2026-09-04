@@ -75,8 +75,8 @@ const actions = computed<CardAction[]>(() => {
     box-shadow 0.12s ease;
 }
 
-/* A11Y-09: `--amatista-300` daba 2,02:1, por debajo del reposo `--warm-450`
-   (3,55:1). `--amatista-450` da 3,77:1. */
+/* A11Y-09: `--amatista-300` daba 1,99:1, por debajo del reposo `--warm-450`
+   (3,54:1). `--amatista-450` da 3,69:1. */
 .card:hover {
   border-color: var(--amatista-450);
   box-shadow: 0 2px 8px -4px rgb(20 15 30 / 14%);

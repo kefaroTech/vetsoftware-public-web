@@ -45,7 +45,7 @@ const benefits = [
 
 .upsell-title {
   margin: 8px 0 0;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 28px;
   font-weight: 400;
   letter-spacing: -0.015em;

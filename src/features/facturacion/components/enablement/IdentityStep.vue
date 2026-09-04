@@ -397,8 +397,8 @@ async function save() {
     background 0.14s;
 }
 
-/* A11Y-09: `--amatista-300` daba 2,02:1, por debajo del reposo `--warm-450`
-   (3,55:1). `--amatista-450` da 3,77:1 y sigue por debajo del `--amatista-600`
+/* A11Y-09: `--amatista-300` daba 1,99:1, por debajo del reposo `--warm-450`
+   (3,54:1). `--amatista-450` da 3,69:1 y sigue por debajo del `--amatista-600`
    de `.on`. */
 .respitem:hover {
   border-color: var(--amatista-450);

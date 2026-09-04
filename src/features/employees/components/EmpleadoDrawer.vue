@@ -275,7 +275,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 
 .name {
   margin: 0;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 26px;
   line-height: 1.1;
   font-weight: 400;
@@ -330,9 +330,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 }
 
 /* Fondo y color son `.ds-tone--accent-soft`; el peso ya lo pone `.ds-btn`.
-   A11Y-09: `--amatista-200` daba 1,34:1 sobre ese fondo `--amatista-50` y
-   1,21:1 con el `--amatista-100` del hover — el botón no tenía frontera.
-   `--amatista-500` da 4,24:1 y 3,86:1. */
+   A11Y-09: `--amatista-200` daba 1,32:1 sobre ese fondo `--amatista-50` y
+   1,20:1 con el `--amatista-100` del hover — el botón no tenía frontera.
+   `--amatista-500` da 4,17:1 y 3,80:1. */
 .accent {
   border-color: var(--amatista-500, oklch(58% 0.18 300deg));
 }

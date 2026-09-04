@@ -7,6 +7,7 @@ import PublicLayout from '@/components/public/PublicLayout.vue'
 import PrimaryButton from '@/components/public/PrimaryButton.vue'
 import PawLoader from '@/components/feedback/PawLoader.vue'
 import { useTokenDeEnlace } from '@/composables/useTokenDeEnlace'
+import { CircleAlert, CircleCheck } from 'lucide-vue-next'
 
 /** Pantalla 3 — Verificación de correo (handoff §7.3). 3 estados: loading | success | error. */
 const router = useRouter()
@@ -54,7 +55,7 @@ onMounted(async () => {
       <!-- Éxito -->
       <template v-else-if="state === 'success'">
         <div class="verify-icon verify-icon--ok">
-          <v-icon size="40">mdi-check-circle-outline</v-icon>
+          <CircleCheck :size="40" aria-hidden="true" />
         </div>
         <h1 class="verify-title">¡Cuenta verificada!</h1>
         <p class="verify-text">Tu correo quedó confirmado. Ya puedes iniciar sesión.</p>
@@ -66,7 +67,7 @@ onMounted(async () => {
       <!-- Error -->
       <template v-else>
         <div class="verify-icon verify-icon--err">
-          <v-icon size="40">mdi-alert-circle-outline</v-icon>
+          <CircleAlert :size="40" aria-hidden="true" />
         </div>
         <h1 class="verify-title">No pudimos verificar</h1>
         <p class="verify-text">{{ errorMessage }}</p>
@@ -123,7 +124,7 @@ onMounted(async () => {
 }
 
 .verify-title {
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-display);
   font-size: 30px;
   font-weight: 400;
   margin: 18px 0 0;

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { CircleAlert, TriangleAlert, X } from 'lucide-vue-next'
 /**
  * Banner cerrable error/warning (handoff reg-fields `Banner`).
  *
@@ -26,9 +27,12 @@ const emit = defineEmits<(e: 'close') => void>()
     :role="tone === 'error' ? 'alert' : 'status'"
     :aria-live="tone === 'error' ? undefined : 'polite'"
   >
-    <v-icon size="17" class="ds-banner-icon">
-      {{ tone === 'warning' ? 'mdi-alert-outline' : 'mdi-alert-circle-outline' }}
-    </v-icon>
+    <component
+      :is="tone === 'warning' ? TriangleAlert : CircleAlert"
+      :size="17"
+      class="ds-banner-icon"
+      aria-hidden="true"
+    />
     <div class="pub-banner-body"><slot /></div>
     <button
       v-if="closable"
@@ -37,7 +41,7 @@ const emit = defineEmits<(e: 'close') => void>()
       aria-label="Cerrar"
       @click="emit('close')"
     >
-      <v-icon size="15">mdi-close</v-icon>
+      <X :size="15" aria-hidden="true" />
     </button>
   </div>
 </template>

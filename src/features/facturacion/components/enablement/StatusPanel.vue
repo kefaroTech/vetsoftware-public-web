@@ -194,7 +194,7 @@ function alertText(
 }
 
 .readycard-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 21px;
   color: var(--warm-900);
 }

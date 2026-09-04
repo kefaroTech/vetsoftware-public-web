@@ -302,7 +302,7 @@ async function onChargeVoided() {
   border-radius: 11px;
   display: grid;
   place-items: center;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 16px;
   font-weight: 500;
   flex-shrink: 0;
@@ -322,7 +322,7 @@ async function onChargeVoided() {
 .name.lg {
   margin: 0;
   font-size: 22px;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-weight: 400;
   letter-spacing: -0.015em;
   line-height: 1.05;
@@ -367,7 +367,7 @@ async function onChargeVoided() {
 
 .sum-box.alert {
   background: var(--warning-50);
-  border-color: var(--warning-200);
+  border-color: var(--warning-border);
 }
 
 .sum-lab {
@@ -378,7 +378,7 @@ async function onChargeVoided() {
 }
 
 .sum-val {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 24px;
   color: var(--warm-900);
   letter-spacing: -0.02em;

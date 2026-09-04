@@ -150,7 +150,7 @@ const emit = defineEmits<{ retry: []; goToCash: []; useCashBranch: [] }>()
 
 .cash-gate h2 {
   margin: 8px 0 10px;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: clamp(23px, 3vw, 31px);
   font-weight: 500;
   color: var(--warm-900);
@@ -189,7 +189,7 @@ const emit = defineEmits<{ retry: []; goToCash: []; useCashBranch: [] }>()
 .cash-gate-btn.secondary {
   color: var(--amatista-700);
   background: var(--warm-50);
-  border: 1px solid var(--amatista-300, #c9a9df);
+  border: 1px solid var(--amatista-450);
   box-shadow: none;
 }
 

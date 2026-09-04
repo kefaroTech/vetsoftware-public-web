@@ -296,7 +296,7 @@ function onDrop(dayIso: string, hour: number) {
 .chip.atrasada {
   background: var(--danger-50);
   color: var(--danger-700);
-  border: 1px solid var(--danger-300);
+  border: 1px solid var(--danger-border);
   cursor: pointer;
 }
 

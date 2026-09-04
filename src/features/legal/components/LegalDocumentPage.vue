@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { PawPrint } from 'lucide-vue-next'
 import LegalDocumentBody from './LegalDocumentBody.vue'
 import { useLegalDocuments } from '../composables/useLegalDocuments'
 import { LEGAL_DOCUMENTS } from '../content/legal.content'
@@ -36,10 +35,7 @@ const otro = computed(() =>
     <a class="pub-skip" href="#contenido">Saltar al contenido</a>
 
     <header class="pub-doc-topbar">
-      <RouterLink :to="{ name: 'landing' }" class="pub-doc-brand">
-        <PawPrint :size="18" aria-hidden="true" />
-        VetSoftware
-      </RouterLink>
+      <RouterLink :to="{ name: 'landing' }" class="pub-doc-brand">Lumbre</RouterLink>
     </header>
 
     <main id="contenido" class="pub-doc-page" tabindex="-1">

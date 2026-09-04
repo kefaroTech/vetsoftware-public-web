@@ -46,9 +46,9 @@ const model = defineModel<boolean>({ required: true })
     background 0.12s ease;
 }
 
-/* A11Y-09: `--amatista-300` daba 1,90:1 sobre el relleno `--warm-100` de este
-   control, por debajo del reposo `--warm-450` (3,35:1 sobre ese mismo relleno).
-   `--amatista-450` da 3,56:1. */
+/* A11Y-09: `--amatista-300` daba 1,87:1 sobre el relleno `--warm-100` de este
+   control, por debajo del reposo `--warm-450` (3,33:1 sobre ese mismo relleno).
+   `--amatista-450` da 3,48:1. */
 .sample-collected:hover {
   border-color: var(--amatista-450);
 }
@@ -59,8 +59,8 @@ const model = defineModel<boolean>({ required: true })
 }
 
 /* A11Y-09 · una casilla es el caso de manual de §1.4.11: sin marcar, su borde
-   ES el control entero. `--warm-300` daba 1,49:1 sobre su relleno `--warm-50`;
-   `--warm-450` da 3,55:1. */
+   ES el control entero. `--warm-300` daba 1,48:1 sobre su relleno `--warm-50`;
+   `--warm-450` da 3,54:1. */
 .cb-box {
   width: 18px;
   height: 18px;
@@ -77,8 +77,8 @@ const model = defineModel<boolean>({ required: true })
     border-color 0.12s ease;
 }
 
-/* `--amatista-400` da 2,97:1: incumple por sí solo y además queda por debajo
-   del reposo de la casilla, ya en 3,55:1. `--amatista-450` da 3,77:1. */
+/* `--amatista-400` da 2,92:1: incumple por sí solo y además queda por debajo
+   del reposo de la casilla, ya en 3,54:1. `--amatista-450` da 3,69:1. */
 .sample-collected:hover .cb-box:not(.checked) {
   border-color: var(--amatista-450);
 }

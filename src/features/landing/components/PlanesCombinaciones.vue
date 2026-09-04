@@ -92,7 +92,7 @@ function elegir(plan: PublicPlan) {
   cursor: pointer;
 }
 
-/* `--pub-ame-600` mide 5,38:1 sobre blanco; `--pub-line` se queda en 1,23:1 y
+/* `--pub-ame-600` mide 5,25:1 sobre blanco; `--pub-line` se queda en 1,23:1 y
    no vale como único borde de un control marcado (§1.4.11). */
 .pcb-opt.is-on {
   border-color: var(--pub-ame-600);

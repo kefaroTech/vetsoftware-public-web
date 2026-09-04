@@ -155,8 +155,8 @@ function goCreate() {
   padding: 0 14px;
   border-radius: 9px;
 
-  /* A11Y-09: `--amatista-300` daba 2,02:1 en reposo y 1,73:1 con el relleno del
-     hover. `--amatista-500` da 4,50:1 y 3,86:1 — el mismo borde en los dos
+  /* A11Y-09: `--amatista-300` daba 1,99:1 en reposo y 1,70:1 con el relleno del
+     hover. `--amatista-500` da 4,44:1 y 3,80:1 — el mismo borde en los dos
      estados, para que el hover no reste contraste al indicador. */
   border: 1.5px solid var(--amatista-500);
   font-family: inherit;

@@ -121,7 +121,7 @@ onMounted(async () => {
         <template v-if="resultado.validaHasta">
           , válida hasta el {{ formatDateLong(resultado.validaHasta) }}</template
         >. Para dejar los módulos encendidos en tu cuenta escríbenos a
-        <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a
+        <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a
         ><template v-if="resultado.cotizacionNumero"> con ese número</template>.
       </p>
     </section>

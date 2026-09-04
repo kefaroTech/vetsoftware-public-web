@@ -100,7 +100,7 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
 }
 
 .card:hover {
-  border-color: var(--warm-300);
+  border-color: var(--warm-450);
   box-shadow: 0 4px 14px -8px rgb(20 15 30 / 18%);
 }
 
@@ -132,7 +132,7 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
 
 .name {
   margin: 0;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 17px;
   font-weight: 400;
   letter-spacing: -0.01em;
@@ -183,7 +183,7 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
 }
 
 .stat-num {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 26px;
   line-height: 1;
   color: var(--warm-900);
@@ -235,9 +235,9 @@ const overflowCount = computed(() => Math.max(0, props.subModules.length - 4))
   gap: 6px;
   padding: 6px 12px;
 
-  /* A11Y-09: `--amatista-200` daba 1,34:1 sobre el `--amatista-50` que pone
-     `.ds-tone--accent-soft`, y el hover lo bajaba a 1,73:1. `--amatista-500` da
-     4,24:1 en reposo y 3,86:1 bajo el relleno del hover; el mismo borde en los
+  /* A11Y-09: `--amatista-200` daba 1,32:1 sobre el `--amatista-50` que pone
+     `.ds-tone--accent-soft`, y el hover lo bajaba a 1,20:1. `--amatista-500` da
+     4,17:1 en reposo y 3,80:1 bajo el relleno del hover; el mismo borde en los
      dos estados, para que señalar el botón no le reste contraste. */
   border: 1px solid var(--amatista-500);
   border-radius: 7px;

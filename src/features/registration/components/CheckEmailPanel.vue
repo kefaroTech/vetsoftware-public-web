@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import PrimaryButton from '@/components/public/PrimaryButton.vue'
+import { MailCheck } from 'lucide-vue-next'
 
 /** Pantalla 2 del registro — "Revisa tu correo" (handoff §7.2). Sin auto-login. */
 defineProps<{ email: string }>()
@@ -11,7 +12,7 @@ const router = useRouter()
 <template>
   <div class="check-card pub-reveal">
     <div class="check-icon">
-      <v-icon size="36">mdi-email-check-outline</v-icon>
+      <MailCheck :size="36" aria-hidden="true" />
     </div>
     <h1 class="check-title">Revisa tu correo</h1>
     <p class="check-text">
@@ -51,7 +52,7 @@ const router = useRouter()
 }
 
 .check-title {
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-display);
   font-size: 30px;
   font-weight: 400;
   margin: 18px 0 0;

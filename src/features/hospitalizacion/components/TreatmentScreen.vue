@@ -347,15 +347,15 @@ function onSuspendConfirm() {
   font-weight: 500;
 }
 
-/* A11Y-09: `--amatista-300` daba 2,02:1, por debajo del reposo `--warm-450`
-   (3,55:1). `--amatista-450` da 3,77:1. */
+/* A11Y-09: `--amatista-300` daba 1,99:1, por debajo del reposo `--warm-450`
+   (3,54:1). `--amatista-450` da 3,69:1. */
 .nav:hover,
 .today:hover {
   border-color: var(--amatista-450);
 }
 
 .weeklabel {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 16px;
   color: var(--warm-800);
   min-width: 120px;
@@ -375,7 +375,7 @@ function onSuspendConfirm() {
 
 /* Resto sobre `.ds-btn --sm` + `.ds-tone--accent-soft`: borde y radio propios. */
 .add {
-  border-color: var(--amatista-200);
+  border-color: var(--amatista-450);
   border-radius: var(--radius-md);
 }
 .add:hover {
@@ -414,7 +414,7 @@ function onSuspendConfirm() {
   vertical-align: middle;
   background: oklch(94% 0.05 25deg);
   color: var(--danger-700);
-  border: 1px solid var(--danger-250);
+  border: 1px solid var(--danger-border);
 }
 
 .row-name {
