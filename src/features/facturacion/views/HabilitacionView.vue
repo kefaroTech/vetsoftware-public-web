@@ -37,7 +37,7 @@ function openWizard(step: number) {
       </div>
     </header>
 
-    <p v-if="error" class="error-banner">{{ error }}</p>
+    <div v-if="error" class="ds-banner ds-banner--error" role="alert">{{ error }}</div>
 
     <EnablementWizard v-if="mode === 'wizard'" :initial-step="wizardStep" @exit="mode = 'panel'" />
     <StatusPanel v-else @open-wizard="openWizard" @open-retenciones="retencionesOpen = true" />
@@ -70,16 +70,6 @@ function openWizard(step: number) {
   font-weight: 600;
   padding: 2px 8px;
   border-radius: var(--radius-pill);
-}
-
-.error-banner {
-  margin: 0;
-  padding: 12px 16px;
-  border-radius: 10px;
-  background: var(--danger-50);
-  border: 1px solid var(--danger-border);
-  color: oklch(45% 0.16 25deg);
-  font-size: 13px;
 }
 
 /* El titular usa `.ds-display`; sólo conserva su separación superior. */

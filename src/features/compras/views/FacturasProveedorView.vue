@@ -173,7 +173,7 @@ onMounted(refresh)
       </button>
     </div>
 
-    <p v-if="error" class="ds-server-error">{{ error }}</p>
+    <div v-if="error" class="ds-banner ds-banner--error" role="alert">{{ error }}</div>
 
     <!-- Facturas -->
     <template v-if="tab === 'facturas'">
@@ -198,7 +198,9 @@ onMounted(refresh)
           </tr>
         </thead>
         <tbody>
-          <tr v-if="!loading && items.length === 0">
+          <!-- EST-01: sin `!error` la pantalla que falló afirmaría que no hay
+               facturas, que es una afirmación contable y es falsa. -->
+          <tr v-if="!error && !loading && items.length === 0">
             <td colspan="8" class="ds-empty ds-empty--md">No hay facturas registradas.</td>
           </tr>
           <tr v-for="inv in items" :key="inv.id">
@@ -274,7 +276,7 @@ onMounted(refresh)
           </tr>
         </thead>
         <tbody>
-          <tr v-if="!agingLoading && agingCols.length === 0">
+          <tr v-if="!error && !agingLoading && agingCols.length === 0">
             <td colspan="8" class="ds-empty ds-empty--md">No hay cuentas por pagar pendientes.</td>
           </tr>
           <tr v-for="row in agingCols" :key="row.supplierId">

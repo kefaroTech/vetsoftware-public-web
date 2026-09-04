@@ -156,7 +156,7 @@ const hasError = computed(() => roles.error.value ?? permissionsCatalog.error.va
       </template>
     </PageHeader>
 
-    <div v-if="hasError" class="banner-error">{{ hasError }}</div>
+    <div v-if="hasError" class="ds-banner ds-banner--error" role="alert">{{ hasError }}</div>
 
     <div class="grid">
       <AddRoleCard v-if="canCreateRole" @click="openCreate" />
@@ -173,7 +173,12 @@ const hasError = computed(() => roles.error.value ?? permissionsCatalog.error.va
         @toggle-active="(v: boolean) => onToggleActive(role, v)"
         @edit="openEdit(role)"
       />
-      <div v-if="orderedRoles.length === 0 && !isLoading" class="empty ds-grid-span ds-empty">
+      <!-- EST-01: la rama de error va ANTES que la de vacío; sin `!hasError` la
+           pantalla que falló afirma que no hay roles creados. -->
+      <div
+        v-if="!hasError && orderedRoles.length === 0 && !isLoading"
+        class="empty ds-grid-span ds-empty"
+      >
         Aún no hay roles creados. Empezá con "Crear rol".
       </div>
     </div>
@@ -194,15 +199,6 @@ const hasError = computed(() => roles.error.value ?? permissionsCatalog.error.va
   gap: 24px;
   max-width: 1320px;
   margin: 0 auto;
-}
-
-.banner-error {
-  background: oklch(96% 0.04 25deg);
-  border: 1px solid oklch(85% 0.06 25deg);
-  color: oklch(40% 0.16 25deg);
-  border-radius: 9px;
-  padding: 10px 14px;
-  font-size: 13px;
 }
 
 .grid {

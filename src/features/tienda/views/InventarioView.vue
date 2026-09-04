@@ -252,7 +252,12 @@ function onFormClose() {
       </div>
     </header>
 
-    <div v-if="store.error.value" class="ds-banner ds-banner--error">{{ store.error.value }}</div>
+    <!-- EST-01: la rama de error va ANTES que la del listado. Con las dos a la
+         vez, la tabla afirma «Sin productos para el filtro» sobre una carga que
+         falló. -->
+    <div v-if="store.error.value" class="ds-banner ds-banner--error" role="alert">
+      {{ store.error.value }}
+    </div>
 
     <!-- El barrido del saldo tiene cota (20 páginas × 200 = 4.000 SKU). Cuando la
          toca, el mapa está incompleto y la tabla enseñaría ceros de productos
@@ -274,7 +279,7 @@ function onFormClose() {
     />
 
     <InventoryProductsTable
-      v-if="mode === 'active'"
+      v-if="!store.error.value && mode === 'active'"
       v-model:query="query"
       v-model:cat="cat"
       v-model:st-state="stState"
@@ -299,7 +304,7 @@ function onFormClose() {
     />
 
     <InventoryPausedTable
-      v-else
+      v-else-if="!store.error.value"
       :products="store.pausedProducts.value"
       :loading="pausedLoading"
       :can-delete="canDelete"
@@ -395,9 +400,16 @@ function onFormClose() {
    queda el CSS de la cabecera. */
 
 /* El rótulo en versalitas es `.ds-kicker ds-kicker--spaced` y la fila de la
-   cabecera `.ds-flex-row` (primitives.css). */
+   cabecera `.ds-flex-row` (primitives.css).
+
+   `.ds-head` es flex sin `flex-wrap` y estos seis controles llevan
+   `.ds-btn--nowrap`: sin envolver aquí, entre 761 px y el ancho en que todos
+   caben en una línea la acción primaria se sale de la pantalla y no hay forma
+   de alcanzarla —el único punto de corte que apilaba era `<= 760px`. */
 .head-actions {
   flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 /* El selector de sede es un `FilterSelect` teñido: solo se queda el tinte, que

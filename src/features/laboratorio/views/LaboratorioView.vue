@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
+import BaseTabs from '@/components/ui/BaseTabs.vue'
+import BaseTabPanel from '@/components/ui/BaseTabPanel.vue'
+import type { TabItem } from '@/components/ui/tabs'
 import { useBranches } from '@/features/branches/composables/useBranches'
 import LabBoard from '../components/LabBoard.vue'
 import LabHistory from '../components/LabHistory.vue'
@@ -20,6 +23,10 @@ const queue = useLabQueue()
 const { selectedBranchId } = useBranches()
 
 const tab = ref<'board' | 'history'>('board')
+const LAB_TABS: TabItem<'board' | 'history'>[] = [
+  { value: 'board', label: 'Bandeja activa' },
+  { value: 'history', label: 'Histórico' },
+]
 const viewing = ref<LaboratoryTestResponse | null>(null)
 const resultsFor = ref<LaboratoryTestResponse | null>(null)
 
@@ -110,25 +117,31 @@ async function onResultsUploaded() {
       lead="Procesa las muestras solicitadas: toma, carga de resultados y validación firmada."
     />
 
-    <div class="tabs">
-      <button type="button" :class="{ active: tab === 'board' }" @click="tab = 'board'">
-        Bandeja activa
-      </button>
-      <button type="button" :class="{ active: tab === 'history' }" @click="tab = 'history'">
-        Histórico
-      </button>
-    </div>
-
-    <div v-if="queue.error.value" class="ds-banner ds-banner--error">{{ queue.error.value }}</div>
-
-    <LabBoard
-      v-if="tab === 'board'"
-      :items="queue.items.value"
-      :loading="queue.loading.value"
-      @open="viewing = $event"
-      @action="handleAction"
+    <BaseTabs
+      v-model="tab"
+      :tabs="LAB_TABS"
+      name="laboratorio"
+      tablist-label="Vista de la bandeja"
+      class="tabs"
     />
-    <LabHistory v-else @open="viewing = $event" />
+
+    <BaseTabPanel name="laboratorio" :value="tab">
+      <template v-if="tab === 'board'">
+        <!-- EST-01: la rama de error va ANTES que el tablero. Detrás de él, un 500
+             se lee como cuatro columnas «Sin muestras», que es lo contrario. -->
+        <div v-if="queue.error.value" class="ds-banner ds-banner--error" role="alert">
+          {{ queue.error.value }}
+        </div>
+        <LabBoard
+          v-else
+          :items="queue.items.value"
+          :loading="queue.loading.value"
+          @open="viewing = $event"
+          @action="handleAction"
+        />
+      </template>
+      <LabHistory v-else @open="viewing = $event" />
+    </BaseTabPanel>
 
     <LabDetailModal
       :open="viewing !== null"
@@ -148,30 +161,7 @@ async function onResultsUploaded() {
 
 <style scoped>
 .tabs {
-  display: flex;
-  gap: 4px;
   border-bottom: 1px solid var(--warm-200);
   margin-bottom: 20px;
-}
-
-.tabs button {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--warm-600);
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  padding: 10px 14px;
-  margin-bottom: -1px;
-  cursor: pointer;
-}
-.tabs button:hover {
-  color: var(--warm-800);
-}
-
-.tabs button.active {
-  color: var(--amatista-700);
-  border-bottom-color: var(--amatista-700);
 }
 </style>
