@@ -109,7 +109,7 @@ function encabezadoDePropuesta(page: Page) {
  */
 async function contarleAlAsistente(page: Page): Promise<void> {
   await page
-    .getByLabel('¿A qué se dedica tu veterinaria?')
+    .getByLabel('¿A qué se dedica tu negocio?')
     .fill('Clínica veterinaria E2E de prueba: consultas, vacunación, baños y una sola sede.')
   await page.getByLabel('¿A qué correo te mandamos tu propuesta?').fill('e2e@vetsoftware.invalid')
 
@@ -248,7 +248,7 @@ test.describe('El enlace del correo — el que ya no sirve', () => {
     // cuadro de texto, que ya estaba montado.
     await page.getByRole('button', { name: 'Empezar de nuevo' }).click()
     await expect(aviso).toBeHidden()
-    await expect(page.getByLabel('¿A qué se dedica tu veterinaria?')).toBeVisible()
+    await expect(page.getByLabel('¿A qué se dedica tu negocio?')).toBeVisible()
 
     expect(red.llamadas, 'se preguntó por el token exactamente una vez').toHaveLength(1)
     sinPeticionesImprevistas(red)

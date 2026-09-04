@@ -96,20 +96,26 @@ function capacidad(
 }
 
 /**
- * Los catorce artículos, con los nombres EXACTOS que publica `plans.content.ts`
- * en los `includes` de cada paquete.
+ * Los catorce artículos, con los rótulos que el catálogo publica DE VERDAD:
+ * changeset 403 para los tres BUNDLE y 407 para el vocabulario «negocio /
+ * mascotas» de seis MODULE, tres `short_label` y el área `PATIENT_CARE`.
  *
- * <p>Que coincidan no es cosmética: la tabla de pruebas del paso 6 se arma con
- * el catálogo en la rama modular y con el plan en la del paquete, y dos juegos
- * de nombres harían que la misma pantalla llamara «Caja» a lo que la otra rama
- * llama «Caja y punto de venta».
+ * <p>Manda la semilla, no `plans.content.ts`. Esa transcripción se quedó en el
+ * changeset 308 y todavía dice «Núcleo: clientes y mascotas», «Caja y punto de
+ * venta» y «Pack Clínica» (issue #360), así que mientras no se realinee **las
+ * dos ramas del paso 6 nombran distinto el mismo módulo**: la modular lo lee de
+ * aquí y la del paquete, de allí. Es la incoherencia real del producto, no un
+ * despiste del doble, y por eso se reproduce en vez de taparse — ver el issue
+ * #371. Alinear este fichero con el otro volvería a poner la suite en verde
+ * sobre un catálogo que ya no existe, que es justo lo que no puede pasar.
  */
 const MODULOS: PublicCatalogItemResponse[] = [
   modulo({
     code: 'CORE',
-    name: 'Núcleo: clientes y mascotas',
+    name: 'Clientes y mascotas',
     monthlyAmount: 59_000,
     mandatory: true,
+    shortLabel: 'Clientes y mascotas',
   }),
   modulo({
     code: 'SCHEDULING',
@@ -148,33 +154,33 @@ const MODULOS: PublicCatalogItemResponse[] = [
   modulo({ code: 'SURGERY', name: 'Cirugía', monthlyAmount: 45_000, areaCode: 'HOSPITAL' }),
   modulo({
     code: 'LAB_IMAGING',
-    name: 'Laboratorio e imagen diagnóstica',
+    name: 'Laboratorio y radiografías',
     monthlyAmount: 42_000,
     areaCode: 'HOSPITAL',
     shortLabel: 'Laboratorio',
   }),
   modulo({
     code: 'SERVICES',
-    name: 'Servicios, tarifas y promociones',
+    name: 'Tarifas y promociones',
     monthlyAmount: 33_000,
     areaCode: 'MONEY',
     shortLabel: 'Servicios',
   }),
   modulo({
     code: 'CASH_REGISTER',
-    name: 'Caja y punto de venta',
+    name: 'Caja y ventas',
     monthlyAmount: 42_000,
     trialDays: 14,
     areaCode: 'MONEY',
-    shortLabel: 'Caja',
+    shortLabel: 'Caja y ventas',
   }),
   modulo({
     code: 'OPEN_ACCOUNTS',
-    name: 'Cuentas abiertas y cartera',
+    name: 'Cuentas por cobrar',
     monthlyAmount: 29_000,
     trialDays: 14,
     areaCode: 'MONEY',
-    shortLabel: 'Cuentas abiertas',
+    shortLabel: 'Por cobrar',
   }),
   // `NEVER_FREE` en el catálogo real: `trialDays` nulo es un dato de negocio y
   // no un hueco, y es el único artículo que hace aparecer la fila «Sin prueba ·
@@ -189,7 +195,7 @@ const MODULOS: PublicCatalogItemResponse[] = [
   }),
   modulo({
     code: 'INVENTORY',
-    name: 'Inventario y kardex',
+    name: 'Inventario de productos',
     monthlyAmount: 35_000,
     trialDays: 14,
     areaCode: 'STOCK',
@@ -272,7 +278,7 @@ export const CATALOGO_EMBUDO: PublicCatalogResponse = {
   capacities: CAPACIDADES,
   oneTimeItems: [],
   packs: [
-    paquete('PACK_SPA', 'Pack Spa', 179_000, [
+    paquete('PACK_SPA', 'Estética y guardería', 179_000, [
       'SCHEDULING',
       'GROOMING',
       'SERVICES',
@@ -280,21 +286,21 @@ export const CATALOGO_EMBUDO: PublicCatalogResponse = {
     ]),
     paquete(
       'PACK_CLINIC',
-      'Pack Clínica',
+      'Consulta de barrio',
       189_000,
       ['SCHEDULING', 'CLINICAL_HISTORY', 'VACCINATION_DEWORMING', 'CASH_REGISTER'],
       true,
     ),
     paquete(
       'PACK_FULL',
-      'Pack Clínica completa',
+      'Clínica completa',
       449_000,
       MODULOS.filter((m) => !m.mandatory).map((m) => m.code),
     ),
   ],
   requirements: [],
   areas: [
-    { code: 'PATIENT_CARE', name: 'Atención a los pacientes' },
+    { code: 'PATIENT_CARE', name: 'Atención a las mascotas' },
     { code: 'HOSPITAL', name: 'Hospital y quirófano' },
     { code: 'MONEY', name: 'Mostrador y dinero' },
     { code: 'STOCK', name: 'Inventario y compras' },

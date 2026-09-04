@@ -4,7 +4,7 @@ import { RouterLink } from 'vue-router'
 import {
   calcularEstimado,
   importeEstimado,
-  sufijoCiclo,
+  sufijoConImpuesto,
   textoSinPrecio,
 } from '../composables/planPricing'
 import {
@@ -64,8 +64,8 @@ const avisoSinPrecio = computed(() => textoSinPrecio(estimado.value.sinPrecio, p
       <summary id="seleccion-titulo" class="sel-summary">Tu selección</summary>
       <p class="sel-line">{{ linea }}</p>
       <p class="sel-amount">
-        Estimado: <strong>{{ importeEstimado(estimado.subtotal) }}</strong> + IVA
-        {{ sufijoCiclo(ciclo) }}
+        Estimado: <strong>{{ importeEstimado(estimado.total) }}</strong>
+        {{ sufijoConImpuesto(ciclo) }}
       </p>
       <p v-if="avisoSinPrecio" class="ds-banner ds-banner--warning sel-sinprecio" role="status">
         {{ avisoSinPrecio }}

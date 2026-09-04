@@ -97,7 +97,7 @@ const touched = reactive<Record<Campo, boolean>>({
 function validarTexto(v: string): string | null {
   const limpio = v.trim()
   if (limpio.length === 0) {
-    return 'Cuéntanos a qué se dedica tu veterinaria para poder proponerte algo.'
+    return 'Cuéntanos a qué se dedica tu negocio para poder proponerte algo.'
   }
   if (limpio.length < MIN_DESCRIPCION) {
     // El literal vive en `copy.content.ts` y no aquí: la caja del hero da el
@@ -229,9 +229,9 @@ function enviar(): void {
   <div class="aen" data-testid="asistente-entrada">
     <ErrorSummary ref="resumen" :items="itemsResumen" />
 
-    <h2 class="aen-h2">Cuéntanos qué hace tu veterinaria</h2>
+    <h2 class="aen-h2">Cuéntanos qué hace tu negocio</h2>
 
-    <label :for="idTexto" class="aen-label">¿A qué se dedica tu veterinaria?</label>
+    <label :for="idTexto" class="aen-label">¿A qué se dedica tu negocio?</label>
     <!-- Los ejemplos van FUERA del `placeholder`: un placeholder desaparece al
          escribir y es texto de bajo contraste que se lee como valor introducido. -->
     <p :id="idAyudaTexto" class="aen-ayuda">

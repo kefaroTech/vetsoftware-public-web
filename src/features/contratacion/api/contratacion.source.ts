@@ -196,7 +196,7 @@ export async function fetchResumenContratacion(args: ResumenArgs): Promise<Resum
     // `findById` devuelve null sin permiso `company.read` o con 404, y la vista
     // degrada con gracia: se sigue pudiendo contratar sin ver el NIT, pero no se
     // inventa un nombre de clínica.
-    empresaNombre: empresa?.name ?? 'tu clínica',
+    empresaNombre: empresa?.name ?? 'tu negocio',
     empresaIdentificador: empresa?.identifier ?? '',
     planCode: plan.code,
     titulo: plan.name,
@@ -267,7 +267,7 @@ export async function fetchResumenSeleccion(args: ResumenSeleccionArgs): Promise
 
   return {
     origen: 'PLAN',
-    empresaNombre: empresa?.name ?? 'tu clínica',
+    empresaNombre: empresa?.name ?? 'tu negocio',
     empresaIdentificador: empresa?.identifier ?? '',
     // Nulo porque no hay paquete: es lo que hace que `lineasDeContratacion`
     // arme la cesta con el catálogo en vez de con una línea de paquete.
@@ -412,7 +412,7 @@ export async function fetchResumenPropuesta(args: ResumenPropuestaArgs): Promise
 
   const resumen: ResumenPropuesta = {
     origen: 'PROPUESTA',
-    empresaNombre: empresa?.name ?? 'tu clínica',
+    empresaNombre: empresa?.name ?? 'tu negocio',
     empresaIdentificador: empresa?.identifier ?? '',
     titulo: TITULO_PROPUESTA,
     propuestaId: propuesta.id,

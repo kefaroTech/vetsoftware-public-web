@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { enrutarEmbudoPublico } from './helpers/catalogo'
+import { enrutarEmbudoPublico, RUTAS_DEL_EMBUDO } from './helpers/catalogo'
 import { CLAVE_INTENCION, intencion, leerIntencion, sembrarIntencion } from './helpers/contratacion'
 import { exigir } from './helpers/exigir'
 
@@ -85,6 +85,41 @@ async function descripcionDe(page: Page, control: Locator): Promise<string> {
 test.beforeEach(async ({ page }) => {
   await enrutarEmbudoPublico(page)
 })
+
+/**
+ * Un relato que menciona tres módulos de TRES áreas distintas, y ninguno de la
+ * cuarta.
+ *
+ * <p>Las tres son deliberadas: con los tres en la misma área no se podría
+ * distinguir «se abren las áreas con detección» de «se abre la primera», que es
+ * lo que la portada hacía antes y sigue haciendo cuando no reconoce nada.
+ *
+ * <p>`guardería` → spa · `vendemos` → caja · `alimento` → inventario. Hospital y
+ * quirófano se queda fuera, y es el área que prueba que no se abren las cuatro.
+ */
+const RELATO = 'Tenemos guardería y vendemos alimento.'
+
+/** Los tres que {@link RELATO} nombra, por el rótulo que publica el catálogo. */
+const DETECTADOS = [
+  'Spa, estética y guardería',
+  'Caja y ventas',
+  'Inventario de productos',
+] as const
+
+/**
+ * Escribe el relato y espera al REPOSO, no a un reloj.
+ *
+ * <p>La propuesta se recalcula 500 ms después de la última tecla (`REPOSO_MS`),
+ * así que lo que se espera es el estado observable —la región de estado ya
+ * dice cuántos módulos propone— y nunca un `waitForTimeout`, que en una máquina
+ * cargada se queda corto y en una rápida sobra.
+ */
+async function contarElNegocio(page: Page, relato: string, cuantos: number): Promise<void> {
+  await page.getByLabel('¿Qué hace tu negocio?').fill(relato)
+  await expect(page.locator('#cotizador').getByRole('status')).toContainText(
+    `te proponemos ${cuantos}`,
+  )
+}
 
 test.describe('Landing comercial', () => {
   test('el primer elemento tabulable es el enlace de salto, y salta de verdad', async ({
@@ -278,6 +313,160 @@ test.describe('Landing comercial', () => {
     expect(
       await page.evaluate((clave) => window.localStorage.getItem(clave), CLAVE_INTENCION),
     ).toBeNull()
+  })
+})
+
+/**
+ * La tarjeta del cotizador de la portada, que es lo que el rediseño reescribió
+ * entero: el campo ya no llega sembrado, la propuesta se calcula en el propio
+ * navegador y aquí ya no hay ninguna cifra.
+ */
+test.describe('El cotizador de la portada', () => {
+  test('el ejemplo va en el placeholder y la instrucción va fuera, donde no se borra', async ({
+    page,
+  }) => {
+    await page.goto('/')
+    const campo = page.getByLabel('¿Qué hace tu negocio?')
+
+    // Vacío: el ejemplo dejó de sembrarse como valor. Quien no borrara nada
+    // mandaba a `/planes` un relato que no era suyo.
+    await expect(campo).toHaveValue('')
+    await expect(campo).toHaveAttribute('placeholder', /petshop/)
+
+    // §3.3.2 Labels or Instructions. Un `placeholder` desaparece al escribir y se
+    // lee como un valor ya introducido, así que NO puede ser la única
+    // indicación. Se resuelve el `aria-describedby` de verdad: un identificador
+    // que no apunta a nada se lee igual de bien en el marcado y no describe nada.
+    const ayuda = page.locator(
+      `#${exigir(await campo.getAttribute('aria-describedby'), 'la ayuda del campo')}`,
+    )
+    await expect(ayuda).toBeVisible()
+    await expect(ayuda).toContainText('escríbelo con tus palabras')
+
+    // Y sigue ahí con el campo escrito, que es exactamente cuando el placeholder
+    // ya no está y la instrucción hace falta.
+    await contarElNegocio(page, RELATO, 3)
+    await expect(ayuda).toBeVisible()
+  })
+
+  test('la región de estado está en el documento antes de tener nada que decir', async ({
+    page,
+  }) => {
+    await page.goto('/')
+
+    // §4.1.3. Una región viva que NACE junto con su contenido no se anuncia en
+    // varios lectores: tiene que estar puesta y vacía, y llenarse después.
+    const estado = page.locator('#cotizador [role="status"]')
+    await expect(estado).toBeAttached()
+    await expect(estado).toHaveText('')
+
+    await contarElNegocio(page, RELATO, 3)
+    await expect(estado).toContainText('Con eso te proponemos 3 módulos')
+  })
+
+  test('el relato marca los módulos que nombra, dice por qué, y abre solo esas áreas', async ({
+    page,
+  }) => {
+    await page.goto('/')
+    await contarElNegocio(page, RELATO, 3)
+
+    for (const nombre of DETECTADOS) {
+      // La nota va DENTRO del `<label>`, así que entra en el nombre accesible de
+      // la casilla: «Spa, estética y guardería Porque lo mencionaste» es lo que
+      // hace falta oír para saber por qué está marcada algo que uno no marcó.
+      const casilla = page.getByRole('checkbox', { name: new RegExp(`^${nombre}`) })
+      await expect(casilla).toBeChecked()
+      await expect(casilla).toHaveAccessibleName(`${nombre} Porque lo mencionaste`)
+    }
+
+    // Un módulo del área abierta que el relato NO nombra: ni marcado ni con
+    // nota. Sin esto, la nota podría estar en las trece filas y el caso pasaría.
+    const noMencionado = page.getByRole('checkbox', { name: 'Tarifas y promociones' })
+    await expect(noMencionado).not.toBeChecked()
+    await expect(noMencionado).toHaveAccessibleName('Tarifas y promociones')
+
+    // Se abren las áreas CON detección y solo esas: abrir las cuatro son trece
+    // paradas de tabulación antes del CTA.
+    for (const [area, abierta] of [
+      ['Atención a las mascotas', 'true'],
+      ['Mostrador y dinero', 'true'],
+      ['Inventario y compras', 'true'],
+      ['Hospital y quirófano', 'false'],
+    ] as const) {
+      await expect(
+        page.getByRole('button', { name: new RegExp(`^${area}`) }),
+        `el área «${area}»`,
+      ).toHaveAttribute('aria-expanded', abierta)
+    }
+
+    // El eco del carril, que es lo mismo dicho donde está el botón. No lleva
+    // región viva propia a propósito: dos locuciones por un gesto se pisan.
+    await expect(page.locator('#cotizador')).toContainText('Listo: 3 módulos marcados')
+  })
+
+  test('sin nada reconocible lo dice, y deja el camino abierto igual', async ({ page }) => {
+    await page.goto('/')
+
+    await page.getByLabel('¿Qué hace tu negocio?').fill('Somos tres socios y abrimos hace poco.')
+    const estado = page.locator('#cotizador [role="status"]')
+    await expect(estado).toContainText('No reconocimos ningún módulo en tu texto')
+    await expect(estado).toContainText('Abre el área que te interese y marca lo que uses')
+
+    // No reconocer no es un error y no cierra la puerta: el mismo campo, más
+    // grande y con su contexto, espera en el destino.
+    await page.getByRole('button', { name: 'Ver propuesta' }).click()
+    await expect(page).toHaveURL(/\/planes$/)
+  })
+
+  test('«Ver propuesta» envía el formulario y el relato viaja a /planes', async ({ page }) => {
+    await page.goto('/')
+    await contarElNegocio(page, RELATO, 3)
+
+    await page.getByRole('button', { name: 'Ver propuesta' }).click()
+    await expect(page).toHaveURL(/\/planes$/)
+
+    // El relato es lo ÚNICO que la portada le pasa al paso siguiente: el texto
+    // no sale del navegador en la landing (Ley 1581, art. 9 y 26 lit. a), así
+    // que si no llegara aquí el prospecto tendría que volver a escribirlo.
+    await expect(page.getByLabel('¿A qué se dedica tu negocio?')).toHaveValue(RELATO)
+  })
+
+  test('la portada no cotiza, y /planes sí: el cupo por IP llega entero al precio', async ({
+    page,
+  }) => {
+    const cotizar = exigir(RUTAS_DEL_EMBUDO['/quotes/preview'], 'el doble de POST /quotes/preview')
+    let cotizaciones = 0
+    // Se registra DESPUÉS del `beforeEach`, así que gana: Playwright resuelve la
+    // ruta declarada más tarde. Y delega en el doble de verdad para que una
+    // llamada indebida no cambie además el comportamiento de la pantalla.
+    await page.route('**/api/v1/quotes/preview', async (route) => {
+      cotizaciones += 1
+      await cotizar(route)
+    })
+
+    await page.goto('/')
+    await contarElNegocio(page, RELATO, 3)
+
+    // Y encima se toca a mano, que es el gesto que disparaba una cotización por
+    // casilla cuando el hero enseñaba una cifra.
+    const caja = page.getByRole('checkbox', { name: /^Caja y ventas/ })
+    await caja.uncheck()
+    await caja.check()
+    await expect(page.locator('#cotizador')).toContainText('Listo: 3 módulos marcados')
+
+    expect(
+      cotizaciones,
+      'la portada ya no pinta ninguna cifra: cotizar aquí gastaría el cupo por IP del prospecto ' +
+        'antes de que llegue a la pantalla donde el precio sí se decide',
+    ).toBe(0)
+
+    // La otra mitad, sin la cual ese cero lo cumpliría también un seam borrado:
+    // donde el precio SÍ se enseña, se sigue pidiendo.
+    await page.goto('/planes?plan=PACK_CLINIC&ciclo=MENSUAL')
+    await expect(page.getByRole('heading', { level: 1, name: H1_PLANES })).toBeVisible()
+    await expect
+      .poll(() => cotizaciones, { message: '`/planes` tiene que seguir cotizando' })
+      .toBeGreaterThan(0)
   })
 })
 

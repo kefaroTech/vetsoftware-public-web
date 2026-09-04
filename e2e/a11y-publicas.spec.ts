@@ -23,13 +23,17 @@ import { exigir } from './helpers/exigir'
  */
 
 /**
- * Las ocho pantallas públicas. Siete montan `PublicLayout` —que trae el enlace
- * de salto para todas de una vez— y la landing lo declara en su propia vista,
- * porque no usa ese armazón.
+ * Las siete pantallas públicas que dejan el foco donde nace, así que en ellas el
+ * primer tabulador llega al enlace de salto. Seis montan `PublicLayout` —que lo
+ * trae para todas de una vez— y la landing lo declara en su propia vista, porque
+ * no usa ese armazón.
+ *
+ * <p>`/planes` está fuera de esta lista **a propósito**: mueve el foco al `<h1>`
+ * al montar, así que el primer tabulador ya no parte del principio del
+ * documento. Tiene su propio caso más abajo, que afirma las dos cosas.
  */
 const PANTALLAS = [
   { ruta: '/', nombre: 'landing' },
-  { ruta: '/planes', nombre: 'planes' },
   { ruta: '/login', nombre: 'login' },
   { ruta: '/registro', nombre: 'registro' },
   { ruta: '/verify-email', nombre: 'verificar correo' },
@@ -67,6 +71,64 @@ test.describe('§2.4.1 Bypass Blocks — el enlace de salto', () => {
       await expect(page.locator('#contenido')).toBeFocused()
     })
   }
+
+  /**
+   * `/planes` es la excepción, y conviene que esté escrita en vez de descubierta.
+   *
+   * <p>La vista lleva el foco al `<h1>` en `onMounted` (`PlanesView.vue:85-87`),
+   * para que quien llega desde la portada sepa dónde ha aterrizado (§2.4.3). El
+   * `<h1>` está DENTRO de `#contenido`, así que la navegación queda saltada de
+   * todos modos — pero el primer tabulador de la carga ya no llega al enlace,
+   * porque Chromium sigue tabulando desde donde la vista dejó el foco. Eso es lo
+   * que esta pantalla no puede afirmar y las otras siete sí, y está reportado en
+   * https://github.com/kefaroTech/vetsoftware-public-web/issues/369.
+   *
+   * <p>Lo que aquí se sujeta es lo que sigue siendo cierto y sigue importando: el
+   * enlace es el primer tabulable del DOCUMENTO —comprobado por estructura, no
+   * por tabulación, que es lo que la vista desplaza— y al activarlo mueve el
+   * foco, no solo la vista.
+   */
+  test('«planes» mueve el foco al <h1> al montar, y conserva el enlace de salto', async ({
+    page,
+  }) => {
+    await page.route('**/api/v1/**', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
+    )
+    await page.goto('/planes')
+
+    const salto = page.getByRole('link', { name: 'Saltar al contenido' })
+    await expect(salto).toBeAttached()
+    await expect(salto).toHaveAttribute('href', '#contenido')
+
+    const h1 = page.getByRole('heading', { level: 1, name: 'Esto es lo que te armamos' })
+    await expect(h1).toBeFocused()
+    expect(
+      await h1.evaluate((el) => el.closest('#contenido') !== null),
+      'el foco de llegada tiene que caer dentro del contenido; si cayera fuera, el salto haría falta y no habría quien lo diera',
+    ).toBe(true)
+
+    // Primero del documento, por estructura. Si alguien mete un control delante
+    // —una banda de aviso, un selector de idioma— esto se pone rojo, que es la
+    // regresión que §2.4.1 persigue de verdad.
+    expect(
+      await salto.evaluate(
+        (el) =>
+          el ===
+          document.querySelector(
+            'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])',
+          ),
+      ),
+      'el enlace de salto ya no es el primer elemento tabulable del documento',
+    ).toBe(true)
+
+    // Y sirve cuando se llega a él: se ve al recibir el foco y mueve el foco al
+    // contenido. Con solo el hash el navegador desplaza la vista y deja el foco
+    // en el `<body>`, así que la siguiente tabulación volvería a la navegación.
+    await salto.focus()
+    await expect(salto).toBeVisible()
+    await page.keyboard.press('Enter')
+    await expect(page.locator('#contenido')).toBeFocused()
+  })
 })
 
 test.describe('§2.4.2 Page Titled — el título por ruta', () => {

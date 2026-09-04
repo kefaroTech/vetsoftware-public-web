@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 /**
- * La letra pequeña del paso vinculante: dos frases que tienen que estar delante
- * de quien va a confirmar, y ninguna de las dos es decorativa.
+ * La letra pequeña del paso vinculante: tres frases que tienen que estar delante
+ * de quien va a confirmar, y ninguna de las tres es decorativa.
  *
  * ── Los documentos legales YA están publicados ─────────────────────────────
  * Este bloque decía «Todavía no están publicadas en la web: pídenoslas en
@@ -25,17 +27,29 @@
  * 500 líneas de `css:budget`, y porque esto es texto que se revisa con legal, no
  * lógica de la pantalla.
  */
-defineProps<{
+const props = defineProps<{
   /**
    * Si arriba se está pintando `LegalConsentCheckbox`. Es lo que decide si la
-   * primera frase tiene a qué referirse: la vista la esconde cuando falta el
+   * segunda frase tiene a qué referirse: la vista la esconde cuando falta el
    * permiso o falta el precio, y entonces no hay casilla ni enlaces.
    */
   conCasilla: boolean
+  /** Cuántos módulos quedan reservados al confirmar; los cuenta la vista sobre lo que pinta. */
+  modulos: number
 }>()
+
+const alcance = computed(() =>
+  props.modulos === 1
+    ? 'Al confirmar reservas este módulo con los precios de esta pantalla, y solo este.'
+    : `Al confirmar reservas estos ${props.modulos} módulos con los precios de esta pantalla, y solo estos.`,
+)
 </script>
 
 <template>
+  <p class="ds-meta ds-meta--sm">
+    {{ alcance }} Si algo cambia antes de la activación te lo decimos y vuelves a confirmar.
+  </p>
+
   <p v-if="conCasilla" class="ds-meta ds-meta--sm">
     Los dos documentos están enlazados en la casilla de arriba y se abren en una pestaña nueva: los
     puedes leer sin perder nada de esta pantalla.

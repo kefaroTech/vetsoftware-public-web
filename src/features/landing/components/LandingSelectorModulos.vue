@@ -26,12 +26,23 @@ import { importeEstimado } from '../composables/planPricing'
  * ── El núcleo NO es un control ─────────────────────────────────────────────
  * Es un `<p>`, no una casilla `disabled checked`: una casilla que no se puede
  * desmarcar y no dice por qué es §3.3.2 sin etiqueta de restricción.
+ *
+ * ── Con precio y sin precio ────────────────────────────────────────────────
+ * En `/planes` la fila lleva su importe, porque ahí se está decidiendo qué se
+ * contrata. En la portada no lo lleva: allí no hay ninguna cifra, y una fila
+ * con precio suelto sería la única, sin total contra el que sumar.
  */
-const props = defineProps<{
-  catalogo: CatalogoComercial | null
-  /** Códigos marcados. El núcleo no está aquí: entra siempre. */
-  modulos: string[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    catalogo: CatalogoComercial | null
+    /** Códigos marcados. El núcleo no está aquí: entra siempre. */
+    modulos: string[]
+    conPrecio?: boolean
+    /** Códigos que el texto del visitante mencionó, para explicar por qué están marcados. */
+    detectados?: readonly string[]
+  }>(),
+  { conPrecio: true, detectados: () => [] },
+)
 
 defineEmits<{ alternar: [code: string, marcado: boolean] }>()
 
@@ -62,6 +73,15 @@ function resumenDe(areaCode: string): string {
     .join(' · ')
 }
 
+/**
+ * La nota solo se gana su sitio donde explica una marca que el visitante no
+ * hizo. Va DENTRO del `<label>`, así que el nombre accesible de la casilla pasa
+ * a ser «Agenda de citas Porque lo mencionaste», que es lo que hace falta oír.
+ */
+function porqueSeMenciono(code: string): boolean {
+  return props.detectados.includes(code) && props.modulos.includes(code)
+}
+
 function alternarArea(code: string) {
   abiertas.value = abiertas.value.includes(code)
     ? abiertas.value.filter((c) => c !== code)
@@ -69,18 +89,28 @@ function alternarArea(code: string) {
 }
 
 /**
- * Una sola área abierta al llegar el catálogo, la primera del orden del
- * servidor. Cuatro cuerpos abiertos son trece paradas de tabulación antes del
- * precio y del CTA; uno son cuatro cabeceras y cuatro casillas.
+ * Con detección se abren las áreas que la tienen, y solo esas: abrir las cuatro
+ * son trece paradas de tabulación antes del CTA, y en el caso típico la
+ * detección cae en una o dos.
  *
- * <p>Se siembra una vez: recargar el catálogo al cambiar de ciclo no puede
- * volver a plegar lo que el visitante abrió.
+ * <p>Sin detección se abre una sola, la primera del orden del servidor, y se
+ * siembra una vez: recargar el catálogo al cambiar de ciclo no puede volver a
+ * plegar lo que el visitante abrió.
  */
 watch(
-  areas,
-  (lista) => {
+  [areas, () => props.detectados],
+  ([lista, detectados]) => {
     const primera = lista[0]
-    if (sembrada || !primera) return
+    if (!primera) return
+    const conDeteccion = lista
+      .map((a) => a.code)
+      .filter((code) => modulosDe(code).some((m) => detectados.includes(m.code)))
+    if (conDeteccion.length > 0) {
+      sembrada = true
+      abiertas.value = conDeteccion
+      return
+    }
+    if (sembrada) return
     sembrada = true
     abiertas.value = [primera.code]
   },
@@ -92,8 +122,15 @@ watch(
   <div class="lsm">
     <p v-for="a in nucleo" :key="a.code" class="lsm-nucleo pub-tinted">
       <span class="lsm-nucleo-pt" aria-hidden="true">✓</span>
-      <span class="lsm-nucleo-nom">{{ a.nombre }} — incluido siempre</span>
-      <span class="lsm-nucleo-pre">{{ importeEstimado(a.importe) }}</span>
+      <span class="lsm-nucleo-txt">
+        <span class="lsm-nucleo-nom">
+          {{ conPrecio ? `${a.nombre} — incluido siempre` : a.nombre }}
+        </span>
+        <!-- La descripción la publica el catálogo: escribirla aquí sería una
+             segunda verdad sobre lo que entra en el núcleo. -->
+        <span v-if="!conPrecio && a.descripcion" class="lsm-nucleo-desc">{{ a.descripcion }}</span>
+      </span>
+      <span v-if="conPrecio" class="lsm-nucleo-pre">{{ importeEstimado(a.importe) }}</span>
     </p>
 
     <p v-if="catalogo && areas.length === 0" class="lsm-vacio" role="status">
@@ -124,8 +161,11 @@ watch(
           :value="m.code"
           @change="$emit('alternar', m.code, ($event.target as HTMLInputElement).checked)"
         />
-        <span class="lsm-nombre">{{ m.nombre }}</span>
-        <span class="lsm-precio">{{ importeEstimado(m.importe) }}</span>
+        <span class="lsm-nombre">
+          {{ m.nombre }}
+          <span v-if="porqueSeMenciono(m.code)" class="lsm-porque">Porque lo mencionaste</span>
+        </span>
+        <span v-if="conPrecio" class="lsm-precio">{{ importeEstimado(m.importe) }}</span>
       </label>
     </AreaPlegable>
   </div>
@@ -159,10 +199,24 @@ watch(
   font-size: 11px;
 }
 
+.lsm-nucleo-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-inline-size: 0;
+}
+
 .lsm-nucleo-nom {
   font-size: 14px;
   font-weight: 600;
   color: var(--pub-ink-900);
+}
+
+.lsm-nucleo-desc {
+  font-size: 12.5px;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--pub-ink-600);
 }
 
 .lsm-nucleo-pre {
@@ -204,10 +258,20 @@ watch(
 }
 
 .lsm-nombre {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
   min-inline-size: 0;
   font-size: 14px;
   font-weight: 400;
   color: var(--pub-ink-600);
+}
+
+.lsm-porque {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pub-ame-700);
 }
 
 .lsm-fila.is-on .lsm-nombre {

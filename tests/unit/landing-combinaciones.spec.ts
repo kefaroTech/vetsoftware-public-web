@@ -237,16 +237,18 @@ describe('Las combinaciones de la portada', () => {
   it('el conteo de módulos concuerda en singular', async () => {
     const conteos = (await montar()).findAll('[data-testid="plan-card-conteo"]')
 
-    expect(conteos[0]?.text()).toBe('Núcleo + 2 módulos')
-    // El prototipo escribía «Núcleo + 1 módulos» con el plural clavado.
-    expect(conteos[1]?.text()).toBe('Núcleo + 1 módulo')
+    expect(conteos[0]?.text()).toBe('Clientes y mascotas + 2 módulos')
+    // El prototipo escribía «+ 1 módulos» con el plural clavado.
+    expect(conteos[1]?.text()).toBe('Clientes y mascotas + 1 módulo')
   })
 
   it('avisa de que quitar un módulo sube el precio, con las cifras del catálogo', async () => {
     const avisos = (await montar()).findAll('[data-testid="plan-card-descuento"]')
 
+    // Las dos cifras llevan el IVA dentro, como la que se pinta arriba: comparar
+    // un precio con impuesto contra una suma sin él daría un ahorro inventado.
     expect(texto(avisos[0]?.text())).toBe(
-      'Los 2 juntos salen más baratos: $ 119.000 en vez de $ 133.000. Si quitas uno, se cobran por separado.',
+      'Los 2 juntos salen más baratos: $ 141.610 en vez de $ 158.270. Si quitas uno, se cobran por separado.',
     )
     // Con un solo módulo no hay combinación que romper, así que no hay aviso.
     expect(avisos).toHaveLength(1)
@@ -256,7 +258,7 @@ describe('Las combinaciones de la portada', () => {
     const nota = texto((await montar()).get('[data-testid="landing-planes-nota"]').text())
 
     expect(nota).toBe(
-      'Todas parten del núcleo ($ 69.000 al mes) con 2 personas y 1 sede. ' +
+      'Todas parten de clientes y mascotas ($ 69.000 al mes) con 2 personas y 1 sede. ' +
         'Cada sede adicional cuesta $ 35.000 al mes y cada persona adicional $ 12.000 al mes.',
     )
   })

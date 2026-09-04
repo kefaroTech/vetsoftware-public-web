@@ -12,7 +12,6 @@ import TrialLinesTable from '@/features/contratacion/components/TrialLinesTable.
 import { useContratacion } from '@/features/contratacion/composables/useContratacion'
 import type { LineaPrueba } from '@/features/contratacion/types/contratacion.types'
 import AsistentePanel from '@/features/asistente/components/AsistentePanel.vue'
-import { useAsistente } from '@/features/asistente/composables/useAsistente'
 import PasosEmbudo from '../components/PasosEmbudo.vue'
 import PlanesCombinaciones from '../components/PlanesCombinaciones.vue'
 import PlanesResumenAside from '../components/PlanesResumenAside.vue'
@@ -51,8 +50,6 @@ const router = useRouter()
 const { plans, loading, error, loaded, refresh } = usePlanes()
 const { vigente, elegir, destinoTrasElegir } = useContratacion()
 const { isAuthenticated } = useAuth()
-// Se renombra: esta vista ya tiene su propio `texto()`, el lector de la query.
-const { texto: textoLibre } = useAsistente()
 
 const {
   ciclo,
@@ -75,22 +72,18 @@ const {
 const h1 = useTemplateRef<HTMLElement>('h1')
 
 /**
- * Si el prospecto llega con el texto ya escrito desde la caja del hero.
- *
- * <p>Se lee **una vez, al montar**: lo que describe es de dónde vino, no qué
- * hay en la caja ahora.
- */
-const llegoSembrado = textoLibre.value.trim().length > 0
-
-/**
- * Con texto sembrado, el foco va al `<h1>`, **no al campo**.
+ * El foco va al `<h1>`, traiga texto o no.
  *
  * <p>Llevarlo al `<textarea>` —o peor, al correo— saltaría el encabezado y el
  * lector de pantalla no sabría en qué pantalla acaba de aterrizar. Es la misma
  * convención del paso vinculante.
+ *
+ * <p>Y no se condiciona a que llegue texto: desde que la portada dejó de sembrar
+ * el ejemplo, quien no escribió nada aterrizaba con el foco en el `<body>` y el
+ * lector volvía a leer desde la navegación (§2.4.3).
  */
 onMounted(() => {
-  if (llegoSembrado) h1.value?.focus()
+  h1.value?.focus()
 })
 
 function texto(v: unknown): string | null {
@@ -210,11 +203,16 @@ function continuar() {
           ...capacidades,
           plan: null,
           modulos: modulos.value,
-          // El subtotal del SERVIDOR, y sólo cuando el ciclo ya es mensual:
-          // dividir un importe anual entre doce para poder comparar sería
-          // aritmética de dinero en el cliente sobre la cifra que dispara el
-          // aviso de deriva. Sin las dos cifras no hay comparación, que es lo
-          // correcto.
+          // El SUBTOTAL del servidor, aunque la pantalla enseñe el total: el
+          // otro lado de la comparación —`subtotalMensualEquivalente`, tanto el
+          // del plan como el que devuelve el servidor en el paso 6— es una base
+          // gravable, y guardar aquí el total haría saltar el aviso de deriva en
+          // cada contratación contra una cifra que nadie movió.
+          //
+          // Y sólo cuando el ciclo ya es mensual: dividir un importe anual entre
+          // doce para poder comparar sería aritmética de dinero en el cliente
+          // sobre la cifra que dispara el aviso. Sin las dos cifras no hay
+          // comparación, que es lo correcto.
           importeVistoMensual:
             ciclo.value === 'MENSUAL' ? (cotizacion.value?.subtotal ?? null) : null,
         },
@@ -263,11 +261,14 @@ function continuar() {
              desaparecería del documento en cuanto llegara la propuesta. -->
         <h1 ref="h1" class="pub-title" tabindex="-1">Esto es lo que te armamos</h1>
         <p class="pub-sub">
-          Ajusta lo que quieras. El importe se actualiza mientras eliges, y no te compromete a nada.
+          Cambia lo que quieras: el precio de la derecha se mueve contigo. Nada de esto te
+          compromete.
         </p>
         <!-- El indicador de moneda va AQUÍ, una vez por pantalla, y no pegado a
              cada cifra: ver `MONEDA_DE_FACTURACION`. -->
-        <p class="pl-moneda">Todos los precios están en {{ MONEDA_DE_FACTURACION }}, sin IVA.</p>
+        <p class="pl-moneda">
+          Todos los precios están en {{ MONEDA_DE_FACTURACION }}, IVA incluido.
+        </p>
       </div>
 
       <div v-if="error" class="pub-error" role="alert">
@@ -315,7 +316,10 @@ function continuar() {
 
           <section class="pl-card" aria-labelledby="pruebas-h2">
             <h2 id="pruebas-h2" class="pub-card-t">Cuándo empieza a costar</h2>
-            <p class="pub-card-sub">Estas son las fechas si contratas hoy.</p>
+            <p class="pub-card-sub">
+              Cada módulo tiene su propia prueba y no terminan el mismo día. Estas son las fechas si
+              contratas hoy.
+            </p>
             <TrialLinesTable :lineas="lineasPrueba" class="pl-pruebas" />
           </section>
 

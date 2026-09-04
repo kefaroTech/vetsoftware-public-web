@@ -83,7 +83,7 @@ export const RELLENOS_RAPIDOS: readonly string[] = [
  * del campo literalmente.
  */
 export const ERROR_TEXTO_CORTO =
-  'Con eso no nos alcanza. Escríbenos una o dos frases sobre lo que hace tu veterinaria.'
+  'Con eso no nos alcanza. Escríbenos una o dos frases sobre lo que hace tu negocio.'
 
 /**
  * Los tres ejemplos pulsables de la caja de arranque.

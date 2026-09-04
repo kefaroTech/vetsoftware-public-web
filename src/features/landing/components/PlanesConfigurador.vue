@@ -12,8 +12,9 @@ import {
   calcularEstimado,
   importeEstimado,
   precioBase,
-  sufijoCiclo,
+  sufijoConImpuesto,
   textoSinPrecio,
+  totalConImpuesto,
 } from '../composables/planPricing'
 import type { Ciclo, PublicPlan } from '../types/plans.types'
 
@@ -66,8 +67,8 @@ const estimado = computed(() =>
     : null,
 )
 
-/** El importe que se PINTA. Cambia en cuanto cambia la selección. */
-const importe = computed(() => (estimado.value ? importeEstimado(estimado.value.subtotal) : '—'))
+/** El importe que se PINTA, con el impuesto dentro. Cambia en cuanto cambia la selección. */
+const importe = computed(() => (estimado.value ? importeEstimado(estimado.value.total) : '—'))
 
 /**
  * Por qué no hay cifra, cuando no la hay. El `—` sin explicación se lee como un
@@ -140,7 +141,8 @@ function fijar(campo: 'sedes' | 'usuarios', crudo: string) {
               </span>
               <span class="pl-plan-tag">{{ p.tagline }}</span>
               <span class="pl-plan-from">
-                desde {{ formatMoney(precioBase(p, ciclo)) }} + IVA {{ sufijoCiclo(ciclo) }}
+                desde {{ formatMoney(totalConImpuesto(p, precioBase(p, ciclo))) }}
+                {{ sufijoConImpuesto(ciclo) }}
               </span>
             </span>
           </label>
@@ -191,10 +193,10 @@ function fijar(campo: 'sedes' | 'usuarios', crudo: string) {
       <h2 id="estimado-titulo" class="pl-resumen-title">Estimado</h2>
       <p class="pl-resumen-amount">
         <span class="pub-price">{{ importe }}</span>
-        <span class="pl-resumen-suffix">+ IVA {{ sufijoCiclo(ciclo) }}</span>
+        <span class="pl-resumen-suffix">{{ sufijoConImpuesto(ciclo) }}</span>
       </p>
       <p class="ds-sr-only" aria-live="polite">
-        Estimado: {{ importeAnunciado }} más IVA {{ sufijoCiclo(ciclo) }}.
+        Estimado: {{ importeAnunciado }} {{ sufijoConImpuesto(ciclo) }}.
       </p>
 
       <ul v-if="estimado" class="pl-breakdown">
@@ -213,6 +215,12 @@ function fijar(campo: 'sedes' | 'usuarios', crudo: string) {
           <span>{{ estimado.usuariosCobrados }} persona(s) adicional(es)</span>
           <span>{{ importeEstimado(estimado.usuariosExtra) }}</span>
         </li>
+        <!-- Sin esta fila las de arriba no suman la cifra grande, que lleva el
+             impuesto dentro. Sin porcentaje: una cesta con exentos no tiene uno. -->
+        <li>
+          <span>IVA</span>
+          <span>{{ importeEstimado(estimado.impuesto) }}</span>
+        </li>
       </ul>
 
       <!-- `role="status"` y no `alert`: no ha fallado nada, es lo que esa
@@ -223,7 +231,7 @@ function fijar(campo: 'sedes' | 'usuarios', crudo: string) {
       </p>
 
       <p class="pl-resumen-note">
-        Es un cálculo orientativo con los precios de lista. El precio exacto de tu clínica lo ves
+        Es un cálculo orientativo con los precios de lista. El precio exacto de tu negocio lo ves
         antes de confirmar, sin compromiso.
       </p>
       <p class="pl-resumen-note">Prueba gratis. Sin tarjeta.</p>

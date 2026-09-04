@@ -130,3 +130,38 @@ describe('ContratarResumenTabla · qué se afirma como contratado', () => {
     )
   })
 })
+
+/** Los rótulos de la segunda tabla, que es la de los importes. */
+function rotulosImportes(resumen: ResumenPlan | ResumenPropuesta): string[] {
+  const wrapper = mount(ContratarResumenTabla, { props: { resumen } })
+  return elemento(wrapper.findAll('table'), 1, 'las tablas del resumen')
+    .findAll('th[scope="row"]')
+    .map((th) => th.text().replace(/\s+/g, ' ').trim())
+}
+
+describe('ContratarResumenTabla · el desglose con IVA incluido', () => {
+  it('las tres filas siguen ahí: colapsarlas borraría la base gravable de la pantalla', () => {
+    expect(rotulosImportes(PLAN)).toEqual([
+      'Subtotal',
+      'IVA incluido (19 %)',
+      'Total al mes, cuando termine la prueba',
+      'Lo que se te cobra hoy',
+    ])
+  })
+
+  it('sin tasa publicada se escribe «IVA» a secas, nunca un porcentaje deducido', () => {
+    const rotulos = rotulosImportes({ ...PROPUESTA, tasaImpuesto: null })
+
+    expect(rotulos).toContain('IVA')
+    expect(
+      rotulos.join(' '),
+      'un 19 % deducido es equivocarse por un factor de cien',
+    ).not.toContain('%')
+  })
+
+  it('en el ciclo anual el total se rotula «al año», y conserva la coletilla de la prueba', () => {
+    expect(rotulosImportes({ ...PLAN, ciclo: 'ANUAL' })).toContain(
+      'Total al año, cuando termine la prueba',
+    )
+  })
+})

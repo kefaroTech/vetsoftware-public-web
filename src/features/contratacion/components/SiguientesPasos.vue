@@ -54,7 +54,7 @@ const pasos = computed(() => TODOS.filter((p) => hasPermission(p.permiso)))
   <!-- Sin ninguna tarjeta alcanzable no se pinta una rejilla vacía: se dice qué pasa. -->
   <p v-if="pasos.length === 0" class="ds-meta">
     Tu usuario no tiene acceso a la configuración inicial. Quien administre los permisos de tu
-    clínica puede invitar al equipo, abrir la agenda y configurar la caja.
+    negocio puede invitar al equipo, abrir la agenda y configurar la caja.
   </p>
   <div v-else class="pasos">
     <article v-for="p in pasos" :key="p.titulo" class="ds-card pasos-card">

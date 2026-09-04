@@ -5,18 +5,18 @@ import { formatDateLong } from '@/composables/format'
 import { formatMoney } from '@/composables/money'
 import type { CatalogoComercial } from '@/features/asistente/types/catalogo.types'
 import type { EstadoImporte } from '../composables/useCotizador'
-import { sufijoCiclo } from '../composables/planPricing'
+import { sufijoConImpuesto } from '../composables/planPricing'
 import type { CotizacionPreview } from '../types/cotizacion.types'
 import type { Ciclo } from '../types/plans.types'
 
 /**
  * Lo que se está comprando, al lado y siempre visible.
  *
- * ── Subtotal sin IVA, y sin fila de total ──────────────────────────────────
- * Es deliberado y es la diferencia con el `<aside>` del paso vinculante, que sí
- * lleva impuesto y total: aquí todavía no se contrata nada, y el número que
- * hace comparable esta pantalla con la portada y con la competencia es el
- * subtotal. El impuesto aparece donde hay algo que pagar.
+ * ── La cifra grande lleva el IVA dentro, y no hay fila de desglose ─────────
+ * Es el `total` del servidor, no una división en el navegador: el subtotal que
+ * llega es la base gravable, y restarle el impuesto para «sacarlo» bajaría todos
+ * los precios publicados. El desglose Subtotal / IVA / Total sigue existiendo
+ * donde hay algo que pagar, en el paso vinculante.
  *
  * ── El desglose usa el rótulo CORTO ────────────────────────────────────────
  * El selector y la tabla de pruebas usan el nombre completo; aquí no cabe. La
@@ -50,13 +50,13 @@ const idMotivoBloqueo = useId()
 const firme = computed(() => props.estado === 'LISTO')
 
 const sufijo = computed(() =>
-  props.estado === 'CALCULANDO' ? 'calculando…' : `+ IVA ${sufijoCiclo(props.ciclo)}`,
+  props.estado === 'CALCULANDO' ? 'calculando…' : sufijoConImpuesto(props.ciclo),
 )
 
 const conteo = computed(() => {
   const n = props.modulos.length
-  if (n === 0) return 'Solo el núcleo'
-  return `Núcleo + ${n} ${n === 1 ? 'módulo' : 'módulos'}`
+  if (n === 0) return 'Solo clientes y mascotas'
+  return `Clientes y mascotas + ${n} ${n === 1 ? 'módulo' : 'módulos'}`
 })
 
 const sinContratar = computed(() => {
