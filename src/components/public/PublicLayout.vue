@@ -3,6 +3,8 @@
  * Marco compartido de la zona pública/auth (handoff §5): fondo amatista + blobs
  * estáticos + topbar (marca → landing + link contextual) + footer + contenido centrado.
  */
+import { ArrowLeft } from 'lucide-vue-next'
+
 withDefaults(
   defineProps<{
     footerCenter?: boolean
@@ -25,7 +27,7 @@ withDefaults(
         right: -140px;
         width: 500px;
         height: 500px;
-        background: radial-gradient(circle, rgb(192 132 252 / 24%), transparent 60%);
+        background: radial-gradient(circle, rgb(150 152 255 / 24%), transparent 60%);
       "
     />
     <div
@@ -35,15 +37,12 @@ withDefaults(
         left: -140px;
         width: 460px;
         height: 460px;
-        background: radial-gradient(circle, rgb(168 85 247 / 16%), transparent 62%);
+        background: radial-gradient(circle, rgb(119 112 255 / 16%), transparent 62%);
       "
     />
 
     <header class="pub-topbar">
-      <RouterLink :to="{ name: 'landing' }" class="pub-brand">
-        <span class="pub-brand-mark"><v-icon size="16">mdi-paw</v-icon></span>
-        <span class="pub-brand-word">VetSoftware</span>
-      </RouterLink>
+      <RouterLink :to="{ name: 'landing' }" class="pub-brand">Lumbre</RouterLink>
       <div class="pub-topbar-right">
         <slot name="topRight" />
       </div>
@@ -54,9 +53,9 @@ withDefaults(
     </main>
 
     <footer class="pub-footer" :class="{ 'pub-footer-center': footerCenter }">
-      <span>© 2026 VetSoftware · Colombia</span>
+      <span>© 2026 Lumbre · Colombia</span>
       <RouterLink v-if="!footerCenter" :to="{ name: 'landing' }" class="pub-footer-back">
-        <v-icon size="13">mdi-arrow-left</v-icon> Volver al inicio
+        <ArrowLeft :size="13" aria-hidden="true" /> Volver al inicio
       </RouterLink>
     </footer>
   </div>
@@ -72,29 +71,20 @@ withDefaults(
   flex-shrink: 0;
 }
 
+/* Sin isotipo: por debajo de 48 px la ilustración de marca es una mancha sin
+   figura reconocible, así que en este tramo la identidad la carga el nombre.
+   Y sin el cuadro del isotipo el enlace mide lo que mide su línea de texto,
+   por debajo del suelo de 24×24 px CSS de §2.5.8 Target Size (Minimum). */
 .pub-brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  min-height: 32px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   text-decoration: none;
   color: var(--pub-ink-900);
-}
-
-.pub-brand-mark {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #a855f7, #581c87);
-  display: grid;
-  place-items: center;
-  color: #fff;
-  box-shadow: 0 2px 6px -1px rgb(126 34 206 / 40%);
-}
-
-.pub-brand-word {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
 }
 
 .pub-topbar-right {
@@ -137,9 +127,9 @@ withDefaults(
   justify-content: space-between;
   font-size: 12px;
 
-  /* `--pub-ink-400` mide 4,05:1 sobre blanco y 3,43:1 sobre el fondo de la
+  /* `--pub-ink-400` mide 3,94:1 sobre blanco y 3,37:1 sobre el fondo de la
      zona pública: falla §1.4.3 AA para texto normal, y este pie es de 12 px.
-     `--pub-ink-500` mide 6,12:1 y 5,18:1. */
+     `--pub-ink-500` mide 5,96:1 y 5,09:1. */
   color: var(--pub-ink-500);
   flex-shrink: 0;
 }
