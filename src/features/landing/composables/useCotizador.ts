@@ -11,7 +11,7 @@ import {
 import type { CotizacionPreview } from '../types/cotizacion.types'
 import type { Ciclo } from '../types/plans.types'
 import { cestaDeCotizacion, modulosDelPaquete, paqueteQueCoincide } from './cotizadorLineas'
-import { importeEstimado, sufijoCiclo } from './planPricing'
+import { importeEstimado, sufijoConImpuesto } from './planPricing'
 
 /**
  * El cotizador de la portada: la selección, y el importe que el servidor le pone.
@@ -72,7 +72,20 @@ export interface SaltoDePaquete {
   texto: string
 }
 
-export function useCotizador() {
+/**
+ * Sin `conPrecio` el cotizador no pide nada al servidor: mantiene la selección y
+ * el catálogo, y deja de cotizar.
+ *
+ * <p>Existe por la portada, que desde el rediseño ya no enseña ninguna cifra.
+ * Seguir pidiendo `POST /quotes/preview` por cada casilla gastaría el cupo por
+ * IP de `QUOTE_PREVIEW_RATE_LIMITED` en la pantalla donde el precio no se pinta,
+ * y el prospecto llegaría a `/planes` —donde sí importa— ya limitado.
+ */
+export interface OpcionesCotizador {
+  conPrecio?: boolean
+}
+
+export function useCotizador({ conPrecio = true }: OpcionesCotizador = {}) {
   const ciclo = ref<Ciclo>('MENSUAL')
   const modulos = ref<string[]>([])
   const sedes = ref(1)
@@ -96,8 +109,15 @@ export function useCotizador() {
   let temporizadorLimite: ReturnType<typeof setTimeout> | null = null
   let ultimoAnuncioEn = 0
   let anuncioDeLentitudHecho = false
-  /** Cómo se resolvió la cotización anterior, que es contra lo que se compara el salto. */
-  let anterior: { paquete: PaqueteCatalogo | null; subtotal: number } | null = null
+  /**
+   * Cómo se resolvió la cotización anterior.
+   *
+   * <p>Se guardan las dos cifras porque cumplen papeles distintos: el salto se
+   * DETECTA comparando subtotales —la base gravable, que es lo único comparable
+   * entre dos cestas con tratamientos fiscales distintos— y se EXPLICA con
+   * totales, que es lo que el visitante tiene delante.
+   */
+  let anterior: { paquete: PaqueteCatalogo | null; subtotal: number; total: number } | null = null
 
   const hayCatalogo = computed(() => (catalogo.value?.articulos.length ?? 0) > 0)
 
@@ -132,10 +152,11 @@ export function useCotizador() {
     cesta.value ? `${ciclo.value}|${JSON.stringify(cesta.value.lineas)}` : '',
   )
 
-  /** La cifra que se PINTA. Nunca `$ 0`: el guion es el marcador de «sin dato». */
-  const importe = computed(() =>
-    cotizacion.value ? importeEstimado(cotizacion.value.subtotal) : '—',
-  )
+  /**
+   * La cifra que se PINTA: el total del servidor, impuesto dentro. Nunca `$ 0`:
+   * el guion es el marcador de «sin dato».
+   */
+  const importe = computed(() => (cotizacion.value ? importeEstimado(cotizacion.value.total) : '—'))
 
   const mensajeDeFallo = computed(() => {
     if (limitado.value) return FALLO_LIMITE
@@ -144,8 +165,8 @@ export function useCotizador() {
 
   function nombreParaLector(): string {
     const n = modulos.value.length
-    if (n === 0) return 'Solo el núcleo'
-    return n === 1 ? 'Núcleo y 1 módulo' : `Núcleo y ${n} módulos`
+    if (n === 0) return 'Solo clientes y mascotas'
+    return n === 1 ? 'Clientes y mascotas y 1 módulo' : `Clientes y mascotas y ${n} módulos`
   }
 
   function anunciar(texto: string) {
@@ -183,13 +204,13 @@ export function useCotizador() {
     const n = modulos.value.length
     const sueltos =
       n === 1
-        ? `el que te queda cuesta ${importeEstimado(nuevo.subtotal)}`
-        : `los ${n} que te quedan suman ${importeEstimado(nuevo.subtotal)}`
+        ? `el que te queda cuesta ${importeEstimado(nuevo.total)}`
+        : `los ${n} que te quedan suman ${importeEstimado(nuevo.total)}`
     saltoDePaquete.value = {
       paquete: previo.paquete,
       texto:
         `Los ${modulosDelPaquete(previo.paquete, cat).length} módulos de ` +
-        `${previo.paquete.nombre} juntos costaban ${importeEstimado(previo.subtotal)}. ` +
+        `${previo.paquete.nombre} juntos costaban ${importeEstimado(previo.total)}. ` +
         `Sueltos, ${sueltos}. Los paquetes tienen descuento; los módulos sueltos, no.`,
     }
   }
@@ -226,12 +247,12 @@ export function useCotizador() {
       explicarSalto(respuesta, actual.paquete)
       cotizacion.value = respuesta
       estado.value = 'LISTO'
-      anterior = { paquete: actual.paquete, subtotal: respuesta.subtotal }
+      anterior = { paquete: actual.paquete, subtotal: respuesta.subtotal, total: respuesta.total }
 
       const salto = saltoDePaquete.value
       anunciar(
-        `${nombreParaLector()}. Desde ${importeEstimado(respuesta.subtotal)} más IVA ` +
-          `${sufijoCiclo(ciclo.value)}.` +
+        `${nombreParaLector()}. ${importeEstimado(respuesta.total)} ` +
+          `${sufijoConImpuesto(ciclo.value)}.` +
           (salto
             ? ` Subió el precio porque se perdió el descuento de la combinación ${salto.paquete.nombre}.`
             : ''),
@@ -273,7 +294,7 @@ export function useCotizador() {
     }, CALCULANDO_MS)
   }
 
-  watch([clave, hayCatalogo, sinCatalogo], programar, { immediate: true })
+  if (conPrecio) watch([clave, hayCatalogo, sinCatalogo], programar, { immediate: true })
 
   /**
    * Marca o desmarca un módulo **con su cadena de requisitos**.

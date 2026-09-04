@@ -451,6 +451,62 @@ describe('§5 caso 6 · la empresa ya tiene plan', () => {
 
     expect(replace).not.toHaveBeenCalled()
     expect(botonConfirmar(wrapper), 'sigue pudiendo contratar').toHaveLength(1)
-    expect(wrapper.text()).toContain('No pudimos comprobar si tu clínica ya tiene un plan')
+    expect(wrapper.text()).toContain('No pudimos comprobar si tu negocio ya tiene un plan')
+  })
+})
+
+describe('§D.6 · el botón bloqueado por la casilla legal', () => {
+  it('es el ÚNICO bloqueo que deja el botón puesto: enfocable, con el motivo a la vista', async () => {
+    // Con los otros dos motivos (sin permiso, sin precio) el control desaparece
+    // y en su sitio va `ConfirmarBloqueadoNotice`, porque el usuario no puede
+    // resolverlos. Este sí: se resuelve marcando la casilla que tiene encima.
+    const wrapper = await montar()
+    const boton = elemento(botonConfirmar(wrapper), 0, 'botonConfirmar(wrapper)')
+
+    expect(
+      boton.attributes('disabled'),
+      '`disabled` lo saca del orden de tabulación y deja al teclado sin saber qué falta',
+    ).toBeUndefined()
+    expect(boton.attributes('aria-disabled')).toBe('true')
+
+    const idMotivo = boton.attributes('aria-describedby')
+    expect(idMotivo).toBeTruthy()
+    const motivo = wrapper.get(`[id="${idMotivo}"]`)
+    expect(motivo.text()).toContain('Marca la casilla de arriba')
+    expect(motivo.classes(), 'el motivo es visible, no solo para el lector').not.toContain(
+      'ds-sr-only',
+    )
+  })
+
+  it('marcada la casilla, el bloqueo y su motivo desaparecen', async () => {
+    const wrapper = await montar()
+    await wrapper.find('input[type="checkbox"]').setValue(true)
+
+    const boton = elemento(botonConfirmar(wrapper), 0, 'botonConfirmar(wrapper)')
+    expect(boton.attributes('aria-disabled')).toBeUndefined()
+    expect(boton.attributes('aria-describedby')).toBeUndefined()
+    expect(wrapper.text()).not.toContain('Marca la casilla de arriba')
+  })
+})
+
+describe('lo que la pantalla afirma antes de que se firme', () => {
+  it('el bloque del negocio se rotula «Tu negocio» y trae el nombre y el NIT del resumen', async () => {
+    const wrapper = await montar()
+
+    expect(wrapper.findAll('h2').map((h) => h.text())).toContain('Tu negocio')
+    expect(wrapper.text()).toContain('Clínica Norte')
+    expect(wrapper.text()).toContain('NIT 900123456')
+  })
+
+  it('la letra pequeña acota lo que se reserva, y conserva las dos frases que ya tenía', async () => {
+    // La frase del alcance se AÑADE: las otras dos cubren dónde están los
+    // documentos legales (Ley 1581 de 2012) y cómo darse de baja, y ninguna de
+    // las dos la dice la nueva.
+    const texto = (await montar()).text()
+
+    expect(texto).toContain('con los precios de esta pantalla, y solo')
+    expect(texto).toContain('Si algo cambia antes de la activación te lo decimos')
+    expect(texto).toContain('Los dos documentos están enlazados en la casilla de arriba')
+    expect(texto).toContain('Si quieres darte de baja antes de que empiece el cobro')
   })
 })

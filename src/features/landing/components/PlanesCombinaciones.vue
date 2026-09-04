@@ -3,7 +3,7 @@ import { computed, useId } from 'vue'
 import { formatMoney } from '@/composables/money'
 import type { CatalogoComercial, PaqueteCatalogo } from '@/features/asistente/types/catalogo.types'
 import { modulosDelPaquete } from '../composables/cotizadorLineas'
-import { precioBase, sufijoCiclo } from '../composables/planPricing'
+import { precioBase, sufijoConImpuesto, totalConImpuesto } from '../composables/planPricing'
 import type { Ciclo, PublicPlan } from '../types/plans.types'
 
 /**
@@ -67,7 +67,8 @@ function elegir(plan: PublicPlan) {
         <span class="pcb-tagline">{{ p.tagline }}</span>
       </span>
       <span class="pcb-precio">
-        {{ formatMoney(precioBase(p, ciclo)) }} {{ sufijoCiclo(ciclo) }}
+        {{ formatMoney(totalConImpuesto(p, precioBase(p, ciclo))) }}
+        {{ sufijoConImpuesto(ciclo) }}
       </span>
     </label>
   </div>

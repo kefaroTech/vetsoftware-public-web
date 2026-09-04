@@ -142,7 +142,7 @@ const notaBase = computed<string | null>(() => {
 
   const cuando = sufijoCiclo(ciclo.value)
   return (
-    `Todas parten del núcleo (${formatMoney(base.importe)} ${cuando}) con ` +
+    `Todas parten de clientes y mascotas (${formatMoney(base.importe)} ${cuando}) con ` +
     `${unidadesIncluidas(personas)} y ${unidadesIncluidas(sedes)}. Cada sede adicional cuesta ` +
     `${formatMoney(porSede)} ${cuando} y cada persona adicional ${formatMoney(porPersona)} ${cuando}.`
   )

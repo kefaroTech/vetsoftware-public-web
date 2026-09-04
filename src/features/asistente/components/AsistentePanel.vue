@@ -281,7 +281,7 @@ watch(estado, async (nuevo, anterior) => {
     >
       <p class="apan-aviso-t">Este enlace ya no sirve</p>
       <p class="apan-aviso-p">
-        Los enlaces de propuesta caducan. Cuéntanos otra vez a qué se dedica tu clínica aquí abajo y
+        Los enlaces de propuesta caducan. Cuéntanos otra vez a qué se dedica tu negocio aquí abajo y
         te armamos una nueva en unos segundos.
       </p>
       <button type="button" class="ds-btn ds-btn--ghost apan-boton" @click="reiniciar">
@@ -370,7 +370,7 @@ watch(estado, async (nuevo, anterior) => {
           Continuar con esta propuesta
         </button>
         <p class="ds-meta apan-salida-nota">
-          Te pedimos los datos de tu clínica. Sin tarjeta, y todavía no contratas nada.
+          Te pedimos los datos de tu negocio. Sin tarjeta, y todavía no contratas nada.
         </p>
       </div>
 
@@ -412,7 +412,7 @@ watch(estado, async (nuevo, anterior) => {
     />
 
     <p class="apan-letra">
-      Es un cálculo orientativo con los precios de lista. El precio exacto de tu clínica lo ves
+      Es un cálculo orientativo con los precios de lista. El precio exacto de tu negocio lo ves
       antes de confirmar, sin compromiso. · Prueba gratis. Sin tarjeta.
     </p>
   </div>

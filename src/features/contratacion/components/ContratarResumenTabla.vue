@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue'
 import { RouterLink } from 'vue-router'
-import { importeEstimado } from '@/features/landing/composables/planPricing'
+import { importeEstimado, sufijoCiclo } from '@/features/landing/composables/planPricing'
 import { CICLO_LABEL } from '@/features/landing/types/plans.types'
 import { useScrollableRegion } from '@/composables/useScrollableRegion'
 import type { ResumenContratacion } from '../types/contratacion.types'
@@ -111,14 +111,14 @@ const filas = computed(() => {
 /**
  * El rótulo del IVA.
  *
- * <p>Con tipo publicado se escribe «IVA (19 %)»; sin él, **«IVA» a secas** y el
- * importe al lado, que sí es del servidor. La propuesta del asistente no publica
+ * <p>Con tipo publicado se escribe «IVA incluido (19 %)»; sin él, **«IVA» a secas**
+ * y el importe al lado, que sí es del servidor. La propuesta del asistente no publica
  * el tipo —el contrato solo trae un `taxRate` por línea y sin escala declarada—,
  * y escribir un porcentaje deducido en la pantalla que decide una compra es
  * equivocarse por un factor de cien de la forma más barata posible.
  */
 const rotuloImpuesto = computed(() =>
-  props.resumen.tasaImpuesto != null ? `IVA (${props.resumen.tasaImpuesto} %)` : 'IVA',
+  props.resumen.tasaImpuesto != null ? `IVA incluido (${props.resumen.tasaImpuesto} %)` : 'IVA',
 )
 
 const seleccion = useTemplateRef<HTMLElement>('seleccion')
@@ -180,8 +180,7 @@ const importesDesborda = useScrollableRegion(importes)
                que costará el ciclo cuando la prueba termine. -->
           <tr>
             <th scope="row" class="ds-text-strong">
-              {{ resumen.ciclo === 'ANUAL' ? 'Total por año' : 'Total por mes' }}, cuando termine la
-              prueba
+              Total {{ sufijoCiclo(resumen.ciclo) }}, cuando termine la prueba
             </th>
             <td class="ds-num ds-text-strong">{{ importeEstimado(resumen.total) }}</td>
           </tr>

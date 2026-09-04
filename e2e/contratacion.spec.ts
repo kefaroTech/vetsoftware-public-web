@@ -304,9 +304,15 @@ test.describe('Paso 6 — el paso vinculante', () => {
 
     // La prueba vence POR LÍNEA, no por contrato. Caja tiene 14 días y Agenda
     // 30 dentro del mismo plan, así que la tabla tiene que enseñar las dos.
-    // Los nombres van COMPLETOS, como los publica el catálogo (changeset 308):
-    // «Caja» y «Agenda» a secas pasaban por subcadena y habrían seguido pasando
-    // con el módulo renombrado a cualquier cosa que empezara igual.
+    // Los nombres van COMPLETOS: «Caja» y «Agenda» a secas pasaban por subcadena
+    // y habrían seguido pasando con el módulo renombrado a cualquier cosa que
+    // empezara igual.
+    //
+    // Y son los de `plans.content.ts`, NO los del catálogo: en la rama del
+    // paquete la tabla de pruebas se arma con los `includes` del plan. Por eso
+    // aquí sigue diciendo «Caja y punto de venta» mientras la rama modular ya
+    // dice «Caja y ventas» — la transcripción se quedó en el changeset 308
+    // (issue #360) y el catálogo va por el 407.
     await expect(paso).toContainText('Caja y punto de venta')
     await expect(paso).toContainText('Agenda de citas')
 
@@ -348,7 +354,15 @@ test.describe('Paso 6 — el paso vinculante', () => {
     const captura = await entrarAlPaso6(page)
     const paso = page.getByTestId('paso-contratar')
 
-    await paso.getByRole('button', { name: CONFIRMAR }).click()
+    // Se activa con el TECLADO y no con `click()`: el botón lleva
+    // `aria-disabled` en vez de `disabled` —a propósito, para no salirse del
+    // orden de tabulación— y Playwright lo da por no accionable, así que un
+    // `click()` se queda esperando a que se «habilite» y el rojo no señalaría a
+    // nada. Enter sobre el botón enfocado es además el gesto exacto que §D.6
+    // existe para permitir: llegar hasta él con el teclado y que conteste.
+    const boton = paso.getByRole('button', { name: CONFIRMAR })
+    await boton.focus()
+    await page.keyboard.press('Enter')
 
     // Sigue en el paso 6: no ha pasado nada.
     await expect(page).toHaveURL(/\/dashboard\/contratar$/)
@@ -374,6 +388,32 @@ test.describe('Paso 6 — el paso vinculante', () => {
     expect(captura.llamadas, 'un consentimiento no dado no puede haber pedido una oferta').toBe(0)
   })
 
+  test('el botón bloqueado sigue tabulable y dice por qué, en pantalla', async ({ page }) => {
+    await entrarAlPaso6(page)
+    const paso = page.getByTestId('paso-contratar')
+    const boton = paso.getByRole('button', { name: CONFIRMAR })
+
+    // `aria-disabled` y NO `disabled`: el atributo nativo lo sacaría del orden de
+    // tabulación, y quien llega con el teclado se quedaría delante de un botón
+    // que no responde y sin nada que le diga qué falta (§2.4.3 / §3.3.1).
+    await expect(boton).toHaveAttribute('aria-disabled', 'true')
+    await expect(boton).not.toHaveAttribute('disabled')
+    await boton.focus()
+    await expect(boton).toBeFocused()
+
+    // El motivo se resuelve de verdad y se comprueba que se VE: un
+    // `aria-describedby` que apunta a nada se lee igual de bien en el marcado, y
+    // un motivo solo para lector deja al resto mirando un botón muerto.
+    const id = exigir(await boton.getAttribute('aria-describedby'), 'el motivo del bloqueo')
+    const motivo = page.locator(`#${id}`)
+    await expect(motivo).toBeVisible()
+    await expect(motivo).toHaveText('Marca la casilla de arriba para poder confirmar.')
+
+    await paso.getByRole('checkbox').check()
+    await expect(boton).not.toHaveAttribute('aria-disabled', 'true')
+    await expect(motivo).toHaveCount(0)
+  })
+
   test('la casilla marcada lleva al paso 7 con lo que se acaba de contratar', async ({ page }) => {
     await entrarAlPaso6(page)
     await confirmar(page)
@@ -386,7 +426,7 @@ test.describe('Paso 6 — el paso vinculante', () => {
     // se deriva de los `includes` del contenido y no se transcribe: un módulo
     // más en el paquete cambiaría la frase, y un «5» quemado dejaría este caso
     // rojo por algo que no es un fallo.
-    await expect(titulo).toContainText(`Reservaste ${CLINICA.includes.length} módulos`)
+    await expect(titulo).toContainText(`Reservaste tu plan con ${CLINICA.includes.length} módulos`)
     await expect(titulo).toBeFocused()
 
     // El paquete se nombra ahora en la bajada. Que siga estando en algún sitio es
@@ -807,10 +847,18 @@ test.describe('Paso 7 — manda el servidor', () => {
     await confirmar(page)
     const exito = page.getByTestId('contratacion-exito')
 
-    // Los tres del servidor.
-    await expect(exito).toContainText(grupos.format(OFERTA.subtotalAmount))
-    await expect(exito).toContainText(grupos.format(OFERTA.taxAmount))
+    // El TOTAL del servidor, con el sufijo que dice que el impuesto va dentro:
+    // «IVA incluido» es una afirmación tributaria y solo puede acompañar a la
+    // cifra que de verdad lo lleva, nunca a una base gravable.
     await expect(exito).toContainText(grupos.format(OFERTA.totalAmount))
+    await expect(exito).toContainText('IVA incluido')
+
+    // El desglose ya NO se pinta aquí: la base gravable y el impuesto se ven en
+    // el paso 6, ANTES de confirmar, que es cuando el comprador los necesita.
+    // Repetir un subtotal al lado de un total rotulado «IVA incluido» publicaría
+    // dos cifras sin decir cuál se cobra.
+    await expect(exito).not.toContainText(grupos.format(OFERTA.subtotalAmount))
+    await expect(exito).not.toContainText(grupos.format(OFERTA.taxAmount))
 
     // Y NO el que saldría de la lista de precio transcrita. Sin esta línea, un
     // `??` puesto al revés en `activarPlan` —el estimado ganando al servidor—
@@ -883,7 +931,12 @@ test.describe('§5 caso 3 — el precio cambió mientras decidía', () => {
 
     // ESTA es la afirmación que sí tiene puerta: no hay atajo. Confirmar sin
     // aceptar los importes NUEVOS no pide ninguna oferta.
-    await paso.getByRole('button', { name: CONFIRMAR }).click()
+    // Con el teclado, y por lo mismo que en «sin aceptar los términos no
+    // activa»: con la casilla sin marcar el botón está `aria-disabled` y
+    // Playwright no lo pulsa, pero el usuario sí puede.
+    const boton = paso.getByRole('button', { name: CONFIRMAR })
+    await boton.focus()
+    await page.keyboard.press('Enter')
     await expect(page).toHaveURL(/\/dashboard\/contratar$/)
     expect(captura.llamadas).toBe(0)
 

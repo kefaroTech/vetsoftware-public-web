@@ -101,7 +101,9 @@ describe('BloquePrecioVivo — la cifra vieja nunca se hace pasar por la nueva',
   })
 
   it('una sola región viva en toda la pantalla, atómica, y solo con lo que le pasan', () => {
-    const wrapper = montar({ regionViva: 'Núcleo y 2 módulos. Desde $ 187.000 más IVA al mes.' })
+    const wrapper = montar({
+      regionViva: 'Clientes y mascotas y 2 módulos. $ 222.530 al mes, IVA incluido.',
+    })
     const vivas = wrapper.findAll('[aria-live]')
 
     expect(vivas).toHaveLength(1)
@@ -109,13 +111,13 @@ describe('BloquePrecioVivo — la cifra vieja nunca se hace pasar por la nueva',
     expect(viva.attributes('aria-live')).toBe('polite')
     expect(viva.attributes('aria-atomic')).toBe('true')
     expect(viva.classes()).toContain('ds-sr-only')
-    expect(viva.text()).toBe('Núcleo y 2 módulos. Desde $ 187.000 más IVA al mes.')
+    expect(viva.text()).toBe('Clientes y mascotas y 2 módulos. $ 222.530 al mes, IVA incluido.')
   })
 
-  it('selección vacía: «Solo el núcleo», y nada bloqueado', () => {
+  it('selección vacía: «Solo clientes y mascotas», y nada bloqueado', () => {
     const wrapper = montar({ modulos: [] })
 
-    expect(wrapper.find('.lpr-l1').text()).toBe('Estás pagando Solo el núcleo y nada más')
+    expect(wrapper.find('.lpr-l1').text()).toBe('Estás pagando Solo clientes y mascotas y nada más')
     expect(wrapper.findAll('[disabled]')).toHaveLength(0)
     expect(wrapper.findAll('[aria-disabled]')).toHaveLength(0)
   })
@@ -125,19 +127,19 @@ describe('BloquePrecioVivo — la cifra vieja nunca se hace pasar por la nueva',
       montar({ modulos: ['SCHEDULING'] })
         .find('.lpr-l1')
         .text(),
-    ).toBe('Estás pagando Núcleo + 1 módulo y nada más')
+    ).toBe('Estás pagando Clientes y mascotas + 1 módulo y nada más')
     expect(
       montar({ modulos: ['SCHEDULING', 'CASH_REGISTER'] })
         .find('.lpr-l1')
         .text(),
-    ).toBe('Estás pagando Núcleo + 2 módulos y nada más')
+    ).toBe('Estás pagando Clientes y mascotas + 2 módulos y nada más')
   })
 
   it('la línea de extras sale del catálogo: incluidas, cobradas y las que no se pagan', () => {
     const wrapper = montar({ modulos: ['SCHEDULING'], sedes: 1, usuarios: 3 })
 
     expect(wrapper.find('.lpr-l3').text()).toBe(
-      'Núcleo, 1 sede y 2 personas incluidos, más 1 persona adicional. No pagas los otros 3 módulos.',
+      'Clientes y mascotas, 1 sede y 2 personas incluidos, más 1 persona adicional. No pagas los otros 3 módulos.',
     )
   })
 
@@ -145,7 +147,7 @@ describe('BloquePrecioVivo — la cifra vieja nunca se hace pasar por la nueva',
     const wrapper = montar({ modulos: ['SCHEDULING'], sedes: 1, usuarios: 2 })
 
     expect(wrapper.find('.lpr-l3').text()).toBe(
-      'Núcleo, 1 sede y 2 personas incluidos. No pagas los otros 3 módulos.',
+      'Clientes y mascotas, 1 sede y 2 personas incluidos. No pagas los otros 3 módulos.',
     )
   })
 
@@ -154,7 +156,9 @@ describe('BloquePrecioVivo — la cifra vieja nunca se hace pasar por la nueva',
       modulos: ['SCHEDULING', 'CLINICAL_HISTORY', 'CASH_REGISTER', 'INVOICING'],
     })
 
-    expect(wrapper.find('.lpr-l3').text()).toBe('Núcleo, 1 sede y 2 personas incluidos.')
+    expect(wrapper.find('.lpr-l3').text()).toBe(
+      'Clientes y mascotas, 1 sede y 2 personas incluidos.',
+    )
   })
 
   it('el salto de paquete explica y ofrece deshacer, sin región viva propia', async () => {

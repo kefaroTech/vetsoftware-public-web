@@ -1,21 +1,23 @@
 - main:
   - navigation "Progreso de la contratación":
     - list:
-      - listitem: Tu clínica , completado
+      - listitem: Tu negocio , completado
       - listitem: Tu cuenta , completado
       - listitem: Verifica tu correo , completado
       - listitem: Confirmar , paso actual
   - heading "Confirma tu contratación" [level=1]
-  - paragraph:
-    - text: Estás contratando para
-    - strong: Clínica E2E de prueba
-    - text: /\(NIT \d+-7\)\./
+  - region "Tu negocio":
+    - heading "Tu negocio" [level=2]
+    - paragraph:
+      - text: Estás contratando para
+      - strong: Clínica E2E de prueba
+      - text: /\(NIT \d+-7\)\./
   - region "Los 4 módulos que activas, y cuándo empieza a costar cada uno":
     - heading "Los 4 módulos que activas, y cuándo empieza a costar cada uno" [level=2]
     - paragraph:
       - text: Cada módulo tiene su propia prueba, y no terminan todas el mismo día.
-      - strong: "Caja y punto de venta termina antes:"
-      - text: /el \d+ de \w+, \d+ empezamos a cobrar Caja y punto de venta, y Agenda de citas sigue gratis hasta el \d+ de \w+, \d+\./
+      - strong: "Caja y ventas termina antes:"
+      - text: /el \d+ de \w+, \d+ empezamos a cobrar Caja y ventas, y Agenda de citas sigue gratis hasta el \d+ de \w+, \d+\./
     - paragraph:
       - strong: Facturación electrónica DIAN
       - text: "no tiene prueba: se cobra desde el primer día."
@@ -32,12 +34,12 @@
             - cell "Facturación electrónica DIAN"
             - cell "Sin prueba · se cobra desde el primer día"
             - cell "Se cobra dentro del total del plan"
-          - row /Caja y punto de venta \d+ de \w+, \d+ Se cobra dentro del total del plan/:
-            - cell "Caja y punto de venta"
+          - row /Caja y ventas \d+ de \w+, \d+ Se cobra dentro del total del plan/:
+            - cell "Caja y ventas"
             - cell /\d+ de \w+, \d+/
             - cell "Se cobra dentro del total del plan"
-          - 'row /Núcleo: clientes y mascotas \d+ de \w+, \d+ Se cobra dentro del total del plan/':
-            - 'cell "Núcleo: clientes y mascotas"'
+          - 'row /Clientes y mascotas \d+ de \w+, \d+ Se cobra dentro del total del plan/':
+            - 'cell "Clientes y mascotas"'
             - cell /\d+ de \w+, \d+/
             - cell "Se cobra dentro del total del plan"
           - row /Agenda de citas \d+ de \w+, \d+ Se cobra dentro del total del plan/:
@@ -82,8 +84,8 @@
         - row /IVA \$ \d+\.\d+/:
           - rowheader "IVA"
           - cell /\$ \d+\.\d+/
-        - row /Total por mes, cuando termine la prueba \$ \d+\.\d+/:
-          - rowheader "Total por mes, cuando termine la prueba"
+        - row /Total al mes, cuando termine la prueba \$ \d+\.\d+/:
+          - rowheader "Total al mes, cuando termine la prueba"
           - cell /\$ \d+\.\d+/
         - row "Lo que se te cobra hoy $ 0":
           - rowheader "Lo que se te cobra hoy"
@@ -97,9 +99,9 @@
     - paragraph: 4 módulos
     - paragraph: Mes a mes · 1 sede · 1 persona
     - paragraph: /Los otros \d+ módulos quedan apagados y no se cobran\./
-    - paragraph: "/Núcleo: clientes y mascotas \\$ \\d+\\.\\d+/"
+    - paragraph: "/Clientes y mascotas \\$ \\d+\\.\\d+/"
     - paragraph: /Agenda de citas \$ \d+\.\d+/
-    - paragraph: /Caja y punto de venta \$ \d+\.\d+/
+    - paragraph: /Caja y ventas \$ \d+\.\d+/
     - paragraph: /Facturación electrónica DIAN \$ \d+\.\d+/
     - paragraph:
       - strong: Hoy pagas $ 0.
@@ -112,11 +114,13 @@
   - link "Política de Tratamiento de Datos Personales (se abre en una pestaña nueva)":
     - /url: /legal/privacidad
   - text: "/\\. Términos del Servicio: versión 1, vigente desde el 1 de septiembre, \\d+ · Política de Tratamiento de Datos Personales: versión 1, vigente desde el 1 de septiembre, \\d+/"
+  - paragraph: /Al confirmar reservas estos \d+ módulos con los precios de esta pantalla, y solo estos\. Si algo cambia antes de la activación te lo decimos y vuelves a confirmar\./
   - paragraph: "Los dos documentos están enlazados en la casilla de arriba y se abren en una pestaña nueva: los puedes leer sin perder nada de esta pantalla."
   - paragraph:
     - text: Durante la prueba no se cobra nada. Si quieres darte de baja antes de que empiece el cobro, escríbenos a
     - link "soporte@kefaro.tech":
       - /url: mailto:soporte@kefaro.tech
     - text: y lo hacemos.
-  - button "Confirmar mi selección"
+  - button "Confirmar mi selección" [disabled]
   - button "Ahora no"
+  - paragraph: Marca la casilla de arriba para poder confirmar.

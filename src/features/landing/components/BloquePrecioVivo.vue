@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import type { CatalogoComercial } from '@/features/asistente/types/catalogo.types'
 import { incluidasDelEje, unidadesExtra } from '../composables/cotizadorLineas'
 import type { EstadoImporte, SaltoDePaquete } from '../composables/useCotizador'
-import { sufijoCiclo } from '../composables/planPricing'
+import { sufijoConImpuesto } from '../composables/planPricing'
 import type { Ciclo } from '../types/plans.types'
 
 /**
@@ -57,8 +57,8 @@ const marca = computed(() => {
 
 const paquete = computed(() => {
   const n = props.modulos.length
-  if (n === 0) return 'Solo el núcleo'
-  return `Núcleo + ${n} ${n === 1 ? 'módulo' : 'módulos'}`
+  if (n === 0) return 'Solo clientes y mascotas'
+  return `Clientes y mascotas + ${n} ${n === 1 ? 'módulo' : 'módulos'}`
 })
 
 const sinContratar = computed(() => {
@@ -84,7 +84,7 @@ const extras = computed(() => {
   const sedes = incluidasDelEje(cat, 'BRANCH')
   const personas = incluidasDelEje(cat, 'USER')
   const base =
-    `Núcleo, ${sedes} ${sedes === 1 ? 'sede' : 'sedes'} y ` +
+    `Clientes y mascotas, ${sedes} ${sedes === 1 ? 'sede' : 'sedes'} y ` +
     `${personas} ${personas === 1 ? 'persona' : 'personas'} incluidos`
 
   const cobrados = [
@@ -116,7 +116,7 @@ const extras = computed(() => {
     <p class="lpr-l2">
       <span class="lpr-desde">{{ recalculando ? 'calculando' : 'desde' }}</span>
       <span class="lpr-cifra pub-num" :aria-hidden="firme ? undefined : 'true'">{{ importe }}</span>
-      <span class="lpr-suf">+ IVA {{ sufijoCiclo(ciclo) }}</span>
+      <span class="lpr-suf">{{ sufijoConImpuesto(ciclo) }}</span>
     </p>
 
     <p v-if="recalculando" class="lpr-nota">Actualizando con los precios de hoy…</p>

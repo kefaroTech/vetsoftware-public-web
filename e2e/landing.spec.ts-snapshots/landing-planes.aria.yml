@@ -10,13 +10,13 @@
   - article:
     - heading "Pack Spa" [level=3]
     - paragraph: Núcleo, agenda, servicios, spa y caja
-    - paragraph: /Núcleo \+ 4 módulos \$ \d+\.\d+ \+ IVA al mes/
+    - paragraph: /Clientes y mascotas \+ 4 módulos \$ \d+\.\d+ al mes, IVA incluido/
     - paragraph: "/Los 4 juntos salen más baratos: \\$ \\d+\\.\\d+ en vez de \\$ \\d+\\.\\d+\\. Si quitas uno, se cobran por separado\\./"
     - list:
       - listitem: /Agenda de citas · \$ \d+\.\d+/
       - listitem: /Spa, estética y guardería · \$ \d+\.\d+/
-      - listitem: /Servicios, tarifas y promociones · \$ \d+\.\d+/
-      - listitem: /Caja y punto de venta · \$ \d+\.\d+/
+      - listitem: /Tarifas y promociones · \$ \d+\.\d+/
+      - listitem: /Caja y ventas · \$ \d+\.\d+/
       - listitem: Quita en el siguiente paso lo que no uses
     - link "Marcar los de Pack Spa":
       - /url: /planes?plan=PACK_SPA&ciclo=MENSUAL
@@ -24,20 +24,20 @@
     - paragraph: La que más eligen
     - heading "Pack Clínica" [level=3]
     - paragraph: Núcleo, agenda, historia clínica, vacunación y caja
-    - paragraph: /Núcleo \+ 4 módulos \$ \d+\.\d+ \+ IVA al mes/
+    - paragraph: /Clientes y mascotas \+ 4 módulos \$ \d+\.\d+ al mes, IVA incluido/
     - paragraph: "/Los 4 juntos salen más baratos: \\$ \\d+\\.\\d+ en vez de \\$ \\d+\\.\\d+\\. Si quitas uno, se cobran por separado\\./"
     - list:
       - listitem: /Agenda de citas · \$ \d+\.\d+/
       - listitem: /Historia clínica y consultas · \$ \d+\.\d+/
       - listitem: /Vacunación y desparasitación · \$ \d+\.\d+/
-      - listitem: /Caja y punto de venta · \$ \d+\.\d+/
+      - listitem: /Caja y ventas · \$ \d+\.\d+/
       - listitem: Quita en el siguiente paso lo que no uses
     - link "Marcar los de Pack Clínica":
       - /url: /planes?plan=PACK_CLINIC&ciclo=MENSUAL
   - article:
     - heading "Pack Clínica completa" [level=3]
     - paragraph: Todo el producto, de la historia clínica a la facturación DIAN
-    - paragraph: /Núcleo \+ \d+ módulos \$ \d+\.\d+ \+ IVA al mes/
+    - paragraph: /Clientes y mascotas \+ \d+ módulos \$ \d+\.\d+ al mes, IVA incluido/
     - paragraph: "/Los \\d+ juntos salen más baratos: \\$ \\d+\\.\\d+ en vez de \\$ \\d+\\.\\d+\\. Si quitas uno, se cobran por separado\\./"
     - list:
       - listitem: /Agenda de citas · \$ \d+\.\d+/
@@ -46,14 +46,14 @@
       - listitem: /Spa, estética y guardería · \$ \d+\.\d+/
       - listitem: /Hospitalización · \$ \d+\.\d+/
       - listitem: /Cirugía · \$ \d+\.\d+/
-      - listitem: /Laboratorio e imagen diagnóstica · \$ \d+\.\d+/
-      - listitem: /Servicios, tarifas y promociones · \$ \d+\.\d+/
-      - listitem: /Caja y punto de venta · \$ \d+\.\d+/
-      - listitem: /Cuentas abiertas y cartera · \$ \d+\.\d+/
+      - listitem: /Laboratorio y radiografías · \$ \d+\.\d+/
+      - listitem: /Tarifas y promociones · \$ \d+\.\d+/
+      - listitem: /Caja y ventas · \$ \d+\.\d+/
+      - listitem: /Cuentas por cobrar · \$ \d+\.\d+/
       - listitem: /Facturación electrónica DIAN · \$ \d+\.\d+/
-      - listitem: /Inventario y kardex · \$ \d+\.\d+/
+      - listitem: /Inventario de productos · \$ \d+\.\d+/
       - listitem: /Compras y proveedores · \$ \d+\.\d+/
       - listitem: Quita en el siguiente paso lo que no uses
     - link "Marcar los de Pack Clínica completa":
       - /url: /planes?plan=PACK_FULL&ciclo=MENSUAL
-  - paragraph: /Todas parten del núcleo \(\$ \d+\.\d+ al mes\) con 2 personas y 1 sede\. Cada sede adicional cuesta \$ \d+\.\d+ al mes y cada persona adicional \$ \d+\.\d+ al mes\./
+  - paragraph: /Todas parten de clientes y mascotas \(\$ \d+\.\d+ al mes\) con 2 personas y 1 sede\. Cada sede adicional cuesta \$ \d+\.\d+ al mes y cada persona adicional \$ \d+\.\d+ al mes\./

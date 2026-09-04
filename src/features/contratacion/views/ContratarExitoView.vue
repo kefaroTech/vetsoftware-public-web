@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia'
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { formatDateLong } from '@/composables/format'
-import { importeEstimado } from '@/features/landing/composables/planPricing'
+import { importeEstimado, sufijoConImpuesto } from '@/features/landing/composables/planPricing'
 import { CICLO_LABEL } from '@/features/landing/types/plans.types'
 import DemoModeNotice from '../components/DemoModeNotice.vue'
 import SiguientesPasos from '../components/SiguientesPasos.vue'
@@ -77,7 +77,8 @@ onMounted(async () => {
 
     <h1 ref="h1" class="ds-display ds-display--sm" tabindex="-1">
       <template v-if="resultado.origen === 'PLAN'">
-        Listo. Reservaste {{ cuantosModulos }} {{ cuantosModulos === 1 ? 'módulo' : 'módulos' }}.
+        Listo. Reservaste tu plan con {{ cuantosModulos }}
+        {{ cuantosModulos === 1 ? 'módulo' : 'módulos' }}.
       </template>
       <template v-else> Listo. {{ resultado.titulo }} está reservada. </template>
     </h1>
@@ -93,16 +94,18 @@ onMounted(async () => {
 
       <TrialLinesTable :lineas="resultado.lineasPrueba" />
 
-      <p class="ds-meta">
-        {{ CICLO_LABEL[resultado.ciclo] }} · {{ importeEstimado(resultado.subtotal) }} + IVA
-        {{ importeEstimado(resultado.impuesto) }} =
+      <!-- El `total` del servidor, no el subtotal: «IVA incluido» solo puede acompañar a la
+           cifra que de verdad lo lleva dentro. El desglose por línea queda en el paso anterior,
+           que es donde el comprador tiene que poder ver la base gravable antes de confirmar. -->
+      <p class="ds-meta ex-importes">
+        {{ CICLO_LABEL[resultado.ciclo] }} ·
         <strong>{{ importeEstimado(resultado.total) }}</strong>
+        {{ sufijoConImpuesto(resultado.ciclo) }}.
         <template v-if="primerCobro">
-          · Primer cobro previsto: {{ formatDateLong(primerCobro) }}
+          Primer cobro previsto: {{ formatDateLong(primerCobro) }}.
         </template>
+        Te avisamos por correo antes del primer cobro.
       </p>
-
-      <p class="ds-meta">Te vamos a avisar por correo antes del primer cobro.</p>
 
       <!-- La segunda y ÚLTIMA vez que aparece el aviso. Nunca más. -->
       <DemoModeNotice compacto />
@@ -151,5 +154,12 @@ onMounted(async () => {
 .ex h1:focus,
 .ex h1:focus-visible {
   outline-offset: 3px;
+}
+
+.ex-importes {
+  padding: var(--space-14);
+  border-radius: var(--radius-panel);
+  background: var(--amatista-50);
+  line-height: 1.6;
 }
 </style>

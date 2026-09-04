@@ -134,4 +134,48 @@ describe('LandingSelectorModulos — casillas nativas, núcleo fijo y plegado in
     expect(wrapper.findAll('[role="status"]')).toHaveLength(0)
     expect(wrapper.findAll('.lsm-nucleo')).toHaveLength(0)
   })
+
+  it('sin precio no se pinta ninguna cifra, y el núcleo cuenta lo que incluye', () => {
+    const wrapper = mount(LandingSelectorModulos, {
+      attachTo: document.body,
+      props: { catalogo: catalogoEmbudo(), modulos: [], conPrecio: false },
+    })
+
+    expect(wrapper.findAll('.lsm-precio')).toHaveLength(0)
+    expect(wrapper.findAll('.lsm-nucleo-pre')).toHaveLength(0)
+    // El nombre queda solo: «incluido siempre» pasa a la descripción, que la
+    // publica el catálogo.
+    expect(wrapper.get('.lsm-nucleo-nom').text()).toBe('Núcleo: clientes y mascotas')
+  })
+
+  it('la nota explica la marca, y solo donde de verdad hay una que explicar', () => {
+    const wrapper = mount(LandingSelectorModulos, {
+      attachTo: document.body,
+      props: {
+        catalogo: catalogoEmbudo(),
+        modulos: ['SCHEDULING'],
+        conPrecio: false,
+        // `CLINICAL_HISTORY` se detectó pero el visitante lo quitó: sin marca no
+        // hay nada que justificar.
+        detectados: ['SCHEDULING', 'CLINICAL_HISTORY'],
+      },
+    })
+    const filas = wrapper.findAll('.lsm-fila')
+
+    expect(elemento(filas, 0, 'las filas').text()).toContain('Porque lo mencionaste')
+    expect(elemento(filas, 1, 'las filas').text()).not.toContain('Porque lo mencionaste')
+  })
+
+  it('con detección se abren las áreas que la tienen, y solo esas', () => {
+    const wrapper = mount(LandingSelectorModulos, {
+      attachTo: document.body,
+      props: { catalogo: catalogoEmbudo(), modulos: [], detectados: ['CASH_REGISTER'] },
+    })
+
+    // Sin detección se abriría la primera; con ella se abre la que la tiene.
+    expect(wrapper.findAll('h3 button').map((b) => b.attributes('aria-expanded'))).toEqual([
+      'false',
+      'true',
+    ])
+  })
 })

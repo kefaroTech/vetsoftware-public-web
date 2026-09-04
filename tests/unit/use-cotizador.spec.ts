@@ -198,8 +198,11 @@ describe('los cuatro estados del importe', () => {
     await vi.advanceTimersByTimeAsync(600)
 
     expect(cotizador.estado.value).toBe('LISTO')
-    expect(cotizador.importe.value).toContain('104.000')
-    expect(cotizador.regionViva.value).toContain('Solo el núcleo')
+    // El TOTAL del servidor, no el subtotal: la cifra que se pinta lleva el IVA
+    // dentro y no se calcula en el navegador.
+    expect(cotizador.importe.value).toContain('123.760')
+    expect(cotizador.regionViva.value).toContain('Solo clientes y mascotas')
+    expect(cotizador.regionViva.value).toContain('IVA incluido')
   })
 
   /** La cifra anterior se destruye: enseñarla junto a un aviso la presenta como la nueva. */
@@ -275,6 +278,6 @@ describe('el cupo por IP no es una avería', () => {
 
     expect(cotizador.limitado.value).toBe(false)
     expect(cotizador.estado.value).toBe('LISTO')
-    expect(cotizador.importe.value).toContain('139.000')
+    expect(cotizador.importe.value).toContain('165.410')
   })
 })

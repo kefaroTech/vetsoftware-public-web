@@ -7,6 +7,7 @@ import LandingDayFlow from '../components/LandingDayFlow.vue'
 import LandingFaq from '../components/LandingFaq.vue'
 import LandingFinalCta from '../components/LandingFinalCta.vue'
 import LandingFooter from '../components/LandingFooter.vue'
+import LandingCotizador from '../components/LandingCotizador.vue'
 import LandingHero from '../components/LandingHero.vue'
 import LandingPlans from '../components/LandingPlans.vue'
 import LandingTopbar from '../components/LandingTopbar.vue'
@@ -48,11 +49,15 @@ const { recuperarDeEnlace, recuperarGuardada, conocePropuesta } = useRecuperarPr
 
 /**
  * El cotizador es de la VISTA, y por eso vive aquí y no en Pinia: nace con la
- * portada y muere con ella. Está en la vista y no dentro del hero porque las
+ * portada y muere con ella. Vive aquí y no dentro de su tarjeta porque las
  * tarjetas de combinación —que están en otra sección— siembran su selección, y
  * el estado tiene que ser el mismo para las dos.
+ *
+ * <p>`conPrecio: false` porque esta pantalla ya no enseña ninguna cifra: cotizar
+ * lo que nadie pinta gastaría el cupo por IP del prospecto antes de que llegue a
+ * `/planes`, que es donde el precio se decide.
  */
-const cotizador = useCotizador()
+const cotizador = useCotizador({ conPrecio: false })
 
 /**
  * Aquí aterriza el enlace del correo de la propuesta.
@@ -171,7 +176,8 @@ function empezarDeNuevo() {
     />
 
     <main id="contenido" class="land-main" tabindex="-1">
-      <LandingHero :cotizador="cotizador" />
+      <LandingHero />
+      <LandingCotizador :cotizador="cotizador" />
       <LandingValueGrid />
       <LandingDayFlow />
       <LandingPlans

@@ -8,16 +8,16 @@
  * cifra, así que el orden viaja por el `<ol>` y por la hora, nunca por CSS.
  */
 const pasos = [
-  { hora: '8:00', titulo: 'Llega el primer paciente.', texto: 'Está en la agenda desde ayer.' },
+  { hora: '8:00', titulo: 'Llega la primera mascota.', texto: 'Está en la agenda desde ayer.' },
   {
     hora: '8:15',
-    titulo: 'La consulta.',
-    texto: 'Anotas peso, motivo y tratamiento. La historia se escribe sola.',
+    titulo: 'La atienden.',
+    texto: 'Consulta, baño o vacuna: lo que anotas queda en su ficha.',
   },
   {
     hora: '8:40',
     titulo: 'El cobro.',
-    texto: 'La consulta pasa a la cuenta del propietario. Facturas si hace falta.',
+    texto: 'El servicio pasa a la cuenta del propietario. Facturas si hace falta.',
   },
   {
     hora: '20:00',

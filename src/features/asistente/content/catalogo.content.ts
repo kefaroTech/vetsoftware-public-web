@@ -7,7 +7,7 @@ import type { ArcoDependencia, GrupoCatalogo } from '../types/catalogo.types'
  * ── Por qué esto vive en el front y no se inventa como si viniera del servidor
  * Es el mismo criterio, con las mismas palabras, con el que `PublicPlan.recommended`
  * vive fuera de `PublicPlanContract`: **una decisión editorial no se disfraza de
- * dato del modelo**. Aquí hay tres, y cada una tiene su propio plazo de muerte:
+ * dato del modelo**. Aquí hay cuatro, y cada una tiene su propio plazo de muerte:
  *
  *  1. {@link GRUPO_POR_CODIGO} — los cuatro grupos temáticos. **No caduca**: el
  *     backend no tiene categorías y no debería tenerlas. Los 26 artículos llevan
@@ -27,6 +27,10 @@ import type { ArcoDependencia, GrupoCatalogo } from '../types/catalogo.types'
  *     `catalog_item_dependencies.note`. **Caduca en cuanto el contrato publique
  *     `note`.** Tampoco viaja hoy. Es lo que convierte «añadimos también Caja»
  *     en una explicación en vez de en una sorpresa de 46.000 pesos.
+ *
+ *  4. {@link CLAVES_POR_CODIGO} — el vocabulario con el que un negocio nombra
+ *     cada módulo. **Caduca en cuanto el contrato publique unas palabras clave**
+ *     (public-web, detección local del hero).
  *
  * ⚠️ Las dos que caducan están transcritas **literal** de la semilla 309 del
  * backend, no reescritas. Reescribirlas produciría dos verdades sobre lo mismo,
@@ -80,6 +84,48 @@ export const GRUPO_POR_CODIGO: Readonly<Record<string, GrupoCatalogo>> = {
   ELECTRONIC_INVOICING: 'DINERO',
   INVENTORY: 'EXISTENCIAS',
   PURCHASES: 'EXISTENCIAS',
+}
+
+/**
+ * Con qué palabras nombra cada módulo quien cuenta su negocio con las suyas.
+ *
+ * <p>Vive aquí y no en el contrato porque `PublicCatalogItemResponse` no
+ * declara ningún campo de palabras clave, y esto es vocabulario comercial en
+ * español —lo escribe quien escribe el copy— no un dato del modelo. Es la misma
+ * frontera que {@link GRUPO_POR_CODIGO}: lo que la pantalla necesita y
+ * `GET /catalog` no publica.
+ *
+ * <p>Y es local a propósito: el texto que se compara contra esta lista es el del
+ * hero, que **no sale del navegador** (Ley 1581, art. 9 y 26 lit. a). Una
+ * detección en el servidor exigiría dos autorizaciones sobre el primer pliegue.
+ *
+ * <p>Son RAÍCES, no palabras completas —`estétic` cubre «estética» y
+ * «estéticas»— y quien las compare tiene que anclarlas a principio de palabra:
+ * «hora» dentro de «ahora» no menciona la agenda. Ver `deteccionModulos.ts`.
+ */
+export const CLAVES_POR_CODIGO: Readonly<Record<string, readonly string[]>> = {
+  SCHEDULING: ['cita', 'agenda', 'turno', 'horario', 'reserv'],
+  CLINICAL_HISTORY: ['consulta', 'historia', 'clínic', 'clinic', 'diagnos', 'tratamiento'],
+  VACCINATION_DEWORMING: ['vacun', 'desparasit'],
+  HOSPITALIZATION: ['hospital', 'internad', 'internac', 'urgencia'],
+  SURGERY: ['cirug', 'quirófano', 'quirofano', 'esteriliz', 'operac'],
+  LAB_IMAGING: ['laboratorio', 'radiograf', 'ecograf', 'examen', 'rayos x'],
+  GROOMING: ['estétic', 'estetic', 'spa', 'peluquer', 'baño', 'guarder'],
+  SERVICES: ['tarifa', 'promoc', 'descuento'],
+  CASH_REGISTER: ['cobr', 'caja', 'mostrador', 'vend', 'tienda', 'pago'],
+  INVENTORY: ['inventario', 'stock', 'product', 'aliment', 'medicament', 'bodega'],
+  PURCHASES: ['compra', 'proveedor'],
+  OPEN_ACCOUNTS: [
+    'cartera',
+    'cuenta abierta',
+    'cuentas abiertas',
+    'fiado',
+    'fiamos',
+    'credito',
+    'crédito',
+    'nos deben',
+  ],
+  ELECTRONIC_INVOICING: ['factur', 'dian'],
 }
 
 /**

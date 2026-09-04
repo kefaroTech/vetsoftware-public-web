@@ -95,6 +95,8 @@ const {
  */
 const idTerminos = `${useId()}-terminos`
 
+const idMotivoConfirmar = `${useId()}-motivo-confirmar`
+
 const itemsResumenError = computed(() =>
   errorTerminos.value ? [{ id: idTerminos, text: errorTerminos.value }] : [],
 )
@@ -256,10 +258,14 @@ onMounted(entrar)
     </template>
 
     <template v-else>
-      <p class="ds-subtitle">
-        Estás contratando para <strong>{{ resumen.empresaNombre }}</strong
-        ><span v-if="resumen.empresaIdentificador"> (NIT {{ resumen.empresaIdentificador }})</span>.
-      </p>
+      <section class="ds-card" aria-labelledby="negocio-h2">
+        <h2 id="negocio-h2" class="ds-title">Tu negocio</h2>
+        <p class="ds-subtitle">
+          Estás contratando para <strong>{{ resumen.empresaNombre }}</strong
+          ><span v-if="resumen.empresaIdentificador"> (NIT {{ resumen.empresaIdentificador }})</span
+          >.
+        </p>
+      </section>
 
       <!-- En la rama del plan la deriva es de la lista de precio; en la de la
            propuesta es la propuesta misma, editada o repreciada desde que se
@@ -281,7 +287,7 @@ onMounted(entrar)
         class="ds-banner ds-banner--warning"
         role="status"
       >
-        No pudimos comprobar si tu clínica ya tiene un plan contratado. Si crees que ya lo tiene,
+        No pudimos comprobar si tu negocio ya tiene un plan contratado. Si crees que ya lo tiene,
         escríbenos a <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a> antes de
         confirmar.
       </p>
@@ -356,7 +362,7 @@ onMounted(entrar)
           :ciclo="resumen.ciclo"
         />
 
-        <LetraPequenaPaso6 :con-casilla="puedeConfirmar" />
+        <LetraPequenaPaso6 :con-casilla="puedeConfirmar" :modulos="resumen.lineasPrueba.length" />
 
         <div class="ct-actions">
           <!-- Ausente, no deshabilitado: ver `puedeContratar`. «Ahora no» se queda en los dos
@@ -366,6 +372,8 @@ onMounted(entrar)
             type="button"
             class="ds-btn ds-btn--primary ds-btn--lg"
             :disabled="enviando"
+            :aria-disabled="aceptaTerminos ? undefined : 'true'"
+            :aria-describedby="aceptaTerminos ? undefined : idMotivoConfirmar"
             @click="confirmar"
           >
             <PawLoader v-if="enviando" :size="18" :glow="false" :speed="900" />
@@ -375,6 +383,13 @@ onMounted(entrar)
             Ahora no
           </button>
         </div>
+
+        <!-- `aria-disabled` y no `disabled`, y solo aquí: este bloqueo lo levanta el propio
+             usuario marcando la casilla, y sacar el botón del orden de tabulación deja al
+             teclado en un vacío sin decirle qué falta. El motivo es visible, no solo leído. -->
+        <p v-if="puedeConfirmar && !aceptaTerminos" :id="idMotivoConfirmar" class="ds-meta">
+          Marca la casilla de arriba para poder confirmar.
+        </p>
 
         <p v-if="tardando" class="ds-meta" aria-live="polite">
           Seguimos registrando tu contratación. No cierres esta ventana.
@@ -450,6 +465,14 @@ onMounted(entrar)
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+/* El rótulo del botón apagado sube a `--warm-600` sobre `--amatista-100`: el gris del
+   botón activo sobre ese fondo se queda en 4,23:1 y no llega al 4,5:1 de §1.4.3. */
+.ct-actions .ds-btn--primary[aria-disabled='true'] {
+  background: var(--amatista-100);
+  color: var(--warm-600);
+  cursor: default;
 }
 
 .ct-error-text {

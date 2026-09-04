@@ -73,7 +73,7 @@ const respuestaDian = computed(() => {
 const preguntas = computed(() => [
   {
     q: '¿Tengo que contratar módulos que no uso?',
-    a: 'No. Solo se cobra el núcleo y los módulos que marcaste. Los demás quedan apagados y no aparecen en tu recibo.',
+    a: 'No. Se cobra la parte de clientes y mascotas, que va siempre, y solo los módulos que marcaste. Los demás quedan apagados y no aparecen en tu recibo.',
   },
   {
     q: '¿Puedo quitar un módulo si dejo de usarlo?',

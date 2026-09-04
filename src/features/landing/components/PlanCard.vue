@@ -4,7 +4,12 @@ import { computed, useId } from 'vue'
 import { RouterLink } from 'vue-router'
 import { formatMoney } from '@/composables/money'
 import type { ArticuloCatalogo } from '@/features/asistente/types/catalogo.types'
-import { importeEstimado, precioBase, sufijoCiclo } from '../composables/planPricing'
+import {
+  importeEstimado,
+  precioBase,
+  sufijoConImpuesto,
+  totalConImpuesto,
+} from '../composables/planPricing'
 import type { Ciclo, PublicPlan } from '../types/plans.types'
 
 /**
@@ -45,12 +50,13 @@ const uid = useId()
 const badgeId = `${uid}-badge`
 const tituloId = `${uid}-titulo`
 
-const precio = computed(() => precioBase(props.plan, props.ciclo))
+/** Lo que se pinta lleva el impuesto dentro, así que la comparación de abajo también. */
+const precio = computed(() => totalConImpuesto(props.plan, precioBase(props.plan, props.ciclo)))
 
 const conteo = computed<string | null>(() => {
   const n = props.modulos.length
   if (n === 0) return null
-  return `Núcleo + ${n} ${n === 1 ? 'módulo' : 'módulos'}`
+  return `Clientes y mascotas + ${n} ${n === 1 ? 'módulo' : 'módulos'}`
 })
 
 /**
@@ -63,7 +69,7 @@ const conteo = computed<string | null>(() => {
  */
 const avisoDescuento = computed<string | null>(() => {
   const n = props.modulos.length
-  const suelto = props.sumaSuelta
+  const suelto = props.sumaSuelta === null ? null : totalConImpuesto(props.plan, props.sumaSuelta)
   if (n < 2 || suelto === null || suelto <= precio.value) return null
   return (
     `Los ${n} juntos salen más baratos: ${formatMoney(precio.value)} en vez de ` +
@@ -90,7 +96,7 @@ const avisoDescuento = computed<string | null>(() => {
         {{ conteo }}
       </span>
       <span class="pub-price">{{ formatMoney(precio) }}</span>
-      <span class="land-plan-suffix">+ IVA {{ sufijoCiclo(ciclo) }}</span>
+      <span class="land-plan-suffix">{{ sufijoConImpuesto(ciclo) }}</span>
     </p>
 
     <p v-if="avisoDescuento" class="land-plan-descuento" data-testid="plan-card-descuento">

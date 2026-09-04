@@ -120,7 +120,7 @@ export const useContratacionStore = defineStore('contratacion', () => {
 
   // Aquí vivía una bandera `contratada` en memoria, y era la ÚNICA señal con la
   // que el front decidía si la empresa ya tenía plan. Volvía a `false` en cada
-  // recarga, así que «tu clínica ya tiene un plan activo» solo saltaba si el
+  // recarga, así que «tu negocio ya tiene un plan activo» solo saltaba si el
   // usuario acababa de contratar en esa misma pestaña. La señal real es
   // `GET /subscriptions/current` (`suscripcion.api.ts`), que ya existe en el
   // tenant y distingue el 403 del 404; la resuelve `useSuscripcion().

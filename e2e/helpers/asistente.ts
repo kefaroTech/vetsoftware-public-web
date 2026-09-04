@@ -346,7 +346,7 @@ export const CATALOGO: PublicCatalogResponse = {
   packs: [],
   requirements: [],
   areas: [
-    { code: 'PATIENT_CARE', name: 'Atención a los pacientes' },
+    { code: 'PATIENT_CARE', name: 'Atención a las mascotas' },
     { code: 'HOSPITAL', name: 'Hospital y quirófano' },
   ],
 }

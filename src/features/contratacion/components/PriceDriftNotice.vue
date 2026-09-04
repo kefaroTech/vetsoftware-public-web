@@ -50,16 +50,20 @@ defineExpose({ focus })
   >
     <div class="drift-body">
       <h2 :id="tituloId" class="drift-title">El precio cambió desde que lo elegiste</h2>
+      <!-- Sin coletilla de impuesto: las dos cifras son la base gravable
+           (`subtotalMensualEquivalente` contra `importeVistoMensual`), así que rotularlas «IVA
+           incluido» sería una afirmación tributaria falsa. El desglose de abajo tiene las tres. -->
       <p class="drift-text">
-        Cuando lo elegiste: <strong>{{ formatMoney(antes) }} + IVA {{ sufijo }}</strong
+        Cuando lo elegiste: <strong>{{ formatMoney(antes) }} {{ sufijo }}</strong
         >.
       </p>
       <p class="drift-text">
-        Ahora: <strong>{{ formatMoney(ahora) }} + IVA {{ sufijo }}</strong
+        Ahora: <strong>{{ formatMoney(ahora) }} {{ sufijo }}</strong
         >.
       </p>
       <p class="drift-text">
-        Es el precio de lista vigente hoy. Revisa el resumen antes de confirmar.
+        Es el precio de lista vigente hoy, sin el IVA que sí lleva el total. Revisa el resumen antes
+        de confirmar.
       </p>
     </div>
   </div>

@@ -167,6 +167,17 @@ export function ahorroAnual(plan: PublicPlan): number {
 }
 
 /**
+ * Una base gravable con el impuesto del plan dentro.
+ *
+ * <p>El redondeo es en dos pasos —primero el impuesto, después la suma— y no en
+ * uno: es la misma cuenta que ya hacía {@link calcularEstimado}, y colapsarla a
+ * un solo redondeo mueve algunos importes un peso.
+ */
+export function totalConImpuesto(plan: PublicPlan, subtotal: number): number {
+  return aPesos(subtotal + aPesos((subtotal * plan.taxRate) / 100))
+}
+
+/**
  * Desglose orientativo de una selección.
  *
  * <p>Cada ciclo lee SU precio de unidad adicional (`monthlyExtraUnitAmount` /
@@ -205,7 +216,7 @@ export function calcularEstimado(plan: PublicPlan, seleccion: SeleccionPlan): De
     usuariosExtra,
     subtotal,
     impuesto,
-    total: subtotal === null || impuesto === null ? null : aPesos(subtotal + impuesto),
+    total: subtotal === null ? null : totalConImpuesto(plan, subtotal),
     sedesCobradas,
     usuariosCobrados,
     sinPrecio,
@@ -236,6 +247,14 @@ export function subtotalMensualEquivalente(
 /** Sufijo del rótulo del precio según el ciclo. Nunca se muestra el enum crudo. */
 export function sufijoCiclo(ciclo: Ciclo): string {
   return ciclo === 'ANUAL' ? 'al año' : 'al mes'
+}
+
+/**
+ * Solo puede acompañar a un `total`, nunca a un subtotal: «IVA incluido» sobre
+ * una cifra es una afirmación tributaria, y el subtotal es la base gravable.
+ */
+export function sufijoConImpuesto(ciclo: Ciclo): string {
+  return `${sufijoCiclo(ciclo)}, IVA incluido`
 }
 
 /**

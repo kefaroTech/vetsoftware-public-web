@@ -283,7 +283,7 @@ export function usePasoContratar(focos: FocosPaso6) {
     // con un aviso. Lo que tampoco se hace es callarlo: se dice en pantalla.
     if (resumen.value?.estadoPlanActual === 'CON_PLAN') {
       descartar()
-      toast.info('Tu clínica ya tiene un plan activo', 'No hace falta contratar otro.')
+      toast.info('Tu negocio ya tiene un plan activo', 'No hace falta contratar otro.')
       void router.replace({ name: 'home' })
       return
     }
@@ -386,7 +386,7 @@ export function usePasoContratar(focos: FocosPaso6) {
       const fuente = fuenteDeLineas(actual)
       if (!fuente) {
         errorEnvio.value =
-          'El catálogo de planes cambió mientras confirmabas. Recarga la página y vuelve a elegir; no se ha hecho ningún cambio en tu clínica.'
+          'El catálogo de planes cambió mientras confirmabas. Recarga la página y vuelve a elegir; no se ha hecho ningún cambio en tu negocio.'
         await nextTick()
         focos.errorEnvio.value?.focus()
         return
@@ -421,7 +421,7 @@ export function usePasoContratar(focos: FocosPaso6) {
       // Y además DENTRO de la pantalla: un toast se va solo, y este es el clic más
       // importante de todo el flujo.
       errorEnvio.value =
-        'No pudimos registrar tu contratación. No se ha hecho ningún cambio en tu clínica y no se te ha cobrado nada. Vuelve a intentarlo; si sigue fallando, escríbenos con este código:'
+        'No pudimos registrar tu contratación. No se ha hecho ningún cambio en tu negocio y no se te ha cobrado nada. Vuelve a intentarlo; si sigue fallando, escríbenos con este código:'
       await nextTick()
       focos.errorEnvio.value?.focus()
     } finally {

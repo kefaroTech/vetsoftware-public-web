@@ -89,14 +89,14 @@ describe('El contenido principal de /planes existe en el esquema de la página',
 
     const h2 = wrapper.get('h2')
     expect(h2.element.tagName).toBe('H2')
-    expect(h2.text()).toBe('Cuéntanos qué hace tu veterinaria')
+    expect(h2.text()).toBe('Cuéntanos qué hace tu negocio')
 
     // El `h2` NO sustituye a la etiqueta: el campo sigue teniendo la suya, y
     // apuntando a él. Un encabezado no es una etiqueta programática (§3.3.2).
     const campo = wrapper.get('textarea')
     const idCampo = campo.attributes('id')
     const etiqueta = wrapper.get(`label[for="${idCampo}"]`)
-    expect(etiqueta.text()).toBe('¿A qué se dedica tu veterinaria?')
+    expect(etiqueta.text()).toBe('¿A qué se dedica tu negocio?')
   })
 
   it('los ejemplos de la entrada no aparecen cuando ya se llega con texto escrito', () => {

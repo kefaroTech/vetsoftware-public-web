@@ -42,7 +42,7 @@ defineProps<{ leyoElTexto: boolean }>()
     data-testid="propuesta-origen-base"
   >
     <strong>Este es un punto de partida, no una recomendación.</strong> Lo armamos con lo más
-    habitual en una clínica veterinaria, sin leer todavía lo que nos escribiste. Revísalo y quita lo
+    habitual en un negocio como el tuyo, sin leer todavía lo que nos escribiste. Revísalo y quita lo
     que no vayas a usar.
   </p>
 </template>

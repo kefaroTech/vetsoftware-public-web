@@ -14,17 +14,17 @@ const tarjetas = [
   {
     titulo: 'Pagas por módulo, no por plan',
     texto:
-      'Cada módulo tiene su precio y su casilla. Si tu clínica no hospitaliza, no hay una línea de hospitalización en tu recibo.',
+      'Cada módulo tiene su precio y su casilla. Si tu negocio no hospitaliza, no hay una línea de hospitalización en tu recibo.',
   },
   {
     titulo: 'Empiezas por dos y creces cuando toque',
     texto:
-      'Muchas clínicas arrancan con agenda e historia clínica. El resto se enciende el mes que haga falta.',
+      'Muchos negocios arrancan con agenda y caja. El resto se enciende el mes que haga falta.',
   },
   {
     titulo: 'Quitar módulos no te cambia de plan',
     texto:
-      'Si dejas de usar el spa en temporada baja, escríbenos y lo damos de baja. El resto de tu clínica sigue igual.',
+      'Si dejas de usar el spa en temporada baja, escríbenos y lo damos de baja. El resto de tu negocio sigue igual.',
   },
   {
     titulo: 'Nada agrupado a la fuerza',

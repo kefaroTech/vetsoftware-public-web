@@ -20,15 +20,18 @@ import { elemento } from '../helpers/exigir'
  *  1. **Vacío + enviar navega, sin error.** El hero no puede ser una puerta
  *     cerrada; un error en el primer pliegue castiga a quien todavía no había
  *     decidido escribir.
- *  2. **El ejemplo es un VALOR, no un `placeholder`** —un placeholder
- *     desaparece al escribir y se lee como un valor ya introducido— y **no pisa
- *     lo que el visitante ya había escrito**, que es lo más caro de la pantalla.
- *  3. **Sin nada marcado se cotiza «Solo el núcleo» y se puede avanzar.** La
- *     selección vacía es un estado legítimo, no un error: nadie tiene que
- *     marcar nada para ver el siguiente paso.
+ *  2. **El campo llega VACÍO y el ejemplo es el `placeholder`**, con la
+ *     instrucción persistente fuera —§3.3.2: un placeholder desaparece al
+ *     escribir— y **sin pisar lo que el visitante ya había escrito**, que es lo
+ *     más caro de la pantalla.
+ *  3. **Sin nada marcado se puede avanzar.** La selección vacía es un estado
+ *     legítimo, no un error: nadie tiene que marcar nada para ver el siguiente
+ *     paso.
  *  4. **Plegar un área no desmarca nada.** El cuerpo del área se desmonta al
  *     plegar; si la selección viviera en él, cerrar para ver mejor borraría lo
  *     comprado.
+ *  5. **La portada no pide precio.** El importe se fue a `/planes`; seguir
+ *     cotizando aquí gastaría el cupo por IP del prospecto antes de llegar.
  *
  * ── La afirmación que necesita control positivo ────────────────────────────
  * «El texto libre no sale del navegador» y «no lo compruebo» producen la misma
@@ -70,15 +73,15 @@ const COTIZACION: CotizacionPreview = {
   total: 222_530,
 }
 
-/** Una frase del ejemplo sembrado, que es lo que ninguna petición puede llevar. */
-const DEL_EJEMPLO = 'clínica de barrio'
+/** Lo que el visitante escribió, que es lo que ninguna petición puede llevar. */
+const RELATO = 'Somos una clínica de barrio con consulta y vacunación.'
 
-function montar() {
+function montar(opciones?: Parameters<typeof useCotizador>[0]) {
   let cotizador!: ReturnType<typeof useCotizador>
   const wrapper = mount(
     defineComponent({
       setup() {
-        cotizador = useCotizador()
+        cotizador = useCotizador(opciones)
         return () => h(LandingCotizador, { cotizador })
       },
     }),
@@ -88,8 +91,8 @@ function montar() {
 }
 
 /** Monta y deja el catálogo cargado: sin él no hay ni casillas ni cesta. */
-async function conCatalogo() {
-  const montado = montar()
+async function conCatalogo(opciones?: Parameters<typeof useCotizador>[0]) {
+  const montado = montar(opciones)
   await flushPromises()
   return montado
 }
@@ -120,12 +123,18 @@ describe('LandingCotizador — se arma el plan, y el relato se queda en el naveg
     expect(wrapper.findAll('[role="alert"]')).toHaveLength(0)
   })
 
-  it('el ejemplo llega como VALOR del campo, nunca como placeholder', () => {
-    const campo = montar().wrapper.find('textarea')
+  it('el campo llega vacío, con el ejemplo en el placeholder y la instrucción fuera', () => {
+    const { wrapper } = montar()
+    const campo = wrapper.find('textarea')
 
-    expect(campo.element.value).toContain(DEL_EJEMPLO)
-    expect(campo.attributes('placeholder')).toBeUndefined()
-    expect(usePropuestaStore().texto).toContain(DEL_EJEMPLO)
+    expect(campo.element.value).toBe('')
+    expect(campo.attributes('placeholder')).toContain('petshop de barrio')
+    expect(campo.attributes('rows')).toBe('6')
+    // §3.3.2: el placeholder NO puede ser la única instrucción. La ayuda
+    // persistente sigue ahí y sigue siendo la que describe el campo.
+    const idAyuda = campo.attributes('aria-describedby')
+    expect(idAyuda).toBeTruthy()
+    expect(wrapper.get('#' + idAyuda).text()).toContain('escríbelo con tus palabras')
   })
 
   it('el relato que el visitante ya había escrito no se pisa con el ejemplo', () => {
@@ -136,12 +145,14 @@ describe('LandingCotizador — se arma el plan, y el relato se queda en el naveg
     expect(campo.element.value).toBe('Atendemos perros y gatos, y hacemos cirugía los martes.')
   })
 
-  it('sin nada marcado: se cotiza «Solo el núcleo» y el botón sigue llevando a /planes', async () => {
+  it('sin nada marcado: nada bloqueado y el botón sigue llevando a /planes', async () => {
     const { wrapper, cotizador } = await conCatalogo()
 
     expect(cotizador.modulos.value).toEqual([])
-    expect(wrapper.get('.lpr-pack').text()).toBe('Solo el núcleo')
     expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeUndefined()
+    // Y el selector está en el DOM sin haber escrito nada: si apareciera al
+    // teclear, el índice de encabezados del lector cambiaría de forma sola.
+    expect(wrapper.findAll('h3').length).toBeGreaterThan(0)
 
     await wrapper.find('form').trigger('submit')
 
@@ -170,10 +181,10 @@ describe('LandingCotizador — se arma el plan, y el relato se queda en el naveg
     const h2 = wrapper.get('#cotizador-h2')
 
     expect(h2.element.tagName).toBe('H2')
-    expect(h2.text()).toBe('Arma tu plan y mira el precio')
+    expect(h2.text()).toBe('Arma tu plan')
     // El `h2` NO sustituye a la etiqueta del campo: un encabezado no es una
     // etiqueta programática.
-    expect(wrapper.get('label').text()).toBe('Cuéntanos qué hace tu veterinaria')
+    expect(wrapper.get('label').text()).toBe('¿Qué hace tu negocio?')
     expect(wrapper.findAll('h3').length).toBeGreaterThan(0)
     // Y da nombre a la región: sin nombre accesible, un `<section>` no se expone
     // como `region` y los enlaces que traen el foco aquí aterrizan en un
@@ -184,6 +195,7 @@ describe('LandingCotizador — se arma el plan, y el relato se queda en el naveg
   })
 
   it('ninguna petición lleva el texto libre — con control positivo del espía', async () => {
+    usePropuestaStore().texto = RELATO
     const { wrapper } = await conCatalogo()
     await elemento(wrapper.findAll('input[type="checkbox"]'), 0, 'las casillas').setValue(true)
     await vi.advanceTimersByTimeAsync(600)
@@ -195,12 +207,47 @@ describe('LandingCotizador — se arma el plan, y el relato se queda en el naveg
     expect(args.lineas.every((l) => Object.keys(l).sort().join() === 'code,quantity')).toBe(true)
 
     const todo = JSON.stringify([pedirCotizacion.mock.calls, post.mock.calls, get.mock.calls])
-    expect(todo).not.toContain(DEL_EJEMPLO)
+    expect(todo).not.toContain('clínica de barrio')
 
     // CONTROL POSITIVO. Sin esto, un espía desconectado del módulo que el
     // componente importa daría el mismo verde que un componente mudo, y la
     // prueba estaría afirmando «no lo compruebo».
     void http.post('/assistant/proposal', { texto: usePropuestaStore().texto })
-    expect(JSON.stringify(post.mock.calls)).toContain(DEL_EJEMPLO)
+    expect(JSON.stringify(post.mock.calls)).toContain('clínica de barrio')
+  })
+
+  it('la portada monta el cotizador sin red: marcar casillas no cotiza nada', async () => {
+    const { wrapper, cotizador } = await conCatalogo({ conPrecio: false })
+
+    for (const casilla of wrapper.findAll('input[type="checkbox"]')) {
+      await casilla.setValue(true)
+    }
+    await vi.advanceTimersByTimeAsync(2000)
+
+    expect(cotizador.modulos.value.length).toBeGreaterThan(0)
+    expect(pedirCotizacion).not.toHaveBeenCalled()
+  })
+
+  it('lo escrito marca lo que nombra, lo anuncia y abre sus áreas — 500 ms después', async () => {
+    const { wrapper, cotizador } = await conCatalogo()
+
+    await wrapper.find('textarea').setValue('Agendamos citas y cobramos en caja.')
+    await vi.advanceTimersByTimeAsync(600)
+    await flushPromises()
+
+    expect(cotizador.modulos.value).toEqual(['SCHEDULING', 'CASH_REGISTER'])
+    // Las dos áreas con detección quedan abiertas, y solo esas.
+    expect(wrapper.findAll('h3 button').map((b) => b.attributes('aria-expanded'))).toEqual([
+      'true',
+      'true',
+    ])
+
+    const propuesta = wrapper.get('[role="status"]')
+    expect(propuesta.attributes('aria-atomic')).toBe('true')
+    expect(propuesta.text()).toContain('Con eso te proponemos')
+    // La nota va DENTRO del `<label>`, así que entra en el nombre accesible.
+    expect(elemento(wrapper.findAll('.lsm-fila.is-on'), 0, 'las filas marcadas').text()).toContain(
+      'Porque lo mencionaste',
+    )
   })
 })

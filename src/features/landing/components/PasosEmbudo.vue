@@ -14,7 +14,7 @@ import { computed } from 'vue'
  */
 const props = defineProps<{ actual: number }>()
 
-const ROTULOS = ['Tu clínica', 'Tu cuenta', 'Verifica tu correo', 'Confirmar']
+const ROTULOS = ['Tu negocio', 'Tu cuenta', 'Verifica tu correo', 'Confirmar']
 
 const SUFIJO = {
   HECHO: ', completado',
