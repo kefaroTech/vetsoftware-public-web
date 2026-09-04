@@ -92,9 +92,9 @@ function onBlur() {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 0 12px;
   background: #fff;
-  border: 1px solid var(--pub-line);
+  border: 1px solid var(--pub-line-control);
   border-radius: 8px;
   transition:
     border-color 0.15s,
@@ -128,6 +128,8 @@ function onBlur() {
   color: var(--pub-ame-700);
 }
 
+/* El relleno vertical va en el `<input>` y no en la caja de fuera: puesto en la
+   caja, sus 10 px de arriba y de abajo se ven como campo y no enfocan (§2.5.8). */
 .pub-input input {
   flex: 1;
   border: none;
@@ -137,6 +139,7 @@ function onBlur() {
   color: var(--pub-ink-900);
   min-width: 0;
   outline: none;
+  padding-block: 10px;
 }
 
 .pub-input-eye {

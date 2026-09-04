@@ -33,7 +33,7 @@ import { irAAncla } from '../composables/anclaConFoco'
   z-index: 1;
   max-width: 1120px;
   margin: 0 auto;
-  padding: 56px 32px 40px;
+  padding: 56px var(--pub-gutter) 40px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;

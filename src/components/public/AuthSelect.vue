@@ -76,7 +76,7 @@ function onBlur() {
   font-size: 14px;
   color: var(--pub-ink-900);
   background: #fff;
-  border: 1px solid var(--pub-line);
+  border: 1px solid var(--pub-line-control);
   border-radius: 8px;
   cursor: pointer;
   outline: none;

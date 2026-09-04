@@ -27,6 +27,16 @@
   --pub-line: #dfe9f7;
   --pub-line-2: #e5eefa;
 
+  /* El contorno de `AuthInput` y `AuthSelect` es el ÚNICO indicador visible del
+     control —no hay relleno, sombra ni subrayado que lo identifique—, así que
+     §1.4.11 Non-text Contrast (AA) le exige 3:1 y la exención de «límites
+     visuales» no aplica. `--pub-line` mide 1,23:1 sobre blanco; este 3,63:1, el
+     mismo margen con el que `--warm-450` sustituyó a `--warm-200` en el DS.
+     Se declara aparte y NO se oscurece `--pub-line` porque ese sigue siendo el
+     borde de seis superficies (`.pub-card`, `.pub-doc-toc`, `.pub-doc-foot`,
+     `.pub-plan-card`), donde §1.4.11 sí exime por decorativo. */
+  --pub-line-control: #6e88ac;
+
   /* El borde de las tarjetas secundarias de la portada. Estaba escrito a pelo en dos SFC
      (`LandingHero`, `LandingFinalCta`) con el mismo valor y ningún token equivalente, así
      que ninguna auditoría de contraste lo veía. Mismo valor exacto: cero cambio visual. */
@@ -42,6 +52,11 @@
   --pub-tint-bd: #e4e6ff;
   --pub-tint-sep: #eef0fe;
   --pub-tint-mute: #f5f6fb;
+
+  /* El canal lateral de la portada, en un único sitio: las secciones y el pie de
+     la landing tienen que sangrar lo mismo en los seis anchos, y con el valor
+     escrito dos veces dejan de hacerlo en cuanto uno de los dos se toca. */
+  --pub-gutter: clamp(20px, 5vw, 44px);
 
   /* `--pub-err-tx: #dc2626` se retira: medía 4,41:1 sobre `--pub-err-bg` y fallaba
      §1.4.3 AA para texto normal. Sus dos últimos consumidores (`RestablecerContrasenaView`,
@@ -358,7 +373,7 @@
 /* Ritmo vertical de una sección de la landing (§B, §C, §D, §E, §F). */
 .pub-section {
   position: relative;
-  padding: clamp(48px, 7vw, 88px) clamp(20px, 5vw, 44px);
+  padding: clamp(48px, 7vw, 88px) var(--pub-gutter);
   margin: 0 auto;
   width: 100%;
   max-width: 1120px;
@@ -394,11 +409,19 @@
 }
 
 /* Geometría y superficie de la tarjeta de plan. El realce de la recomendada NO
-   viaja aquí: va en el modificador, para que se pueda medir por separado. */
+   viaja aquí: va en el modificador, para que se pueda medir por separado.
+
+   Las siete filas son `subgrid` sobre las que declara `.land-plans-grid`: el
+   precio es el ancla con la que se comparan las tres tarjetas y tiene que
+   quedar a la misma altura en todas, aunque solo una lleve insignia y los
+   subtítulos ocupen una o dos líneas. Quien cambie el número de filas tiene que
+   cambiarlo también allí y en `PlanCard.vue`, que coloca cada hijo en su fila
+   de forma explícita. */
 .pub-plan-card {
   position: relative;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-row: span 7;
+  grid-template-rows: subgrid;
   gap: 14px;
   padding: 26px 24px 24px;
   border-radius: 16px;
@@ -798,6 +821,74 @@
   font-size: 13px;
   line-height: 1.55;
   color: var(--pub-ink-500);
+}
+
+/* La barra de acción del embudo en pantallas estrechas.
+ *
+ * En ancho el resumen es una columna propia y `position: sticky` lo mantiene a
+ * la vista; al colapsar la rejilla pasa a ser el ÚLTIMO bloque de la página, y
+ * un elemento pegajoso que no tiene nada debajo no se pega a nada: el importe y
+ * la acción que cierra la compra quedan a cinco pantallas de scroll.
+ *
+ * `display: contents` es lo que evita duplicar el control: en ancho la envoltura
+ * desaparece del árbol de cajas y el botón cae exactamente donde lo pone su
+ * componente; por debajo del corte la misma envoltura pasa a ser la barra fija y
+ * se lleva ESE botón consigo. Hay un solo «Continuar» en el documento en los dos
+ * casos. */
+.pub-barra-accion {
+  display: contents;
+}
+
+.pub-barra-cifra {
+  display: none;
+}
+
+@media (width <= 900px) {
+  .pub-barra-accion {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: var(--z-sticky);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    background: var(--pub-surface);
+    border-block-start: 1px solid var(--pub-line-strong);
+    box-shadow: 0 -8px 22px -14px rgb(70 45 190 / 35%);
+  }
+
+  .pub-barra-cifra {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 21px;
+    color: var(--pub-ink-900);
+  }
+
+  .pub-barra-suf {
+    font-size: 11.5px;
+    color: var(--pub-ink-600);
+  }
+
+  /* La barra decide la caja del control que aloja, y por eso lo alcanza por
+     elemento: la clase del botón es del componente que lo declara, no suya. */
+  .pub-scope .pub-barra-accion > button {
+    margin: 0;
+    inline-size: auto;
+    min-block-size: 44px;
+    padding-inline: 22px;
+    font-size: 14px;
+    border-radius: 11px;
+  }
+
+  /* El pie del armazón cae por debajo de la barra, y su enlace de vuelta dejaría
+     de ser pulsable. */
+  .pub-shell:has(.pub-barra-accion) .pub-footer {
+    padding-block-end: calc(74px + env(safe-area-inset-bottom));
+  }
 }
 
 /* ===========================================================================

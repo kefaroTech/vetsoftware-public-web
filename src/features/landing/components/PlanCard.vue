@@ -116,13 +116,22 @@ const avisoDescuento = computed<string | null>(() => {
       data-testid="plan-card-cta"
       @click="emit('marcar')"
     >
-      Marcar estos módulos
+      Marcar los de {{ plan.name }}
     </RouterLink>
   </article>
 </template>
 
 <style scoped>
+/* Cada hijo ocupa una fila FIJA del `subgrid` de `.pub-plan-card`. Explícito y
+   no por orden de aparición: la insignia solo la lleva la recomendada, y con
+   colocación automática su ausencia subiría título, subtítulo y precio una fila
+   entera, que es justo el descuadre que estas filas vienen a corregir. */
+.pub-badge {
+  grid-row: 1;
+}
+
 .land-plan-name {
+  grid-row: 2;
   margin: 0;
   font-size: 19px;
   font-weight: 700;
@@ -131,6 +140,7 @@ const avisoDescuento = computed<string | null>(() => {
 }
 
 .land-plan-tagline {
+  grid-row: 3;
   margin: -8px 0 0;
   font-size: 13px;
   line-height: 1.5;
@@ -138,6 +148,7 @@ const avisoDescuento = computed<string | null>(() => {
 }
 
 .land-plan-price {
+  grid-row: 4;
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -158,6 +169,7 @@ const avisoDescuento = computed<string | null>(() => {
 }
 
 .land-plan-descuento {
+  grid-row: 5;
   margin: -6px 0 0;
   font-size: 12.5px;
   line-height: 1.5;
@@ -165,6 +177,7 @@ const avisoDescuento = computed<string | null>(() => {
 }
 
 .land-plan-list {
+  grid-row: 6;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -189,7 +202,7 @@ const avisoDescuento = computed<string | null>(() => {
 }
 
 .land-plan-cta {
-  margin-top: auto;
+  grid-row: 7;
   display: inline-flex;
   align-items: center;
   justify-content: center;

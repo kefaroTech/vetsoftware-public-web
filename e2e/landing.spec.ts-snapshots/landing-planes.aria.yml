@@ -18,7 +18,7 @@
       - listitem: /Servicios, tarifas y promociones · \$ \d+\.\d+/
       - listitem: /Caja y punto de venta · \$ \d+\.\d+/
       - listitem: Quita en el siguiente paso lo que no uses
-    - link "Marcar estos módulos":
+    - link "Marcar los de Pack Spa":
       - /url: /planes?plan=PACK_SPA&ciclo=MENSUAL
   - article:
     - paragraph: La que más eligen
@@ -32,7 +32,7 @@
       - listitem: /Vacunación y desparasitación · \$ \d+\.\d+/
       - listitem: /Caja y punto de venta · \$ \d+\.\d+/
       - listitem: Quita en el siguiente paso lo que no uses
-    - link "Marcar estos módulos":
+    - link "Marcar los de Pack Clínica":
       - /url: /planes?plan=PACK_CLINIC&ciclo=MENSUAL
   - article:
     - heading "Pack Clínica completa" [level=3]
@@ -54,6 +54,6 @@
       - listitem: /Inventario y kardex · \$ \d+\.\d+/
       - listitem: /Compras y proveedores · \$ \d+\.\d+/
       - listitem: Quita en el siguiente paso lo que no uses
-    - link "Marcar estos módulos":
+    - link "Marcar los de Pack Clínica completa":
       - /url: /planes?plan=PACK_FULL&ciclo=MENSUAL
   - paragraph: /Todas parten del núcleo \(\$ \d+\.\d+ al mes\) con 2 personas y 1 sede\. Cada sede adicional cuesta \$ \d+\.\d+ al mes y cada persona adicional \$ \d+\.\d+ al mes\./

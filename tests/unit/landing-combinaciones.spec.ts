@@ -207,16 +207,31 @@ describe('Las combinaciones de la portada', () => {
     )
   })
 
-  it('«Marcar estos módulos» siembra los módulos del paquete, y nada más', async () => {
+  it('el CTA siembra los módulos del paquete, y nada más', async () => {
     const wrapper = await montar()
 
     await wrapper.findAll('[data-testid="plan-card-cta"]')[0]?.trigger('click')
 
     // Ni `CORE` ni la capacidad: no son casillas, y mandarlas rompería la cesta.
     expect(wrapper.emitted('sembrar')?.[0]).toEqual([['SCHEDULING', 'GROOMING'], 'MENSUAL'])
-    // El CTA dice lo mismo en todas las tarjetas; lo que las distingue es el
-    // `aria-describedby` al título, no un `aria-label` que rompería §2.5.3.
-    expect(wrapper.findAll('[data-testid="plan-card-cta"]')[0]?.text()).toBe('Marcar estos módulos')
+  })
+
+  it('el rótulo del CTA nombra su propio plan, y por eso los tres se distinguen', async () => {
+    const tarjetas = (await montar()).findAll('[data-testid="plan-card"]')
+
+    // `landing-comercial-y-contratacion.md:826` pide un único control cuyo texto
+    // nombre el plan. El nombre va en el texto VISIBLE y no en un `aria-label`,
+    // que dejaría el nombre accesible sin el rótulo y rompería §2.5.3 Label in
+    // Name; el `aria-describedby` al `<h3>` se conserva aparte.
+    const rotulos = tarjetas.map((tarjeta) => {
+      const nombre = tarjeta.get('h3').text()
+      expect(tarjeta.get('[data-testid="plan-card-cta"]').text()).toBe(`Marcar los de ${nombre}`)
+      return tarjeta.get('[data-testid="plan-card-cta"]').text()
+    })
+
+    // El defecto que esto cierra: tres rótulos idénticos en una comparación de
+    // tres columnas obligan a volver a subir la vista para saber qué se elige.
+    expect(new Set(rotulos).size).toBe(tarjetas.length)
   })
 
   it('el conteo de módulos concuerda en singular', async () => {
