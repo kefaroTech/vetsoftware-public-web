@@ -118,7 +118,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 
 .title {
   margin: 0 0 8px;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 20px;
   font-weight: 400;
   letter-spacing: -0.01em;

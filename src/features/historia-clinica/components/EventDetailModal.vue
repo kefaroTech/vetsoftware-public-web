@@ -219,9 +219,9 @@ function printReceta() {
   border: 1px solid oklch(85% 0.06 25deg);
 }
 
-/* A11Y-09 · el borde era `--amatista-300`: 2,02:1 en reposo, y el hover lo
-   empeoraba a 1,90:1 al oscurecer el relleno. `--amatista-500` da 4,50:1 en
-   reposo y 4,24:1 bajo el relleno del hover. El color del borde NO cambia entre
+/* A11Y-09 · el borde era `--amatista-300`: 1,99:1 en reposo, y el hover lo
+   empeoraba a 1,87:1 al oscurecer el relleno. `--amatista-500` da 4,44:1 en
+   reposo y 4,17:1 bajo el relleno del hover. El color del borde NO cambia entre
    estados a propósito: así el indicador nunca se debilita y el hover aporta su
    señal por relleno, no restando contraste al borde. */
 .btn-print {

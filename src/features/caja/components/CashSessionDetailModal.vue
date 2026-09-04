@@ -163,7 +163,7 @@ const emit = defineEmits<{ close: []; retry: [session: CashSessionView] }>()
 .cash-detail-section-title {
   margin: 0 0 -8px;
   color: var(--warm-800);
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 16px;
   font-weight: 400;
 }

@@ -4,6 +4,7 @@ import AuthInput from '@/components/public/AuthInput.vue'
 import SectionHead from '@/components/public/SectionHead.vue'
 import type { ToRefs } from 'vue'
 import type { RegisterFieldKey, RegisterFormState } from '../types/register-form.types'
+import { Lock, Mail, UserPlus, Users } from 'lucide-vue-next'
 
 /**
  * Bloque «Usuario administrador» del auto-registro. Mismo trato que la sección
@@ -25,7 +26,7 @@ const { employeeName, employeeEmail, password } = props.form
 <template>
   <section>
     <SectionHead
-      icon="mdi-account-plus-outline"
+      :icon="UserPlus"
       title="Usuario administrador"
       desc="La persona que gestionará la cuenta."
     />
@@ -42,7 +43,7 @@ const { employeeName, employeeEmail, password } = props.form
           placeholder="Dr. Ana Martínez"
           :maxlength="100"
           autocomplete="name"
-          icon="mdi-account-multiple"
+          :icon="Users"
           :invalid="!!err('employeeName')"
           @blur="markTouched('employeeName')"
         />
@@ -61,7 +62,7 @@ const { employeeName, employeeEmail, password } = props.form
             placeholder="ana@clinica.com"
             :maxlength="100"
             autocomplete="email"
-            icon="mdi-email-outline"
+            :icon="Mail"
             :invalid="!!err('employeeEmail')"
             @blur="markTouched('employeeEmail')"
           />
@@ -86,7 +87,7 @@ const { employeeName, employeeEmail, password } = props.form
             placeholder="••••••••"
             :maxlength="100"
             autocomplete="new-password"
-            icon="mdi-lock-outline"
+            :icon="Lock"
             :invalid="!!err('password')"
             @blur="markTouched('password')"
           />

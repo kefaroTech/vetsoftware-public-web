@@ -97,22 +97,22 @@ function select(value: ClinicalEventType | 'ALL') {
 .chip:hover:not(.active) {
   background: var(--warm-100);
 
-  /* A11Y-09: era --warm-300 (1,54:1), por debajo del reposo ya migrado a
-     --warm-450 (3,55:1) — el hover apagaba el borde del chip. */
+  /* A11Y-09: era --warm-300 (1,40:1), por debajo del reposo ya migrado a
+     --warm-450 (3,54:1) — el hover apagaba el borde del chip. */
   border-color: var(--warm-500);
 }
 
 /* A11Y-09 (issue #207) · el estado activo tiene que ser el MÁS evidente, y aquí
-   era el menos: el chip en reposo lleva borde `--warm-450` (3,55:1) y el activo
+   era el menos: el chip en reposo lleva borde `--warm-450` (3,54:1) y el activo
    se quedaba en `transparent`, con su relleno `--amatista-100` a 1,17:1 contra
    la página. La jerarquía se invierte a favor del seleccionado —no se sube a
-   los dos—: `--amatista-600` da 5,44:1 contra su relleno y 6,36:1 contra la
-   página, por encima del reposo (3,55:1) y del hover (5,06:1).
+   los dos—: `--amatista-600` da 5,36:1 contra su relleno y 6,26:1 contra la
+   página, por encima del reposo (3,54:1) y del hover (5,07:1).
 
    Los 9 chips por tipo NO pasan por aquí: su `borderColor` va en el `:style` en
    línea de la plantilla, que gana a cualquier regla, y también valía
    `transparent`. Allí el borde toma el `fg` del propio tipo (`TYPE_COLORS`),
-   que mide entre 5,76:1 (rojo) y 7,61:1 (amatista) contra su propio relleno. */
+   que mide entre 5,77:1 (rojo) y 8,91:1 (gris) contra su propio relleno. */
 .chip.active {
   background: var(--amatista-100);
   color: var(--amatista-700);

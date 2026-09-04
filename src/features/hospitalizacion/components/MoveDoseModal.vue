@@ -88,7 +88,12 @@ const emit = defineEmits<{
   border-color: var(--warm-450);
   color: var(--warm-900);
 }
+
+/* --warm-500 (4,36:1) y no --warm-450 (2,87:1): el relleno de hover baja a
+   --warm-200 y ahí el tono del reposo cae por debajo del 3:1 que exige
+   WCAG 2.2 §1.4.11, borrando el borde justo al señalar el botón. */
 .btn-secondary:hover {
   background: var(--warm-200);
+  border-color: var(--warm-500);
 }
 </style>

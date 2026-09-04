@@ -357,11 +357,11 @@ function goNuevaConsulta() {
   color: var(--wt-fg, var(--warm-700));
 }
 
-/* A11Y-09 · los dos estados bajaban del reposo: `--amatista-300` da 2,02:1
-   sobre `--warm-50` y 1,90:1 sobre el `--amatista-50` que pinta `.open`, contra
-   los 3,55:1 del reposo `--warm-450`. Y el peor era `.open`, que es el estado
+/* A11Y-09 · los dos estados bajaban del reposo: `--amatista-300` da 1,99:1
+   sobre `--warm-50` y 1,87:1 sobre el `--amatista-50` que pinta `.open`, contra
+   los 3,54:1 del reposo `--warm-450`. Y el peor era `.open`, que es el estado
    activo: se veía menos que el botón sin abrir. La jerarquía queda
-   reposo (3,55:1) < hover (3,77:1) < abierto (4,24:1). */
+   reposo (3,54:1) < hover (3,69:1) < abierto (4,17:1). */
 .weight-toggle:hover {
   --wt-border: var(--amatista-450);
   --wt-fg: var(--amatista-700);
@@ -408,8 +408,8 @@ function goNuevaConsulta() {
     color 0.12s ease;
 }
 
-/* A11Y-09: `--amatista-300` daba 2,02:1, por debajo del reposo `--warm-450`
-   (3,55:1). `--amatista-450` da 3,77:1. */
+/* A11Y-09: `--amatista-300` daba 1,99:1, por debajo del reposo `--warm-450`
+   (3,54:1). `--amatista-450` da 3,69:1. */
 .chip:hover {
   border-color: var(--amatista-450);
 }

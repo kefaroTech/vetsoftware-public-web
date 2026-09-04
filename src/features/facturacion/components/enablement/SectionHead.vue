@@ -33,7 +33,7 @@ defineProps<{ icon: Component; title: string; sub?: string }>()
 }
 
 .sechead-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 19px;
   font-weight: 400;
   letter-spacing: -0.01em;

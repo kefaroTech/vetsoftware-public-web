@@ -126,7 +126,7 @@ function onNotifications() {
          mayoría de empleados no tiene. Antes esto decía «Clínica Norte» para todo el
          mundo. El hueco es honesto y la sede real ya la muestra el `BranchSelector`
          justo debajo. -->
-    <SidebarBrand app-name="Vetrina" />
+    <SidebarBrand app-name="Lumbre" />
 
     <BranchSelector />
 

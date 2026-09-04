@@ -332,7 +332,7 @@ onUnmounted(() => {
 
 .brand {
   margin: 0;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 22px;
   letter-spacing: -0.01em;
   font-weight: 400;
@@ -386,7 +386,7 @@ onUnmounted(() => {
   font-size: 13px;
   padding: 12px 18px;
   background: var(--danger-150);
-  border-top: 1px solid var(--danger-300);
+  border-top: 1px solid var(--danger-border);
   color: oklch(35% 0.15 25deg);
 }
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ChevronDown } from 'lucide-vue-next'
 import { computed, inject, ref } from 'vue'
 import { FieldKey } from '@/components/ui/fieldContext'
 
@@ -57,7 +58,7 @@ function onBlur() {
     </select>
     <span class="pub-select-tail">
       <span v-if="loading" class="pub-select-spin" />
-      <v-icon v-else size="15" class="pub-select-chev">mdi-chevron-down</v-icon>
+      <ChevronDown v-else :size="15" class="pub-select-chev" aria-hidden="true" />
     </span>
   </div>
 </template>
@@ -84,7 +85,7 @@ function onBlur() {
     box-shadow 0.15s;
 }
 
-/* `--pub-ink-300` mide 2,60:1 sobre blanco. El placeholder de este select NO es
+/* `--pub-ink-300` mide 2,55:1 sobre blanco. El placeholder de este select NO es
    decorativo: en los tres selects de la cascada geográfica dice «Cargando…»
    mientras baja el catálogo, y ese es el único canal que informa de la espera. */
 .pub-select select.is-placeholder {

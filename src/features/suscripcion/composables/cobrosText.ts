@@ -32,7 +32,7 @@ import type { TaxTreatment } from '../types/suscripcion.types'
  * (el documento fiscal lo emite el proveedor DIAN); quitar la promesa, no.
  */
 export const CABECERA_SOLO_LECTURA =
-  'Las cuentas de cobro las emite VetSoftware. Aquí las consultas; no se registran pagos desde esta pantalla.'
+  'Las cuentas de cobro las emite Lumbre. Aquí las consultas; no se registran pagos desde esta pantalla.'
 
 export const SIN_DOCUMENTOS =
   'Todavía no tienes cuentas de cobro. Aparecerán aquí en cuanto se emita la primera.'

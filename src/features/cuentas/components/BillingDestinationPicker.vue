@@ -111,9 +111,9 @@ const emit = defineEmits<{ 'update:modelValue': [destino: BillingDestino] }>()
    de hover con la que competir, así que conserva su borde amatista-500 como
    antes (cuando ganaba por orden de aparición).
 
-   A11Y-09: `--amatista-300` daba 2,02:1, por debajo del `--warm-450` en reposo
-   (3,55:1) que aporta `.ds-field-rest` — el hover apagaba el borde.
-   `--amatista-450` da 3,77:1 y sigue por debajo del `--amatista-500` activo. */
+   A11Y-09: `--amatista-300` daba 1,99:1, por debajo del `--warm-450` en reposo
+   (3,54:1) que aporta `.ds-field-rest` — el hover apagaba el borde.
+   `--amatista-450` da 3,69:1 y sigue por debajo del `--amatista-500` activo. */
 .destopt-off:hover {
   border-color: var(--amatista-450);
 }

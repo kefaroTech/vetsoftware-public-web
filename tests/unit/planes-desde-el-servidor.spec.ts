@@ -238,7 +238,7 @@ describe('`/planes` dice la verdad cuando el servidor no tiene tarifa', () => {
     const aviso = wrapper.get('[data-testid="planes-vacio"]')
     // Se ANUNCIA. Sin esto, quien navega con lector espera una lista que no viene.
     expect(aviso.attributes('role')).toBe('status')
-    expect(aviso.text()).toContain('soporte@vetsoftware.co')
+    expect(aviso.text()).toContain('soporte@kefaro.tech')
 
     // Y no queda ni un camino a contratar un importe que nadie puede honrar.
     expect(wrapper.findComponent({ name: 'PlanesCombinaciones' }).exists()).toBe(false)
@@ -295,7 +295,7 @@ describe('La portada tampoco afirma el vacío antes de tiempo', () => {
     const aviso = montarSeccion(true).get('[data-testid="landing-planes-vacio"]')
 
     expect(aviso.attributes('role')).toBe('status')
-    expect(aviso.text()).toContain('soporte@vetsoftware.co')
+    expect(aviso.text()).toContain('soporte@kefaro.tech')
   })
 
   it('con paquetes no se pinta el vacío', () => {

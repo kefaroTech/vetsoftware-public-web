@@ -67,7 +67,7 @@ function enviar(): void {
     <p v-if="sinAjustes" class="ds-banner ref-agotado">
       Ya hiciste los 3 ajustes. Si todavía no encaja, quítale o añádele módulos aquí abajo, o
       escríbenos a
-      <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y lo armamos contigo.
+      <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a> y lo armamos contigo.
     </p>
 
     <template v-else>

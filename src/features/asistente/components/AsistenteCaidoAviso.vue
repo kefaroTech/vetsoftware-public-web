@@ -82,8 +82,8 @@ defineProps<{
     <template v-if="sinPaquetes">
       El asistente no está disponible ahora mismo y todavía no hay ningún paquete que puedas
       contratar por aquí. Escríbenos a
-      <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y te decimos qué podemos
-      montarte hoy.
+      <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a> y te decimos qué podemos montarte
+      hoy.
     </template>
     <template v-else-if="catalogoVacio">
       El asistente no está disponible ahora mismo, y todavía no hay módulos publicados para que

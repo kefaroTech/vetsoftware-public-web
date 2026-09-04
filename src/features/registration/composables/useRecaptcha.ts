@@ -25,7 +25,7 @@ const DEV_TEST_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI' // gitleaks
 
 /** Mensaje de un build publicado sin `VITE_RECAPTCHA_SITE_KEY`: no es un problema del usuario. */
 export const RECAPTCHA_MISSING_KEY_MESSAGE =
-  'La verificación anti-bots no está configurada en este despliegue, así que no es posible crear la cuenta. Avisa al soporte de VetSoftware.'
+  'La verificación anti-bots no está configurada en este despliegue, así que no es posible crear la cuenta. Avisa al soporte de Lumbre.'
 
 /** Mensaje del caso clásico: la clave existe pero el script de Google no llegó a cargar. */
 export const RECAPTCHA_LOAD_FAILED_MESSAGE =

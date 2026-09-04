@@ -34,8 +34,8 @@ import { exigir } from './helpers/exigir'
  */
 
 /** El texto del `<title>` de cada ruta, tal como lo declara `meta.title`. */
-const TITULO_LANDING = 'VetSoftware — Software para clínicas veterinarias en Colombia'
-const TITULO_PLANES = 'Planes y precios — VetSoftware'
+const TITULO_LANDING = 'Lumbre — Software para clínicas veterinarias en Colombia'
+const TITULO_PLANES = 'Planes y precios — Lumbre'
 
 /**
  * El `<h1>` de `/planes`, que NO es su `<title>`: son dos textos distintos y los

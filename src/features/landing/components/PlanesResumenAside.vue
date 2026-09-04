@@ -259,7 +259,7 @@ const MOTIVO_BLOQUEO =
   box-shadow: var(--pub-btn-shadow);
 }
 
-/* `--pub-ink-700` sobre `--pub-tint-100` mide 10,45:1. El gris del prototipo
+/* `--pub-ink-700` sobre `--pub-tint-100` mide 10,12:1. El gris del prototipo
    sobre ese mismo fondo se queda en 2,23:1 y el rótulo, que es lo único que
    identifica el botón, deja de leerse. */
 .pra-continuar[aria-disabled='true'] {

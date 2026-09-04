@@ -7,7 +7,7 @@ import { storageService } from '@/services/storage/storage.service'
  * No están aquí por orden: están aquí porque la decisión importante de cada una
  * es si SOBREVIVE a un cierre de sesión, y esa decisión solo se puede revisar si
  * se ven todas juntas. Cuando la clave vivía como literal dentro de su store,
- * nadie tenía delante la lista completa y `vetrina:nueva-consulta-draft` —con el
+ * nadie tenía delante la lista completa y el borrador de «Nueva consulta» —con el
  * paciente, el propietario y el examen físico dentro— sobrevivía al logout y se
  * le aparecía prellenada al siguiente usuario del mismo equipo (issue #68).
  *
@@ -17,7 +17,7 @@ import { storageService } from '@/services/storage/storage.service'
  */
 
 /** Borrador del asistente de «Nueva consulta». Volátil: lleva datos clínicos del paciente. */
-export const NUEVA_CONSULTA_DRAFT_KEY = 'vetrina:nueva-consulta-draft'
+export const NUEVA_CONSULTA_DRAFT_KEY = 'lumbre:nueva-consulta-draft'
 
 /** Sede operativa seleccionada. Volátil: es contexto de la sesión, no del equipo. */
 export const SELECTED_BRANCH_KEY = 'vetsoft.branch'
@@ -29,7 +29,7 @@ export const SELECTED_BRANCH_KEY = 'vetsoft.branch'
  * usuario que esté en turno. Borrarla al cerrar sesión obligaría a reconfigurarla
  * en cada cambio de turno y el primer ticket saldría con el ancho equivocado.
  */
-export const RECEIPT_WIDTH_KEY = 'vetrina:receipt-width'
+export const RECEIPT_WIDTH_KEY = 'lumbre:receipt-width'
 
 /**
  * Intención de contratación del embudo comercial: el paquete o los módulos
@@ -77,6 +77,37 @@ export const CONTRATACION_INTENCION_KEY = 'vs.contratacion.intencion.v1'
  * vive aquí, con la misma exposición y el mismo origen.
  */
 export const ASISTENTE_PROPUESTA_KEY = 'vs.asistente.propuestas.v1'
+
+/**
+ * Traspaso de las dos claves que el rebrand renombró de `vetrina:` a `lumbre:`.
+ *
+ * El valor de estas claves no es código: vive en el `localStorage` de
+ * navegadores reales. Sin el traspaso, un borrador de consulta a medio escribir
+ * el viernes queda inalcanzable el lunes —sigue en disco bajo el nombre viejo,
+ * pero ya nadie lo lee ni lo borra— y cada mostrador vuelve al ancho de rollo
+ * por defecto, con lo que el primer recibo del día sale cortado.
+ *
+ * Cuando las dos existen manda la nueva: la vieja solo puede ser el resto de una
+ * pestaña que se quedó abierta en la versión anterior, y pisar con ella lo que
+ * el usuario acaba de escribir sería peor que descartarla.
+ *
+ * Se puede retirar en cuanto haya pasado un ciclo de despliegue completo desde
+ * la versión que lo introduce: a partir de ahí ningún navegador activo conserva
+ * una clave `vetrina:` que traspasar.
+ */
+export function migrateRenamedStorageKeys(): void {
+  const renamed: readonly (readonly [string, string])[] = [
+    ['vetrina:nueva-consulta-draft', NUEVA_CONSULTA_DRAFT_KEY],
+    ['vetrina:receipt-width', RECEIPT_WIDTH_KEY],
+  ]
+
+  for (const [legacy, current] of renamed) {
+    const value = localStorage.getItem(legacy)
+    if (value === null) continue
+    if (localStorage.getItem(current) === null) localStorage.setItem(current, value)
+    localStorage.removeItem(legacy)
+  }
+}
 
 /** Claves que un cierre de sesión debe llevarse por delante. */
 export const VOLATILE_STORAGE_KEYS: readonly string[] = [

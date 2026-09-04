@@ -109,7 +109,7 @@ function isHighlighted(text: string): boolean {
 }
 
 .acc.open {
-  border-color: var(--amatista-200);
+  border-color: var(--amatista-450);
 }
 
 .row {

@@ -180,7 +180,7 @@ function totalsBlock(rows: ReceiptTotalRow[]): string {
 
 function buildHtml(t: ReceiptTicket): string {
   const width: ReceiptWidth = t.width === '58' ? '58' : '80'
-  const mark = (t.brand.mark ?? (t.brand.name.trim().charAt(0) || 'V')).toUpperCase()
+  const mark = (t.brand.mark ?? (t.brand.name.trim().charAt(0) || 'L')).toUpperCase()
 
   const fiscal = (t.fiscal ?? []).length
     ? `<div class="r-fiscal">${(t.fiscal ?? []).map(esc).join('<br />')}</div>`
@@ -223,13 +223,16 @@ function buildHtml(t: ReceiptTicket): string {
       `</div></div>`
     : ''
 
-  const foot = t.footer
-    ? `<hr class="r-sep" /><div class="r-foot">` +
-      (t.footer.thanks ? `<div class="thanks">${esc(t.footer.thanks)}</div>` : '') +
-      (t.footer.lines && t.footer.lines.length ? t.footer.lines.map(esc).join('<br />') : '') +
-      (t.footer.web ? `<div class="web">${esc(t.footer.web)}</div>` : '') +
-      `</div>`
-    : ''
+  // La atribución no es opcional ni depende del llamador: la cabecera del ticket
+  // es la clínica emisora, así que este pie es el único sitio del papel donde
+  // aparece quién fabrica el software.
+  const foot =
+    `<hr class="r-sep" /><div class="r-foot">` +
+    (t.footer?.thanks ? `<div class="thanks">${esc(t.footer.thanks)}</div>` : '') +
+    (t.footer?.lines?.length ? t.footer.lines.map(esc).join('<br />') : '') +
+    (t.footer?.web ? `<div class="web">${esc(t.footer.web)}</div>` : '') +
+    `<div class="web">Emitido con Lumbre</div>` +
+    `</div>`
 
   // Ancho del CONTENIDO = área imprimible del cabezal (no el ancho del papel): un rollo de
   // 58mm imprime ~48mm y uno de 80mm ~72mm. Y se ALINEA A LA IZQUIERDA (margin:0): la térmica

@@ -461,9 +461,9 @@ watch(
     background 0.12s;
 }
 
-/* A11Y-09: `--amatista-300` daba 1,90:1 sobre el `--amatista-50` que el propio
-   hover pinta, por debajo del reposo `--warm-450` (3,55:1). `--amatista-450` da
-   3,55:1 y deja `.selected` (`--amatista-500`, 4,24:1) como estado más fuerte. */
+/* A11Y-09: `--amatista-300` daba 1,87:1 sobre el `--amatista-50` que el propio
+   hover pinta, por debajo del reposo `--warm-450` (3,54:1). `--amatista-450` da
+   3,47:1 y deja `.selected` (`--amatista-500`, 3,80:1) como estado más fuerte. */
 
 /* No adopta `.ds-tone--accent-selected` desde el marcado, como sí hace
    `.clinical-btn` (`AgendaDayView.vue`): aquí reposo (warm-50/warm-450) y

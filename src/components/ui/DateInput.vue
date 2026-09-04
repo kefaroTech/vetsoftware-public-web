@@ -200,7 +200,7 @@ function onUpdate(value: string | null) {
   background: var(--warm-50);
 
   /* A11Y-09 · WCAG 2.2 §1.4.11 (AA): --warm-200 medía 1,23:1 sobre --warm-50.
-     --warm-450 da 3,55:1. Es un borde de control, no un separador. */
+     --warm-450 da 3,54:1. Es un borde de control, no un separador. */
   border: 1px solid var(--warm-450);
   border-radius: 8px;
   font-family: var(--font-sans);
@@ -217,7 +217,7 @@ function onUpdate(value: string | null) {
     background-color 0.15s ease;
 }
 
-/* --warm-500 (5,36:1): con el reposo en --warm-450, --warm-300 (1,49:1) dejaba
+/* --warm-500 (5,38:1): con el reposo en --warm-450, --warm-300 (1,48:1) dejaba
    el hover más claro que el reposo. */
 .date-wrap .mx-input:hover {
   border-color: var(--warm-500);
@@ -258,18 +258,18 @@ function onUpdate(value: string | null) {
 }
 
 .date-wrap.invalid .mx-input {
-  border-color: oklch(60% 0.2 25deg);
+  border-color: var(--danger-border);
   background: oklch(98.5% 0.02 25deg);
 }
 
 /* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- mismo motivo que el `:focus` neutro: `.ds-field-invalid-focus` habría que colgarla de `.mx-input`, un nodo de `vue-datepicker-next` que no pasa por nuestro marcado. El estado inválido vive en el wrapper `.date-wrap`, y una clase en el wrapper no tiñe el input de dentro. */
 .date-wrap.invalid .mx-input:focus {
-  border-color: oklch(55% 0.22 25deg);
+  border-color: var(--danger-border);
   box-shadow: var(--ring-danger);
 }
 
 .date-wrap.invalid .mx-icon-calendar {
-  color: oklch(55% 0.22 25deg);
+  color: var(--danger-border);
 }
 
 /* --- Panel (teletransportado a body) --- */
@@ -334,19 +334,19 @@ function onUpdate(value: string | null) {
 /* Días del mes anterior/siguiente. SON ELEGIBLES —pulsarlos salta a esa fecha,
    que es lo que se espera al elegir un día cercano al cambio de mes—, así que
    son contenido operable y WCAG 2.2 §1.4.3 (AA) les exige 4,5:1 completos.
-   --warm-300 medía 1,53:1 sobre el blanco del panel (que lo pinta la librería,
-   no nosotros) y no se veían. --warm-500 da 5,52:1 y conserva la jerarquía: el
-   día del mes en curso es --warm-800 (16,03:1), así que estos siguen leyéndose
+   --warm-300 medía 1,52:1 sobre el blanco del panel (que lo pinta la librería,
+   no nosotros) y no se veían. --warm-500 da 5,53:1 y conserva la jerarquía: el
+   día del mes en curso es --warm-800 (15,99:1), así que estos siguen leyéndose
    como secundarios sin bajar del mínimo legal. Ojo: --warm-450, el escalón de
-   A11Y-09, NO sirve aquí (3,65:1) — ese es el umbral de 3:1 de borde, no el de
+   A11Y-09, NO sirve aquí (3,63:1) — ese es el umbral de 3:1 de borde, no el de
    4,5:1 de texto.
 
    Y va AQUÍ, pegada a la regla base y ANTES de :hover, .active y .today: las
    cuatro pesan (0,4,0), así que la posición es el único desempate. Desde la
    posición anterior —la última— este color le ganaba a .active, y con un token
-   oscuro eso habría dejado el día seleccionado de otro mes en 1,19:1 sobre
+   oscuro eso habría dejado el día seleccionado de otro mes en 1,16:1 sobre
    --amatista-600, ilegible. Cediendo el paso, .active recupera su blanco
-   (6,55:1) y :hover su amatista (8,36:1). Los tres dicen algo más específico
+   (6,44:1) y :hover su amatista (8,23:1). Los tres dicen algo más específico
    que «pertenece a otro mes» y deben ganarle. */
 .mx-datepicker-main .mx-table-date .cell.not-current-month {
   color: var(--warm-500);

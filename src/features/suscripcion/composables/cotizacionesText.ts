@@ -13,7 +13,7 @@ import type { MandateStatus, PaymentMethodKind } from '../types/medios-pago.type
  */
 
 export const SIN_COTIZACIONES =
-  'No tienes ninguna propuesta pendiente. Cuando VetSoftware te prepare una, aparecerá aquí.'
+  'No tienes ninguna propuesta pendiente. Cuando Lumbre te prepare una, aparecerá aquí.'
 
 /**
  * A dónde lleva «Pedir más cupo». **El tenant no puede añadir líneas** —`POST

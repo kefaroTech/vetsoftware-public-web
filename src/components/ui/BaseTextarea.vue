@@ -51,7 +51,7 @@ const toneClass = computed(() => {
   // Solo lectura NO es deshabilitado: el control sigue siendo operable y su
   // valor SÍ se envía. Sin `tone-*`: `.ds-field-readonly` trae borde, fondo y
   // color, y el color es el CANAL que lo separa de deshabilitado (--warm-900,
-  // 16,76:1, frente al --warm-500 atenuado del otro estado).
+  // 16,75:1, frente al --warm-500 atenuado del otro estado).
   if (props.readonly) return ['ds-field-readonly', 'ds-focus-ring']
   return ['tone-border', 'tone-bg', 'tone-text', 'ds-focus-ring']
 })
@@ -110,7 +110,7 @@ function onBlur(event: FocusEvent) {
    resolución frente a `.ds-focus-ring:focus` no cambia. */
 
 /* A11Y-09 · WCAG 2.2 §1.4.11 (AA): --warm-200 medía 1,23:1 sobre --warm-50 y
-   el límite del campo era invisible con poca luz. --warm-450 da 3,55:1. Es el
+   el límite del campo era invisible con poca luz. --warm-450 da 3,54:1. Es el
    escalón que tokens.css reserva para bordes de control e icono; --warm-200 se
    queda para separadores y divisores, que §1.4.11 exime por decorativos. */
 .tone-border {
@@ -125,7 +125,7 @@ function onBlur(event: FocusEvent) {
   color: var(--warm-900);
 }
 
-/* --warm-500 (5,36:1): con el reposo en --warm-450, --warm-300 (1,49:1) dejaba
+/* --warm-500 (5,38:1): con el reposo en --warm-450, --warm-300 (1,48:1) dejaba
    el hover más claro que el reposo. */
 .textarea:hover:not(:focus, :disabled, .readonly, .invalid) {
   border-color: var(--warm-500);

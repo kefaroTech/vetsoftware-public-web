@@ -111,7 +111,7 @@ const openedAt = computed(() => props.detail && formatDateTime(props.detail.open
 .detail-title-wrap h1 {
   margin: 4px 0 2px;
   color: var(--warm-900);
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 28px;
   font-weight: 400;
 }
@@ -153,7 +153,7 @@ const openedAt = computed(() => props.detail && formatDateTime(props.detail.open
 
 .movement-title {
   margin: 8px 0 10px;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 15px;
   font-weight: 400;
   color: var(--warm-800);

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, inject } from 'vue'
+import { ref, computed, inject, type Component } from 'vue'
+import { Eye, EyeOff } from 'lucide-vue-next'
 import { FieldKey } from '@/components/ui/fieldContext'
 
 /** Input de texto/email/tel/password con ícono, focus-ring y estado de error (handoff reg-fields). */
@@ -9,7 +10,7 @@ const props = withDefaults(
     id?: string
     type?: 'text' | 'email' | 'tel' | 'password'
     placeholder?: string
-    icon?: string
+    icon?: Component
     invalid?: boolean
     maxlength?: number
     autocomplete?: string
@@ -57,7 +58,7 @@ function onBlur() {
     class="pub-input"
     :class="{ 'is-focused': focused, 'is-invalid': invalid, 'is-disabled': disabled }"
   >
-    <v-icon v-if="icon" size="15" class="pub-input-ico">{{ icon }}</v-icon>
+    <component :is="icon" v-if="icon" :size="15" class="pub-input-ico" aria-hidden="true" />
     <input
       :id="controlId"
       :type="resolvedType"
@@ -81,7 +82,7 @@ function onBlur() {
       :aria-label="show ? 'Ocultar contraseña' : 'Mostrar contraseña'"
       @click="show = !show"
     >
-      <v-icon size="16">{{ show ? 'mdi-eye-off-outline' : 'mdi-eye-outline' }}</v-icon>
+      <component :is="show ? EyeOff : Eye" :size="16" aria-hidden="true" />
     </button>
   </div>
 </template>

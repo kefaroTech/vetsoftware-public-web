@@ -168,7 +168,7 @@ function onSaveSurgery(item: Surgery) {
 .actions-banner {
   padding: 10px 14px;
   background: var(--amatista-50);
-  border: 1px solid var(--amatista-200);
+  border: 1px solid var(--info-border);
   color: var(--amatista-700);
   border-radius: 10px;
   font-size: 12.5px;

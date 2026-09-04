@@ -89,7 +89,7 @@ defineEmits<{ reset: [] }>()
 .reset:hover {
   background: var(--warm-50);
 
-  /* A11Y-09: era --warm-300 (1,54:1). Con el reposo ya en --warm-450 (3,55:1)
+  /* A11Y-09: era --warm-300 (1,48:1). Con el reposo ya en --warm-450 (3,54:1)
      el hover BORRABA el borde en vez de reforzarlo; --warm-500 lo mantiene un
      escalón por encima del reposo, igual que en las primitivas. */
   border-color: var(--warm-500);

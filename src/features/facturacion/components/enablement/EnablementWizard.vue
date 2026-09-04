@@ -99,7 +99,7 @@ function go(n: number) {
    none`. */
 
 .wiz-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 18px;
   color: var(--warm-900);
 }

@@ -95,8 +95,7 @@ const cuando = computed(() =>
     <p v-if="sinPaquetes" class="alim-p">
       No es un fallo: limitamos cuántas propuestas se piden desde un mismo sitio. Lo que escribiste
       sigue ahí arriba, tal como lo dejaste. Escríbenos a
-      <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y te armamos el plan a
-      mano.
+      <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a> y te armamos el plan a mano.
     </p>
     <p v-else class="alim-p">
       No es un fallo: limitamos cuántas propuestas se piden desde un mismo sitio. Lo que escribiste

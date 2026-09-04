@@ -132,7 +132,7 @@ function go(p: number) {
   background: transparent;
 
   /* A11Y-09 · WCAG 2.2 §1.4.11 (AA): son botones, no separadores. --warm-200
-     medía 1,23:1 sobre --warm-50; --warm-450 da 3,55:1. El hover sigue viniendo
+     medía 1,23:1 sobre --warm-50; --warm-450 da 3,54:1. El hover sigue viniendo
      de `.ds-tone--neutral-soft`, que cambia el fondo y no el borde. */
   border: 1px solid var(--warm-450);
   color: var(--warm-700);

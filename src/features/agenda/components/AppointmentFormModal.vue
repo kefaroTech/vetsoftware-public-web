@@ -404,8 +404,11 @@ function doEmit(forceOverlap = false) {
   min-width: 0;
 }
 
+/* A11Y-09: el borde escrito a mano medía 1,67:1 sobre el `--danger-50` del
+   banner y 1,66:1 bajo el relleno del hover, por debajo del 3:1 de WCAG 2.2
+   §1.4.11. `--danger-border` da 3,68:1 y 3,65:1. */
 .force-btn {
-  border-color: oklch(80% 0.09 25deg);
+  border-color: var(--danger-border);
   color: var(--danger-700);
 }
 

@@ -176,7 +176,7 @@ function mas() {
 
 /* Dos canales, relleno Y contorno, nunca solo opacidad (§1.4.1): el diseño
    pedía «sin cambio de estilo» en el límite y un botón que no responde y no lo
-   parece es un botón roto. `--pub-ink-500` mide 6,12:1 sobre blanco. */
+   parece es un botón roto. `--pub-ink-500` mide 5,96:1 sobre blanco. */
 .lct-paso.is-tope {
   background: var(--pub-surface);
   border: 1px solid var(--pub-line-strong);

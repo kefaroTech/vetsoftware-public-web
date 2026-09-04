@@ -284,7 +284,7 @@ async function remove(id: number) {
 }
 
 .wp-title h2 {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 20px;
   font-weight: 400;
   color: var(--warm-900);

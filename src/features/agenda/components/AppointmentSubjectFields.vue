@@ -207,10 +207,10 @@ const petOptions = computed(() => [
 }
 
 /* A11Y-09 (issue #208) · el segmento elegido se marcaba sólo con relleno
-   `--warm-50` sobre la pista `--warm-150`: 1,13:1. La sombra tampoco lo
-   rescataba (negro al 5%). El borde `--amatista-500` da 4,50:1 contra el propio
-   relleno del segmento y 4,00:1 contra la pista, y deja el estado elegido por
-   encima del marco del conmutador en reposo (`--warm-450`, 3,55:1). */
+   `--warm-50` sobre la pista `--warm-150`: 1,12:1. La sombra tampoco lo
+   rescataba (negro al 5%). El borde `--amatista-500` da 4,44:1 contra el propio
+   relleno del segmento y 3,95:1 contra la pista, y deja el estado elegido por
+   encima del marco del conmutador en reposo (`--warm-450`, 3,54:1). */
 .subject-toggle button.active {
   background: var(--warm-50);
   color: var(--warm-900);

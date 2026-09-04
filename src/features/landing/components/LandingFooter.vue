@@ -16,13 +16,13 @@ import { irAAncla } from '../composables/anclaConFoco'
 
 <template>
   <footer class="land-footer">
-    <p class="land-footer-legal">VetSoftware · Colombia</p>
+    <p class="land-footer-legal">Lumbre · Colombia</p>
     <p class="land-footer-links">
       <a href="#planes" @click="irAAncla('planes', $event)">Paquetes</a>
       <a href="#preguntas" @click="irAAncla('preguntas', $event)">Preguntas</a>
       <RouterLink :to="{ name: 'legal-privacidad' }">Privacidad</RouterLink>
       <RouterLink :to="{ name: 'legal-terminos' }">Términos</RouterLink>
-      <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a>
+      <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a>
     </p>
   </footer>
 </template>
@@ -41,8 +41,8 @@ import { irAAncla } from '../composables/anclaConFoco'
   gap: 20px;
   font-size: 13px;
 
-  /* `--pub-ink-400` mide 4,05:1 sobre blanco: falla §1.4.3 AA para texto
-     normal. `--pub-ink-500` mide 6,12:1. */
+  /* `--pub-ink-400` mide 3,94:1 sobre blanco: falla §1.4.3 AA para texto
+     normal. `--pub-ink-500` mide 5,96:1. */
   color: var(--pub-ink-500);
 }
 

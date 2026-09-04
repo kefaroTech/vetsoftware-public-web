@@ -69,7 +69,7 @@ provide(FieldKey, field)
     <label :id="labelId" :for="controlId" class="label">
       {{ label }}
       <!-- El candado es el canal VISUAL del estado de solo lectura, y no es
-           decorativo: el fondo hundido mide 1,061:1 contra el de deshabilitado
+           decorativo: el fondo hundido mide 1,059:1 contra el de deshabilitado
            y 1,125:1 contra el de reposo, así que por sí solo no se ve.
            `aria-hidden` porque el canal auditivo ya lo lleva el `readonly` /
            `aria-readonly` del propio control: duplicarlo haría que el lector

@@ -119,7 +119,7 @@ onMounted(() => void lista.reload())
           <p>
             <strong>{{ PEDIR_MAS_CUPO.fuerte }}</strong> {{ PEDIR_MAS_CUPO.resto }}
           </p>
-          <a class="ds-btn ds-btn--neutral" href="mailto:soporte@vetsoftware.co">Escríbenos</a>
+          <a class="ds-btn ds-btn--neutral" href="mailto:soporte@kefaro.tech">Escríbenos</a>
         </template>
         <p v-else>{{ SIN_COTIZACIONES }}</p>
       </div>

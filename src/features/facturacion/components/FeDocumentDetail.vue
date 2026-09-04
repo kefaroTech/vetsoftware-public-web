@@ -294,7 +294,7 @@ function copyId() {
 
 .type {
   margin: 4px 0 0;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 30px;
   font-weight: 400;
   letter-spacing: -0.015em;
@@ -376,7 +376,7 @@ function copyId() {
   padding: 14px 16px;
   border-radius: 12px;
   background: var(--danger-50);
-  border: 1px solid var(--danger-250);
+  border: 1px solid var(--danger-border);
   color: oklch(45% 0.16 25deg);
   font-size: 13px;
   line-height: 1.45;

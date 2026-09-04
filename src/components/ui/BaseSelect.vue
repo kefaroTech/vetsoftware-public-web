@@ -322,7 +322,7 @@ onBeforeUnmount(() => {
    resolución frente a `.trigger:focus-visible` (más abajo) no cambia. */
 
 /* A11Y-09 · WCAG 2.2 §1.4.11 (AA): --warm-200 medía 1,23:1 sobre --warm-50 y
-   el límite del campo era invisible con poca luz. --warm-450 da 3,55:1. Es el
+   el límite del campo era invisible con poca luz. --warm-450 da 3,54:1. Es el
    escalón que tokens.css reserva para bordes de control e icono; --warm-200 se
    queda para separadores y divisores, que §1.4.11 exime por decorativos. */
 .tone-border {
@@ -337,7 +337,7 @@ onBeforeUnmount(() => {
   color: var(--warm-900);
 }
 
-/* --warm-500 (5,36:1): con el reposo en --warm-450, --warm-300 (1,49:1) dejaba
+/* --warm-500 (5,38:1): con el reposo en --warm-450, --warm-300 (1,48:1) dejaba
    el hover más claro que el reposo. */
 .select:not(.open, .disabled, .readonly, .invalid) .trigger:hover {
   border-color: var(--warm-500);
@@ -353,12 +353,12 @@ onBeforeUnmount(() => {
 /* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- `.ds-field-invalid-focus` pesa (0,1,0) y `.select.open .trigger` (0,3,0) le gana: el anillo de foco inválido tiene que reafirmarse aquí, a (0,3,0), para desempatar contra el estado `open`. Además la segunda mitad del selector es `:focus-visible`, un pseudo-estado que ninguna clase aplicada desde el marcado puede reproducir. */
 .select.invalid.open .trigger,
 .select.invalid .trigger:focus-visible {
-  border-color: oklch(55% 0.22 25deg);
+  border-color: var(--danger-border);
   box-shadow: var(--ring-danger);
 }
 
 .select.invalid .chev {
-  color: oklch(55% 0.22 25deg);
+  color: var(--danger-border);
 }
 
 .value {

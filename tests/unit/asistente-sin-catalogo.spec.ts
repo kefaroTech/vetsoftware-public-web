@@ -174,7 +174,7 @@ describe('El catálogo manual dice cuándo no tiene nada que ofrecer', () => {
     // navega con lector se queda esperando una lista que nunca va a llegar.
     expect(vacio.attributes('role')).toBe('status')
     // Y hay una salida real dentro del propio vacío, no solo la mala noticia.
-    expect(vacio.find('a[href="mailto:soporte@vetsoftware.co"]').exists()).toBe(true)
+    expect(vacio.find('a[href="mailto:soporte@kefaro.tech"]').exists()).toBe(true)
     // El encabezado deja de dar una instrucción que la pantalla no puede
     // cumplir. «Añádelo tú» sobre un vacío es el mismo hueco, en negrita.
     expect(wrapper.get('#catalogo-h2').text()).toBe('Todavía no hay módulos que añadir')
@@ -251,9 +251,7 @@ describe('El aviso del asistente caído no promete lo que no hay', () => {
     expect(texto).toContain('ningún paquete que puedas contratar por aquí')
     // La salida que sí existe cuando no queda ninguna otra: una persona.
     expect(
-      wrapper
-        .find('[data-testid="asistente-caido"] a[href="mailto:soporte@vetsoftware.co"]')
-        .exists(),
+      wrapper.find('[data-testid="asistente-caido"] a[href="mailto:soporte@kefaro.tech"]').exists(),
     ).toBe(true)
   })
 

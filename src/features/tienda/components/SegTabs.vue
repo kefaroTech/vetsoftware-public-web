@@ -65,12 +65,20 @@ const emit = defineEmits<{ 'update:modelValue': [value: T] }>()
 .seg {
   display: inline-flex;
   background: var(--warm-100);
-  border: 1px solid var(--warm-200);
+
+  /* A11Y-09 · WCAG 2.2 §1.4.11: este borde es el único límite visible del
+     grupo, y lo rodean tres fondos distintos —blanco, el `--warm-50` de la
+     página y de los modales, y su propia pista `--warm-100`—. `--warm-200`
+     medía ahí 1,27:1, 1,23:1 y 1,16:1; `--warm-450` —el escalón que
+     `tokens.css` reserva a bordes de control— da 3,63:1, 3,54:1 y 3,33:1. */
+  border: 1px solid var(--warm-450);
   border-radius: 9px;
   padding: 2px;
 }
 .seg button {
-  border: none;
+  /* Reserva el sitio del borde que marca la posición puesta: sin él, activar
+     un segmento lo ensancharía 2px y el grupo daría un salto al conmutar. */
+  border: 1px solid transparent;
   background: transparent;
   font-family: inherit;
   font-size: 12.5px;
@@ -85,9 +93,17 @@ const emit = defineEmits<{ 'update:modelValue': [value: T] }>()
 .seg--md button {
   padding: 6px 14px;
 }
+
+/* A11Y-09 · WCAG 2.2 §1.4.1 y §1.4.11: el relleno `--warm-50` mide 1,06:1
+   sobre la pista `--warm-100` que lo rodea y `--shadow-xs` (8 % de alfa) no
+   llega a 3:1, así que la posición puesta se distinguía sólo por el tono del
+   rótulo. El peso la comunica sin recurrir al color; el borde `--warm-450` le
+   da 3,33:1 contra la pista y 3,54:1 contra su propio relleno. */
 .seg button.on {
   background: var(--warm-50);
+  border-color: var(--warm-450);
   color: var(--amatista-700);
+  font-weight: var(--weight-semibold);
   box-shadow: var(--shadow-xs);
 }
 </style>

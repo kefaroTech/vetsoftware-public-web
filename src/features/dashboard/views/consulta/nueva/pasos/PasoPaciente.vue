@@ -360,7 +360,7 @@ function clearBanner() {
 
 .banner.danger {
   background: var(--danger-150);
-  border: 1px solid var(--danger-300);
+  border: 1px solid var(--danger-border);
   color: oklch(35% 0.15 25deg);
 }
 

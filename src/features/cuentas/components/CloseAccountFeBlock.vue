@@ -169,8 +169,8 @@ const finalConsumer = defineModel<boolean>('finalConsumer', { required: true })
 }
 
 /* A11Y-09 · el tipo de documento ELEGIDO se marcaba con `--amatista-400`:
-   2,80:1 sobre su propio relleno, por debajo del mínimo. `--amatista-500` da
-   4,24:1. (`.doctype.off` conserva `--warm-200`: es `cursor: not-allowed`, y
+   2,74:1 sobre su propio relleno, por debajo del mínimo. `--amatista-500` da
+   4,17:1. (`.doctype.off` conserva `--warm-200`: es `cursor: not-allowed`, y
    §1.4.11 exime a los componentes inactivos.) */
 .doctype.on {
   background: var(--amatista-50);

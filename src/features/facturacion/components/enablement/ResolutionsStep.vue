@@ -188,7 +188,7 @@ async function onSave(payload: { id: number | null; body: SaveNumberingResolutio
 }
 
 .rescard.set {
-  border-color: var(--amatista-200);
+  border-color: var(--amatista-450);
 }
 
 .rescard-top {

@@ -402,9 +402,9 @@ const notesCancellation = computed(() =>
   transition: all 0.1s;
 }
 
-/* A11Y-09: `--amatista-400` daba 2,80:1 sobre el `--amatista-50` que el propio
-   hover pinta — incumple, y por debajo del reposo `--warm-450` (3,55:1).
-   `--amatista-500` da 4,24:1 y el hover pasa a reforzar el borde. */
+/* A11Y-09: `--amatista-400` daba 2,74:1 sobre el `--amatista-50` que el propio
+   hover pinta — incumple, y por debajo del reposo `--warm-450` (3,54:1).
+   `--amatista-500` da 4,17:1 y el hover pasa a reforzar el borde. */
 .trans-btn:hover:not(:disabled) {
   border-color: var(--amatista-500);
   background: var(--amatista-50);
@@ -427,8 +427,11 @@ const notesCancellation = computed(() =>
   color: var(--warm-400);
 }
 
+/* `--danger-border` (3,65:1) y no `oklch(75% 0.12 25deg)` (1,99:1): sobre el
+   relleno rojo que el propio hover pinta, ese tono quedaba por debajo del 3:1
+   de WCAG 2.2 §1.4.11 y por debajo del reposo `--warm-450` (3,54:1). */
 .trans-btn.danger:hover {
-  border-color: oklch(75% 0.12 25deg);
+  border-color: var(--danger-border);
   background: oklch(96% 0.04 25deg);
   color: var(--danger-700);
 }

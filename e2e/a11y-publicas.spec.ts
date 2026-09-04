@@ -79,8 +79,8 @@ test.describe('§2.4.2 Page Titled — el título por ruta', () => {
    * informe como hueco, no como algo que esta prueba deba tapar.
    */
   const CON_TITULO = [
-    { ruta: '/', titulo: 'VetSoftware — Software para clínicas veterinarias en Colombia' },
-    { ruta: '/planes', titulo: 'Planes y precios — VetSoftware' },
+    { ruta: '/', titulo: 'Lumbre — Software para clínicas veterinarias en Colombia' },
+    { ruta: '/planes', titulo: 'Planes y precios — Lumbre' },
   ]
 
   for (const caso of CON_TITULO) {
@@ -97,11 +97,11 @@ test.describe('§2.4.2 Page Titled — el título por ruta', () => {
     // declara y no se repone al salir, así que /login se llama «Planes y
     // precios» para siempre.
     await page.goto('/planes')
-    await expect(page).toHaveTitle('Planes y precios — VetSoftware')
+    await expect(page).toHaveTitle('Planes y precios — Lumbre')
 
     await page.getByRole('link', { name: 'Inicia sesión' }).click()
     await expect(page).toHaveURL(/\/login$/)
-    await expect(page).toHaveTitle('VetSoftware')
+    await expect(page).toHaveTitle('Lumbre')
   })
 })
 

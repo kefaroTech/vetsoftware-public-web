@@ -132,7 +132,7 @@ const activeModel = computed({
 
 .name-input {
   width: 100%;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 28px;
   font-weight: 400;
   letter-spacing: -0.01em;
@@ -152,7 +152,7 @@ const activeModel = computed({
 }
 
 .name-input:focus {
-  border-bottom-color: var(--amatista-300);
+  border-bottom-color: var(--amatista-450);
 }
 
 .name-input.invalid {

@@ -56,7 +56,7 @@ export const RESPONSABLE = {
   nit: pendiente('NIT del responsable del tratamiento'),
   domicilio: pendiente('domicilio y dirección física del responsable'),
   telefono: pendiente('teléfono de contacto del responsable'),
-  canalCorreo: 'soporte@vetsoftware.co',
+  canalCorreo: 'soporte@kefaro.tech',
   areaResponsable: 'Área de Protección de Datos Personales',
 } as const
 

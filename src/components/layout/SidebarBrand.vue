@@ -12,7 +12,27 @@ defineProps<{
 
 <template>
   <div class="brand">
-    <div class="mark">V</div>
+    <!-- El isotipo vive solo en el raíl (≤1024px), que es donde el nombre se
+         oculta: es una ilustración de cuatro niveles de detalle y por debajo de
+         48px deja de leerse como figura, así que fuera del raíl la identidad la
+         carga el texto. El `ds-sr-only` va dentro de este mismo contenedor para
+         que se oculte con él y el nombre no se anuncie dos veces. -->
+    <span class="rail-mark">
+      <picture>
+        <source srcset="/brand/lumbre-logo-only-transparent-128.webp" type="image/webp" />
+        <img
+          class="ds-brand-mark"
+          src="/brand/lumbre-logo-only-transparent-64.png"
+          alt=""
+          width="32"
+          height="32"
+          decoding="async"
+          loading="eager"
+        />
+      </picture>
+      <span class="ds-sr-only">{{ appName }}</span>
+    </span>
+
     <div class="text ds-stack">
       <div class="name">{{ appName }}</div>
       <div v-if="clinic" class="clinic">{{ clinic }}</div>
@@ -28,19 +48,8 @@ defineProps<{
   padding: 10px 6px 22px;
 }
 
-.mark {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: oklch(72% 0.16 var(--hue));
-  color: oklch(20% 0.05 var(--hue));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-weight: 700;
-  font-size: 15px;
+.rail-mark {
+  display: none;
 }
 
 .text {
@@ -48,8 +57,10 @@ defineProps<{
 }
 
 .name {
-  font-size: 14px;
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   color: oklch(96% 0.02 var(--hue));
 }
 
@@ -63,6 +74,10 @@ defineProps<{
   .brand {
     justify-content: center;
     padding: 8px 0 18px;
+  }
+
+  .rail-mark {
+    display: block;
   }
 
   .text {

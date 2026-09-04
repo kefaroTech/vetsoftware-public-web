@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { PawPrint } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
 import { irAAncla } from '../composables/anclaConFoco'
 
@@ -20,11 +19,8 @@ import { irAAncla } from '../composables/anclaConFoco'
 
 <template>
   <header class="land-topbar">
-    <RouterLink :to="{ name: 'landing' }" class="land-brand" aria-label="VetSoftware, inicio">
-      <span class="land-brand-mark">
-        <PawPrint :size="17" :stroke-width="1.8" aria-hidden="true" />
-      </span>
-      <span class="land-brand-word">VetSoftware</span>
+    <RouterLink :to="{ name: 'landing' }" class="land-brand" aria-label="Lumbre, inicio">
+      <span class="land-brand-word">Lumbre</span>
     </RouterLink>
 
     <nav class="land-nav" aria-label="Principal">
@@ -49,28 +45,20 @@ import { irAAncla } from '../composables/anclaConFoco'
   flex-wrap: wrap;
 }
 
+/* §2.5.8 Target Size (Minimum): sin el cuadro del isotipo el enlace mide lo
+   que mide su línea de texto, por debajo del suelo de 24×24 px CSS. */
 .land-brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 11px;
+  min-height: 32px;
   text-decoration: none;
   color: var(--pub-ink-900);
 }
 
-.land-brand-mark {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, var(--pub-ame-500), var(--pub-ame-900));
-  display: grid;
-  place-items: center;
-  color: var(--pub-surface);
-  box-shadow: 0 4px 10px -2px rgb(126 34 206 / 45%);
-}
-
 .land-brand-word {
-  font-size: 15px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
   letter-spacing: -0.01em;
 }
 

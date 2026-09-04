@@ -9,6 +9,7 @@ import AuthInput from '@/components/public/AuthInput.vue'
 import { authApi } from '../api/auth.api'
 import { useAuth } from '../composables/useAuth'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { ArrowRight, Lock, ShieldCheck } from 'lucide-vue-next'
 
 const router = useRouter()
 const { me, refreshMe, logout } = useAuth()
@@ -65,6 +66,26 @@ async function submit() {
     </template>
 
     <div class="pub-card pub-reveal">
+      <picture class="pub-brand-lockup">
+        <source
+          type="image/webp"
+          srcset="
+            /brand/lumbre-lockup-transparent-480.webp   480w,
+            /brand/lumbre-lockup-transparent-768.webp   768w,
+            /brand/lumbre-lockup-transparent-1024.webp 1024w
+          "
+          sizes="160px"
+        />
+        <img
+          class="ds-brand-mark"
+          src="/brand/lumbre-lockup-transparent-480.png"
+          alt="Lumbre — Gestiona lo que cuidas"
+          width="160"
+          height="160"
+          decoding="async"
+          loading="eager"
+        />
+      </picture>
       <div class="pub-eyebrow">Primer ingreso</div>
       <h1 class="pub-title">Crea tu contraseña</h1>
       <p class="pub-sub">
@@ -82,7 +103,7 @@ async function submit() {
             <AuthInput
               v-model="form.password"
               type="password"
-              icon="mdi-lock-outline"
+              :icon="Lock"
               placeholder="••••••••"
               :maxlength="100"
               autocomplete="new-password"
@@ -95,7 +116,7 @@ async function submit() {
             <AuthInput
               v-model="form.confirm"
               type="password"
-              icon="mdi-lock-check-outline"
+              :icon="ShieldCheck"
               placeholder="••••••••"
               :maxlength="100"
               autocomplete="new-password"
@@ -105,7 +126,7 @@ async function submit() {
           </AuthField>
 
           <PrimaryButton type="submit" :loading="submitting" loading-text="Guardando…">
-            Guardar y entrar <v-icon size="14">mdi-arrow-right</v-icon>
+            Guardar y entrar <ArrowRight :size="14" aria-hidden="true" />
           </PrimaryButton>
         </div>
       </form>

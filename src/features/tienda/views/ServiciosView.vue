@@ -361,8 +361,8 @@ async function onCategoryRemove(id: number) {
   background: var(--warm-50);
 
   /* A11Y-09 · la fila lleva `@click`: es un control, y `--warm-200` daba
-     1,23:1. `--warm-450` da 3,55:1; el hover pasa de `--amatista-300` (2,02:1,
-     por debajo del reposo) a `--amatista-450` (3,77:1). */
+     1,23:1. `--warm-450` da 3,54:1; el hover pasa de `--amatista-300` (1,99:1,
+     por debajo del reposo) a `--amatista-450` (3,69:1). */
   border: 1px solid var(--warm-450);
   border-radius: 11px;
   padding: 12px 14px;

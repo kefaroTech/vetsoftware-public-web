@@ -9,6 +9,7 @@ import type {
   RegisterFormState,
   RegisterOption,
 } from '../types/register-form.types'
+import { Building2, FileText, MapPin, Phone, ReceiptText } from 'lucide-vue-next'
 
 /**
  * Bloque «Empresa» del auto-registro. Se extrajo de `RegisterForm.vue` (646
@@ -58,7 +59,7 @@ const {
 <template>
   <section class="reg-section">
     <SectionHead
-      icon="mdi-office-building-outline"
+      :icon="Building2"
       title="Empresa"
       desc="Datos fiscales y ubicación del centro veterinario."
     />
@@ -80,7 +81,7 @@ const {
             :placeholder="isNit ? '900123456' : 'ABC12345'"
             :maxlength="20"
             :inputmode="isNit ? 'numeric' : 'text'"
-            icon="mdi-file-document-outline"
+            :icon="FileText"
             :invalid="!!err('companyIdentifier')"
             @update:model-value="sanitizeIdentifier"
             @blur="markTouched('companyIdentifier')"
@@ -89,8 +90,7 @@ const {
             <p v-if="nitTaken" class="reg-way-out">
               Si esta clínica es tuya,
               <RouterLink :to="{ name: 'login' }">inicia sesión</RouterLink>. Si crees que es un
-              error, escríbenos a
-              <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a>.
+              error, escríbenos a <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a>.
             </p>
           </template>
         </AuthField>
@@ -108,7 +108,7 @@ const {
           placeholder="Clínica Veterinaria Patitas S.A.S."
           :maxlength="100"
           autocomplete="organization"
-          icon="mdi-office-building-outline"
+          :icon="Building2"
           :invalid="!!err('companyName')"
           @blur="markTouched('companyName')"
         />
@@ -142,7 +142,7 @@ const {
             placeholder="facturacion@clinica.com"
             :maxlength="255"
             autocomplete="email"
-            icon="mdi-receipt-text-outline"
+            :icon="ReceiptText"
             :invalid="!!err('fiscalEmail')"
             @blur="markTouched('fiscalEmail')"
           />
@@ -156,7 +156,7 @@ const {
             placeholder="Cra 12 # 34-56"
             :maxlength="200"
             autocomplete="street-address"
-            icon="mdi-map-marker-outline"
+            :icon="MapPin"
           />
         </AuthField>
         <AuthField
@@ -171,7 +171,7 @@ const {
             placeholder="+57 601 234 5678"
             :maxlength="30"
             autocomplete="tel"
-            icon="mdi-phone-outline"
+            :icon="Phone"
             :invalid="!!err('companyContactNumber')"
             @update:model-value="sanitizePhone"
             @blur="markTouched('companyContactNumber')"

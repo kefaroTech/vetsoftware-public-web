@@ -170,11 +170,11 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
    `.ds-field-invalid-focus`. Sólo queda aquí el `border-color` del foco, que
    tiene que ganarle al de la primitiva. */
 .combo-input.invalid:focus-within {
-  border-color: oklch(55% 0.22 25deg);
+  border-color: var(--danger-border);
 }
 
 .combo-input.invalid .combo-icon {
-  color: oklch(55% 0.22 25deg);
+  color: var(--danger-border);
 }
 
 .combo-input input {
@@ -274,9 +274,9 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   color: var(--amatista-700);
   background: var(--amatista-50);
 
-  /* A11Y-09: `--amatista-200` daba 1,34:1 en reposo y 1,21:1 con el relleno del
-     hover — el botón «cambiar» no tenía frontera. `--amatista-500` da 4,24:1 y
-     3,86:1. */
+  /* A11Y-09: `--amatista-200` daba 1,32:1 en reposo y 1,20:1 con el relleno del
+     hover — el botón «cambiar» no tenía frontera. `--amatista-500` da 4,17:1 y
+     3,80:1. */
   border: 1px solid var(--amatista-500);
   border-radius: 7px;
   padding: 6px 11px;

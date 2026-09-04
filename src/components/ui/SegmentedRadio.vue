@@ -124,7 +124,7 @@ function onKeydown(event: KeyboardEvent, index: number) {
   background: var(--warm-50);
 
   /* A11Y-09 · WCAG 2.2 §1.4.11 (AA): cada opción es un control, no un
-     separador. --warm-200 medía 1,23:1 sobre --warm-50; --warm-450 da 3,55:1. */
+     separador. --warm-200 medía 1,23:1 sobre --warm-50; --warm-450 da 3,54:1. */
   border: 1px solid var(--warm-450);
   color: var(--warm-900);
   padding: 8px 14px;
@@ -139,7 +139,7 @@ function onKeydown(event: KeyboardEvent, index: number) {
     color 0.12s;
 }
 
-/* --warm-500 (5,36:1): con el reposo en --warm-450, --warm-300 (1,49:1) dejaba
+/* --warm-500 (5,38:1): con el reposo en --warm-450, --warm-300 (1,48:1) dejaba
    el hover más claro que el reposo. */
 .seg:hover {
   border-color: var(--warm-500);
@@ -162,7 +162,7 @@ function onKeydown(event: KeyboardEvent, index: number) {
    El temblor era una copia byte a byte del `@keyframes shake` bajo otro
    nombre: ahora lo pone `.ds-field-shake` desde el template. */
 .segmented.invalid .seg:not(.active) {
-  border-color: oklch(60% 0.2 25deg);
+  border-color: var(--danger-border);
   background: oklch(98.5% 0.02 25deg);
 }
 </style>

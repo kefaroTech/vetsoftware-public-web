@@ -155,9 +155,10 @@ const store = useCuentas()
   cursor: pointer;
 }
 
+/* stylelint-disable-next-line vetsoftware/no-duplicate-primitive -- el cuerpo coincide con `.ds-btn--danger`, pero esa primitiva es el tono en REPOSO de un `.ds-btn`: aplicarla desde el template pintaría de rojo un botón que aquí sólo se tiñe al pasar el ratón, y arrastraría la base de `.ds-btn` sobre una píldora propia de 12px con su propio radio y relleno. */
 .pago-void-btn:hover {
   background: var(--danger-50);
-  border-color: var(--danger-300);
+  border-color: var(--danger-border);
   color: var(--danger-700);
 }
 </style>

@@ -170,7 +170,7 @@ async function submit() {
   padding: var(--space-26);
 
   /* A11Y-09 · la zona de soltar archivos es pulsable y su borde discontinuo es
-     toda su frontera: `--warm-300` daba 1,49:1. `--warm-450` da 3,55:1. */
+     toda su frontera: `--warm-300` daba 1,48:1. `--warm-450` da 3,54:1. */
   border: 1.5px dashed var(--warm-450);
 
   /* El reposo se declara aquí a (0,2,0) para ganarle a la forma plana de

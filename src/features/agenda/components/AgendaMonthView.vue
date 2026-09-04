@@ -150,8 +150,8 @@ const cells = computed(() =>
 /* El tono de reposo se declara aquí a (0,2,0) para ganarle a la forma plana
    de `.ds-tone--neutral-soft`; el hover lo pone su forma `:hover` (0,3,0), que
    sube el borde a `--warm-500`. Un estado de interacción no puede bajar el
-   contraste del control, y dejarlo en `--warm-450` lo bajaba de 3,55:1 a
-   3,35:1 al oscurecer el relleno. */
+   contraste del control, y dejarlo en `--warm-450` lo bajaba de 3,54:1 a
+   3,33:1 al oscurecer el relleno. */
 .cell {
   align-items: stretch;
   gap: var(--space-4);
@@ -159,9 +159,9 @@ const cells = computed(() =>
   background: var(--warm-50);
   border: none;
 
-  /* A11Y-09 (issue #204): era `--warm-150`, 1,13:1 sobre el relleno de la celda
+  /* A11Y-09 (issue #204): era `--warm-150`, 1,12:1 sobre el relleno de la celda
      y 1,06:1 sobre el de las celdas de otro mes y la de hoy. `--warm-450` da
-     3,55:1 / 3,35:1 / 3,34:1 respectivamente. */
+     3,54:1 / 3,33:1 / 3,32:1 respectivamente. */
   border-right: 1px solid var(--warm-450);
   border-bottom: 1px solid var(--warm-450);
   text-align: left;
@@ -178,8 +178,8 @@ const cells = computed(() =>
 /* El `opacity: 0.55` que había aquí se retira, y no por estética: la opacidad
    se aplica al elemento entero, borde incluido, así que atenuaba la reja de
    estas celdas contra el fondo del calendario. Con ella puesta NINGÚN token la
-   salva — medido sobre `--warm-50`, la reja se queda en 1,81:1 con
-   `--warm-450`, 2,17:1 con `--warm-500` y 2,46:1 con `--warm-600`, todos por
+   salva — medido sobre `--warm-50`, la reja se queda en 1,87:1 con
+   `--warm-450`, 2,24:1 con `--warm-500` y 2,55:1 con `--warm-600`, todos por
    debajo del mínimo. El "mes vecino" se marca ahora con lo que ya lo marcaba
    —el relleno `--warm-100`— más el número de día atenuado por color, que sí
    deja el borde a contraste pleno. De paso, los chips de estas celdas dejan de

@@ -303,7 +303,7 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
   gap: 6px;
   padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid var(--amatista-200);
+  border: 1px solid var(--amatista-450);
   background: var(--amatista-50);
   color: var(--amatista-700);
   font-family: inherit;

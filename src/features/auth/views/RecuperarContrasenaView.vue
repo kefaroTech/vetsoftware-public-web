@@ -6,6 +6,7 @@ import AuthField from '@/components/public/AuthField.vue'
 import AuthInput from '@/components/public/AuthInput.vue'
 import { authApi } from '../api/auth.api'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { ArrowRight, IdCard, MailCheck } from 'lucide-vue-next'
 
 const RESEND_COOLDOWN_SECONDS = 60
 
@@ -102,7 +103,7 @@ async function resend() {
           <AuthField label="Código de usuario" required :error="err()">
             <AuthInput
               v-model="form.employeeCode"
-              icon="mdi-card-account-details-outline"
+              :icon="IdCard"
               placeholder="ADMIN-001"
               :maxlength="50"
               autocomplete="username"
@@ -112,14 +113,14 @@ async function resend() {
           </AuthField>
 
           <PrimaryButton type="submit" :loading="submitting" loading-text="Enviando…">
-            Enviar enlace <v-icon size="14">mdi-arrow-right</v-icon>
+            Enviar enlace <ArrowRight :size="14" aria-hidden="true" />
           </PrimaryButton>
         </form>
       </template>
 
       <template v-else>
         <div class="rc-icon">
-          <v-icon size="38">mdi-email-check-outline</v-icon>
+          <MailCheck :size="38" aria-hidden="true" />
         </div>
         <h1 class="pub-title">Revisa tu correo</h1>
         <p class="pub-sub">

@@ -202,8 +202,8 @@ onMounted(() => history.fetch())
 /* El fondo del hover ya lo pone `.ds-btn--ghost:hover:not(:disabled)` con el mismo
    valor (`--surface-muted` es `--warm-100`), así que aquí sólo queda el borde. */
 
-/* A11Y-09: `--warm-300` daba 1,41:1 sobre el `--warm-100` que pinta el propio
-   hover. `--warm-500` da 5,06:1, el mismo escalón que usa la forma `:hover` de
+/* A11Y-09: `--warm-300` daba 1,40:1 sobre el `--warm-100` que pinta el propio
+   hover. `--warm-500` da 5,07:1, el mismo escalón que usa la forma `:hover` de
    `.ds-tone--neutral-soft`. */
 .filter-btn:hover,
 .clear:hover {

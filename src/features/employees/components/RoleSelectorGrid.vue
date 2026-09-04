@@ -72,9 +72,9 @@ const orderedRoles = computed(() =>
     background 0.12s ease;
 }
 
-/* A11Y-09: `--amatista-300` daba 2,02:1, por debajo del reposo `--warm-450`
-   (3,55:1) — el hover apagaba el borde de la opción. `--amatista-450` da 3,77:1
-   y se queda por debajo del `--amatista-600` de `.selected` (6,36:1), que sigue
+/* A11Y-09: `--amatista-300` daba 1,99:1, por debajo del reposo `--warm-450`
+   (3,54:1) — el hover apagaba el borde de la opción. `--amatista-450` da 3,69:1
+   y se queda por debajo del `--amatista-600` de `.selected` (6,26:1), que sigue
    siendo el estado más evidente. */
 .option:hover:not(.selected) {
   border-color: var(--amatista-450);
@@ -86,7 +86,7 @@ const orderedRoles = computed(() =>
 }
 
 /* A11Y-09 · sin marcar, el borde ES la casilla entera: `--warm-300` daba
-   1,49:1 sobre su relleno `--warm-50`; `--warm-450` da 3,55:1. */
+   1,48:1 sobre su relleno `--warm-50`; `--warm-450` da 3,54:1. */
 .checkbox {
   width: 18px;
   height: 18px;

@@ -337,7 +337,7 @@ function goToExistingAccount(): void {
   border-radius: 11px;
   display: grid;
   place-items: center;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 15px;
   font-weight: 500;
   flex-shrink: 0;
@@ -364,7 +364,7 @@ function goToExistingAccount(): void {
   border-radius: 10px;
   font-size: var(--text-body);
   background: var(--warning-50);
-  border: 1px solid var(--warning-200);
+  border: 1px solid var(--warning-border);
 
   /* Nota: este tono es propio de `.dup-warn` (hue 70), no el `--warning-fg`
      del sistema (hue 80). Se deja tal cual para no cambiar el aspecto. */
@@ -397,10 +397,10 @@ function goToExistingAccount(): void {
   color: var(--warm-700);
 }
 
-/* A11Y-09: `--amatista-400` daba 2,80:1 sobre el `--amatista-50` del chip
+/* A11Y-09: `--amatista-400` daba 2,74:1 sobre el `--amatista-50` del chip
    activo — incumple, y encima por debajo del chip inactivo (`--warm-450` sobre
-   `--warm-100`, 3,35:1): el seleccionado se veía menos. `--amatista-500` da
-   4,24:1. */
+   `--warm-100`, 3,33:1): el seleccionado se veía menos. `--amatista-500` da
+   4,17:1. */
 .chip.active {
   background: var(--amatista-50);
   border-color: var(--amatista-500);
@@ -414,8 +414,8 @@ function goToExistingAccount(): void {
   background: var(--amatista-50);
 
   /* A11Y-09: discontinuo o no, es la frontera del control. `--amatista-300`
-     daba 1,90:1 en reposo y 1,73:1 con el relleno del hover; `--amatista-500`
-     da 4,24:1 y 3,86:1. */
+     daba 1,87:1 en reposo y 1,70:1 con el relleno del hover; `--amatista-500`
+     da 4,17:1 y 3,80:1. */
   border: 1.5px dashed var(--amatista-500);
   color: var(--amatista-700);
   font-weight: 600;

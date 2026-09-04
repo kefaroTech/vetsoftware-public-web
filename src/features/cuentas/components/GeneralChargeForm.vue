@@ -139,7 +139,7 @@ function submit() {
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
-  border: 1px solid var(--amatista-200);
+  border: 1px solid var(--amatista-450);
 }
 
 .add-btn:hover:not(:disabled) {

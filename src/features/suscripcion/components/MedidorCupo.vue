@@ -64,7 +64,7 @@ const valor = computed(() => Math.min(props.usado ?? 0, props.limite ?? 0))
  * fábrica de varios de ellos no llega a 3:1 sobre el blanco de la tarjeta. Un medidor cuyo
  * contorno no se ve es un medidor que no se lee.
  *
- * `--warm-450` sobre `--warm-50` mide 3,55:1; es el mismo token con el que `Pagination` resolvió
+ * `--warm-450` sobre `--warm-50` mide 3,54:1; es el mismo token con el que `Pagination` resolvió
  * exactamente este criterio (A11Y-09). Las tres seudoclases son la única forma portable de
  * pintar un `<progress>`: WebKit/Blink usan `::-webkit-progress-*` y Gecko `::-moz-progress-bar`.
  */

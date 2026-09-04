@@ -9,6 +9,7 @@ import PawLoader from '@/components/feedback/PawLoader.vue'
 import { useTokenDeEnlace } from '@/composables/useTokenDeEnlace'
 import { authApi } from '../api/auth.api'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { ArrowRight, CircleAlert, CircleCheck, Lock, ShieldCheck } from 'lucide-vue-next'
 
 type State = 'loading' | 'form' | 'invalid' | 'success'
 
@@ -108,7 +109,7 @@ async function submit() {
             <AuthInput
               v-model="form.password"
               type="password"
-              icon="mdi-lock-outline"
+              :icon="Lock"
               placeholder="••••••••"
               :maxlength="100"
               autocomplete="new-password"
@@ -121,7 +122,7 @@ async function submit() {
             <AuthInput
               v-model="form.confirm"
               type="password"
-              icon="mdi-lock-check-outline"
+              :icon="ShieldCheck"
               placeholder="••••••••"
               :maxlength="100"
               autocomplete="new-password"
@@ -131,7 +132,7 @@ async function submit() {
           </AuthField>
 
           <PrimaryButton type="submit" :loading="submitting" loading-text="Guardando…">
-            Guardar contraseña <v-icon size="14">mdi-arrow-right</v-icon>
+            Guardar contraseña <ArrowRight :size="14" aria-hidden="true" />
           </PrimaryButton>
         </form>
       </template>
@@ -139,7 +140,7 @@ async function submit() {
       <!-- Éxito -->
       <template v-else-if="state === 'success'">
         <div class="rp-icon rp-icon--ok">
-          <v-icon size="38">mdi-check-circle-outline</v-icon>
+          <CircleCheck :size="38" aria-hidden="true" />
         </div>
         <h1 class="pub-title">Contraseña actualizada</h1>
         <p class="pub-sub">Tu contraseña quedó cambiada. Ya puedes iniciar sesión con la nueva.</p>
@@ -151,7 +152,7 @@ async function submit() {
       <!-- Token inválido / expirado -->
       <template v-else>
         <div class="rp-icon rp-icon--err">
-          <v-icon size="38">mdi-alert-circle-outline</v-icon>
+          <CircleAlert :size="38" aria-hidden="true" />
         </div>
         <h1 class="pub-title">Enlace no válido</h1>
         <p class="pub-sub">

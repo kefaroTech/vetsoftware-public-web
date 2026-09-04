@@ -13,10 +13,10 @@ import type { LegalDocument } from '../types/legal.types'
  * documentos se publican juntos porque la casilla los nombra juntos.
  *
  * ── Qué NO es este documento ───────────────────────────────────────────────
- * No es el acuerdo de tratamiento de datos entre la clínica y VetSoftware por
+ * No es el acuerdo de tratamiento de datos entre la clínica y Lumbre por
  * los datos de SUS pacientes y propietarios. Ese es otro documento —el backend
  * ya reserva para él el `kind` `DATA_PROCESSING_AGREEMENT`— y tiene otras
- * partes: allí la clínica es Responsable y VetSoftware es Encargado. Aquí se
+ * partes: allí la clínica es Responsable y Lumbre es Encargado. Aquí se
  * enuncia la distinción (sección 6) y nada más, porque enunciarla mal es peor
  * que no tenerla.
  *
@@ -30,7 +30,7 @@ export const TERMINOS: LegalDocument = {
   documentVersion: 1,
   effectiveFrom: '2026-09-01',
   resumen:
-    'Las condiciones bajo las que se presta VetSoftware: quién lo presta, qué incluye, cómo se ' +
+    'Las condiciones bajo las que se presta Lumbre: quién lo presta, qué incluye, cómo se ' +
     'cobra, qué puedes esperar del asistente de propuesta y qué ley lo rige.',
   sections: [
     {
@@ -39,7 +39,7 @@ export const TERMINOS: LegalDocument = {
       blocks: [
         {
           kind: 'p',
-          text: 'VetSoftware es un servicio de software prestado por:',
+          text: 'Lumbre es un servicio de software prestado por:',
         },
         {
           kind: 'dl',
@@ -65,7 +65,7 @@ export const TERMINOS: LegalDocument = {
         {
           kind: 'p',
           text:
-            'Estos términos regulan el acceso y el uso de VetSoftware, un software de gestión ' +
+            'Estos términos regulan el acceso y el uso de Lumbre, un software de gestión ' +
             'para clínicas veterinarias que se presta a través de internet. Al marcar la casilla ' +
             'de aceptación o al usar el servicio, aceptas estos términos en la versión vigente ' +
             'en ese momento, cuyo número y fecha aparecen al comienzo de este documento.',
@@ -153,7 +153,7 @@ export const TERMINOS: LegalDocument = {
           text:
             'Respecto de los datos personales que tú cargas en la plataforma —los propietarios ' +
             'de los pacientes, tu equipo— la clínica es el Responsable del Tratamiento y ' +
-            'VetSoftware actúa como Encargado: los tratamos siguiendo tus instrucciones y para ' +
+            'Lumbre actúa como Encargado: los tratamos siguiendo tus instrucciones y para ' +
             'prestarte el servicio, no para fines propios.',
         },
         {
@@ -242,7 +242,7 @@ export const TERMINOS: LegalDocument = {
         {
           kind: 'p',
           text:
-            'VetSoftware es una herramienta de gestión: no sustituye el criterio clínico del ' +
+            'Lumbre es una herramienta de gestión: no sustituye el criterio clínico del ' +
             'profesional veterinario, que es quien responde por sus decisiones y por los ' +
             'registros que produce. Ninguna cláusula de estos términos excluye la ' +
             'responsabilidad que la ley colombiana no permite excluir, en particular frente a ' +

@@ -217,7 +217,7 @@ onMounted(entrar)
       >
         Tu propuesta a medida ya no está disponible. Puedes elegir uno de nuestros paquetes aquí
         abajo, o escribirnos a
-        <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> y la rehacemos contigo.
+        <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a> y la rehacemos contigo.
       </p>
 
       <p class="ds-subtitle">{{ subtituloRecuperacion }}</p>
@@ -282,7 +282,7 @@ onMounted(entrar)
         role="status"
       >
         No pudimos comprobar si tu clínica ya tiene un plan contratado. Si crees que ya lo tiene,
-        escríbenos a <a href="mailto:soporte@vetsoftware.co">soporte@vetsoftware.co</a> antes de
+        escríbenos a <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a> antes de
         confirmar.
       </p>
 

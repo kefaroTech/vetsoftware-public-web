@@ -93,7 +93,7 @@ defineEmits<{ alternar: [code: string, marcado: boolean] }>()
   cursor: pointer;
 }
 
-/* El borde de la fila marcada sale de `--pub-ame-600` (5,38:1 sobre blanco) y
+/* El borde de la fila marcada sale de `--pub-ame-600` (5,25:1 sobre blanco) y
    no de `--pub-line`, que mide 1,23:1 y no vale como borde de control
    (§1.4.11, AA). */
 .cgr-fila.is-on {

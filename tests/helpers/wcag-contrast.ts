@@ -29,11 +29,18 @@ export interface Oklch {
 }
 
 /**
- * Convierte OKLCH a sRGB con gamma, recortando al gamut.
+ * Convierte OKLCH a sRGB con gamma, recortando al gamut y cuantizando a 8
+ * bits por canal.
  *
  * El recorte es el mismo que hace el navegador al pintar un color fuera de
  * gamut en una pantalla sRGB, así que el contraste que sale de aquí es el que
- * ve el usuario, no el teórico.
+ * ve el usuario, no el teórico. La cuantización a 8 bits (redondeo a 1/255)
+ * es la MISMA razón: es lo último que el navegador le hace al canal antes de
+ * mandarlo a la pantalla. METODOLOGÍA DE REFERENCIA de este archivo — sin
+ * ella el contraste calibra contra un continuo que ningún píxel real
+ * reproduce, y el próximo barrido "corrige" tokens que ya estaban bien
+ * (verificado en `--amatista-450`/`--amatista-50`: 3,47:1 con cuantización,
+ * el valor documentado en `tokens.css`, frente a 3,49:1 sin ella).
  */
 export function oklchToSrgb({ l: L, c: C, h }: Oklch): Srgb {
   const hRad = (h * Math.PI) / 180
@@ -52,7 +59,8 @@ export function oklchToSrgb({ l: L, c: C, h }: Oklch): Srgb {
 
   return linear.map((v) => {
     const clamped = Math.min(1, Math.max(0, v))
-    return clamped <= 0.0031308 ? 12.92 * clamped : 1.055 * clamped ** (1 / 2.4) - 0.055
+    const encoded = clamped <= 0.0031308 ? 12.92 * clamped : 1.055 * clamped ** (1 / 2.4) - 0.055
+    return Math.round(encoded * 255) / 255
   }) as unknown as Srgb
 }
 

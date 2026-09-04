@@ -72,7 +72,7 @@ function toggle() {
 }
 
 .switch:focus-visible {
-  outline: 2px solid var(--amatista-400);
+  outline: 2px solid var(--amatista-450);
   outline-offset: 2px;
 }
 </style>

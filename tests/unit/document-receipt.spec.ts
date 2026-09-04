@@ -357,7 +357,7 @@ describe('bloque fiscal del emisor', () => {
       { width: '80' },
     )
 
-    expect(ticket.brand.name).toBe('Vetrina')
+    expect(ticket.brand.name).toBe('Lumbre')
     expect(ticket.fiscal).toEqual([])
   })
 })

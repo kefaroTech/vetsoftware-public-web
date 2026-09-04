@@ -44,7 +44,7 @@ const borrador = computed(() => esBorrador(props.doc))
 <template>
   <article class="pub-doc">
     <header>
-      <p class="pub-doc-eyebrow">Documento legal · VetSoftware Colombia</p>
+      <p class="pub-doc-eyebrow">Documento legal · Lumbre Colombia</p>
       <h1 class="pub-doc-title">{{ doc.title }}</h1>
       <p class="pub-doc-resumen">{{ doc.resumen }}</p>
 

@@ -303,7 +303,7 @@ function onSave() {
   flex-direction: row;
   align-items: center;
   background: var(--danger-100);
-  border: 1px solid var(--danger-400);
+  border: 1px solid var(--danger-border);
   color: var(--danger-900);
 }
 

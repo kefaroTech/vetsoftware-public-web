@@ -58,13 +58,13 @@ withDefaults(
 .banner.warn {
   background: oklch(95% 0.07 80deg);
   color: oklch(42% 0.13 60deg);
-  border: 1px solid var(--warning-200);
+  border: 1px solid var(--warning-border);
 }
 
 .banner.err {
   background: var(--danger-50);
   color: var(--danger-700);
-  border: 1px solid oklch(88% 0.07 25deg);
+  border: 1px solid var(--danger-border);
 }
 
 .banner.neutral {
