@@ -157,12 +157,7 @@ const csp = parseCsp(policy)
 
 describe('cabeceras de seguridad', () => {
   it('declara las mismas cabeceras en Cloudflare Pages y en el contenedor', () => {
-    // Cache-Control lo gestiona cada plataforma a su manera (nginx usa `expires`),
-    // así que es la única que legítimamente puede diferir.
-    const comparable = new Map(cloudflare)
-    comparable.delete('Cache-Control')
-
-    expect(Object.fromEntries(nginx)).toEqual(Object.fromEntries(comparable))
+    expect(Object.fromEntries(nginx)).toEqual(Object.fromEntries(cloudflare))
   })
 
   it('incluye Content-Security-Policy', () => {
@@ -226,6 +221,9 @@ describe('Content-Security-Policy', () => {
     )
     // Namespaces XML: se escriben en el SVG pero no se descargan nunca.
     hosts.delete('https://www.w3.org')
+    // Origen canónico de los metadatos sociales (`og:url`, `og:image`): lo leen
+    // los rastreadores desde fuera; la página nunca lo pide como subrecurso.
+    hosts.delete('https://vetsoftware.co')
 
     expect(hosts.size).toBeGreaterThan(0)
     for (const host of hosts) {
@@ -383,5 +381,45 @@ describe('Referrer-Policy en las rutas que llegan por enlace de correo', () => {
       'src/composables/useTokenDeEnlace.ts',
       'src/features/asistente/composables/useRecuperarPropuesta.ts',
     ])
+  })
+})
+
+/**
+ * La caché tiene que decir lo mismo en los dos sitios.
+ *
+ * Mientras `Cache-Control` quedó fuera de la comparación de arriba —con
+ * `expires` por `location` y bloques de `_headers` no hay forma de igualarlos
+ * campo a campo— `/brand/*` estuvo cayendo en el `no-cache` global sin que nada
+ * avisara. Resuelto con un `map`, las dos declaraciones son comparables y esto
+ * lo comprueba.
+ */
+describe('política de caché', () => {
+  const mapa = parseNginxMap('vs_cache_control')
+
+  /** `~^/brand/` (regex de nginx) y `/brand/*` (glob de Cloudflare) son la misma ruta. */
+  function comoGlob(clave: string): string {
+    return clave.replace(/^~\^/, '').replace(/\/$/, '/*')
+  }
+
+  it('nginx y Cloudflare declaran la misma caché en cada prefijo', () => {
+    const enNginx = Object.fromEntries([...mapa.entries].map(([k, v]) => [comoGlob(k), v]))
+    const enCloudflare = Object.fromEntries(
+      [...reglas]
+        .filter(([ruta]) => ruta in enNginx)
+        .map(([ruta, cabeceras]) => [ruta, cabeceras.get('Cache-Control')]),
+    )
+
+    expect(enCloudflare).toEqual(enNginx)
+  })
+
+  it('solo lleva immutable lo que lleva hash en el nombre', () => {
+    // `/assets/*` son los artefactos de Vite y su nombre cambia con el contenido.
+    // `/brand/*` no: `favicon-32x32.png` se llama igual antes y después de un
+    // cambio de logotipo, así que `immutable` congelaría la marca vieja durante
+    // un año en cada navegador que ya la hubiera pedido, sin invalidación posible.
+    for (const [ruta, valor] of mapa.entries) {
+      if (valor.includes('immutable')) expect(comoGlob(ruta)).toBe('/assets/*')
+    }
+    expect(mapa.entries.get('~^/brand/')).toMatch(/stale-while-revalidate=\d+/)
   })
 })
