@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, useTemplateRef } from 'vue'
 import { PauseCircle, Pencil, Plus, RotateCcw } from 'lucide-vue-next'
 import TaxFormModal from '../components/TaxFormModal.vue'
 import AccentButton from '../components/AccentButton.vue'
 import SegTabs from '../components/SegTabs.vue'
 import { useTienda } from '../composables/useTienda'
 import { formatMoney } from '../composables/pricing'
+import { useScrollableRegion } from '@/composables/useScrollableRegion'
 import { useToast } from '@/composables/useToast'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
@@ -20,6 +21,14 @@ const { can } = useAuthorization()
 const canCreate = can(PERMISSIONS.TAX_CREATE)
 const canUpdate = can(PERMISSIONS.TAX_UPDATE)
 const canDelete = can(PERMISSIONS.TAX_DELETE)
+
+// Sin `TAX_CREATE` no hay botón de alta en la cabecera, así que «Crea el
+// primero» sería una instrucción que la pantalla no deja seguir.
+const emptyText = computed(() =>
+  canCreate.value
+    ? 'Sin impuestos. Crea el primero.'
+    : 'Sin impuestos. Tu rol no incluye crearlos.',
+)
 
 /** 'active' = impuestos vivos; 'paused' = impuestos pausados (enabled=false) para reactivar. */
 const mode = ref<'active' | 'paused'>('active')
@@ -117,6 +126,11 @@ async function onReactivate(t: TaxResponse) {
 function ivaContenido(percentage: number): string {
   return formatMoney(Math.round(100000 - 100000 / (1 + percentage / 100)))
 }
+
+const activos = useTemplateRef<HTMLElement>('activos')
+const activosDesborda = useScrollableRegion(activos)
+const pausados = useTemplateRef<HTMLElement>('pausados')
+const pausadosDesborda = useScrollableRegion(pausados)
 </script>
 
 <template>
@@ -147,17 +161,28 @@ function ivaContenido(percentage: number): string {
       </div>
     </header>
 
-    <div v-if="store.error.value" class="ds-banner ds-banner--error">{{ store.error.value }}</div>
+    <!-- EST-01: la rama de error va ANTES que la de vacío. Si conviven, la
+         pantalla que falló afirma «Sin impuestos. Crea el primero». -->
+    <div v-if="store.error.value" class="ds-banner ds-banner--error" role="alert">
+      {{ store.error.value }}
+    </div>
 
     <!-- ─────────── Modo ACTIVOS ─────────── -->
-    <div v-if="mode === 'active'" class="ds-table-scroll">
+    <div
+      v-if="!store.error.value && mode === 'active'"
+      ref="activos"
+      class="ds-table-scroll ds-focus-ring"
+      role="region"
+      aria-label="Impuestos activos"
+      :tabindex="activosDesborda ? 0 : undefined"
+    >
       <table class="ds-table">
         <thead>
           <tr>
             <th>Impuesto</th>
             <th>Tributo</th>
-            <th>Porcentaje</th>
-            <th>IVA contenido en $100.000</th>
+            <th class="ds-num">Porcentaje</th>
+            <th class="ds-num">IVA contenido en $100.000</th>
             <th>En uso</th>
             <th v-if="canUpdate || canDelete"></th>
           </tr>
@@ -167,7 +192,7 @@ function ivaContenido(percentage: number): string {
             <td colspan="6" class="ds-empty ds-empty--lg">Cargando…</td>
           </tr>
           <tr v-else-if="store.taxes.value.length === 0">
-            <td colspan="6" class="ds-empty ds-empty--lg">Sin impuestos. Crea el primero.</td>
+            <td colspan="6" class="ds-empty ds-empty--lg">{{ emptyText }}</td>
           </tr>
           <tr
             v-for="t in store.taxes.value"
@@ -178,8 +203,8 @@ function ivaContenido(percentage: number): string {
           >
             <td class="tname ds-text-strong">{{ t.name }}</td>
             <td>{{ t.taxScheme }}</td>
-            <td class="tstock">{{ t.percentage }}%</td>
-            <td>{{ ivaContenido(t.percentage) }}</td>
+            <td class="tstock ds-num">{{ t.percentage }}%</td>
+            <td class="ds-num">{{ ivaContenido(t.percentage) }}</td>
             <td class="tuse">{{ usageOf(t.id) }} ítem(s)</td>
             <td v-if="canUpdate || canDelete" @click.stop>
               <div class="actions">
@@ -210,13 +235,20 @@ function ivaContenido(percentage: number): string {
     </div>
 
     <!-- ─────────── Modo PAUSADOS ─────────── -->
-    <div v-else class="ds-table-scroll">
+    <div
+      v-else-if="!store.error.value"
+      ref="pausados"
+      class="ds-table-scroll ds-focus-ring"
+      role="region"
+      aria-label="Impuestos pausados"
+      :tabindex="pausadosDesborda ? 0 : undefined"
+    >
       <table class="ds-table">
         <thead>
           <tr>
             <th>Impuesto</th>
             <th>Tributo</th>
-            <th>Porcentaje</th>
+            <th class="ds-num">Porcentaje</th>
             <th></th>
           </tr>
         </thead>
@@ -230,7 +262,7 @@ function ivaContenido(percentage: number): string {
           <tr v-for="t in store.pausedTaxes.value" v-else :key="t.id">
             <td class="tname ds-text-strong">{{ t.name }}</td>
             <td>{{ t.taxScheme }}</td>
-            <td class="tstock">{{ t.percentage }}%</td>
+            <td class="tstock ds-num">{{ t.percentage }}%</td>
             <td>
               <AccentButton v-if="canDelete" @click="onReactivate(t)">
                 <RotateCcw :size="14" :stroke-width="1.7" /> Reactivar

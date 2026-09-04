@@ -165,6 +165,7 @@ async function requestDelete(target: DiagnosticImagingResponse) {
         :fetch-page="fetchPage"
         placeholder="Buscar tipo o región…"
         empty-text="Este paciente aún no tiene estudios registrados."
+        table-label="Imagen diagnóstica"
       >
         <template #header>
           <tr>

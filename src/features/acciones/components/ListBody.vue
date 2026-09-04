@@ -1,10 +1,12 @@
 <script setup lang="ts" generic="T">
-import { computed, onMounted, ref, useId, watch } from 'vue'
+import { computed, onMounted, ref, useId, useTemplateRef, watch } from 'vue'
 import { AlertTriangle, Check, Copy, RefreshCw, Search } from 'lucide-vue-next'
 import { usePaged } from '../composables/usePaged'
 import { useServerPaged, type ServerPageLoader } from '@/composables/useServerPaged'
+import { useScrollableRegion } from '@/composables/useScrollableRegion'
 import { emptyPage } from '@/types/pagination'
 import Pagination from '@/components/ui/Pagination.vue'
+import PawLoader from '@/components/feedback/PawLoader.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -21,12 +23,20 @@ const props = withDefaults(
     pageSize?: number
     emptyText?: string
     loading?: boolean
+    /**
+     * Nombre accesible de la región desplazable. R04 pide el SUJETO de la tabla, que
+     * este componente no puede saber: lo aportan sus ocho pantallas. El valor por
+     * defecto solo evita que la región quede sin nombre —una `region` anónima no se
+     * expone como landmark—, no sustituye al sujeto.
+     */
+    tableLabel?: string
   }>(),
   {
     items: () => [],
     placeholder: 'Buscar…',
     pageSize: 8,
     emptyText: 'No hay registros aún',
+    tableLabel: 'Registros',
   },
 )
 
@@ -124,6 +134,9 @@ async function copyTrace() {
   }
 }
 
+const tabla = useTemplateRef<HTMLElement>('tabla')
+const desborda = useScrollableRegion(tabla)
+
 onMounted(() => {
   if (isServer.value) void server.reload()
 })
@@ -155,7 +168,9 @@ defineExpose({
       <slot name="actions" />
     </div>
 
-    <div v-if="busy" class="state">Cargando…</div>
+    <div v-if="busy" class="state">
+      <PawLoader :size="42" :glow="false" :speed="900" label="Cargando registros" />
+    </div>
     <!-- EST-01: la rama de error va ANTES que la de vacío. Si se invierten, un 500
          vuelve a disfrazarse de «no hay registros». -->
     <div v-else-if="listError" class="state-error ds-banner ds-banner--error" role="alert">
@@ -193,7 +208,14 @@ defineExpose({
     </div>
     <!-- Vacío de VERDAD: no hay término, la lista está vacía de por sí. -->
     <div v-else-if="total === 0" class="state empty">{{ emptyText }}</div>
-    <div v-else class="ds-table-scroll">
+    <div
+      v-else
+      ref="tabla"
+      class="ds-table-scroll ds-focus-ring"
+      role="region"
+      :aria-label="tableLabel"
+      :tabindex="desborda ? 0 : undefined"
+    >
       <table class="table">
         <thead>
           <slot name="header" />

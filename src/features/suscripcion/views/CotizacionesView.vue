@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, useTemplateRef } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { FileText } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import SectionCard from '@/components/ui/SectionCard.vue'
 import Pagination from '@/components/ui/Pagination.vue'
+import { useScrollableRegion } from '@/composables/useScrollableRegion'
 import { useServerPaged } from '@/composables/useServerPaged'
 import { formatDateShort } from '@/composables/format'
 import { formatMoney } from '@/composables/money'
@@ -94,6 +95,9 @@ const filas = computed(() => lista.items.value)
 const desdeCupo = computed(() => route.query.motivo === 'cupo')
 
 onMounted(() => void lista.reload())
+
+const tabla = useTemplateRef<HTMLElement>('tabla')
+const desborda = useScrollableRegion(tabla)
 </script>
 
 <template>
@@ -124,14 +128,21 @@ onMounted(() => void lista.reload())
         <p v-else>{{ SIN_COTIZACIONES }}</p>
       </div>
 
-      <div v-else class="ds-table-scroll">
+      <div
+        v-else
+        ref="tabla"
+        class="ds-table-scroll ds-focus-ring"
+        role="region"
+        aria-label="Cotizaciones y cambios de plan"
+        :tabindex="desborda ? 0 : undefined"
+      >
         <table class="ds-table">
           <thead>
             <tr>
               <th scope="col">Propuesta</th>
               <th scope="col">Fecha</th>
               <th scope="col">Vigencia</th>
-              <th scope="col">Total</th>
+              <th scope="col" class="ds-num">Total</th>
               <th scope="col">Estado</th>
             </tr>
           </thead>

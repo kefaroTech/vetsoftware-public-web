@@ -181,6 +181,7 @@ async function requestDelete(target: PromotionResponse) {
       :search-fn="searchFn"
       placeholder="Buscar por nombre o destino…"
       empty-text="Aún no hay promociones."
+      table-label="Promociones"
     >
       <template #header>
         <tr>

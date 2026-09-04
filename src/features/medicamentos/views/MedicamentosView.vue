@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, useTemplateRef } from 'vue'
 import { Globe, PauseCircle, Pencil, Plus, RotateCcw } from 'lucide-vue-next'
 import MedicamentFormModal from '../components/MedicamentFormModal.vue'
 import SegTabs from '@/features/tienda/components/SegTabs.vue'
 import { useMedicamentCatalog } from '../composables/useMedicamentCatalog'
+import { useScrollableRegion } from '@/composables/useScrollableRegion'
 import { useToast } from '@/composables/useToast'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
@@ -18,6 +19,14 @@ const { can } = useAuthorization()
 const canCreate = can(PERMISSIONS.PRESCRIPTION_CREATE)
 const canUpdate = can(PERMISSIONS.PRESCRIPTION_UPDATE)
 const canDelete = can(PERMISSIONS.PRESCRIPTION_DELETE)
+
+// Sin `PRESCRIPTION_CREATE` no hay botón de alta en la cabecera, así que
+// «Crea el primero» sería una instrucción que la pantalla no deja seguir.
+const emptyText = computed(() =>
+  canCreate.value
+    ? 'Sin medicamentos. Crea el primero.'
+    : 'Sin medicamentos. Tu rol no incluye crearlos.',
+)
 
 /** 'active' = disponibles (globales + propios); 'paused' = pausados propios para reactivar. */
 const mode = ref<'active' | 'paused'>('active')
@@ -100,6 +109,11 @@ async function onReactivate(m: MedicamentResponse) {
 }
 
 const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.localeCompare(b.name)))
+
+const disponibles = useTemplateRef<HTMLElement>('disponibles')
+const disponiblesDesborda = useScrollableRegion(disponibles)
+const pausados = useTemplateRef<HTMLElement>('pausados')
+const pausadosDesborda = useScrollableRegion(pausados)
 </script>
 
 <template>
@@ -130,10 +144,21 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
       </div>
     </header>
 
-    <div v-if="store.error.value" class="ds-banner ds-banner--error">{{ store.error.value }}</div>
+    <!-- EST-01: la rama de error va ANTES que la de vacío. Si conviven, la
+         pantalla que falló afirma «Sin medicamentos. Crea el primero». -->
+    <div v-if="store.error.value" class="ds-banner ds-banner--error" role="alert">
+      {{ store.error.value }}
+    </div>
 
     <!-- ─────────── Modo DISPONIBLES ─────────── -->
-    <div v-if="mode === 'active'" class="ds-table-scroll">
+    <div
+      v-if="!store.error.value && mode === 'active'"
+      ref="disponibles"
+      class="ds-table-scroll ds-focus-ring"
+      role="region"
+      aria-label="Medicamentos disponibles"
+      :tabindex="disponiblesDesborda ? 0 : undefined"
+    >
       <table class="ds-table">
         <thead>
           <tr>
@@ -148,7 +173,7 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
             <td colspan="4" class="ds-empty ds-empty--lg">Cargando…</td>
           </tr>
           <tr v-else-if="sorted.length === 0">
-            <td colspan="4" class="ds-empty ds-empty--lg">Sin medicamentos. Crea el primero.</td>
+            <td colspan="4" class="ds-empty ds-empty--lg">{{ emptyText }}</td>
           </tr>
           <tr v-for="m in sorted" v-else :key="m.id" class="ds-row-hover">
             <td class="tname ds-text-strong">{{ m.name }}</td>
@@ -188,7 +213,14 @@ const sorted = computed(() => [...store.items.value].sort((a, b) => a.name.local
     </div>
 
     <!-- ─────────── Modo PAUSADOS ─────────── -->
-    <div v-else class="ds-table-scroll">
+    <div
+      v-else-if="!store.error.value"
+      ref="pausados"
+      class="ds-table-scroll ds-focus-ring"
+      role="region"
+      aria-label="Medicamentos pausados"
+      :tabindex="pausadosDesborda ? 0 : undefined"
+    >
       <table class="ds-table">
         <thead>
           <tr>

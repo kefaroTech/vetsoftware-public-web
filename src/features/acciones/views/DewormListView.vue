@@ -186,6 +186,7 @@ function typeLabel(t: DewormingResponse['type']): string {
         :fetch-page="fetchPage"
         placeholder="Buscar producto…"
         empty-text="Este paciente aún no tiene desparasitaciones registradas."
+        table-label="Desparasitaciones"
       >
         <template #header>
           <tr>

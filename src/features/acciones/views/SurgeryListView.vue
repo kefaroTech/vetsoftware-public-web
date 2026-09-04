@@ -165,6 +165,7 @@ async function requestDelete(target: SurgeryResponse) {
         :fetch-page="fetchPage"
         placeholder="Buscar tipo o descripción…"
         empty-text="Este paciente aún no tiene cirugías registradas."
+        table-label="Cirugías"
       >
         <template #header>
           <tr>

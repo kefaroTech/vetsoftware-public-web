@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useTemplateRef } from 'vue'
 import { RouterLink } from 'vue-router'
 import { importeEstimado } from '@/features/landing/composables/planPricing'
 import { CICLO_LABEL } from '@/features/landing/types/plans.types'
+import { useScrollableRegion } from '@/composables/useScrollableRegion'
 import type { ResumenContratacion } from '../types/contratacion.types'
 
 /**
@@ -119,11 +120,22 @@ const filas = computed(() => {
 const rotuloImpuesto = computed(() =>
   props.resumen.tasaImpuesto != null ? `IVA (${props.resumen.tasaImpuesto} %)` : 'IVA',
 )
+
+const seleccion = useTemplateRef<HTMLElement>('seleccion')
+const seleccionDesborda = useScrollableRegion(seleccion)
+const importes = useTemplateRef<HTMLElement>('importes')
+const importesDesborda = useScrollableRegion(importes)
 </script>
 
 <template>
   <div class="res">
-    <div class="ds-table-scroll">
+    <div
+      ref="seleccion"
+      class="ds-table-scroll ds-focus-ring"
+      role="region"
+      aria-label="Lo que vas a contratar"
+      :tabindex="seleccionDesborda ? 0 : undefined"
+    >
       <table class="ds-table ds-table--dense">
         <caption class="ds-sr-only">
           Lo que vas a contratar, con un enlace para cambiar cada dato
@@ -142,7 +154,13 @@ const rotuloImpuesto = computed(() =>
       </table>
     </div>
 
-    <div class="ds-table-scroll">
+    <div
+      ref="importes"
+      class="ds-table-scroll ds-focus-ring"
+      role="region"
+      aria-label="Importes de la contratación"
+      :tabindex="importesDesborda ? 0 : undefined"
+    >
       <table class="ds-table ds-table--dense">
         <caption class="ds-sr-only">
           Importes

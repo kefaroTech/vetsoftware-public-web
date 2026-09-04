@@ -175,6 +175,7 @@ async function requestDelete(target: LaboratoryTestResponse) {
         :fetch-page="fetchPage"
         placeholder="Buscar tipo o diagnóstico…"
         empty-text="Este paciente aún no tiene solicitudes de laboratorio."
+        table-label="Solicitudes de laboratorio"
       >
         <template #header>
           <tr>

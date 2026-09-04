@@ -167,6 +167,7 @@ async function requestDelete(target: VaccinationResponse) {
         :fetch-page="fetchPage"
         placeholder="Buscar vacuna o lote…"
         empty-text="Este paciente aún no tiene vacunaciones registradas."
+        table-label="Vacunaciones"
       >
         <template #header>
           <tr>
