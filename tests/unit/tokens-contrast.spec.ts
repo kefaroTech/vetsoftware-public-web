@@ -183,7 +183,7 @@ describe('texto secundario — contraste (A11Y-02)', () => {
  * (BaseInput, BaseSelect, BaseTextarea, OwnerSearchAutocomplete, DateInput).
  * Tenía su propio `box-shadow: 0 0 0 3px var(--danger-200)` escrito a mano:
  * 1,29:1, el mismo defecto que A11Y-01 corrigió en `--ring-danger`, pero por la
- * puerta de al lado y sin guarda. Ahora hereda el token, y esto lo sujeta: si
+ * puerta de al lado. El único origen admitido del anillo es el token: si
  * alguien vuelve a escribir el anillo a mano aquí, la prueba lo dice.
  */
 describe('.ds-field-invalid-focus — hereda el anillo de peligro (A11Y-02)', () => {

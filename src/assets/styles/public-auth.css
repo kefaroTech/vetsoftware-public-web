@@ -1,46 +1,47 @@
 /* ===========================================================================
    Zona pública / autenticación — tokens y utilidades del handoff
    (design_handoff_vetsoftware_completo). Aplica SOLO bajo `.pub-scope` para no
-   alterar el resto de la app (que usa Geist + paleta warm). Paleta amatista + Inter.
+   alterar el resto de la app (que usa la paleta warm). Paleta amatista + Inter.
    =========================================================================== */
 
 .pub-scope {
-  --pub-ame-300: #d8b4fe;
-  --pub-ame-400: #c084fc;
-  --pub-ame-500: #a855f7;
-  --pub-ame-600: #9333ea;
-  --pub-ame-700: #7e22ce;
-  --pub-ame-800: #6b1fa8;
-  --pub-ame-900: #581c87;
-  --pub-ink-900: #1a1325;
-  --pub-ink-700: #3d2e57;
-  --pub-ink-600: #4a3d63;
-  --pub-ink-500: #6b5b80;
+  --pub-ame-300: #bcc0ff;
+  --pub-ame-400: #9698ff;
+  --pub-ame-500: #7770ff;
+  --pub-ame-600: #654bff;
+  --pub-ame-700: #563ae1;
+  --pub-ame-800: #4733ba;
+  --pub-ame-900: #392b96;
+  --pub-ink-900: #0c1827;
+  --pub-ink-700: #1d385c;
+  --pub-ink-600: #2d4667;
+  --pub-ink-500: #4d6586;
 
-  /* SOLO ICONO, NUNCA TEXTO. Mide 4,05:1 sobre blanco: pasa el umbral de 3:1 de
-     §1.4.11 para un glifo no textual (el chevron del selector de módulos) y falla
-     el de 4,5:1 de §1.4.3 para cualquier texto. Para texto apagado va
-     `--pub-ink-500` (6,12:1 sobre blanco, 5,65:1 sobre `--pub-tint-mute`). */
-  --pub-ink-400: #8578a0;
-  --pub-ink-300: #a89bbd;
-  --pub-line: #ece5f4;
-  --pub-line-2: #f0eaf7;
+  /* SOLO ICONO Y BORDE DE CONTROL, NUNCA TEXTO. Mide 3,94:1 sobre blanco: pasa
+     el umbral de 3:1 de §1.4.11 para un elemento no textual (el chevron del
+     selector de módulos, el borde de `.login-secondary`) y falla el de 4,5:1 de
+     §1.4.3 para cualquier texto. Para texto apagado va `--pub-ink-500` (5,96:1
+     sobre blanco, 5,53:1 sobre `--pub-tint-mute`). */
+  --pub-ink-400: #6882a5;
+  --pub-ink-300: #8ea4c2;
+  --pub-line: #dfe9f7;
+  --pub-line-2: #e5eefa;
 
   /* El borde de las tarjetas secundarias de la portada. Estaba escrito a pelo en dos SFC
      (`LandingHero`, `LandingFinalCta`) con el mismo valor y ningún token equivalente, así
      que ninguna auditoría de contraste lo veía. Mismo valor exacto: cero cambio visual. */
-  --pub-line-strong: #e6ddf0;
+  --pub-line-strong: #d6e3f4;
   --pub-surface: #fff;
 
   /* Los cinco tintes del embudo. Estaban escritos a pelo en el prototipo y el
      rediseño los usa en más de tres sitios cada uno: sin token, ninguna
      auditoría de contraste los ve. Mismo argumento con el que nació
      `--pub-line-strong`, y mismos valores exactos: cero cambio visual. */
-  --pub-tint-50: #f9f4fe;
-  --pub-tint-100: #f3e8ff;
-  --pub-tint-bd: #efe2fc;
-  --pub-tint-sep: #f4eefb;
-  --pub-tint-mute: #f7f5fa;
+  --pub-tint-50: #f5f6ff;
+  --pub-tint-100: #eaecff;
+  --pub-tint-bd: #e4e6ff;
+  --pub-tint-sep: #eef0fe;
+  --pub-tint-mute: #f5f6fb;
 
   /* `--pub-err-tx: #dc2626` se retira: medía 4,41:1 sobre `--pub-err-bg` y fallaba
      §1.4.3 AA para texto normal. Sus dos últimos consumidores (`RestablecerContrasenaView`,
@@ -58,10 +59,10 @@
   --pub-warn-tx: #92600a;
   --pub-warn-bg: #fffbeb;
   --pub-warn-bd: #fde68a;
-  --pub-card-shadow: 0 24px 48px -18px rgb(91 33 182 / 18%), 0 4px 12px -4px rgb(91 33 182 / 7%);
-  --pub-btn-shadow: 0 4px 12px -2px rgb(126 34 206 / 40%), inset 0 1px 0 rgb(255 255 255 / 15%);
+  --pub-card-shadow: 0 24px 48px -18px rgb(70 45 190 / 18%), 0 4px 12px -4px rgb(70 45 190 / 7%);
+  --pub-btn-shadow: 0 4px 12px -2px rgb(86 58 225 / 40%), inset 0 1px 0 rgb(255 255 255 / 15%);
   --pub-btn-shadow-hover:
-    0 8px 20px -4px rgb(126 34 206 / 50%), inset 0 1px 0 rgb(255 255 255 / 15%);
+    0 8px 20px -4px rgb(86 58 225 / 50%), inset 0 1px 0 rgb(255 255 255 / 15%);
 
   font-family: Inter, system-ui, sans-serif;
   color: var(--pub-ink-900);
@@ -75,7 +76,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: radial-gradient(ellipse at top, #f3e8ff 0%, #f5f1fa 50%, #ede8f4 100%);
+  background: radial-gradient(ellipse at top, #eaecff 0%, #f1f2fc 50%, #e8eaf6 100%);
 }
 
 .pub-blob {
@@ -91,8 +92,8 @@
   pointer-events: none;
   opacity: 0.5;
   background-image:
-    linear-gradient(rgb(126 34 206 / 4.5%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(126 34 206 / 4.5%) 1px, transparent 1px);
+    linear-gradient(rgb(86 58 225 / 4.5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(86 58 225 / 4.5%) 1px, transparent 1px);
   background-size: 56px 56px;
   mask-image: radial-gradient(ellipse at center, #000 30%, transparent 78%);
 }
@@ -175,7 +176,7 @@
 
    Mismo papel que `primitives.css` para la app, pero con ESTE lenguaje: Inter,
    paleta `--pub-*` y sombras propias. No se usan las clases `ds-*` aquí a
-   propósito — mezclarlas traería Geist y la paleta warm a las pantallas de
+   propósito — mezclarlas traería la paleta warm a las pantallas de
    acceso, que el handoff mantiene deliberadamente aparte.
 
    Reemplazan las copias que estaban repetidas en los 6 SFC de `auth` con
@@ -192,6 +193,29 @@
   box-shadow: var(--pub-card-shadow);
 }
 
+/* Plancha de marca de la tarjeta de acceso (§7.3 del rebrand). El fondo es
+   `--brand-canvas` y no el blanco de la tarjeta porque es el lienzo que el kit
+   aprueba para el logotipo: los PNG lo llevan quemado en su antialiasing y
+   sobre blanco el isotipo queda con un halo lila alrededor.
+
+   La caja se encoge con la altura de la ventana en vez de fijarse en los 160 px
+   del documento: en un portátil de 768 px, 160 px de plancha dejan el primer
+   campo del formulario de registro por debajo del pliegue. */
+.pub-brand-lockup {
+  display: grid;
+  place-items: center;
+  width: clamp(104px, 18vh, 160px);
+  margin-bottom: 20px;
+  border-radius: 16px;
+  background: var(--brand-canvas);
+  aspect-ratio: 1;
+}
+
+.pub-brand-lockup img {
+  width: 100%;
+  height: auto;
+}
+
 .pub-eyebrow {
   margin-bottom: 8px;
   color: var(--pub-ame-700);
@@ -203,7 +227,7 @@
 
 .pub-title {
   margin: 0;
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-display);
   font-size: 32px;
   font-weight: 400;
   line-height: 1.06;
@@ -259,7 +283,7 @@
 /* §2.4.1 Bypass Blocks (A). Primer elemento focalizable del documento, fuera de
    pantalla hasta recibir el foco. No se oculta con `display: none` ni con
    `visibility: hidden`: eso lo sacaría del orden de tabulación y entonces no
-   habría nada que saltar. Blanco sobre `--pub-ame-700` mide 6,98:1. */
+   habría nada que saltar. Blanco sobre `--pub-ame-700` mide 6,80:1. */
 .pub-skip {
   position: absolute;
   left: 12px;
@@ -310,7 +334,7 @@
   resize: vertical;
 }
 
-/* El tono en reposo. El borde sale de `--pub-ame-600` (5,38:1) y no de
+/* El tono en reposo. El borde sale de `--pub-ame-600` (5,25:1) y no de
    `--pub-line` (1,23:1), que no alcanza el mínimo de §1.4.11 para el borde de
    un control. */
 .pub-campo-rest {
@@ -354,7 +378,7 @@
 
 .pub-section-head h2 {
   margin: 0;
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-display);
   font-weight: 400;
   font-size: clamp(26px, 3.4vw, 38px);
   line-height: 1.12;
@@ -380,23 +404,23 @@
   border-radius: 16px;
   border: 1px solid var(--pub-line);
   background: var(--pub-surface);
-  box-shadow: 0 8px 20px -14px rgb(91 33 182 / 18%);
+  box-shadow: 0 8px 20px -14px rgb(70 45 190 / 18%);
 }
 
 /* §1.4.11 Non-text Contrast (AA): `--pub-line` mide 1,23:1 contra blanco, así
    que un borde de ese color NO puede ser lo que distingue a la recomendada.
-   `--pub-ame-600` mide 5,38:1 sobre blanco y 4,56:1 sobre el fondo de la
+   `--pub-ame-600` mide 5,25:1 sobre blanco y 4,48:1 sobre el fondo de la
    landing. Y aun así el color no es el único canal (§1.4.1): la tarjeta lleva
    además `.pub-badge` con texto visible. */
 .pub-plan-card--featured {
   border: 2px solid var(--pub-ame-600);
-  box-shadow: 0 20px 40px -20px rgb(126 34 206 / 42%);
+  box-shadow: 0 20px 40px -20px rgb(86 58 225 / 42%);
 }
 
 /* La cifra grande. `tabular-nums` para que «$89.000» y «$129.000» no bailen al
    cambiar de ciclo con el conmutador. */
 .pub-price {
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-display);
   font-size: clamp(30px, 3.4vw, 40px);
   line-height: 1.05;
   letter-spacing: -0.02em;
@@ -467,7 +491,7 @@
 
 .pub-doc-title {
   margin: 0;
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-display);
   font-weight: 400;
   font-size: clamp(1.75rem, 4vw, 2.5rem);
   line-height: 1.15;
@@ -632,7 +656,7 @@
   width: 100%;
   min-height: 100vh;
   overflow-x: hidden;
-  background: radial-gradient(ellipse at top, #f3e8ff 0%, #f5f1fa 48%, #ede8f4 100%);
+  background: radial-gradient(ellipse at top, #eaecff 0%, #f1f2fc 48%, #e8eaf6 100%);
 }
 
 .pub-doc-topbar {
@@ -641,12 +665,17 @@
   padding: 1.375rem clamp(1.25rem, 5vw, 2.5rem);
 }
 
+/* Sin isotipo: por debajo de 48 px la ilustración de marca es una mancha sin
+   figura reconocible, así que en este tramo la identidad la carga el nombre.
+   Y sin el cuadro del isotipo el enlace mide lo que mide su línea de texto,
+   por debajo del suelo de 24×24 px CSS de §2.5.8 Target Size (Minimum). */
 .pub-doc-brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 700;
+  min-height: 2rem;
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--pub-ink-900);
   text-decoration: none;
@@ -729,8 +758,8 @@
    de «La que más eligen»; estos dos son la insignia de conteo, que acompaña a
    un texto y no debe competir con él.
 
-   `--pub-ink-500` sobre `--pub-tint-mute` mide 5,65:1. El `#8578a0` del diseño
-   medía 3,74:1 sobre ese mismo fondo y fallaba §1.4.3 AA. */
+   `--pub-ink-500` sobre `--pub-tint-mute` mide 5,53:1. `--pub-ink-400`, que es el
+   tono que pedía el diseño, mide 3,65:1 sobre ese mismo fondo y falla §1.4.3 AA. */
 .pub-badge--on {
   padding: 5px 11px;
   background: var(--pub-tint-100);
@@ -752,7 +781,7 @@
 /* Toda cifra grande del embudo. `tabular-nums` para que el importe no baile de
    ancho mientras se recalcula. */
 .pub-num {
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-display);
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -778,11 +807,11 @@
    nuevos repartidos en cuatro pantallas, un anillo por componente es un anillo
    que en algún sitio se queda sin escribir.
 
-   `--pub-ame-600` mide 5,38:1 sobre blanco y 4,56:1 sobre el más oscuro de los
+   `--pub-ame-600` mide 5,25:1 sobre blanco y 4,48:1 sobre el más oscuro de los
    fondos claros de estas pantallas (`--pub-tint-100`), así que §1.4.11 y
    §2.4.11 se cumplen en todos ellos. Sobre un fondo de acento NO: el mismo
    morado sobre `--pub-ame-700` mide 1,30:1 y el anillo desaparece. Por eso el
-   modificador invierte los tonos —anillo blanco por dentro (6,98:1 sobre
+   modificador invierte los tonos —anillo blanco por dentro (6,80:1 sobre
    `--pub-ame-700`) y halo morado por fuera— en vez de subir el grosor.
    =========================================================================== */
 .pub-focus-ring:focus-visible {
