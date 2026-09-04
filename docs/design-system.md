@@ -289,6 +289,17 @@ La convergencia no es gratis. Lo que cambia respecto a hoy, medido con
 | Diálogo de roles          | Radio 7 → 9px                      | Un solo radio de control                                                  |
 | **Primario de `employees`** | **Hover: oscurecía, ahora aclara** | Usaba `background: --amatista-800` (oscurecer) contra el `filter: brightness(1.05)` (aclarar) del resto de la app. Es el único cambio de *comportamiento*, no de estética, de toda la migración. |
 | **Ghost/outline (6 patrones)** | **Borde `--warm-200` → `--warm-450`** | A11Y-09 · WCAG 2.2 §1.4.11: `--warm-200` medía 1,23:1 sobre `--warm-50` y 1,16:1 sobre `--warm-100`; `--warm-450` da 3,54:1 y 3,33:1. Único delta que **aleja** la primitiva del original en vez de acercarla, porque el original era inaccesible y converger hacia él sería el defecto. Suma 45 diferencias: es la subida del techo de `ds:audit` de 320 a 365. |
+| **Degradado primario (6 patrones)** | **`oklch(45% 0.18 var(--hue))` / `oklch(38% 0.18 calc(var(--hue) - 5))` → `oklch(51.1% 0.2301 277)` / `oklch(49.1% 0.2412 292.6)`** | Rebrand a Lumbre. El degradado deja de derivarse por fórmula del `--hue` y pasa a ser el indigo exacto del kit. Afecta a `btn-primary-lg`, `btn-primary-lg-disabled`, `cta`, `btn-snug`, `cta-base` y `empresa-cta`, en base y en hover: **11 diferencias**. |
+| **Escala de error (2 patrones)** | **Coral `25deg` → `16,4deg`** | Rebrand a Lumbre. El rojo de error se re-ancla al coral del kit. `btn-danger` en base y en hover, y el color de `danger-soft`: **3 diferencias**. |
+| **Superficie de tarjeta (2 patrones)** | **`--surface`: `var(--warm-50)` → `#fff`** | Rebrand a Lumbre. Tarjeta blanca sobre el `--brand-canvas` `#F5F3FF` es la jerarquía que propone la marca (1,10:1 entre ambas). `ds-card` y `ds-empty--boxed`: **2 diferencias**. |
+
+Las tres últimas filas son el rebrand a Lumbre y suman las **16 diferencias** que
+suben el techo de `ds:audit` de 365 a 381 (`scripts/ds-audit.config.json`).
+Alejan la primitiva del original igual que A11Y-09, y por el mismo tipo de razón:
+el lado "a" del harness congela el CSS que el componente tenía **antes** de
+migrar —es la línea base de la migración, no una foto del aspecto de hoy—, así
+que no se reescribe cuando cambia la marca. Ninguna de las 16 es un cambio de
+accesibilidad.
 
 El del primario **corrige** una desalineación existente: hoy un par
 "Cancelar / Guardar" mide 40px y 38px de alto respectivamente.
