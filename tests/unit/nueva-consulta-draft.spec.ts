@@ -20,7 +20,7 @@ import { elemento, exigir } from '../helpers/exigir'
  * cosas son peores que el error original, y ninguna se ve en pantalla.
  */
 
-const STORAGE_KEY = 'vetrina:nueva-consulta-draft'
+const STORAGE_KEY = 'lumbre:nueva-consulta-draft'
 const AUTH_STORAGE_KEY = 'vetsoft.auth'
 
 /** JWT sin firmar con el payload dado, en base64url como los del backend. */

@@ -112,7 +112,7 @@ export function buildDocumentReceiptTicket(
 
   return {
     width: opts.width,
-    brand: { name: issuer?.legalName || 'Vetrina' },
+    brand: { name: issuer?.legalName || 'Lumbre' },
     fiscal,
     docType: DOC_TYPE_LABEL[doc.documentType] ?? 'Comprobante',
     docNumber,
