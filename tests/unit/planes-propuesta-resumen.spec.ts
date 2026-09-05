@@ -86,6 +86,7 @@ const RESUMEN_PROPS: ResumenProps = {
   mensajeDeFallo: null,
   regionViva: '',
   puedeContinuar: true,
+  cta: 'Crear mi cuenta',
 }
 
 const montarResumen = (over: Partial<ResumenProps> = {}) =>

@@ -34,10 +34,14 @@ import { irAAncla } from '../composables/anclaConFoco'
 </template>
 
 <style scoped>
+/* La caja es la del hero y la de la tarjeta del cotizador, y tiene que seguir
+   siéndolo: la marca se lee como la columna de la que cuelga todo lo de abajo. */
 .land-topbar {
   position: relative;
   z-index: 2;
-  padding: 22px clamp(20px, 5vw, 44px);
+  max-inline-size: 1240px;
+  margin: 0 auto;
+  padding: 22px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -62,10 +66,14 @@ import { irAAncla } from '../composables/anclaConFoco'
   letter-spacing: -0.01em;
 }
 
+/* Compensa el `padding` de los enlaces, para que con el margen de la página se
+   alinee su texto y no su caja. En los dos lados: al envolver en móvil el que
+   toca el margen es el primero. */
 .land-nav {
   display: flex;
   align-items: center;
   gap: clamp(10px, 2vw, 22px);
+  margin-inline: -14px;
 }
 
 /* §2.5.8 Target Size (Minimum): 24×24 px CSS es el suelo de todo control. */
@@ -83,5 +91,11 @@ import { irAAncla } from '../composables/anclaConFoco'
 
 .land-nav-link:hover {
   color: var(--pub-ame-700);
+}
+
+@media (width <= 600px) {
+  .land-topbar {
+    padding: 18px 16px;
+  }
 }
 </style>

@@ -1079,8 +1079,9 @@ test.describe('Recorrido de solo teclado', () => {
     await expect(page.getByRole('main')).toBeFocused()
 
     // Desde el contenido, atravesando el cotizador —que es lo primero que se
-    // toca en el hero: `<textarea>`, las áreas plegables, los dos contadores y el
-    // envío—, hasta el CTA de la combinación recomendada. Cada parada: visible,
+    // toca en el hero: las áreas plegables, el desplegable del relato, los dos
+    // contadores y el envío—, hasta el CTA de la combinación recomendada. Cada
+    // parada: visible,
     // sin perder el foco y sin retroceder en el documento, que es lo que
     // `tabularHasta` comprueba en cada tecla y lo que hace que este tramo valga.
     //
@@ -1098,7 +1099,7 @@ test.describe('Recorrido de solo teclado', () => {
 
     await expect(page).toHaveURL(/\/planes\?plan=PACK_CLINIC/)
 
-    const continuar = page.getByRole('button', { name: 'Continuar' })
+    const continuar = page.getByRole('button', { name: 'Crear mi cuenta' })
     // El botón lleva `aria-disabled` y NO `disabled`, para seguir siendo
     // enfocable: pulsarlo antes de que llegue el catálogo es un clic que no hace
     // nada, y el fallo se leería como «no navegó».
@@ -1136,7 +1137,7 @@ test.describe('Recorrido de solo teclado', () => {
  * ocho literales es exactamente como se queda uno sin cambiar, que es el mismo
  * criterio de {@link TITULO_PASO6}.
  */
-const TITULO_PLANES = 'Esto es lo que te armamos'
+const TITULO_PLANES = 'Tu plan, con el precio exacto'
 
 /**
  * LOS CUATRO «CAMBIAR» DEL PASO VINCULANTE, PULSADOS.
@@ -1232,7 +1233,7 @@ test.describe('Los cuatro «Cambiar» — pulsados, no fotografiados', () => {
     // exactamente lo que va a viajar en la oferta del paso vinculante, así que
     // una casilla bien pintada sobre una intención mal guardada seguiría siendo
     // una compra distinta de la que el prospecto ve.
-    const continuar = page.getByRole('button', { name: 'Continuar' })
+    const continuar = page.getByRole('button', { name: 'Ir a confirmar' })
     await expect(continuar).not.toHaveAttribute('aria-disabled', 'true')
     await continuar.click()
     await expect(page.getByRole('heading', { level: 1, name: TITULO_PASO6 })).toBeVisible()
@@ -1338,7 +1339,8 @@ test.describe('/planes con sesión — las tres ramas del guard', () => {
       '?plan=PACK_CLINIC&ciclo=MENSUAL&sedes=1&usuarios=1',
     )
 
-    const continuar = page.getByRole('button', { name: 'Continuar' })
+    // Con sesión el botón nombra el paso vinculante, no el alta: ya tiene cuenta.
+    const continuar = page.getByRole('button', { name: 'Ir a confirmar' })
     await expect(continuar).not.toHaveAttribute('aria-disabled', 'true')
     await continuar.click()
 

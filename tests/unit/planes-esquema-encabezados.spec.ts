@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { mount } from '@vue/test-utils'
 import AsistenteEntrada from '@/features/asistente/components/AsistenteEntrada.vue'
+import PlanesRelatoPlegable from '@/features/landing/components/PlanesRelatoPlegable.vue'
 import PlanesView from '@/features/landing/views/PlanesView.vue'
 import { http } from '@/services/http/http.client'
 
@@ -61,24 +62,31 @@ describe('El contenido principal de /planes existe en el esquema de la página',
     const wrapper = montarVista()
     const h1 = wrapper.findAll('h1')
     expect(h1).toHaveLength(1)
-    expect(wrapper.get('h1').text()).toBe('Esto es lo que te armamos')
+    expect(wrapper.get('h1').text()).toBe('Tu plan, con el precio exacto')
   })
 
-  it('la sección de paquetes la encabeza un `h2` real, no un `summary`', () => {
-    const wrapper = montarVista()
+  it('el relato plegado conserva su `h2`, y el disparador va dentro', () => {
+    const wrapper = mount(PlanesRelatoPlegable, {
+      props: { sinPaquetes: false },
+      shallow: true,
+    })
 
-    const h2 = wrapper.get('#paquetes-h2')
+    const h2 = wrapper.get('#relato-h2')
     expect(h2.element.tagName).toBe('H2')
-    expect(h2.text()).toBe('O parte de una combinación conocida')
+    expect(h2.text()).toContain('¿No sabes qué módulos necesitas?')
 
-    // El `<details open>` estático era un control de divulgación sin ningún
-    // estado plegado que valiera la pena: cerrarlo destruía el ancla de precio y
-    // quien lo cerraba sin querer perdía los precios sin saber cómo volver.
+    // El disparador DENTRO del encabezado es lo que conserva el relato en el
+    // esquema estando plegado. Con un `<details>`/`<summary>` —o con el botón
+    // suelto— desaparecería del índice por el que navega quien usa lector, que
+    // es exactamente el defecto que este archivo existe para fijar.
+    const boton = h2.get('button')
+    expect(boton.attributes('aria-expanded')).toBe('false')
+    expect(boton.attributes('aria-controls')).toBe('relato-panel')
     expect(wrapper.find('details').exists()).toBe(false)
     expect(wrapper.find('summary').exists()).toBe(false)
 
     // Y la sección se nombra con ese mismo encabezado.
-    expect(wrapper.get('.pl-paquetes').attributes('aria-labelledby')).toBe('paquetes-h2')
+    expect(wrapper.get('section').attributes('aria-labelledby')).toBe('relato-h2')
   })
 
   it('la entrada de texto libre trae su propio `h2`, y conserva la etiqueta del campo', () => {

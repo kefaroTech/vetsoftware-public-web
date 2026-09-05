@@ -163,7 +163,7 @@ describe('El aviso del límite lo dice con su nombre', () => {
     expect(texto).toContain('No es un fallo')
     expect(texto).toContain('Lo que escribiste sigue ahí arriba, tal como lo dejaste.')
     expect(texto).toContain('volver a intentarlo más tarde')
-    expect(texto).toContain('uno de nuestros paquetes, aquí abajo')
+    expect(texto).toContain('armar tu plan con los módulos de arriba')
   })
 
   it('sin paquetes publicados no manda a una sección vacía: manda a una persona', () => {

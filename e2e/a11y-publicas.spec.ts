@@ -100,7 +100,7 @@ test.describe('§2.4.1 Bypass Blocks — el enlace de salto', () => {
     await expect(salto).toBeAttached()
     await expect(salto).toHaveAttribute('href', '#contenido')
 
-    const h1 = page.getByRole('heading', { level: 1, name: 'Esto es lo que te armamos' })
+    const h1 = page.getByRole('heading', { level: 1, name: 'Tu plan, con el precio exacto' })
     await expect(h1).toBeFocused()
     expect(
       await h1.evaluate((el) => el.closest('#contenido') !== null),

@@ -214,50 +214,11 @@ describe('`/planes` dice la verdad cuando el servidor no tiene tarifa', () => {
     vi.clearAllMocks()
   })
 
-  it('con paquetes, encabeza y ofrece el configurador', async () => {
-    get.mockResolvedValue({ data: catalogoWire([planWire()]) } as never)
-
-    const wrapper = montarVista()
-    await flushPromises()
-
-    expect(wrapper.get('#paquetes-h2').text()).toBe('O parte de una combinación conocida')
-    expect(wrapper.find('[data-testid="planes-vacio"]').exists()).toBe(false)
-    expect(wrapper.findComponent({ name: 'PlanesCombinaciones' }).exists()).toBe(true)
-  })
-
-  it('sin tarifa, no promete un precio ni manda a contratar', async () => {
-    get.mockResolvedValue({ data: SIN_TARIFA } as never)
-
-    const wrapper = montarVista()
-    await flushPromises()
-
-    // El encabezado también cambia: «O parte de una combinación conocida» sobre un
-    // hueco es una instrucción que la pantalla no puede cumplir.
-    expect(wrapper.get('#paquetes-h2').text()).toBe('Todavía no hay paquetes publicados')
-
-    const aviso = wrapper.get('[data-testid="planes-vacio"]')
-    // Se ANUNCIA. Sin esto, quien navega con lector espera una lista que no viene.
-    expect(aviso.attributes('role')).toBe('status')
-    expect(aviso.text()).toContain('soporte@kefaro.tech')
-
-    // Y no queda ni un camino a contratar un importe que nadie puede honrar.
-    expect(wrapper.findComponent({ name: 'PlanesCombinaciones' }).exists()).toBe(false)
-  })
-
-  it('mientras la petición está en vuelo NO afirma que no haya paquetes', async () => {
-    // La rama vieja (`plans.length === 0` a secas) se cumplía en el primer
-    // render, porque `usePlanes` pide el catálogo en su `onMounted` y hasta que
-    // la respuesta no vuelve la lista está vacía. Con red detrás eso es un
-    // parpadeo de «no hay paquetes» sobre un catálogo que llega después.
-    get.mockReturnValue(new Promise(() => {}) as never)
-
-    const wrapper = montarVista()
-    await flushPromises()
-
-    expect(wrapper.find('[data-testid="planes-vacio"]').exists()).toBe(false)
-    expect(wrapper.get('#paquetes-h2').text()).toBe('O parte de una combinación conocida')
-  })
-
+  /**
+   * `/planes` no enseña paquetes —eso es la portada, y lo cubre el `describe` de
+   * abajo— pero sigue pidiendo su catálogo: de él sale el descuento que puede
+   * llevar la oferta, y por eso el fallo de red sí es asunto de esta pantalla.
+   */
   it('un fallo de red manda su propio mensaje, no el del vacío', async () => {
     // «No pudimos cargarlo» y «no hay nada publicado» son dos frases distintas, y
     // solo la primera ofrece hacer algo.

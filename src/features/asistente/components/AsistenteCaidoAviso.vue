@@ -87,11 +87,13 @@ defineProps<{
     </template>
     <template v-else-if="catalogoVacio">
       El asistente no está disponible ahora mismo, y todavía no hay módulos publicados para que
-      armes tu plan pieza a pieza. Puedes empezar por uno de nuestros paquetes, aquí abajo.
+      armes tu plan pieza a pieza. Escríbenos a
+      <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a> y te decimos qué podemos montarte
+      hoy.
     </template>
     <template v-else>
-      El asistente no está disponible ahora mismo. Aquí abajo tienes los módulos con su precio, y
-      puedes empezar por uno de nuestros paquetes.
+      El asistente no está disponible ahora mismo. Arriba tienes los módulos con su precio: puedes
+      armar tu plan tú mismo.
     </template>
   </div>
 </template>

@@ -212,25 +212,25 @@ describe('El aviso del asistente caído no promete lo que no hay', () => {
     const texto = wrapper.get('[data-testid="asistente-caido"]').text()
     expect(texto).not.toContain('armar tu plan tú mismo')
     expect(texto).toContain('todavía no hay módulos publicados')
-    // Los paquetes siguen ahí en esta rama porque `sinPaquetes` es `false`: hay
-    // lista publicada. Retirarlos «por simetría» dejaría al visitante sin la
-    // única compra que en ese momento puede hacer.
-    expect(texto).toContain('paquetes')
+    // Sin módulos y con el asistente caído no queda ninguna salida en pantalla,
+    // así que la única honesta es una persona.
+    expect(
+      wrapper.find('[data-testid="asistente-caido"] a[href="mailto:soporte@kefaro.tech"]').exists(),
+    ).toBe(true)
   })
 
-  it('con catálogo ofrece la lista de precios, y NO promete armar nada', () => {
+  it('con catálogo manda al selector de la pantalla, que sí funciona sin propuesta', () => {
     const wrapper = mount(AsistenteCaidoAviso, {
       props: { catalogoVacio: false, sinPaquetes: false },
     })
 
     const texto = wrapper.get('[data-testid="asistente-caido"]').text()
-    // Sin propuesta, marcar una casilla del catálogo no hace nada:
-    // `empujarCarrito` sale en su primera línea por `if (!actual ...) return`.
-    // El catálogo de la degradación es una lista de precios, no un
-    // configurador, y el texto no puede prometer lo contrario.
-    expect(texto).not.toContain('armar tu plan tú mismo')
-    expect(texto).toContain('los módulos con su precio')
-    expect(texto).toContain('paquetes')
+    // La frase apunta a «Tus módulos», que está ARRIBA en la misma pantalla y lo
+    // mueve `useCotizador`. NO al catálogo del propio panel: ahí, sin propuesta,
+    // marcar una casilla no hace nada (`empujarCarrito` sale en su primera línea
+    // por `if (!actual ...) return`), y prometer armar un plan sería mentira.
+    expect(texto).toContain('Arriba tienes los módulos con su precio')
+    expect(texto).toContain('armar tu plan tú mismo')
   })
 
   it('sin paquetes publicados deja de mandar a una sección vacía', () => {

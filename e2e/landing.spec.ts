@@ -51,7 +51,7 @@ const TITULO_PLANES = 'Planes y precios — Lumbre'
  * dos correctos, y confundirlos es lo que hace que un caso afirme el de la
  * pestaña creyendo que afirma el de la pantalla.
  */
-const H1_PLANES = 'Esto es lo que te armamos'
+const H1_PLANES = 'Tu plan, con el precio exacto'
 
 /**
  * El rótulo del único control de cada tarjeta de combinación.
@@ -116,6 +116,17 @@ const DETECTADOS = [
 ] as const
 
 /**
+ * Despliega el relato, que llega plegado detrás de su disparador.
+ *
+ * <p>Es idempotente porque varios casos lo encadenan con `contarElNegocio`: un
+ * segundo clic sobre un panel ya abierto lo cerraría.
+ */
+async function abrirRelato(page: Page): Promise<void> {
+  const disparador = page.getByRole('button', { name: /No sabes cuáles necesitas/ })
+  if ((await disparador.getAttribute('aria-expanded')) === 'false') await disparador.click()
+}
+
+/**
  * Escribe el relato y espera al REPOSO, no a un reloj.
  *
  * <p>La propuesta se recalcula 500 ms después de la última tecla (`REPOSO_MS`),
@@ -124,6 +135,7 @@ const DETECTADOS = [
  * cargada se queda corto y en una rápida sobra.
  */
 async function contarElNegocio(page: Page, relato: string, cuantos: number): Promise<void> {
+  await abrirRelato(page)
   await page.getByLabel('¿Qué hace tu negocio?').fill(relato)
   await expect(page.locator('#cotizador').getByRole('status')).toContainText(
     `te proponemos ${cuantos}`,
@@ -385,9 +397,10 @@ test.describe('Landing comercial', () => {
 })
 
 /**
- * La tarjeta del cotizador de la portada: llega con un ejemplo escrito en el
- * campo, con cuatro casillas ya marcadas y con el total que suman, y ese total
- * no se le pide a nadie —lo calcula el navegador con el catálogo que ya bajó—.
+ * La tarjeta del cotizador de la portada: llega con cuatro casillas ya marcadas
+ * y con el total que suman —y ese total no se le pide a nadie, lo calcula el
+ * navegador con el catálogo que ya bajó—. El relato del negocio va detrás, en
+ * un desplegable, y solo rescata a quien no sepa qué marcar.
  *
  * ── Por qué el premarcado se prueba por sus dos condiciones, y no por sí mismo ─
  * `content/cotizador.content.ts` deja escrito que la lista solo es defendible
@@ -398,21 +411,32 @@ test.describe('Landing comercial', () => {
  * una popularidad que no está medida.
  */
 test.describe('El cotizador de la portada', () => {
-  test('el ejemplo llega sembrado como valor, se puede reescribir, y la instrucción no se va con él', async ({
+  test('el campo llega plegado detrás de su disparador, y el ejemplo se enseña fuera', async ({
     page,
   }) => {
     await page.goto('/')
-    const campo = page.getByLabel('¿Qué hace tu negocio?')
 
-    // El ejemplo es el VALOR del campo y no su `placeholder`. Se afirma contra
-    // la constante de producción y no contra una copia: el ejemplo va emparejado
-    // con el conjunto premarcado y se reescribe con él, así que una
-    // transcripción aquí pondría este caso rojo por el texto y no por la
-    // pantalla.
-    await expect(campo).toHaveValue(EJEMPLO_DE_NEGOCIO)
+    // Plegado significa fuera del documento, no escondido con CSS: un campo que
+    // sigue ahí lo enumera el modo de formularios del lector igual que si
+    // estuviera visible.
+    await expect(page.getByLabel('¿Qué hace tu negocio?')).toHaveCount(0)
+
+    const disparador = page.getByRole('button', { name: /No sabes cuáles necesitas/ })
+    await expect(disparador).toHaveAttribute('aria-expanded', 'false')
+    await disparador.click()
+    await expect(disparador).toHaveAttribute('aria-expanded', 'true')
+
+    const campo = page.getByLabel('¿Qué hace tu negocio?')
+    await expect(campo).toBeFocused()
+
+    await expect(campo).toHaveValue('')
+    // Contra la constante de producción y no contra una copia: el ejemplo va
+    // emparejado con el conjunto premarcado y se reescribe con él, así que una
+    // transcripción aquí pondría el caso rojo por el texto y no por la pantalla.
+    await expect(page.locator('#cotizador')).toContainText(EJEMPLO_DE_NEGOCIO)
     expect(
       await campo.getAttribute('placeholder'),
-      'el ejemplo ya no va en el placeholder, que desaparece al primer carácter',
+      'el ejemplo no va en el placeholder, que desaparece al primer carácter',
     ).toBeNull()
 
     // §3.3.2 Labels or Instructions. La indicación que sobrevive a lo que se
@@ -425,11 +449,16 @@ test.describe('El cotizador de la portada', () => {
     await expect(ayuda).toBeVisible()
     await expect(ayuda).toContainText('escríbelo con tus palabras')
 
-    // Sembrado no es de solo lectura, y eso es lo que separa un ejemplo de un
-    // relato impuesto: se reescribe entero y lo que queda es lo del visitante.
     await contarElNegocio(page, RELATO, 3)
     await expect(campo).toHaveValue(RELATO)
     await expect(ayuda).toBeVisible()
+  })
+
+  test('los pasos de «Cómo funciona» empiezan por marcar, no por escribir', async ({ page }) => {
+    await page.goto('/')
+
+    const pasos = page.locator('#cotizador .lcc-pasos').getByRole('listitem')
+    await expect(pasos.first()).toContainText('Marcas los módulos')
   })
 
   test('llega con los cuatro módulos premarcados, y con nada más', async ({ page }) => {
@@ -603,6 +632,7 @@ test.describe('El cotizador de la portada', () => {
   test('sin nada reconocible lo dice, y deja el camino abierto igual', async ({ page }) => {
     await page.goto('/')
 
+    await abrirRelato(page)
     await page.getByLabel('¿Qué hace tu negocio?').fill('Somos tres socios y abrimos hace poco.')
     const estado = page.locator('#cotizador [role="status"]')
     await expect(estado).toContainText('No reconocimos ningún módulo en tu texto')
@@ -610,15 +640,15 @@ test.describe('El cotizador de la portada', () => {
 
     // No reconocer no es un error y no cierra la puerta: el mismo campo, más
     // grande y con su contexto, espera en el destino.
-    await page.getByRole('button', { name: 'Ver propuesta' }).click()
+    await page.getByRole('button', { name: 'Empezar gratis' }).click()
     await expect(page).toHaveURL(/\/planes$/)
   })
 
-  test('«Ver propuesta» envía el formulario y el relato viaja a /planes', async ({ page }) => {
+  test('«Empezar gratis» envía el formulario y el relato viaja a /planes', async ({ page }) => {
     await page.goto('/')
     await contarElNegocio(page, RELATO, 3)
 
-    await page.getByRole('button', { name: 'Ver propuesta' }).click()
+    await page.getByRole('button', { name: 'Empezar gratis' }).click()
     await expect(page).toHaveURL(/\/planes$/)
 
     // El relato viaja con la selección al paso siguiente: el texto no sale del
@@ -635,7 +665,7 @@ test.describe('El cotizador de la portada', () => {
     await expect(caja).toBeChecked()
     await caja.uncheck()
 
-    await page.getByRole('button', { name: 'Ver propuesta' }).click()
+    await page.getByRole('button', { name: 'Empezar gratis' }).click()
     await expect(page).toHaveURL(/\/planes$/)
     await expect(page.getByRole('heading', { level: 1, name: H1_PLANES })).toBeVisible()
 
@@ -710,7 +740,7 @@ test.describe('/planes — el paso de la propuesta', () => {
    * y el fallo se leería como «no navegó»—, y lo que se espera es su estado real.
    */
   async function continuar(page: Page): Promise<Locator> {
-    const boton = page.getByRole('button', { name: 'Continuar' })
+    const boton = page.getByRole('button', { name: 'Crear mi cuenta' })
     await expect(boton).not.toHaveAttribute('aria-disabled', 'true')
     return boton
   }

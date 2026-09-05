@@ -11,9 +11,8 @@ import {
 import TrialLinesTable from '@/features/contratacion/components/TrialLinesTable.vue'
 import { useContratacion } from '@/features/contratacion/composables/useContratacion'
 import type { LineaPrueba } from '@/features/contratacion/types/contratacion.types'
-import AsistentePanel from '@/features/asistente/components/AsistentePanel.vue'
 import PasosEmbudo from '../components/PasosEmbudo.vue'
-import PlanesCombinaciones from '../components/PlanesCombinaciones.vue'
+import PlanesRelatoPlegable from '../components/PlanesRelatoPlegable.vue'
 import PlanesResumenAside from '../components/PlanesResumenAside.vue'
 import PlanesTarjetaModulos from '../components/PlanesTarjetaModulos.vue'
 import { usePlanes } from '../composables/usePlanes'
@@ -162,6 +161,10 @@ const planElegido = computed(() => plans.value.find((p) => p.code === paquete.va
  */
 const puedeContinuar = computed(() => catalogo.value !== null)
 
+const rotuloDeContinuar = computed(() =>
+  destinoTrasElegir.value === 'contratar' ? 'Ir a confirmar' : 'Crear mi cuenta',
+)
+
 /**
  * Guarda la intención y salta al paso siguiente, que **no es el mismo para
  * todos**: el registro para un prospecto, el paso vinculante para un cliente
@@ -238,7 +241,7 @@ function continuar() {
         <!-- El `<h1>` vive AQUÍ y no dentro del asistente, y es deliberado: el
              panel monta y desmonta sus estados, así que un `<h1>` suyo
              desaparecería del documento en cuanto llegara la propuesta. -->
-        <h1 ref="h1" class="pub-title" tabindex="-1">Esto es lo que te armamos</h1>
+        <h1 ref="h1" class="pub-title" tabindex="-1">Tu plan, con el precio exacto</h1>
         <p class="pub-sub">
           Cambia lo que quieras: el precio de la derecha se mueve contigo. Nada de esto te
           compromete.
@@ -265,12 +268,6 @@ function continuar() {
 
       <div class="pl-grid">
         <div class="pl-col">
-          <!-- Tarjeta 1. El panel conserva su propio encabezado y su etiqueta de
-               campo: lo único que cambia es dónde vive su cuadro de texto. -->
-          <section class="pl-card">
-            <AsistentePanel :sin-paquetes="sinPaquetes" />
-          </section>
-
           <section class="pl-card" aria-labelledby="modulos-h2">
             <h2 id="modulos-h2" class="pub-card-t">Tus módulos</h2>
             <PlanesTarjetaModulos
@@ -302,35 +299,7 @@ function continuar() {
             <TrialLinesTable :lineas="lineasPrueba" class="pl-pruebas" />
           </section>
 
-          <!-- Tarjeta 4. El encabezado cambia con el estado, y no es cosmética:
-               «O parte de una combinación conocida» encima de un hueco es una
-               instrucción que la pantalla no puede cumplir. -->
-          <section class="pl-card pl-paquetes" aria-labelledby="paquetes-h2">
-            <h2 id="paquetes-h2" class="pub-card-t">
-              {{
-                sinPaquetes
-                  ? 'Todavía no hay paquetes publicados'
-                  : 'O parte de una combinación conocida'
-              }}
-            </h2>
-
-            <!-- El vacío se ANUNCIA: es contenido, no la ausencia de contenido.
-                 Sin `role="status"` quien navega con lector se queda esperando
-                 una lista de precios que nunca va a llegar. -->
-            <p v-if="sinPaquetes" class="pub-card-sub" role="status" data-testid="planes-vacio">
-              Todavía no hay paquetes con precio publicado. Escríbenos a
-              <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a> y te decimos qué podemos
-              montarte hoy.
-            </p>
-            <PlanesCombinaciones
-              v-else
-              :plans="plans"
-              :catalogo="catalogo"
-              :ciclo="ciclo"
-              :paquete-actual="paquete"
-              @sembrar="sembrarModulos"
-            />
-          </section>
+          <PlanesRelatoPlegable :sin-paquetes="sinPaquetes" />
         </div>
 
         <PlanesResumenAside
@@ -344,6 +313,7 @@ function continuar() {
           :mensaje-de-fallo="mensajeDeFallo"
           :region-viva="regionViva"
           :puede-continuar="puedeContinuar"
+          :cta="rotuloDeContinuar"
           @continuar="continuar"
         />
       </div>

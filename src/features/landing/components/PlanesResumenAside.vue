@@ -41,6 +41,8 @@ const props = defineProps<{
   regionViva: string
   /** El catálogo llegó: sin él no hay códigos de módulo que llevarse al paso siguiente. */
   puedeContinuar: boolean
+  /** Baja de fuera porque el destino no es el mismo para los dos públicos. */
+  cta: string
 }>()
 
 defineEmits<{ continuar: [] }>()
@@ -157,7 +159,7 @@ const MOTIVO_BLOQUEO =
         :aria-describedby="puedeContinuar ? undefined : idMotivoBloqueo"
         @click="puedeContinuar && $emit('continuar')"
       >
-        Continuar
+        {{ cta }}
       </button>
     </div>
 

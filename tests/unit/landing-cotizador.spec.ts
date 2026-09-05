@@ -23,12 +23,13 @@ import { elemento } from '../helpers/exigir'
  *  1. **Vacío + enviar navega, sin error.** El hero no puede ser una puerta
  *     cerrada; un error en el primer pliegue castiga a quien todavía no había
  *     decidido escribir.
- *  2. **El ejemplo llega SEMBRADO en el campo y es editable**, con la
- *     instrucción persistente al lado —§3.3.2: un placeholder desaparece al
- *     escribir—, **sin pisar lo que el visitante ya había escrito**, que es lo
- *     más caro de la pantalla, y sin marcar módulos por su cuenta.
- *  3. **Sin nada marcado se puede avanzar, y el selector se ve con el campo
- *     vacío.** Nadie tiene que escribir ni marcar para llegar al paso siguiente,
+ *  2. **El campo llega PLEGADO, detrás del selector**, y el ejemplo se enseña
+ *     junto a él en vez de ocupar su interior —§3.3.2: un placeholder desaparece
+ *     al escribir, y un campo con texto ajeno obliga a borrarlo—. Quien vuelve
+ *     con un relato ya escrito lo encuentra abierto: es lo más caro de la
+ *     pantalla y plegado parecería perdido.
+ *  3. **Sin nada marcado se puede avanzar, y el selector se ve sin abrir el
+ *     campo.** Nadie tiene que escribir ni marcar para llegar al paso siguiente,
  *     y un selector que aparece al teclear cambiaría solo el índice de
  *     encabezados del lector.
  *  4. **Plegar un área no desmarca nada.** El cuerpo del área se desmonta al
@@ -181,6 +182,16 @@ function casilla(wrapper: ReturnType<typeof montar>['wrapper'], code: string) {
   )
 }
 
+/**
+ * El campo vive detrás del disparador de «¿No sabes cuáles necesitas?», así que
+ * sin abrirlo no está en el documento.
+ */
+async function abrirRelato(wrapper: ReturnType<typeof montar>['wrapper']) {
+  const boton = wrapper.get('button.lcr-abrir')
+  if (boton.attributes('aria-expanded') === 'false') await boton.trigger('click')
+  return wrapper.get('textarea')
+}
+
 /** Sin esto, las casillas de un área plegada no están en el documento. */
 async function abrirTodo(wrapper: ReturnType<typeof montar>['wrapper']) {
   for (const cabecera of wrapper.findAll('h3 button')) {
@@ -205,7 +216,6 @@ describe('LandingCotizador — se arma el plan, y el relato se queda en el naveg
 
   it('vacío y enviar: navega a /planes y NO enseña ningún error', async () => {
     const { wrapper } = montar()
-    await wrapper.find('textarea').setValue('')
 
     await wrapper.find('form').trigger('submit')
 
@@ -215,16 +225,47 @@ describe('LandingCotizador — se arma el plan, y el relato se queda en el naveg
     expect(wrapper.findAll('[role="alert"]')).toHaveLength(0)
   })
 
-  it('el ejemplo llega SEMBRADO y editable, con la instrucción persistente al lado', async () => {
-    const { wrapper } = montar()
-    const campo = wrapper.find('textarea')
+  it('el campo llega plegado y su disparador va DESPUÉS del selector de módulos', async () => {
+    const { wrapper } = await conCatalogo({ conPrecio: false })
 
-    // Sembrado, no `placeholder`: el placeholder se va con el primer carácter y
-    // no puede ser la única instrucción (§3.3.2).
-    expect(campo.element.value).toContain('clínica veterinaria de barrio')
+    expect(wrapper.find('textarea').exists()).toBe(false)
+    const disparador = wrapper.get('button.lcr-abrir')
+    expect(disparador.attributes('aria-expanded')).toBe('false')
+    expect(disparador.text()).toContain('¿No sabes cuáles necesitas?')
+
+    const orden = wrapper.findAll('h3 button, button.lcr-abrir')
+    expect(elemento(orden, orden.length - 1, 'los controles de la columna').classes()).toContain(
+      'lcr-abrir',
+    )
+  })
+
+  it('abrir el disparador monta el campo, lo apunta con aria-controls y le da el foco', async () => {
+    const { wrapper } = await conCatalogo({ conPrecio: false })
+    const disparador = wrapper.get('button.lcr-abrir')
+
+    await disparador.trigger('click')
+    await vi.advanceTimersByTimeAsync(0)
+
+    const campo = wrapper.get('textarea')
+    expect(disparador.attributes('aria-expanded')).toBe('true')
+    // El `aria-controls` tiene que apuntar al panel que de verdad contiene el
+    // campo: uno que señale a un id inexistente se anuncia igual y no lleva.
+    const panel = document.getElementById(disparador.attributes('aria-controls') ?? '')
+    expect(panel?.contains(campo.element)).toBe(true)
+    expect(document.activeElement).toBe(campo.element)
+  })
+
+  it('el ejemplo se ENSEÑA junto al campo, no dentro, y la ayuda lo describe', async () => {
+    const { wrapper } = await conCatalogo({ conPrecio: false })
+    const campo = await abrirRelato(wrapper)
+
+    // Un `placeholder` se iría con el primer carácter (§3.3.2), y sembrado
+    // obligaría a borrarlo antes de escribir el relato propio.
+    expect(campo.element.value).toBe('')
     expect(campo.attributes('placeholder')).toBeUndefined()
     expect(campo.attributes('rows')).toBe('6')
-    // La ayuda persistente sigue ahí y sigue siendo la que describe el campo.
+    expect(wrapper.get('.lcr-ejemplo').text()).toContain('clínica veterinaria de barrio')
+
     const idAyuda = campo.attributes('aria-describedby')
     expect(idAyuda).toBeTruthy()
     expect(wrapper.get('#' + idAyuda).text()).toContain('escríbelo con tus palabras')
@@ -310,12 +351,15 @@ describe('LandingCotizador — se arma el plan, y el relato se queda en el naveg
     expect(wrapper.get('.lcc-precio').text()).not.toContain('Un punto de partida')
   })
 
-  it('el relato que el visitante ya había escrito no se pisa con el ejemplo', () => {
+  it('quien vuelve con un relato escrito lo encuentra abierto y sin pisar', () => {
     usePropuestaStore().texto = 'Atendemos perros y gatos, y hacemos cirugía los martes.'
 
-    const campo = montar().wrapper.find('textarea')
+    const { wrapper } = montar()
 
-    expect(campo.element.value).toBe('Atendemos perros y gatos, y hacemos cirugía los martes.')
+    expect(wrapper.get('button.lcr-abrir').attributes('aria-expanded')).toBe('true')
+    expect(wrapper.find('textarea').element.value).toBe(
+      'Atendemos perros y gatos, y hacemos cirugía los martes.',
+    )
   })
 
   /**
@@ -350,7 +394,7 @@ describe('LandingCotizador — se arma el plan, y el relato se queda en el naveg
    * así que la portada tiene que entregar lo que quedó marcado, no lo que se
    * premarcó (#374).
    */
-  it('«Ver propuesta» entrega a /planes la selección que quedó, con los cambios a mano', async () => {
+  it('«Empezar gratis» entrega a /planes la selección que quedó, con los cambios a mano', async () => {
     const { wrapper } = await conCatalogo({ conPrecio: false })
     await abrirTodo(wrapper)
 
@@ -373,13 +417,12 @@ describe('LandingCotizador — se arma el plan, y el relato se queda en el naveg
    * overload mide un efecto medio nulo— y además le cambiaría solo el índice de
    * encabezados a quien navega con lector.
    */
-  it('el selector se ve con el campo vacío: no hay que escribir para poder marcar', async () => {
+  it('el selector se ve sin abrir el campo: no hay que escribir para poder marcar', async () => {
     const { wrapper } = await conCatalogo({ conPrecio: false })
 
-    await wrapper.find('textarea').setValue('')
     await vi.advanceTimersByTimeAsync(1000)
 
-    expect(wrapper.find('textarea').element.value).toBe('')
+    expect(wrapper.find('textarea').exists()).toBe(false)
     expect(wrapper.findAll('h3')).toHaveLength(2)
     expect(wrapper.findAll('input[type="checkbox"]').length).toBeGreaterThan(0)
   })
@@ -408,7 +451,10 @@ describe('LandingCotizador — se arma el plan, y el relato se queda en el naveg
     expect(h2.text()).toBe('Arma tu plan')
     // El `h2` NO sustituye a la etiqueta del campo: un encabezado no es una
     // etiqueta programática.
-    expect(wrapper.get('label').text()).toBe('¿Qué hace tu negocio?')
+    const campo = await abrirRelato(wrapper)
+    expect(wrapper.get(`label[for="${campo.attributes('id')}"]`).text()).toBe(
+      '¿Qué hace tu negocio?',
+    )
     expect(wrapper.findAll('h3').length).toBeGreaterThan(0)
     // Y da nombre a la región: sin nombre accesible, un `<section>` no se expone
     // como `region` y los enlaces que traen el foco aquí aterrizan en un
@@ -456,7 +502,7 @@ describe('LandingCotizador — se arma el plan, y el relato se queda en el naveg
   it('lo escrito marca lo que nombra, lo anuncia y abre sus áreas — 500 ms después', async () => {
     const { wrapper, cotizador } = await conCatalogo()
 
-    await wrapper.find('textarea').setValue('Agendamos citas y cobramos en caja.')
+    await (await abrirRelato(wrapper)).setValue('Agendamos citas y cobramos en caja.')
     await vi.advanceTimersByTimeAsync(600)
     await flushPromises()
 
@@ -482,7 +528,7 @@ describe('LandingCotizador — se arma el plan, y el relato se queda en el naveg
     await casilla(wrapper, 'GROOMING').setValue(true)
     expect(cotizador.modulos.value).toContain('GROOMING')
 
-    await wrapper.find('textarea').setValue('Agendamos citas y cobramos en caja.')
+    await (await abrirRelato(wrapper)).setValue('Agendamos citas y cobramos en caja.')
     await vi.advanceTimersByTimeAsync(600)
     await flushPromises()
 
@@ -494,14 +540,15 @@ describe('LandingCotizador — se arma el plan, y el relato se queda en el naveg
   it('lo que se quitó a mano tampoco vuelve porque se reescriba el relato', async () => {
     const { wrapper, cotizador } = await conCatalogo({ conPrecio: false })
 
-    await wrapper.find('textarea').setValue('Agendamos citas.')
+    const campo = await abrirRelato(wrapper)
+    await campo.setValue('Agendamos citas.')
     await vi.advanceTimersByTimeAsync(600)
     await flushPromises()
     expect(cotizador.modulos.value).toEqual(['SCHEDULING'])
 
     await casilla(wrapper, 'SCHEDULING').setValue(false)
 
-    await wrapper.find('textarea').setValue('Agendamos citas y cobramos en caja.')
+    await campo.setValue('Agendamos citas y cobramos en caja.')
     await vi.advanceTimersByTimeAsync(600)
     await flushPromises()
 
