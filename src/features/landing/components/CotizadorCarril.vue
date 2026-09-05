@@ -72,9 +72,9 @@ const nota = computed(() =>
     <p class="lcc-eyebrow">Cómo funciona</p>
 
     <ol class="ds-steps lcc-pasos">
-      <li>Nos cuentas qué hace tu negocio.</li>
-      <li>Marcamos los módulos que encajan y tú los ajustas.</li>
-      <li>El total se actualiza aquí mismo y lo confirmas en la pantalla siguiente.</li>
+      <li>Marcas los módulos que usas, o dejas los que ya vienen marcados.</li>
+      <li>Si no sabes cuáles, nos cuentas qué hace tu negocio y te los proponemos.</li>
+      <li>Ves el precio exacto y las fechas de cobro antes de crear ninguna cuenta.</li>
     </ol>
 
     <div class="lcc-precio pub-tinted" :data-estado="estado">
@@ -97,11 +97,13 @@ const nota = computed(() =>
       <p v-if="fuera" class="lcc-fuera">{{ fuera }}</p>
     </div>
 
-    <button type="submit" class="ds-btn ds-btn--primary lcc-cta">Ver propuesta</button>
+    <button type="submit" class="ds-btn ds-btn--primary lcc-cta">Empezar gratis</button>
 
+    <!-- No es letra pequeña decorativa: «Empezar gratis» no dice a dónde lleva, y
+         esta línea es lo único que anuncia el paso siguiente. -->
     <p class="lcc-pie">
-      Cálculo orientativo con los precios de lista. Prueba gratis y sin tarjeta: no te compromete a
-      nada.
+      Cálculo orientativo con los precios de lista. Sin tarjeta y sin compromiso: en el paso
+      siguiente ves el precio exacto y cuándo empieza a cobrarse.
     </p>
 
     <p class="ds-sr-only" aria-live="polite" aria-atomic="true">{{ regionViva }}</p>

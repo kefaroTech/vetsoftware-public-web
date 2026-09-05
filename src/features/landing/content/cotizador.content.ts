@@ -32,7 +32,7 @@ export const SELECCION_POR_DEFECTO: readonly string[] = [
 ]
 
 /**
- * El relato que llega escrito en el campo.
+ * El relato que se enseña junto al campo, como muestra de qué se espera ahí.
  *
  * <p>Va emparejado con {@link SELECCION_POR_DEFECTO}: describe exactamente el
  * negocio que esas cuatro casillas reproducen —la combinación «Consulta de

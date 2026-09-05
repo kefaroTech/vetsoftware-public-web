@@ -102,12 +102,24 @@ function encabezadoDePropuesta(page: Page) {
 }
 
 /**
+ * Despliega el relato de `/planes`, que llega plegado detrás de su disparador.
+ *
+ * <p>Es idempotente: varios casos lo encadenan, y un segundo clic sobre un panel
+ * ya abierto lo cerraría.
+ */
+async function abrirRelato(page: Page): Promise<void> {
+  const disparador = page.getByRole('button', { name: /No sabes qué módulos necesitas/ })
+  if ((await disparador.getAttribute('aria-expanded')) === 'false') await disparador.click()
+}
+
+/**
  * Rellena el formulario de entrada con datos reconocibles como de prueba.
  *
  * <p>El correo lleva el TLD reservado `.invalid`: pasa la validación del
  * formulario y no puede existir, así que ni un envío accidental llegaría a nadie.
  */
 async function contarleAlAsistente(page: Page): Promise<void> {
+  await abrirRelato(page)
   await page
     .getByLabel('¿A qué se dedica tu negocio?')
     .fill('Clínica veterinaria E2E de prueba: consultas, vacunación, baños y una sola sede.')

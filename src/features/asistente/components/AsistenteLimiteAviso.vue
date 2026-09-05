@@ -99,8 +99,8 @@ const cuando = computed(() =>
     </p>
     <p v-else class="alim-p">
       No es un fallo: limitamos cuántas propuestas se piden desde un mismo sitio. Lo que escribiste
-      sigue ahí arriba, tal como lo dejaste. Puedes volver a intentarlo {{ cuando }}, o empezar
-      ahora por uno de nuestros paquetes, aquí abajo.
+      sigue ahí arriba, tal como lo dejaste. Puedes volver a intentarlo {{ cuando }}, o armar tu
+      plan con los módulos de arriba.
     </p>
   </div>
 </template>

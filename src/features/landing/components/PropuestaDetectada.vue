@@ -30,7 +30,7 @@ defineProps<{
       <p class="lpd-a">
         {{
           cantidad > 0
-            ? 'Marcados abajo. Quita lo que no uses o abre otra área para añadir.'
+            ? 'Marcados arriba. Quita lo que no uses o abre otra área para añadir.'
             : 'Abre el área que te interese y marca lo que uses.'
         }}
       </p>
