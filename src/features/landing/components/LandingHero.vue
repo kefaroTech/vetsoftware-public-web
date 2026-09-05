@@ -26,7 +26,7 @@
           /brand/lumbre-lockup-transparent-768.webp   768w,
           /brand/lumbre-lockup-transparent-1024.webp 1024w
         "
-        sizes="(width <= 900px) 140px, 200px"
+        sizes="(width <= 900px) 168px, 244px"
       />
       <img
         class="ds-brand-mark"
@@ -83,7 +83,7 @@
    el navegador los usa para reservar la caja por relación de aspecto antes de
    la descarga, y sin ellos el titular salta en el primer pintado. */
 .land-lockup img {
-  width: clamp(140px, 16vw, 200px);
+  width: clamp(168px, 19vw, 244px);
   height: auto;
   display: block;
 }
