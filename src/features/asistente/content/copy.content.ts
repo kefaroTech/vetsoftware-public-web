@@ -16,7 +16,7 @@
  * como «la aplicación está rota», y el usuario no tiene forma de saber que le
  * faltaban quince caracteres.
  *
- * <p>Y no sube a 40 «para forzar detalle»: «Clínica de barrio, consulta general
+ * <p>Y no sube a 40 «para forzar detalle»: «Clínica veterinaria, consulta general
  * y vacunas» son 38 caracteres y bastan para proponer Historia clínica,
  * Vacunación y Agenda. Un umbral de 40 castiga a quien escribe bien y corto, que
  * es exactamente el usuario con prisa que este producto tiene. El texto corto

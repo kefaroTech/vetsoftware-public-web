@@ -286,7 +286,7 @@ export const CATALOGO_EMBUDO: PublicCatalogResponse = {
     ]),
     paquete(
       'PACK_CLINIC',
-      'Consulta de barrio',
+      'Consulta básica',
       189_000,
       ['SCHEDULING', 'CLINICAL_HISTORY', 'VACCINATION_DEWORMING', 'CASH_REGISTER'],
       true,

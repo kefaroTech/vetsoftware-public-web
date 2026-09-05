@@ -5,6 +5,7 @@ import { RouterLink } from 'vue-router'
 import { formatMoney } from '@/composables/money'
 import type { ArticuloCatalogo } from '@/features/asistente/types/catalogo.types'
 import {
+  importeConImpuesto,
   importeEstimado,
   precioBase,
   sufijoConImpuesto,
@@ -106,7 +107,7 @@ const avisoDescuento = computed<string | null>(() => {
     <ul class="land-plan-list">
       <li v-for="m in modulos" :key="m.code">
         <Check :size="14" :stroke-width="2" aria-hidden="true" />
-        <span>{{ m.nombre }} · {{ importeEstimado(m.importe) }}</span>
+        <span>{{ m.nombre }} · {{ importeEstimado(importeConImpuesto(m)) }}</span>
       </li>
       <li>
         <Check :size="14" :stroke-width="2" aria-hidden="true" />

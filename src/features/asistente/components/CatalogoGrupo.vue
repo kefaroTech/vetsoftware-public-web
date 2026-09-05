@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { importeEstimado, sufijoCiclo } from '../../landing/composables/planPricing'
+import {
+  importeConImpuesto,
+  importeEstimado,
+  sufijoCiclo,
+} from '../../landing/composables/planPricing'
 import type { Ciclo } from '../../landing/types/plans.types'
 import type { ArticuloCatalogo } from '../types/catalogo.types'
 
@@ -55,7 +59,7 @@ defineEmits<{ alternar: [code: string, marcado: boolean] }>()
         <span class="cgr-desc">{{ a.descripcion }}</span>
       </span>
       <span class="cgr-precio">
-        {{ importeEstimado(a.importe) }} {{ sufijoCiclo(ciclo) }}
+        {{ importeEstimado(importeConImpuesto(a)) }} {{ sufijoCiclo(ciclo) }}
         <span class="cgr-prueba">{{
           a.trialDays ? `${a.trialDays} días gratis` : 'sin prueba'
         }}</span>

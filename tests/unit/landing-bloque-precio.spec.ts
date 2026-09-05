@@ -164,17 +164,17 @@ describe('BloquePrecioVivo — la cifra vieja nunca se hace pasar por la nueva',
   it('el salto de paquete explica y ofrece deshacer, sin región viva propia', async () => {
     const wrapper = montar({
       modulos: ['SCHEDULING'],
-      saltoDePaquete: { paquete: PACK_BARRIO, texto: 'Los 2 módulos de Consulta de barrio…' },
+      saltoDePaquete: { paquete: PACK_BARRIO, texto: 'Los 2 módulos de Consulta básica…' },
     })
     const salto = wrapper.find('.lpr-salto')
 
     expect(salto.attributes('role')).toBe('status')
     expect(salto.find('.lpr-salto-t').text()).toBe('Subió el precio porque se perdió el descuento')
-    expect(salto.find('.lpr-salto-c').text()).toBe('Los 2 módulos de Consulta de barrio…')
+    expect(salto.find('.lpr-salto-c').text()).toBe('Los 2 módulos de Consulta básica…')
     expect(wrapper.findAll('[aria-live]')).toHaveLength(1)
 
     const volver = salto.find('button')
-    expect(volver.text()).toBe('Volver a Consulta de barrio')
+    expect(volver.text()).toBe('Volver a Consulta básica')
     await volver.trigger('click')
     expect(wrapper.emitted('volver-al-paquete')).toHaveLength(1)
   })

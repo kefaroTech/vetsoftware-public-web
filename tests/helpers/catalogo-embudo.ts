@@ -46,7 +46,7 @@ export function capacidad(over: Partial<CapacidadCatalogo> = {}): CapacidadCatal
 
 export const PACK_BARRIO: PaqueteCatalogo = {
   code: 'PACK_CLINIC',
-  nombre: 'Consulta de barrio',
+  nombre: 'Consulta básica',
   tagline: null,
   importe: 189_000,
   taxRate: 19,

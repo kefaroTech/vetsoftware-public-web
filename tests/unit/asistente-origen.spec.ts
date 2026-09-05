@@ -94,7 +94,7 @@ function respuesta(
  */
 async function panelTrasResponder(presentation: AssistantProposalResponse['presentation']) {
   const store = usePropuestaStore()
-  store.texto = 'Clínica de barrio, consulta general y vacunas'
+  store.texto = 'Clínica veterinaria, consulta general y vacunas'
   store.email = 'ana@clinica.co'
   post.mockResolvedValueOnce({ data: respuesta(presentation) } as never)
   await store.generar([])

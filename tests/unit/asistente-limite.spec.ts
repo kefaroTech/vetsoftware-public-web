@@ -76,7 +76,7 @@ const AVERIA = { response: { status: 500, headers: {}, data: { status: 500 } } }
 
 async function pedirPropuesta(rechazo: unknown) {
   const store = usePropuestaStore()
-  store.texto = 'Clínica de barrio, consulta general y vacunas'
+  store.texto = 'Clínica veterinaria, consulta general y vacunas'
   store.email = 'ana@clinica.co'
   post.mockRejectedValueOnce(rechazo)
   await store.generar([])
@@ -99,7 +99,7 @@ describe('Un 429 es un límite alcanzado, y no una avería', () => {
 
     expect(store.estado).toBe('LIMITE_ALCANZADO')
     // Y el texto del prospecto sigue intacto: es lo que el aviso le promete.
-    expect(store.texto).toBe('Clínica de barrio, consulta general y vacunas')
+    expect(store.texto).toBe('Clínica veterinaria, consulta general y vacunas')
   })
 
   it('NO incrementa `fallos`: dos límites seguidos no degradan la pantalla', async () => {
