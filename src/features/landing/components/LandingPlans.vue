@@ -7,7 +7,7 @@ import type { ArticuloCatalogo } from '@/features/asistente/types/catalogo.types
 import CicloFieldset from './CicloFieldset.vue'
 import PlanCard from './PlanCard.vue'
 import { modulosDelPaquete } from '../composables/cotizadorLineas'
-import { sufijoCiclo } from '../composables/planPricing'
+import { importeConImpuesto, sufijoCiclo, totalConImpuesto } from '../composables/planPricing'
 import {
   CAPACITY_UNIT_LABEL,
   CAPACITY_UNIT_LABEL_ONE,
@@ -142,9 +142,10 @@ const notaBase = computed<string | null>(() => {
 
   const cuando = sufijoCiclo(ciclo.value)
   return (
-    `Todas parten de clientes y mascotas (${formatMoney(base.importe)} ${cuando}) con ` +
-    `${unidadesIncluidas(personas)} y ${unidadesIncluidas(sedes)}. Cada sede adicional cuesta ` +
-    `${formatMoney(porSede)} ${cuando} y cada persona adicional ${formatMoney(porPersona)} ${cuando}.`
+    `Todas parten de clientes y mascotas (${formatMoney(importeConImpuesto(base) ?? 0)} ${cuando}) ` +
+    `con ${unidadesIncluidas(personas)} y ${unidadesIncluidas(sedes)}. Cada sede adicional cuesta ` +
+    `${formatMoney(totalConImpuesto(plan, porSede))} ${cuando} y cada persona adicional ` +
+    `${formatMoney(totalConImpuesto(plan, porPersona))} ${cuando}. Todos con IVA incluido.`
   )
 })
 

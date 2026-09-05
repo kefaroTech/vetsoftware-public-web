@@ -169,7 +169,8 @@ export function ahorroAnual(plan: PublicPlan): number {
 }
 
 /**
- * Una base gravable con el impuesto del plan dentro.
+ * Una base gravable con el impuesto del PLAN dentro. Para un artículo del
+ * catálogo, que declara además su tratamiento, es {@link importeConImpuesto}.
  *
  * <p>El redondeo es en dos pasos —primero el impuesto, después la suma— y no en
  * uno: es la misma cuenta que ya hacía {@link calcularEstimado}, y colapsarla a
@@ -286,7 +287,7 @@ export interface EstimacionCatalogo {
 }
 
 /** Lo único que hace falta de un artículo para sumarlo: su precio y cómo tributa. */
-type Tributable = Pick<ArticuloCatalogo, 'importe' | 'taxRate' | 'taxTreatment'>
+export type Tributable = Pick<ArticuloCatalogo, 'importe' | 'taxRate' | 'taxTreatment'>
 
 /**
  * El tipo que se le aplica a una línea: el suyo si tributa, cero si no.
@@ -363,6 +364,22 @@ export function estimarSeleccion(
     total: aPesos(subtotal + impuesto),
     tasa: unica !== undefined && unica > 0 ? unica : null,
   }
+}
+
+/**
+ * La fila y el total tienen que decir lo mismo. Enseñar la base gravable al
+ * lado de un total rotulado «IVA incluido» le pide al visitante que haga la
+ * cuenta para saber cuál de las dos cifras va a pagar, y en Colombia el precio
+ * que se exhibe al consumidor es el final (Ley 1480, art. 26).
+ *
+ * <p>Redondea igual que {@link estimarSeleccion} —impuesto por línea sobre la
+ * base ya redondeada— porque si no, la suma de las filas se separaría del total
+ * algún peso y la pantalla enseñaría dos cuentas distintas del mismo carrito.
+ */
+export function importeConImpuesto(articulo: Tributable): number | null {
+  if (articulo.importe === null) return null
+  const base = aPesos(articulo.importe)
+  return aPesos(base + impuestoDe(base, tasaDe(articulo)))
 }
 
 /**

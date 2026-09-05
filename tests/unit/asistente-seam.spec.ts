@@ -152,7 +152,7 @@ describe('la petición inicial', () => {
     post.mockResolvedValueOnce({ data: respuesta() } as never)
     await generarPropuesta({
       email: 'laura@vetchapinero.co',
-      texto: 'Veterinaria de barrio con consulta, vacunación y venta de concentrado.',
+      texto: 'Veterinaria con consulta, vacunación y venta de concentrado.',
       aceptaciones: [{ code: 'PRIVACY_POLICY', documentVersion: 2 }],
       clientRequestId: 'llave-abc',
     })
@@ -166,7 +166,7 @@ describe('la petición inicial', () => {
     expect(cuerpo).not.toHaveProperty('clientRequestId')
     expect(cuerpo).toEqual({
       email: 'laura@vetchapinero.co',
-      description: 'Veterinaria de barrio con consulta, vacunación y venta de concentrado.',
+      description: 'Veterinaria con consulta, vacunación y venta de concentrado.',
       acceptances: [{ code: 'PRIVACY_POLICY', documentVersion: 2 }],
     })
   })

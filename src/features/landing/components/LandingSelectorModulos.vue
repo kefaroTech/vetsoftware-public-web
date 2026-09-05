@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import type { ArticuloCatalogo, CatalogoComercial } from '@/features/asistente/types/catalogo.types'
 import AreaPlegable from './AreaPlegable.vue'
-import { importeEstimado } from '../composables/planPricing'
+import { importeConImpuesto, importeEstimado } from '../composables/planPricing'
 
 /**
  * El selector de módulos del cotizador: el núcleo fijo y las áreas plegables.
@@ -142,7 +142,9 @@ watch(
              segunda verdad sobre lo que entra en el núcleo. -->
         <span v-if="!conPrecio && a.descripcion" class="lsm-nucleo-desc">{{ a.descripcion }}</span>
       </span>
-      <span v-if="conPrecio" class="lsm-nucleo-pre">{{ importeEstimado(a.importe) }}</span>
+      <span v-if="conPrecio" class="lsm-nucleo-pre">{{
+        importeEstimado(importeConImpuesto(a))
+      }}</span>
     </p>
 
     <p v-if="catalogo && areas.length === 0" class="lsm-vacio" role="status">
@@ -181,7 +183,9 @@ watch(
           <span v-if="!conPrecio && m.descripcion" class="lsm-desc">{{ m.descripcion }}</span>
           <span v-if="porqueSeMenciono(m.code)" class="lsm-porque">Porque lo mencionaste</span>
         </span>
-        <span v-if="conPrecio" class="lsm-precio">{{ importeEstimado(m.importe) }}</span>
+        <span v-if="conPrecio" class="lsm-precio">{{
+          importeEstimado(importeConImpuesto(m))
+        }}</span>
       </label>
     </AreaPlegable>
   </div>

@@ -105,7 +105,7 @@ const CATALOGO: PublicCatalogResponse = {
     paquete(),
     paquete({
       code: 'PACK_CLINIC',
-      name: 'Consulta de barrio',
+      name: 'Consulta básica',
       componentCodes: ['CORE', 'CLINICAL_HISTORY'],
       recommended: false,
     }),
@@ -155,7 +155,7 @@ function plan(over: Partial<PublicPlan> = {}): PublicPlan {
  */
 const PLANES: PublicPlan[] = [
   plan(),
-  plan({ code: 'PACK_CLINIC', name: 'Consulta de barrio', recommended: true }),
+  plan({ code: 'PACK_CLINIC', name: 'Consulta básica', recommended: true }),
 ]
 
 interface Props {
@@ -257,9 +257,13 @@ describe('Las combinaciones de la portada', () => {
   it('la nota interpola el núcleo, lo incluido y las unidades adicionales', async () => {
     const nota = texto((await montar()).get('[data-testid="landing-planes-nota"]').text())
 
+    // 69.000, 35.000 y 12.000 del catálogo, al 19 %. Escritas y no derivadas: una
+    // regresión a la base gravable tiene que poner esto rojo, y derivarlas
+    // recalcularía el mismo error a los dos lados.
     expect(nota).toBe(
-      'Todas parten de clientes y mascotas ($ 69.000 al mes) con 2 personas y 1 sede. ' +
-        'Cada sede adicional cuesta $ 35.000 al mes y cada persona adicional $ 12.000 al mes.',
+      'Todas parten de clientes y mascotas ($ 82.110 al mes) con 2 personas y 1 sede. ' +
+        'Cada sede adicional cuesta $ 41.650 al mes y cada persona adicional $ 14.280 al mes. ' +
+        'Todos con IVA incluido.',
     )
   })
 
@@ -269,9 +273,10 @@ describe('Las combinaciones de la portada', () => {
       ?.findAll('.land-plan-list li')
       .map((li) => texto(li.text()))
 
+    // 35.000 y 29.000 del catálogo, al 19 %.
     expect(puntos).toEqual([
-      'Agenda de citas · $ 35.000',
-      'Spa y estética · $ 29.000',
+      'Agenda de citas · $ 41.650',
+      'Spa y estética · $ 34.510',
       'Quita en el siguiente paso lo que no uses',
     ])
   })

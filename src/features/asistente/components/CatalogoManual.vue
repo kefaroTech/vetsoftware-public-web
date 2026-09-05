@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import ModalShell from '@/components/ui/ModalShell.vue'
-import { importeEstimado, sufijoCiclo } from '../../landing/composables/planPricing'
+import {
+  importeConImpuesto,
+  importeEstimado,
+  sufijoCiclo,
+} from '../../landing/composables/planPricing'
 import type { Ciclo } from '../../landing/types/plans.types'
 import { arrastraAlMarcar, caeAlQuitar, sugerenciasDe } from '../composables/dependencias'
 import type { GrupoConArticulos } from '../composables/useCatalogoComercial'
@@ -75,7 +79,8 @@ function nombreDe(code: string): string {
 }
 
 function importeDe(code: string): number | null {
-  return props.catalogo?.articulos.find((a) => a.code === code)?.importe ?? null
+  const articulo = props.catalogo?.articulos.find((a) => a.code === code)
+  return articulo ? importeConImpuesto(articulo) : null
 }
 
 /**
@@ -162,7 +167,7 @@ const anuncioArrastre = computed(() => {
   const a = arrastre.value
   if (!a) return ''
   const lista = a.items
-    .map((i) => `${i.nombre}, ${importeEstimado(i.importe)} ${sufijoCiclo(props.ciclo)}`)
+    .map((i) => `${i.nombre}, ${importeEstimado(importeDe(i.code))} ${sufijoCiclo(props.ciclo)}`)
     .join('; ')
   return `Añadimos también ${lista}. ${a.nota ?? ''}`.trim()
 })
