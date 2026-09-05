@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import LandingSelectorModulos from '@/features/landing/components/LandingSelectorModulos.vue'
-import { importeEstimado } from '@/features/landing/composables/planPricing'
+import { importeConImpuesto, importeEstimado } from '@/features/landing/composables/planPricing'
 import { articulo, catalogoEmbudo } from '../helpers/catalogo-embudo'
 import { elemento } from '../helpers/exigir'
 
@@ -33,7 +33,10 @@ describe('LandingSelectorModulos — casillas nativas, núcleo fijo y plegado in
 
     expect(nucleo.element.tagName).toBe('P')
     expect(nucleo.text()).toContain('Núcleo: clientes y mascotas — incluido siempre')
-    expect(nucleo.text()).toContain(importeEstimado(59_000))
+    expect(nucleo.text()).toContain(
+      importeEstimado(importeConImpuesto(articulo({ importe: 59_000 }))),
+    )
+    expect(nucleo.text()).not.toContain(importeEstimado(59_000))
     expect(nucleo.find('input').exists()).toBe(false)
     // Nunca una casilla `disabled checked`: eso es §3.3.2 sin etiqueta de restricción.
     expect(wrapper.findAll('input[disabled]')).toHaveLength(0)
@@ -57,7 +60,7 @@ describe('LandingSelectorModulos — casillas nativas, núcleo fijo y plegado in
     expect((casilla.element as HTMLInputElement).checked).toBe(true)
     // El nombre accesible que se oye al llegar: «Agenda de citas $ 35.000».
     expect(fila.text()).toContain('Agenda de citas')
-    expect(fila.text()).toContain(importeEstimado(35_000))
+    expect(fila.text()).toContain(importeEstimado(importeConImpuesto(articulo())))
     expect(fila.classes()).toContain('is-on')
   })
 

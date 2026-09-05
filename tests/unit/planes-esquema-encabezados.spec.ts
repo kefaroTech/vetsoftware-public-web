@@ -109,7 +109,11 @@ describe('El contenido principal de /planes existe en el esquema de la página',
 
   it('los ejemplos de la entrada no aparecen cuando ya se llega con texto escrito', () => {
     const conTexto = mount(AsistenteEntrada, {
-      props: { texto: 'Clínica de barrio, consulta general y vacunas', email: '', ocupado: false },
+      props: {
+        texto: 'Clínica veterinaria, consulta general y vacunas',
+        email: '',
+        ocupado: false,
+      },
       global: { stubs: { LegalConsentCheckbox: true } },
     })
     expect(conTexto.findAll('.aen-ejemplos button')).toHaveLength(0)

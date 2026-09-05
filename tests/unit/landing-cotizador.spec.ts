@@ -40,7 +40,7 @@ import { elemento } from '../helpers/exigir'
  *     pedirla casilla a casilla gastaría el cupo por IP antes de `/planes`.
  *  6. **Escribir no deshace lo que se tocó a mano.** Sobre lo que nadie tocó
  *     sigue mandando el texto; sobre lo demás manda el visitante.
- *  7. **La portada llega premarcada con «Consulta de barrio», y eso se
+ *  7. **La portada llega premarcada con «Consulta básica», y eso se
  *     divulga.** El conteo y «no pagas los otros N módulos» están desde el
  *     primer pintado, desmarcar no cuesta nada y `ELECTRONIC_INVOICING` —el
  *     único módulo sin prueba gratis— se queda fuera. Vaciar la constante
@@ -102,7 +102,7 @@ const COTIZACION: CotizacionPreview = {
 }
 
 /** Lo que el visitante escribió, que es lo que ninguna petición puede llevar. */
-const RELATO = 'Somos una clínica de barrio con consulta y vacunación.'
+const RELATO = 'Somos una clínica veterinaria con consulta y vacunación.'
 
 /**
  * El catálogo de ESTA pantalla, y no el compartido: la portada llega premarcada
@@ -264,7 +264,7 @@ describe('LandingCotizador — se arma el plan, y el relato se queda en el naveg
     expect(campo.element.value).toBe('')
     expect(campo.attributes('placeholder')).toBeUndefined()
     expect(campo.attributes('rows')).toBe('6')
-    expect(wrapper.get('.lcr-ejemplo').text()).toContain('clínica veterinaria de barrio')
+    expect(wrapper.get('.lcr-ejemplo').text()).toContain('clínica veterinaria')
 
     const idAyuda = campo.attributes('aria-describedby')
     expect(idAyuda).toBeTruthy()
@@ -280,7 +280,7 @@ describe('LandingCotizador — se arma el plan, y el relato se queda en el naveg
    * que el visitante no escribió sería decidir por él— y lo que marca las cuatro
    * casillas es la constante, que se puede cambiar o vaciar en un solo sitio.
    */
-  it('la portada llega con la combinación «Consulta de barrio» marcada', async () => {
+  it('la portada llega con la combinación «Consulta básica» marcada', async () => {
     const { cotizador } = await conCatalogo({ conPrecio: false })
 
     await vi.advanceTimersByTimeAsync(1000)
@@ -477,13 +477,13 @@ describe('LandingCotizador — se arma el plan, y el relato se queda en el naveg
     expect(args.lineas.every((l) => Object.keys(l).sort().join() === 'code,quantity')).toBe(true)
 
     const todo = JSON.stringify([pedirCotizacion.mock.calls, post.mock.calls, get.mock.calls])
-    expect(todo).not.toContain('clínica de barrio')
+    expect(todo).not.toContain('clínica veterinaria con consulta')
 
     // CONTROL POSITIVO. Sin esto, un espía desconectado del módulo que el
     // componente importa daría el mismo verde que un componente mudo, y la
     // prueba estaría afirmando «no lo compruebo».
     void http.post('/assistant/proposal', { texto: usePropuestaStore().texto })
-    expect(JSON.stringify(post.mock.calls)).toContain('clínica de barrio')
+    expect(JSON.stringify(post.mock.calls)).toContain('clínica veterinaria con consulta')
   })
 
   it('la portada monta el cotizador sin red: marcar casillas no cotiza nada', async () => {

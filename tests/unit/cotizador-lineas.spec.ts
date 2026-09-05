@@ -57,7 +57,7 @@ function capacidad(over: Partial<CapacidadCatalogo> = {}): CapacidadCatalogo {
 
 const PACK_CLINIC: PaqueteCatalogo = {
   code: 'PACK_CLINIC',
-  nombre: 'Consulta de barrio',
+  nombre: 'Consulta básica',
   tagline: 'Agenda, historia clínica, vacunación y mostrador',
   importe: 189_000,
   taxRate: 19,

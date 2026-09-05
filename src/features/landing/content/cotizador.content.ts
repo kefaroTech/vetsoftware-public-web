@@ -40,5 +40,5 @@ export const SELECCION_POR_DEFECTO: readonly string[] = [
  * contando un negocio y marcando otro.
  */
 export const EJEMPLO_DE_NEGOCIO =
-  'Somos una clínica veterinaria de barrio: atendemos con cita previa, llevamos la historia de ' +
-  'cada paciente, aplicamos vacunas y desparasitación, y cobramos en el mostrador.'
+  'Somos una clínica veterinaria: atendemos con cita previa, llevamos la historia de cada ' +
+  'paciente, aplicamos vacunas y desparasitación, y cobramos en el mostrador.'

@@ -293,7 +293,7 @@ describe('La pantalla entera, con el asistente caído y el catálogo sin publica
   async function panel(respuestaCatalogo: PublicCatalogResponse) {
     get.mockResolvedValue({ data: respuestaCatalogo } as never)
     const store = usePropuestaStore()
-    store.texto = 'Clínica de barrio, consulta general y vacunas'
+    store.texto = 'Clínica veterinaria, consulta general y vacunas'
     store.email = 'ana@clinica.co'
     post.mockResolvedValueOnce({ data: SIN_CATALOGO } as never)
     await store.generar([])
