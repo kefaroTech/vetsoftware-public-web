@@ -307,8 +307,12 @@ borradores con la forma anterior — añade defaults o migración.
 - `npm run lint` — eslint
 - `npm run format` — prettier
 
-Ejecuta `npx vue-tsc -b` después de cualquier cambio significativo en tipos o
-componentes.
+`vue-tsc -b` son 25 s sin modo incremental: en el bucle, `mcp__idea__get_file_problems` sobre
+cada fichero tocado (1 s) y `npx vitest related <ficheros> --run`; el typecheck completo llega
+una sola vez, al final, dentro de `npm run quality`. El protocolo por niveles con los costes
+medidos está en `.claude/rules/verificacion-front.md` (entra solo en contexto al leer un
+fichero del repo). Tras `quality`, un build es `npx vite build --mode prod` (3 s), no
+`npm run build` (33 s).
 
 ### El techo de 500 líneas por SFC SÍ es un gate
 
