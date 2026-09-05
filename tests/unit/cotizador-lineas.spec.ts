@@ -30,6 +30,8 @@ function articulo(over: Partial<ArticuloCatalogo> = {}): ArticuloCatalogo {
     descripcion: '',
     grupo: null,
     importe: 35_000,
+    taxRate: 19,
+    taxTreatment: 'TAXED',
     trialDays: 30,
     obligatorio: false,
     vendible: true,
@@ -46,6 +48,9 @@ function capacidad(over: Partial<CapacidadCatalogo> = {}): CapacidadCatalogo {
     unit: 'BRANCH',
     incluido: 0,
     vendible: true,
+    importe: 25_000,
+    taxRate: 19,
+    taxTreatment: 'TAXED',
     ...over,
   }
 }
@@ -55,6 +60,8 @@ const PACK_CLINIC: PaqueteCatalogo = {
   nombre: 'Consulta de barrio',
   tagline: 'Agenda, historia clínica, vacunación y mostrador',
   importe: 189_000,
+  taxRate: 19,
+  taxTreatment: 'TAXED',
   // Como los sembrados: el núcleo y una capacidad viajan dentro de los tres.
   componentes: [
     'CORE',

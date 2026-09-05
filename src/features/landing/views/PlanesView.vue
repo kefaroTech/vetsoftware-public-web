@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RefreshCw } from 'lucide-vue-next'
-import { computed, onMounted, useTemplateRef, watch } from 'vue'
+import { computed, onMounted, useTemplateRef } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import PublicLayout from '@/components/public/PublicLayout.vue'
 import { useAuth } from '@/features/auth/composables/useAuth'
@@ -16,9 +16,9 @@ import PasosEmbudo from '../components/PasosEmbudo.vue'
 import PlanesCombinaciones from '../components/PlanesCombinaciones.vue'
 import PlanesResumenAside from '../components/PlanesResumenAside.vue'
 import PlanesTarjetaModulos from '../components/PlanesTarjetaModulos.vue'
-import { modulosDelPaquete } from '../composables/cotizadorLineas'
 import { usePlanes } from '../composables/usePlanes'
 import { useCotizador } from '../composables/useCotizador'
+import { useSemillaDeSeleccion } from '../composables/useSemillaDeSeleccion'
 import { MONEDA_DE_FACTURACION } from '../composables/planPricing'
 import type { Ciclo } from '../types/plans.types'
 
@@ -78,9 +78,9 @@ const h1 = useTemplateRef<HTMLElement>('h1')
  * lector de pantalla no sabría en qué pantalla acaba de aterrizar. Es la misma
  * convención del paso vinculante.
  *
- * <p>Y no se condiciona a que llegue texto: desde que la portada dejó de sembrar
- * el ejemplo, quien no escribió nada aterrizaba con el foco en el `<body>` y el
- * lector volvía a leer desde la navegación (§2.4.3).
+ * <p>Y no se condiciona a que llegue texto: quien borre el ejemplo y siga sin
+ * escribir aterrizaría con el foco en el `<body>`, y el lector volvería a leer
+ * desde la navegación (§2.4.3).
  */
 onMounted(() => {
   h1.value?.focus()
@@ -104,34 +104,13 @@ ciclo.value =
 sedes.value = entero(route.query.sedes, vigente.value?.sedes ?? 1)
 usuarios.value = entero(route.query.usuarios, vigente.value?.usuarios ?? 1)
 
-/**
- * La primera selección se siembra desde el paquete con el que el visitante
- * llegó, y **sólo una vez**: recargar el catálogo al cambiar de ciclo no puede
- * deshacer lo que el usuario acabe de marcar.
- *
- * <p>Manda la URL porque es lo que se acaba de pulsar; luego la intención
- * guardada, y por último el paquete que el negocio destaca.
- */
-let sembrado = false
-watch(
-  [catalogo, plans],
-  ([cat, lista]) => {
-    if (sembrado || !cat || cat.paquetes.length === 0) return
-    const preferido =
-      texto(route.query.plan) ??
-      planDeLaIntencion ??
-      lista.find((p) => p.recommended)?.code ??
-      lista[0]?.code
-    const elegido =
-      cat.paquetes.find((p) => p.code === preferido) ??
-      cat.paquetes.find((p) => p.recommended) ??
-      cat.paquetes[0]
-    if (!elegido) return
-    sembrado = true
-    sembrarModulos(modulosDelPaquete(elegido, cat))
-  },
-  { immediate: true },
-)
+useSemillaDeSeleccion({
+  catalogo,
+  plans,
+  planPedido: () => texto(route.query.plan),
+  planDeLaIntencion,
+  sembrar: sembrarModulos,
+})
 
 /**
  * Cuándo deja de ser gratis cada módulo, **ordenado por fecha de fin

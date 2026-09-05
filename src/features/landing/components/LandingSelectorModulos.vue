@@ -28,9 +28,11 @@ import { importeEstimado } from '../composables/planPricing'
  * desmarcar y no dice por qué es §3.3.2 sin etiqueta de restricción.
  *
  * ── Con precio y sin precio ────────────────────────────────────────────────
- * En `/planes` la fila lleva su importe, porque ahí se está decidiendo qué se
- * contrata. En la portada no lo lleva: allí no hay ninguna cifra, y una fila
- * con precio suelto sería la única, sin total contra el que sumar.
+ * En `/planes` la fila lleva su importe, porque ahí se decide pieza a pieza qué
+ * se contrata. En la portada lleva su DESCRIPCIÓN en vez del importe: es la
+ * primera vez que alguien lee estos trece nombres y lo que hace falta para
+ * marcar es saber qué es cada uno. La cifra que allí importa es el total, y esa
+ * la mantiene el carril.
  */
 const props = withDefaults(
   defineProps<{
@@ -40,8 +42,10 @@ const props = withDefaults(
     conPrecio?: boolean
     /** Códigos que el texto del visitante mencionó, para explicar por qué están marcados. */
     detectados?: readonly string[]
+    /** Códigos que la pantalla marcó por su cuenta antes de que nadie tocara nada. */
+    premarcados?: readonly string[]
   }>(),
-  { conPrecio: true, detectados: () => [] },
+  { conPrecio: true, detectados: () => [], premarcados: () => [] },
 )
 
 defineEmits<{ alternar: [code: string, marcado: boolean] }>()
@@ -89,25 +93,33 @@ function alternarArea(code: string) {
 }
 
 /**
- * Con detección se abren las áreas que la tienen, y solo esas: abrir las cuatro
- * son trece paradas de tabulación antes del CTA, y en el caso típico la
- * detección cae en una o dos.
+ * Se abren las áreas que traen alguna marca que el visitante NO hizo, y solo
+ * esas: abrir las cuatro son trece paradas de tabulación antes del CTA, y en el
+ * caso típico eso cae en una o dos.
  *
- * <p>Sin detección se abre una sola, la primera del orden del servidor, y se
- * siembra una vez: recargar el catálogo al cambiar de ciclo no puede volver a
- * plegar lo que el visitante abrió.
+ * <p>Son marcas de dos procedencias. La detección del texto, que cambia cada vez
+ * que se reescribe el relato. Y el premarcado, que solo cuenta en la primera
+ * pintada: un módulo premarcado dentro de un área plegada se cobraría sin que
+ * nadie lo haya visto, y eso deja el premarcado sin la divulgación proactiva que
+ * lo hace legítimo; pasada esa primera vez, volver a imponerlo replegaría lo que
+ * el visitante hubiera abierto por su cuenta.
+ *
+ * <p>Sin ninguna de las dos se abre una sola, la primera del orden del servidor,
+ * y se siembra una vez: recargar el catálogo al cambiar de ciclo no puede volver
+ * a plegar lo que el visitante abrió.
  */
 watch(
   [areas, () => props.detectados],
   ([lista, detectados]) => {
     const primera = lista[0]
     if (!primera) return
-    const conDeteccion = lista
+    const automaticos = sembrada ? detectados : [...detectados, ...props.premarcados]
+    const conMarcaAutomatica = lista
       .map((a) => a.code)
-      .filter((code) => modulosDe(code).some((m) => detectados.includes(m.code)))
-    if (conDeteccion.length > 0) {
+      .filter((code) => modulosDe(code).some((m) => automaticos.includes(m.code)))
+    if (conMarcaAutomatica.length > 0) {
       sembrada = true
-      abiertas.value = conDeteccion
+      abiertas.value = conMarcaAutomatica
       return
     }
     if (sembrada) return
@@ -163,6 +175,10 @@ watch(
         />
         <span class="lsm-nombre">
           {{ m.nombre }}
+          <!-- La descripción la publica el catálogo, igual que en la fila del
+               núcleo: escribirla aquí sería una segunda verdad sobre lo que hace
+               cada módulo. -->
+          <span v-if="!conPrecio && m.descripcion" class="lsm-desc">{{ m.descripcion }}</span>
           <span v-if="porqueSeMenciono(m.code)" class="lsm-porque">Porque lo mencionaste</span>
         </span>
         <span v-if="conPrecio" class="lsm-precio">{{ importeEstimado(m.importe) }}</span>
@@ -212,7 +228,8 @@ watch(
   color: var(--pub-ink-900);
 }
 
-.lsm-nucleo-desc {
+.lsm-nucleo-desc,
+.lsm-desc {
   font-size: 12.5px;
   line-height: 1.5;
   font-weight: 400;

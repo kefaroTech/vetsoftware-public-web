@@ -19,6 +19,8 @@ export function articulo(over: Partial<ArticuloCatalogo> = {}): ArticuloCatalogo
     descripcion: '',
     grupo: null,
     importe: 35_000,
+    taxRate: 19,
+    taxTreatment: 'TAXED',
     trialDays: 30,
     obligatorio: false,
     vendible: true,
@@ -35,6 +37,9 @@ export function capacidad(over: Partial<CapacidadCatalogo> = {}): CapacidadCatal
     unit: 'BRANCH',
     incluido: 0,
     vendible: true,
+    importe: 25_000,
+    taxRate: 19,
+    taxTreatment: 'TAXED',
     ...over,
   }
 }
@@ -44,6 +49,8 @@ export const PACK_BARRIO: PaqueteCatalogo = {
   nombre: 'Consulta de barrio',
   tagline: null,
   importe: 189_000,
+  taxRate: 19,
+  taxTreatment: 'TAXED',
   componentes: ['CORE', 'SCHEDULING', 'CLINICAL_HISTORY'],
   recommended: true,
 }

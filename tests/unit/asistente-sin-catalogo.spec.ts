@@ -120,6 +120,8 @@ const ARTICULO: ArticuloCatalogo = {
   descripcion: 'El expediente del paciente',
   grupo: 'CLINICA',
   importe: 49000,
+  taxRate: 19,
+  taxTreatment: 'TAXED',
   trialDays: null,
   obligatorio: false,
   vendible: true,

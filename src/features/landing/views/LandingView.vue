@@ -53,9 +53,11 @@ const { recuperarDeEnlace, recuperarGuardada, conocePropuesta } = useRecuperarPr
  * tarjetas de combinación —que están en otra sección— siembran su selección, y
  * el estado tiene que ser el mismo para las dos.
  *
- * <p>`conPrecio: false` porque esta pantalla ya no enseña ninguna cifra: cotizar
- * lo que nadie pinta gastaría el cupo por IP del prospecto antes de que llegue a
- * `/planes`, que es donde el precio se decide.
+ * <p>`conPrecio: false` **no significa sin precio**: significa sin red. La
+ * portada sí enseña su total, sumado en el navegador con el catálogo ya
+ * descargado; lo que no hace es pedirlo. `POST /quotes/preview` tiene cupo por
+ * IP y gastarlo casilla a casilla aquí dejaría al prospecto limitado al llegar a
+ * `/planes`, que es donde el importe se decide y sí lo calcula el servidor.
  */
 const cotizador = useCotizador({ conPrecio: false })
 
