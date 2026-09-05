@@ -10,17 +10,30 @@ import {
 import CotizadorCarril from './CotizadorCarril.vue'
 import LandingSelectorModulos from './LandingSelectorModulos.vue'
 import PropuestaDetectada from './PropuestaDetectada.vue'
+import { EJEMPLO_DE_NEGOCIO, SELECCION_POR_DEFECTO } from '../content/cotizador.content'
 import { detectarModulos } from '../composables/deteccionModulos'
+import { useSeleccionPortadaStore } from '../stores/seleccionPortada.store'
 import type { useCotizador } from '../composables/useCotizador'
 
 /**
- * La tarjeta de la portada: se describe el negocio y se marcan los módulos.
+ * La tarjeta de la portada: se describe el negocio, se marcan los módulos y se
+ * ve lo que suman.
  *
- * ── Aquí no hay precio, y es la decisión de fondo ───────────────────────────
- * El importe vive en `/planes`. Por eso este cotizador se monta sin red
- * (`conPrecio: false` en `LandingView`): pedir una cotización por casilla para
- * una cifra que nadie pinta gastaría el cupo por IP del prospecto antes de
- * llegar a la pantalla donde el precio sí se enseña.
+ * ── El precio se calcula aquí, y no se pide ─────────────────────────────────
+ * La cifra la suma `estimarSeleccion` con el catálogo que ya está descargado:
+ * la portada no hace ni una petición a `POST /quotes/preview`. Ese endpoint
+ * tiene cupo por IP y gastarlo casilla a casilla dejaría al prospecto limitado
+ * al llegar a `/planes`, que es donde el importe tiene que venir del servidor.
+ * Lo que se evita es la red; esconder el total no: sin él se subestima lo que se
+ * va a pagar y la decisión ya no se revisa cuando el precio aparece
+ * (Rasch et al. 2020, JEBO; Santana, Dallas & Morwitz).
+ *
+ * ── El selector se ve desde el primer momento ───────────────────────────────
+ * No se oculta hasta que alguien escriba. El metaanálisis de choice overload
+ * (Scheibehenne, Greifeneder & Todd, 2010, JCR) mide un efecto medio
+ * prácticamente nulo en 63 condiciones de 50 experimentos, así que trece
+ * casillas no son un motivo; y un selector que aparece al teclear le cambia
+ * solo el índice de encabezados a quien navega con lector.
  *
  * ── Qué sale del navegador y qué no ─────────────────────────────────────────
  * El `<textarea>` **no sale**. Viaja a un encargado en EE. UU. y eso exige dos
@@ -43,19 +56,20 @@ import type { useCotizador } from '../composables/useCotizador'
  */
 const props = defineProps<{ cotizador: ReturnType<typeof useCotizador> }>()
 
-const { catalogo, modulos, alternarModulo, sembrarModulos } = props.cotizador
+const {
+  catalogo,
+  modulos,
+  estado,
+  importe,
+  sufijoImpuesto,
+  regionViva,
+  alternarModulo,
+  sembrarModulos,
+} = props.cotizador
 
 const { texto } = useAsistente()
 const router = useRouter()
-
-/**
- * El ejemplo es `placeholder` y no valor sembrado, así que la instrucción vive
- * FUERA: un placeholder desaparece al escribir, y quedarse con él como única
- * indicación es §3.3.2.
- */
-const EJEMPLO =
-  'Somos un petshop de barrio: baño y estética, vendemos alimento y accesorios, y los sábados ' +
-  'viene un veterinario a consulta.'
+const seleccionPortada = useSeleccionPortadaStore()
 
 /**
  * El silencio tras el que la propuesta se recalcula. Es el mismo
@@ -75,10 +89,27 @@ const campo = useTemplateRef<HTMLTextAreaElement>('campo')
 /** Solo se pone a `true` al enviar. Ver la cabecera. */
 const enviado = ref(false)
 
-const textoEnReposo = ref(texto.value)
+/**
+ * El ejemplo se SIEMBRA como valor del campo, y no como `placeholder`: el
+ * placeholder desaparece en cuanto se escribe, así que como instrucción no
+ * sobrevive al primer carácter (§3.3.2). La ayuda persistente de debajo sigue
+ * ahí y sigue siendo la que describe el campo por `aria-describedby`.
+ *
+ * <p>Y solo se siembra sobre un campo vacío: el relato que el visitante ya
+ * escribió es lo más caro de esta pantalla y no se pisa nunca.
+ */
+const ejemploIntacto = ref(texto.value.trim().length === 0)
+if (ejemploIntacto.value) texto.value = EJEMPLO_DE_NEGOCIO
+
+/**
+ * Lo que la detección lee. Arranca en blanco mientras el ejemplo esté intacto:
+ * marcar módulos por un texto que el visitante no escribió sería decidir por él.
+ */
+const textoEnReposo = ref(ejemploIntacto.value ? '' : texto.value)
 let temporizador: ReturnType<typeof setTimeout> | null = null
 
 watch(texto, (v) => {
+  ejemploIntacto.value = false
   if (temporizador) clearTimeout(temporizador)
   temporizador = setTimeout(() => {
     textoEnReposo.value = v
@@ -95,12 +126,60 @@ const vendibles = computed(() =>
   (catalogo.value?.articulos ?? []).filter((a) => !a.obligatorio && a.vendible).map((a) => a.code),
 )
 
+/**
+ * El conjunto premarcado, cruzado contra la tarifa vigente: marcar un código que
+ * el catálogo de hoy no publica mandaría a cotizar una línea que el servidor no
+ * resuelve.
+ */
+const porDefecto = computed(() =>
+  SELECCION_POR_DEFECTO.filter((code) => vendibles.value.includes(code)),
+)
+
+/**
+ * Se siembra UNA vez, en cuanto hay catálogo. Recargar la tarifa —cambiar de
+ * ciclo produce una lista nueva con los mismos códigos— no puede volver a marcar
+ * lo que el visitante acaba de quitar.
+ */
+let semillaPuesta = false
+watch(
+  vendibles,
+  (codigos) => {
+    if (semillaPuesta || codigos.length === 0) return
+    semillaPuesta = true
+    sembrarModulos(porDefecto.value)
+  },
+  { immediate: true },
+)
+
+/**
+ * El rótulo del carril solo se sostiene mientras lo marcado ES la combinación
+ * premarcada: en cuanto el visitante la cambia, la pantalla ya no es el punto de
+ * partida que ofreció, sino la selección de él.
+ */
+const esElPuntoDePartida = computed(
+  () =>
+    porDefecto.value.length > 0 &&
+    modulos.value.length === porDefecto.value.length &&
+    porDefecto.value.every((code) => modulos.value.includes(code)),
+)
+
 const detectados = computed(() => detectarModulos(textoEnReposo.value, vendibles.value))
 
 /**
- * Reescribir el relato rehace la propuesta desde cero y se lleva por delante lo
- * que se hubiera marcado a mano. Es agresivo y es coherente: lo marcado era la
- * lectura del texto anterior, y el texto anterior ya no existe.
+ * Las casillas que el visitante tocó a mano. El texto ya no manda sobre ellas.
+ */
+const tocadas = new Set<string>()
+
+function alternar(code: string, marcado: boolean): void {
+  tocadas.add(code)
+  alternarModulo(code, marcado)
+}
+
+/**
+ * Reescribir el relato vuelve a proponer, pero **no deshace lo que se marcó o se
+ * quitó a mano**: rehacer la selección entera en cada edición borraba una
+ * decisión que el visitante acababa de tomar mirando la lista, y eso se lee como
+ * que la pantalla no obedece. Sobre lo que nadie tocó sigue mandando el texto.
  *
  * <p>Se compara por contenido y no por referencia porque recargar el catálogo al
  * cambiar de ciclo produce una lista nueva con los mismos códigos, y eso no es
@@ -108,7 +187,10 @@ const detectados = computed(() => detectarModulos(textoEnReposo.value, vendibles
  */
 watch(
   () => detectados.value.join('|'),
-  () => sembrarModulos(detectados.value),
+  () => {
+    const suyas = modulos.value.filter((code) => tocadas.has(code))
+    sembrarModulos([...detectados.value.filter((code) => !tocadas.has(code)), ...suyas])
+  },
 )
 
 const error = computed(() => {
@@ -131,6 +213,10 @@ function enviar(): void {
     campo.value?.focus()
     return
   }
+  // Sin esta entrega `/planes` siembra desde el paquete recomendado y pisa lo
+  // que el visitante acaba de marcar. Va incluso vacía: quitarlo todo también
+  // es una decisión suya.
+  seleccionPortada.entregar(modulos.value)
   void router.push({ name: 'planes' })
 }
 </script>
@@ -155,7 +241,6 @@ function enviar(): void {
           class="pub-campo lcot-texto"
           :class="error ? 'ds-field-invalid' : 'pub-campo-rest'"
           rows="6"
-          :placeholder="EJEMPLO"
           :maxlength="MAX_DESCRIPCION"
           :aria-describedby="error ? `${idAyuda} ${idError}` : idAyuda"
           :aria-invalid="error ? 'true' : undefined"
@@ -174,11 +259,20 @@ function enviar(): void {
           :modulos="modulos"
           :con-precio="false"
           :detectados="detectados"
-          @alternar="alternarModulo"
+          :premarcados="porDefecto"
+          @alternar="alternar"
         />
       </div>
 
-      <CotizadorCarril :n-modulos="modulos.length" :tiene-texto="tieneTexto" />
+      <CotizadorCarril
+        :n-modulos="modulos.length"
+        :n-vendibles="vendibles.length"
+        :punto-de-partida="esElPuntoDePartida"
+        :importe="importe"
+        :sufijo="sufijoImpuesto"
+        :estado="estado"
+        :region-viva="regionViva"
+      />
     </form>
 
     <ul class="land-trust">

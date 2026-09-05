@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import LandingSelectorModulos from '@/features/landing/components/LandingSelectorModulos.vue'
 import { importeEstimado } from '@/features/landing/composables/planPricing'
-import { catalogoEmbudo } from '../helpers/catalogo-embudo'
+import { articulo, catalogoEmbudo } from '../helpers/catalogo-embudo'
 import { elemento } from '../helpers/exigir'
 
 /**
@@ -148,6 +148,50 @@ describe('LandingSelectorModulos — casillas nativas, núcleo fijo y plegado in
     expect(wrapper.get('.lsm-nucleo-nom').text()).toBe('Núcleo: clientes y mascotas')
   })
 
+  /**
+   * En la portada es la primera vez que alguien lee estos nombres, y «Agenda de
+   * citas» no dice qué se lleva. La descripción la publica el catálogo: la fila
+   * la pinta, no la escribe.
+   */
+  it('sin precio la fila del módulo lleva su descripción, dentro del <label>', () => {
+    const wrapper = mount(LandingSelectorModulos, {
+      attachTo: document.body,
+      props: {
+        catalogo: catalogoEmbudo({
+          articulos: [
+            articulo({
+              code: 'SCHEDULING',
+              descripcion: 'Reserva, recordatorios y sala de espera',
+            }),
+          ],
+        }),
+        modulos: [],
+        conPrecio: false,
+      },
+    })
+    const fila = elemento(wrapper.findAll('.lsm-fila'), 0, 'las filas de módulo')
+
+    expect(fila.element.tagName).toBe('LABEL')
+    expect(fila.get('.lsm-desc').text()).toBe('Reserva, recordatorios y sala de espera')
+    // Sigue siendo el objetivo táctil entero: la casilla no se sale del rótulo.
+    expect(fila.find('input[type="checkbox"]').exists()).toBe(true)
+  })
+
+  it('con precio la fila NO añade descripción: ahí la cifra es lo que se decide', () => {
+    const wrapper = mount(LandingSelectorModulos, {
+      attachTo: document.body,
+      props: {
+        catalogo: catalogoEmbudo({
+          articulos: [articulo({ code: 'SCHEDULING', descripcion: 'Reserva y recordatorios' })],
+        }),
+        modulos: [],
+      },
+    })
+
+    expect(wrapper.findAll('.lsm-desc')).toHaveLength(0)
+    expect(wrapper.findAll('.lsm-precio')).toHaveLength(1)
+  })
+
   it('la nota explica la marca, y solo donde de verdad hay una que explicar', () => {
     const wrapper = mount(LandingSelectorModulos, {
       attachTo: document.body,
@@ -164,6 +208,29 @@ describe('LandingSelectorModulos — casillas nativas, núcleo fijo y plegado in
 
     expect(elemento(filas, 0, 'las filas').text()).toContain('Porque lo mencionaste')
     expect(elemento(filas, 1, 'las filas').text()).not.toContain('Porque lo mencionaste')
+  })
+
+  /**
+   * Misma regla que la detección, y por el mismo motivo: un módulo que la
+   * pantalla marcó sola dentro de un área plegada se cobra sin que nadie lo
+   * haya visto, y eso deja el premarcado sin divulgación proactiva.
+   */
+  it('con premarcado se abren las áreas que lo tienen, como con la detección', () => {
+    const wrapper = mount(LandingSelectorModulos, {
+      attachTo: document.body,
+      props: {
+        catalogo: catalogoEmbudo(),
+        modulos: ['CASH_REGISTER'],
+        premarcados: ['CASH_REGISTER'],
+      },
+    })
+
+    expect(wrapper.findAll('h3 button').map((b) => b.attributes('aria-expanded'))).toEqual([
+      'false',
+      'true',
+    ])
+    // Y la casilla está en el documento: plegada no se puede leer ni desmarcar.
+    expect(wrapper.find('input[type="checkbox"][value="CASH_REGISTER"]').exists()).toBe(true)
   })
 
   it('con detección se abren las áreas que la tienen, y solo esas', () => {

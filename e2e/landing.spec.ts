@@ -1,7 +1,16 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { enrutarEmbudoPublico, RUTAS_DEL_EMBUDO } from './helpers/catalogo'
+import {
+  catalogoDe,
+  enrutarEmbudoPublico,
+  RUTAS_DEL_EMBUDO,
+  subtotalDeSeleccion,
+} from './helpers/catalogo'
 import { CLAVE_INTENCION, intencion, leerIntencion, sembrarIntencion } from './helpers/contratacion'
 import { exigir } from './helpers/exigir'
+import {
+  EJEMPLO_DE_NEGOCIO,
+  SELECCION_POR_DEFECTO,
+} from '../src/features/landing/content/cotizador.content'
 
 /**
  * La landing comercial y el paso 2 del embudo (`/planes`).
@@ -119,6 +128,65 @@ async function contarElNegocio(page: Page, relato: string, cuantos: number): Pro
   await expect(page.locator('#cotizador').getByRole('status')).toContainText(
     `te proponemos ${cuantos}`,
   )
+}
+
+/** Un rótulo convertido en localizador ANCLADO al principio del nombre accesible. */
+function anclado(texto: string): RegExp {
+  return new RegExp(`^${texto.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`)
+}
+
+/**
+ * El rótulo con el que el catálogo de prueba publica un código.
+ *
+ * <p>Se deriva en vez de transcribirse porque los códigos vienen de
+ * `SELECCION_POR_DEFECTO`, que es producción: una tabla de rótulos escrita aquí
+ * seguiría verde el día que el catálogo renombre un módulo, y el caso que dice
+ * «estos cuatro llegan marcados» pasaría a mirar otra fila.
+ */
+function rotuloDe(code: string): string {
+  const articulo = catalogoDe('MENSUAL').articulos.find((a) => a.code === code)
+  return exigir(articulo, `el módulo «${code}» en el catálogo de prueba`).nombre
+}
+
+/**
+ * La casilla de un módulo, por el principio de su nombre accesible.
+ *
+ * <p>Anclado y no exacto: la fila lleva la descripción del módulo debajo del
+ * nombre y, cuando el relato lo menciona, también la nota; en `/planes` lleva
+ * además el precio. Las tres entran en el nombre accesible, que es lo correcto
+ * —es lo que hace falta oír para decidir— y lo que deja sin valer a un
+ * localizador por nombre exacto.
+ */
+function casillaDe(page: Page, code: string): Locator {
+  return page.getByRole('checkbox', { name: anclado(rotuloDe(code)) })
+}
+
+/**
+ * Lo que suma una selección con el IVA dentro, derivado del mismo catálogo que
+ * sirve la ruta simulada.
+ *
+ * <p>Una cifra escrita a mano rompería estos casos el día que cualquier precio
+ * del doble cambie, por un motivo que no tiene nada que ver con lo que dicen
+ * comprobar. Y el producto único basta en vez del redondeo por línea del
+ * servidor porque todo este catálogo tributa al 19 % y sus importes son
+ * múltiplos de mil, así que no hay decimales que separar.
+ */
+function totalConIva(modulos: readonly string[]): number {
+  return Math.round(subtotalDeSeleccion({ modulos, sedes: 1, usuarios: 1 }, 'MENSUAL') * 1.19)
+}
+
+/**
+ * La cifra que el carril PINTA, en pesos.
+ *
+ * <p>Se lee del bloque de precio y no de la región viva: las dos publican el
+ * mismo importe, pero la región viva solo existe después de marcar algo, así
+ * que un caso que la leyera no podría afirmar nada del primer momento.
+ */
+async function totalDelCarril(page: Page): Promise<number> {
+  const texto = (await page.locator('#cotizador').textContent()) ?? ''
+  const cifra = /desde\s*\$\s*([\d.]+)\s*al mes, IVA incluido \(19 %\)/.exec(texto)
+  expect(cifra, `el carril no está pintando ningún total: «${texto}»`).not.toBeNull()
+  return Number(exigir(cifra, 'la cifra del carril')[1]?.replace(/\D/g, ''))
 }
 
 test.describe('Landing comercial', () => {
@@ -317,36 +385,154 @@ test.describe('Landing comercial', () => {
 })
 
 /**
- * La tarjeta del cotizador de la portada, que es lo que el rediseño reescribió
- * entero: el campo ya no llega sembrado, la propuesta se calcula en el propio
- * navegador y aquí ya no hay ninguna cifra.
+ * La tarjeta del cotizador de la portada: llega con un ejemplo escrito en el
+ * campo, con cuatro casillas ya marcadas y con el total que suman, y ese total
+ * no se le pide a nadie —lo calcula el navegador con el catálogo que ya bajó—.
+ *
+ * ── Por qué el premarcado se prueba por sus dos condiciones, y no por sí mismo ─
+ * `content/cotizador.content.ts` deja escrito que la lista solo es defendible
+ * mientras haya SALIDA SIN COSTE y DIVULGACIÓN PROACTIVA. Por eso lo que
+ * afirman estos casos no es «vienen cuatro marcadas» a secas, sino que se ven
+ * sin abrir nada, que se quitan de un clic, que el total y lo que queda fuera
+ * están en pantalla desde el primer momento, y que nada de esto se respalda con
+ * una popularidad que no está medida.
  */
 test.describe('El cotizador de la portada', () => {
-  test('el ejemplo va en el placeholder y la instrucción va fuera, donde no se borra', async ({
+  test('el ejemplo llega sembrado como valor, se puede reescribir, y la instrucción no se va con él', async ({
     page,
   }) => {
     await page.goto('/')
     const campo = page.getByLabel('¿Qué hace tu negocio?')
 
-    // Vacío: el ejemplo dejó de sembrarse como valor. Quien no borrara nada
-    // mandaba a `/planes` un relato que no era suyo.
-    await expect(campo).toHaveValue('')
-    await expect(campo).toHaveAttribute('placeholder', /petshop/)
+    // El ejemplo es el VALOR del campo y no su `placeholder`. Se afirma contra
+    // la constante de producción y no contra una copia: el ejemplo va emparejado
+    // con el conjunto premarcado y se reescribe con él, así que una
+    // transcripción aquí pondría este caso rojo por el texto y no por la
+    // pantalla.
+    await expect(campo).toHaveValue(EJEMPLO_DE_NEGOCIO)
+    expect(
+      await campo.getAttribute('placeholder'),
+      'el ejemplo ya no va en el placeholder, que desaparece al primer carácter',
+    ).toBeNull()
 
-    // §3.3.2 Labels or Instructions. Un `placeholder` desaparece al escribir y se
-    // lee como un valor ya introducido, así que NO puede ser la única
-    // indicación. Se resuelve el `aria-describedby` de verdad: un identificador
-    // que no apunta a nada se lee igual de bien en el marcado y no describe nada.
+    // §3.3.2 Labels or Instructions. La indicación que sobrevive a lo que se
+    // escriba es la de fuera, y se resuelve el `aria-describedby` de verdad: un
+    // identificador que no apunta a nada se lee igual de bien en el marcado y no
+    // describe nada.
     const ayuda = page.locator(
       `#${exigir(await campo.getAttribute('aria-describedby'), 'la ayuda del campo')}`,
     )
     await expect(ayuda).toBeVisible()
     await expect(ayuda).toContainText('escríbelo con tus palabras')
 
-    // Y sigue ahí con el campo escrito, que es exactamente cuando el placeholder
-    // ya no está y la instrucción hace falta.
+    // Sembrado no es de solo lectura, y eso es lo que separa un ejemplo de un
+    // relato impuesto: se reescribe entero y lo que queda es lo del visitante.
     await contarElNegocio(page, RELATO, 3)
+    await expect(campo).toHaveValue(RELATO)
     await expect(ayuda).toBeVisible()
+  })
+
+  test('llega con los cuatro módulos premarcados, y con nada más', async ({ page }) => {
+    await page.goto('/')
+
+    for (const code of SELECCION_POR_DEFECTO) {
+      await expect(casillaDe(page, code), `«${rotuloDe(code)}»`).toBeChecked()
+    }
+
+    // Premarcar no es detectar. La nota explica una marca que salió del texto
+    // del visitante, y aquí todavía no hay texto suyo: si apareciera, la
+    // pantalla estaría atribuyéndole al prospecto una decisión de la casa.
+    await expect(page.locator('#cotizador')).not.toContainText('Porque lo mencionaste')
+
+    // La facturación electrónica se queda fuera a propósito: es el único módulo
+    // sin prueba gratis, así que premarcarla cobraría desde el primer día por
+    // algo que nadie marcó.
+    await expect(casillaDe(page, 'ELECTRONIC_INVOICING')).not.toBeChecked()
+
+    // Y nada más marcado. Se cuenta por las insignias de las cuatro áreas
+    // porque son lo único que cuenta también los módulos de un área plegada,
+    // que no están en el documento.
+    for (const [area, insignia] of [
+      ['Atención a las mascotas', '3 de 4 módulos marcados'],
+      ['Hospital y quirófano', 'ninguno de 3 módulos marcados'],
+      ['Mostrador y dinero', '1 de 4 módulos marcados'],
+      ['Inventario y compras', 'ninguno de 2 módulos marcados'],
+    ] as const) {
+      await expect(
+        page.getByRole('button', { name: anclado(area) }),
+        `el área «${area}»`,
+      ).toHaveAccessibleName(`${area} ${insignia}`)
+    }
+
+    await expect(page.locator('#cotizador')).toContainText('Clientes y mascotas + 4 módulos')
+  })
+
+  test('las áreas que traen un premarcado llegan abiertas, y solo esas', async ({ page }) => {
+    await page.goto('/')
+
+    for (const [area, abierta] of [
+      ['Atención a las mascotas', 'true'],
+      ['Mostrador y dinero', 'true'],
+      ['Hospital y quirófano', 'false'],
+      ['Inventario y compras', 'false'],
+    ] as const) {
+      await expect(
+        page.getByRole('button', { name: anclado(area) }),
+        `el área «${area}»`,
+      ).toHaveAttribute('aria-expanded', abierta)
+    }
+
+    // La condición que hace defendible el premarcado: si la portada marca algo
+    // que se cobra, tiene que verse sin abrir nada. Un módulo premarcado dentro
+    // de un área plegada es un cargo que nadie llegó a ver.
+    const caja = casillaDe(page, 'CASH_REGISTER')
+    await expect(caja).toBeVisible()
+    await expect(caja).toBeChecked()
+  })
+
+  test('el total ya está en pantalla antes de escribir nada, y se mueve con lo que se quita', async ({
+    page,
+  }) => {
+    await page.goto('/')
+    await expect(page.locator('#cotizador')).toContainText('Clientes y mascotas + 4 módulos')
+
+    // La otra condición del premarcado: sin cifra el comprador subestima lo que
+    // va a pagar y ya no revisa la decisión cuando el importe aparece al final
+    // del embudo, y con casillas puestas de antemano eso es cobrar sin decir
+    // cuánto. El «no pagas los otros» es la misma divulgación por el otro lado.
+    expect(await totalDelCarril(page)).toBe(totalConIva(SELECCION_POR_DEFECTO))
+    await expect(page.locator('#cotizador')).toContainText('No pagas los otros')
+
+    // Y la salida sin coste, medida donde se nota: un clic, sin confirmación, y
+    // el total baja de verdad. Un total premarcado que no reacciona al quitar es
+    // el mismo defecto que no tener total.
+    const restantes = SELECCION_POR_DEFECTO.filter((code) => code !== 'CASH_REGISTER')
+    await casillaDe(page, 'CASH_REGISTER').uncheck()
+    await expect(page.locator('#cotizador')).toContainText('Clientes y mascotas + 3 módulos')
+    expect(await totalDelCarril(page)).toBe(totalConIva(restantes))
+  })
+
+  test('no afirma que esto sea lo que más se elige', async ({ page }) => {
+    await page.goto('/')
+    const cotizador = page.locator('#cotizador')
+
+    // El rótulo dice de dónde sale la selección sin respaldarla con una
+    // popularidad que nadie ha medido: el art. 30 de la Ley 1480 exige que lo
+    // que se afirma en publicidad sea verificable.
+    await expect(cotizador).toContainText('Un punto de partida: cámbialo a tu gusto')
+    await expect(cotizador).not.toContainText(/eligen|popular|la mayoría|más elegid/i)
+
+    // La insignia de las tarjetas de paquete SÍ dice «La que más eligen», sale
+    // de `recommended` y no se tocó. Va aquí porque sin ella el aserto de arriba
+    // pasaría igual el día que alguien lo borrara todo, y porque es lo que
+    // distingue «esta afirmación no está en la portada» de «no está en ninguna».
+    await expect(page.locator('#planes')).toContainText('La que más eligen')
+
+    // Y el rótulo se retira en cuanto lo marcado deja de ser lo que la pantalla
+    // ofreció: a partir de ahí la selección es del visitante, y seguir
+    // llamándola punto de partida describiría otra cosa.
+    await casillaDe(page, 'CASH_REGISTER').uncheck()
+    await expect(cotizador).not.toContainText('Un punto de partida')
   })
 
   test('la región de estado está en el documento antes de tener nada que decir', async ({
@@ -385,8 +571,18 @@ test.describe('El cotizador de la portada', () => {
     await expect(noMencionado).not.toBeChecked()
     await expect(noMencionado).toHaveAccessibleName('Tarifas y promociones')
 
-    // Se abren las áreas CON detección y solo esas: abrir las cuatro son trece
-    // paradas de tabulación antes del CTA.
+    // Reescribir el relato SUSTITUYE al premarcado sobre lo que nadie tocó, no
+    // se le suma: si se sumaran, quien se molesta en describir su negocio
+    // acabaría con siete módulos, cuatro de ellos sin nombrar.
+    await expect(casillaDe(page, 'CLINICAL_HISTORY')).not.toBeChecked()
+
+    // Se abren las áreas con alguna marca que el visitante NO hizo, y solo
+    // esas: abrir las cuatro son trece paradas de tabulación antes del CTA. Esas
+    // marcas son de dos procedencias —la detección y el premarcado—, pero el
+    // premarcado solo cuenta en la primera pintada; aquí, con relato escrito,
+    // manda la detección sola, y por eso «Mostrador y dinero» sigue abierta por
+    // «Caja y ventas» y no por haber venido premarcada, e «Inventario y compras»
+    // se abre ahora sin traer ningún premarcado.
     for (const [area, abierta] of [
       ['Atención a las mascotas', 'true'],
       ['Mostrador y dinero', 'true'],
@@ -394,14 +590,14 @@ test.describe('El cotizador de la portada', () => {
       ['Hospital y quirófano', 'false'],
     ] as const) {
       await expect(
-        page.getByRole('button', { name: new RegExp(`^${area}`) }),
+        page.getByRole('button', { name: anclado(area) }),
         `el área «${area}»`,
       ).toHaveAttribute('aria-expanded', abierta)
     }
 
     // El eco del carril, que es lo mismo dicho donde está el botón. No lleva
     // región viva propia a propósito: dos locuciones por un gesto se pisan.
-    await expect(page.locator('#cotizador')).toContainText('Listo: 3 módulos marcados')
+    await expect(page.locator('#cotizador')).toContainText('Clientes y mascotas + 3 módulos')
   })
 
   test('sin nada reconocible lo dice, y deja el camino abierto igual', async ({ page }) => {
@@ -425,10 +621,46 @@ test.describe('El cotizador de la portada', () => {
     await page.getByRole('button', { name: 'Ver propuesta' }).click()
     await expect(page).toHaveURL(/\/planes$/)
 
-    // El relato es lo ÚNICO que la portada le pasa al paso siguiente: el texto
-    // no sale del navegador en la landing (Ley 1581, art. 9 y 26 lit. a), así
-    // que si no llegara aquí el prospecto tendría que volver a escribirlo.
+    // El relato viaja con la selección al paso siguiente: el texto no sale del
+    // navegador en la landing (Ley 1581, art. 9 y 26 lit. a), así que si no
+    // llegara aquí el prospecto tendría que volver a escribirlo.
     await expect(page.getByLabel('¿A qué se dedica tu negocio?')).toHaveValue(RELATO)
+  })
+
+  test('lo que se desmarca en la portada llega desmarcado a /planes, y le gana al recomendado', async ({
+    page,
+  }) => {
+    await page.goto('/')
+    const caja = casillaDe(page, 'CASH_REGISTER')
+    await expect(caja).toBeChecked()
+    await caja.uncheck()
+
+    await page.getByRole('button', { name: 'Ver propuesta' }).click()
+    await expect(page).toHaveURL(/\/planes$/)
+    await expect(page.getByRole('heading', { level: 1, name: H1_PLANES })).toBeVisible()
+
+    // El paquete recomendado del catálogo son EXACTAMENTE los cuatro
+    // premarcados, así que este módulo es lo único que distingue «llegó la
+    // selección del visitante» de «se volvió a sembrar el recomendado encima»,
+    // que es lo que la pantalla hacía y lo que convertía cualquier ajuste de la
+    // portada en un clic perdido.
+    //
+    // Se lee de las insignias porque `/planes` no premarca nada y por tanto solo
+    // llega abierta la primera área: la casilla de «Caja y ventas» ni siquiera
+    // está en el documento, y afirmar sobre lo que no está pasaría en verde
+    // también con una selección vacía.
+    for (const [area, insignia] of [
+      ['Atención a las mascotas', '3 de 4 módulos marcados'],
+      ['Mostrador y dinero', 'ninguno de 4 módulos marcados'],
+    ] as const) {
+      await expect(
+        page.getByRole('button', { name: anclado(area) }),
+        `el área «${area}»`,
+      ).toHaveAccessibleName(`${area} ${insignia}`)
+    }
+
+    await page.getByRole('button', { name: anclado('Mostrador y dinero') }).click()
+    await expect(casillaDe(page, 'CASH_REGISTER')).not.toBeChecked()
   })
 
   test('la portada no cotiza, y /planes sí: el cupo por IP llega entero al precio', async ({
@@ -449,10 +681,10 @@ test.describe('El cotizador de la portada', () => {
 
     // Y encima se toca a mano, que es el gesto que disparaba una cotización por
     // casilla cuando el hero enseñaba una cifra.
-    const caja = page.getByRole('checkbox', { name: /^Caja y ventas/ })
+    const caja = casillaDe(page, 'CASH_REGISTER')
     await caja.uncheck()
     await caja.check()
-    await expect(page.locator('#cotizador')).toContainText('Listo: 3 módulos marcados')
+    await expect(page.locator('#cotizador')).toContainText('Clientes y mascotas + 3 módulos')
 
     expect(
       cotizaciones,

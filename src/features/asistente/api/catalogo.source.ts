@@ -59,6 +59,8 @@ export function componer(respuesta: PublicCatalogResponse, ciclo: Ciclo): Catalo
     descripcion: m.description ?? '',
     grupo: GRUPO_POR_CODIGO[m.code] ?? null,
     importe: importeDelCiclo(ciclo, m.monthlyAmount, m.annualAmount),
+    taxRate: m.taxRate,
+    taxTreatment: m.taxTreatment,
     trialDays: m.trialDays,
     obligatorio: m.mandatory,
     vendible: m.selfServiceEligible,
@@ -87,6 +89,9 @@ export function componer(respuesta: PublicCatalogResponse, ciclo: Ciclo): Catalo
     // tenga precio en uno. Cero si el ciclo no publica tramo de entrada.
     incluido: (ciclo === 'ANUAL' ? c.annualIncludedQuantity : c.monthlyIncludedQuantity) ?? 0,
     vendible: c.selfServiceEligible,
+    importe: importeDelCiclo(ciclo, c.monthlyUnitAmount, c.annualUnitAmount),
+    taxRate: c.taxRate,
+    taxTreatment: c.taxTreatment,
   }))
 
   const paquetes: PaqueteCatalogo[] = respuesta.packs.map((p) => ({
@@ -94,6 +99,8 @@ export function componer(respuesta: PublicCatalogResponse, ciclo: Ciclo): Catalo
     nombre: p.name,
     tagline: p.tagline,
     importe: importeDelCiclo(ciclo, p.monthlyAmount, p.annualAmount),
+    taxRate: p.taxRate,
+    taxTreatment: p.taxTreatment,
     componentes: p.componentCodes,
     recommended: p.recommended,
   }))

@@ -11,10 +11,16 @@ import {
 import type { CotizacionPreview } from '../types/cotizacion.types'
 import type { Ciclo } from '../types/plans.types'
 import { cestaDeCotizacion, modulosDelPaquete, paqueteQueCoincide } from './cotizadorLineas'
-import { importeEstimado, sufijoConImpuesto } from './planPricing'
+import {
+  type EstimacionCatalogo,
+  estimarSeleccion,
+  importeEstimado,
+  sufijoConImpuesto,
+} from './planPricing'
 
 /**
- * El cotizador de la portada: la selección, y el importe que el servidor le pone.
+ * El cotizador: la selección, y el importe que le pone el servidor — o, cuando
+ * no puede haber red, el que se suma con el catálogo ya descargado.
  *
  * <p>Estado de vista, no de aplicación: vive con la pantalla y muere con ella,
  * así que **no hay nada nuevo en Pinia**. Lo único compartido es el catálogo, que
@@ -41,7 +47,7 @@ const CALCULANDO_MS = 1000
  * hace falta es esta distancia mínima, porque dos respuestas separadas por 80 ms
  * se pisan en el lector.
  */
-const ANUNCIO_MS = 400
+export const ANUNCIO_MS = 400
 
 /**
  * Cuánto se espera tras un 429 cuando `Retry-After` no llega. El cupo es por
@@ -73,13 +79,19 @@ export interface SaltoDePaquete {
 }
 
 /**
- * Sin `conPrecio` el cotizador no pide nada al servidor: mantiene la selección y
- * el catálogo, y deja de cotizar.
+ * Sin `conPrecio` el cotizador no pide NADA al servidor: el total lo suma él
+ * mismo con el catálogo que ya se descargó.
  *
- * <p>Existe por la portada, que desde el rediseño ya no enseña ninguna cifra.
- * Seguir pidiendo `POST /quotes/preview` por cada casilla gastaría el cupo por
- * IP de `QUOTE_PREVIEW_RATE_LIMITED` en la pantalla donde el precio no se pinta,
- * y el prospecto llegaría a `/planes` —donde sí importa— ya limitado.
+ * <p>Lo que se evita es la red, no el precio. `POST /quotes/preview` tiene cupo
+ * por IP (`QUOTE_PREVIEW_RATE_LIMITED`) y una petición por casilla en la portada
+ * dejaría al prospecto limitado justo al llegar a `/planes`, que es donde el
+ * importe se decide y donde tiene que venir del servidor —con la escalera por
+ * volumen, que el catálogo no publica—.
+ *
+ * <p>Ocultar el total no era la alternativa: sin cifra el comprador subestima lo
+ * que va a pagar y no cambia de opción cuando aparece el importe real
+ * (Rasch et al. 2020, JEBO; Santana, Dallas & Morwitz). Por eso la cifra local
+ * se pinta, rotulada «desde» y orientativa. Ver {@link estimarSeleccion}.
  */
 export interface OpcionesCotizador {
   conPrecio?: boolean
@@ -153,10 +165,32 @@ export function useCotizador({ conPrecio = true }: OpcionesCotizador = {}) {
   )
 
   /**
-   * La cifra que se PINTA: el total del servidor, impuesto dentro. Nunca `$ 0`:
-   * el guion es el marcador de «sin dato».
+   * El total sumado en el navegador, sin red. `null` con precio del servidor:
+   * ahí la cifra local no se calcula ni se compara, para que no haya dos.
    */
-  const importe = computed(() => (cotizacion.value ? importeEstimado(cotizacion.value.total) : '—'))
+  const estimacion = computed<EstimacionCatalogo | null>(() =>
+    conPrecio || !catalogo.value
+      ? null
+      : estimarSeleccion(catalogo.value, {
+          modulos: modulos.value,
+          sedes: sedes.value,
+          usuarios: usuarios.value,
+        }),
+  )
+
+  /**
+   * La cifra que se PINTA, con el impuesto dentro. Nunca `$ 0`: el guion es el
+   * marcador de «sin dato».
+   */
+  const importe = computed(() => {
+    if (!conPrecio) return importeEstimado(estimacion.value?.total ?? null)
+    return cotizacion.value ? importeEstimado(cotizacion.value.total) : '—'
+  })
+
+  /** El rótulo de la cifra. Sin un tipo único que describa la cesta va sin porcentaje. */
+  const sufijoImpuesto = computed(() =>
+    sufijoConImpuesto(ciclo.value, estimacion.value?.tasa ?? null),
+  )
 
   const mensajeDeFallo = computed(() => {
     if (limitado.value) return FALLO_LIMITE
@@ -294,7 +328,38 @@ export function useCotizador({ conPrecio = true }: OpcionesCotizador = {}) {
     }, CALCULANDO_MS)
   }
 
+  /**
+   * Los mismos cuatro estados sin red. `SIN_CATALOGO` cubre también la cesta a
+   * la que le falta un precio en el ciclo elegido: para la pantalla los dos
+   * casos son «no hay con qué calcular», y el camino a `/planes` sigue abierto.
+   */
+  function estadoLocal(): EstadoImporte {
+    if (sinCatalogo.value) return 'SIN_CATALOGO'
+    if (!hayCatalogo.value) return 'CALCULANDO'
+    return (estimacion.value?.total ?? null) === null ? 'SIN_CATALOGO' : 'LISTO'
+  }
+
+  /**
+   * El total local se anuncia AL MARCAR, no cuando cambia la cifra.
+   *
+   * <p>Sembrar la selección desde el texto la cuenta ya la propuesta detectada,
+   * y dos regiones vivas por un mismo gesto se pisan (§4.1.3). El espaciado de
+   * {@link ANUNCIO_MS} sigue siendo el que separa dos marcas seguidas.
+   */
+  function anunciarTotalLocal() {
+    if ((estimacion.value?.total ?? null) === null) return
+    anunciar(`${nombreParaLector()}. ${importe.value} ${sufijoImpuesto.value}.`)
+  }
+
   if (conPrecio) watch([clave, hayCatalogo, sinCatalogo], programar, { immediate: true })
+  else
+    watch(
+      [hayCatalogo, sinCatalogo, estimacion],
+      () => {
+        estado.value = estadoLocal()
+      },
+      { immediate: true },
+    )
 
   /**
    * Marca o desmarca un módulo **con su cadena de requisitos**.
@@ -308,15 +373,17 @@ export function useCotizador({ conPrecio = true }: OpcionesCotizador = {}) {
     const cat = catalogo.value
     if (!cat) return []
 
+    let cambiados: string[]
     if (marcado) {
-      const arrastrados = arrastraAlMarcar(code, modulos.value, cat)
-      modulos.value = [...modulos.value, code, ...arrastrados]
-      return arrastrados
+      cambiados = arrastraAlMarcar(code, modulos.value, cat)
+      modulos.value = [...modulos.value, code, ...cambiados]
+    } else {
+      cambiados = caeAlQuitar(code, modulos.value, cat)
+      const fuera = new Set([code, ...cambiados])
+      modulos.value = modulos.value.filter((m) => !fuera.has(m))
     }
-    const caidos = caeAlQuitar(code, modulos.value, cat)
-    const fuera = new Set([code, ...caidos])
-    modulos.value = modulos.value.filter((m) => !fuera.has(m))
-    return caidos
+    if (!conPrecio) anunciarTotalLocal()
+    return cambiados
   }
 
   /**
@@ -372,6 +439,7 @@ export function useCotizador({ conPrecio = true }: OpcionesCotizador = {}) {
     lento,
     limitado,
     importe,
+    sufijoImpuesto,
     mensajeDeFallo,
     regionViva,
     paquete,

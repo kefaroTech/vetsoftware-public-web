@@ -234,6 +234,18 @@ export interface ArticuloCatalogo {
   descripcion: string
   grupo: GrupoCatalogo | null
   importe: number | null
+  /**
+   * El tipo de IVA en porcentaje, `null` si la tarifa no lo publica.
+   *
+   * <p>Llega hasta la pantalla porque la portada suma su total **en el
+   * navegador**: pedirlo a `POST /quotes/preview` por cada casilla gastaría el
+   * cupo por IP del prospecto antes de que llegue a `/planes`. Sin este campo la
+   * única forma de rotular el impuesto sería deducir un tipo, y un tipo deducido
+   * es una afirmación tributaria que nadie publicó.
+   */
+  taxRate: number | null
+  /** Cómo tributa. `null` cuando la tarifa no lo declara: no se supone `TAXED`. */
+  taxTreatment: CatalogoTaxTreatment | null
   /** `null` = sin prueba. Nunca `0`. */
   trialDays: number | null
   /** Parte del mínimo estructural: se muestra, no se puede desmarcar. */
@@ -253,9 +265,11 @@ export interface ArticuloCatalogo {
 }
 
 /**
- * Una capacidad, para mostrarla como DATO.
+ * Una capacidad: lo que el tramo de entrada incluye y lo que cuesta pasar de ahí.
  *
- * <p>Nunca se convierte en línea cotizada. Ver `PublicCatalogCapacityResponse`.
+ * <p>Solo la vendible del eje (`EXTRA_*`) se convierte en línea; la que trae lo
+ * incluido (`CAPACITY_*`) es un dato que se muestra. Ver
+ * `PublicCatalogCapacityResponse` y `cotizadorLineas`.
  */
 export interface CapacidadCatalogo {
   code: string
@@ -263,6 +277,10 @@ export interface CapacidadCatalogo {
   unit: string
   incluido: number
   vendible: boolean
+  /** Lo que cuesta UNA unidad adicional en el ciclo resuelto; `null` si no se vende en él. */
+  importe: number | null
+  taxRate: number | null
+  taxTreatment: CatalogoTaxTreatment | null
 }
 
 /** Un paquete, con lo que incluye ya resuelto a artículos. */
@@ -271,6 +289,8 @@ export interface PaqueteCatalogo {
   nombre: string
   tagline: string | null
   importe: number | null
+  taxRate: number | null
+  taxTreatment: CatalogoTaxTreatment | null
   componentes: string[]
   /** La combinación que el negocio destaca. A lo sumo una la lleva. */
   recommended: boolean

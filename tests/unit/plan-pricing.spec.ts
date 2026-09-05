@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import {
   calcularEstimado,
+  estimarSeleccion,
   importeEstimado,
   subtotalMensualEquivalente,
+  sufijoConImpuesto,
   textoSinPrecio,
 } from '@/features/landing/composables/planPricing'
 import { PLANS_CONTENT } from '@/features/landing/content/plans.content'
 import type { PlanCapacity, PublicPlan } from '@/features/landing/types/plans.types'
+import { articulo, catalogoEmbudo } from '../helpers/catalogo-embudo'
 import { exigir } from '../helpers/exigir'
 
 /**
@@ -306,5 +309,113 @@ describe('el catálogo transcrito de hoy', () => {
     expect(mensual.sinPrecio).toEqual([])
     expect(mensual.sedesExtra).toBe(35_000)
     expect(mensual.subtotal).toBe(clinica.monthlyFromAmount + 35_000)
+  })
+})
+
+/**
+ * EL TOTAL DE LA PORTADA, SUMADO EN EL NAVEGADOR.
+ *
+ * ── Por qué esta suma existe y no es una petición ──────────────────────────
+ * La portada no puede llamar a `POST /quotes/preview`: tiene cupo por IP y
+ * gastarlo casilla a casilla dejaría al prospecto limitado en `/planes`, que es
+ * donde el importe decide. Pero tampoco puede callar el total —sin él se
+ * subestima el precio y la elección ya no se revisa cuando aparece—, así que se
+ * suma con lo que `GET /catalog` ya trajo.
+ *
+ * ── La trampa que estas pruebas fijan ──────────────────────────────────────
+ * `CatalogoTaxTreatment` tiene TRES valores. Con un exento dentro, el total ya
+ * no es la base por 1,19, y rotularlo «IVA incluido (19 %)» es una afirmación
+ * tributaria falsa aunque todo lo demás de la cesta sí tribute al 19 %.
+ */
+describe('estimarSeleccion · el total de la portada', () => {
+  const seleccion = (modulos: string[]) => ({ modulos, sedes: 1, usuarios: 1 })
+
+  it('suma el núcleo y lo marcado, con el IVA de cada línea dentro', () => {
+    const estimacion = estimarSeleccion(catalogoEmbudo({ paquetes: [] }), seleccion(['SCHEDULING']))
+
+    // 59.000 del núcleo + 35.000 del módulo, y el 19 % de cada uno.
+    expect(estimacion.subtotal).toBe(94_000)
+    expect(estimacion.impuesto).toBe(11_210 + 6_650)
+    expect(estimacion.total).toBe(111_860)
+    expect(estimacion.tasa).toBe(19)
+    expect(sufijoConImpuesto('MENSUAL', estimacion.tasa)).toBe('al mes, IVA incluido (19 %)')
+  })
+
+  it('la cesta con un exento dentro NO se rotula con porcentaje', () => {
+    const catalogo = catalogoEmbudo({
+      paquetes: [],
+      articulos: [
+        articulo({ code: 'CORE', nombre: 'Núcleo', importe: 59_000, obligatorio: true }),
+        articulo({ code: 'SCHEDULING', importe: 35_000 }),
+        articulo({
+          code: 'CLINICAL_HISTORY',
+          importe: 40_000,
+          taxRate: null,
+          taxTreatment: 'EXEMPT',
+        }),
+      ],
+    })
+
+    const estimacion = estimarSeleccion(catalogo, seleccion(['SCHEDULING', 'CLINICAL_HISTORY']))
+
+    expect(estimacion.subtotal).toBe(134_000)
+    // El exento no aporta impuesto: solo tributan el núcleo y la agenda.
+    expect(estimacion.impuesto).toBe(11_210 + 6_650)
+    expect(estimacion.total).toBe(151_860)
+    // Y por eso no hay tipo que describa el total: 151.860 no es 134.000 × 1,19.
+    expect(estimacion.tasa).toBeNull()
+    expect(sufijoConImpuesto('MENSUAL', estimacion.tasa)).toBe('al mes, IVA incluido')
+  })
+
+  it('el excluido tampoco tributa, y tampoco deja rotular el 19 %', () => {
+    const catalogo = catalogoEmbudo({
+      paquetes: [],
+      articulos: [
+        articulo({ code: 'CORE', nombre: 'Núcleo', importe: 59_000, obligatorio: true }),
+        articulo({ code: 'SCHEDULING', importe: 35_000, taxTreatment: 'EXCLUDED', taxRate: 19 }),
+      ],
+    })
+
+    const estimacion = estimarSeleccion(catalogo, seleccion(['SCHEDULING']))
+
+    expect(estimacion.impuesto).toBe(11_210)
+    expect(estimacion.tasa).toBeNull()
+  })
+
+  it('la selección que reproduce un paquete se cobra al precio del paquete', () => {
+    // Con descuento: sueltos serían 59.000 + 35.000 + 35.000 = 129.000 y el
+    // paquete cuesta 189.000 con el núcleo y las capacidades dentro.
+    const estimacion = estimarSeleccion(
+      catalogoEmbudo(),
+      seleccion(['SCHEDULING', 'CLINICAL_HISTORY']),
+    )
+
+    expect(estimacion.subtotal).toBe(189_000)
+    expect(estimacion.total).toBe(189_000 + 35_910)
+  })
+
+  it('un módulo sin precio en el ciclo elegido deja la cesta sin cifra, nunca en cero', () => {
+    const catalogo = catalogoEmbudo({
+      paquetes: [],
+      articulos: [
+        articulo({ code: 'CORE', nombre: 'Núcleo', importe: 59_000, obligatorio: true }),
+        articulo({ code: 'SCHEDULING', importe: null }),
+      ],
+    })
+
+    const estimacion = estimarSeleccion(catalogo, seleccion(['SCHEDULING']))
+
+    expect(estimacion.subtotal).toBeNull()
+    expect(estimacion.total).toBeNull()
+    expect(importeEstimado(estimacion.total)).toBe('—')
+  })
+
+  it('sin artículos publicados no hay cesta, y por tanto tampoco un total de cero', () => {
+    const estimacion = estimarSeleccion(
+      catalogoEmbudo({ articulos: [], capacidades: [], paquetes: [] }),
+      seleccion([]),
+    )
+
+    expect(estimacion.total).toBeNull()
   })
 })

@@ -1,4 +1,6 @@
 import { formatMoney } from '@/composables/money'
+import type { ArticuloCatalogo, CatalogoComercial } from '@/features/asistente/types/catalogo.types'
+import { cestaDeCotizacion, type SeleccionCotizador } from './cotizadorLineas'
 import {
   CAPACITY_UNIT_LABEL,
   type CapacityUnit,
@@ -174,7 +176,12 @@ export function ahorroAnual(plan: PublicPlan): number {
  * un solo redondeo mueve algunos importes un peso.
  */
 export function totalConImpuesto(plan: PublicPlan, subtotal: number): number {
-  return aPesos(subtotal + aPesos((subtotal * plan.taxRate) / 100))
+  return aPesos(subtotal + impuestoDe(subtotal, plan.taxRate))
+}
+
+/** El impuesto de una base gravable a un tipo, con el redondeo al peso del módulo. */
+function impuestoDe(base: number, tasa: number): number {
+  return aPesos((base * tasa) / 100)
 }
 
 /**
@@ -208,7 +215,7 @@ export function calcularEstimado(plan: PublicPlan, seleccion: SeleccionPlan): De
 
   const subtotal =
     sedesExtra === null || usuariosExtra === null ? null : aPesos(base + sedesExtra + usuariosExtra)
-  const impuesto = subtotal === null ? null : aPesos((subtotal * plan.taxRate) / 100)
+  const impuesto = subtotal === null ? null : impuestoDe(subtotal, plan.taxRate)
 
   return {
     base,
@@ -252,9 +259,110 @@ export function sufijoCiclo(ciclo: Ciclo): string {
 /**
  * Solo puede acompañar a un `total`, nunca a un subtotal: «IVA incluido» sobre
  * una cifra es una afirmación tributaria, y el subtotal es la base gravable.
+ *
+ * <p>El porcentaje se escribe SOLO cuando la tarifa lo publica y es uno solo
+ * para la cesta entera. Una que mezcla `TAXED` con `EXEMPT` o `EXCLUDED` no
+ * tiene un tipo que describa su total —«(19 %)» al lado de la cifra afirma que
+ * el total es la base por 1,19— y deducir uno dividiendo impuesto entre base
+ * inventaría una escala que nadie declaró: ahí se dice «IVA» sin cifra, que es
+ * el criterio que `ContratarResumenTabla` ya aplica sobre el mismo dato.
  */
-export function sufijoConImpuesto(ciclo: Ciclo): string {
-  return `${sufijoCiclo(ciclo)}, IVA incluido`
+export function sufijoConImpuesto(ciclo: Ciclo, tasa: number | null = null): string {
+  return `${sufijoCiclo(ciclo)}, IVA incluido${tasa === null ? '' : ` (${tasa} %)`}`
+}
+
+/** Lo que costaría una selección del catálogo, con el impuesto ya dentro. */
+export interface EstimacionCatalogo {
+  /** Base gravable de la cesta, o `null` si a la suma le falta un precio. */
+  subtotal: number | null
+  impuesto: number | null
+  total: number | null
+  /**
+   * El tipo al que tributa la cesta ENTERA, cuando es uno solo. `null` si
+   * conviven varios, si algo va exento o excluido, o si nada tributa: es lo que
+   * decide si el rótulo puede llevar porcentaje.
+   */
+  tasa: number | null
+}
+
+/** Lo único que hace falta de un artículo para sumarlo: su precio y cómo tributa. */
+type Tributable = Pick<ArticuloCatalogo, 'importe' | 'taxRate' | 'taxTreatment'>
+
+/**
+ * El tipo que se le aplica a una línea: el suyo si tributa, cero si no.
+ *
+ * <p>El tratamiento sin declarar **con tipo publicado sí se cobra**. La tarifa
+ * trae un tipo porque algo grava, y tomarlo por exento rebajaría el total — que
+ * es justo el error que esta cifra existe para no cometer: un precio que se
+ * queda corto se descubre al pagar, cuando ya se decidió.
+ */
+function tasaDe(articulo: Tributable): number {
+  if (articulo.taxTreatment === 'EXEMPT' || articulo.taxTreatment === 'EXCLUDED') return 0
+  return articulo.taxRate ?? 0
+}
+
+function tributableDe(catalogo: CatalogoComercial, code: string): Tributable | undefined {
+  return (
+    catalogo.articulos.find((a) => a.code === code) ??
+    catalogo.paquetes.find((p) => p.code === code) ??
+    catalogo.capacidades.find((c) => c.code === code)
+  )
+}
+
+/**
+ * Lo que costaría una selección arbitraria de módulos, sumado EN EL NAVEGADOR.
+ *
+ * <p>Existe por la portada. El importe vinculante lo calcula el servidor y el de
+ * `/planes` sale de `POST /quotes/preview`, pero ese endpoint tiene cupo por IP:
+ * gastarlo casilla a casilla en el primer pliegue dejaría al prospecto limitado
+ * justo en la pantalla donde el precio decide. Esta suma no pide nada y no
+ * publica ninguna cifra nueva: son los precios que `GET /catalog` ya trajo.
+ *
+ * <p>Se cotiza sobre {@link cestaDeCotizacion}, la misma cesta que viajaría al
+ * servidor, y por eso hereda su regla del paquete: una selección que reproduce
+ * una combinación se suma por el precio del paquete —con su descuento— y no por
+ * el de sus piezas sueltas, que sería un total más caro que el que se va a
+ * cobrar.
+ *
+ * <p>Todo queda en `null` en cuanto una línea no tiene precio en el ciclo
+ * elegido. No se estima el hueco: un subtotal al que le falta un sumando no es
+ * un subtotal, y el cero que lo taparía se lee como «no cuesta nada».
+ */
+export function estimarSeleccion(
+  catalogo: CatalogoComercial,
+  seleccion: SeleccionCotizador,
+): EstimacionCatalogo {
+  const sinCifra: EstimacionCatalogo = { subtotal: null, impuesto: null, total: null, tasa: null }
+  const lineas = cestaDeCotizacion(seleccion, catalogo).lineas
+  if (lineas.length === 0) return sinCifra
+
+  const tasas = new Set<number>()
+  let subtotal = 0
+  let impuesto = 0
+
+  for (const linea of lineas) {
+    const articulo = tributableDe(catalogo, linea.code)
+    if (!articulo || articulo.importe === null) return sinCifra
+    const bruto = aPesos(articulo.importe * linea.quantity)
+    const tasa = tasaDe(articulo)
+    subtotal += bruto
+    // El impuesto se redondea POR LÍNEA, como lo desglosa el servidor
+    // (`QuotePreviewLineResponse.taxAmount`): redondear solo al final separa las
+    // dos cifras algún peso y la de la portada dejaría de casar con la de después.
+    impuesto += impuestoDe(bruto, tasa)
+    // El cero entra en el conjunto: una cesta con un exento dentro NO tributa al
+    // 19 % aunque todo lo demás lo haga, y rotularla así afirmaría que el total
+    // es la base por 1,19.
+    tasas.add(tasa)
+  }
+
+  const unica = tasas.size === 1 ? [...tasas][0] : undefined
+  return {
+    subtotal,
+    impuesto,
+    total: aPesos(subtotal + impuesto),
+    tasa: unica !== undefined && unica > 0 ? unica : null,
+  }
 }
 
 /**
