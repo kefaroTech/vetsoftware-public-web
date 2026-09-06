@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { ref } from 'vue'
+import { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { CONTRATACION_INTENCION_KEY } from '@/constants/storageKeys'
 import ContratarView from '@/features/contratacion/views/ContratarView.vue'
 import { useResultadoContratacionStore } from '@/features/contratacion/stores/resultadoContratacion.store'
@@ -250,6 +251,25 @@ async function pagarConTarjetaValida(wrapper: Awaited<ReturnType<typeof montar>>
   await flushPromises()
 }
 
+/** Un error con la forma que `getProblemDetailCode` reconoce: `isAxiosError` y `response.data.code`. */
+function httpError(status: number, code: string): AxiosError {
+  const config = { headers: {} } as InternalAxiosRequestConfig
+  const response = {
+    data: { code },
+    status,
+    statusText: '',
+    headers: {},
+    config,
+  } as AxiosResponse
+  return new AxiosError(
+    `Request failed with status code ${status}`,
+    String(status),
+    config,
+    null,
+    response,
+  )
+}
+
 beforeEach(() => {
   window.localStorage.clear()
   selfServe.mockReset().mockResolvedValue(OFERTA)
@@ -271,7 +291,7 @@ beforeEach(() => {
   errorFrom.mockReset()
   toastInfo.mockReset()
   cargarSuscripcion.mockReset().mockResolvedValue(undefined)
-  permisos.value = ['quote.request']
+  permisos.value = ['quote.request', 'quote.accept']
   estadoPlanActual.value = 'SIN_PLAN'
   sembrarIntencion()
 })
@@ -324,6 +344,23 @@ describe('la puerta del permiso `quote.request`', () => {
 
     expect(botonConfirmar(wrapper)).toHaveLength(1)
     expect(wrapper.find('input[type="checkbox"]').exists()).toBe(true)
+  })
+
+  it('con `quote.request` y sin `quote.accept` el control tampoco existe, y no sale ninguna petición', async () => {
+    // El servidor exige `quote.accept` para `POST /quotes/{id}/accept`: pedir la oferta sin poder
+    // aceptarla llevaría a tokenizar una tarjeta entera para recibir un 403 al final, el paso más
+    // caro de repetir de todo el embudo.
+    permisos.value = ['quote.request']
+    const wrapper = await montar()
+
+    expect(botonConfirmar(wrapper)).toHaveLength(0)
+    expect(wrapper.find('input[type="checkbox"]').exists()).toBe(false)
+
+    const ahoraNo = wrapper.findAll('button').find((b) => b.text().includes('Ahora no'))
+    await exigir(ahoraNo, 'ahoraNo').trigger('click')
+    await flushPromises()
+
+    expect(selfServe).not.toHaveBeenCalled()
   })
 
   it('el botón vinculante nombra el PAQUETE cuando el cliente eligió un paquete', async () => {
@@ -425,6 +462,22 @@ describe('la casilla de términos es una puerta, no un adorno', () => {
     // vuelto a pedirle a `MedioDePagoWompi` que tokenice nada.
     expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeUndefined()
     expect(tokenizarTarjeta).toHaveBeenCalledTimes(1)
+  })
+
+  it('si `accept` responde 409 `INVALID_QUOTE_STATUS_TRANSITION`, navega igual: ya se había aceptado', async () => {
+    // El servidor se está volviendo idempotente: si la respuesta del primer `accept` se perdió en
+    // tránsito, este 409 confirma que la cotización ya quedó aceptada, no que algo falló.
+    accept.mockRejectedValueOnce(httpError(409, 'INVALID_QUOTE_STATUS_TRANSITION'))
+    const wrapper = await montar()
+
+    await wrapper.find('input[type="checkbox"]').setValue(true)
+    await elemento(botonConfirmar(wrapper), 0, 'botonConfirmar(wrapper)').trigger('click')
+    await flushPromises()
+    await pagarConTarjetaValida(wrapper)
+
+    expect(push).toHaveBeenCalledWith({ name: 'contratar-exito' })
+    expect(useResultadoContratacionStore().resultado).not.toBeNull()
+    expect(errorFrom).not.toHaveBeenCalled()
   })
 
   it('la llave de idempotencia se genera UNA vez por pantalla, y sobrevive a un reintento', async () => {

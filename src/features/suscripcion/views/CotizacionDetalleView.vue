@@ -6,6 +6,7 @@ import PageHeader from '@/components/ui/PageHeader.vue'
 import SectionCard from '@/components/ui/SectionCard.vue'
 import { formatMoney } from '@/composables/money'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { useSuscripcion } from '@/features/suscripcion/composables/useSuscripcion'
 import AceptarCotizacionModal from '../components/AceptarCotizacionModal.vue'
 import { useCotizaciones } from '../composables/useCotizaciones'
 import { SIN_PERMISO } from '../composables/accesoBloqueado'
@@ -41,12 +42,16 @@ const {
 } = useCotizaciones()
 
 const { confirm } = useConfirmDialog()
+const { estadoPlanActual, load: cargarSuscripcion } = useSuscripcion()
 const aceptarAbierto = ref(false)
 const encabezado = ref<HTMLElement | null>(null)
 
 const cotizacionId = computed(() => Number(props.id))
 
-onMounted(() => void loadDetalle(cotizacionId.value))
+onMounted(() => {
+  void loadDetalle(cotizacionId.value)
+  void cargarSuscripcion(true)
+})
 
 /**
  * WCAG 2.2 §2.4.3: tras responder, el foco va al `<h1>` —que sigue existiendo pase lo que
@@ -190,6 +195,7 @@ async function onRechazar() {
       :open="aceptarAbierto"
       :quote="quote"
       :total-mostrado="totalMostrado"
+      :estado-plan-actual="estadoPlanActual"
       @close="aceptarAbierto = false"
       @aceptar="onAceptar"
     />

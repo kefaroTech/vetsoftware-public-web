@@ -129,8 +129,14 @@ const CONFIRMAR_SELECCION = 'Confirmar mi selección'
  */
 const TITULO_PASO6 = 'Confirma tu contratación'
 
-/** Lo único que hace falta para que el paso vinculante exista. Ver el encabezado. */
-const PERMISOS_CONTRATAR = ['quote.request']
+/**
+ * Lo que hace falta para que el paso vinculante exista de punta a punta.
+ *
+ * `quote.request` pide la oferta (`POST /quotes/self-serve`) y `quote.accept` la acepta
+ * (`POST /quotes/{id}/accept`); son permisos distintos y hace falta el segundo para llegar hasta
+ * el final sin un 403 después de tokenizar la tarjeta.
+ */
+const PERMISOS_CONTRATAR = ['quote.request', 'quote.accept']
 
 function planPorCodigo(code: string) {
   const plan = PLANS_CONTENT.plans.find((p) => p.code === code)
@@ -1108,6 +1114,20 @@ test.describe('Paso 7 — manda el servidor', () => {
 
     // Y no se afirma lo contrario: un rechazo no es una aprobación a medias.
     await expect(exito).not.toContainText('Pago aprobado')
+  })
+
+  test('sin intento de cobro todavía, no dice que está confirmando con el banco', async ({
+    page,
+  }) => {
+    // `NOT_ATTEMPTED` y `PENDING` son estados distintos: uno dice que el banco no ha
+    // respondido, el otro que ni siquiera se le preguntó — típico de un contrato que nació
+    // en `TRIALING` y para el que el backend nunca intenta el primer cobro.
+    await entrarAlPaso6(page, {}, { primerPago: primerPagoSondeo(['NOT_ATTEMPTED']) })
+    await confirmar(page)
+    const exito = page.getByTestId('contratacion-exito')
+
+    await expect(exito).toContainText('Todavía no hemos intentado el cobro; te avisaremos.')
+    await expect(exito).not.toContainText('Estamos confirmando el pago con tu banco')
   })
 
   /**

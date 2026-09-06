@@ -63,7 +63,7 @@ function montarCantidad() {
 
 function montarAceptar() {
   return mount(AceptarCotizacionModal, {
-    props: { open: true, quote: OFERTA, totalMostrado: 595_000 },
+    props: { open: true, quote: OFERTA, totalMostrado: 595_000, estadoPlanActual: 'SIN_PLAN' },
     global: { stubs: { teleport: true } },
   })
 }
@@ -156,5 +156,20 @@ describe('aceptar propuesta · el tope de 120 del correo', () => {
 
     expect(wrapper.emitted('aceptar')?.[0]).toEqual(['ana@clinicanorte.com.co'])
     expect(wrapper.text()).not.toContain('no puede pasar de 120')
+  })
+})
+
+describe('aceptar propuesta · con un plan ya vigente', () => {
+  it('CON_PLAN avisa que aceptar sustituye el plan vigente', () => {
+    const wrapper = mount(AceptarCotizacionModal, {
+      props: { open: true, quote: OFERTA, totalMostrado: 595_000, estadoPlanActual: 'CON_PLAN' },
+      global: { stubs: { teleport: true } },
+    })
+
+    expect(wrapper.text()).toContain('sustituye tu plan vigente')
+  })
+
+  it('sin plan vigente no aparece ningún aviso de sustitución', () => {
+    expect(montarAceptar().text()).not.toContain('sustituye tu plan vigente')
   })
 })
