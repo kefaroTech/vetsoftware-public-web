@@ -230,12 +230,21 @@ export function usePasoContratar(focos: FocosPaso6) {
     await cargarSuscripcion(true)
 
     if (intencion.origen === 'PLAN' && plan) {
-      resumen.value = await fetchResumenContratacion({
-        intencion,
-        plan,
-        companyId: companyId.value,
-        estadoPlanActual: estadoPlanActual.value,
-      })
+      try {
+        resumen.value = await fetchResumenContratacion({
+          intencion,
+          plan,
+          companyId: companyId.value,
+          estadoPlanActual: estadoPlanActual.value,
+        })
+      } catch (e) {
+        // Misma razón que en la rama de módulos: sin cotización no hay resumen
+        // que pintar, y la intención sigue guardada para el siguiente intento.
+        toast.errorFrom('No pudimos calcular el precio de tu selección', e)
+        resumen.value = null
+        cargando.value = false
+        return
+      }
     } else if (intencion.origen === 'PLAN' && catalogo.value) {
       try {
         resumen.value = await fetchResumenSeleccion({
@@ -302,10 +311,18 @@ export function usePasoContratar(focos: FocosPaso6) {
     // exige que EXISTAN las dos cifras: un lado vacío no es deriva, es un hueco.
     const antes = intencion.importeVistoMensual
     const ahora = resumen.value?.subtotalMensualEquivalente ?? null
-    if (antes !== null && ahora !== null && antes !== ahora) {
-      drift.value = { antes, ahora }
-      await nextTick()
-      focos.drift.value?.focus()
+    if (antes !== null && ahora !== null) {
+      // En la rama del plan el estimado es el tramo de entrada, y la escalera de
+      // descuento por volumen del servidor solo puede bajarlo, nunca subirlo: un
+      // preview más barato ahí no es una noticia que avisar. La propuesta no
+      // tiene esa asimetría —el prospecto pudo editarla en cualquier sentido—,
+      // así que ahí se avisa también cuando baja.
+      const esCambioQueAvisar = intencion.origen === 'PROPUESTA' ? ahora !== antes : ahora > antes
+      if (esCambioQueAvisar) {
+        drift.value = { antes, ahora }
+        await nextTick()
+        focos.drift.value?.focus()
+      }
     }
   }
 

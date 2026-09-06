@@ -174,7 +174,10 @@ const OFERTA = {
  */
 type EstadoDelPlan = 'SIN_PLAN' | 'CON_PLAN' | 'DESCONOCIDO'
 
-/** Un plan VIGENTE con la forma del contrato. `ACTIVE` está en `VIGENTES`. */
+/**
+ * Un plan VIGENTE con la forma del contrato. `ACTIVE` está en `VIGENTES`, y `origin: 'QUOTE'`
+ * es lo que lo distingue de un alta sin plan contratado (ver `CONTRATO_INICIAL`, debajo).
+ */
 const PLAN_VIGENTE: SubscriptionResponse = {
   id: 55,
   subscriptionNumber: 'SUS-E2E-0001',
@@ -186,6 +189,20 @@ const PLAN_VIGENTE: SubscriptionResponse = {
   autoRenew: true,
   createdDate: '2026-01-01',
   enabled: true,
+  origin: 'QUOTE',
+}
+
+/**
+ * El contrato mínimo estructural que el alta de una empresa firma siempre: vigente por
+ * `status`, pero `origin: 'INITIAL'` dice que no hay ningún plan contratado. `estadoPlanActual`
+ * lo trata como `SIN_PLAN`, así que una empresa recién dada de alta sigue pudiendo entrar a
+ * `/planes`.
+ */
+const CONTRATO_INICIAL: SubscriptionResponse = {
+  ...PLAN_VIGENTE,
+  id: 56,
+  subscriptionNumber: 'SUS-E2E-0002',
+  origin: 'INITIAL',
 }
 
 /**
@@ -261,11 +278,12 @@ async function entrarAlPaso6(
     page,
     {
       // Los tres públicos van SIEMPRE, incluso en los casos que no salen de esta
-      // pantalla: la rama del paquete resuelve el plan con `GET /plans`, la
-      // modular pide además `GET /catalog` y `POST /quotes/preview`, y los cuatro
-      // «Cambiar» acaban en `/planes`, que necesita los tres. Sin ellos caen en el
-      // comodín, que devuelve una página vacía, y el fallo que se ve es «no
-      // encuentro el resumen» en una pantalla que sí montó.
+      // pantalla: las dos ramas del plan piden `POST /quotes/preview` para el
+      // precio real —el paquete solo cuando el estimado local no tiene ningún
+      // hueco, la modular siempre—, la modular además `GET /catalog`, y los
+      // cuatro «Cambiar» acaban en `/planes`, que necesita los tres. Sin ellos
+      // caen en el comodín, que devuelve una página vacía, y el fallo que se ve
+      // es «no encuentro el resumen» en una pantalla que sí montó.
       ...RUTAS_DEL_EMBUDO,
       '/companies/*': EMPRESA_RESPUESTA,
       '/subscriptions/current': suscripcionSegun(opciones.estadoDelPlan ?? 'SIN_PLAN'),
@@ -1254,6 +1272,26 @@ test.describe('/planes con sesión — las tres ramas del guard', () => {
     // vuelta al tablero sería el botón «atrás» del navegador — `PublicLayout` no
     // trae la navegación de la aplicación.
     await expect(page.getByRole('link', { name: 'Volver a mi tablero' })).toBeVisible()
+  })
+
+  test('un contrato de alta (`origin: INITIAL`) entra igual que SIN_PLAN', async ({ page }) => {
+    // El alta firma un contrato mínimo vigente por `status`, pero sin plan contratado. Si el
+    // guard mirara solo `planVigente` esto rebotaría al tablero como `CON_PLAN`, y ninguna
+    // empresa recién dada de alta podría contratar su primer plan real.
+    await instalarSesion(page)
+    await enrutarApi(
+      page,
+      {
+        ...RUTAS_DEL_EMBUDO,
+        '/companies/*': EMPRESA_RESPUESTA,
+        '/subscriptions/current': (route: Route) => responderJson(route, CONTRATO_INICIAL),
+      },
+      { permisos: PERMISOS_CONTRATAR },
+    )
+    await page.goto('/planes')
+
+    await expect(page).toHaveURL(/\/planes$/)
+    await expect(page.getByRole('heading', { level: 1, name: TITULO_PLANES })).toBeVisible()
   })
 
   test('CON_PLAN rebota al tablero, y lo DICE', async ({ page }) => {

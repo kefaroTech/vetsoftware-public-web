@@ -96,8 +96,10 @@ export const TODOS_LOS_PERMISOS: string[] = Object.values(PERMISSIONS)
 /**
  * El plan activo de las pantallas privadas.
  *
- * `estadoPlanActual` mira `status` contra la lista de vigentes; `ACTIVE` es la
- * que deja al tenant con plan y evita que el guard de `/planes` intervenga.
+ * `estadoPlanActual` mira `status` contra la lista de vigentes y además exige
+ * `origin !== 'INITIAL'`; sin `origin` (como aquí) se trata como un plan contratado,
+ * igual que antes de que el campo existiera, así que `ACTIVE` sigue evitando que el
+ * guard de `/planes` intervenga.
  */
 const SUSCRIPCION_ACTIVA: SubscriptionResponse = {
   id: 1,

@@ -172,8 +172,17 @@ export interface ResumenArgs {
 }
 
 /**
- * El resumen del paso 6. Lee la empresa del servidor y calcula los importes con
- * la lista de precio transcrita (ver el encabezado de este fichero).
+ * El resumen del paso 6 de un paquete. Lee la empresa del servidor y, con ella,
+ * decide de dónde saca el importe.
+ *
+ * <p>El desglose LOCAL (`calcularEstimado`, sobre la lista transcrita) sigue
+ * siendo el que decide si hay algo que cotizar: con un hueco en `sinPrecio` la
+ * cesta no tiene precio para todo lo que lleva y `POST /quotes/preview` la
+ * rechazaría con el error único de `INVALID_INPUT` sin decir cuál línea sobró, así
+ * que aquí no se llama y el subtotal se deja en `null`. Sin hueco, el subtotal,
+ * el impuesto, el total y las líneas son los de la cotización real —la misma
+ * cesta que arma `lineasDeContratacion`, no una reimplementación—: la cifra que
+ * confirma el paso siguiente tiene que ser esta y no el cálculo local.
  */
 export async function fetchResumenContratacion(args: ResumenArgs): Promise<ResumenPlan> {
   const { intencion, plan, companyId, estadoPlanActual } = args
@@ -187,12 +196,9 @@ export async function fetchResumenContratacion(args: ResumenArgs): Promise<Resum
   }
   const desglose = calcularEstimado(plan, seleccion)
 
-  return {
-    origen: 'PLAN',
+  const base = {
+    origen: 'PLAN' as const,
     modulos: intencion.modulos,
-    // El paquete es UNA línea con su precio de entrada; sus componentes no
-    // tienen importe propio que desglosar. Ver `ResumenPlan.lineas`.
-    lineas: [],
     // `findById` devuelve null sin permiso `company.read` o con 404, y la vista
     // degrada con gracia: se sigue pudiendo contratar sin ver el NIT, pero no se
     // inventa un nombre de clínica.
@@ -203,18 +209,57 @@ export async function fetchResumenContratacion(args: ResumenArgs): Promise<Resum
     ciclo: intencion.ciclo,
     sedes: intencion.sedes,
     usuarios: intencion.usuarios,
-    // Los importes viajan tal cual, `null` incluido. `calcularEstimado` deja en
-    // `null` lo que no puede calcular —una capacidad que se cobra y que la lista
-    // no publica en el ciclo elegido—, y aplanarlo aquí a cero sería reintroducir
-    // en el paso VINCULANTE justo la cifra inventada que se acaba de quitar.
-    subtotal: desglose.subtotal,
-    impuesto: desglose.impuesto,
+    // Las líneas del paquete comparten el tipo impositivo del propio paquete: a
+    // diferencia de `fetchResumenSeleccion`, aquí sí hay un único `taxRate` que
+    // afirmar.
     tasaImpuesto: plan.taxRate,
-    total: desglose.total,
-    subtotalMensualEquivalente: subtotalMensualEquivalente(plan, seleccion),
-    sinPrecio: desglose.sinPrecio,
     lineasPrueba: lineasDePrueba(plan),
     estadoPlanActual,
+  }
+
+  if (desglose.sinPrecio.length > 0) {
+    return {
+      ...base,
+      // El paquete es UNA línea con su precio de entrada; sus componentes no
+      // tienen importe propio que desglosar. Ver `ResumenPlan.lineas`.
+      lineas: [],
+      // `null` incluido: aplanarlo aquí a cero reintroduciría en el paso
+      // VINCULANTE justo la cifra inventada que `calcularEstimado` ya evita.
+      subtotal: desglose.subtotal,
+      impuesto: desglose.impuesto,
+      total: desglose.total,
+      subtotalMensualEquivalente: subtotalMensualEquivalente(plan, seleccion),
+      sinPrecio: desglose.sinPrecio,
+    }
+  }
+
+  const cotizacion = await previsualizarCotizacion({
+    ciclo: intencion.ciclo,
+    lineas: lineasDeContratacion(
+      { modulos: intencion.modulos, sedes: intencion.sedes, usuarios: intencion.usuarios },
+      { clase: 'PAQUETE', plan },
+    ),
+  })
+
+  const lineas: LineaContratada[] = cotizacion.lineas.map((l) => ({
+    code: l.code,
+    nombre: l.nombre,
+    tipo: null,
+    cantidad: l.cobradas,
+    importe: l.importe,
+  }))
+
+  return {
+    ...base,
+    lineas,
+    subtotal: cotizacion.subtotal,
+    impuesto: cotizacion.impuesto,
+    total: cotizacion.total,
+    // Igual que en `fetchResumenSeleccion`: dividir un importe anual entre doce
+    // sería aritmética de dinero en el cliente sobre la cifra que compara la
+    // deriva de precio.
+    subtotalMensualEquivalente: intencion.ciclo === 'MENSUAL' ? cotizacion.subtotal : null,
+    sinPrecio: [],
   }
 }
 

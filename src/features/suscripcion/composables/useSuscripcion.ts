@@ -2,7 +2,12 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { todayISO } from '@/composables/format'
 import { useSuscripcionStore } from '../stores/suscripcion.store'
-import { bajaRegistrada, estadoPlan, planVigente, type EstadoPlanActual } from './estadoSuscripcion'
+import {
+  bajaRegistrada,
+  esPlanContratado,
+  estadoPlan,
+  type EstadoPlanActual,
+} from './estadoSuscripcion'
 
 /**
  * Fachada de lectura del plan. **No guarda estado propio**: todo sale del store por
@@ -27,12 +32,13 @@ export function useSuscripcion() {
    * quien ya tiene uno. Un 403 —el rol sin `subscription.read`, escenario de la migración 377—
    * y un fallo de red devuelven `DESCONOCIDO`: **no** son «no tiene plan», y confundirlos es
    * exactamente lo que la especificación prohíbe. Un 404, o un cuerpo vacío, sí son `SIN_PLAN`.
+   * Un contrato vigente de alta (`origin: 'INITIAL'`) tampoco es `CON_PLAN`: ver `esPlanContratado`.
    */
   const estadoPlanActual = computed<EstadoPlanActual>(() => {
     if (forbidden.value || error.value) return 'DESCONOCIDO'
     if (notFound.value) return 'SIN_PLAN'
     if (!subscription.value) return 'SIN_PLAN'
-    return planVigente(subscription.value) ? 'CON_PLAN' : 'SIN_PLAN'
+    return esPlanContratado(subscription.value) ? 'CON_PLAN' : 'SIN_PLAN'
   })
 
   /** Total de las líneas del plan, tal como las devuelve el backend. */

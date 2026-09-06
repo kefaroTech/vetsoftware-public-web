@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   bajaRegistrada,
   cicloLabel,
+  esPlanContratado,
   estadoPlan,
   estadoRotulo,
   graceDaysLeft,
@@ -164,6 +165,29 @@ describe('estadoSuscripcion · prueba y salidas', () => {
   it('no pinta un botón muerto en los estados sin salida', () => {
     expect(estadoPlan(sub({ status: 'CANCELLED' }), HOY)?.accion).toBeNull()
     expect(estadoPlan(sub({ status: 'EXPIRED' }), HOY)?.accion).toBeNull()
+  })
+})
+
+describe('estadoSuscripcion · un contrato vigente de alta no es un plan contratado', () => {
+  it('un `INITIAL` vigente no cuenta, aunque el status sea ACTIVE', () => {
+    expect(esPlanContratado(sub({ status: 'ACTIVE', origin: 'INITIAL' }))).toBe(false)
+  })
+
+  it('un `QUOTE` vigente sí cuenta', () => {
+    expect(esPlanContratado(sub({ status: 'ACTIVE', origin: 'QUOTE' }))).toBe(true)
+  })
+
+  it('sin `origin` (respuesta antigua) se comporta como hoy: vigente cuenta', () => {
+    expect(esPlanContratado(sub({ status: 'ACTIVE' }))).toBe(true)
+  })
+
+  it('un `INITIAL` que ya no está vigente sigue sin contar, por el mismo motivo que cualquier otro', () => {
+    expect(esPlanContratado(sub({ status: 'CANCELLED', origin: 'INITIAL' }))).toBe(false)
+  })
+
+  it('nulo o indefinido nunca cuenta', () => {
+    expect(esPlanContratado(null)).toBe(false)
+    expect(esPlanContratado(undefined)).toBe(false)
   })
 })
 
