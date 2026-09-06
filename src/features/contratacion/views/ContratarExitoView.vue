@@ -6,6 +6,7 @@ import { formatDateLong } from '@/composables/format'
 import { importeEstimado, sufijoConImpuesto } from '@/features/landing/composables/planPricing'
 import { CICLO_LABEL } from '@/features/landing/types/plans.types'
 import { wompiApi } from '@/features/suscripcion/api/pago.api'
+import { VER_PLAN } from '@/features/suscripcion/composables/estadoSuscripcion'
 import SiguientesPasos from '../components/SiguientesPasos.vue'
 import TrialLinesTable from '../components/TrialLinesTable.vue'
 import { sumarDias } from '../api/contratacion.source'
@@ -106,7 +107,7 @@ const INSIGNIA: Record<FirstPeriodPaymentStatus, string> = {
   APPROVED: 'Pago aprobado',
   PENDING: 'Confirmando tu pago',
   DECLINED: 'Pago rechazado',
-  NOT_ATTEMPTED: 'Confirmando tu pago',
+  NOT_ATTEMPTED: 'Sin cobro todavía',
 }
 
 const insignia = computed(() => INSIGNIA[estadoPago.value ?? 'NOT_ATTEMPTED'])
@@ -125,13 +126,21 @@ const bannerClase = computed(() =>
       : 'ds-banner--warning',
 )
 
-/** Los tres textos exactos de la especificación (§4.4). `NOT_ATTEMPTED` cuenta como pendiente:
- * es lo mismo que ve el usuario — todavía no hay una respuesta que contar. */
+/**
+ * Los textos exactos de la especificación (§4.4), más el que le faltaba: `NOT_ATTEMPTED`
+ * sostenido tras agotar el sondeo **no es** lo mismo que `PENDING` — uno dice que el banco
+ * todavía no respondió, el otro que ni siquiera se le preguntó.
+ */
 const mensajePago = computed(() => {
   if (estadoPago.value === 'APPROVED') return 'Pago aprobado: tu plan está activo.'
   if (estadoPago.value === 'DECLINED') return 'No pudimos cobrar tu tarjeta.'
+  if (estadoPago.value === 'NOT_ATTEMPTED') {
+    return 'Todavía no hemos intentado el cobro; te avisaremos.'
+  }
   return 'Estamos confirmando el pago con tu banco; te avisaremos.'
 })
+
+const mostrarVerPlan = computed(() => estadoPago.value !== 'APPROVED')
 
 // El título de la pestaña reflejaba «reservado» incondicionalmente. Se corrige aquí, no en el
 // `meta.title` de la ruta: ese valor es estático y se fija ANTES de saber qué contestó Wompi.
@@ -167,6 +176,10 @@ watch(estadoPago, (v) => {
       <RouterLink v-if="estadoPago === 'DECLINED'" :to="{ name: 'suscripcion-medios-pago' }">
         Actualiza tu medio de pago
       </RouterLink>
+    </p>
+
+    <p v-if="mostrarVerPlan" class="ds-meta">
+      <RouterLink :to="{ name: VER_PLAN.routeName }">{{ VER_PLAN.label }}</RouterLink>
     </p>
 
     <section class="ds-stack ds-stack--10" aria-labelledby="cobro-titulo">

@@ -237,7 +237,7 @@ beforeEach(() => {
   push.mockReset()
   replace.mockReset()
   cargarSuscripcion.mockReset().mockResolvedValue(undefined)
-  permisos.value = ['quote.request']
+  permisos.value = ['quote.request', 'quote.accept']
   estadoPlanActual.value = 'SIN_PLAN'
 })
 

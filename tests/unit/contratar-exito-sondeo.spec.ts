@@ -219,3 +219,24 @@ describe('sin resultado en el store', () => {
     expect(primerPago).not.toHaveBeenCalled()
   })
 })
+
+describe('NOT_ATTEMPTED sostenido', () => {
+  it('dice que no se ha intentado el cobro, distinto del mensaje de PENDING', async () => {
+    primerPago.mockResolvedValue({
+      status: 'NOT_ATTEMPTED',
+      amount: null,
+      currency: null,
+      gatewayReference: null,
+      attemptedAt: null,
+    })
+
+    const wrapper = await montar()
+
+    expect(wrapper.text()).toContain('Todavía no hemos intentado el cobro; te avisaremos.')
+    expect(wrapper.text()).not.toContain('Estamos confirmando el pago con tu banco')
+
+    // Sigue sondeando: `NOT_ATTEMPTED` no es un estado final, igual que `PENDING`.
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(primerPago).toHaveBeenCalledTimes(2)
+  })
+})

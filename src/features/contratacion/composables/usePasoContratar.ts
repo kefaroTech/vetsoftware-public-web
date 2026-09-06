@@ -3,7 +3,7 @@ import type { Ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast'
 import { PERMISSIONS } from '@/constants/permissions'
-import { getTraceId } from '@/services/http/http.client'
+import { getProblemDetailCode, getTraceId } from '@/services/http/http.client'
 import { useAuth } from '@/features/auth/composables/useAuth'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useCatalogoStore } from '@/features/asistente/stores/catalogo.store'
@@ -177,8 +177,15 @@ export function usePasoContratar(focos: FocosPaso6) {
    * <p>Se esconde la acción, no se deshabilita: un botón deshabilitado sin motivo visible se lee
    * como un fallo de la aplicación. En su lugar va una frase que dice quién puede hacerlo, y
    * «Ahora no» sigue ahí — quien no puede contratar tiene que poder salir del embudo.
+   *
+   * <p>Las dos puertas del servidor, no una: `POST /quotes/self-serve` exige `quote.request` y
+   * `POST /quotes/{id}/accept` exige `quote.accept`, y son permisos distintos. Con solo la
+   * primera comprobada, un rol que tuviera `quote.request` y no `quote.accept` tokenizaba la
+   * tarjeta entera y recibía un 403 en el último paso — el más caro de repetir de todo el embudo.
    */
-  const puedeContratar = can(PERMISSIONS.QUOTE_REQUEST)
+  const puedeSolicitarOferta = can(PERMISSIONS.QUOTE_REQUEST)
+  const puedeAceptarOferta = can(PERMISSIONS.QUOTE_ACCEPT)
+  const puedeContratar = computed(() => puedeSolicitarOferta.value && puedeAceptarOferta.value)
 
   /** La segunda puerta: **hay un precio**. El porqué, en `ConfirmarBloqueadoNotice`. */
   const hayPrecio = computed(() => resumen.value?.subtotal != null)
@@ -494,6 +501,19 @@ export function usePasoContratar(focos: FocosPaso6) {
       await router.push({ name: 'contratar-exito' })
       return true
     } catch (e) {
+      /**
+       * `accept` se está volviendo idempotente en el servidor: un segundo `accept` sobre una
+       * cotización que ya quedó ACEPTADA responde 409 `INVALID_QUOTE_STATUS_TRANSITION`. Si la
+       * respuesta del primer intento se perdió en tránsito, ese 409 no es un fallo — es la
+       * confirmación de que la aceptación ya ocurrió, y tratarlo como error dejaría al usuario
+       * reintentando para siempre contra una oferta que el servidor ya cerró.
+       */
+      if (getProblemDetailCode(e) === 'INVALID_QUOTE_STATUS_TRANSITION') {
+        resultadoStore.guardar(pendiente)
+        marcarContratada()
+        await router.push({ name: 'contratar-exito' })
+        return true
+      }
       toast.errorFrom('No se pudo confirmar tu pago', e)
       traceId.value = getTraceId(e)
       errorEnvio.value =

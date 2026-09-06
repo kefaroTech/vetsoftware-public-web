@@ -5,6 +5,7 @@ import ModalShell from '@/components/ui/ModalShell.vue'
 import BaseField from '@/components/ui/BaseField.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import ErrorSummary, { toSummaryItems } from '@/components/feedback/ErrorSummary.vue'
+import type { EstadoPlanActual } from '@/features/suscripcion/composables/estadoSuscripcion'
 import { confirmarAceptacion } from '../composables/cotizacionesText'
 import type { QuoteResponse } from '../types/cotizaciones.types'
 
@@ -25,6 +26,12 @@ const props = defineProps<{
   open: boolean
   quote: QuoteResponse | null
   totalMostrado: number | null
+  /**
+   * Si la empresa ya tiene un plan vigente ahora mismo. Aceptar una propuesta abandonada con un
+   * plan ya contratado la sustituye — no la complementa —, y quien pidió esta oferta hace semanas
+   * y volvió por otra puerta no tiene forma de saberlo sin este aviso.
+   */
+  estadoPlanActual: EstadoPlanActual
 }>()
 
 const emit = defineEmits<{ close: []; aceptar: [acceptedByEmail: string] }>()
@@ -105,6 +112,13 @@ function submit() {
     <template #body>
       <div class="ds-stack ds-stack--14">
         <ErrorSummary ref="resumen" :items="items" />
+        <p
+          v-if="estadoPlanActual === 'CON_PLAN'"
+          class="ds-banner ds-banner--warning"
+          role="status"
+        >
+          Tu negocio ya tiene un plan activo. Si aceptas esta propuesta, sustituye tu plan vigente.
+        </p>
         <p class="ds-dialog-body">
           {{ texto.antes }} <strong>{{ texto.importe }}</strong
           >{{ texto.despues }}

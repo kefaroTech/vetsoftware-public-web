@@ -153,7 +153,7 @@ const VER_COBROS: EstadoAccion = {
   routeName: 'suscripcion-cobros',
 }
 
-const VER_PLAN: EstadoAccion = { label: 'Ver mi plan', routeName: 'suscripcion-plan' }
+export const VER_PLAN: EstadoAccion = { label: 'Ver mi plan', routeName: 'suscripcion-plan' }
 
 function enPrueba(sub: SubscriptionResponse, today: string): EstadoPlan {
   const restantes = trialDaysLeft(sub, today)
