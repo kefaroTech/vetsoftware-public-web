@@ -92,19 +92,7 @@ describe('lineasDeContratacion · lo que de verdad viaja en la oferta', () => {
     expect(codigos).not.toContain('BRANCH')
   })
 
-  /**
-   * ESTA ES LA MITAD QUE FALTABA, y faltaba de una forma concreta: el caso de
-   * arriba hace `.map((l) => l.code)` y tira las cantidades. Con solo esos tres
-   * casos, cambiar `quantity: cantidad` por `cantidad - capacidad.included`
-   * —«mandar lo extra», que es lo que el nombre de la variable invita a pensar—
-   * dejaba la suite ENTERA en verde: los códigos siguen siendo los mismos.
-   *
-   * <p>Y el error no se ve por ningún lado hasta la factura. `TieredPrice.of`
-   * resta lo incluido otra vez (`billableQuantity`), así que la clínica que pide
-   * 4 personas sobre 2 incluidas pagaría 0 unidades adicionales en vez de 4, con
-   * un total del servidor más bajo que el estimado que acaba de aceptar.
-   */
-  it('la cantidad que viaja es la CONTRATADA, nunca la extra', () => {
+  it('al pasar de lo incluido, la cantidad que viaja es la EXTRA, no la contratada', () => {
     const p = plan('PACK_CLINIC')
     const incluidasUsuarios = exigir(
       p.capacities.find((c) => c.unit === 'USER'),
@@ -114,8 +102,8 @@ describe('lineasDeContratacion · lo que de verdad viaja en la oferta', () => {
       p.capacities.find((c) => c.unit === 'BRANCH'),
       "p.capacities.find((c) => c.unit === 'BRANCH')",
     ).included
-    const usuarios = incluidasUsuarios + 4
-    const sedes = incluidasSedes + 3
+    const usuarios = incluidasUsuarios + 3
+    const sedes = incluidasSedes + 1
 
     const porCodigo = new Map(
       lineasDeContratacion({ modulos: [], sedes, usuarios }, paquete(p)).map((l) => [
@@ -124,13 +112,13 @@ describe('lineasDeContratacion · lo que de verdad viaja en la oferta', () => {
       ]),
     )
 
-    expect(porCodigo.get('EXTRA_USER'), 'lo contratado, no lo extra').toBe(usuarios)
-    expect(porCodigo.get('EXTRA_BRANCH'), 'lo contratado, no lo extra').toBe(sedes)
-    // Escrito aparte y a propósito: es el valor concreto que produciría el
-    // defecto, y sin esta línea el caso pasaría con cualquier fórmula que
-    // casualmente diera el mismo número.
-    expect(porCodigo.get('EXTRA_USER')).not.toBe(usuarios - incluidasUsuarios)
-    expect(porCodigo.get('EXTRA_BRANCH')).not.toBe(sedes - incluidasSedes)
+    // `EXTRA_*` tiene `included_quantity = 0`: el servidor cobra tal cual lo
+    // que reciba en la línea, así que mandar el total contratado cobraría dos
+    // veces lo incluido.
+    expect(porCodigo.get('EXTRA_USER'), 'solo lo que pasa de lo incluido').toBe(3)
+    expect(porCodigo.get('EXTRA_BRANCH'), 'solo lo que pasa de lo incluido').toBe(1)
+    expect(porCodigo.get('EXTRA_USER')).not.toBe(usuarios)
+    expect(porCodigo.get('EXTRA_BRANCH')).not.toBe(sedes)
     // El paquete siempre va con uno: no se multiplica por sedes ni por personas.
     expect(porCodigo.get('PACK_CLINIC')).toBe(1)
   })
@@ -228,9 +216,8 @@ describe('lineasDeContratacion · la rama de los módulos sueltos', () => {
   })
 
   it('la capacidad viaja con las unidades que PASAN de lo incluido, no con el total', () => {
-    // Y no contradice la regla de la rama del paquete: son dos artículos. El
-    // `EXTRA_*` tiene `included_quantity = 0` —lo incluido vive en el
-    // `CAPACITY_*` del mismo eje—, así que el servidor cobra todas las unidades
+    // La misma regla que la rama del paquete: `EXTRA_*` tiene
+    // `included_quantity = 0`, así que el servidor cobra todas las unidades
     // que reciba en esa línea. Ver `unidadesExtra`.
     const porCodigo = new Map(
       lineasDeContratacion({ modulos: [], sedes: 1, usuarios: 5 }, MODULOS).map((l) => [

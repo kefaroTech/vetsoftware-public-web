@@ -519,28 +519,7 @@ test.describe('El cuerpo que viaja a POST /quotes/self-serve', () => {
     }
   })
 
-  /**
-   * ⚠️ ESTE CASO DESCRIBE UN CAMINO QUE EL SERVIDOR RECHAZA HOY. Va verde a
-   * propósito y no se borra: es el único registro ejecutable de que está roto.
-   *
-   * Lo que afirma es correcto y es lo que este front DEBE hacer: si el cliente
-   * pide más capacidad de la incluida, la línea viaja con la cantidad CONTRATADA.
-   * La alternativa —no mandarla— cobraría el paquete base mientras el cliente
-   * cree haber comprado doce personas, que es peor que fallar.
-   *
-   * Lo que NO es verdad es que el servidor lo acepte. `EXTRA_USER` y
-   * `EXTRA_BRANCH` son códigos reales y con precio, pero no son componentes de
-   * ningún paquete, y `findPublishedIdByCode` solo resuelve un `BUNDLE`
-   * publicado o un `MODULE`/`CAPACITY` que cuelgue de uno. Así que en producción
-   * esta petición se rechaza entera con `Unknown or unavailable catalog item
-   * code`, indistinguible de un código inventado. Es un hueco del CATÁLOGO, no
-   * de este front: está escrito en `plans.content.ts` («LO QUE ESTA
-   * TRANSCRIPCIÓN NO PUEDE ARREGLAR»).
-   *
-   * El caso siguiente comprueba qué ve el cliente cuando eso pasa. Los dos
-   * juntos dicen la verdad completa; este solo, no.
-   */
-  test('la capacidad viaja con la cantidad CONTRATADA — y hoy el servidor la rechaza (ver el caso siguiente)', async ({
+  test('al pasar de lo incluido, la línea de capacidad viaja con la cantidad EXTRA', async ({
     page,
   }) => {
     const sedes = 3 // el mínimo estructural incluye 1
@@ -555,39 +534,26 @@ test.describe('El cuerpo que viaja a POST /quotes/self-serve', () => {
     const lineas = captura.cuerpo?.lines ?? []
     expect(lineas).toContainEqual({ code: CLINICA.code, quantity: 1 })
 
-    // La cantidad es la CONTRATADA, no la extra: `TieredPrice.of` resta ya lo
-    // incluido (`billableQuantity`) y reparte el resto por tramos acumulativos.
-    // Mandar «1 sede extra» y «4 personas extra» haría que el servidor volviera
-    // a restar lo incluido y cobrara de menos.
+    // `EXTRA_*` tiene `included_quantity = 0`: el servidor cobra tal cual lo
+    // que reciba en la línea, así que mandar el total contratado cobraría dos
+    // veces lo incluido.
     for (const capacidad of CLINICA.capacities) {
       const contratada = capacidad.unit === 'BRANCH' ? sedes : usuarios
       expect(contratada, 'el caso deja de probar nada si no supera lo incluido').toBeGreaterThan(
         capacidad.included,
       )
-      expect(lineas).toContainEqual({ code: capacidad.code, quantity: contratada })
+      expect(lineas).toContainEqual({
+        code: capacidad.code,
+        quantity: contratada - capacidad.included,
+      })
     }
 
     expect(lineas).toHaveLength(1 + CLINICA.capacities.length)
-
-    // Y la afirmación que convierte el comentario de arriba en algo ejecutable:
-    // los códigos que se acaban de mandar son EXACTAMENTE los que el servidor no
-    // sabe resolver. El día que el catálogo cuelgue `EXTRA_USER`/`EXTRA_BRANCH`
-    // de los paquetes —o que se publiquen de otra forma— esto habrá que
-    // revisarlo, y esta línea es lo que obliga a mirar.
-    const codigosDeCapacidad = lineas.filter((l) => l.code !== CLINICA.code).map((l) => l.code)
-    expect(
-      codigosDeCapacidad.sort(),
-      'si estos códigos cambian, revisa si el catálogo ya los publica como componentes',
-    ).toEqual(['EXTRA_BRANCH', 'EXTRA_USER'])
   })
 
   /**
-   * La otra mitad de la verdad: qué ve el cliente cuando el servidor rechaza la
-   * línea de capacidad del caso anterior.
-   *
-   * Este caso NO simula un fallo inventado: reproduce la respuesta real de
-   * `findPublishedIdByCode` ante `EXTRA_USER`. Sin él, la suite entera dice que
-   * comprar más de dos personas funciona, y no funciona.
+   * Qué ve el cliente cuando `POST /quotes/self-serve` rechaza la oferta: ni
+   * paso 7 ni intención descartada, para poder reintentar.
    */
   test('cuando el servidor rechaza la capacidad, el cliente NO acaba en el paso 7 creyendo que compró', async ({
     page,
@@ -606,9 +572,6 @@ test.describe('El cuerpo que viaja a POST /quotes/self-serve', () => {
       {
         ...RUTAS_DEL_EMBUDO,
         '/companies/*': EMPRESA_RESPUESTA,
-        // La respuesta REAL del backend ante un código que no cuelga de ningún
-        // paquete. El mensaje es el mismo que para un código inventado: ni
-        // siquiera dice cuál de las líneas falló.
         '/quotes/self-serve': (route: Route) => {
           llamadas += 1
           return responderJson(
