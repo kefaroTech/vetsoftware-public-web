@@ -108,13 +108,12 @@ async function confirmarRevocar(reason: string) {
         <!--
           El hueco honesto del alta.
 
-          `POST /subscription-payment-methods` exige `token` —el de la pasarela— y este front no
-          tiene ningún widget de tokenización: sus nueve dependencias no incluyen ninguna
-          pasarela. Un formulario que le pida a una auxiliar «el token de la pasarela» promete
-          una acción que no puede completar y la deja sintiéndose incapaz; pedirle el número de
-          tarjeta sería peor, porque sin tokenización ese dato viajaría en claro por nuestro
-          dominio. Cuando exista el widget, esto se sustituye por el formulario y el store, el
-          cliente y el tipo ya están escritos.
+          El widget de tokenización con Wompi ya existe (`MedioDePagoWompi.vue`, feature
+          `contratacion`), pero vive en el paso 6 de la autocontratación: es donde la empresa da
+          de alta su primer medio de pago, junto con el primer cobro. Esta pantalla no lo repite
+          para dar de alta un medio ADICIONAL o de reemplazo — `POST /subscription-payment-methods`
+          (el endpoint genérico, `mediosPagoApi.create`) sigue sin pantalla que lo llame. Cuando
+          esta vista necesite su propio alta, el store, el cliente y el tipo ya están escritos.
         -->
         <div class="ds-empty ds-empty--boxed alta">
           <p>{{ ALTA_MEDIO_PAGO }}</p>

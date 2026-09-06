@@ -33,23 +33,19 @@ export interface SubscriptionPaymentMethodResponse {
 }
 
 /**
- * `POST /subscription-payment-methods` — **escrito, no cableado a ningún formulario todavía**.
+ * `POST /subscription-payment-methods` — **escrito, no cableado a esta pantalla**.
  *
- * <p>El campo que lo impide es `token`: el de la pasarela, obligatorio, que solo produce un
- * widget de tokenización. Este front no tiene ninguno — sus dependencias son
- * `@grafana/faro-*`, `axios`, `lucide-vue-next`, `pinia`, `vue`, `vue-datepicker-next`,
- * `vue-router` y `vuetify`, y ni una de pasarela.
- *
- * <p>Pedirle a una auxiliar «el token de la pasarela» promete una acción que no puede
- * completar; pedirle el número de tarjeta sería peor, porque sin tokenización ese dato viajaría
- * en claro por nuestro dominio. La pantalla ofrece el canal de soporte en su lugar
- * (`MediosPagoView`). El tipo y la acción del store se dejan escritos para que, cuando exista el
- * widget, el hueco se sustituya por el formulario **sin tocar nada más**.
+ * <p>El widget de tokenización con Wompi ya existe (`MedioDePagoWompi.vue`, feature
+ * `contratacion`), pero da de alta el medio de pago por `POST /payment-gateway/wompi/payment-sources`
+ * — el registro inicial ocurre siempre al contratar, dentro del paso 6. `MediosPagoView` no repite
+ * ese alta para un medio ADICIONAL o de reemplazo, y por eso ofrece el canal de soporte en su
+ * lugar. El tipo y la acción del store se dejan escritos para el día en que esta pantalla necesite
+ * su propio formulario, sin pasar por la autocontratación.
  */
 export interface RegisterSubscriptionPaymentMethodRequest {
   methodKind: PaymentMethodKind
   gateway: string
-  /** El de la pasarela. Sin widget de tokenización no hay forma honesta de obtenerlo. */
+  /** El de la pasarela. */
   token: string
   brand?: string
   lastFour?: string

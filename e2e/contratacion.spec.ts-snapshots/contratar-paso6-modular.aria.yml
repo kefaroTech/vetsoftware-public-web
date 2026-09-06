@@ -84,16 +84,12 @@
         - row /IVA \$ \d+\.\d+/:
           - rowheader "IVA"
           - cell /\$ \d+\.\d+/
-        - row /Total al mes, cuando termine la prueba \$ \d+\.\d+/:
-          - rowheader "Total al mes, cuando termine la prueba"
+        - row /Total al mes \$ \d+\.\d+/:
+          - rowheader "Total al mes"
           - cell /\$ \d+\.\d+/
-        - row "Lo que se te cobra hoy $ 0":
+        - row /Lo que se te cobra hoy \$ \d+\.\d+/:
           - rowheader "Lo que se te cobra hoy"
-          - cell "$ 0"
-  - 'complementary "Modo demostración: no vamos a cobrarte nada"':
-    - 'heading "Modo demostración: no vamos a cobrarte nada" [level=2]'
-    - paragraph: Todavía no tenemos conectada la pasarela de pago. Al confirmar, tu contratación queda registrada con estos importes y nosotros dejamos los módulos listos.
-    - paragraph: No se te va a cobrar, no vamos a pedirte una tarjeta y no guardamos ningún dato de pago. Cuando conectemos la pasarela te escribiremos por correo antes del primer cobro, y podrás decidir entonces.
+          - cell /\$ \d+\.\d+/
   - complementary "Lo que confirmas":
     - heading "Lo que confirmas" [level=2]
     - paragraph: 4 módulos
@@ -104,8 +100,7 @@
     - paragraph: /Caja y ventas \$ \d+\.\d+/
     - paragraph: /Facturación electrónica DIAN \$ \d+\.\d+/
     - paragraph:
-      - strong: Hoy pagas $ 0.
-      - text: /El primer cobro sería el \d+ de \w+, \d+, y te avisamos por correo antes\./
+      - strong: /Hoy pagas \$ \d+\.\d+\./
   - 'checkbox /He leído y acepto los Términos del Servicio \(se abre en una pestaña nueva\) y la Política de Tratamiento de Datos Personales \(se abre en una pestaña nueva\) \. Términos del Servicio: versión 1, vigente desde el 1 de septiembre, \d+ · Política de Tratamiento de Datos Personales: versión 1, vigente desde el 1 de septiembre, \d+/'
   - text: He leído y acepto los
   - link "Términos del Servicio (se abre en una pestaña nueva)":

@@ -22,8 +22,12 @@ import type { ResumenContratacion } from '../types/contratacion.types'
  * ── Ninguna cifra se suma aquí ─────────────────────────────────────────────
  * Las líneas y los importes son los que trae el resumen, que en la rama modular
  * los pone `POST /quotes/preview` y en la de la propuesta el propio servidor.
- * El único número escrito a mano es el cero de «Hoy pagas», y ese sí es un cero
- * real: durante la prueba no se cobra nada.
+ *
+ * <p>«Hoy pagas» YA NO es un `$0` fijo: con Wompi conectado, el primer periodo se cobra en el
+ * acto salvo que TODAS las líneas contratadas tengan prueba (`SettleNewContractService`, backend
+ * — un contrato nace `TRIALING` y no cobra solo si el catálogo concede prueba a todo lo
+ * contratado). Con alguna línea `trial_eligibility = 'NEVER_FREE'` —`ELECTRONIC_INVOICING` es el
+ * ejemplo real del catálogo— el `$0` sería una promesa falsa justo antes de firmar.
  */
 const props = defineProps<{
   resumen: ResumenContratacion
@@ -81,6 +85,20 @@ const desglose = computed(() =>
     importe: l.importe === null ? '—' : formatMoney(l.importe),
   })),
 )
+
+/**
+ * `true` solo si CADA línea contratada tiene prueba: es la misma condición que deja el contrato
+ * en `TRIALING` en vez de `ACTIVE` (`SettleNewContractService`, backend), y por tanto la única en
+ * la que hoy no se cobra nada. Una sola línea `trialDays: null` (NEVER_FREE) ya activa el
+ * contrato y el primer periodo se cobra en el acto.
+ */
+const todoConPrueba = computed(() =>
+  props.resumen.lineasPrueba.every((l) => l.trialDays !== null && l.trialDays > 0),
+)
+
+const totalTexto = computed(() =>
+  props.resumen.total === null ? '—' : formatMoney(props.resumen.total),
+)
 </script>
 
 <template>
@@ -97,12 +115,19 @@ const desglose = computed(() =>
       </p>
     </div>
 
-    <!-- La respuesta a la única pregunta que se hace quien está a punto de
-         confirmar, y el cero es de verdad: la prueba corre desde hoy. -->
+    <!-- La respuesta a la única pregunta que se hace quien está a punto de confirmar. Con
+         Wompi conectado el `$0` solo es cierto si TODO lo contratado tiene prueba — ver
+         `todoConPrueba`. -->
     <p class="cra-hoy">
-      <strong>Hoy pagas {{ formatMoney(0) }}.</strong>
-      <template v-if="primerCobro">
-        El primer cobro sería el {{ formatDateLong(primerCobro) }}, y te avisamos por correo antes.
+      <template v-if="todoConPrueba">
+        <strong>Hoy pagas {{ formatMoney(0) }}.</strong>
+        <template v-if="primerCobro">
+          El primer cobro sería el {{ formatDateLong(primerCobro) }}, y te avisamos por correo
+          antes.
+        </template>
+      </template>
+      <template v-else>
+        <strong>Hoy pagas {{ totalTexto }}.</strong>
       </template>
     </p>
   </aside>
