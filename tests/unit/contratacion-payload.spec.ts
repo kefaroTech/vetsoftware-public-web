@@ -1,10 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { activarPlan, lineasDeContratacion } from '@/features/contratacion/api/contratacion.source'
+import {
+  activarPlan,
+  fetchResumenContratacion,
+  lineasDeContratacion,
+} from '@/features/contratacion/api/contratacion.source'
 import type { FuenteDeLineas } from '@/features/contratacion/api/contratacion.source'
 import { PLANS_CONTENT } from '@/features/landing/content/plans.content'
 import { calcularEstimado } from '@/features/landing/composables/planPricing'
 import type { PublicPlan } from '@/features/landing/types/plans.types'
-import type { ResumenPlan } from '@/features/contratacion/types/contratacion.types'
+import type { CotizacionPreview } from '@/features/landing/types/cotizacion.types'
+import type { IntencionPlan, ResumenPlan } from '@/features/contratacion/types/contratacion.types'
 import type { QuoteResponse } from '@/features/suscripcion/types/cotizaciones.types'
 import { elemento, exigir } from '../helpers/exigir'
 
@@ -38,9 +43,32 @@ vi.mock('@/features/suscripcion/api/cotizaciones.api', () => ({
   },
 }))
 
+const previsualizarCotizacion = vi.fn<(args: unknown) => Promise<CotizacionPreview>>()
+
+vi.mock('@/features/landing/api/cotizacion.source', () => ({
+  previsualizarCotizacion: (args: unknown) => previsualizarCotizacion(args),
+}))
+
 /** La fuente de líneas de la rama del paquete, que es la que este fichero cubre. */
 function FUENTE_PAQUETE(p: PublicPlan): FuenteDeLineas {
   return { clase: 'PAQUETE', plan: p }
+}
+
+/** Una intención de paquete, con lo mínimo que `fetchResumenContratacion` necesita. */
+function intencionDe(p: PublicPlan, over: Partial<IntencionPlan> = {}): IntencionPlan {
+  return {
+    origen: 'PLAN',
+    planCode: p.code,
+    modulos: [],
+    ciclo: 'MENSUAL',
+    sedes: 1,
+    usuarios: 1,
+    importeVistoMensual: null,
+    selloRevisadoEl: '2026-08-29',
+    creadaEn: new Date().toISOString(),
+    descartada: false,
+    ...over,
+  }
 }
 
 function plan(code: string): PublicPlan {
@@ -99,9 +127,36 @@ const OFERTA_DEL_SERVIDOR: QuoteResponse = {
   status: 'SENT',
 }
 
+/** Una cotización con cifras que el cálculo local, con estos mismos datos, no produce. */
+const PREVIEW_DEL_SERVIDOR: CotizacionPreview = {
+  moneda: 'COP',
+  ciclo: 'MENSUAL',
+  lineas: [
+    {
+      code: 'PACK_CLINIC',
+      nombre: 'Pack Clínica',
+      contratadas: 1,
+      incluidas: 1,
+      cobradas: 1,
+      importeUnitario: 777_321,
+      importe: 777_321,
+      taxRate: 19,
+      taxTreatment: 'TAXED',
+      impuesto: 147_690,
+      total: 925_011,
+    },
+  ],
+  subtotal: 777_321,
+  descuento: 0,
+  impuesto: 147_690,
+  total: 925_011,
+}
+
 beforeEach(() => {
   selfServe.mockReset()
   selfServe.mockResolvedValue(OFERTA_DEL_SERVIDOR)
+  previsualizarCotizacion.mockReset()
+  previsualizarCotizacion.mockResolvedValue(PREVIEW_DEL_SERVIDOR)
 })
 
 describe('activarPlan · el cuerpo que se manda', () => {
@@ -276,5 +331,85 @@ describe('activarPlan · de quién son los importes de la pantalla de éxito', (
     await expect(
       activarPlan({ resumen: resumenDe(p), fuente: FUENTE_PAQUETE(p), clientRequestId: 'k' }),
     ).rejects.toBe(fallo)
+  })
+})
+
+describe('fetchResumenContratacion · el paso 6 del paquete pide el precio real', () => {
+  it('sin precio publicado para lo que se cobra, no llama al servidor y el subtotal queda nulo', async () => {
+    const p = plan('PACK_CLINIC')
+    // El tramo ANUAL de `EXTRA_BRANCH` sí está publicado en el catálogo transcrito;
+    // se anula aquí para reproducir el hueco sin tocar el contenido de referencia.
+    const sinPrecioAnual: PublicPlan = {
+      ...p,
+      capacities: p.capacities.map((c) =>
+        c.unit === 'BRANCH' ? { ...c, annualExtraUnitAmount: null } : c,
+      ),
+    }
+    const sedes =
+      exigir(
+        sinPrecioAnual.capacities.find((c) => c.unit === 'BRANCH'),
+        "sinPrecioAnual.capacities.find((c) => c.unit === 'BRANCH')",
+      ).included + 1
+    const intencion = intencionDe(sinPrecioAnual, { ciclo: 'ANUAL', sedes })
+
+    const resumen = await fetchResumenContratacion({
+      intencion,
+      plan: sinPrecioAnual,
+      companyId: null,
+      estadoPlanActual: 'SIN_PLAN',
+    })
+
+    expect(
+      previsualizarCotizacion,
+      'el preview lo rechazaría: no hay nada que pedir',
+    ).not.toHaveBeenCalled()
+    expect(resumen.subtotal).toBeNull()
+    expect(resumen.sinPrecio).toEqual(['BRANCH'])
+  })
+
+  it('con precio publicado, pide `/quotes/preview` y el resumen lleva las cifras del servidor', async () => {
+    const p = plan('PACK_CLINIC')
+    const sedes =
+      exigir(
+        p.capacities.find((c) => c.unit === 'BRANCH'),
+        "p.capacities.find((c) => c.unit === 'BRANCH')",
+      ).included + 2
+    const usuarios =
+      exigir(
+        p.capacities.find((c) => c.unit === 'USER'),
+        "p.capacities.find((c) => c.unit === 'USER')",
+      ).included + 3
+    const intencion = intencionDe(p, { sedes, usuarios })
+
+    // Autocomprobación del doble, como en `activarPlan`: si alguien igualara estas
+    // cifras con el estimado local, este caso dejaría de demostrar nada.
+    const local = calcularEstimado(p, { ciclo: 'MENSUAL', sedes, usuarios })
+    expect(PREVIEW_DEL_SERVIDOR.subtotal).not.toBe(local.subtotal)
+
+    const resumen = await fetchResumenContratacion({
+      intencion,
+      plan: p,
+      companyId: null,
+      estadoPlanActual: 'SIN_PLAN',
+    })
+
+    expect(previsualizarCotizacion).toHaveBeenCalledTimes(1)
+    // El pack primero, y luego cada capacidad EXTRA con la cantidad NETA: la misma
+    // cesta que `lineasDeContratacion` arma para `activarPlan`.
+    expect(
+      elemento(previsualizarCotizacion.mock.calls, 0, 'previsualizarCotizacion.mock.calls')[0],
+    ).toMatchObject({
+      ciclo: 'MENSUAL',
+      lineas: [
+        { code: 'PACK_CLINIC', quantity: 1 },
+        { code: 'EXTRA_USER', quantity: 3 },
+        { code: 'EXTRA_BRANCH', quantity: 2 },
+      ],
+    })
+
+    expect(resumen.subtotal).toBe(777_321)
+    expect(resumen.impuesto).toBe(147_690)
+    expect(resumen.total).toBe(925_011)
+    expect(resumen.sinPrecio).toEqual([])
   })
 })

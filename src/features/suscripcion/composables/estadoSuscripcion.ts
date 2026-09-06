@@ -46,6 +46,18 @@ export function planVigente(sub: SubscriptionResponse | null | undefined): boole
   return sub != null && VIGENTES.includes(sub.status)
 }
 
+/**
+ * `true` cuando el contrato vigente cuenta como un plan CONTRATADO a efectos del embudo.
+ *
+ * <p>El alta de una empresa siempre firma un contrato con el mínimo estructural
+ * (`origin: 'INITIAL'`): vigente por `status`, pero sin que nadie haya elegido ni pagado nada,
+ * así que no cierra el embudo. `origin` ausente —respuesta de antes de que el backend lo
+ * publicara— se trata como plan contratado, para no cambiar el comportamiento sin el dato.
+ */
+export function esPlanContratado(sub: SubscriptionResponse | null | undefined): boolean {
+  return planVigente(sub) && sub?.origin !== 'INITIAL'
+}
+
 export interface EstadoAccion {
   label: string
   routeName: string

@@ -57,6 +57,12 @@ export interface SubscriptionResponse {
   cancelReason?: string
   createdDate: string
   enabled: boolean
+  /**
+   * **NO se pinta**: decide el embudo, no la pantalla del plan. `'INITIAL'` es el contrato
+   * mínimo que el alta firma siempre —vigente, pero sin plan contratado— y por eso
+   * `estadoPlanActual` no lo cuenta como `CON_PLAN` (ver `esPlanContratado`).
+   */
+  origin?: 'INITIAL' | 'QUOTE'
 }
 
 /** Una línea del plan: qué incluye, cuántas unidades y a cuánto. */

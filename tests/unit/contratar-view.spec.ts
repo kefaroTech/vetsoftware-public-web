@@ -6,6 +6,7 @@ import ContratarView from '@/features/contratacion/views/ContratarView.vue'
 import { useResultadoContratacionStore } from '@/features/contratacion/stores/resultadoContratacion.store'
 import type { EstadoPlanActual } from '@/features/suscripcion/composables/estadoSuscripcion'
 import type { QuoteResponse } from '@/features/suscripcion/types/cotizaciones.types'
+import type { CotizacionPreview } from '@/features/landing/types/cotizacion.types'
 import { elemento, exigir } from '../helpers/exigir'
 
 /**
@@ -98,6 +99,12 @@ vi.mock('@/features/suscripcion/api/medios-pago.api', () => ({
   },
 }))
 
+const previsualizarCotizacion = vi.fn<(args: unknown) => Promise<CotizacionPreview>>()
+
+vi.mock('@/features/landing/api/cotizacion.source', () => ({
+  previsualizarCotizacion: (args: unknown) => previsualizarCotizacion(args),
+}))
+
 // El seam de los planes se dobla, y ahora HAY QUE doblarlo: desde que
 // `plans.source.ts` pide `GET /plans` en vez de devolver contenido local, esta
 // pantalla depende del catálogo por red, y sin doble el `usePlanes()` de
@@ -135,6 +142,31 @@ const OFERTA: QuoteResponse = {
 
 /** El precio de lista de `PACK_CLINIC` con 1 sede y 1 persona, sin impuesto. */
 const SUBTOTAL_MENSUAL_PACK_CLINIC = 189_000
+
+/** El preview del servidor para esa misma selección: mismo subtotal, para no introducir deriva. */
+const PREVIEW_PACK_CLINIC: CotizacionPreview = {
+  moneda: 'COP',
+  ciclo: 'MENSUAL',
+  lineas: [
+    {
+      code: 'PACK_CLINIC',
+      nombre: 'Pack Clínica',
+      contratadas: 1,
+      incluidas: 1,
+      cobradas: 1,
+      importeUnitario: SUBTOTAL_MENSUAL_PACK_CLINIC,
+      importe: SUBTOTAL_MENSUAL_PACK_CLINIC,
+      taxRate: 19,
+      taxTreatment: 'TAXED',
+      impuesto: 35_910,
+      total: 224_910,
+    },
+  ],
+  subtotal: SUBTOTAL_MENSUAL_PACK_CLINIC,
+  descuento: 0,
+  impuesto: 35_910,
+  total: 224_910,
+}
 
 const CHECKOUT_CONFIG = {
   environment: 'SANDBOX' as const,
@@ -221,6 +253,7 @@ async function pagarConTarjetaValida(wrapper: Awaited<ReturnType<typeof montar>>
 beforeEach(() => {
   window.localStorage.clear()
   selfServe.mockReset().mockResolvedValue(OFERTA)
+  previsualizarCotizacion.mockReset().mockResolvedValue(PREVIEW_PACK_CLINIC)
   accept.mockReset().mockResolvedValue({ ...OFERTA, status: 'ACCEPTED' })
   findById.mockReset().mockResolvedValue({ id: 7, name: 'Clínica Norte', identifier: '900123456' })
   checkoutConfig.mockReset().mockResolvedValue(CHECKOUT_CONFIG)
@@ -479,6 +512,17 @@ describe('§5 caso 3 · el precio se movió mientras decidía', () => {
   it('sin deriva no hay aviso: el caso feliz no paga el precio del raro', async () => {
     const wrapper = await montar()
     expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+  })
+
+  it('un preview MÁS BARATO que lo visto no avisa: la escalera por volumen solo baja', async () => {
+    // 300.000 es lo que el usuario vio en `/planes` con el tramo de entrada;
+    // `PREVIEW_PACK_CLINIC` cotiza 189.000, más barato por el descuento de
+    // volumen del servidor. Eso no es una noticia que avisar.
+    sembrarIntencion(300_000)
+    const wrapper = await montar()
+
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('El precio cambió')
   })
 
   it('sin importe guardado NO se inventa una comparación', async () => {
