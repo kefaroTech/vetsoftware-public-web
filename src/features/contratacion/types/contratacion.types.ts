@@ -354,4 +354,16 @@ export interface ResultadoContratacion {
   cotizacionNumero: string | null
   /** ISO date hasta la que vale la oferta (15 días desde hoy, los pone el servidor). */
   validaHasta: string | null
+  /**
+   * El estado del cobro del primer periodo, en el instante en que se guardó este resultado.
+   *
+   * <p>`null` mientras se acaba de aceptar la oferta y todavía no se ha preguntado por el cobro:
+   * el paso 7 lo rellena sondeando `GET /payment-gateway/wompi/first-period-payment` y actualiza
+   * este mismo store. No es una segunda verdad — es la ÚNICA forma en que el paso 7 sabe algo del
+   * cobro sin volver a pedir la oferta entera.
+   */
+  pago: { status: FirstPeriodPaymentStatus; amount: number | null; currency: string | null } | null
 }
+
+/** Espeja `FirstPeriodPaymentResponse.status` (backend, rodaja `paymentgateway`). */
+export type FirstPeriodPaymentStatus = 'APPROVED' | 'PENDING' | 'DECLINED' | 'NOT_ATTEMPTED'

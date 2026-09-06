@@ -1,7 +1,19 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
 import { subtotalMensualEquivalente } from '../src/features/landing/composables/planPricing'
 import { PLANS_CONTENT } from '../src/features/landing/content/plans.content'
+import type {
+  FirstPeriodPaymentResponse,
+  WompiCheckoutConfigResponse,
+  WompiPaymentMethodResponse,
+  WompiPaymentSourceRequest,
+} from '../src/features/contratacion/types/pago.types'
+import type {
+  AcceptQuoteRequest,
+  QuoteResponse,
+} from '../src/features/suscripcion/types/cotizaciones.types'
+import type { SubscriptionPaymentMethodResponse } from '../src/features/suscripcion/types/medios-pago.types'
 import type { SubscriptionResponse } from '../src/features/suscripcion/types/suscripcion.types'
+import type { PageResponse } from '../src/types/pagination'
 import {
   ID_PROPUESTA,
   intencionDePropuesta,
@@ -78,6 +90,20 @@ import { exigir } from './helpers/exigir'
  * componente borrada — y se borró, por muerta. El caso de abajo ya no descansa
  * en ese `not.toBeChecked()`: comprueba el foco, comprueba que confirmar a
  * ciegas no manda nada, y comprueba que tras releer y aceptar la compra SÍ sale.
+ *
+ * ── La pasarela de pago, y qué se simula de ella ────────────────────────────
+ * «Confirmar mi plan» ya no navega al paso 7: pide la oferta y deja ver el
+ * bloque «Medio de pago» (`MedioDePagoWompi.vue`), que tokeniza la tarjeta
+ * DIRECTO contra Wompi —con la llave pública de `checkout-config`, nunca con
+ * el JWT del tenant— y solo entonces registra el medio y acepta la oferta. Esta
+ * spec simula los cinco puntos de esa frontera: `GET checkout-config`,
+ * `GET subscription-payment-methods`, `POST payment-sources`,
+ * `POST /quotes/{id}/accept` y `GET first-period-payment`; y añade un `page.route`
+ * aparte sobre `https://sandbox.wompi.co/v1/tokens/cards` —un origen distinto del
+ * backend propio— para comprobar con qué credencial sale esa petición y qué NO
+ * lleva. El paso 7 pasó de decir «reservado» a sondear el cobro real: sondea
+ * `first-period-payment` cada 2 s hasta que Wompi responde, y esta spec ejercita
+ * las tres salidas (aprobado, rechazado, y el tramo pendiente de en medio).
  */
 
 const CONFIRMAR = 'Confirmar mi plan'
@@ -161,6 +187,127 @@ const OFERTA = {
   enabled: true,
 }
 
+/** El origen de Wompi que hay que enrutar APARTE de `enrutarApi`: no cuelga de `/api/v1`. */
+const WOMPI_SANDBOX_URL = 'https://sandbox.wompi.co/v1'
+
+/** `GET /payment-gateway/wompi/checkout-config`. La llave pública, no el JWT del tenant. */
+const CHECKOUT_CONFIG: WompiCheckoutConfigResponse = {
+  environment: 'SANDBOX',
+  apiBaseUrl: WOMPI_SANDBOX_URL,
+  publicKey: 'pub_test_e2e_wompi',
+  acceptance: {
+    token: 'tok_acceptance_e2e',
+    permalink: 'https://sandbox.wompi.co/terminos-y-condiciones',
+  },
+  personalDataAuthorization: {
+    token: 'tok_personal_data_e2e',
+    permalink: 'https://sandbox.wompi.co/autorizacion-datos',
+  },
+}
+
+/**
+ * `POST {apiBaseUrl}/tokens/cards`, la tarjeta de prueba de Wompi (Visa, Luhn
+ * válida — no es un dato real ni sirve contra ningún servidor de verdad).
+ */
+const TOKEN_TARJETA_WOMPI = {
+  status: 'CREATED',
+  data: { id: 'tok_test_1', brand: 'VISA', last_four: '4242', exp_month: '12', exp_year: '29' },
+}
+
+/** `POST /payment-gateway/wompi/payment-sources`. */
+const MEDIO_PAGO_NUEVO: WompiPaymentMethodResponse = {
+  paymentMethodId: 501,
+  brand: 'VISA',
+  lastFour: '4242',
+  expiresOn: '2029-12-31',
+  defaultMethod: true,
+}
+
+/**
+ * Un medio de pago YA guardado y activo por defecto, para el caso que se salta la
+ * tokenización. `lastFour` es distinto del de {@link MEDIO_PAGO_NUEVO} a propósito:
+ * si un caso mezclara las dos rutas por error, el número que aparece en pantalla
+ * delataría cuál de las dos se sirvió.
+ */
+const MEDIO_GUARDADO: SubscriptionPaymentMethodResponse = {
+  id: 900,
+  companyId: EMPRESA_ID,
+  methodKind: 'CARD',
+  gateway: 'WOMPI',
+  brand: 'VISA',
+  lastFour: '1234',
+  expiresOn: '2030-01-31',
+  mandateStatus: 'ACTIVE',
+  mandateEvidence: 'evidence-e2e',
+  authorizedAt: '2026-01-01T00:00:00Z',
+  defaultMethod: true,
+  createdDate: '2026-01-01',
+}
+
+function paginaMediosPago(
+  medios: SubscriptionPaymentMethodResponse[] = [],
+): PageResponse<SubscriptionPaymentMethodResponse> {
+  return { content: medios, page: 0, pageSize: 50, totalElements: medios.length, totalPages: 1 }
+}
+
+/**
+ * `GET /payment-gateway/wompi/first-period-payment`, con la secuencia de estados
+ * que hay que servir en cada llamada sucesiva. Con un solo elemento resuelve a la
+ * primera: el sondeo con su intervalo real de 2 s solo hace falta ejercitarlo en
+ * el caso dedicado a él, no en cada uno de los que solo necesitan llegar al paso 7.
+ */
+function primerPagoSondeo(
+  secuencia: FirstPeriodPaymentResponse['status'][],
+): (route: Route) => Promise<void> {
+  let llamada = 0
+  return (route: Route) => {
+    const status = secuencia[Math.min(llamada, secuencia.length - 1)] ?? 'NOT_ATTEMPTED'
+    llamada += 1
+    const respuesta: FirstPeriodPaymentResponse = {
+      status,
+      amount: status === 'APPROVED' ? OFERTA.totalAmount : null,
+      currency: status === 'APPROVED' ? 'COP' : null,
+      gatewayReference: status === 'APPROVED' ? 'e2e-ref-1' : null,
+      attemptedAt: status === 'NOT_ATTEMPTED' ? null : '2026-09-06T00:00:00Z',
+    }
+    return responderJson(route, respuesta)
+  }
+}
+
+/**
+ * Las rutas del bloque «Medio de pago», comunes a todo lo que atraviesa el paso 6
+ * hasta el paso 7. Van en una función y no repetidas en cada `enrutarApi`: son
+ * las mismas cinco para el caso feliz y solo cambian por lo que cada caso quiere
+ * observar o forzar.
+ */
+function rutasPagoWompi(
+  over: {
+    mediosGuardados?: SubscriptionPaymentMethodResponse[]
+    checkoutConfig?: (route: Route) => Promise<void> | void
+    primerPago?: (route: Route) => Promise<void> | void
+    onPaymentSource?: (cuerpo: WompiPaymentSourceRequest) => void
+    onAccept?: (cuerpo: AcceptQuoteRequest) => void
+  } = {},
+): Record<string, (route: Route) => Promise<void> | void> {
+  return {
+    '/subscription-payment-methods*': (route: Route) =>
+      responderJson(route, paginaMediosPago(over.mediosGuardados ?? [])),
+    '/payment-gateway/wompi/checkout-config':
+      over.checkoutConfig ?? ((route: Route) => responderJson(route, CHECKOUT_CONFIG)),
+    '/payment-gateway/wompi/payment-sources': (route: Route) => {
+      over.onPaymentSource?.(route.request().postDataJSON() as WompiPaymentSourceRequest)
+      return responderJson(route, MEDIO_PAGO_NUEVO, 201)
+    },
+    '/quotes/*/accept': (route: Route) => {
+      over.onAccept?.(route.request().postDataJSON() as AcceptQuoteRequest)
+      const aceptada: QuoteResponse = { ...OFERTA, status: 'ACCEPTED' }
+      return responderJson(route, aceptada, 200)
+    },
+    '/payment-gateway/wompi/first-period-payment':
+      over.primerPago ?? primerPagoSondeo(['APPROVED']),
+  }
+}
+
 /**
  * Los tres estados de `GET /subscriptions/current`, que son TRES y no dos.
  *
@@ -218,10 +365,21 @@ interface CuerpoEnviado {
   lines: { code: string; quantity: number }[]
 }
 
-/** Lo que la prueba ve de la petición: el cuerpo y cuántas veces salió. */
+/**
+ * Lo que la prueba ve de la petición: el cuerpo y cuántas veces salió.
+ *
+ * <p>`paymentSource` y `accept` son opcionales porque no todos los sitios que
+ * construyen una `Captura` pasan por {@link entrarAlPaso6} (`irAPlanes`, más
+ * abajo, arma la suya a mano): solo se rellenan cuando la ruta de pago está
+ * cableada, y los casos que no llegan a pagar no los necesitan.
+ */
 interface Captura {
   cuerpo: CuerpoEnviado | null
   llamadas: number
+  /** El cuerpo de `POST /payment-gateway/wompi/payment-sources`, o `null` si no se llamó. */
+  paymentSource?: WompiPaymentSourceRequest | null
+  /** El cuerpo de `POST /quotes/{id}/accept`, o `null` si no se llamó. */
+  accept?: AcceptQuoteRequest | null
 }
 
 interface OpcionesPaso6 {
@@ -237,6 +395,22 @@ interface OpcionesPaso6 {
    * que el comodín cambiara, media suite se pondría roja sin motivo aparente.
    */
   estadoDelPlan?: EstadoDelPlan
+  /** Por defecto ninguno: el caso normal tokeniza una tarjeta nueva. */
+  mediosGuardados?: SubscriptionPaymentMethodResponse[]
+  /** Para forzar `checkout-config` caído (409/503: «todavía no está disponible»). */
+  checkoutConfig?: (route: Route) => Promise<void> | void
+  /** Por defecto aprueba a la primera. Ver {@link primerPagoSondeo}. */
+  primerPago?: (route: Route) => Promise<void> | void
+  /**
+   * `POST {apiBaseUrl}/tokens/cards`. Por defecto responde {@link TOKEN_TARJETA_WOMPI}.
+   *
+   * <p>Va como opción de {@link entrarAlPaso6} y no como un `page.route` aparte en cada
+   * caso que quisiera inspeccionarla: dos `page.route` sobre el mismo patrón se resuelven
+   * en el ORDEN INVERSO al de registro, así que uno declarado por el caso ANTES de entrar
+   * al paso 6 quedaría tapado por el que registraría `entrarAlPaso6` después. Con una sola
+   * declaración, el caso que quiere mirar la petición pasa su propia función aquí.
+   */
+  tokenizar?: (route: Route) => Promise<void> | void
 }
 
 /**
@@ -253,7 +427,7 @@ async function entrarAlPaso6(
   over: Partial<Intencion> = {},
   opciones: OpcionesPaso6 = {},
 ): Promise<Captura> {
-  const captura: Captura = { cuerpo: null, llamadas: 0 }
+  const captura: Captura = { cuerpo: null, llamadas: 0, paymentSource: null, accept: null }
 
   await instalarSesion(page)
   await sembrarIntencion(page, intencion(over))
@@ -276,8 +450,27 @@ async function entrarAlPaso6(
         captura.cuerpo = route.request().postDataJSON() as CuerpoEnviado
         return responderJson(route, OFERTA, 201)
       },
+      // El bloque «Medio de pago» los pide en cuanto la oferta existe: sin ellos,
+      // `MedioDePagoWompi` monta sobre un `checkout-config` con la forma del
+      // comodín y revienta leyendo `config.acceptance.permalink`.
+      ...rutasPagoWompi({
+        mediosGuardados: opciones.mediosGuardados,
+        checkoutConfig: opciones.checkoutConfig,
+        primerPago: opciones.primerPago,
+        onPaymentSource: (cuerpo) => {
+          captura.paymentSource = cuerpo
+        },
+        onAccept: (cuerpo) => {
+          captura.accept = cuerpo
+        },
+      }),
     },
     { permisos: opciones.permisos ?? PERMISOS_CONTRATAR },
+  )
+  // Un origen distinto del backend propio: `enrutarApi` solo enruta `**/api/v1/**`.
+  await page.route(
+    `${WOMPI_SANDBOX_URL}/tokens/cards`,
+    opciones.tokenizar ?? ((route: Route) => responderJson(route, TOKEN_TARJETA_WOMPI)),
   )
   await page.goto('/dashboard/contratar')
   await expect(page.getByRole('heading', { level: 1, name: TITULO_PASO6 })).toBeVisible()
@@ -285,11 +478,49 @@ async function entrarAlPaso6(
   return captura
 }
 
-/** Marca los términos y confirma. Espera al paso 7, que es el estado observable. */
+/**
+ * Rellena el formulario de tarjeta NUEVA del bloque «Medio de pago» y lo envía.
+ *
+ * <p>La tarjeta es la de prueba de Wompi (Visa, Luhn válida): no es un dato real
+ * y no sirve contra ningún servidor de verdad. Asume que el bloque ya está
+ * pintado —`confirmar()` lo espera antes de llamar aquí— y que no hay un medio
+ * guardado por defecto, que es la rama que prueba {@link pagarConMedioGuardado}.
+ */
+async function pagarConTarjetaNueva(
+  page: Page,
+  correo = 'acepta.paga.e2e@example.com',
+): Promise<void> {
+  const paso = page.getByTestId('paso-contratar')
+  await paso.getByRole('textbox', { name: 'Número de tarjeta' }).fill('4242 4242 4242 4242')
+  await paso.getByRole('textbox', { name: 'Vencimiento (MM/AA)' }).fill('12/29')
+  await paso.getByRole('textbox', { name: 'CVC' }).fill('123')
+  await paso.getByRole('textbox', { name: 'Nombre del titular' }).fill('Prueba E2E')
+  await paso.getByRole('textbox', { name: 'Correo de quien acepta y paga' }).fill(correo)
+  await paso.getByRole('checkbox', { name: 'Acepto los' }).check()
+  await paso.getByRole('checkbox', { name: 'Autorizo el tratamiento' }).check()
+  await paso.getByRole('button', { name: 'Guardar tarjeta y pagar' }).click()
+}
+
+/** La otra rama del bloque de pago: paga con el medio que ya existía por defecto. */
+async function pagarConMedioGuardado(
+  page: Page,
+  correo = 'acepta.paga.e2e@example.com',
+): Promise<void> {
+  const paso = page.getByTestId('paso-contratar')
+  await paso.getByRole('textbox', { name: 'Correo de quien acepta y paga' }).fill(correo)
+  await paso.getByRole('button', { name: /^Pagar con la tarjeta terminada en/ }).click()
+}
+
+/**
+ * Marca los términos, confirma y paga con una tarjeta nueva. Espera al paso 7,
+ * que es el estado observable.
+ */
 async function confirmar(page: Page, rotulo: string = CONFIRMAR): Promise<void> {
   const paso = page.getByTestId('paso-contratar')
   await paso.getByRole('checkbox').check()
   await paso.getByRole('button', { name: rotulo }).click()
+  await expect(paso.getByRole('heading', { level: 2, name: 'Medio de pago' })).toBeVisible()
+  await pagarConTarjetaNueva(page)
   await expect(page).toHaveURL(/\/dashboard\/contratar\/exito$/)
 }
 
@@ -319,15 +550,6 @@ test.describe('Paso 6 — el paso vinculante', () => {
     // Al entrar en el paso el foco va al `<h1>`: tras un `router.push` se queda
     // en el `<body>` y el lector empieza a leer desde la navegación otra vez.
     await expect(page.getByRole('heading', { level: 1, name: TITULO_PASO6 })).toBeFocused()
-  })
-
-  test('el aviso de modo demostración no se puede cerrar', async ({ page }) => {
-    await entrarAlPaso6(page)
-    const paso = page.getByTestId('paso-contratar')
-
-    // Un aviso de que no hay cobro real que se pueda descartar es un aviso que
-    // la mitad de la gente no ve. Si alguien le pone una ✕, esto se pone rojo.
-    await expect(paso.getByRole('button', { name: /cerrar|descartar|entendido/i })).toHaveCount(0)
   })
 
   test('conserva la semántica del paso', async ({ page }) => {
@@ -414,7 +636,9 @@ test.describe('Paso 6 — el paso vinculante', () => {
     await expect(motivo).toHaveCount(0)
   })
 
-  test('la casilla marcada lleva al paso 7 con lo que se acaba de contratar', async ({ page }) => {
+  test('la casilla marcada lleva al paso 7, paga con Wompi y dice que el pago quedó aprobado', async ({
+    page,
+  }) => {
     await entrarAlPaso6(page)
     await confirmar(page)
 
@@ -426,7 +650,7 @@ test.describe('Paso 6 — el paso vinculante', () => {
     // se deriva de los `includes` del contenido y no se transcribe: un módulo
     // más en el paquete cambiaría la frase, y un «5» quemado dejaría este caso
     // rojo por algo que no es un fallo.
-    await expect(titulo).toContainText(`Reservaste tu plan con ${CLINICA.includes.length} módulos`)
+    await expect(titulo).toContainText(`Contrataste tu plan con ${CLINICA.includes.length} módulos`)
     await expect(titulo).toBeFocused()
 
     // El paquete se nombra ahora en la bajada. Que siga estando en algún sitio es
@@ -434,22 +658,11 @@ test.describe('Paso 6 — el paso vinculante', () => {
     await expect(exito).toContainText(CLINICA.name)
     await expect(exito).toContainText(EMPRESA_NOMBRE)
 
-    // «activo» era mentira y la propia pantalla la desmentía dos párrafos más abajo. Aceptar una
-    // oferta no enciende hoy los módulos —nadie reacciona a `QuoteStatus.ACCEPTED`—, así que lo
-    // que de verdad pasó es que la elección quedó reservada. El título de la pestaña dice lo
-    // mismo que el `<h1>`.
-    await expect(page).toHaveTitle('Tu plan está reservado — Lumbre')
-    // «Reservaste», nunca «activo» ni «activado»: aceptar una oferta no enciende
-    // ningún módulo, y la afirmación va contra el verbo prohibido y no a favor de
-    // uno concreto, que es lo que la deja en pie al siguiente retoque de copy.
-    await expect(titulo).toContainText(/Reservaste/)
-    await expect(titulo).not.toContainText(/activ/i)
-
-    // Lo que todavía NO es verdad, dicho donde se puede leer. La frase vieja —«no ha viajado al
-    // servidor»— se borró porque dejó de ser cierta el día que `activarPlan` empezó a llamar al
-    // endpoint; lo que sigue sin ocurrir es el último eslabón, y es esto lo que no se puede
-    // borrar sin que la pantalla vuelva a prometer de más.
-    await expect(exito).toContainText('Para dejar los módulos encendidos')
+    // El cobro ya es real: con Wompi aprobando a la primera, el plan queda
+    // activo de verdad, y el título de la pestaña dice lo mismo que la insignia.
+    await expect(exito).toContainText('Pago aprobado')
+    await expect(exito).toContainText('Pago aprobado: tu plan está activo.')
+    await expect(page).toHaveTitle('Pago aprobado — Lumbre')
   })
 
   test('la intención se descarta al contratar: el enganche del login no vuelve a disparar', async ({
@@ -599,7 +812,7 @@ test.describe('El cuerpo que viaja a POST /quotes/self-serve', () => {
     await expect(paso).toContainText('No pudimos registrar tu contratación')
     expect(llamadas).toBe(1)
 
-    // Y lo que NO pasó: no hay paso 7, no hay «tu plan está reservado» y la
+    // Y lo que NO pasó: no hay paso 7, no hay bloque de pago que tokenizar y la
     // intención sigue viva para poder reintentar. Un cliente que ve la pantalla
     // de éxito sobre una oferta que el servidor rechazó es el peor final posible
     // de este embudo.
@@ -844,27 +1057,62 @@ test.describe('Paso 7 — manda el servidor', () => {
     await expect(exito).toContainText('27 de septiembre, 2026')
   })
 
-  test('el cobro sigue siendo una simulación, y la pantalla no dice lo contrario', async ({
-    page,
-  }) => {
+  /**
+   * El cobro ya NO es una simulación: `SettleNewContractService` reacciona a la
+   * oferta aceptada y el paso 7 sondea el desenlace real en vez de darlo por
+   * hecho. Este bloque cubre las tres salidas de ese sondeo.
+   */
+  test('el pago aprobado activa el plan de verdad, y lo dice sin ambigüedad', async ({ page }) => {
     await entrarAlPaso6(page)
     await confirmar(page)
     const exito = page.getByTestId('contratacion-exito')
 
-    // No hay pasarela conectada. El aviso se repite aquí una segunda y ÚLTIMA vez.
-    await expect(exito).toContainText('Modo demostración')
-    await expect(exito).toContainText('no se ha cobrado nada')
+    await expect(exito).toContainText('Pago aprobado')
+    await expect(exito).toContainText('Pago aprobado: tu plan está activo.')
+    await expect(page).toHaveTitle('Pago aprobado — Lumbre')
 
-    // Y en ningún sitio se afirma que haya habido un cargo. Esto es lo que
-    // separa «tu plan quedó reservado» de un recibo falso.
-    const texto = (await exito.textContent()) ?? ''
-    expect(texto).not.toMatch(
-      /pago (recibido|procesado|aprobado)|hemos cobrado|te cobramos|se te ha cobrado|cargo (a|en) tu tarjeta|tarjeta terminada/i,
-    )
+    // El aviso de «no se ha cobrado nada» era verdad en el modo demostración y
+    // dejó de serlo: si sobreviviera aquí, la pantalla mentiría sobre un cargo
+    // que Wompi sí hizo.
+    await expect(exito).not.toContainText('Modo demostración')
+    await expect(exito).not.toContainText('no se ha cobrado nada')
+  })
 
-    // Ni un solo campo que pida datos de pago: pedir dieciséis dígitos para no
-    // cobrar es exactamente lo que hace el fraude.
-    await expect(exito.getByRole('textbox')).toHaveCount(0)
+  test('el pago rechazado lo dice, y ofrece actualizar el medio de pago', async ({ page }) => {
+    await entrarAlPaso6(page, {}, { primerPago: primerPagoSondeo(['DECLINED']) })
+    await confirmar(page)
+    const exito = page.getByTestId('contratacion-exito')
+
+    await expect(exito).toContainText('Pago rechazado')
+    await expect(exito).toContainText('No pudimos cobrar tu tarjeta.')
+    await expect(exito.getByRole('link', { name: 'Actualiza tu medio de pago' })).toBeVisible()
+    await expect(page).toHaveTitle('Pago rechazado — Lumbre')
+
+    // Y no se afirma lo contrario: un rechazo no es una aprobación a medias.
+    await expect(exito).not.toContainText('Pago aprobado')
+  })
+
+  /**
+   * El tramo pendiente de en medio, el único que necesita el intervalo real del
+   * sondeo (2 s): con `PENDING` primero y `APPROVED` después, `sondear()` tiene
+   * que preguntar dos veces y no una, y la pantalla tiene que reflejar las dos
+   * respuestas en el orden en que llegaron.
+   */
+  test('mientras Wompi confirma con el banco, la pantalla pasa de «Confirmando» a «Pago aprobado»', async ({
+    page,
+  }) => {
+    await entrarAlPaso6(page, {}, { primerPago: primerPagoSondeo(['PENDING', 'APPROVED']) })
+    await confirmar(page)
+    const exito = page.getByTestId('contratacion-exito')
+
+    await expect(exito).toContainText('Confirmando tu pago')
+    await expect(exito).toContainText('Estamos confirmando el pago con tu banco; te avisaremos.')
+    await expect(page).toHaveTitle('Confirmando tu pago — Lumbre')
+
+    // El segundo sondeo llega ~2 s después: el timeout de la aserción cubre esa
+    // espera real, no un `waitForTimeout` a ciegas.
+    await expect(exito).toContainText('Pago aprobado', { timeout: 6000 })
+    await expect(page).toHaveTitle('Pago aprobado — Lumbre')
   })
 })
 
@@ -1072,7 +1320,9 @@ test.describe('Recorrido de solo teclado', () => {
     await expect(page).toHaveURL(/\/registro\?plan=PACK_CLINIC/)
   })
 
-  test('tramo autenticado: del inicio del paso 6 hasta «Confirmar mi plan»', async ({ page }) => {
+  test('tramo autenticado: del inicio del paso 6 hasta pagar con Wompi, todo con teclado', async ({
+    page,
+  }) => {
     const captura = await entrarAlPaso6(page)
     const paso = page.getByTestId('paso-contratar')
 
@@ -1088,8 +1338,40 @@ test.describe('Recorrido de solo teclado', () => {
     await tabularHasta(page, boton)
     await page.keyboard.press('Enter')
 
-    await expect(page).toHaveURL(/\/dashboard\/contratar\/exito$/)
+    // La oferta ya se pidió: sigue en el paso 6, con el bloque de pago servido.
+    await expect(page).toHaveURL(/\/dashboard\/contratar$/)
+    await expect(paso.getByRole('heading', { level: 2, name: 'Medio de pago' })).toBeVisible()
     expect(captura.llamadas, 'el teclado tiene que pedir la oferta igual que el ratón').toBe(1)
+
+    // El resto del bloque de pago, también sin ratón: los campos se rellenan
+    // directamente (lo que importa aquí es que el foco no se pierda al tabular
+    // entre ellos, no la mecánica de tecleo carácter a carácter) y las dos
+    // casillas y el envío sí pasan por `tabularHasta`.
+    const numero = paso.getByRole('textbox', { name: 'Número de tarjeta' })
+    await tabularHasta(page, numero)
+    await numero.fill('4242 4242 4242 4242')
+    await paso.getByRole('textbox', { name: 'Vencimiento (MM/AA)' }).fill('12/29')
+    await paso.getByRole('textbox', { name: 'CVC' }).fill('123')
+    await paso.getByRole('textbox', { name: 'Nombre del titular' }).fill('Prueba E2E')
+    await paso
+      .getByRole('textbox', { name: 'Correo de quien acepta y paga' })
+      .fill('acepta.paga.e2e@example.com')
+
+    const terminos = paso.getByRole('checkbox', { name: 'Acepto los' })
+    await tabularHasta(page, terminos)
+    await page.keyboard.press('Space')
+    await expect(terminos).toBeChecked()
+
+    const datos = paso.getByRole('checkbox', { name: 'Autorizo el tratamiento' })
+    await tabularHasta(page, datos)
+    await page.keyboard.press('Space')
+    await expect(datos).toBeChecked()
+
+    const pagar = paso.getByRole('button', { name: 'Guardar tarjeta y pagar' })
+    await tabularHasta(page, pagar)
+    await page.keyboard.press('Enter')
+
+    await expect(page).toHaveURL(/\/dashboard\/contratar\/exito$/)
   })
 })
 
@@ -1220,7 +1502,7 @@ test.describe('Los cuatro «Cambiar» — pulsados, no fotografiados', () => {
  */
 test.describe('/planes con sesión — las tres ramas del guard', () => {
   async function irAPlanes(page: Page, estado: EstadoDelPlan, consulta = ''): Promise<Captura> {
-    const captura: Captura = { cuerpo: null, llamadas: 0 }
+    const captura: Captura = { cuerpo: null, llamadas: 0, paymentSource: null, accept: null }
     await instalarSesion(page)
     await enrutarApi(
       page,
@@ -1236,8 +1518,22 @@ test.describe('/planes con sesión — las tres ramas del guard', () => {
           captura.cuerpo = route.request().postDataJSON() as CuerpoEnviado
           return responderJson(route, OFERTA, 201)
         },
+        // El único caso de este bloque que llega a pagar («el cliente sin plan
+        // elige un paquete aquí y CONTRATA») entra al paso 6 desde aquí, así que
+        // necesita el mismo bloque de pago que `entrarAlPaso6`.
+        ...rutasPagoWompi({
+          onPaymentSource: (cuerpo) => {
+            captura.paymentSource = cuerpo
+          },
+          onAccept: (cuerpo) => {
+            captura.accept = cuerpo
+          },
+        }),
       },
       { permisos: PERMISOS_CONTRATAR },
+    )
+    await page.route(`${WOMPI_SANDBOX_URL}/tokens/cards`, (route: Route) =>
+      responderJson(route, TOKEN_TARJETA_WOMPI),
     )
     await page.goto(`/planes${consulta}`)
     return captura
@@ -1447,5 +1743,118 @@ test.describe('§5 caso 2b — la propuesta a medida que no se puede pintar', ()
     await paso.getByTestId('volver-planes').click()
     await expect(page).toHaveURL(/\/planes$/)
     await expect(page.getByRole('heading', { level: 1, name: TITULO_PLANES })).toBeVisible()
+  })
+})
+
+/**
+ * EL BLOQUE DE PAGO — a quién le llega la tarjeta, y a quién no.
+ *
+ * <p>`MedioDePagoWompi.vue` tokeniza DIRECTO contra Wompi con una instancia de
+ * axios propia: a nuestro backend solo tienen que llegar un `cardToken` y los
+ * cuatro campos no sensibles de la tarjeta (marca, últimos cuatro, vencimiento).
+ * Este bloque es la prueba de esa frontera, no una prueba de unidad de
+ * `tokenizarTarjeta` —ya cubierta en `tests/unit/tokenizar-tarjeta.spec.ts`—: lo
+ * que se afirma aquí es que la PANTALLA, con la tarjeta que un usuario
+ * escribiría, no deja escapar el número ni el CVC por ningún sitio observable
+ * desde fuera del componente: ni el cable hacia nuestro API, ni el
+ * almacenamiento del navegador.
+ */
+test.describe('El bloque de pago — la tarjeta y el CVC solo llegan a Wompi', () => {
+  test('tokeniza con la llave pública de Wompi, nunca con el JWT del tenant, y no deja rastro en nuestro API ni en el almacenamiento', async ({
+    page,
+  }) => {
+    const autorizacionRecibida: string[] = []
+    const captura = await entrarAlPaso6(
+      page,
+      {},
+      {
+        tokenizar: (route: Route) => {
+          autorizacionRecibida.push(route.request().headers()['authorization'] ?? '')
+          return responderJson(route, TOKEN_TARJETA_WOMPI)
+        },
+      },
+    )
+    await confirmar(page)
+
+    // La credencial que salió hacia Wompi es SU llave pública — nunca la sesión
+    // del tenant. Si `tokenizarTarjeta` usara por error el cliente `http` del
+    // repo en vez de su propia instancia de axios, aquí llegaría el JWT
+    // simulado en su lugar.
+    expect(autorizacionRecibida).toEqual([`Bearer ${CHECKOUT_CONFIG.publicKey}`])
+
+    const NUMERO_SIN_ESPACIOS = '4242424242424242'
+    const NUMERO_CON_ESPACIOS = '4242 4242 4242 4242'
+
+    // Lo que SÍ le llega a nuestro API: nunca el número completo ni el CVC como
+    // valor propio, en ninguno de los dos cuerpos que sí viajan al backend.
+    for (const cuerpo of [captura.paymentSource, captura.accept]) {
+      const crudo = JSON.stringify(cuerpo ?? {})
+      expect(crudo).not.toContain(NUMERO_SIN_ESPACIOS)
+      expect(crudo).not.toContain(NUMERO_CON_ESPACIOS)
+      expect(crudo, 'el CVC no es un campo del contrato: no puede viajar como valor').not.toContain(
+        '"123"',
+      )
+    }
+    expect(captura.paymentSource?.lastFour).toBe('4242')
+
+    // Y tampoco sobrevive en el navegador: ni el store de auth ni el espejo de
+    // la intención guardan nada de la tarjeta, así que una recarga a medio pagar
+    // no puede filtrarla desde `localStorage` ni desde `sessionStorage`.
+    const almacenamiento = await page.evaluate(() => ({
+      local: { ...window.localStorage },
+      session: { ...window.sessionStorage },
+    }))
+    const crudoAlmacenamiento = JSON.stringify(almacenamiento)
+    expect(crudoAlmacenamiento).not.toContain(NUMERO_SIN_ESPACIOS)
+    expect(crudoAlmacenamiento).not.toContain(NUMERO_CON_ESPACIOS)
+    expect(crudoAlmacenamiento).not.toContain('"123"')
+  })
+})
+
+/**
+ * CUANDO YA HAY UN MEDIO DE PAGO ACTIVO — se salta la tokenización entera.
+ *
+ * Es la rama de `medioPorDefecto` en `MedioDePagoWompi.vue`: con un medio WOMPI
+ * `ACTIVE` y `defaultMethod`, el bloque ofrece pagar con él directamente y ni
+ * siquiera pinta el formulario de tarjeta nueva. `lastFour` es el de
+ * {@link MEDIO_GUARDADO} (1234) y no el de la tarjeta de prueba que usa el resto
+ * de la spec (4242): si algo tokenizara por error, el número que aparece en
+ * pantalla lo delataría.
+ */
+test.describe('Con un medio de pago ya guardado, se paga sin tokenizar nada', () => {
+  test('ofrece pagar con la tarjeta guardada y no llama a tokens/cards', async ({ page }) => {
+    const llamadasTokenize: number[] = []
+    const captura = await entrarAlPaso6(
+      page,
+      {},
+      {
+        mediosGuardados: [MEDIO_GUARDADO],
+        tokenizar: (route: Route) => {
+          llamadasTokenize.push(1)
+          return responderJson(route, TOKEN_TARJETA_WOMPI)
+        },
+      },
+    )
+    const paso = page.getByTestId('paso-contratar')
+    await paso.getByRole('checkbox').check()
+    await paso.getByRole('button', { name: CONFIRMAR }).click()
+
+    const boton = paso.getByRole('button', { name: 'Pagar con la tarjeta terminada en 1234' })
+    await expect(boton).toBeVisible()
+    // Y el formulario de tarjeta nueva ni se pinta: no hay nada que rellenar.
+    await expect(paso.getByRole('textbox', { name: 'Número de tarjeta' })).toHaveCount(0)
+
+    await pagarConMedioGuardado(page)
+
+    await expect(page).toHaveURL(/\/dashboard\/contratar\/exito$/)
+    expect(
+      llamadasTokenize,
+      'con un medio activo por defecto no hace falta tokenizar nada',
+    ).toHaveLength(0)
+    expect(captura.paymentSource, 'el medio ya existe: no se registra uno nuevo').toBeNull()
+    expect(captura.accept?.acceptedByEmail).toBe('acepta.paga.e2e@example.com')
+
+    const exito = page.getByTestId('contratacion-exito')
+    await expect(exito).toContainText('Pago aprobado')
   })
 })

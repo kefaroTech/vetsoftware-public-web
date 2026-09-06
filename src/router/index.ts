@@ -264,12 +264,15 @@ const router = createRouter({
           path: 'contratar/exito',
           name: 'contratar-exito',
           component: () => import('@/features/contratacion/views/ContratarExitoView.vue'),
-          // El título repetía la mentira del `<h1>`. Va con la misma palabra que
-          // la pantalla: reservado, que es lo que de verdad ocurrió.
+          // «Reservado» ya no es verdad para ninguno de los tres desenlaces del cobro con Wompi
+          // (aprobado, pendiente, rechazado), y este valor es estático — se fija ANTES de saber
+          // qué contestó la pasarela. Uno neutro que ContratarExitoView.vue sobrescribe con
+          // `document.title` en cuanto el sondeo de `GET
+          // /payment-gateway/wompi/first-period-payment` responde.
           meta: {
             fullBleed: true,
             hideTopbar: true,
-            title: 'Tu plan está reservado — Lumbre',
+            title: 'Confirmando tu pago — Lumbre',
           },
         },
         {

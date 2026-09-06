@@ -119,8 +119,9 @@ export function avisoBajarCantidad(usado: number, nuevo: number, nombre: string)
 export const SIN_MEDIOS_PAGO = 'No tienes ningún medio de pago registrado.'
 
 /**
- * El hueco honesto del alta. Ver `RegisterSubscriptionPaymentMethodRequest`: el endpoint exige
- * un token de pasarela y este front no tiene widget de tokenización.
+ * El hueco honesto del alta. Ver `RegisterSubscriptionPaymentMethodRequest`: el widget de
+ * tokenización con Wompi vive en la autocontratación (paso 6), no en esta pantalla — que no lo
+ * repite para dar de alta un medio adicional o de reemplazo.
  */
 export const ALTA_MEDIO_PAGO =
   'Para registrar un medio de pago nuevo, escríbenos y lo dejamos listo.'
