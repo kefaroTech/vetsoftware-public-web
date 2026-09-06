@@ -118,13 +118,6 @@ export function avisoBajarCantidad(usado: number, nuevo: number, nombre: string)
 
 export const SIN_MEDIOS_PAGO = 'No tienes ningún medio de pago registrado.'
 
-/**
- * El hueco honesto del alta. Ver `RegisterSubscriptionPaymentMethodRequest`: el endpoint exige
- * un token de pasarela y este front no tiene widget de tokenización.
- */
-export const ALTA_MEDIO_PAGO =
-  'Para registrar un medio de pago nuevo, escríbenos y lo dejamos listo.'
-
 const METHOD_KIND_LABELS: Record<PaymentMethodKind, string> = { CARD: 'Tarjeta', PSE: 'PSE' }
 
 export function methodKindLabel(kind: PaymentMethodKind | undefined): string {

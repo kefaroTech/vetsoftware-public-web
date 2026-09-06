@@ -46,10 +46,12 @@ export const mediosPagoApi = {
   /**
    * `POST /subscription-payment-methods` — **escrito y sin pantalla que lo llame**.
    *
-   * <p>No es código muerto por descuido: el endpoint exige `token` de pasarela y este front no
-   * tiene widget de tokenización. Dejarlo escrito es lo que permite que, cuando lo haya, el
-   * hueco honesto de `MediosPagoView` se sustituya por el formulario sin tocar la capa de API.
-   * Ver `RegisterSubscriptionPaymentMethodRequest`.
+   * <p>No es código muerto por descuido: el widget de tokenización con Wompi
+   * (`MedioDePagoWompi.vue`, feature `contratacion`) da de alta el medio de pago por
+   * `POST /payment-gateway/wompi/payment-sources`, no por este endpoint genérico — el registro
+   * inicial de la empresa ocurre siempre al contratar. Este método se deja escrito para el día en
+   * que `MediosPagoView` necesite dar de alta un medio SIN pasar por esa contratación (una tarjeta
+   * de refuerzo, un cambio de banco). Ver `RegisterSubscriptionPaymentMethodRequest`.
    */
   async create(
     payload: RegisterSubscriptionPaymentMethodRequest,

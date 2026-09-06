@@ -31,12 +31,17 @@ import { elemento, exigir } from '../helpers/exigir'
  */
 
 const selfServe = vi.fn<(payload: unknown) => Promise<QuoteResponse>>()
+const accept = vi.fn<(id: number, payload: unknown) => Promise<QuoteResponse>>()
 const findById = vi.fn()
 const push = vi.fn()
 const replace = vi.fn()
 const errorFrom = vi.fn()
 const toastInfo = vi.fn()
 const cargarSuscripcion = vi.fn()
+const checkoutConfig = vi.fn()
+const crearFuenteDePago = vi.fn()
+const tokenizarTarjeta = vi.fn()
+const mediosPagoListAll = vi.fn()
 
 const permisos = ref<string[]>([])
 const estadoPlanActual = ref<EstadoPlanActual>('SIN_PLAN')
@@ -65,7 +70,33 @@ vi.mock('@/features/empresa/api/company.api', () => ({
 }))
 
 vi.mock('@/features/suscripcion/api/cotizaciones.api', () => ({
-  cotizacionesApi: { selfServe: (p: unknown) => selfServe(p) },
+  cotizacionesApi: {
+    selfServe: (p: unknown) => selfServe(p),
+    accept: (id: number, p: unknown) => accept(id, p),
+  },
+}))
+
+vi.mock('@/features/suscripcion/api/pago.api', () => ({
+  wompiApi: {
+    checkoutConfig: () => checkoutConfig(),
+    crearFuenteDePago: (p: unknown) => crearFuenteDePago(p),
+    primerPago: vi.fn(),
+  },
+  tokenizarTarjeta: (apiBaseUrl: string, publicKey: string, tarjeta: unknown) =>
+    tokenizarTarjeta(apiBaseUrl, publicKey, tarjeta),
+}))
+
+// El medio de pago se lee del store real de `suscripcion` (no se dobla el store, solo su API):
+// `MedioDePagoWompi` decide si tokeniza o si ofrece el medio por defecto según lo que este
+// endpoint devuelva, y una página vacía es la rama que la mayoría de estos casos necesita.
+vi.mock('@/features/suscripcion/api/medios-pago.api', () => ({
+  mediosPagoApi: {
+    listAll: () => mediosPagoListAll(),
+    findById: vi.fn(),
+    setDefault: vi.fn(),
+    revoke: vi.fn(),
+    create: vi.fn(),
+  },
 }))
 
 const previsualizarCotizacion = vi.fn<(args: unknown) => Promise<CotizacionPreview>>()
@@ -137,6 +168,30 @@ const PREVIEW_PACK_CLINIC: CotizacionPreview = {
   total: 224_910,
 }
 
+const CHECKOUT_CONFIG = {
+  environment: 'SANDBOX' as const,
+  apiBaseUrl: 'https://sandbox.wompi.co/v1',
+  publicKey: 'pub_test_abc',
+  acceptance: { token: 'acc-token', permalink: 'https://wompi.co/acceptance' },
+  personalDataAuthorization: { token: 'pda-token', permalink: 'https://wompi.co/pda' },
+}
+
+const TOKEN_TARJETA = {
+  id: 'tok_test_1',
+  brand: 'VISA',
+  last_four: '4242',
+  exp_month: '08',
+  exp_year: '29',
+}
+
+const MEDIO_REGISTRADO = {
+  paymentMethodId: 1,
+  brand: 'VISA',
+  lastFour: '4242',
+  expiresOn: '2029-08-31',
+  defaultMethod: true,
+}
+
 function sembrarIntencion(importeVistoMensual: number | null = SUBTOTAL_MENSUAL_PACK_CLINIC) {
   window.localStorage.setItem(
     CONTRATACION_INTENCION_KEY,
@@ -171,11 +226,46 @@ function botonConfirmar(wrapper: Awaited<ReturnType<typeof montar>>) {
   return wrapper.findAll('button').filter((b) => b.text().includes('Confirmar mi plan'))
 }
 
+/**
+ * Rellena el formulario de `MedioDePagoWompi` con una tarjeta válida, marca las dos casillas de
+ * Wompi y pulsa «Guardar tarjeta y pagar». Asume que ya se pidió la oferta (`oferta` no es
+ * `null`) y que `mediosPagoListAll` devolvió una página SIN medio por defecto — si lo hubiera,
+ * este formulario no se pintaría.
+ */
+async function pagarConTarjetaValida(wrapper: Awaited<ReturnType<typeof montar>>) {
+  await flushPromises() // GET checkout-config + GET subscription-payment-methods
+
+  await wrapper.find('input[placeholder="4242 4242 4242 4242"]').setValue('4242424242424242')
+  await wrapper.find('input[placeholder="08/29"]').setValue('0829')
+  await wrapper.find('input[placeholder="123"]').setValue('123')
+  await wrapper.find('input[placeholder="Como aparece en la tarjeta"]').setValue('Ana Gómez')
+  await wrapper.find('input[type="email"]').setValue('admin@clinica.com')
+  const casillas = wrapper.findAll('input[type="checkbox"]')
+  await elemento(casillas, 0, 'casilla de términos de Wompi').setValue(true)
+  await elemento(casillas, 1, 'casilla de datos personales de Wompi').setValue(true)
+
+  // `trigger('click')` sobre el botón no basta en JSDOM: no siempre dispara el `submit` del
+  // `<form>` que envuelve. Se dispara el `submit` directamente, igual que el navegador real.
+  await wrapper.find('form').trigger('submit')
+  await flushPromises()
+}
+
 beforeEach(() => {
   window.localStorage.clear()
   selfServe.mockReset().mockResolvedValue(OFERTA)
   previsualizarCotizacion.mockReset().mockResolvedValue(PREVIEW_PACK_CLINIC)
+  accept.mockReset().mockResolvedValue({ ...OFERTA, status: 'ACCEPTED' })
   findById.mockReset().mockResolvedValue({ id: 7, name: 'Clínica Norte', identifier: '900123456' })
+  checkoutConfig.mockReset().mockResolvedValue(CHECKOUT_CONFIG)
+  crearFuenteDePago.mockReset().mockResolvedValue(MEDIO_REGISTRADO)
+  tokenizarTarjeta.mockReset().mockResolvedValue(TOKEN_TARJETA)
+  mediosPagoListAll.mockReset().mockResolvedValue({
+    content: [],
+    page: 0,
+    pageSize: 50,
+    totalElements: 0,
+    totalPages: 0,
+  })
   push.mockReset()
   replace.mockReset()
   errorFrom.mockReset()
@@ -264,7 +354,7 @@ describe('la casilla de términos es una puerta, no un adorno', () => {
     expect(wrapper.text()).toContain('Tienes que aceptar los Términos para continuar')
   })
 
-  it('marcada, se manda la oferta y se navega al éxito con los importes DEL SERVIDOR', async () => {
+  it('marcada, pide la oferta y muestra el bloque de pago — no navega todavía', async () => {
     const wrapper = await montar()
 
     await wrapper.find('input[type="checkbox"]').setValue(true)
@@ -276,6 +366,37 @@ describe('la casilla de términos es una puerta, no un adorno', () => {
       billingCycle: 'MONTHLY',
       lines: [{ code: 'PACK_CLINIC', quantity: 1 }],
     })
+    // El acto de pedir la oferta ya NO navega ni guarda nada: eso es lo que hace
+    // que un fallo posterior de `accept` no obligue a pedir una segunda oferta.
+    expect(push).not.toHaveBeenCalled()
+    expect(useResultadoContratacionStore().resultado).toBeNull()
+    expect(wrapper.text()).toContain('Medio de pago')
+  })
+
+  it('pagada, acepta la oferta y navega al éxito con los importes DEL SERVIDOR', async () => {
+    const wrapper = await montar()
+
+    await wrapper.find('input[type="checkbox"]').setValue(true)
+    await elemento(botonConfirmar(wrapper), 0, 'botonConfirmar(wrapper)').trigger('click')
+    await flushPromises()
+
+    await pagarConTarjetaValida(wrapper)
+
+    expect(tokenizarTarjeta).toHaveBeenCalledWith(
+      CHECKOUT_CONFIG.apiBaseUrl,
+      CHECKOUT_CONFIG.publicKey,
+      expect.objectContaining({ number: '4242424242424242', cvc: '123' }),
+    )
+    expect(crearFuenteDePago).toHaveBeenCalledWith({
+      cardToken: TOKEN_TARJETA.id,
+      acceptanceToken: CHECKOUT_CONFIG.acceptance.token,
+      personalDataAuthToken: CHECKOUT_CONFIG.personalDataAuthorization.token,
+      brand: TOKEN_TARJETA.brand,
+      lastFour: TOKEN_TARJETA.last_four,
+      expMonth: 8,
+      expYear: 29,
+    })
+    expect(accept).toHaveBeenCalledWith(55, { acceptedByEmail: 'admin@clinica.com' })
     expect(push).toHaveBeenCalledWith({ name: 'contratar-exito' })
 
     // Y lo que la pantalla de éxito va a leer son las cifras de la oferta, no el
@@ -285,20 +406,41 @@ describe('la casilla de términos es una puerta, no un adorno', () => {
     expect(guardado?.subtotal).toBe(777_321)
     expect(guardado?.subtotal).not.toBe(SUBTOTAL_MENSUAL_PACK_CLINIC)
     expect(guardado?.cotizacionNumero).toBe('COT-2026-0055')
+    expect(guardado?.pago).toBeNull()
   })
 
-  it('la llave de idempotencia se genera UNA vez por pantalla, no por clic', async () => {
-    // Es lo que hace que un doble clic no cree dos ofertas. Se comprueba con dos
-    // envíos consecutivos: la segunda llamada tiene que llevar la misma llave.
+  it('si `accept` falla, no navega y reabre el botón sin volver a tokenizar', async () => {
+    accept.mockRejectedValueOnce(new Error('502'))
+    const wrapper = await montar()
+
+    await wrapper.find('input[type="checkbox"]').setValue(true)
+    await elemento(botonConfirmar(wrapper), 0, 'botonConfirmar(wrapper)').trigger('click')
+    await flushPromises()
+    await pagarConTarjetaValida(wrapper)
+
+    expect(push).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('no pudimos confirmar el pago')
+
+    // El botón vuelve al reposo: `restablecer()` lo reabre sin que el padre haya
+    // vuelto a pedirle a `MedioDePagoWompi` que tokenice nada.
+    expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeUndefined()
+    expect(tokenizarTarjeta).toHaveBeenCalledTimes(1)
+  })
+
+  it('la llave de idempotencia se genera UNA vez por pantalla, y sobrevive a un reintento', async () => {
+    // Es lo que hace que un reintento tras un fallo no cree dos ofertas. El primer
+    // envío falla —el botón vuelve al reposo, con la oferta todavía sin pedir— y
+    // el segundo tiene que llevar LA MISMA llave.
+    selfServe.mockRejectedValueOnce(new Error('502'))
     const wrapper = await montar()
     await wrapper.find('input[type="checkbox"]').setValue(true)
 
     await elemento(botonConfirmar(wrapper), 0, 'botonConfirmar(wrapper)').trigger('click')
     await flushPromises()
-    selfServe.mockRejectedValueOnce(new Error('reintento'))
-    await botonConfirmar(wrapper)[0]?.trigger('click')
+    await elemento(botonConfirmar(wrapper), 0, 'botonConfirmar(wrapper)').trigger('click')
     await flushPromises()
 
+    expect(selfServe).toHaveBeenCalledTimes(2)
     const llaves = selfServe.mock.calls.map(
       (c) => (c[0] as { clientRequestId: string }).clientRequestId,
     )

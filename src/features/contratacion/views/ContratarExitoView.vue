@@ -1,29 +1,35 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { computed, nextTick, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
 import { formatDateLong } from '@/composables/format'
 import { importeEstimado, sufijoConImpuesto } from '@/features/landing/composables/planPricing'
 import { CICLO_LABEL } from '@/features/landing/types/plans.types'
-import DemoModeNotice from '../components/DemoModeNotice.vue'
+import { wompiApi } from '@/features/suscripcion/api/pago.api'
 import SiguientesPasos from '../components/SiguientesPasos.vue'
 import TrialLinesTable from '../components/TrialLinesTable.vue'
 import { sumarDias } from '../api/contratacion.source'
 import { useResultadoContratacionStore } from '../stores/resultadoContratacion.store'
+import type { FirstPeriodPaymentStatus } from '../types/contratacion.types'
 
 /**
  * Paso 7 — el momento más importante, y el que peor se resuelve siempre.
  *
- * Tres bloques, en este orden: qué pasó en una línea con el dato que le importa;
- * qué se va a cobrar y cuándo, con las fechas reales por módulo; y tres cosas
- * que hacer ahora. Eso último es lo que convierte una compra en un uso.
+ * <p>El cobro es real y anticipado (§1 de la especificación de Wompi): esta pantalla ya no puede
+ * decir «Reservado» y quedarse ahí, porque lo que pasó con la tarjeta es justo lo que decide si el
+ * plan queda activo. Sondea `GET /payment-gateway/wompi/first-period-payment` cada
+ * {@link INTERVALO_MS} hasta que Wompi responde `APPROVED`/`DECLINED` o pasan
+ * {@link DURACION_MAX_MS} — mientras tanto, y si el plazo se agota en `PENDING`, el aviso dice que
+ * se está confirmando con el banco: el webhook (`ProcessWompiEventUseCase`) cierra ese estado más
+ * tarde, y esta pantalla no vuelve a preguntarlo.
  *
- * Sin resultado en el store no hay nada que contar —una recarga a la semana, un
- * enlace pegado—, y la pantalla manda al tablero en vez de repetir una
- * activación vieja como si acabara de ocurrir.
+ * <p>Sin resultado en el store no hay nada que contar —una recarga a la semana, un enlace
+ * pegado—, y la pantalla manda al tablero en vez de repetir una activación vieja como si acabara
+ * de ocurrir.
  */
 const router = useRouter()
-const { resultado } = storeToRefs(useResultadoContratacionStore())
+const resultadoStore = useResultadoContratacionStore()
+const { resultado } = storeToRefs(resultadoStore)
 
 const h1 = ref<HTMLElement | null>(null)
 
@@ -47,6 +53,45 @@ const primerCobro = computed(() => {
   return primera ? sumarDias(primera.trialEndDate, 1) : null
 })
 
+const INTERVALO_MS = 2000
+const DURACION_MAX_MS = 20_000
+
+const estadoPago = ref<FirstPeriodPaymentStatus | null>(null)
+let detenido = false
+
+function esperar(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/** Deja de sondear en cuanto la respuesta es final, o al agotar el plazo. */
+async function sondear() {
+  const inicio = Date.now()
+  while (!detenido && Date.now() - inicio < DURACION_MAX_MS) {
+    let respuesta
+    try {
+      respuesta = await wompiApi.primerPago()
+    } catch {
+      // Un fallo de red aquí no es el desenlace del cobro: se deja de sondear y el estado se
+      // queda como estaba (o `NOT_ATTEMPTED` de entrada), sin fingir un resultado que no se leyó.
+      return
+    }
+    if (detenido) return
+    estadoPago.value = respuesta.status
+    if (resultado.value) {
+      resultadoStore.guardar({
+        ...resultado.value,
+        pago: { status: respuesta.status, amount: respuesta.amount, currency: respuesta.currency },
+      })
+    }
+    if (respuesta.status === 'APPROVED' || respuesta.status === 'DECLINED') return
+    await esperar(INTERVALO_MS)
+  }
+}
+
+onBeforeUnmount(() => {
+  detenido = true
+})
+
 onMounted(async () => {
   if (!resultado.value) {
     void router.replace({ name: 'home' })
@@ -54,6 +99,44 @@ onMounted(async () => {
   }
   await nextTick()
   h1.value?.focus()
+  await sondear()
+})
+
+const INSIGNIA: Record<FirstPeriodPaymentStatus, string> = {
+  APPROVED: 'Pago aprobado',
+  PENDING: 'Confirmando tu pago',
+  DECLINED: 'Pago rechazado',
+  NOT_ATTEMPTED: 'Confirmando tu pago',
+}
+
+const insignia = computed(() => INSIGNIA[estadoPago.value ?? 'NOT_ATTEMPTED'])
+
+const tonoInsignia = computed(() => {
+  if (estadoPago.value === 'APPROVED') return 'ds-tone--success'
+  if (estadoPago.value === 'DECLINED') return 'ds-tone--danger'
+  return 'ds-tone--warning'
+})
+
+const bannerClase = computed(() =>
+  estadoPago.value === 'APPROVED'
+    ? 'ds-banner--success'
+    : estadoPago.value === 'DECLINED'
+      ? 'ds-banner--error'
+      : 'ds-banner--warning',
+)
+
+/** Los tres textos exactos de la especificación (§4.4). `NOT_ATTEMPTED` cuenta como pendiente:
+ * es lo mismo que ve el usuario — todavía no hay una respuesta que contar. */
+const mensajePago = computed(() => {
+  if (estadoPago.value === 'APPROVED') return 'Pago aprobado: tu plan está activo.'
+  if (estadoPago.value === 'DECLINED') return 'No pudimos cobrar tu tarjeta.'
+  return 'Estamos confirmando el pago con tu banco; te avisaremos.'
+})
+
+// El título de la pestaña reflejaba «reservado» incondicionalmente. Se corrige aquí, no en el
+// `meta.title` de la ruta: ese valor es estático y se fija ANTES de saber qué contestó Wompi.
+watch(estadoPago, (v) => {
+  if (v) document.title = `${INSIGNIA[v]} — Lumbre`
 })
 </script>
 
@@ -63,30 +146,27 @@ onMounted(async () => {
     class="ds-page ds-page--contained ds-stack ds-stack--16 ex"
     data-testid="contratacion-exito"
   >
-    <!-- «está activo» era mentira, y la propia pantalla la desmentía ochenta píxeles más abajo
-         («esta confirmación no ha viajado al servidor»). «Reservado» es lo que de verdad
-         ocurrió: la elección quedó tomada y guardada, y la activación es el paso que falta.
-         Es el punto donde la app le habla a quien acaba de decidir una compra, así que lo
-         primero que se lee no puede desmentir lo último. -->
-    <!-- Un paquete se nombra («Tu plan Completo está reservado»); una propuesta a
-         medida ya se llama a sí misma («Tu propuesta a medida está reservada»), y
-         anteponerle «Tu plan» produciría «Tu plan Tu propuesta a medida». Es la
-         primera frase que lee quien acaba de comprar: tiene que estar escrita en
-         castellano, no en plantilla. -->
-    <p class="ex-insignia ds-pill ds-tone--accent-soft">Reservado</p>
+    <p class="ex-insignia ds-pill" :class="tonoInsignia">{{ insignia }}</p>
 
     <h1 ref="h1" class="ds-display ds-display--sm" tabindex="-1">
       <template v-if="resultado.origen === 'PLAN'">
-        Listo. Reservaste tu plan con {{ cuantosModulos }}
+        Contrataste tu plan con {{ cuantosModulos }}
         {{ cuantosModulos === 1 ? 'módulo' : 'módulos' }}.
       </template>
-      <template v-else> Listo. {{ resultado.titulo }} está reservada. </template>
+      <template v-else> {{ resultado.titulo }} quedó contratada. </template>
     </h1>
     <p class="ds-subtitle">
       <template v-if="resultado.origen === 'PLAN'">{{ resultado.titulo }}. </template>
-      {{ modulos }} son los módulos que quedan reservados para
+      {{ modulos }} son los módulos que contrataste para
       <strong>{{ resultado.empresaNombre }}</strong
       >.
+    </p>
+
+    <p class="ds-banner" :class="bannerClase" role="status" aria-live="polite">
+      {{ mensajePago }}
+      <RouterLink v-if="estadoPago === 'DECLINED'" :to="{ name: 'suscripcion-medios-pago' }">
+        Actualiza tu medio de pago
+      </RouterLink>
     </p>
 
     <section class="ds-stack ds-stack--10" aria-labelledby="cobro-titulo">
@@ -107,15 +187,6 @@ onMounted(async () => {
         Te avisamos por correo antes del primer cobro.
       </p>
 
-      <!-- La segunda y ÚLTIMA vez que aparece el aviso. Nunca más. -->
-      <DemoModeNotice compacto />
-
-      <!-- Lo que SÍ pasó y lo que todavía no, sin adornos y sin bandera que lo esconda.
-           La confirmación viajó: `POST /quotes/self-serve` dejó una oferta emitida con estos
-           importes, resueltos por el servidor. Lo que no ocurre solo es el último eslabón —hoy
-           nadie reacciona a una oferta aceptada, así que los módulos no se encienden—, y eso se
-           dice aquí en vez de dejar que el usuario lo descubra entrando al tablero. El número de
-           la oferta es lo que convierte «escríbenos» en algo accionable. -->
       <p class="ds-meta">
         Ya registramos tu contratación
         <template v-if="resultado.cotizacionNumero">
@@ -123,9 +194,7 @@ onMounted(async () => {
         </template>
         <template v-if="resultado.validaHasta">
           , válida hasta el {{ formatDateLong(resultado.validaHasta) }}</template
-        >. Para dejar los módulos encendidos en tu cuenta escríbenos a
-        <a href="mailto:soporte@kefaro.tech">soporte@kefaro.tech</a
-        ><template v-if="resultado.cotizacionNumero"> con ese número</template>.
+        >.
       </p>
     </section>
 

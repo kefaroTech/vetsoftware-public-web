@@ -300,6 +300,12 @@ import type {
   SubscriptionPaymentMethodResponse,
 } from '../features/suscripcion/types/medios-pago.types'
 import type {
+  FirstPeriodPaymentResponse,
+  WompiCheckoutConfigResponse,
+  WompiPaymentMethodResponse,
+  WompiPaymentSourceRequest,
+} from '../features/suscripcion/types/pago.types'
+import type {
   AcceptQuoteRequest,
   QuoteCompanySummary,
   QuoteLineResponse,
@@ -807,6 +813,10 @@ export type ContractAssertions = [
   Expect<MatchesContract<QuoteLineResponse, 'QuoteLineResponse'>>,
   Expect<MatchesContract<QuoteCompanySummary, 'CompanySummary'>>,
   Expect<MatchesContract<AcceptQuoteRequest, 'AcceptQuoteRequest'>>,
+  Expect<MatchesContract<WompiCheckoutConfigResponse, 'WompiCheckoutConfigResponse'>>,
+  Expect<MatchesContract<WompiPaymentSourceRequest, 'WompiPaymentSourceRequest'>>,
+  Expect<MatchesContract<WompiPaymentMethodResponse, 'WompiPaymentMethodResponse'>>,
+  Expect<MatchesContract<FirstPeriodPaymentResponse, 'FirstPeriodPaymentResponse'>>,
   // La autocontratación, atada por sus DOS esquemas y no solo por el de fuera. `lines` es un
   // array, y `MismatchedFields` solo compara `string | number | boolean`: la envoltura sabe que
   // el campo `lines` existe y se llama así, pero **no mira dentro**. Sin la segunda línea, el

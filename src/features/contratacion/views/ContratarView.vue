@@ -9,8 +9,8 @@ import PlanesConfigurador from '@/features/landing/components/PlanesConfigurador
 import ConfirmarBloqueadoNotice from '../components/ConfirmarBloqueadoNotice.vue'
 import ContratarResumenAside from '../components/ContratarResumenAside.vue'
 import ContratarResumenTabla from '../components/ContratarResumenTabla.vue'
-import DemoModeNotice from '../components/DemoModeNotice.vue'
 import LetraPequenaPaso6 from '../components/LetraPequenaPaso6.vue'
+import MedioDePagoWompi from '../components/MedioDePagoWompi.vue'
 import PriceDriftNotice from '../components/PriceDriftNotice.vue'
 import TrialLinesTable from '../components/TrialLinesTable.vue'
 import { usePasoContratar } from '../composables/usePasoContratar'
@@ -54,6 +54,7 @@ const h1 = useTemplateRef<HTMLElement>('h1')
 const driftRef = useTemplateRef<Enfocable>('driftRef')
 const errorRef = useTemplateRef<Enfocable>('errorRef')
 const errorEnvioRef = useTemplateRef<HTMLElement>('errorEnvioRef')
+const medioPagoRef = useTemplateRef<InstanceType<typeof MedioDePagoWompi>>('medioPagoRef')
 
 const {
   plans,
@@ -66,6 +67,9 @@ const {
   terminosTocado,
   enviando,
   tardando,
+  oferta,
+  pagando,
+  confirmarPago,
   errorEnvio,
   traceId,
   drift,
@@ -305,8 +309,6 @@ onMounted(entrar)
           </section>
 
           <ContratarResumenTabla :resumen="resumen" />
-
-          <DemoModeNotice />
         </div>
 
         <!-- Después del contenido en el DOM y no antes: en pantalla estrecha la
@@ -335,7 +337,14 @@ onMounted(entrar)
         </p>
       </div>
 
-      <div class="ds-stack ds-stack--10">
+      <MedioDePagoWompi
+        v-if="oferta"
+        ref="medioPagoRef"
+        :total="oferta.total"
+        :procesando="pagando"
+        @pagar="(p) => confirmarPago(p, () => medioPagoRef?.restablecer())"
+      />
+      <div v-else class="ds-stack ds-stack--10">
         <!-- Sin `quote.request` no hay nada que aceptar: la casilla de términos existe para
              habilitar un botón que no se va a pintar, y pedir que se acepten unos términos para
              después no dejar continuar es la peor forma de comunicar una falta de permiso.

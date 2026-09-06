@@ -67,6 +67,15 @@ const volverAPlanes = computed(() => ({
  * un importe que no explica su parte del subtotal si no se dice cuántas son. Y
  * no se multiplica: eso es aritmética de dinero en el cliente.
  */
+/**
+ * Misma regla que «Hoy pagas» en `ContratarResumenAside`: solo con todas las líneas en
+ * prueba el cobro de hoy es cero; si alguna no la tiene, el primer periodo se cobra al
+ * aceptar.
+ */
+const todoConPrueba = computed(() =>
+  props.resumen.lineasPrueba.every((l) => l.trialDays !== null && l.trialDays > 0),
+)
+
 const filas = computed(() => {
   const r = props.resumen
   const ciclo = {
@@ -180,14 +189,17 @@ const importesDesborda = useScrollableRegion(importes)
                que costará el ciclo cuando la prueba termine. -->
           <tr>
             <th scope="row" class="ds-text-strong">
-              Total {{ sufijoCiclo(resumen.ciclo) }}, cuando termine la prueba
+              Total {{ sufijoCiclo(resumen.ciclo)
+              }}<template v-if="todoConPrueba">, cuando termine la prueba</template>
             </th>
             <td class="ds-num ds-text-strong">{{ importeEstimado(resumen.total) }}</td>
           </tr>
           <!-- Y la respuesta a la única pregunta que se hace quien está a punto de confirmar. -->
           <tr>
             <th scope="row" class="ds-text-strong">Lo que se te cobra hoy</th>
-            <td class="ds-num ds-text-strong">{{ importeEstimado(0) }}</td>
+            <td class="ds-num ds-text-strong">
+              {{ importeEstimado(todoConPrueba ? 0 : resumen.total) }}
+            </td>
           </tr>
         </tbody>
       </table>

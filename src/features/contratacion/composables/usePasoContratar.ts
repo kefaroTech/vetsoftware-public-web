@@ -10,6 +10,7 @@ import { useCatalogoStore } from '@/features/asistente/stores/catalogo.store'
 import type { CatalogoComercial } from '@/features/asistente/types/catalogo.types'
 import { usePlanes } from '@/features/landing/composables/usePlanes'
 import type { Ciclo, PublicPlan } from '@/features/landing/types/plans.types'
+import { cotizacionesApi } from '@/features/suscripcion/api/cotizaciones.api'
 import { useSuscripcion } from '@/features/suscripcion/composables/useSuscripcion'
 import {
   activarPlan,
@@ -24,6 +25,7 @@ import type {
   ResumenPlan,
   ResumenPropuesta,
   ResumenContratacion,
+  ResultadoContratacion,
 } from '../types/contratacion.types'
 import { useContratacion } from './useContratacion'
 
@@ -119,6 +121,18 @@ export function usePasoContratar(focos: FocosPaso6) {
   const errorEnvio = ref<string | null>(null)
   const traceId = ref<string | undefined>()
 
+  /**
+   * La oferta ya emitida (`POST /quotes/self-serve` respondió), a la espera de que se pague.
+   *
+   * <p>`null` mientras se decide (el bloque de «Medio de pago» ni existe): en cuanto `enviar()`
+   * consigue la oferta, este campo se llena y la vista sustituye la casilla de términos por
+   * `MedioDePagoWompi`. El resultado no se guarda en `resultadoContratacion.store` todavía —eso
+   * ocurriría antes de que el usuario haya pagado nada— ni se navega al paso 7 hasta que
+   * `confirmarPago` acepte la oferta.
+   */
+  const oferta = ref<ResultadoContratacion | null>(null)
+  const pagando = ref(false)
+
   /** `null` mientras la propuesta se pueda pintar, que es el caso normal. */
   const motivoSinPropuesta = ref<MotivoSinPropuesta | null>(null)
 
@@ -197,6 +211,9 @@ export function usePasoContratar(focos: FocosPaso6) {
     // Sin esto, un aviso de deriva de la selección anterior sobrevive a `elegirAqui()`.
     drift.value = null
     motivoSinPropuesta.value = null
+    // Y sin esto, volver a `cargar()` (`elegirAqui()`, una intención nueva) con una oferta ya
+    // pedida dejaría el bloque de pago pintado sobre un resumen que ya no es el que se cotizó.
+    oferta.value = null
 
     const intencion = vigente.value
     if (!intencion) {
@@ -417,7 +434,13 @@ export function usePasoContratar(focos: FocosPaso6) {
     await enviar({ resumen: actual as ResumenPropuesta, clientRequestId: clientRequestId.value })
   }
 
-  /** El envío, común a las dos formas: es el mismo `POST` con líneas distintas. */
+  /**
+   * Pide la oferta, común a las dos formas: es el mismo `POST` con líneas distintas.
+   *
+   * <p>Ya no acepta ni navega: se detiene en cuanto la oferta existe, y dejar la vista mostrando
+   * el bloque de pago es justo lo que permite que un fallo posterior de `confirmarPago` (§abajo)
+   * no obligue a pedir una segunda oferta — la que ya se tiene se reintenta contra `accept`.
+   */
   async function enviar(args: Parameters<typeof activarPlan>[0]) {
     enviando.value = true
     tardando.value = false
@@ -426,10 +449,7 @@ export function usePasoContratar(focos: FocosPaso6) {
     }, UMBRAL_LARGO_MS)
 
     try {
-      const resultado = await activarPlan(args)
-      resultadoStore.guardar(resultado)
-      marcarContratada()
-      await router.push({ name: 'contratar-exito' })
+      oferta.value = await activarPlan(args)
     } catch (e) {
       // El aviso va por `errorFrom`, NUNCA con el texto escrito a mano: es lo que
       // conserva el `X-Trace-Id`, y sin traza soporte no correlaciona nada.
@@ -449,6 +469,44 @@ export function usePasoContratar(focos: FocosPaso6) {
     }
   }
 
+  /**
+   * El segundo acto: `MedioDePagoWompi` ya dejó un medio de pago listo (nuevo o el que hubiera
+   * por defecto) y emitió `pagar`. Aquí se acepta la oferta —lo único que le falta para dejar de
+   * ser un borrador— y solo entonces se guarda el resultado y se navega.
+   *
+   * <p>Devuelve si aceptó o no: la vista usa el `false` para reabrir el botón de
+   * `MedioDePagoWompi` (`restablecer()`) sin volver a tokenizar nada — el medio de pago ya quedó
+   * registrado, lo único que falló fue `accept`.
+   */
+  async function confirmarPago(
+    payload: { acceptedByEmail: string },
+    alFallar?: () => void,
+  ): Promise<boolean> {
+    const pendiente = oferta.value
+    if (!pendiente) return false
+    pagando.value = true
+    errorEnvio.value = null
+    traceId.value = undefined
+    try {
+      await cotizacionesApi.accept(pendiente.cotizacionId, payload)
+      resultadoStore.guardar(pendiente)
+      marcarContratada()
+      await router.push({ name: 'contratar-exito' })
+      return true
+    } catch (e) {
+      toast.errorFrom('No se pudo confirmar tu pago', e)
+      traceId.value = getTraceId(e)
+      errorEnvio.value =
+        'Guardamos tu tarjeta, pero no pudimos confirmar el pago. Vuelve a intentarlo; si sigue fallando, escríbenos con este código:'
+      await nextTick()
+      focos.errorEnvio.value?.focus()
+      alFallar?.()
+      return false
+    } finally {
+      pagando.value = false
+    }
+  }
+
   function ahoraNo() {
     descartar()
     void router.push({ name: 'home' })
@@ -465,6 +523,9 @@ export function usePasoContratar(focos: FocosPaso6) {
     terminosTocado,
     enviando,
     tardando,
+    oferta,
+    pagando,
+    confirmarPago,
     errorEnvio,
     traceId,
     drift,

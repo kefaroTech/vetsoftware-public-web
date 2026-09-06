@@ -37,7 +37,11 @@
 #   connect-src                 → los DOS orígenes de API, porque el mismo archivo
 #                                 estático se despliega en dev y en prod. El test
 #                                 comprueba que coincidan con el VITE_API_URL de
-#                                 .env.dev y .env.prod.
+#                                 .env.dev y .env.prod. Los dos orígenes de Wompi
+#                                 (sandbox y producción) son la tokenización de
+#                                 tarjeta del paso 6 (`MedioDePagoWompi.vue`):
+#                                 llamada directa desde el navegador con la llave
+#                                 pública, sin pasar por nuestro backend.
 #
 # HSTS sin `preload`: entrar en la lista de precarga es una decisión de dominio,
 # no de repositorio, y salir de ella tarda meses.
@@ -49,7 +53,7 @@
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: same-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://dev-api.kefaro.tech https://api.vetsoftware.co https://www.google.com; frame-src 'self' blob: https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://dev-api.kefaro.tech https://api.vetsoftware.co https://www.google.com https://sandbox.wompi.co https://production.wompi.co; frame-src 'self' blob: https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
   Cache-Control: no-cache
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -89,7 +93,7 @@
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: same-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://dev-api.kefaro.tech https://api.vetsoftware.co https://www.google.com; frame-src 'self' blob: https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://dev-api.kefaro.tech https://api.vetsoftware.co https://www.google.com https://sandbox.wompi.co https://production.wompi.co; frame-src 'self' blob: https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
   Cache-Control: no-cache
 
 # Recuperar propuesta — AsistentePanel también lee `?token=` montado en PlanesView
@@ -101,7 +105,7 @@
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: same-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://dev-api.kefaro.tech https://api.vetsoftware.co https://www.google.com; frame-src 'self' blob: https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://dev-api.kefaro.tech https://api.vetsoftware.co https://www.google.com https://sandbox.wompi.co https://production.wompi.co; frame-src 'self' blob: https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
   Cache-Control: no-cache
 
 # Verificación de correo del registro
@@ -113,7 +117,7 @@
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: same-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://dev-api.kefaro.tech https://api.vetsoftware.co https://www.google.com; frame-src 'self' blob: https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://dev-api.kefaro.tech https://api.vetsoftware.co https://www.google.com https://sandbox.wompi.co https://production.wompi.co; frame-src 'self' blob: https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
   Cache-Control: no-cache
 
 # Restablecimiento de contraseña — el token FIJA la credencial de la cuenta
@@ -125,7 +129,7 @@
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: same-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://dev-api.kefaro.tech https://api.vetsoftware.co https://www.google.com; frame-src 'self' blob: https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://dev-api.kefaro.tech https://api.vetsoftware.co https://www.google.com https://sandbox.wompi.co https://production.wompi.co; frame-src 'self' blob: https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
   Cache-Control: no-cache
 
 # `/assets/*` son los artefactos de Vite y su nombre cambia con el contenido, así

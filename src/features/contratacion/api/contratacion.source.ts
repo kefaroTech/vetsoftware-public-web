@@ -62,20 +62,20 @@ import type {
  * que salir del catálogo público**, y un rechazo significa «el catálogo se
  * movió, vuelve a leer los planes», no «te equivocaste de campo».
  *
- * ── Qué es real y qué sigue siendo simulado ────────────────────────────────
+ * ── Qué es real hoy, con Wompi conectado ────────────────────────────────────
  * Real: la oferta. El servidor resuelve tarifa vigente, tramos, IVA y vigencia,
  * la deja `SENT` y devuelve sus importes — que son los que se pintan en el paso
  * 7, no los de la lista transcrita.
  *
- * Simulado: **el cobro**. No hay pasarela conectada y no se pide ninguna tarjeta.
+ * Real también: el cobro. El paso 6 tokeniza la tarjeta contra Wompi
+ * (`MedioDePagoWompi.vue`) y a nuestro backend solo llega un `payment_source_id`, nunca un
+ * número de tarjeta. Este fichero sigue sin acabar el acto: `activarPlan` pide la oferta y para;
+ * quien acepta y paga es `usePasoContratar.confirmarPago`, con `cotizacionesApi.accept`.
  *
- * Y hay un tercer estado que no es ni una cosa ni la otra: **aceptar una oferta
- * no enciende los módulos**. `SelfServeQuoteService` lo dice sin rodeos —nadie
- * reacciona hoy a `QuoteStatus.ACCEPTED`—, así que el eslabón «oferta aceptada →
- * suscripción con sus concesiones» no existe. Aquí NO se inventa: `activarPlan`
- * pide la oferta y para. Que aceptarla deba activar el servicio es una decisión
- * de producto abierta, y cablearla a ciegas sería exactamente el tipo de promesa
- * que esta pantalla existe para no hacer.
+ * Y el tercer estado dejó de ser un hueco: `SettleNewContractService` SÍ reacciona a la oferta
+ * aceptada — cobra el primer periodo y activa el contrato si Wompi lo aprueba (o lo deja activo
+ * sin cobrar si nace en prueba). El paso 7 sondea el desenlace real
+ * (`GET /payment-gateway/wompi/first-period-payment`) en vez de darlo por hecho.
  *
  * El importe orientativo de `calcularEstimado` sigue vivo, pero solo hasta el
  * paso 6: es lo que se compara contra lo que el usuario vio al elegir (deriva de
@@ -684,6 +684,8 @@ export async function activarPlan(args: ActivarArgs): Promise<ResultadoContratac
     ciclo: resumen.ciclo,
     cotizacionId: cotizacion.id,
     cotizacionNumero: cotizacion.quoteNumber ?? null,
+    // Todavía no se ha preguntado por el cobro: eso es el paso 7, después de aceptar la oferta.
+    pago: null,
     validaHasta: cotizacion.validUntil ?? null,
   }
 }
