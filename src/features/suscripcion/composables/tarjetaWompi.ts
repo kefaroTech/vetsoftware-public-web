@@ -1,5 +1,5 @@
 /**
- * Validadores puros del formulario de tarjeta de `MedioDePagoWompi.vue`, separados del
+ * Validadores puros del formulario de tarjeta de `FormularioTarjetaWompi.vue`, separados del
  * componente para poder probarlos sin montar nada (convención `validateXxx(v): string | null`
  * del repositorio).
  */
@@ -70,10 +70,11 @@ export function validarCorreoAceptante(v: string): string | null {
 }
 
 /**
- * `true` si `v` tiene forma de correo. La usa `MedioDePagoWompi.vue` para decidir si prellenar
- * el campo con `MeResponse.employeeCode`: en el registro de autoservicio el usuario de acceso del
- * administrador ES su correo (`RegisterUserService`), pero un empleado dado de alta después puede
- * tener un código que no lo sea — y ese caso deja el campo vacío en vez de prellenarlo con basura.
+ * `true` si `v` tiene forma de correo. La usa `MedioDePagoWompi.vue` (modo contratación) para
+ * decidir si prellenar el campo con `MeResponse.employeeCode`: en el registro de autoservicio el
+ * usuario de acceso del administrador ES su correo (`RegisterUserService`), pero un empleado dado
+ * de alta después puede tener un código que no lo sea — y ese caso deja el campo vacío en vez de
+ * prellenarlo con basura.
  */
 export function pareceCorreo(v: string): boolean {
   return EMAIL_RE.test(v.trim())

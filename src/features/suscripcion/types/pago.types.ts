@@ -1,10 +1,8 @@
 /**
  * Espejo manual del contrato de `paymentgateway` (backend, rodaja `com.vetsoftware.app.paymentgateway`).
  *
- * <p>El backend todavía no existe cuando se escribe este fichero: se está construyendo en
- * paralelo con la misma especificación. `src/api/*` lo regenera `api-contract-sync` en cuanto el
- * contrato esté publicado — estos tipos no se tocan desde ahí, se sustituyen por la importación
- * generada cuando corresponda.
+ * <p>`src/api/*` lo regenera `api-contract-sync` en cuanto el contrato esté publicado — estos
+ * tipos no se tocan desde ahí, se sustituyen por la importación generada cuando corresponda.
  */
 
 /** `GET /payment-gateway/wompi/checkout-config`. */

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import axios from 'axios'
-import { tokenizarTarjeta } from '@/features/contratacion/api/pago.api'
+import { tokenizarTarjeta } from '@/features/suscripcion/api/pago.api'
 
 /**
  * `tokenizarTarjeta` HABLA DIRECTO CON WOMPI, NUNCA CON `http`.
