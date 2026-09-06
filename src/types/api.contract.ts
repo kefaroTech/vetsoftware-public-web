@@ -304,7 +304,7 @@ import type {
   WompiCheckoutConfigResponse,
   WompiPaymentMethodResponse,
   WompiPaymentSourceRequest,
-} from '../features/contratacion/types/pago.types'
+} from '../features/suscripcion/types/pago.types'
 import type {
   AcceptQuoteRequest,
   QuoteCompanySummary,

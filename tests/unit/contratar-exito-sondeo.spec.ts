@@ -3,7 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import ContratarExitoView from '@/features/contratacion/views/ContratarExitoView.vue'
 import { useResultadoContratacionStore } from '@/features/contratacion/stores/resultadoContratacion.store'
 import type { ResultadoContratacion } from '@/features/contratacion/types/contratacion.types'
-import type { FirstPeriodPaymentResponse } from '@/features/contratacion/types/pago.types'
+import type { FirstPeriodPaymentResponse } from '@/features/suscripcion/types/pago.types'
 
 /**
  * EL SONDEO DEL PASO 7.
@@ -23,7 +23,7 @@ vi.mock('vue-router', () => ({
   RouterLink: { props: ['to'], template: '<a><slot /></a>' },
 }))
 
-vi.mock('@/features/contratacion/api/pago.api', () => ({
+vi.mock('@/features/suscripcion/api/pago.api', () => ({
   wompiApi: { primerPago: () => primerPago() },
 }))
 

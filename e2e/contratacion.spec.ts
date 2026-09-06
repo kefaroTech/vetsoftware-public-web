@@ -6,7 +6,7 @@ import type {
   WompiCheckoutConfigResponse,
   WompiPaymentMethodResponse,
   WompiPaymentSourceRequest,
-} from '../src/features/contratacion/types/pago.types'
+} from '../src/features/suscripcion/types/pago.types'
 import type {
   AcceptQuoteRequest,
   QuoteResponse,

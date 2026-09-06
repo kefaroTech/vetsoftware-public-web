@@ -1,24 +1,27 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { AlertTriangle, Wallet } from 'lucide-vue-next'
+import { AlertTriangle, Plus, Wallet } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import SectionCard from '@/components/ui/SectionCard.vue'
 import { useToast } from '@/composables/useToast'
+import { PERMISSIONS } from '@/constants/permissions'
+import { useAuthorization } from '@/features/auth/composables/useAuthorization'
+import FormularioTarjetaWompi from '../components/FormularioTarjetaWompi.vue'
 import MedioPagoCard from '../components/MedioPagoCard.vue'
 import RevocarMedioModal from '../components/RevocarMedioModal.vue'
 import { useMediosPago } from '../composables/useMediosPago'
 import { useSuscripcion } from '../composables/useSuscripcion'
 import { SIN_PERMISO } from '../composables/accesoBloqueado'
-import { ALTA_MEDIO_PAGO, SIN_MEDIOS_PAGO } from '../composables/cotizacionesText'
+import { SIN_MEDIOS_PAGO } from '../composables/cotizacionesText'
 import type { SubscriptionPaymentMethodResponse } from '../types/medios-pago.types'
+import type { WompiPaymentMethodResponse } from '../types/pago.types'
 
 /**
  * Medios de pago: el único bloque con escritura real de dinero para el tenant, y por un motivo
  * escrito en el backend — **revocar es un derecho que no puede quedar detrás de una gestión de
- * plataforma**.
- *
- * <p>Lo que **no** hay aquí es un formulario de alta, y no es un olvido: ver el hueco honesto
- * del pie de la lista y `RegisterSubscriptionPaymentMethodRequest`.
+ * plataforma**. El alta, en cambio, sí queda detrás de su propio permiso
+ * (`subscriptionPaymentMethod.create`): es la misma tokenización con Wompi del paso 6 de la
+ * autocontratación (`FormularioTarjetaWompi.vue`), aquí para un medio adicional o de reemplazo.
  */
 const { subscription } = useSuscripcion()
 const {
@@ -35,9 +38,13 @@ const {
   revocar,
 } = useMediosPago(() => subscription.value?.nextBillingDate)
 
+const { can } = useAuthorization()
+const puedeCrear = can(PERMISSIONS.SUBSCRIPTION_PAYMENT_METHOD_CREATE)
+
 const toast = useToast()
 const revocarAbierto = ref(false)
 const medioARevocar = ref<SubscriptionPaymentMethodResponse | null>(null)
+const formularioAbierto = ref(false)
 
 onMounted(() => void load(true))
 
@@ -59,6 +66,12 @@ async function confirmarRevocar(reason: string) {
   } catch (e: unknown) {
     toast.errorFrom('No se pudo revocar el medio de pago', e)
   }
+}
+
+async function onTarjetaGuardada(_medio: WompiPaymentMethodResponse) {
+  formularioAbierto.value = false
+  await load(true)
+  toast.success('Tarjeta añadida', 'Tu nuevo medio de pago ya quedó registrado.')
 }
 </script>
 
@@ -94,6 +107,17 @@ async function confirmarRevocar(reason: string) {
       </div>
 
       <SectionCard title="Tus medios de pago" :icon="Wallet">
+        <template v-if="puedeCrear && !formularioAbierto" #action>
+          <button
+            type="button"
+            class="ds-btn ds-btn--neutral ds-btn--snug"
+            @click="formularioAbierto = true"
+          >
+            <Plus :size="15" :stroke-width="1.8" aria-hidden="true" />
+            Añadir tarjeta
+          </button>
+        </template>
+
         <ul v-if="medios.length > 0" class="ds-list-reset ds-stack ds-stack--10">
           <li v-for="entrada in medios" :key="entrada.medio.id">
             <MedioPagoCard
@@ -105,20 +129,12 @@ async function confirmarRevocar(reason: string) {
         </ul>
         <p v-else-if="!loading" class="ds-empty ds-empty--tight">{{ SIN_MEDIOS_PAGO }}</p>
 
-        <!--
-          El hueco honesto del alta.
-
-          El widget de tokenización con Wompi ya existe (`MedioDePagoWompi.vue`, feature
-          `contratacion`), pero vive en el paso 6 de la autocontratación: es donde la empresa da
-          de alta su primer medio de pago, junto con el primer cobro. Esta pantalla no lo repite
-          para dar de alta un medio ADICIONAL o de reemplazo — `POST /subscription-payment-methods`
-          (el endpoint genérico, `mediosPagoApi.create`) sigue sin pantalla que lo llame. Cuando
-          esta vista necesite su propio alta, el store, el cliente y el tipo ya están escritos.
-        -->
-        <div class="ds-empty ds-empty--boxed alta">
-          <p>{{ ALTA_MEDIO_PAGO }}</p>
-          <a class="ds-btn ds-btn--neutral" href="mailto:soporte@kefaro.tech">Escríbenos</a>
-        </div>
+        <FormularioTarjetaWompi
+          v-if="formularioAbierto"
+          class="alta-formulario"
+          @guardado="onTarjetaGuardada"
+          @cancelar="formularioAbierto = false"
+        />
       </SectionCard>
     </div>
 
@@ -134,16 +150,7 @@ async function confirmarRevocar(reason: string) {
 </template>
 
 <style scoped>
-.alta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-14);
-  flex-wrap: wrap;
+.alta-formulario {
   margin-top: var(--space-16);
-}
-
-.alta a {
-  text-decoration: none;
 }
 </style>

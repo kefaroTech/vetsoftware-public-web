@@ -6,7 +6,7 @@ import {
   validarNumeroTarjeta,
   validarTitular,
   validarVencimiento,
-} from '@/features/contratacion/composables/tarjetaWompi'
+} from '@/features/suscripcion/composables/tarjetaWompi'
 
 /**
  * LOS VALIDADORES DEL FORMULARIO DE TARJETA, PUROS Y SIN MONTAR NADA.

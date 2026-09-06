@@ -118,14 +118,6 @@ export function avisoBajarCantidad(usado: number, nuevo: number, nombre: string)
 
 export const SIN_MEDIOS_PAGO = 'No tienes ningún medio de pago registrado.'
 
-/**
- * El hueco honesto del alta. Ver `RegisterSubscriptionPaymentMethodRequest`: el widget de
- * tokenización con Wompi vive en la autocontratación (paso 6), no en esta pantalla — que no lo
- * repite para dar de alta un medio adicional o de reemplazo.
- */
-export const ALTA_MEDIO_PAGO =
-  'Para registrar un medio de pago nuevo, escríbenos y lo dejamos listo.'
-
 const METHOD_KIND_LABELS: Record<PaymentMethodKind, string> = { CARD: 'Tarjeta', PSE: 'PSE' }
 
 export function methodKindLabel(kind: PaymentMethodKind | undefined): string {

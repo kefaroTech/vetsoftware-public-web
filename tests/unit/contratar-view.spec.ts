@@ -75,7 +75,7 @@ vi.mock('@/features/suscripcion/api/cotizaciones.api', () => ({
   },
 }))
 
-vi.mock('@/features/contratacion/api/pago.api', () => ({
+vi.mock('@/features/suscripcion/api/pago.api', () => ({
   wompiApi: {
     checkoutConfig: () => checkoutConfig(),
     crearFuenteDePago: (p: unknown) => crearFuenteDePago(p),

@@ -21,7 +21,7 @@ vi.mock('@/features/auth/composables/useAuth', () => ({
 }))
 
 const checkoutConfig = vi.fn()
-vi.mock('@/features/contratacion/api/pago.api', () => ({
+vi.mock('@/features/suscripcion/api/pago.api', () => ({
   wompiApi: {
     checkoutConfig: () => checkoutConfig(),
     crearFuenteDePago: vi.fn(),
