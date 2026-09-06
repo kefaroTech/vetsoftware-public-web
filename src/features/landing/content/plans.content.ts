@@ -128,17 +128,6 @@ import type { PublicCatalog } from '../types/plans.types'
  * superiores (EXTRA_USER 9+ a 9.000; EXTRA_BRANCH 3-9 a 28.000, 10+ a 22.000) NO
  * se transcriben porque el contrato publica solo el tramo de entrada: la escalera
  * completa es política de descuento por volumen y no se publica.
- *
- * >>> LO QUE ESTA TRANSCRIPCIÓN NO PUEDE ARREGLAR, Y HAY QUE SABER <<<
- * `EXTRA_USER` y `EXTRA_BRANCH` son códigos REALES y con precio, pero **hoy no se
- * pueden contratar por autoservicio**: `findPublishedIdByCode` solo resuelve un
- * `BUNDLE` publicado o un `MODULE`/`CAPACITY` que **cuelgue de un paquete**, y
- * ninguno de los dos es componente de ningún paquete. Así que la línea que
- * `lineasDeContratacion` empuja al pasar de lo incluido se rechaza con
- * `Unknown or unavailable catalog item code` y hunde la oferta entera. Eso es un
- * hueco del CATÁLOGO, no de este fichero, y no se tapa desde aquí: poner otro
- * código sería volver a inventar, y no mandar la línea cobraría el paquete base
- * mientras el cliente cree haber comprado cinco personas. Se deja fallar.
  */
 /**
  * LA CAPA EDITORIAL: lo único de este fichero que llega a producción.

@@ -7,7 +7,7 @@ import type { Propuesta } from '@/features/asistente/types/asistente.types'
 import type { CatalogoComercial } from '@/features/asistente/types/catalogo.types'
 import { companyApi } from '@/features/empresa/api/company.api'
 import { previsualizarCotizacion } from '@/features/landing/api/cotizacion.source'
-import { cestaDeCotizacion } from '@/features/landing/composables/cotizadorLineas'
+import { cestaDeCotizacion, unidadesExtra } from '@/features/landing/composables/cotizadorLineas'
 import {
   calcularEstimado,
   subtotalMensualEquivalente,
@@ -505,7 +505,7 @@ export type FuenteDeLineas =
  * cotizar y otro para contratar— enseñarían un precio y cobrarían otro.
  *
  * ── RAMA `PAQUETE` — el paquete, y una capacidad solo si se pasa ────────────
- * Tres decisiones, las tres con una cifra detrás:
+ * Dos decisiones, las dos con una cifra detrás:
  *
  *  1. **Los `includes` NO son líneas.** Son componentes del paquete
  *     (`bundle_components`) y su precio ya está dentro del precio de entrada del
@@ -513,24 +513,12 @@ export type FuenteDeLineas =
  *     los resolvería sin rechistar, porque `findPublishedIdByCode` acepta un
  *     `MODULE` que cuelgue de un paquete publicado. Es la única forma de que el
  *     total del servidor se separe del estimado que el usuario acaba de aceptar.
- *  2. **La cantidad es la CONTRATADA, no la extra.** `TieredPrice.of` resta lo
- *     incluido (`billableQuantity`) y reparte el resto por tramos acumulativos:
- *     mandar «2 usuarios extra» en vez de «5 usuarios» haría que el servidor
- *     restara lo incluido por segunda vez.
- *  3. **Y aun así, la capacidad que no se pasa de lo incluido NO se manda.** El
- *     servidor no emitiría renglón por ella —`billableQuantity` da 0 y
- *     `TieredPrice` devuelve el reparto vacío—, así que la línea no aporta nada;
- *     lo que sí puede hacer es tumbar la petición entera. `GET /plans` lee el
- *     precio de cada capacidad con un `LEFT JOIN` fijado a `billing_cycle =
- *     'MONTHLY'` (`JpaPublicPlanQueryPort.SQL_COMPONENTS`), mientras que el
- *     traductor de la autocontratación exige un `INNER JOIN` con precio **en el
- *     ciclo pedido**. Una capacidad publicada en la portada pero sin fila de
- *     precio `ANNUAL` se resuelve a `Optional.empty()` y el `IllegalArgument`
- *     hunde la oferta completa — con un mensaje indistinguible a propósito, así
- *     que desde aquí no hay forma de saber cuál de las líneas falló. Mandar solo
- *     lo que de verdad se cobra reduce esa superficie al caso en el que la
- *     capacidad extra es justamente lo que se está comprando, donde el fallo sí
- *     es el resultado correcto: sin precio anual no hay nada que cobrar.
+ *  2. **La cantidad es la EXTRA, no la contratada.** El artículo que cobra las
+ *     unidades de más (`EXTRA_*`) tiene `included_quantity = 0` —lo incluido
+ *     vive en el `CAPACITY_*` del mismo eje—, así que mandar el total cobraría
+ *     de más. Lo resuelve `unidadesExtra`, la misma función que usa la rama
+ *     `MODULOS`; y si no se pasa de lo incluido, la línea no se manda, porque
+ *     el servidor no emitiría renglón por ella (`billableQuantity` = 0).
  *
  * ── RAMA `MODULOS` — aquí los módulos SÍ son líneas ─────────────────────────
  * Y tienen que serlo: sin paquete que los contenga, no mandarlos sería contratar
@@ -538,13 +526,6 @@ export type FuenteDeLineas =
  * la compone `cestaDeCotizacion`, **la misma llamada que `/quotes/preview`**, no
  * una reimplementación con las mismas reglas: la cesta que se cotiza y la que se
  * contrata son el mismo objeto o acaban divergiendo.
- *
- * <p>La capacidad de esta rama sí viaja con las unidades que PASAN de lo
- * incluido, y no es una contradicción con la decisión 2: son dos artículos
- * distintos. Bajo un paquete la cantidad se cobra contra el tramo del propio
- * paquete, que ya trae lo incluido; suelta se cobra contra el `EXTRA_*`, que
- * tiene `included_quantity = 0` porque lo incluido vive en el `CAPACITY_*` del
- * mismo eje. Quien lo resuelve es `unidadesExtra`, y su cabecera lo explica.
  */
 export function lineasDeContratacion(
   resumen: Pick<ResumenPlan, 'modulos' | 'sedes' | 'usuarios'>,
@@ -561,8 +542,10 @@ export function lineasDeContratacion(
   const lineas: SelfServeQuoteLineRequest[] = [{ code: plan.code, quantity: 1 }]
   for (const capacidad of plan.capacities) {
     const cantidad = cantidadContratada(capacidad.unit, resumen.sedes, resumen.usuarios)
-    if (cantidad !== null && cantidad > capacidad.included) {
-      lineas.push({ code: capacidad.code, quantity: cantidad })
+    if (cantidad === null) continue
+    const cantidadExtra = unidadesExtra(cantidad, capacidad.included)
+    if (cantidadExtra > 0) {
+      lineas.push({ code: capacidad.code, quantity: cantidadExtra })
     }
   }
   return lineas

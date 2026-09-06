@@ -71,6 +71,14 @@ function planWire(over: Partial<PublicPlanContract> = {}): PublicPlanContract {
         monthlyExtraUnitAmount: 12000,
         annualExtraUnitAmount: 120000,
       },
+      {
+        code: 'EXTRA_BRANCH',
+        name: 'Sede adicional',
+        unit: 'BRANCH',
+        included: 1,
+        monthlyExtraUnitAmount: 35000,
+        annualExtraUnitAmount: 350000,
+      },
     ],
     ...over,
   }
