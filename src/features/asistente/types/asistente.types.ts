@@ -161,6 +161,11 @@ export interface PropuestaLinea {
    * Cuántas unidades del artículo. Casi siempre `1`; los ejes de capacidad son
    * los que traen más.
    *
+   * <p>En un `EXTRA_*` son las unidades POR ENCIMA de las que concede el núcleo,
+   * nunca el total: esos artículos tienen `included_quantity = 0` y el servidor
+   * cobra todo lo que reciba. Aquí no se resta nada; se reenvía tal cual al
+   * contratar, así que la cifra que ponga el servidor es la que se factura.
+   *
    * <p>Se pinta cuando pasa de `1`, y no es cosmético: {@link importe} es el
    * precio **unitario** que devuelve el servidor, así que una línea de tres
    * unidades enseñaría un importe que no explica su parte del subtotal si no se
