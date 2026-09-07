@@ -7,20 +7,27 @@ import CtaSecondary from '../components/home/CtaSecondary.vue'
 import TodayAppointments from '../components/home/TodayAppointments.vue'
 import { useTodayAgenda } from '../composables/useTodayAgenda'
 import { useAuth } from '@/features/auth/composables/useAuth'
+import { useAuthorization } from '@/features/auth/composables/useAuthorization'
+import { PERMISSIONS } from '@/constants/permissions'
 
 const { me } = useAuth()
 const firstName = computed(() => me.value?.name.trim().split(/\s+/).filter(Boolean)[0] ?? '')
 
 const { appointments, canRead, loading, error, ready } = useTodayAgenda()
 const scheduledToday = computed(() => (ready.value ? appointments.value.length : null))
+
+const { can } = useAuthorization()
+const canCreateConsultation = can(PERMISSIONS.CONSULTATION_CREATE)
+const canClinicalHistory = can(PERMISSIONS.CLINICAL_HISTORY_READ)
+const showCtaRow = computed(() => canCreateConsultation.value || canClinicalHistory.value)
 </script>
 
 <template>
   <GreetingHeader :first-name="firstName" :scheduled-today="scheduledToday" />
   <StatsRow v-if="ready" :appointments="appointments" />
-  <div class="cta-row">
-    <CtaPrimary />
-    <CtaSecondary />
+  <div v-if="showCtaRow" class="cta-row">
+    <CtaPrimary v-if="canCreateConsultation" />
+    <CtaSecondary v-if="canClinicalHistory" />
   </div>
   <TodayAppointments
     v-if="canRead"

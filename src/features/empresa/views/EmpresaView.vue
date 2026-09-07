@@ -6,14 +6,17 @@ import { useToast } from '@/composables/useToast'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useFacturacionAccess } from '@/features/facturacion/composables/useFacturacionAccess'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { capacityLimitMessage, isCapacityLimitExceeded } from '@/composables/useCapacityLimitError'
 import { PERMISSIONS } from '@/constants/permissions'
 import { COMPANY_DOCTYPE_LABEL, TAX_REGIME_LABEL } from '@/features/facturacion/types/facturacion'
 import { useEmpresa } from '../composables/useEmpresa'
 import { useSedes } from '@/features/branches/composables/useSedes'
 import type { BranchResponse, SaveBranchRequest } from '@/features/branches/types/branch.types'
+import type { UpdateCompanyRequest } from '../types/company.types'
 import BranchCard from '../components/BranchCard.vue'
 import EmpresaHero from '../components/EmpresaHero.vue'
 import SedeFormModal from '../components/SedeFormModal.vue'
+import CompanyEditModal from '../components/CompanyEditModal.vue'
 import CashTerminalsPanel from '@/features/caja/components/CashTerminalsPanel.vue'
 
 const router = useRouter()
@@ -21,11 +24,18 @@ const toast = useToast()
 const { can } = useAuthorization()
 const { canConfig: feCanConfig } = useFacturacionAccess()
 
-const { company, taxProfile, loading, load } = useEmpresa()
+const { company, taxProfile, loading, load, update: updateCompany } = useEmpresa()
 const { sedes, activeCount, isPrincipal, create, update, setActive } = useSedes()
 
 const canManageSedes = computed(
   () => can(PERMISSIONS.BRANCH_CREATE).value || can(PERMISSIONS.BRANCH_UPDATE).value,
+)
+const canEditCompany = can(PERMISSIONS.COMPANY_UPDATE)
+// BILLING no contratado: `useEmpresa().load()` ni siquiera pide el perfil fiscal, así que
+// mostrarlo como «pendiente de configurar» sería un estado inventado. La tarjeta se oculta.
+const canViewTaxProfile = can(PERMISSIONS.ELECTRONIC_BILLING_READ)
+const canViewCashTerminals = computed(
+  () => can(PERMISSIONS.CASHREGISTER_READ).value || can(PERMISSIONS.CASHREGISTER_OPERATE).value,
 )
 
 // ── Datos derivados de la empresa (perfil fiscal + base) ─────────────────────
@@ -59,17 +69,22 @@ const createdDate = computed(() =>
 // ── Modal de sede ────────────────────────────────────────────────────────────
 const sedeModalOpen = ref(false)
 const editingSede = ref<BranchResponse | null>(null)
+const sedeCapacityExceeded = ref(false)
+const canViewCupos = can(PERMISSIONS.ENTITLEMENT_READ)
 
 function openAdd() {
   editingSede.value = null
+  sedeCapacityExceeded.value = false
   sedeModalOpen.value = true
 }
 function openEdit(branch: BranchResponse) {
   editingSede.value = branch
+  sedeCapacityExceeded.value = false
   sedeModalOpen.value = true
 }
 
 async function onSaveSede(payload: { id: number | null; body: SaveBranchRequest }) {
+  sedeCapacityExceeded.value = false
   try {
     if (payload.id != null) {
       await update(payload.id, payload.body)
@@ -80,6 +95,11 @@ async function onSaveSede(payload: { id: number | null; body: SaveBranchRequest 
     }
     sedeModalOpen.value = false
   } catch (e) {
+    if (isCapacityLimitExceeded(e)) {
+      sedeCapacityExceeded.value = true
+      toast.error('No se pudo crear la sede', capacityLimitMessage(e, 'sedes'))
+      return
+    }
     toast.errorFrom('No se pudo guardar', e, 'Revisa los datos de la sede.')
   }
 }
@@ -103,6 +123,23 @@ function goEditFiscal() {
   router.push({ name: 'facturacion-habilitacion' })
 }
 
+// ── Modal de datos de la empresa ─────────────────────────────────────────────
+const companyModalOpen = ref(false)
+
+function openEditCompany() {
+  companyModalOpen.value = true
+}
+
+async function onSaveCompany(payload: UpdateCompanyRequest) {
+  try {
+    await updateCompany(payload)
+    toast.success('Datos actualizados', 'Los datos de la empresa se guardaron correctamente.')
+    companyModalOpen.value = false
+  } catch (e) {
+    toast.errorFrom('No se pudo guardar', e, 'Revisa los datos de la empresa.')
+  }
+}
+
 onMounted(() => {
   void load()
 })
@@ -116,9 +153,14 @@ onMounted(() => {
         <h1 class="title ds-display">Empresa</h1>
         <div class="lead">Datos fiscales, ubicación y sedes de tu empresa.</div>
       </div>
-      <button v-if="feCanConfig" type="button" class="editbtn" @click="goEditFiscal">
-        <Pencil :size="15" :stroke-width="1.8" /> Editar datos fiscales
-      </button>
+      <div class="emp-header-actions">
+        <button v-if="canEditCompany" type="button" class="editbtn" @click="openEditCompany">
+          <Pencil :size="15" :stroke-width="1.8" /> Editar datos
+        </button>
+        <button v-if="feCanConfig" type="button" class="editbtn" @click="goEditFiscal">
+          <Pencil :size="15" :stroke-width="1.8" /> Editar datos fiscales
+        </button>
+      </div>
     </div>
 
     <EmpresaHero
@@ -128,12 +170,12 @@ onMounted(() => {
       :tax-regime-label="taxRegimeLabel"
       :person-type="personType"
       :created-date="createdDate"
-      :profile-missing="!taxProfile && !loading"
+      :profile-missing="canViewTaxProfile && !taxProfile && !loading"
     />
 
     <!-- Info cards -->
     <div class="cards ds-grid-2">
-      <section class="ds-card">
+      <section v-if="canViewTaxProfile" class="ds-card">
         <header class="cardhead">
           <span class="cardic ds-tone--accent"><ShieldCheck :size="16" :stroke-width="1.7" /></span>
           <h3>Identidad fiscal</h3>
@@ -220,6 +262,13 @@ onMounted(() => {
         </button>
       </div>
 
+      <div v-if="sedeCapacityExceeded" class="ds-banner ds-banner--warning" role="alert">
+        <span>Ya usas todas las sedes que incluye tu plan.</span>
+        <RouterLink v-if="canViewCupos" :to="{ name: 'suscripcion-cupos' }">
+          Amplía el cupo desde Mi suscripción
+        </RouterLink>
+      </div>
+
       <div v-if="sedes.length" class="sedesgrid">
         <BranchCard
           v-for="b in sedes"
@@ -237,13 +286,20 @@ onMounted(() => {
       </div>
     </div>
 
-    <CashTerminalsPanel :branches="sedes" />
+    <CashTerminalsPanel v-if="canViewCashTerminals" :branches="sedes" />
 
     <SedeFormModal
       :open="sedeModalOpen"
       :initial="editingSede"
       @save="onSaveSede"
       @close="sedeModalOpen = false"
+    />
+
+    <CompanyEditModal
+      :open="companyModalOpen"
+      :company="company"
+      @save="onSaveCompany"
+      @close="companyModalOpen = false"
     />
   </div>
 </template>
@@ -275,6 +331,12 @@ onMounted(() => {
 .lead {
   font-size: 13.5px;
   color: var(--warm-600);
+}
+
+.emp-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .editbtn {

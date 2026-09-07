@@ -12,6 +12,8 @@ const props = defineProps<{
   employee: Employee | null
   busy?: boolean
   canUpdate?: boolean
+  canCreate?: boolean
+  canDelete?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -25,6 +27,11 @@ const emit = defineEmits<{
 }>()
 
 const isAdmin = computed(() => props.employee?.roles.some((r) => r.code === 'ADMIN') ?? false)
+
+// CreateEmployeeRoleUseCase exige employee.create; DeleteEmployeeRoleUseCase exige
+// employee.delete. El modal añade y quita roles en la misma acción, así que hace falta
+// autoridad para ambas mitades del cambio.
+const canChangeRoles = computed(() => !!props.canCreate && !!props.canDelete)
 
 const isInvited = computed(() => props.employee?.status === 'INVITED')
 
@@ -136,7 +143,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               Editar
             </button>
             <button
-              v-if="canUpdate"
+              v-if="canChangeRoles"
               type="button"
               class="ds-btn ds-btn--ghost ds-btn--snug"
               :disabled="busy"
@@ -162,7 +169,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
             </button>
             <div class="ds-flex-fill" />
             <span
-              v-if="canUpdate && employee.enabled && isAdmin"
+              v-if="canDelete && employee.enabled && isAdmin"
               class="admin-lock"
               title="Los empleados con rol ADMIN no pueden ser desactivados"
             >
@@ -170,7 +177,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               ADMIN protegido
             </span>
             <button
-              v-else-if="canUpdate && employee.enabled"
+              v-else-if="canDelete && employee.enabled"
               type="button"
               class="danger"
               :class="{ 'ds-is-disabled--60': busy }"

@@ -125,7 +125,7 @@ function stockMinOf(productId: number): number {
 // configurarlo en vez de dejar que falle con un error crudo.
 const taxProfileMissing = ref(false)
 const canConfigTaxProfile =
-  can(PERMISSIONS.COMPANY_TAX_PROFILE_MANAGE) || can(PERMISSIONS.COMPANY_TAX_PROFILE_READ)
+  can(PERMISSIONS.ELECTRONIC_BILLING_CREATE) || can(PERMISSIONS.ELECTRONIC_BILLING_READ)
 
 type Mode = 'producto' | 'servicio' | 'paquete'
 const mode = ref<Mode>('producto')

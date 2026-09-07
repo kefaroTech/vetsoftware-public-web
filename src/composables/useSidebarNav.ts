@@ -10,6 +10,7 @@ import {
   Bug,
   ClipboardList,
   History,
+  Home,
   Package,
   ReceiptText,
   ScanLine,
@@ -44,13 +45,13 @@ export function useSidebarNav() {
   const canDeworming = can(PERMISSIONS.DEWORMING_CREATE)
   const canSurgery = can(PERMISSIONS.SURGERY_CREATE)
   const canSpa = can(PERMISSIONS.SPA_CREATE)
+  const canDaycare = can(PERMISSIONS.DAYCARE_CREATE)
   const canEmployees = can(PERMISSIONS.EMPLOYEE_READ)
-  const canRoles = can(PERMISSIONS.ROLE_PERMISSIONS_READ)
+  const canRoles = canAny(PERMISSIONS.ROLE_READ, PERMISSIONS.ROLE_PERMISSIONS_READ)
   const canEmpresa = canAny(
     PERMISSIONS.COMPANY_READ,
     PERMISSIONS.BRANCH_CREATE,
     PERMISSIONS.BRANCH_UPDATE,
-    PERMISSIONS.BRANCH_READ,
   )
   /**
    * «Mi suscripción». Basta CUALQUIERA de los cinco: la 377 documenta que varios de estos
@@ -82,7 +83,12 @@ export function useSidebarNav() {
   const canTaxes = can(PERMISSIONS.TAX_READ)
   const canAccounts = can(PERMISSIONS.OPEN_ACCOUNT_READ)
   const canAgenda = can(PERMISSIONS.APPOINTMENT_READ)
+  const canClientes = canAny(PERMISSIONS.OWNER_READ, PERMISSIONS.ANIMAL_READ)
   const canCreateConsultation = can(PERMISSIONS.CONSULTATION_CREATE)
+  const canClinicalHistory = can(PERMISSIONS.CLINICAL_HISTORY_READ)
+  const showConsultaSection = computed(
+    () => canCreateConsultation.value || canClinicalHistory.value,
+  )
 
   // Compras (punto 7): proveedores, órdenes/recepción, facturas/CxP, libro de compras.
   const canSuppliers = can(PERMISSIONS.SUPPLIER_READ)
@@ -124,6 +130,7 @@ export function useSidebarNav() {
     'acciones-desparasitacion',
     'acciones-cirugia',
     'acciones-spa',
+    'acciones-daycare',
   ] as const
   const isAccionesActive = computed(() => accionesSubRoutes.some((name) => route.name === name))
 
@@ -157,7 +164,7 @@ export function useSidebarNav() {
         icon: History,
         to: { name: 'consulta-historial' as const },
         activeRoutes: historialActiveRoutes,
-        show: true,
+        show: canClinicalHistory.value,
       },
     ].filter((item) => item.show),
   )
@@ -201,6 +208,12 @@ export function useSidebarNav() {
         show: canSurgery.value,
       },
       { label: 'Spa', icon: Sparkles, to: { name: 'acciones-spa' as const }, show: canSpa.value },
+      {
+        label: 'Guardería',
+        icon: Home,
+        to: { name: 'acciones-daycare' as const },
+        show: canDaycare.value,
+      },
     ].filter((item) => item.show),
   )
 
@@ -285,6 +298,9 @@ export function useSidebarNav() {
 
   return {
     canCreateConsultation,
+    canClinicalHistory,
+    showConsultaSection,
+    canClientes,
     canEmployees,
     canRoles,
     canEmpresa,

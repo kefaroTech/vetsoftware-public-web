@@ -14,3 +14,11 @@ export interface CompanyResponse {
   createdDate: string
   enabled: boolean
 }
+
+export interface UpdateCompanyRequest {
+  name: string
+  identifier: string
+  address?: string
+  contactNumber?: string
+  cityId: number
+}

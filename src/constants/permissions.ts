@@ -11,23 +11,24 @@ export const PERMISSIONS = {
 
   ANIMAL_CREATE: 'animal.create',
   ANIMAL_READ: 'animal.read',
+  ANIMAL_UPDATE: 'animal.update',
+  ANIMAL_DELETE: 'animal.delete',
 
   OWNER_CREATE: 'owner.create',
   OWNER_READ: 'owner.read',
   OWNER_UPDATE: 'owner.update',
   OWNER_DELETE: 'owner.delete',
 
-  COMPANY_CREATE: 'company.create',
   COMPANY_READ: 'company.read',
   COMPANY_UPDATE: 'company.update',
-  COMPANY_DELETE: 'company.delete',
 
   // Multi-sucursal: gestión de sedes (sección Empresa). Sembrados en el catálogo por la migración 184.
   BRANCH_CREATE: 'branch.create',
   BRANCH_UPDATE: 'branch.update',
-  BRANCH_READ: 'branch.read',
 
   CONSULTATION_CREATE: 'consultation.create',
+  // Historia clínica: submódulo CLINICAL_HISTORY (changeset 275).
+  CLINICAL_HISTORY_READ: 'clinicalHistory.read',
   PRESCRIPTION_CREATE: 'prescription.create',
   PRESCRIPTION_READ: 'prescription.read',
   PRESCRIPTION_UPDATE: 'prescription.update',
@@ -57,8 +58,11 @@ export const PERMISSIONS = {
   SPA_CREATE: 'spa.create',
   SPA_UPDATE: 'spa.update',
   SPA_DELETE: 'spa.delete',
-
-  AGENDA_READ: 'agenda.read',
+  // Guardería / hotel: submódulo DAYCARE del módulo GROOMING.
+  DAYCARE_CREATE: 'daycare.create',
+  DAYCARE_READ: 'daycare.read',
+  DAYCARE_UPDATE: 'daycare.update',
+  DAYCARE_DELETE: 'daycare.delete',
 
   // Agendamiento de citas
   APPOINTMENT_CREATE: 'appointment.create',
@@ -101,6 +105,7 @@ export const PERMISSIONS = {
   CASHREGISTER_CLOSE: 'cashregister.close',
   CASHREGISTER_READ: 'cashregister.read',
   CASHREGISTER_HISTORY_READ: 'cashregister.history.read',
+  POS_READ: 'pos.read',
 
   // Compras (punto 7). Proveedores (migr. 199), órdenes de compra + recepción (migr. 202),
   // facturas de proveedor / cuentas por pagar (migr. 204) y libro de compras (migr. 205). Sub-módulo PURCHASES.
@@ -137,24 +142,13 @@ export const PERMISSIONS = {
 
   // Facturación electrónica (DIAN) — módulo premium. El front muestra/usa el módulo
   // SOLO si el usuario tiene `electronicbilling.create`, que el backend deriva hoy de los
-  // entitlements de la suscripción de la empresa.
-  // Los permisos granulares de abajo se conservan para usos puntuales.
+  // entitlements de la suscripción de la empresa. `ELECTRONIC_BILLING_READ` cubre los
+  // usos puntuales de solo lectura (p. ej. el perfil fiscal, changeset 278).
   ELECTRONIC_BILLING_CREATE: 'electronicbilling.create',
-  ELECTRONIC_DOCUMENT_READ: 'electronicDocument.read',
-  ELECTRONIC_DOCUMENT_EMIT: 'electronicDocument.emit',
-  ELECTRONIC_DOCUMENT_TRANSMIT: 'electronicDocument.transmit',
-  ELECTRONIC_DOCUMENT_CREATE: 'electronicDocument.create',
-  SALES_REPORT_READ: 'salesReport.read',
-  DIAN_PROVIDER_CONFIG_MANAGE: 'dianProviderConfig.manage',
-  DIAN_PROVIDER_CONFIG_READ: 'dianProviderConfig.read',
-  NUMBERING_RESOLUTION_CREATE: 'numberingResolution.create',
-  NUMBERING_RESOLUTION_UPDATE: 'numberingResolution.update',
-  NUMBERING_RESOLUTION_READ: 'numberingResolution.read',
-  NUMBERING_RESOLUTION_DELETE: 'numberingResolution.delete',
-  WITHHOLDING_CONFIG_MANAGE: 'withholdingConfig.manage',
-  WITHHOLDING_CONFIG_READ: 'withholdingConfig.read',
-  COMPANY_TAX_PROFILE_MANAGE: 'companyTaxProfile.manage',
-  COMPANY_TAX_PROFILE_READ: 'companyTaxProfile.read',
+  ELECTRONIC_BILLING_READ: 'electronicbilling.read',
+  // El backend siembra este código en minúsculas (changeset 277); `salesreport.read`,
+  // no `salesReport.read`.
+  SALES_REPORT_READ: 'salesreport.read',
   // Autoservicio de la suscripción («Mi suscripción»). Todos existen ya en el backend:
   // sembrados por 259 (los `.read`), 260 (update/cancel/accept/reject), 366 (los `.read` de
   // límites) y BACKFILLEADOS sobre las empresas existentes por la 377.

@@ -216,6 +216,19 @@ const router = createRouter({
           meta: { permission: PERMISSIONS.APPOINTMENT_READ, title: 'Agenda — Lumbre' },
         },
         {
+          // `permissionsAny` y no `permission` a secas: la entrada del menú es visible con
+          // `canAny(OWNER_READ, ANIMAL_READ)` (useSidebarNav.ts), y un guard más estricto que
+          // el menú es el defecto documentado en «Mi suscripción» más abajo —quien solo
+          // tuviera animal.read pulsaría y el guard lo devolvería al tablero en silencio—.
+          path: 'clientes',
+          name: 'clientes',
+          component: () => import('@/features/clientes/views/ClientesView.vue'),
+          meta: {
+            permissionsAny: [PERMISSIONS.OWNER_READ, PERMISSIONS.ANIMAL_READ],
+            title: 'Clientes y mascotas — Lumbre',
+          },
+        },
+        {
           path: 'consulta/nueva',
           name: 'consulta-nueva',
           component: () => import('@/features/dashboard/views/consulta/nueva/NuevaView.vue'),
@@ -278,7 +291,11 @@ const router = createRouter({
         {
           path: 'consulta/historial',
           component: () => import('@/features/historia-clinica/views/HistoriaClinicaView.vue'),
-          meta: { fullBleed: true, hideTopbar: true },
+          meta: {
+            fullBleed: true,
+            hideTopbar: true,
+            permission: PERMISSIONS.CLINICAL_HISTORY_READ,
+          },
           children: [
             {
               path: '',
@@ -370,6 +387,12 @@ const router = createRouter({
           name: 'acciones-spa',
           component: () => import('@/features/acciones/views/SpaListView.vue'),
           meta: { permission: PERMISSIONS.SPA_CREATE, title: 'Spa y estética — Lumbre' },
+        },
+        {
+          path: 'acciones/guarderia',
+          name: 'acciones-daycare',
+          component: () => import('@/features/acciones/views/DaycareListView.vue'),
+          meta: { permission: PERMISSIONS.DAYCARE_CREATE, title: 'Guardería — Lumbre' },
         },
         {
           path: 'laboratorio',
@@ -489,7 +512,9 @@ const router = createRouter({
           name: 'facturacion-documentos',
           component: () => import('@/features/facturacion/views/DocumentosView.vue'),
           meta: {
-            permission: PERMISSIONS.ELECTRONIC_BILLING_CREATE,
+            // DocumentosView llama a GET /electronic-documents, que exige pos.read
+            // (submódulo CASH, changeset 277) y no electronicbilling.*.
+            permissionsAny: [PERMISSIONS.ELECTRONIC_BILLING_CREATE, PERMISSIONS.POS_READ],
             title: 'Documentos electrónicos — Lumbre',
           },
         },
@@ -498,7 +523,9 @@ const router = createRouter({
           name: 'facturacion-reportes',
           component: () => import('@/features/facturacion/views/ReportesView.vue'),
           meta: {
-            permission: PERMISSIONS.ELECTRONIC_BILLING_CREATE,
+            // ReportesView llama a GET /sales-reports, que exige salesreport.read
+            // (submódulo CASH), no electronicbilling.*.
+            permissionsAny: [PERMISSIONS.ELECTRONIC_BILLING_CREATE, PERMISSIONS.SALES_REPORT_READ],
             title: 'Reportes de facturación electrónica — Lumbre',
           },
         },
@@ -521,7 +548,6 @@ const router = createRouter({
               PERMISSIONS.COMPANY_READ,
               PERMISSIONS.BRANCH_CREATE,
               PERMISSIONS.BRANCH_UPDATE,
-              PERMISSIONS.BRANCH_READ,
             ],
           },
         },
@@ -615,7 +641,8 @@ const router = createRouter({
           name: 'roles',
           component: () => import('@/features/roles/views/RolesView.vue'),
           meta: {
-            permission: PERMISSIONS.ROLE_PERMISSIONS_READ,
+            // ListRolesByCompanyUseCase acepta role.read O rolePermissions.read.
+            permissionsAny: [PERMISSIONS.ROLE_READ, PERMISSIONS.ROLE_PERMISSIONS_READ],
             title: 'Roles y permisos — Lumbre',
           },
         },
