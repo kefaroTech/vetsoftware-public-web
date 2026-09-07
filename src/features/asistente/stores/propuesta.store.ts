@@ -500,11 +500,9 @@ export const usePropuestaStore = defineStore('asistentePropuesta', () => {
    * el mismo carrito devolvería los mismos importes y gastaría cupo para fingir
    * que el número se tuvo en cuenta.
    *
-   * <p>El único consumidor real de estos dos números es **la banda de
-   * continuación de la landing** (`ResumeIntentBanner`: «para 2 sedes y 5
-   * personas»), que describe lo que el prospecto dijo. Nada más los lee. En
-   * concreto **no son el paso vinculante**, y este docblock afirmaba que sí:
-   * la oferta de una propuesta son `lineasDePropuesta(resumen)` —las líneas que
+   * <p>`PropuestaCapacidades` los enseña en pantalla —lo que el prospecto
+   * dijo— y `elegirPropuesta` los copia a la intención guardada al continuar.
+   * En concreto **no son el paso vinculante**: la oferta de una propuesta son `lineasDePropuesta(resumen)` —las líneas que
    * devolvió el servidor, con SUS cantidades— y `SelfServeQuoteRequest` no tiene
    * dónde poner una capacidad que no sea una línea con `code` y `quantity`.
    * Enviar `EXTRA_USER`/`EXTRA_BRANCH` por nuestra cuenta tampoco es la salida:

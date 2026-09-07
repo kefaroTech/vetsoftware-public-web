@@ -4,21 +4,17 @@ import type {
   GenerateProposalRequest,
 } from '../src/features/asistente/types/asistente.types'
 import {
-  CODIGO_AGENDA,
   CODIGO_NUCLEO,
   CODIGO_RECOMENDADO,
   CODIGO_USUARIOS_EXTRA,
   cuerpoDe,
   enrutarEmbudo,
-  intencionDePropuesta,
   MOTIVO_AGENDA,
   noEncontrado,
   propuestaConRecomendado,
   propuestaDeterminista,
   propuestaSinCapacidad,
   propuestaViva,
-  sembrarIntencionDePropuesta,
-  sembrarSesionDelAsistente,
   TOKEN_DESCONOCIDO,
   TOKEN_MAL_FORMADO,
   TOKEN_VIVO,
@@ -278,65 +274,6 @@ test.describe('El enlace del correo — el que ya no sirve', () => {
     // BIEN formado, `llamadas` vale 1. Aquí vale 0 porque la guarda de forma
     // corta antes de la red, no porque nadie esté mirando.
     expect(red.llamadas, 'un token imposible salió igualmente hacia el servidor').toEqual([])
-    sinPeticionesImprevistas(red)
-  })
-})
-
-test.describe('La banda de continuación de la landing', () => {
-  test('ofrece retomar una propuesta a medida y la relee al seguir', async ({ page }) => {
-    await sembrarIntencionDePropuesta(page, intencionDePropuesta({ sedes: 2, usuarios: 5 }))
-    await sembrarSesionDelAsistente(page)
-    const red = await enrutarEmbudo(page, {
-      '/assistant/proposal*': (route) => responderJson(route, propuestaViva()),
-    })
-
-    await page.goto('/')
-
-    const banda = page.getByTestId('banda-continuacion')
-    await expect(banda).toBeVisible()
-    // Es un `<aside>` con nombre accesible —complementario—, nunca un modal: quien
-    // vuelve a la landing por otra cosa no puede quedarse bloqueado por una
-    // decisión que no tomó.
-    await expect(page.getByRole('complementary')).toHaveCount(1)
-
-    // La frase cambia ENTERA, no solo el sustantivo: una propuesta a medida no
-    // tiene `planCode`, así que la banda no puede nombrar ningún paquete.
-    await expect(banda).toContainText('Estabas armando tu propuesta a medida')
-    await expect(banda).toContainText('para 2 sedes y 5 personas')
-
-    // Hasta aquí nadie ha preguntado nada al servidor: la banda se decide con lo
-    // que hay en este dispositivo.
-    expect(red.llamadas).toEqual([])
-
-    await banda.getByRole('button', { name: 'Seguir' }).click()
-
-    // «Seguir» relee ANTES de navegar: sin la relectura, `/planes` se abriría con
-    // el asistente en blanco y la banda habría mentido.
-    await expect(page).toHaveURL(/\/planes/)
-    await expect(encabezadoDePropuesta(page)).toBeVisible()
-    await expect(page.getByTestId(`propuesta-linea-${CODIGO_AGENDA}`)).toBeVisible()
-    expect(red.llamadas).toHaveLength(1)
-    sinPeticionesImprevistas(red)
-  })
-
-  test('sin el token de ESA propuesta en este dispositivo, no promete nada', async ({ page }) => {
-    // La intención apunta a `p-1` y el espejo guarda `p-9`: el almacenamiento se
-    // lee bien —hay una sesión válida dentro— y aun así `conocePropuesta('p-1')`
-    // es `false`. Eso separa «no hay espejo» de «el espejo no tiene ESTA», que es
-    // justo la diferencia que la guarda existe para notar; una guarda escrita como
-    // «¿hay alguna sesión?» pintaría la banda igualmente y prometería retomar una
-    // propuesta que este navegador ya no puede releer.
-    await sembrarIntencionDePropuesta(page, intencionDePropuesta({ propuestaId: 'p-1' }))
-    await sembrarSesionDelAsistente(page, { id: 'p-9' })
-    const red = await enrutarEmbudo(page, {})
-
-    await page.goto('/')
-    await expect(
-      page.getByRole('heading', { level: 2, name: 'Combinaciones que se piden mucho' }),
-    ).toBeVisible()
-
-    await expect(page.getByTestId('banda-continuacion')).toHaveCount(0)
-    expect(red.llamadas).toEqual([])
     sinPeticionesImprevistas(red)
   })
 })

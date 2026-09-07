@@ -46,13 +46,6 @@ const personasIncluidas = computed(() =>
     instante.
   </p>
 
-  <LandingSelectorModulos
-    class="ptm-selector"
-    :catalogo="catalogo"
-    :modulos="modulos"
-    @alternar="(code, marcado) => $emit('alternar', code, marcado)"
-  />
-
   <div class="ptm-cantidades">
     <ContadorCantidad
       v-model="sedes"
@@ -70,7 +63,17 @@ const personasIncluidas = computed(() =>
     />
   </div>
 
+  <!-- El ciclo va aquí y no junto al selector de abajo: cambia el catálogo
+       (`useCatalogoComercial(ciclo)`), así que condiciona los precios que el
+       selector va a pintar. -->
   <CicloFieldset v-model="ciclo" class="ptm-ciclo" />
+
+  <LandingSelectorModulos
+    class="ptm-selector"
+    :catalogo="catalogo"
+    :modulos="modulos"
+    @alternar="(code, marcado) => $emit('alternar', code, marcado)"
+  />
 </template>
 
 <style scoped>

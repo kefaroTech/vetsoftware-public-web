@@ -146,7 +146,6 @@ export function useContratacion() {
     elegirPropuesta,
     cambiarCiclo: store.cambiarCiclo,
     descartar: store.descartar,
-    limpiar: store.limpiar,
     marcarContratada: store.marcarContratada,
   }
 }
