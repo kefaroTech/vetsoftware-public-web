@@ -74,3 +74,7 @@ export interface CreateAnimalRequest {
   deceased: boolean
   deceasedDate: string | null
 }
+
+// Igual a CreateAnimalRequest salvo `weight`: el backend gestiona el peso posterior
+// vía weightRecordApi, no en la actualización de la ficha.
+export type UpdateAnimalRequest = Omit<CreateAnimalRequest, 'weight'>

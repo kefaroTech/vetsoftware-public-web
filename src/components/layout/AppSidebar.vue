@@ -6,6 +6,7 @@ import {
   BedDouble,
   Building2,
   Calendar,
+  Contact,
   CreditCard,
   FilePlus,
   FileText,
@@ -37,6 +38,8 @@ const draft = useNuevaConsultaDraft()
 // Permisos, rutas activas y listas de entradas: ver useSidebarNav.ts
 const {
   canCreateConsultation,
+  showConsultaSection,
+  canClientes,
   canEmployees,
   canRoles,
   canEmpresa,
@@ -141,37 +144,46 @@ const lastName = computed(() =>
       :active="route.name === 'agenda'"
       @click="router.push({ name: 'agenda' })"
     />
-
     <SidebarNavItem
-      label="Consulta"
-      :icon="FileText"
-      :active="isConsultaActive"
-      expandable
-      :expanded="openSection === 'consulta'"
-      @click="toggleSection('consulta')"
+      v-if="canClientes"
+      label="Clientes y mascotas"
+      :icon="Contact"
+      :active="route.name === 'clientes'"
+      @click="router.push({ name: 'clientes' })"
     />
-    <div v-if="openSection === 'consulta'" class="sub-list ds-stack">
-      <button
-        v-if="canCreateConsultation"
-        type="button"
-        class="sub-item-btn"
-        :class="{ active: route.name === 'consulta-nueva' }"
-        :aria-current="route.name === 'consulta-nueva' ? 'page' : undefined"
-        @click="goNuevaConsulta"
-      >
-        <FilePlus :size="14" :stroke-width="1.5" />
-        <span>Nueva consulta</span>
-        <span class="rail-label ds-sr-only">Nueva consulta</span>
-      </button>
-      <SidebarSubItem
-        v-for="item in subItems"
-        :key="item.label"
-        :label="item.label"
-        :icon="item.icon"
-        :to="item.to"
-        :active="item.activeRoutes.includes(String(route.name))"
+
+    <template v-if="showConsultaSection">
+      <SidebarNavItem
+        label="Consulta"
+        :icon="FileText"
+        :active="isConsultaActive"
+        expandable
+        :expanded="openSection === 'consulta'"
+        @click="toggleSection('consulta')"
       />
-    </div>
+      <div v-if="openSection === 'consulta'" class="sub-list ds-stack">
+        <button
+          v-if="canCreateConsultation"
+          type="button"
+          class="sub-item-btn"
+          :class="{ active: route.name === 'consulta-nueva' }"
+          :aria-current="route.name === 'consulta-nueva' ? 'page' : undefined"
+          @click="goNuevaConsulta"
+        >
+          <FilePlus :size="14" :stroke-width="1.5" />
+          <span>Nueva consulta</span>
+          <span class="rail-label ds-sr-only">Nueva consulta</span>
+        </button>
+        <SidebarSubItem
+          v-for="item in subItems"
+          :key="item.label"
+          :label="item.label"
+          :icon="item.icon"
+          :to="item.to"
+          :active="item.activeRoutes.includes(String(route.name))"
+        />
+      </div>
+    </template>
 
     <template v-if="showAccionesSection">
       <div class="section-label">ACCIONES CLÍNICAS</div>

@@ -47,6 +47,20 @@ export function useAnimalsByOwner(ownerId: Ref<string>) {
     if (ownerKey === ownerId.value) list.value = next
   }
 
+  function updatePet(pet: Animal) {
+    const ownerKey = pet.ownerId
+    const next = (store.getCached(ownerKey) ?? []).map((p) => (p.id === pet.id ? pet : p))
+    store.setCached(ownerKey, next)
+    if (ownerKey === ownerId.value) list.value = next
+  }
+
+  function removePet(pet: Animal) {
+    const ownerKey = pet.ownerId
+    const next = (store.getCached(ownerKey) ?? []).filter((p) => p.id !== pet.id)
+    store.setCached(ownerKey, next)
+    if (ownerKey === ownerId.value) list.value = next
+  }
+
   function invalidate(id: string = ownerId.value) {
     store.invalidate(id)
   }
@@ -61,5 +75,5 @@ export function useAnimalsByOwner(ownerId: Ref<string>) {
     refresh(id, true)
   })
 
-  return { list, loading, error, refresh, addPet, invalidate }
+  return { list, loading, error, refresh, addPet, updatePet, removePet, invalidate }
 }

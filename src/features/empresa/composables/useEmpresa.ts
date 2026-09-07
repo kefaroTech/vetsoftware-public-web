@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 import { companyApi } from '../api/company.api'
-import type { CompanyResponse } from '../types/company.types'
+import type { CompanyResponse, UpdateCompanyRequest } from '../types/company.types'
 import { companyTaxProfileApi } from '@/features/facturacion/api/companyTaxProfile.api'
 import type { CompanyTaxProfileResponse } from '@/features/facturacion/types/facturacion'
 import { useAuth } from '@/features/auth/composables/useAuth'
@@ -43,5 +43,13 @@ export function useEmpresa() {
     }
   }
 
-  return { company, taxProfile, hasTaxProfile, loading, error, load }
+  async function update(payload: UpdateCompanyRequest): Promise<CompanyResponse> {
+    const id = companyId.value
+    if (id == null) throw new Error('No se pudo determinar la empresa actual.')
+    const updated = await companyApi.update(id, payload)
+    company.value = updated
+    return updated
+  }
+
+  return { company, taxProfile, hasTaxProfile, loading, error, load, update }
 }

@@ -1,4 +1,4 @@
-import type { CompanyResponse } from '../types/company.types'
+import type { CompanyResponse, UpdateCompanyRequest } from '../types/company.types'
 import { http } from '@/services/http/http.client'
 
 export const companyApi = {
@@ -11,6 +11,11 @@ export const companyApi = {
       if (isReadable(e)) return null
       throw e
     }
+  },
+
+  async update(id: number, payload: UpdateCompanyRequest): Promise<CompanyResponse> {
+    const { data } = await http.put<CompanyResponse>(`/companies/${id}`, payload)
+    return data
   },
 }
 

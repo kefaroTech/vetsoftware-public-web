@@ -1,5 +1,9 @@
 import type { Animal } from '@/types/domain'
-import type { AnimalResponse, CreateAnimalRequest } from '../types/animal.types'
+import type {
+  AnimalResponse,
+  CreateAnimalRequest,
+  UpdateAnimalRequest,
+} from '../types/animal.types'
 import type { PetDraft } from '../composables/useNuevaConsultaDraft'
 
 export function mapAnimalResponse(r: AnimalResponse): Animal {
@@ -56,4 +60,17 @@ export function buildCreateAnimalRequest(p: PetDraft, ownerId: string): CreateAn
     deceased: false,
     deceasedDate: null,
   }
+}
+
+/**
+ * `PetForm` no edita `deceased`/`deceasedDate`: al editar hay que preservar el valor que ya
+ * tenía el animal en vez de resetearlo con los defaults de creación (`false`/`null`).
+ */
+export function buildUpdateAnimalRequest(
+  p: PetDraft,
+  ownerId: string,
+  preserved: { deceased: boolean; deceasedDate: string | null },
+): UpdateAnimalRequest {
+  const { weight: _weight, ...rest } = buildCreateAnimalRequest(p, ownerId)
+  return { ...rest, deceased: preserved.deceased, deceasedDate: preserved.deceasedDate }
 }

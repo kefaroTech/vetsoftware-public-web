@@ -21,6 +21,7 @@ import PageHeader from '@/components/ui/PageHeader.vue'
 import { useToast } from '@/composables/useToast'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { capacityLimitMessage, isCapacityLimitExceeded } from '@/composables/useCapacityLimitError'
 
 const ADMIN_ROLE_CODE = 'ADMIN'
 function hasAdminRole(employee: Employee): boolean {
@@ -54,6 +55,8 @@ const toast = useToast()
 const { confirm } = useConfirmDialog()
 const canCreate = can(PERMISSIONS.EMPLOYEE_CREATE)
 const canUpdate = can(PERMISSIONS.EMPLOYEE_UPDATE)
+const canDelete = can(PERMISSIONS.EMPLOYEE_DELETE)
+const canViewCupos = can(PERMISSIONS.ENTITLEMENT_READ)
 
 // Valor inmediato del input; se aplica al servicio con debounce para no disparar una petición por tecla.
 const query = ref('')
@@ -77,6 +80,7 @@ const changingBranchesTarget = ref<Employee | null>(null)
 const resendTarget = ref<Employee | null>(null)
 const busy = ref(false)
 const submitError = ref<string | null>(null)
+const capacityExceeded = ref(false)
 
 const selected = computed(() => employees.value.find((e) => e.id === selectedId.value) ?? null)
 
@@ -100,12 +104,14 @@ function closeDrawer() {
 function openCreate() {
   formInitial.value = null
   submitError.value = null
+  capacityExceeded.value = false
   formOpen.value = true
 }
 
 function openEdit(employee: Employee) {
   formInitial.value = employee
   submitError.value = null
+  capacityExceeded.value = false
   formOpen.value = true
 }
 
@@ -131,6 +137,7 @@ async function handleSubmit(data: EmployeeFormData) {
   if (busy.value) return
   busy.value = true
   submitError.value = null
+  capacityExceeded.value = false
   try {
     if (formInitial.value) {
       // `status` no viaja: PUT /employees/{id} no lo acepta. El activar/desactivar tiene sus
@@ -166,6 +173,13 @@ async function handleSubmit(data: EmployeeFormData) {
     }
     formOpen.value = false
   } catch (e) {
+    if (isCapacityLimitExceeded(e)) {
+      capacityExceeded.value = true
+      const msg = capacityLimitMessage(e, 'empleados')
+      submitError.value = msg
+      toast.error('No se pudo invitar al empleado', msg)
+      return
+    }
     const msg = getProblemDetailMessage(e, 'No se pudo guardar el empleado')
     submitError.value = msg
     toast.error('Ocurrió un error', msg)
@@ -327,7 +341,12 @@ async function onConfirmChangeBranches(data: ChangeBranchesConfirm) {
       </template>
     </PageHeader>
 
-    <div v-if="submitError" class="ds-banner ds-banner--error" role="alert">{{ submitError }}</div>
+    <div v-if="submitError" class="ds-banner ds-banner--error" role="alert">
+      {{ submitError }}
+      <RouterLink v-if="capacityExceeded && canViewCupos" :to="{ name: 'suscripcion-cupos' }">
+        Ir a Mi suscripción
+      </RouterLink>
+    </div>
 
     <EmpleadosTable
       :employees="employees"
@@ -348,6 +367,8 @@ async function onConfirmChangeBranches(data: ChangeBranchesConfirm) {
       :employee="selected"
       :busy="busy"
       :can-update="canUpdate"
+      :can-create="canCreate"
+      :can-delete="canDelete"
       @close="closeDrawer"
       @edit="openEdit"
       @change-roles="openChangeRoles"

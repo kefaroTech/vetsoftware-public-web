@@ -109,9 +109,11 @@ import type {
   AnimalColorSummary,
   AnimalResponse,
   CreateAnimalRequest,
+  UpdateAnimalRequest,
 } from '../features/dashboard/views/consulta/nueva/types/animal.types'
 import type { AnimalColorResponse } from '../features/animal-colors/types/animal-colors.types'
 import type { BreedResponse } from '../features/breeds/types/breeds.types'
+import type { DayCareResponse } from '../features/dashboard/views/consulta/nueva/types/daycare.types'
 import type {
   ConsultationResponse,
   ConsultationTypeSummary,
@@ -182,7 +184,7 @@ import type {
   CreateEmployeeRoleRequest,
   EmployeeRoleResponse,
 } from '../features/employees/types/employeeRoles.types'
-import type { CompanyResponse } from '../features/empresa/types/company.types'
+import type { CompanyResponse, UpdateCompanyRequest } from '../features/empresa/types/company.types'
 import type {
   SetSystemConfigurationRequest,
   SystemConfigurationResponse,
@@ -532,6 +534,7 @@ interface ContractGaps {
   ConsultationResponse: 'enabled'
   ConsultationTypeResponse: 'enabled'
   CountryResponse: 'enabled'
+  DayCareResponse: 'enabled'
   DewormingResponse: 'enabled'
   DiagnosticImagingResponse: 'status' | 'enabled'
   DiagnosticImagingTypeResponse: 'company' | 'general' | 'enabled'
@@ -654,6 +657,7 @@ export type ContractAssertions = [
   Expect<MatchesContract<CompanySettingDto, 'CompanySettingDto'>>,
   Expect<MatchesContract<CloseCashSessionRequest, 'CloseCashSessionRequest'>>,
   Expect<MatchesContract<CompanyResponse, 'CompanyResponse'>>,
+  Expect<MatchesContract<UpdateCompanyRequest, 'UpdateCompanyRequest'>>,
   Expect<MatchesContract<CompanySummary, 'CompanySummary'>>,
   Expect<MatchesContract<CompanyTaxProfileResponse, 'CompanyTaxProfileResponse'>>,
   Expect<MatchesContract<ConsultationResponse, 'ConsultationResponse'>>,
@@ -676,6 +680,7 @@ export type ContractAssertions = [
     MatchesContract<CreateServiceChargeOpenAccountRequest, 'CreateServiceChargeOpenAccountRequest'>
   >,
   Expect<MatchesContract<CreateWeightRecordRequest, 'CreateWeightRecordRequest'>>,
+  Expect<MatchesContract<DayCareResponse, 'DayCareResponse'>>,
   Expect<MatchesContract<DewormingResponse, 'DewormingResponse'>>,
   Expect<MatchesContract<DiagnosticImagingResponse, 'DiagnosticImagingResponse'>>,
   Expect<MatchesContract<DiagnosticImagingTypeResponse, 'DiagnosticImagingTypeResponse'>>,
@@ -757,6 +762,7 @@ export type ContractAssertions = [
   Expect<MatchesContract<TaxResponse, 'TaxResponse'>>,
   Expect<MatchesContract<TaxSummary, 'TaxSummary'>>,
   Expect<MatchesContract<TokenResponse, 'TokenResponse'>>,
+  Expect<MatchesContract<UpdateAnimalRequest, 'UpdateAnimalRequest'>>,
   Expect<MatchesContract<UpdateAppointmentRequest, 'UpdateAppointmentRequest'>>,
   Expect<MatchesContract<UpdateEmployeeRequest, 'UpdateEmployeeRequest'>>,
   Expect<MatchesContract<UpdateOwnerRequest, 'UpdateOwnerRequest'>>,
