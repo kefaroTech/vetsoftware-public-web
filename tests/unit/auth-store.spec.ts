@@ -27,7 +27,7 @@ const logoutApi = vi.fn()
 
 vi.mock('@/features/auth/api/auth.api', () => ({
   authApi: {
-    refresh: () => refresh(),
+    refresh: (type: unknown) => refresh(type),
     me: () => me(),
     logout: () => logoutApi(),
   },
@@ -107,11 +107,19 @@ afterEach(() => {
 })
 
 describe('refresco de sesión: single-flight', () => {
+  function conSesionEmployee() {
+    storage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({ token: jwt({ sub: '1' }), type: 'EMPLOYEE' } satisfies AuthSession),
+    )
+  }
+
   it('N peticiones simultáneas producen UN solo /auth/refresh', async () => {
     // Es la garantía que protege al refresh token de un solo uso. Sin ella, la
     // segunda llamada llegaría con un token ya rotado y cerraría la sesión.
     let resolver!: (v: unknown) => void
     refresh.mockReturnValue(new Promise((r) => (resolver = r)))
+    conSesionEmployee()
     await loadStore()
 
     const enVuelo = [refreshHandler()(), refreshHandler()(), refreshHandler()()]
@@ -122,6 +130,7 @@ describe('refresco de sesión: single-flight', () => {
     const tokens = await Promise.all(enVuelo)
 
     expect(refresh).toHaveBeenCalledTimes(1)
+    expect(refresh).toHaveBeenCalledWith('EMPLOYEE')
     expect(new Set(tokens).size).toBe(1)
   })
 
@@ -132,6 +141,7 @@ describe('refresco de sesión: single-flight', () => {
       token: jwt({ sub: '1' }),
       type: 'EMPLOYEE',
     } satisfies TokenResponse)
+    conSesionEmployee()
     await loadStore()
 
     await refreshHandler()()
@@ -142,9 +152,14 @@ describe('refresco de sesión: single-flight', () => {
 
   it('lo libera también cuando el refresco falla', async () => {
     refresh.mockRejectedValue(new Error('401'))
+    conSesionEmployee()
     await loadStore()
 
     await refreshHandler()()
+    // El primer fallo limpió la sesión: sin un tipo de sujeto conocido, el
+    // segundo intento no llamaría al backend. Se repone para poder comprobar
+    // que el cerrojo en sí se liberó y no quedó bloqueando la segunda llamada.
+    conSesionEmployee()
     await refreshHandler()()
 
     expect(refresh).toHaveBeenCalledTimes(2)
@@ -155,6 +170,7 @@ describe('refresco de sesión: single-flight', () => {
     // resolviera antes de persistir, el reintento iría con el token viejo.
     const token = jwt({ sub: '1', companyId: 3 })
     refresh.mockResolvedValue({ token, type: 'EMPLOYEE' } satisfies TokenResponse)
+    conSesionEmployee()
     const store = await loadStore()
 
     const devuelto = await refreshHandler()()
@@ -165,6 +181,18 @@ describe('refresco de sesión: single-flight', () => {
       type: 'EMPLOYEE',
     })
     expect(store.isAuthenticated).toBe(true)
+  })
+
+  it('sin sesión ni en memoria ni en storage, no llama a /auth/refresh', async () => {
+    // Sin tipo de sujeto no hay cookie que pedirle al backend: se limpia la
+    // sesión directamente en vez de gastar un viaje de red que va a fallar.
+    const store = await loadStore()
+
+    const resultado = await refreshHandler()()
+
+    expect(refresh).not.toHaveBeenCalled()
+    expect(resultado).toBeNull()
+    expect(store.isAuthenticated).toBe(false)
   })
 
   it('un refresco fallido limpia la sesión y devuelve null', async () => {
@@ -184,11 +212,21 @@ describe('refresco de sesión: single-flight', () => {
     expect(storage.getItem(AUTH_STORAGE_KEY)).toBeNull()
   })
 
-  it('no manda el refresh token en el cuerpo: viaja en la cookie HttpOnly', () => {
-    // Si alguien volviera a pasarlo por parámetro, estaría reintroduciendo la
-    // credencial de 30 días en JavaScript, que es justo lo que FE-03 sacó.
-    expect(refresh).not.toHaveBeenCalled()
-    expect(refresh.mock.calls.every((args) => args.length === 0)).toBe(true)
+  it('no manda el refresh token en el cuerpo, solo el tipo de sujeto', async () => {
+    // Si alguien volviera a pasar el token por parámetro, estaría reintroduciendo
+    // la credencial de 30 días en JavaScript, que es justo lo que FE-03 sacó.
+    // El tipo sí viaja: es lo que permite al backend elegir entre
+    // `vet_refresh_employee` y `vet_refresh_system`.
+    refresh.mockResolvedValue({
+      token: jwt({ sub: '1' }),
+      type: 'EMPLOYEE',
+    } satisfies TokenResponse)
+    conSesionEmployee()
+    await loadStore()
+
+    await refreshHandler()()
+
+    expect(refresh).toHaveBeenCalledWith('EMPLOYEE')
   })
 
   it('queda registrado como handler del interceptor al construir el store', async () => {
@@ -504,6 +542,7 @@ describe('frescura de /auth/me (TTL)', () => {
     store.clearSession()
     // Sesión nueva sin pasar por `login()`, que traería el perfil por su cuenta: así
     // lo único que puede evitar el segundo `/auth/me` es una frescura heredada.
+    conSesion('2')
     refresh.mockResolvedValue({
       token: jwt({ sub: '2' }),
       type: 'EMPLOYEE',

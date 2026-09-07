@@ -121,16 +121,16 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * Rota el refresh token y actualiza la sesión; devuelve el nuevo access token
    * o null si falla.
-   *
-   * Ya no comprueba antes si hay refresh token: vive en una cookie HttpOnly y
-   * este código no puede verla. La ausencia la resuelve el servidor con un 401,
-   * que aquí acaba en clearSession(). Un viaje de red de más en el único caso en
-   * que la sesión ya estaba perdida.
    */
   async function refreshSession(): Promise<string | null> {
     if (refreshInFlight) return refreshInFlight
+    const type = session.value?.type ?? storageService.getSession()?.type
+    if (!type) {
+      clearSession()
+      return null
+    }
     refreshInFlight = authApi
-      .refresh()
+      .refresh(type)
       .then((res) => {
         const next: AuthSession = {
           token: res.token,
