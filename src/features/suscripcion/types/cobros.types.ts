@@ -122,6 +122,20 @@ export interface SubscriptionPaymentResponse {
   status: SubscriptionPaymentStatus
   /** **NO se pinta**: marca de conciliación interna. */
   reconciledAt?: string
+  /** **NO se pinta**: lo que se queda la pasarela. */
+  feeAmount?: number
+  /** **NO se pinta**: lo que de verdad entró a la cuenta de la plataforma. */
+  netAmount?: number
+  /** **NO se pinta**: referencia de liquidación, compartida entre clínicas. */
+  settlementReference?: string
+  /** **NO se pinta**: constancia interna de liquidación. */
+  settledOn?: string
+  /** **NO se pinta**: constancia interna de reembolso. */
+  refundedAmount?: number
+  /** **NO se pinta**: llave de idempotencia interna. */
+  clientRequestId?: string
+  /** **NO se pinta**: si la pasarela aún no confirmó este pago. */
+  reservation: boolean
   createdDate: string
   /** **NO se pinta**: control de concurrencia. */
   version?: number

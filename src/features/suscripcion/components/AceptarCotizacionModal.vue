@@ -95,7 +95,13 @@ function submit() {
     return
   }
   enviando.value = true
-  emit('aceptar', email.value.trim())
+  // `emit` no espera al `async` del padre: si un 409 deja el modal abierto (ver
+  // `CotizacionDetalleView.onAceptar`), el botón no puede quedarse deshabilitado para siempre.
+  try {
+    emit('aceptar', email.value.trim())
+  } finally {
+    enviando.value = false
+  }
 }
 </script>
 

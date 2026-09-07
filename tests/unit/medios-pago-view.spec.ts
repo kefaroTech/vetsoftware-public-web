@@ -4,6 +4,15 @@ import { ref } from 'vue'
 import MediosPagoView from '@/features/suscripcion/views/MediosPagoView.vue'
 import type { SubscriptionPaymentMethodResponse } from '@/features/suscripcion/types/medios-pago.types'
 
+// `MediosPagoView` enlaza a «Mis cuentas de cobro» cuando hay aviso de reintento: sin este
+// stub, `RouterLink` real exige un router instalado que este test no monta.
+vi.mock('vue-router', () => ({
+  RouterLink: { props: ['to'], template: '<a><slot /></a>' },
+  // `ModalShell` (vía `useModalHistory`) llama a `useRouter()` con o sin router instalado: sin
+  // este stub, sustituir el módulo entero deja el import sin resolver.
+  useRouter: () => undefined,
+}))
+
 /**
  * EL ALTA DESDE «MI SUSCRIPCIÓN › MEDIOS DE PAGO» (issue public-web#394).
  *
@@ -17,7 +26,10 @@ vi.mock('@/features/auth/composables/useAuth', () => ({
   useAuth: () => ({ me: ref({ permissions: permisos.value, branchIds: [] }), companyId: ref(7) }),
 }))
 
-const subscription = ref<{ nextBillingDate: string } | null>({ nextBillingDate: '2030-01-01' })
+const subscription = ref<{ nextBillingDate: string; status: string } | null>({
+  nextBillingDate: '2030-01-01',
+  status: 'ACTIVE',
+})
 vi.mock('@/features/suscripcion/composables/useSuscripcion', () => ({
   useSuscripcion: () => ({ subscription }),
 }))
@@ -114,11 +126,28 @@ async function montar() {
 
 beforeEach(() => {
   permisos.value = ['subscriptionPaymentMethod.read']
+  subscription.value = { nextBillingDate: '2030-01-01', status: 'ACTIVE' }
   listAll.mockReset().mockResolvedValue({ content: [medio()], ...PAGINA })
   checkoutConfig.mockReset().mockResolvedValue(CONFIG)
   crearFuenteDePago.mockReset().mockResolvedValue(MEDIO_NUEVO)
   tokenizarTarjeta.mockReset().mockResolvedValue(TOKEN)
   toastSuccess.mockReset()
+})
+
+describe('el aviso «La reintentaremos automáticamente»', () => {
+  it('no aparece con la suscripción al día y sin contratación reciente', async () => {
+    const wrapper = await montar()
+
+    expect(wrapper.text()).not.toContain('La reintentaremos automáticamente.')
+  })
+
+  it('aparece cuando la suscripción está en mora por un rebote de renovación', async () => {
+    subscription.value = { nextBillingDate: '2030-01-01', status: 'PAST_DUE' }
+
+    const wrapper = await montar()
+
+    expect(wrapper.text()).toContain('La reintentaremos automáticamente.')
+  })
 })
 
 describe('la puerta del permiso `subscriptionPaymentMethod.create`', () => {

@@ -88,6 +88,23 @@ export function importeCambiado(mostrado: number, devuelto: number): string {
   return `El importe cambió mientras confirmabas: te mostramos ${formatMoney(mostrado)} y quedó en ${formatMoney(devuelto)}. Revísalo antes de seguir; si no cuadra, escríbenos.`
 }
 
+/**
+ * El backend redacta estos 409 en inglés y con IDs internos: el texto del cliente vive aquí.
+ * `QUOTE_ALREADY_CONVERTED` no entra: esa carrera se trata como éxito (ver `useCotizaciones.aceptar`).
+ */
+const CONFLICTOS_ACEPTAR: Record<string, string> = {
+  SUBSCRIPTION_HAS_PENDING_GATEWAY_PAYMENT:
+    'Todavía hay un cobro en trámite sobre tu plan actual. Espera a que se confirme antes de cambiar de plan.',
+  BILLING_DOCUMENT_HAS_PENDING_PAYMENT:
+    'Ese documento tiene un pago en trámite y no se puede anular todavía.',
+}
+
+/** `null` cuando el código no tiene traducción propia: el llamador cae al mensaje del backend. */
+export function mensajeConflictoCotizacion(code: string | null): string | null {
+  if (!code) return null
+  return CONFLICTOS_ACEPTAR[code] ?? null
+}
+
 export function confirmarRechazo(quoteNumber: string | undefined): string {
   return `Vas a rechazar la propuesta ${quoteNumber ?? '—'}. Puedes pedir otra cuando quieras; esta quedará marcada como rechazada.`
 }
