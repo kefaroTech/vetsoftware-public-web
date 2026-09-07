@@ -1,5 +1,5 @@
 import { http } from '@/services/http/http.client'
-import type { LoginEmployeeRequest, MeResponse, TokenResponse } from '../types'
+import type { AuthSubjectType, LoginEmployeeRequest, MeResponse, TokenResponse } from '../types'
 
 export const authApi = {
   async loginEmployee(payload: LoginEmployeeRequest): Promise<TokenResponse> {
@@ -12,9 +12,11 @@ export const authApi = {
     return data
   },
 
-  // Sin cuerpo: el refresh token va en la cookie HttpOnly que adjunta el navegador.
-  async refresh(): Promise<TokenResponse> {
-    const { data } = await http.post<TokenResponse>('/auth/refresh')
+  // Las dos apps comparten la API y cada una emite su propia cookie de refresh
+  // (`vet_refresh_employee` / `vet_refresh_system`): el backend necesita el tipo
+  // para saber cuál leer.
+  async refresh(type: AuthSubjectType): Promise<TokenResponse> {
+    const { data } = await http.post<TokenResponse>('/auth/refresh', { type })
     return data
   },
 
