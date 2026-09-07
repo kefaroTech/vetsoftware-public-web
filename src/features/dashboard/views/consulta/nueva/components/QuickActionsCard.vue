@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import {
   Zap,
   Pill,
@@ -12,6 +13,8 @@ import {
 } from 'lucide-vue-next'
 import SectionCard from '@/components/ui/SectionCard.vue'
 import type { ActionKind } from '../composables/useNuevaConsultaDraft'
+import { useAuthorization } from '@/features/auth/composables/useAuthorization'
+import { PERMISSIONS } from '@/constants/permissions'
 
 defineProps<{
   counts: Record<ActionKind, number>
@@ -27,7 +30,7 @@ interface QuickAction {
   muted?: boolean
 }
 
-const actions: QuickAction[] = [
+const ALL_ACTIONS: QuickAction[] = [
   { kind: 'receta', icon: Pill, label: 'Plan terapéutico', sub: 'Medicamentos / receta' },
   { kind: 'lab', icon: Beaker, label: 'Examen lab.', sub: 'Solicitud' },
   { kind: 'imaging', icon: ImageIcon, label: 'Imagen Dx', sub: 'Rayos X / Eco' },
@@ -38,6 +41,22 @@ const actions: QuickAction[] = [
   { kind: null, icon: Plus, label: 'Más', sub: 'Otras acciones', muted: true },
 ]
 
+const { can } = useAuthorization()
+const CREATE_PERMISSION_BY_KIND: Record<ActionKind, string> = {
+  receta: PERMISSIONS.PRESCRIPTION_CREATE,
+  lab: PERMISSIONS.LABORATORY_TEST_CREATE,
+  imaging: PERMISSIONS.DIAGNOSTIC_IMAGING_CREATE,
+  vaccination: PERMISSIONS.VACCINATION_CREATE,
+  hospitalization: PERMISSIONS.HOSPITALIZATION_CREATE,
+  deworming: PERMISSIONS.DEWORMING_CREATE,
+  surgery: PERMISSIONS.SURGERY_CREATE,
+}
+
+const actions = computed(() =>
+  ALL_ACTIONS.filter((a) => a.kind === null || can(CREATE_PERMISSION_BY_KIND[a.kind]).value),
+)
+const hasAnyAction = computed(() => actions.value.some((a) => a.kind !== null))
+
 function pick(action: QuickAction) {
   if (action.muted || !action.kind) return
   emit('select', action.kind)
@@ -46,6 +65,7 @@ function pick(action: QuickAction) {
 
 <template>
   <SectionCard
+    v-if="hasAnyAction"
     accent
     :icon="Zap"
     title="Plan Diagnóstico y Terapéutico"

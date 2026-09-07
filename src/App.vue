@@ -26,7 +26,7 @@ const auth = useAuthStore()
     <ConsultaActiveBanner v-if="auth.isAuthenticated" />
     <PageLoader />
     <ToastStack />
-    <BillingPromptHost />
+    <BillingPromptHost v-if="auth.isAuthenticated" />
     <!-- Único diálogo de confirmación de la app: lo abre cualquier vista con
          `useConfirmDialog().confirm(...)` y solo existe esta instancia. -->
     <AppConfirmDialog />

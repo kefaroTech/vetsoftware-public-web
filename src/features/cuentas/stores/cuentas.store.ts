@@ -4,6 +4,8 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { openAccountApi } from '../api/openAccount.api'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
+import { useAuthorization } from '@/features/auth/composables/useAuthorization'
+import { PERMISSIONS } from '@/constants/permissions'
 import { generalChargeApi, productChargeApi, serviceChargeApi } from '../api/charges.api'
 import { debtOpenAccountApi } from '../api/debtOpenAccount.api'
 import { useCancellableLatest, useLatestOnly } from '@/composables/useLatestOnly'
@@ -99,6 +101,9 @@ export const useCuentasStore = defineStore('cuentas', () => {
 
   /** Contadores de las pestañas y saldo pendiente acumulado, calculados en el servidor. */
   async function loadSummary(): Promise<void> {
+    // El store se instancia para cualquier empleado autenticado desde App.vue
+    // (BillingPromptHost), así que la pantalla de Cuentas no basta como gate.
+    if (!useAuthorization().hasPermission(PERMISSIONS.OPEN_ACCOUNT_READ)) return
     const turno = summaryTurn.begin()
     try {
       const fresh = await openAccountApi.summary(true)

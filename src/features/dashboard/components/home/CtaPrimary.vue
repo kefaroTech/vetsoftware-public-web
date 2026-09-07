@@ -3,9 +3,13 @@ import { useRouter } from 'vue-router'
 import { Plus } from 'lucide-vue-next'
 import { useNuevaConsultaDraft } from '@/features/dashboard/views/consulta/nueva/composables/useNuevaConsultaDraft'
 import { showResumeOrNewDialog } from '@/composables/useConsultaResumeGuard'
+import { useAuthorization } from '@/features/auth/composables/useAuthorization'
+import { PERMISSIONS } from '@/constants/permissions'
 
 const router = useRouter()
 const draft = useNuevaConsultaDraft()
+const { can } = useAuthorization()
+const canClinicalHistory = can(PERMISSIONS.CLINICAL_HISTORY_READ)
 
 function goNueva() {
   if (draft.state.owner) {
@@ -48,7 +52,9 @@ function goHistorial() {
           <Plus :size="14" :stroke-width="1.5" />
           <span>Nueva consulta</span>
         </button>
-        <button type="button" class="btn-ghost" @click="goHistorial">Ver historial</button>
+        <button v-if="canClinicalHistory" type="button" class="btn-ghost" @click="goHistorial">
+          Ver historial
+        </button>
       </div>
     </div>
   </section>
