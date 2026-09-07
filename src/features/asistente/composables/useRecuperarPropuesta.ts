@@ -4,7 +4,6 @@ import {
   conocePropuesta,
   esPropuestaNoEncontrada,
   recuperarPorToken,
-  releerPropuesta,
 } from '../api/asistente.source'
 import { usePropuestaStore } from '../stores/propuesta.store'
 
@@ -124,31 +123,5 @@ export function useRecuperarPropuesta() {
     }
   }
 
-  /**
-   * El otro camino: la banda de «sigue donde lo dejaste» de la landing, cuando
-   * lo pendiente es una propuesta y no un paquete.
-   *
-   * <p>Entra el identificador **opaco** y no el token: quien llama a esto no
-   * sostiene ninguna credencial, solo le pide al seam que relea con la que él ya
-   * tiene guardada. Devuelve si había con qué, para que la banda no prometa
-   * retomar algo que este dispositivo ya no puede recuperar.
-   */
-  async function recuperarGuardada(propuestaId: string): Promise<boolean> {
-    if (!conocePropuesta(propuestaId)) return false
-
-    store.comenzarRecuperacion()
-    try {
-      store.adoptarRecuperada(await releerPropuesta(propuestaId))
-    } catch (e) {
-      if (esPropuestaNoEncontrada(e)) {
-        store.marcarEnlaceCaducado()
-        return true
-      }
-      toast.errorFrom('No pudimos recuperar tu propuesta', e)
-      store.marcarRecuperacionFallida()
-    }
-    return true
-  }
-
-  return { recuperarDeEnlace, recuperarGuardada, conocePropuesta }
+  return { recuperarDeEnlace, conocePropuesta }
 }

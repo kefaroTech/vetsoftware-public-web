@@ -251,7 +251,7 @@ export const useContratacionStore = defineStore('contratacion', () => {
     persistir()
   }
 
-  /** «Empezar de nuevo» de la banda de reanudación: esto sí borra. */
+  /** Borra la intención guardada, a diferencia de {@link descartar}. */
   function limpiar() {
     intencion.value = null
     persistir()

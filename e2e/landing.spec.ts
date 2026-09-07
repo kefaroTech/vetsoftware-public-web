@@ -349,31 +349,6 @@ test.describe('Landing comercial', () => {
     expect(exigir(leida, 'leida').importeVistoMensual).toBeGreaterThan(0)
   })
 
-  test('con una intención vigente ofrece seguir donde lo dejó', async ({ page }) => {
-    await sembrarIntencion(page, intencion())
-    await page.goto('/')
-
-    const banda = page.getByRole('complementary').filter({ hasText: 'Estabas mirando el plan' })
-    await expect(banda).toContainText('Pack Clínica')
-
-    await banda.getByRole('button', { name: 'Seguir' }).click()
-    await expect(page).toHaveURL(/\/planes\?plan=PACK_CLINIC&ciclo=MENSUAL$/)
-  })
-
-  test('«Empezar de nuevo» borra el espejo y no deja la banda puesta', async ({ page }) => {
-    await sembrarIntencion(page, intencion())
-    await page.goto('/')
-
-    await page.getByRole('button', { name: 'Empezar de nuevo' }).click()
-
-    await expect(
-      page.getByRole('complementary').filter({ hasText: 'Estabas mirando el plan' }),
-    ).toHaveCount(0)
-    expect(
-      await page.evaluate((clave) => window.localStorage.getItem(clave), CLAVE_INTENCION),
-    ).toBeNull()
-  })
-
   test('una intención caducada no reaparece: se limpia al hidratar', async ({ page }) => {
     // 31 días: el tope son 30 (`INTENCION_MAX_DIAS`). El precio de hace un mes
     // ya no vale, y arrastrarlo sería peor que perderlo.
@@ -381,15 +356,8 @@ test.describe('Landing comercial', () => {
     await sembrarIntencion(page, intencion({ creadaEn: hace31Dias }))
     await page.goto('/')
 
-    // Se espera al MONTAJE antes de afirmar una ausencia: antes de que la SPA
-    // pinte no hay ningún `aside`, así que `toHaveCount(0)` pasaría sin que la
-    // limpieza se hubiera ejecutado y la prueba diría verde por el motivo
-    // equivocado. Es la trampa clásica de afirmar sobre lo que no está.
     await expect(page.locator('#planes')).toBeVisible()
 
-    await expect(
-      page.getByRole('complementary').filter({ hasText: 'Estabas mirando el plan' }),
-    ).toHaveCount(0)
     expect(
       await page.evaluate((clave) => window.localStorage.getItem(clave), CLAVE_INTENCION),
     ).toBeNull()
