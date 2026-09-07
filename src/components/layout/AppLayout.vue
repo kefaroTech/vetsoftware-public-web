@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import AppSidebar from './AppSidebar.vue'
+import SuscripcionAvisoGlobal from '@/features/suscripcion/components/SuscripcionAvisoGlobal.vue'
 
 const route = useRoute()
 const fullBleed = computed(() => Boolean(route.meta.fullBleed))
@@ -27,8 +28,11 @@ const fullBleed = computed(() => Boolean(route.meta.fullBleed))
     <div class="ds-stack ds-flex-fill">
       <!-- `tabindex="-1"`: el destino del salto no es focalizable por naturaleza, y sin esto el
            hash mueve el scroll pero deja el foco en el `<body>` — la siguiente tabulación
-           vuelve al menú y el bloque no se ha saltado. Mismo motivo que en `PublicLayout`. -->
+           vuelve al menú y el bloque no se ha saltado. Mismo motivo que en `PublicLayout`.
+           `SuscripcionAvisoGlobal` va DENTRO, primero: fuera de `<main>` el salto de teclado
+           lo dejaba atrás. -->
       <main id="contenido" class="app-content" :class="{ fullbleed: fullBleed }" tabindex="-1">
+        <SuscripcionAvisoGlobal />
         <RouterView />
       </main>
     </div>

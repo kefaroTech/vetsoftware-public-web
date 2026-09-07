@@ -2,10 +2,15 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { todayISO } from '@/composables/format'
 import { useToast } from '@/composables/useToast'
+import { getProblemDetailCode, getTraceId } from '@/services/http/http.client'
+import { useToastStore } from '@/stores/toast.store'
 import { PERMISSIONS } from '@/constants/permissions'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { useCotizacionesStore } from '../stores/cotizaciones.store'
-import { vigencia } from './cotizacionesText'
+import { mensajeConflictoCotizacion, vigencia } from './cotizacionesText'
+
+/** Mismo presupuesto que `useToast().errorFrom`: un error con traza queda más tiempo en pantalla. */
+const TRACE_DURATION_MS = 9000
 
 /**
  * Fachada del detalle de una propuesta y de sus dos respuestas.
@@ -15,6 +20,7 @@ import { vigencia } from './cotizacionesText'
 export function useCotizaciones() {
   const store = useCotizacionesStore()
   const toast = useToast()
+  const toastStore = useToastStore()
   const { quote, loading, error, errorTraceId, forbidden, totalMostrado, avisoImporte } =
     storeToRefs(store)
 
@@ -52,7 +58,34 @@ export function useCotizaciones() {
       toast.success('Propuesta aceptada', 'Tu plan se actualiza con las líneas de la propuesta.')
       return true
     } catch (e: unknown) {
-      toast.errorFrom('No se pudo aceptar la propuesta', e)
+      const code = getProblemDetailCode(e)
+      /**
+       * Dos administradoras aceptando la misma propuesta a la vez: quien pierde la carrera no
+       * falló, llegó tarde — el contrato de la OTRA ya existe. Mismo criterio que
+       * `usePasoContratar.confirmarPago` da a la carrera equivalente de la contratación inicial:
+       * se recarga y se cuenta como resuelto, no como error.
+       */
+      if (code === 'QUOTE_ALREADY_CONVERTED') {
+        await store.loadDetalle(id)
+        toast.info(
+          'Ya se aceptó esta propuesta',
+          'Alguien de tu equipo la aceptó justo antes. Tu plan ya quedó actualizado.',
+        )
+        return true
+      }
+      // `errorFrom` antepone el `detail` del backend a cualquier `fallback`: aquí no sirve.
+      const traducido = mensajeConflictoCotizacion(code)
+      if (traducido) {
+        toastStore.push(
+          'error',
+          'No se pudo aceptar la propuesta',
+          traducido,
+          TRACE_DURATION_MS,
+          getTraceId(e),
+        )
+      } else {
+        toast.errorFrom('No se pudo aceptar la propuesta', e)
+      }
       return false
     }
   }

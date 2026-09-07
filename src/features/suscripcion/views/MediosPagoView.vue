@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { AlertTriangle, Plus, Wallet } from 'lucide-vue-next'
+import { RouterLink } from 'vue-router'
+import { AlertTriangle, Info, Plus, Wallet } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import SectionCard from '@/components/ui/SectionCard.vue'
 import { useToast } from '@/composables/useToast'
 import { PERMISSIONS } from '@/constants/permissions'
 import { useAuthorization } from '@/features/auth/composables/useAuthorization'
+import { useResultadoContratacionStore } from '@/features/contratacion/stores/resultadoContratacion.store'
 import FormularioTarjetaWompi from '../components/FormularioTarjetaWompi.vue'
 import MedioPagoCard from '../components/MedioPagoCard.vue'
 import RevocarMedioModal from '../components/RevocarMedioModal.vue'
@@ -45,6 +47,17 @@ const toast = useToast()
 const revocarAbierto = ref(false)
 const medioARevocar = ref<SubscriptionPaymentMethodResponse | null>(null)
 const formularioAbierto = ref(false)
+
+// El backend no expone cuándo se reintentará el cobro rechazado: el aviso no promete fecha.
+// Dos fuentes, no una: el store efímero solo cubre el rechazo de un cobro recién completado
+// en esta misma sesión; el rebote de una renovación de días atrás solo lo cuenta el `status`
+// real de la suscripción (`PAST_DUE`).
+const resultadoStore = useResultadoContratacionStore()
+const avisoReintento = computed(
+  () =>
+    resultadoStore.resultado?.pago?.status === 'DECLINED' ||
+    subscription.value?.status === 'PAST_DUE',
+)
 
 onMounted(() => void load(true))
 
@@ -96,6 +109,15 @@ async function onTarjetaGuardada(_medio: WompiPaymentMethodResponse) {
     </div>
 
     <div v-else class="ds-stack ds-stack--18">
+      <div v-if="avisoReintento" class="ds-banner ds-banner--warning" role="status">
+        <Info :size="16" :stroke-width="2" class="ds-banner-icon" aria-hidden="true" />
+        <span class="ds-flex-fill">
+          <strong>La reintentaremos automáticamente.</strong>
+          No hace falta que hagas nada más. Puedes ver el estado en
+          <RouterLink :to="{ name: 'suscripcion-cobros' }">Mis cuentas de cobro</RouterLink>.
+        </span>
+      </div>
+
       <!-- Se calcula contra `nextBillingDate`, no contra hoy: el caso que evita el cobro
            rechazado es «vence antes del próximo cobro», y es el que manda. -->
       <div v-if="avisoPrincipal" class="ds-banner" :class="claseAviso" role="status">

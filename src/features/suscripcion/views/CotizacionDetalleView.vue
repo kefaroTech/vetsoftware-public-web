@@ -70,8 +70,11 @@ function devolverFoco() {
 
 async function onAceptar(acceptedByEmail: string) {
   const ok = await aceptar(acceptedByEmail)
+  // Un 409 no cierra el modal: el toast de error no basta como único rastro del intento
+  // fallido, y el usuario pierde el formulario justo cuando más lo necesita.
+  if (!ok) return
   aceptarAbierto.value = false
-  if (ok) devolverFoco()
+  devolverFoco()
 }
 
 async function onRechazar() {
