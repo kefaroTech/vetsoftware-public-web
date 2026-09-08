@@ -18,7 +18,7 @@ import { irAAncla } from '../composables/anclaConFoco'
   <footer class="land-footer">
     <p class="land-footer-legal">Lumbre · Colombia</p>
     <p class="land-footer-links">
-      <a href="#planes" @click="irAAncla('planes', $event)">Paquetes</a>
+      <a href="#planes" @click="irAAncla('planes', $event)">Combinaciones</a>
       <a href="#preguntas" @click="irAAncla('preguntas', $event)">Preguntas</a>
       <RouterLink :to="{ name: 'legal-privacidad' }">Privacidad</RouterLink>
       <RouterLink :to="{ name: 'legal-terminos' }">Términos</RouterLink>

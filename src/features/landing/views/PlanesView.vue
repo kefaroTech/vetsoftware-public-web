@@ -19,6 +19,7 @@ import { usePlanes } from '../composables/usePlanes'
 import { useCotizador } from '../composables/useCotizador'
 import { useSemillaDeSeleccion } from '../composables/useSemillaDeSeleccion'
 import { MONEDA_DE_FACTURACION } from '../composables/planPricing'
+import { useSeleccionPortadaStore } from '../stores/seleccionPortada.store'
 import type { Ciclo } from '../types/plans.types'
 
 /**
@@ -68,7 +69,7 @@ const {
   volverAlPaquete,
 } = useCotizador()
 
-const h1 = useTemplateRef<HTMLElement>('h1')
+const h1El = useTemplateRef<HTMLElement>('h1')
 
 /**
  * El foco va al `<h1>`, traiga texto o no.
@@ -82,7 +83,7 @@ const h1 = useTemplateRef<HTMLElement>('h1')
  * desde la navegación (§2.4.3).
  */
 onMounted(() => {
-  h1.value?.focus()
+  h1El.value?.focus()
 })
 
 function texto(v: unknown): string | null {
@@ -95,6 +96,32 @@ function entero(v: unknown, porDefecto: number): number {
 
 /** El paquete que la intención trae, o nada si lo que trae es una propuesta. */
 const planDeLaIntencion = vigente.value?.origen === 'PLAN' ? vigente.value.planCode : undefined
+
+/**
+ * Se lee ANTES de `useSemillaDeSeleccion`, que consume esta misma entrega
+ * (`useSeleccionPortadaStore().recoger()`): leída después siempre daría `null`.
+ */
+const vinoDeLaPortada = useSeleccionPortadaStore().modulos !== null
+
+/**
+ * Sembrada = trae algo desde la landing (un paquete recién pulsado, lo que se
+ * marcó en la portada, o una intención ya guardada). El paquete recomendado
+ * que `useSemillaDeSeleccion` marca por defecto cuando NINGUNA de las tres
+ * llega no cuenta: es un valor de partida, no algo que el visitante haya
+ * pedido.
+ */
+const llegoSembrado = computed(
+  () =>
+    texto(route.query.plan) !== null ||
+    texto(route.query.ciclo) !== null ||
+    texto(route.query.sedes) !== null ||
+    texto(route.query.usuarios) !== null ||
+    vinoDeLaPortada ||
+    vigente.value !== null,
+)
+const h1 = computed(() =>
+  llegoSembrado.value ? 'Tu plan, con el precio exacto' : 'Arma tu paquete',
+)
 
 ciclo.value =
   route.query.ciclo === 'ANUAL' || route.query.ciclo === 'MENSUAL'
@@ -241,7 +268,7 @@ function continuar() {
         <!-- El `<h1>` vive AQUÍ y no dentro del asistente, y es deliberado: el
              panel monta y desmonta sus estados, así que un `<h1>` suyo
              desaparecería del documento en cuanto llegara la propuesta. -->
-        <h1 ref="h1" class="pub-title" tabindex="-1">Tu plan, con el precio exacto</h1>
+        <h1 ref="h1" class="pub-title" tabindex="-1">{{ h1 }}</h1>
         <p class="pub-sub">
           Cambia lo que quieras: el precio de la derecha se mueve contigo. Nada de esto te
           compromete.
