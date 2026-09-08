@@ -40,7 +40,10 @@ function onBlur() {
 </script>
 
 <template>
-  <div class="pub-select" :class="{ 'is-focused': focused, 'is-invalid': invalid }">
+  <div
+    class="pub-select"
+    :class="{ 'is-focused': focused, 'is-invalid': invalid, 'ds-field-shake': invalid }"
+  >
     <select
       :id="controlId"
       :value="modelValue"

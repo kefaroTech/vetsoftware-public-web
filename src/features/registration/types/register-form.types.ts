@@ -38,34 +38,9 @@ export interface RegisterOption {
 }
 
 /**
- * Orden VISUAL de los campos, explícito.
- *
- * `ErrorSummary` exige el orden del DOM (WCAG §2.4.3) y no lo puede sacar de
- * `Object.keys(errors)`: el orden de claves de un objeto deja de coincidir con
- * la pantalla en cuanto alguien reordena el `computed` que produce los errores,
- * y entonces el resumen manda al usuario a los campos en un orden que no es el
- * que ve. Este array es la única fuente de ese orden, y va junto a la forma del
- * formulario porque es una propiedad de la forma, no del componente.
- */
-export const REGISTER_FIELD_DOM_ORDER: readonly RegisterFieldKey[] = [
-  'companyIdentifier',
-  'companyName',
-  'taxRegime',
-  'fiscalEmail',
-  'companyContactNumber',
-  'countryId',
-  'stateId',
-  'cityId',
-  'employeeName',
-  'employeeEmail',
-  'password',
-]
-
-/**
- * id del CONTROL de cada campo. Estables y conocidos ANTES de renderizar: los
- * enlaces de `ErrorSummary` apuntan aquí y `AuthField` los baja al control por
- * el `FieldContext`, así que el `<label for>`, el `aria-describedby` y el ancla
- * del resumen hablan todos del mismo elemento.
+ * id del CONTROL de cada campo. Estables y conocidos ANTES de renderizar:
+ * `AuthField` los baja al control por el `FieldContext`, así que el
+ * `<label for>` y el `aria-describedby` hablan del mismo elemento.
  */
 export const REGISTER_FIELD_IDS: Readonly<Record<RegisterFieldKey, string>> = {
   companyIdentifier: 'reg-company-identifier',
@@ -81,7 +56,6 @@ export const REGISTER_FIELD_IDS: Readonly<Record<RegisterFieldKey, string>> = {
   password: 'reg-password',
 }
 
-/** El widget de reCAPTCHA no es un `AuthField`, pero su fallo sí es una fila
- * más del resumen: si no lo fuera, el encabezado diría «Hay 2 problemas» y en
- * la lista solo habría 2 de los 3 motivos por los que el envío se detuvo. */
+/** id del contenedor del widget de reCAPTCHA, destino de `scrollToFirstError`
+ * cuando falta la verificación. */
 export const REGISTER_RECAPTCHA_ID = 'reg-recaptcha'

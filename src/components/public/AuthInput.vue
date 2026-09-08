@@ -56,7 +56,12 @@ function onBlur() {
 <template>
   <div
     class="pub-input"
-    :class="{ 'is-focused': focused, 'is-invalid': invalid, 'is-disabled': disabled }"
+    :class="{
+      'is-focused': focused,
+      'is-invalid': invalid,
+      'is-disabled': disabled,
+      'ds-field-shake': invalid,
+    }"
   >
     <component :is="icon" v-if="icon" :size="15" class="pub-input-ico" aria-hidden="true" />
     <input
