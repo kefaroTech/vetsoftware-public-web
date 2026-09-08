@@ -140,7 +140,8 @@ const MOTIVO_BLOQUEO =
     <p v-if="noPagas" class="pra-fuera">{{ noPagas }}</p>
 
     <p v-if="primerCobro" class="pub-tinted pra-cobro">
-      Prueba gratis y sin tarjeta. El primer cobro sería el {{ formatDateLong(primerCobro) }}.
+      Prueba gratis y sin tarjeta, excepto facturación electrónica. El primer cobro sería el
+      {{ formatDateLong(primerCobro) }}.
     </p>
 
     <!-- `.pub-barra-accion` no duplica el botón: lo reubica en una barra anclada

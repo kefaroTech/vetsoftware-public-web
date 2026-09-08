@@ -44,13 +44,13 @@ import { RouterLink } from 'vue-router'
 
     <div class="land-hero-txt">
       <h1 class="land-h1">
-        Paga solo los módulos que tu negocio usa.
-        <span class="land-h1-em">Ni uno más.</span>
+        Prueba todo 30 días.
+        <span class="land-h1-em">Después, sigue gratis con límites.</span>
       </h1>
 
       <p class="land-sub">
-        Agenda, historia clínica, hospitalización, inventario y facturación DIAN son módulos
-        separados, cada uno con su precio. Si dejas de usar uno, lo apagas.
+        Agenda, historia clínica, spa y más te acompañan gratis siempre, con un techo mensual. Si
+        necesitas más, o quieres facturación electrónica DIAN, lo activas cuando quieras.
       </p>
 
       <div class="land-hero-actions">

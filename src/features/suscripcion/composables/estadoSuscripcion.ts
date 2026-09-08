@@ -107,7 +107,7 @@ export function estadoRotulo(status: string | undefined): string {
 }
 
 /** Días entre dos fechas ISO, en días completos. `null` si alguna no es una fecha válida. */
-function diasEntre(desdeIso: string | undefined, hastaIso: string): number | null {
+export function diasEntre(desdeIso: string | undefined, hastaIso: string): number | null {
   const desde = parseISODate(desdeIso)
   const hasta = parseISODate(hastaIso)
   if (!desde || !hasta) return null
@@ -144,7 +144,7 @@ export function trialDaysLeft(
 }
 
 /** `1 día` / `{n} días`, que es lo que exige la concordancia en número. */
-function dias(n: number): string {
+export function dias(n: number): string {
   return n === 1 ? '1 día' : `${n} días`
 }
 
@@ -155,6 +155,12 @@ const VER_COBROS: EstadoAccion = {
 
 export const VER_PLAN: EstadoAccion = { label: 'Ver mi plan', routeName: 'suscripcion-plan' }
 
+/** Salida de la prueba y del reparto posterior: «Mi plan» no dice qué pasa módulo a módulo. */
+export const VER_MODULOS: EstadoAccion = {
+  label: 'Ver tus módulos',
+  routeName: 'suscripcion-modulos',
+}
+
 function enPrueba(sub: SubscriptionResponse, today: string): EstadoPlan {
   const restantes = trialDaysLeft(sub, today)
   const fin = formatDateShort(sub.trialEndDate)
@@ -162,9 +168,9 @@ function enPrueba(sub: SubscriptionResponse, today: string): EstadoPlan {
     return {
       rotulo: ROTULOS.TRIALING,
       fuerte: `No se corta nada por sí solo.`,
-      frase: `Tu prueba termina el ${fin}. Después, el servicio pasa a cobrarse.`,
+      frase: `Tu prueba termina el ${fin}. Después, algunos módulos siguen gratis con límites y otros pasan a solo consulta.`,
       tono: 'warning',
-      accion: VER_PLAN,
+      accion: VER_MODULOS,
     }
   }
   return {
@@ -286,6 +292,50 @@ export function bajaRegistrada(sub: SubscriptionResponse | null | undefined): st
     return 'Pediste la baja de tu plan. Sigues trabajando con normalidad hasta el final del periodo que ya está pagado.'
   }
   return `Pediste la baja el ${formatDateShort(sub.cancelRequestedAt)}. Sigues trabajando con normalidad hasta el ${formatDateShort(sub.cancelEffectiveDate)}: es el periodo que ya está pagado.`
+}
+
+function modulosTexto(n: number): string {
+  return n === 1 ? '1 módulo' : `${n} módulos`
+}
+
+/** Ventana en la que el aviso post-vencimiento sigue siendo información nueva. */
+const DIAS_AVISO_POST_VENCIMIENTO = 3
+
+/**
+ * `true` cuando conviene preguntar el escaparate de módulos para el aviso de «recién repartida».
+ *
+ * <p>Se acota a los primeros {@link DIAS_AVISO_POST_VENCIMIENTO} días tras `trialEndDate` para
+ * que la inmensa mayoría de las visitas —cuentas que llevan meses en `ACTIVE`— no disparen esa
+ * petición de más.
+ */
+export function enVentanaDeReparto(
+  sub: SubscriptionResponse | null | undefined,
+  today: string = todayISO(),
+): boolean {
+  if (!sub || sub.status !== 'ACTIVE' || !sub.trialEndDate) return false
+  const transcurridos = diasEntre(sub.trialEndDate, today)
+  return transcurridos != null && transcurridos >= 0 && transcurridos <= DIAS_AVISO_POST_VENCIMIENTO
+}
+
+/**
+ * El aviso de que el reparto ya ocurrió. `n`/`m` salen del escaparate de módulos y no de este
+ * módulo, que sigue siendo puro: cuenta quien lo consuma.
+ */
+export function estadoPostVencimiento(
+  sub: SubscriptionResponse | null | undefined,
+  soloLectura: number,
+  gratisConTecho: number,
+  today: string = todayISO(),
+): EstadoPlan | null {
+  if (!enVentanaDeReparto(sub, today)) return null
+  if (soloLectura === 0 && gratisConTecho === 0) return null
+  return {
+    rotulo: ROTULOS.ACTIVE,
+    fuerte: 'Tu prueba terminó:',
+    frase: `${modulosTexto(soloLectura)} quedaron en solo lectura y ${modulosTexto(gratisConTecho)} siguen gratis con techo.`,
+    tono: 'warning',
+    accion: VER_MODULOS,
+  }
 }
 
 /** Ciclo de cobro en español. */

@@ -8,6 +8,9 @@ import { genderLabel, reproductiveLabel } from '@/composables/domainLabels'
 import { useToast } from '@/composables/useToast'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import ModuloDegradadoBanner from '@/features/entitlements/components/ModuloDegradadoBanner.vue'
+import CrearBloqueadaButton from '@/features/entitlements/components/CrearBloqueadaButton.vue'
 import PetFormModal from './PetFormModal.vue'
 
 const props = defineProps<{
@@ -41,6 +44,7 @@ const {
 const toast = useToast()
 const { confirm } = useConfirmDialog()
 const petActionError = ref<string | null>(null)
+const { esSoloLectura, banner, modulo } = useModuloEstado('CORE')
 
 const petModalOpen = ref(false)
 const editingPetId = ref<number | null>(null)
@@ -139,8 +143,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
           <div class="body">
             <div class="pets-head">
               <h3>Mascotas</h3>
+              <CrearBloqueadaButton
+                v-if="canCreatePet && esSoloLectura"
+                nombre-modulo="Clientes y mascotas"
+                :desde="modulo?.trialEndDate"
+                trigger-class="ds-btn ds-btn--ghost ds-btn--snug"
+              />
               <button
-                v-if="canCreatePet"
+                v-else-if="canCreatePet"
                 type="button"
                 class="ds-btn ds-btn--ghost ds-btn--snug"
                 @click="openCreatePet"
@@ -148,6 +158,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
                 <Plus :size="14" :stroke-width="1.8" /> Agregar
               </button>
             </div>
+
+            <ModuloDegradadoBanner :banner="banner" />
 
             <div v-if="petActionError" class="ds-banner ds-banner--error" role="alert">
               {{ petActionError }}

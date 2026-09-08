@@ -302,6 +302,15 @@ import type {
   SubscriptionPaymentMethodResponse,
 } from '../features/suscripcion/types/medios-pago.types'
 import type {
+  ModulePurchaseRequest,
+  ModulePurchaseResponse,
+  PurchasedModuleLineResponse,
+} from '../features/suscripcion/types/compraModulos.types'
+import type {
+  ModuleCeilingResponse,
+  ModuleShowcaseResponse,
+} from '../features/entitlements/types/modulos.types'
+import type {
   FirstPeriodPaymentResponse,
   WompiCheckoutConfigResponse,
   WompiPaymentMethodResponse,
@@ -802,6 +811,11 @@ export type ContractAssertions = [
   Expect<MatchesContract<DunningSubscriptionSummary, 'DunningSubscriptionSummary'>>,
   Expect<MatchesContract<DunningBillingDocumentSummary, 'DunningBillingDocumentSummary'>>,
   Expect<MatchesContract<SubscriptionPaymentMethodResponse, 'SubscriptionPaymentMethodResponse'>>,
+  Expect<MatchesContract<ModuleShowcaseResponse, 'ModuleShowcaseResponse'>>,
+  Expect<MatchesContract<ModuleCeilingResponse, 'ModuleCeilingResponse'>>,
+  Expect<MatchesContract<ModulePurchaseRequest, 'ModulePurchaseRequest'>>,
+  Expect<MatchesContract<ModulePurchaseResponse, 'ModulePurchaseResponse'>>,
+  Expect<MatchesContract<PurchasedModuleLineResponse, 'PurchasedModuleLineResponse'>>,
   Expect<
     MatchesContract<
       RegisterSubscriptionPaymentMethodRequest,

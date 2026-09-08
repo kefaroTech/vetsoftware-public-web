@@ -17,6 +17,9 @@ import ComprasIconButton from '../components/ComprasIconButton.vue'
 import ComprasTable from '../components/ComprasTable.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import type { GoodsReceiptStatus, PurchaseOrder, PurchaseOrderStatus } from '../types/compras'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import ModuloDegradadoBanner from '@/features/entitlements/components/ModuloDegradadoBanner.vue'
+import CrearBloqueadaButton from '@/features/entitlements/components/CrearBloqueadaButton.vue'
 
 const purchases = usePurchasesStore()
 const { orders, receipts, ordersPage, ordersTotal, receiptsPage, receiptsTotal, error } =
@@ -24,6 +27,7 @@ const { orders, receipts, ordersPage, ordersTotal, receiptsPage, receiptsTotal, 
 const { can } = useAuthorization()
 const toast = useToast()
 const { confirm } = useConfirmDialog()
+const { esSoloLectura, banner, modulo } = useModuloEstado('PURCHASES')
 
 const canPoCreate = can(PERMISSIONS.PURCHASE_ORDER_CREATE)
 const canPoUpdate = can(PERMISSIONS.PURCHASE_ORDER_UPDATE)
@@ -195,8 +199,13 @@ onMounted(refresh)
           <p class="ds-view-subtitle">Pedidos a proveedores y entrada de mercancía al inventario</p>
         </div>
       </div>
+      <CrearBloqueadaButton
+        v-if="esSoloLectura"
+        nombre-modulo="Compras"
+        :desde="modulo?.trialEndDate"
+      />
       <button
-        v-if="tab === 'ordenes' && canPoCreate"
+        v-else-if="tab === 'ordenes' && canPoCreate"
         type="button"
         class="ds-btn ds-btn--solid ds-btn--strong"
         @click="openCreatePo"
@@ -212,6 +221,8 @@ onMounted(refresh)
         <Plus :size="16" :stroke-width="1.9" /> Nueva recepción
       </button>
     </header>
+
+    <ModuloDegradadoBanner :banner="banner" />
 
     <div class="tabs">
       <button

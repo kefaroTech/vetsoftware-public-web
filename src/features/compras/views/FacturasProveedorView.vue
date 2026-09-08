@@ -15,6 +15,9 @@ import SupplierPaymentModal from '../components/SupplierPaymentModal.vue'
 import ComprasIconButton from '../components/ComprasIconButton.vue'
 import ComprasTable from '../components/ComprasTable.vue'
 import type { SupplierInvoice, SupplierInvoiceStatus } from '../types/compras'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import ModuloDegradadoBanner from '@/features/entitlements/components/ModuloDegradadoBanner.vue'
+import CrearBloqueadaButton from '@/features/entitlements/components/CrearBloqueadaButton.vue'
 
 const { items, total, loading, error, aging, agingLoading, search, loadAging, cancel, remove } =
   useSupplierInvoices()
@@ -22,6 +25,7 @@ const { can } = useAuthorization()
 const branchStore = useBranchStore()
 const toast = useToast()
 const { confirm } = useConfirmDialog()
+const { esSoloLectura, banner, modulo } = useModuloEstado('PURCHASES')
 
 const canCreate = can(PERMISSIONS.SUPPLIER_INVOICE_CREATE)
 const canUpdate = can(PERMISSIONS.SUPPLIER_INVOICE_UPDATE)
@@ -145,8 +149,13 @@ onMounted(refresh)
           <p class="ds-view-subtitle">Compras registradas y cuentas por pagar</p>
         </div>
       </div>
+      <CrearBloqueadaButton
+        v-if="esSoloLectura"
+        nombre-modulo="Compras"
+        :desde="modulo?.trialEndDate"
+      />
       <button
-        v-if="canCreate"
+        v-else-if="canCreate"
         type="button"
         class="ds-btn ds-btn--solid ds-btn--strong"
         @click="openCreate"
@@ -154,6 +163,8 @@ onMounted(refresh)
         <Plus :size="16" :stroke-width="1.9" /> Nueva factura
       </button>
     </header>
+
+    <ModuloDegradadoBanner :banner="banner" />
 
     <div class="tabs">
       <button

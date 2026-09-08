@@ -13,6 +13,8 @@ import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/t
 import type { PetDraft } from '@/features/dashboard/views/consulta/nueva/composables/useNuevaConsultaDraft'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { scrollToFirstError } from '@/composables/scrollToError'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import { avisarTechoAlcanzado } from '@/features/entitlements/composables/avisoTechoAlcanzado'
 import type { Animal } from '@/types/domain'
 
 const props = defineProps<{
@@ -27,6 +29,7 @@ const emit = defineEmits<{
 }>()
 
 const isEditing = computed(() => props.petId != null)
+const { techoAlcanzadoTexto } = useModuloEstado('CORE')
 
 function emptyPetDraft(): PetDraft {
   return {
@@ -119,6 +122,10 @@ async function save() {
     emit('saved', mapAnimalResponse(result))
     emit('close')
   } catch (e: unknown) {
+    if (!isEditing.value && avisarTechoAlcanzado(e, techoAlcanzadoTexto.value)) {
+      submitError.value = techoAlcanzadoTexto.value
+      return
+    }
     submitError.value = getProblemDetailMessage(
       e,
       'No se pudo guardar la mascota. Intenta nuevamente.',

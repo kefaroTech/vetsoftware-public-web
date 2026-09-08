@@ -320,8 +320,8 @@ function continuar() {
           <section class="pl-card" aria-labelledby="pruebas-h2">
             <h2 id="pruebas-h2" class="pub-card-t">Cuándo empieza a costar</h2>
             <p class="pub-card-sub">
-              Cada módulo tiene su propia prueba y no terminan el mismo día. Estas son las fechas si
-              contratas hoy.
+              Todo el plan es gratis 30 días. Esta es la fecha en la que empieza a cambiar cada
+              módulo si contratas hoy.
             </p>
             <TrialLinesTable :lineas="lineasPrueba" class="pl-pruebas" />
           </section>

@@ -20,12 +20,16 @@ import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/t
 import type { Owner } from '@/types/domain'
 import { formatDateShort } from '@/composables/format'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import ModuloDegradadoBanner from '@/features/entitlements/components/ModuloDegradadoBanner.vue'
+import CrearBloqueadaButton from '@/features/entitlements/components/CrearBloqueadaButton.vue'
 const { can } = useAuthorization()
 const toast = useToast()
 const { confirm } = useConfirmDialog()
 const canCreate = can(PERMISSIONS.HOSPITALIZATION_CREATE)
 const canUpdate = can(PERMISSIONS.HOSPITALIZATION_UPDATE)
 const canDelete = can(PERMISSIONS.HOSPITALIZATION_DELETE)
+const { esSoloLectura, banner, modulo } = useModuloEstado('HOSPITALIZATION')
 
 const selection = ref<{ owner: Owner; animal: AnimalResponse } | null>(null)
 const patientId = ref<number | null>(null)
@@ -156,8 +160,13 @@ function isActive(item: HospitalizationResponse): boolean {
       lead="Ingresos hospitalarios y ambulatorios independientes de una consulta."
     >
       <template #action>
+        <CrearBloqueadaButton
+          v-if="selection && esSoloLectura"
+          nombre-modulo="Hospitalización"
+          :desde="modulo?.trialEndDate"
+        />
         <button
-          v-if="canCreate && selection"
+          v-else-if="canCreate && selection"
           type="button"
           class="ds-btn ds-btn--primary ds-btn--lg ds-btn--elevated"
           @click="modalOpen = true"
@@ -166,6 +175,8 @@ function isActive(item: HospitalizationResponse): boolean {
         </button>
       </template>
     </PageHeader>
+
+    <ModuloDegradadoBanner :banner="banner" />
 
     <div v-if="error" class="ds-banner ds-banner--error">{{ error }}</div>
 

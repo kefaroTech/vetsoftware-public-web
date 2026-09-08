@@ -45,6 +45,7 @@ const { hasPermission } = useAuthorization()
 
 const TODOS = [
   { name: 'suscripcion-plan', label: 'Mi plan', permiso: PERMISSIONS.SUBSCRIPTION_READ },
+  { name: 'suscripcion-modulos', label: 'Tus módulos', permiso: PERMISSIONS.SUBSCRIPTION_READ },
   { name: 'suscripcion-cupos', label: 'Cupos y consumo', permiso: PERMISSIONS.ENTITLEMENT_READ },
   {
     name: 'suscripcion-cobros',

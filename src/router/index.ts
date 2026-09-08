@@ -37,6 +37,7 @@ const RESTORE_ATTEMPTS = 3
  */
 const SUSCRIPCION_DESTINOS = [
   { name: 'suscripcion-plan', permission: PERMISSIONS.SUBSCRIPTION_READ },
+  { name: 'suscripcion-modulos', permission: PERMISSIONS.SUBSCRIPTION_READ },
   { name: 'suscripcion-cupos', permission: PERMISSIONS.ENTITLEMENT_READ },
   { name: 'suscripcion-cobros', permission: PERMISSIONS.SUBSCRIPTION_BILLING_READ },
   { name: 'suscripcion-medios-pago', permission: PERMISSIONS.SUBSCRIPTION_PAYMENT_METHOD_READ },
@@ -580,6 +581,12 @@ const router = createRouter({
               name: 'suscripcion-plan',
               component: () => import('@/features/suscripcion/views/MiPlanView.vue'),
               meta: { permission: PERMISSIONS.SUBSCRIPTION_READ, title: 'Mi plan — Lumbre' },
+            },
+            {
+              path: 'modulos',
+              name: 'suscripcion-modulos',
+              component: () => import('@/features/suscripcion/views/TusModulosView.vue'),
+              meta: { permission: PERMISSIONS.SUBSCRIPTION_READ, title: 'Tus módulos — Lumbre' },
             },
             {
               path: 'cupos',

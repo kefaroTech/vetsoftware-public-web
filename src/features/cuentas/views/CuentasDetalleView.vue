@@ -10,6 +10,8 @@ import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import ModuloDegradadoBanner from '@/features/entitlements/components/ModuloDegradadoBanner.vue'
 import type { OpenAccountResponse } from '../types/cuentas'
 
 const props = defineProps<{ accountId: string }>()
@@ -20,6 +22,7 @@ const branchStore = useBranchStore()
 const { can } = useAuthorization()
 const canVoidPayment = can(PERMISSIONS.DEBT_OPEN_ACCOUNT_VOID)
 const canVoidCharge = can(PERMISSIONS.CHARGE_OPEN_ACCOUNT_VOID)
+const { esSoloLectura, banner, modulo } = useModuloEstado('OPEN_ACCOUNTS')
 
 const account = ref<OpenAccountResponse | null>(null)
 const ownerPets = ref<{ id: number; name: string }[]>([])
@@ -99,6 +102,8 @@ function backToList() {
 </script>
 
 <template>
+  <ModuloDegradadoBanner :banner="banner" />
+
   <div v-if="loadError ?? store.error.value" class="ds-banner ds-banner--error" role="alert">
     {{ loadError ?? store.error.value }}
   </div>
@@ -135,6 +140,8 @@ function backToList() {
     :can-void-charge="canVoidCharge"
     :can-void-payment="canVoidPayment"
     :owner-pets="ownerPets"
+    :es-solo-lectura="esSoloLectura"
+    :desde="modulo?.trialEndDate"
     @back="backToList"
     @updated="account = $event"
   />

@@ -95,11 +95,34 @@ const DIST = path.resolve(import.meta.dirname, '../dist')
  * medida real (565,65 × 1,07 ≈ 605), no el 21 % de costumbre, por la misma
  * razon: con `sum(allJs())` la holgura generosa apaga la alarma en vez de
  * hacerla sonar cuando toca.
+ *
+ * -- JS total sube de 605 a 610 KB (8 de septiembre de 2026) ----------------
+ *
+ * Medida al subirlo: 605,78 KB gzip (PR #413), tras la cuenta gratuita: el
+ * escaparate y la compra de modulos (`TusModulosView`, `ModuloCard`,
+ * `useModulosCompra`) y el modo degradado transversal a las 20 vistas
+ * clinicas que consultan `useModuloEstado` (`ModuloDegradadoBanner`,
+ * `CrearBloqueadaButton`, `avisoTechoAlcanzado`).
+ *
+ * Antes de subir el techo se saco lo obvio: `modulosText.ts` y
+ * `estadoSuscripcion.ts` calculaban la misma resta de fechas ISO
+ * (`diasEntre`/`dias`) cada uno por su lado; ahora `modulosText.ts` importa
+ * las de `estadoSuscripcion.ts`. `ModuloDegradadoBanner` y
+ * `CrearBloqueadaButton` ya salian en un unico chunk compartido entre las 20
+ * vistas antes de esta medida — el chunking automatico de Vite (sin
+ * `manualChunks`, ver `vite.config.ts`) ya evita la duplicacion por vista.
+ * No quedo mas peso real que quitar sin tocar comportamiento.
+ *
+ * Por que 610 y no el 7 % de costumbre (605,78 × 1,07 ≈ 648): un techo tan
+ * holgado tarda meses en volver a sonar. 610 deja un margen de menos del
+ * 1 %, a proposito: la cuenta gratuita sigue creciendo (mas modulos en el
+ * escaparate, mas vistas con modo degradado) y este techo debe obligar a
+ * volver a mirar en la siguiente tanda, no dentro de dos.
  */
 const BUDGET_GZIP = {
   criticalJs: 130 * 1024,
   criticalCss: 45 * 1024,
-  totalJs: 605 * 1024,
+  totalJs: 610 * 1024,
 }
 
 const KB = (bytes) => `${(bytes / 1024).toFixed(1)} KB`

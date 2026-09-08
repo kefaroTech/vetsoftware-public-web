@@ -3,10 +3,13 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BreadcrumbStep from '../components/BreadcrumbStep.vue'
 import { useHistoriaSelection } from '../composables/useHistoriaSelection'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import ModuloDegradadoBanner from '@/features/entitlements/components/ModuloDegradadoBanner.vue'
 
 const route = useRoute()
 const router = useRouter()
 const { state } = useHistoriaSelection()
+const { banner } = useModuloEstado('CLINICAL_HISTORY')
 
 const step = computed<1 | 2 | 3>(() => {
   if (route.name === 'consulta-historial-detail') return 3
@@ -58,6 +61,7 @@ function jumpTo(target: 1 | 2) {
         :disabled="!state.pet"
       />
     </header>
+    <ModuloDegradadoBanner :banner="banner" />
     <RouterView />
   </div>
 </template>
