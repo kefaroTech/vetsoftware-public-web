@@ -236,12 +236,10 @@ function fijar(campo: 'sedes' | 'usuarios', crudo: string) {
       </p>
       <p class="pl-resumen-note">Prueba gratis. Sin tarjeta.</p>
 
-      <!-- §6.2 — el detalle de la prueba va PLEGADO aquí y desplegado (y
-           obligatorio) en el paso de contratación, con las fechas reales. La
-           prueba vence por línea, así que aquí no se puede decir «30 días» a
-           secas: sería falso para los módulos que tienen 14. -->
+      <!-- El detalle de la prueba va plegado aquí y desplegado (y obligatorio)
+           en el paso de contratación, con las fechas reales. -->
       <details v-if="plan" class="pl-trial">
-        <summary class="pl-trial-summary">¿Cuánto dura la prueba de cada módulo?</summary>
+        <summary class="pl-trial-summary">Días de prueba por módulo</summary>
         <ul class="pl-trial-list">
           <li v-for="inc in plan.includes" :key="inc.code">
             <span>{{ inc.name }}</span
@@ -249,8 +247,8 @@ function fijar(campo: 'sedes' | 'usuarios', crudo: string) {
           </li>
         </ul>
         <p class="pl-trial-note">
-          Cada módulo tiene su propia prueba y no terminan todas el mismo día. Verás las fechas
-          exactas antes de confirmar.
+          Prueba gratis 30 días para todo el plan. Después, cada módulo sigue con su propio límite
+          gratuito o pasa a solo consulta — lo ves todo en «Tus módulos» antes de que pase.
         </p>
       </details>
 

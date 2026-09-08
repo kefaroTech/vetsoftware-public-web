@@ -25,11 +25,15 @@ import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import type { ProductResponse, StockState } from '../types/tienda'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import ModuloDegradadoBanner from '@/features/entitlements/components/ModuloDegradadoBanner.vue'
+import CrearBloqueadaButton from '@/features/entitlements/components/CrearBloqueadaButton.vue'
 
 const store = useTienda()
 const toast = useToast()
 const branches = useBranches()
 const { can, canAny } = useAuthorization()
+const { esSoloLectura, banner, modulo } = useModuloEstado('INVENTORY')
 const canCreate = can(PERMISSIONS.PRODUCT_CREATE)
 const canUpdate = can(PERMISSIONS.PRODUCT_UPDATE)
 const canDelete = can(PERMISSIONS.PRODUCT_DELETE)
@@ -241,8 +245,13 @@ function onFormClose() {
         >
           <Package :size="14" :stroke-width="1.8" /> Categorías
         </button>
+        <CrearBloqueadaButton
+          v-if="mode === 'active' && esSoloLectura"
+          nombre-modulo="Inventario"
+          :desde="modulo?.trialEndDate"
+        />
         <button
-          v-if="canCreate && mode === 'active'"
+          v-else-if="canCreate && mode === 'active'"
           type="button"
           class="ds-btn ds-btn--primary ds-btn--elevated ds-btn--nowrap"
           @click="openNew"
@@ -251,6 +260,8 @@ function onFormClose() {
         </button>
       </div>
     </header>
+
+    <ModuloDegradadoBanner :banner="banner" />
 
     <!-- EST-01: la rama de error va ANTES que la del listado. Con las dos a la
          vez, la tabla afirma «Sin productos para el filtro» sobre una carga que

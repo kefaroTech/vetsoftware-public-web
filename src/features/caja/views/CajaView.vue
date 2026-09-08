@@ -22,6 +22,9 @@ import { employeeApi } from '@/features/employees/api/employee.api'
 import type { EmployeeResponse } from '@/features/employees/types/employee.types'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import type { CashSessionView } from '../types/caja'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import ModuloDegradadoBanner from '@/features/entitlements/components/ModuloDegradadoBanner.vue'
+import CrearBloqueadaButton from '@/features/entitlements/components/CrearBloqueadaButton.vue'
 
 const {
   current,
@@ -50,6 +53,7 @@ const router = useRouter()
 const canOperate = can(PERMISSIONS.CASHREGISTER_OPERATE)
 const canClose = can(PERMISSIONS.CASHREGISTER_CLOSE)
 const canReadHistory = can(PERMISSIONS.CASHREGISTER_HISTORY_READ)
+const { esSoloLectura, banner, modulo } = useModuloEstado('CASH_REGISTER')
 const myOpenSession = computed(() =>
   subjectId.value == null
     ? null
@@ -288,12 +292,17 @@ watch(
           <p class="sub">Control de efectivo y arqueo por sede</p>
         </div>
       </div>
-      <div v-if="!isOpen && canOpenCash" class="head-actions">
+      <div v-if="!isOpen && esSoloLectura" class="head-actions">
+        <CrearBloqueadaButton nombre-modulo="Caja" :desde="modulo?.trialEndDate" />
+      </div>
+      <div v-else-if="!isOpen && canOpenCash" class="head-actions">
         <button type="button" class="ds-btn ds-btn--solid ds-btn--strong" @click="openModal = true">
           <Plus :size="16" :stroke-width="1.9" /> Abrir caja
         </button>
       </div>
     </header>
+
+    <ModuloDegradadoBanner :banner="banner" />
 
     <BaseTabs
       :model-value="activeTab"

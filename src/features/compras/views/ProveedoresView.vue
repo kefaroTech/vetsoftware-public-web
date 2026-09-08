@@ -10,11 +10,15 @@ import SupplierModal from '../components/SupplierModal.vue'
 import ComprasIconButton from '../components/ComprasIconButton.vue'
 import ComprasTable from '../components/ComprasTable.vue'
 import type { Supplier } from '../types/compras'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import ModuloDegradadoBanner from '@/features/entitlements/components/ModuloDegradadoBanner.vue'
+import CrearBloqueadaButton from '@/features/entitlements/components/CrearBloqueadaButton.vue'
 
 const { items, total, loading, error, search, remove } = useSuppliers()
 const { can } = useAuthorization()
 const toast = useToast()
 const { confirm } = useConfirmDialog()
+const { esSoloLectura, banner, modulo } = useModuloEstado('PURCHASES')
 
 const canCreate = can(PERMISSIONS.SUPPLIER_CREATE)
 const canUpdate = can(PERMISSIONS.SUPPLIER_UPDATE)
@@ -82,8 +86,13 @@ onMounted(refresh)
           <p class="ds-view-subtitle">Terceros a los que le compras bienes o servicios</p>
         </div>
       </div>
+      <CrearBloqueadaButton
+        v-if="esSoloLectura"
+        nombre-modulo="Compras"
+        :desde="modulo?.trialEndDate"
+      />
       <button
-        v-if="canCreate"
+        v-else-if="canCreate"
         type="button"
         class="ds-btn ds-btn--solid ds-btn--strong"
         @click="openCreate"
@@ -91,6 +100,8 @@ onMounted(refresh)
         <Plus :size="16" :stroke-width="1.9" /> Nuevo proveedor
       </button>
     </header>
+
+    <ModuloDegradadoBanner :banner="banner" />
 
     <div class="search-bar ds-flex-row">
       <Search :size="16" :stroke-width="1.7" />

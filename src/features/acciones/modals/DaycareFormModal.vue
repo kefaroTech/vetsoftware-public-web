@@ -15,6 +15,8 @@ import type { DayCareResponse } from '@/features/dashboard/views/consulta/nueva/
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import { scrollToFirstError } from '@/composables/scrollToError'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import { avisarTechoAlcanzado } from '@/features/entitlements/composables/avisoTechoAlcanzado'
 
 const props = defineProps<{
   open: boolean
@@ -32,6 +34,7 @@ const typeOptions = [
 ]
 
 const isEdit = computed(() => props.initial != null)
+const { techoAlcanzadoTexto } = useModuloEstado('GROOMING')
 
 const patientId = ref<number | null>(null)
 const draft = reactive({
@@ -118,6 +121,10 @@ async function save() {
     emit('saved', result)
     emit('close')
   } catch (e) {
+    if (!isEdit.value && avisarTechoAlcanzado(e, techoAlcanzadoTexto.value)) {
+      saveError.value = techoAlcanzadoTexto.value
+      return
+    }
     saveError.value = getProblemDetailMessage(e, 'No se pudo guardar el registro')
   } finally {
     saving.value = false

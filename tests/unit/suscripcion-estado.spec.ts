@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest'
 import {
   bajaRegistrada,
   cicloLabel,
+  enVentanaDeReparto,
   esPlanContratado,
   estadoPlan,
+  estadoPostVencimiento,
   estadoRotulo,
   graceDaysLeft,
   trialDaysLeft,
+  VER_MODULOS,
 } from '@/features/suscripcion/composables/estadoSuscripcion'
 import type {
   SubscriptionResponse,
@@ -162,9 +165,58 @@ describe('estadoSuscripcion · prueba y salidas', () => {
     expect(trialDaysLeft(sub({ trialEndDate: '2026-08-30' }), HOY)).toBe(2)
   })
 
+  it('la salida de la prueba apunta a «Tus módulos», no a «Mi plan»', () => {
+    const estado = estadoPlan(sub({ status: 'TRIALING', trialEndDate: '2026-08-30' }), HOY)
+    expect(estado?.accion).toEqual(VER_MODULOS)
+    expect(estado?.frase).toContain('algunos módulos siguen gratis con límites')
+    expect(estado?.frase).toContain('otros pasan a solo consulta')
+  })
+
   it('no pinta un botón muerto en los estados sin salida', () => {
     expect(estadoPlan(sub({ status: 'CANCELLED' }), HOY)?.accion).toBeNull()
     expect(estadoPlan(sub({ status: 'EXPIRED' }), HOY)?.accion).toBeNull()
+  })
+})
+
+describe('estadoSuscripcion · aviso post-vencimiento («recién repartida»)', () => {
+  it('solo aplica a una cuenta ACTIVE con trialEndDate en los últimos 3 días', () => {
+    expect(enVentanaDeReparto(sub({ status: 'ACTIVE', trialEndDate: '2026-08-26' }), HOY)).toBe(
+      true,
+    )
+    expect(enVentanaDeReparto(sub({ status: 'ACTIVE', trialEndDate: '2026-08-20' }), HOY)).toBe(
+      false,
+    )
+    expect(enVentanaDeReparto(sub({ status: 'TRIALING', trialEndDate: '2026-08-26' }), HOY)).toBe(
+      false,
+    )
+    expect(enVentanaDeReparto(null, HOY)).toBe(false)
+  })
+
+  it('cuenta n solo lectura y m gratis con techo, con concordancia de número', () => {
+    const estado = estadoPostVencimiento(
+      sub({ status: 'ACTIVE', trialEndDate: '2026-08-26' }),
+      2,
+      1,
+      HOY,
+    )
+    expect(estado?.fuerte).toBe('Tu prueba terminó:')
+    expect(estado?.frase).toBe(
+      '2 módulos quedaron en solo lectura y 1 módulo siguen gratis con techo.',
+    )
+    expect(estado?.tono).toBe('warning')
+    expect(estado?.accion).toEqual(VER_MODULOS)
+  })
+
+  it('sin nada que repartir (0 y 0) no hay aviso', () => {
+    expect(
+      estadoPostVencimiento(sub({ status: 'ACTIVE', trialEndDate: '2026-08-26' }), 0, 0, HOY),
+    ).toBeNull()
+  })
+
+  it('fuera de la ventana no hay aviso aunque haya módulos repartidos', () => {
+    expect(
+      estadoPostVencimiento(sub({ status: 'ACTIVE', trialEndDate: '2026-08-01' }), 3, 2, HOY),
+    ).toBeNull()
   })
 })
 

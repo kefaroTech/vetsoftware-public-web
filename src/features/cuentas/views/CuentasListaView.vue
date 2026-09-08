@@ -16,11 +16,15 @@ import BaseTabs from '@/components/ui/BaseTabs.vue'
 import BaseTabPanel from '@/components/ui/BaseTabPanel.vue'
 import type { TabItem } from '@/components/ui/tabs'
 import type { OpenAccountResponse, OpenAccountStatus } from '../types/cuentas'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import ModuloDegradadoBanner from '@/features/entitlements/components/ModuloDegradadoBanner.vue'
+import CrearBloqueadaButton from '@/features/entitlements/components/CrearBloqueadaButton.vue'
 
 const store = useCuentas()
 const router = useRouter()
 const branchStore = useBranchStore()
 const { can } = useAuthorization()
+const { esSoloLectura, banner, modulo } = useModuloEstado('OPEN_ACCOUNTS')
 const canCreate = can(PERMISSIONS.OPEN_ACCOUNT_CREATE)
 
 /**
@@ -136,8 +140,13 @@ function onAccountCreated(account: OpenAccountResponse) {
     lead="Cuentas a crédito administradas por sede. Los cargos se agrupan por mascota."
   >
     <template #action>
+      <CrearBloqueadaButton
+        v-if="esSoloLectura"
+        nombre-modulo="Cuentas abiertas"
+        :desde="modulo?.trialEndDate"
+      />
       <button
-        v-if="canCreate && branchStore.selectedBranchId != null"
+        v-else-if="canCreate && branchStore.selectedBranchId != null"
         type="button"
         class="ds-btn ds-btn--primary ds-btn--lg ds-btn--elevated ds-btn--nowrap"
         @click="openCreateModal"
@@ -146,6 +155,8 @@ function onAccountCreated(account: OpenAccountResponse) {
       </button>
     </template>
   </PageHeader>
+
+  <ModuloDegradadoBanner :banner="banner" />
 
   <!-- EST-01: la rama de error va ANTES que la de vacío; las de abajo se
        apagan mientras esté puesta, o la pantalla que falló afirma que la

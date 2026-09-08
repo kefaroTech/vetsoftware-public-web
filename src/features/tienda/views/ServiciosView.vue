@@ -17,6 +17,8 @@ import { useAuthorization } from '@/features/auth/composables/useAuthorization'
 import { PERMISSIONS } from '@/constants/permissions'
 import { isConcurrencyConflict } from '@/services/http/http.client'
 import type { ServiceResponse } from '../types/tienda'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import ModuloDegradadoBanner from '@/features/entitlements/components/ModuloDegradadoBanner.vue'
 
 const CONFLICT_MESSAGE =
   'El registro fue modificado por otra operación; se recargó la información. Revisa y reintenta.'
@@ -25,6 +27,7 @@ const store = useTienda()
 const toast = useToast()
 const { confirm } = useConfirmDialog()
 const { can, canAny } = useAuthorization()
+const { banner } = useModuloEstado('SERVICES')
 const canCreate = can(PERMISSIONS.SERVICE_CREATE)
 const canUpdate = can(PERMISSIONS.SERVICE_UPDATE)
 const canDelete = can(PERMISSIONS.SERVICE_DELETE)
@@ -231,6 +234,8 @@ async function onCategoryRemove(id: number) {
         </button>
       </div>
     </header>
+
+    <ModuloDegradadoBanner :banner="banner" />
 
     <!-- EST-01: la rama de error va ANTES que la de vacío. Si conviven, la
          pantalla que falló afirma «Sin servicios. Crea el primero». -->

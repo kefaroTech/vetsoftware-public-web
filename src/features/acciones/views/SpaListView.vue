@@ -19,9 +19,12 @@ import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/t
 import type { Owner } from '@/types/domain'
 import { formatDateShort } from '@/composables/format'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import ModuloDegradadoBanner from '@/features/entitlements/components/ModuloDegradadoBanner.vue'
 const { can } = useAuthorization()
 const toast = useToast()
 const { confirm } = useConfirmDialog()
+const { banner } = useModuloEstado('GROOMING')
 const canCreate = can(PERMISSIONS.SPA_CREATE)
 const canUpdate = can(PERMISSIONS.SPA_UPDATE)
 const canDelete = can(PERMISSIONS.SPA_DELETE)
@@ -151,6 +154,8 @@ async function requestDelete(target: SpaResponse) {
         </button>
       </template>
     </PageHeader>
+
+    <ModuloDegradadoBanner :banner="banner" />
 
     <div v-if="error" class="ds-banner ds-banner--error">{{ error }}</div>
 

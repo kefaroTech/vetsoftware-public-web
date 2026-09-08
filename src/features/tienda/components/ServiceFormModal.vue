@@ -8,6 +8,8 @@ import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import { getProblemDetailMessage, isConcurrencyConflict } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import { avisarTechoAlcanzado } from '@/features/entitlements/composables/avisoTechoAlcanzado'
 import { useTienda } from '../composables/useTienda'
 import type { ServicePayload, ServiceResponse, TaxScheme, TaxTreatment } from '../types/tienda'
 import { scrollToFirstError } from '@/composables/scrollToError'
@@ -44,6 +46,7 @@ function schemeForTreatment(t: TaxTreatment): TaxScheme | null {
 
 const store = useTienda()
 const toast = useToast()
+const { techoAlcanzadoTexto } = useModuloEstado('SERVICES')
 
 interface Draft {
   name: string
@@ -194,6 +197,10 @@ async function submit() {
     emit('saved', saved)
     emit('close')
   } catch (e) {
+    if (!props.initial && avisarTechoAlcanzado(e, techoAlcanzadoTexto.value)) {
+      saveError.value = techoAlcanzadoTexto.value
+      return
+    }
     if (isConcurrencyConflict(e)) {
       // Recargamos el catálogo para obtener la versión fresca y re-hidratamos el form para reintentar.
       await store.refresh()

@@ -36,10 +36,14 @@ import {
   isAppointmentOverlap,
   isConcurrencyConflict,
 } from '@/services/http/http.client'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import { avisarTechoAlcanzado } from '@/features/entitlements/composables/avisoTechoAlcanzado'
+import ModuloDegradadoBanner from '@/features/entitlements/components/ModuloDegradadoBanner.vue'
 
 type ViewMode = 'month' | 'week' | 'day'
 
 const { can } = useAuthorization()
+const { banner, techoAlcanzadoTexto } = useModuloEstado('SCHEDULING')
 const canCreate = can(PERMISSIONS.APPOINTMENT_CREATE)
 
 const toast = useToast()
@@ -255,6 +259,10 @@ async function onFormSubmit(
     }
     formOpen.value = false
   } catch (e) {
+    if (result.mode === 'create' && avisarTechoAlcanzado(e, techoAlcanzadoTexto.value)) {
+      formError.value = techoAlcanzadoTexto.value
+      return
+    }
     handleError(e, 'No se pudo guardar la cita')
     // El modal sigue abierto: que el motivo quede a la vista dentro del formulario
     // y no sólo en un aviso que se va solo.
@@ -323,6 +331,8 @@ async function onRemove(appt: AppointmentResponse) {
         </button>
       </template>
     </PageHeader>
+
+    <ModuloDegradadoBanner :banner="banner" />
 
     <AgendaToolbar
       :view="view"

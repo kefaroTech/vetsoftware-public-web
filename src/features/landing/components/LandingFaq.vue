@@ -14,10 +14,12 @@ import type { Ciclo } from '../types/plans.types'
  * propio significaría escribir y mantener `aria-expanded`, `aria-controls`, el
  * manejo de Enter/Espacio y el orden de foco, para acabar en lo mismo.
  *
- * <p>Ninguna respuesta promete «30 días»: la prueba vence POR LÍNEA y las fechas
- * reales se ven al contratar. Y ninguna promete cuándo deja de cobrarse un
- * módulo que se da de baja, ni prorrateo al añadir uno: facturación no cumple
- * hoy ninguna de las dos, y una FAQ es un compromiso comercial por escrito.
+ * <p>La prueba dura 30 días para toda la cuenta (una sola fecha). Lo que sigue
+ * variando módulo a módulo es qué pasa DESPUÉS: unos siguen gratis con techo,
+ * otros pasan a solo lectura. Ninguna respuesta promete cuándo deja de
+ * cobrarse un módulo que se da de baja, ni prorrateo al añadir uno:
+ * facturación no cumple hoy ninguna de las dos, y una FAQ es un compromiso
+ * comercial por escrito.
  *
  * <p>Las dos cifras que aparecen se LEEN del catálogo. Escribirlas a mano
  * significaría que una subida de precio deja mintiendo a la portada, que es el
@@ -89,7 +91,7 @@ const preguntas = computed(() => [
   },
   {
     q: '¿Qué pasa cuando se acaba la prueba?',
-    a: 'Te avisamos por correo antes. Cada módulo tiene su propia fecha y las verás todas antes de confirmar.',
+    a: 'Te avisamos por correo antes. Los módulos que uses todos los días —agenda, historia clínica, clientes— siguen gratis con un techo. Los más avanzados —hospitalización, laboratorio, caja— pasan a solo consulta hasta que los compres. Facturación electrónica es la única excepción: se cobra desde el primer día.',
   },
   { q: '¿Sirve para varias sedes?', a: respuestaSedes.value },
   { q: '¿Emite factura electrónica DIAN?', a: respuestaDian.value },

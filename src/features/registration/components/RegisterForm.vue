@@ -238,7 +238,10 @@ async function submit() {
         />
       </picture>
       <h1 class="reg-title">Crear cuenta</h1>
-      <p class="reg-sub">Registra tu empresa y tu primer usuario administrador.</p>
+      <p class="reg-sub">
+        Registra tu empresa y tu primer usuario administrador. Todo gratis 30 días; después, sigues
+        con acceso gratuito con límites.
+      </p>
 
       <div v-if="globalError" class="reg-banner-wrap" data-error-anchor>
         <AuthBanner tone="error" @close="globalError = null"

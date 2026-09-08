@@ -16,6 +16,9 @@ import PageHeader from '@/components/ui/PageHeader.vue'
 import { useToast } from '@/composables/useToast'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import { avisarTechoAlcanzado } from '@/features/entitlements/composables/avisoTechoAlcanzado'
+import ModuloDegradadoBanner from '@/features/entitlements/components/ModuloDegradadoBanner.vue'
 
 const {
   owners,
@@ -38,6 +41,7 @@ const {
 const { can } = useAuthorization()
 const toast = useToast()
 const { confirm } = useConfirmDialog()
+const { banner, techoAlcanzadoTexto } = useModuloEstado('CORE')
 const canCreate = can(PERMISSIONS.OWNER_CREATE)
 const canUpdate = can(PERMISSIONS.OWNER_UPDATE)
 const canDelete = can(PERMISSIONS.OWNER_DELETE)
@@ -115,6 +119,10 @@ async function handleSubmit(payload: {
     }
     formOpen.value = false
   } catch (e) {
+    if (payload.id == null && avisarTechoAlcanzado(e, techoAlcanzadoTexto.value)) {
+      submitError.value = techoAlcanzadoTexto.value
+      return
+    }
     const msg = getProblemDetailMessage(e, 'No se pudo guardar el cliente')
     submitError.value = msg
     toast.error('Ocurrió un error', msg)
@@ -174,6 +182,8 @@ async function askDelete(owner: Owner) {
         </button>
       </template>
     </PageHeader>
+
+    <ModuloDegradadoBanner :banner="banner" />
 
     <div v-if="submitError" class="ds-banner ds-banner--error" role="alert">
       {{ submitError }}

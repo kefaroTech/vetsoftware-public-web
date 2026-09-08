@@ -21,12 +21,16 @@ import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/t
 import type { Owner } from '@/types/domain'
 import { formatDateShort } from '@/composables/format'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { useModuloEstado } from '@/features/entitlements/composables/useModuloEstado'
+import ModuloDegradadoBanner from '@/features/entitlements/components/ModuloDegradadoBanner.vue'
+import CrearBloqueadaButton from '@/features/entitlements/components/CrearBloqueadaButton.vue'
 const { can } = useAuthorization()
 const toast = useToast()
 const { confirm } = useConfirmDialog()
 const canCreate = can(PERMISSIONS.LABORATORY_TEST_CREATE)
 const canUpdate = can(PERMISSIONS.LABORATORY_TEST_UPDATE)
 const canDelete = can(PERMISSIONS.LABORATORY_TEST_DELETE)
+const { esSoloLectura, banner, modulo } = useModuloEstado('LAB_IMAGING')
 
 const selection = ref<{ owner: Owner; animal: AnimalResponse } | null>(null)
 const patientId = ref<number | null>(null)
@@ -152,8 +156,13 @@ async function requestDelete(target: LaboratoryTestResponse) {
       lead="Crea y consulta solicitudes de examen sin pasar por una consulta."
     >
       <template #action>
+        <CrearBloqueadaButton
+          v-if="selection && esSoloLectura"
+          nombre-modulo="Laboratorio e imagen"
+          :desde="modulo?.trialEndDate"
+        />
         <button
-          v-if="canCreate && selection"
+          v-else-if="canCreate && selection"
           type="button"
           class="ds-btn ds-btn--primary ds-btn--lg ds-btn--elevated"
           @click="modalOpen = true"
@@ -162,6 +171,8 @@ async function requestDelete(target: LaboratoryTestResponse) {
         </button>
       </template>
     </PageHeader>
+
+    <ModuloDegradadoBanner :banner="banner" />
 
     <div v-if="error" class="ds-banner ds-banner--error">{{ error }}</div>
 

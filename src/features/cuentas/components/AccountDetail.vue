@@ -12,6 +12,7 @@ import { useCuentas } from '../composables/useCuentas'
 import { formatMoney } from '@/features/tienda/composables/pricing'
 import { initials, formatDateShort } from '@/composables/format'
 import { useBranchStore } from '@/features/branches/stores/branch.store'
+import CrearBloqueadaButton from '@/features/entitlements/components/CrearBloqueadaButton.vue'
 import {
   OPEN_ACCOUNT_STATUS_LABEL,
   type DebtResponse,
@@ -33,6 +34,10 @@ const props = defineProps<{
   canVoidCharge: boolean
   canVoidPayment: boolean
   ownerPets: { id: number; name: string }[]
+  /** `OPEN_ACCOUNTS` en solo lectura — distinto de `isReadOnly`, que es del propio estado
+   *  de ESTA cuenta (cerrada, cancelada o de otra sede). */
+  esSoloLectura?: boolean
+  desde?: string | null
 }>()
 
 // `refresh` no viaja al padre: recargar la cuenta es asunto interno del detalle
@@ -142,7 +147,14 @@ async function onChargeVoided() {
       </div>
     </div>
     <div v-if="!isReadOnly" class="detail-actions">
+      <CrearBloqueadaButton
+        v-if="esSoloLectura"
+        nombre-modulo="Cuentas abiertas"
+        :desde="desde"
+        trigger-class="ds-btn ds-btn--primary ds-btn--lg ds-btn--elevated ds-btn--nowrap"
+      />
       <button
+        v-else
         type="button"
         class="ds-btn ds-btn--primary ds-btn--lg ds-btn--elevated ds-btn--nowrap"
         @click="addChargeOpen = true"

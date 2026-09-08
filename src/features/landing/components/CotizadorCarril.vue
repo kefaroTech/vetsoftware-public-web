@@ -102,8 +102,9 @@ const nota = computed(() =>
     <!-- No es letra pequeña decorativa: «Empezar gratis» no dice a dónde lleva, y
          esta línea es lo único que anuncia el paso siguiente. -->
     <p class="lcc-pie">
-      Cálculo orientativo con los precios de lista. Sin tarjeta y sin compromiso: en el paso
-      siguiente ves el precio exacto y cuándo empieza a cobrarse.
+      Cálculo orientativo con los precios de lista. Sin tarjeta y sin compromiso —excepto
+      facturación electrónica, que se cobra desde el primer día—: en el paso siguiente ves el precio
+      exacto y cuándo empieza a cobrarse.
     </p>
 
     <p class="ds-sr-only" aria-live="polite" aria-atomic="true">{{ regionViva }}</p>
