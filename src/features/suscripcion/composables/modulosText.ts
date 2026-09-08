@@ -1,14 +1,13 @@
-import { formatDateLong, formatDateShort, parseISODate, todayISO } from '@/composables/format'
+import { formatDateLong, formatDateShort, todayISO } from '@/composables/format'
 import type { ModuleShowcaseState } from '@/features/entitlements/types/modulos.types'
 import type { PurchasedModuleLineResponse } from '../types/compraModulos.types'
+import { diasEntre, dias } from './estadoSuscripcion'
 
 /**
  * El vocabulario de «Tus módulos». **Puro**: funciones y datos, sin estado ni peticiones — mismo
  * principio que `estadoSuscripcion.ts` y `cuposText.ts`, y por el mismo motivo: estos textos son
  * la única explicación que la clínica recibe de por qué un módulo cobra o deja de crear.
  */
-
-const MS_PER_DAY = 86_400_000
 
 /** Variantes que `BaseChip` declara hoy: ni una más. */
 export type ChipVariant = 'neutral' | 'accent' | 'success' | 'warn'
@@ -34,17 +33,6 @@ const PILLS: Record<ModuleShowcaseState, EstadoPill> = {
 export function estadoPill(state: string | undefined): EstadoPill {
   if (state && state in PILLS) return PILLS[state as ModuleShowcaseState]
   return { variant: 'neutral', texto: state ? state.toUpperCase() : '—' }
-}
-
-function diasEntre(desdeIso: string | undefined, hastaIso: string): number | null {
-  const desde = parseISODate(desdeIso)
-  const hasta = parseISODate(hastaIso)
-  if (!desde || !hasta) return null
-  return Math.floor((hasta.getTime() - desde.getTime()) / MS_PER_DAY)
-}
-
-function dias(n: number): string {
-  return n === 1 ? '1 día' : `${n} días`
 }
 
 /** `TRIAL`: fecha de fin + días restantes, con el mismo giro de urgencia que el aviso global. */

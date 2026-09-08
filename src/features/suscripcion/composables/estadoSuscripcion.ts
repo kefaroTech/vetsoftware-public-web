@@ -107,7 +107,7 @@ export function estadoRotulo(status: string | undefined): string {
 }
 
 /** Días entre dos fechas ISO, en días completos. `null` si alguna no es una fecha válida. */
-function diasEntre(desdeIso: string | undefined, hastaIso: string): number | null {
+export function diasEntre(desdeIso: string | undefined, hastaIso: string): number | null {
   const desde = parseISODate(desdeIso)
   const hasta = parseISODate(hastaIso)
   if (!desde || !hasta) return null
@@ -144,7 +144,7 @@ export function trialDaysLeft(
 }
 
 /** `1 día` / `{n} días`, que es lo que exige la concordancia en número. */
-function dias(n: number): string {
+export function dias(n: number): string {
   return n === 1 ? '1 día' : `${n} días`
 }
 
