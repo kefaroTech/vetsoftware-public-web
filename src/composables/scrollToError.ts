@@ -14,9 +14,13 @@ function isVisible(el: HTMLElement): boolean {
   return el.getClientRects().length > 0
 }
 
+/** Elementos capaces de recibir foco de teclado dentro del objetivo desplazado. */
+const FOCUSABLE_SELECTOR = 'input, select, textarea, [tabindex]'
+
 /**
  * Tras una validación fallida, centra verticalmente el scroll sobre el PRIMER campo
- * requerido faltante (el que esté más arriba en la pantalla) con scroll suave.
+ * requerido faltante (el que esté más arriba en la pantalla) con scroll suave y le da el
+ * foco (WCAG 2.4.3) para que el teclado y el lector de pantalla lleguen a él sin más gestos.
  *
  * Sin `root`, se acota automáticamente al modal abierto más reciente (`.overlay` de
  * ModalShell) si lo hay; si no, al documento. Así el mismo `scrollToFirstError()` sirve
@@ -50,5 +54,11 @@ export async function scrollToFirstError(root?: ParentNode): Promise<boolean> {
   )
 
   target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+  const focusTarget = target.matches(FOCUSABLE_SELECTOR)
+    ? target
+    : target.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)
+  focusTarget?.focus({ preventScroll: true })
+
   return true
 }

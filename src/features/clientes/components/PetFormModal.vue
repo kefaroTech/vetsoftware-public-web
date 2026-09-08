@@ -12,6 +12,7 @@ import {
 import type { AnimalResponse } from '@/features/dashboard/views/consulta/nueva/types/animal.types'
 import type { PetDraft } from '@/features/dashboard/views/consulta/nueva/composables/useNuevaConsultaDraft'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { scrollToFirstError } from '@/composables/scrollToError'
 import type { Animal } from '@/types/domain'
 
 const props = defineProps<{
@@ -98,6 +99,7 @@ async function save() {
   if (saving.value || loadingPet.value) return
   if (formRef.value && !formRef.value.validate()) {
     submitError.value = 'Revisa los campos marcados antes de continuar.'
+    void scrollToFirstError()
     return
   }
   saving.value = true

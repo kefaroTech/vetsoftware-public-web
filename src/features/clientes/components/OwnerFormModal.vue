@@ -11,6 +11,7 @@ import type {
 } from '@/features/dashboard/views/consulta/nueva/types/owner.types'
 import type { OwnerDraft } from '@/features/dashboard/views/consulta/nueva/composables/useNuevaConsultaDraft'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { scrollToFirstError } from '@/composables/scrollToError'
 import type { OwnerDocumentType } from '@/features/facturacion/composables/feFiscalChecklist'
 import type { PersonType } from '@/features/facturacion/types/facturacion'
 
@@ -95,6 +96,7 @@ function submit() {
   if (props.busy || loadingOwner.value) return
   if (formRef.value && !formRef.value.validate()) {
     submitError.value = 'Revisa los campos marcados antes de continuar.'
+    void scrollToFirstError()
     return
   }
   const d = draft.value
