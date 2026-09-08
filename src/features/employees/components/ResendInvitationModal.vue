@@ -5,6 +5,7 @@ import type { Employee } from '@/types/domain'
 import ModalShell from '@/components/ui/ModalShell.vue'
 import BaseField from '@/components/ui/BaseField.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const props = defineProps<{
   open: boolean
@@ -64,6 +65,7 @@ function submit() {
   ;(Object.keys(touched) as FieldKey[]).forEach((k) => (touched[k] = true))
   if (Object.keys(errors.value).length > 0) {
     banner.value = true
+    void scrollToFirstError()
     return
   }
   banner.value = false

@@ -9,6 +9,7 @@ import { useNuevaConsultaDraft, type WizardStep } from './composables/useNuevaCo
 import { showResumeOrNewDialog } from '@/composables/useConsultaResumeGuard'
 import { useConsultationSave } from './composables/useConsultationSave'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { scrollToFirstError } from '@/composables/scrollToError'
 
 const router = useRouter()
 const route = useRoute()
@@ -95,6 +96,7 @@ async function handleNext() {
   }
   if (pasoRef.value?.validate && !pasoRef.value.validate()) {
     saveError.value = 'Revisa los campos marcados antes de continuar.'
+    void scrollToFirstError()
     return
   }
   // Antes de guardar, pedimos confirmación explícita (modal).

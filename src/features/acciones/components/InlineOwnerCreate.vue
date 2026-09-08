@@ -14,6 +14,7 @@ import { ownerApi } from '@/features/dashboard/views/consulta/nueva/api/owner.ap
 import { mapOwnerResponse } from '@/features/dashboard/views/consulta/nueva/api/owner.mapper'
 import type { OwnerDraft } from '@/features/dashboard/views/consulta/nueva/composables/useNuevaConsultaDraft'
 import { getProblemDetailMessage } from '@/services/http/http.client'
+import { scrollToFirstError } from '@/composables/scrollToError'
 import type { OwnerDocumentType } from '@/features/facturacion/composables/feFiscalChecklist'
 import type { PersonType } from '@/features/facturacion/types/facturacion'
 import type { Owner } from '@/types/domain'
@@ -53,6 +54,7 @@ const saving = ref(false)
 async function save() {
   if (formRef.value && !formRef.value.validate()) {
     submitError.value = 'Revisa los campos marcados antes de continuar.'
+    void scrollToFirstError()
     return
   }
   const o = draft.value

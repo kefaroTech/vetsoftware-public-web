@@ -6,6 +6,7 @@ import { animalApi } from '@/features/dashboard/views/consulta/nueva/api/animal.
 import { buildCreateAnimalRequest } from '@/features/dashboard/views/consulta/nueva/api/animal.mapper'
 import { getProblemDetailMessage } from '@/services/http/http.client'
 import { useToast } from '@/composables/useToast'
+import { scrollToFirstError } from '@/composables/scrollToError'
 import type { PetDraft } from '@/features/dashboard/views/consulta/nueva/stores/nuevaConsultaDraft.store'
 
 /**
@@ -46,6 +47,7 @@ async function submit() {
   if (busy.value) return
   if (petFormRef.value && !petFormRef.value.validate()) {
     error.value = 'Revisa los campos marcados antes de continuar.'
+    void scrollToFirstError()
     return
   }
   busy.value = true
