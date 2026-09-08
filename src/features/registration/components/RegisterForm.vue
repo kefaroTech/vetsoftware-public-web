@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref, toRefs, watch } from 'vue'
+import { computed, onMounted, reactive, ref, toRefs, watch } from 'vue'
 import { registrationApi } from '../api/registration.api'
 import type { RegisterUserRequest } from '../types'
 import {
@@ -14,16 +14,15 @@ import {
   getProblemDetailMessage,
   getTraceId,
 } from '@/services/http/http.client'
+import { scrollToFirstError } from '@/composables/scrollToError'
 import { useRecaptcha } from '../composables/useRecaptcha'
 import { useRegisterFields } from '../composables/useRegisterFields'
 import { useRegistroGeo } from '../composables/useRegistroGeo'
 import PrimaryButton from '@/components/public/PrimaryButton.vue'
 import AuthBanner from '@/components/public/AuthBanner.vue'
-import ErrorSummary, { toSummaryItems } from '@/components/feedback/ErrorSummary.vue'
 import RegisterCompanySection from './RegisterCompanySection.vue'
 import RegisterAdminSection from './RegisterAdminSection.vue'
 import {
-  REGISTER_FIELD_DOM_ORDER,
   REGISTER_FIELD_IDS,
   REGISTER_RECAPTCHA_ID,
   type RegisterFormState,
@@ -92,20 +91,6 @@ const regimeOptions: Opt[] = (Object.entries(TAX_REGIME_LABEL) as [TaxRegime, st
 )
 
 /**
- * A11Y — el resumen de errores sustituye a «Revisa los campos marcados en rojo».
- *
- * Ese texto solo funcionaba si el usuario VE el rojo (§1.4.1), y encima obligaba
- * a recorrer trece campos a ojo para encontrar cuáles. `ErrorSummary` lista cada
- * problema con su texto literal y un ancla que mueve el FOCO al control, que es
- * lo que §3.3.1 y §2.4.3 piden en el formulario más largo del producto.
- *
- * Se enciende solo tras un envío fallido: mientras se teclea no aparece, igual
- * que los errores en línea (nunca validación prematura).
- */
-const showSummary = ref(false)
-const summaryRef = ref<InstanceType<typeof ErrorSummary> | null>(null)
-
-/**
  * §5, caso 4 — «ya tienes cuenta» no es un callejón sin salida.
  *
  * El error del campo dice el problema; sin una salida al lado, quien se equivocó
@@ -126,7 +111,6 @@ const emailTaken = ref(false)
  */
 const nitTaken = computed(() => !!serverErrors.value.companyIdentifier)
 
-/** Reexpuesto al marcado: los ids tienen que ser los MISMOS que usa el resumen. */
 const fieldIds = REGISTER_FIELD_IDS
 
 // --- reCAPTCHA ---
@@ -140,29 +124,6 @@ const recaptchaMissing = computed(
 // enviar (`captchaMissing` solo mira el caso `ready`), así que el usuario recibía un error
 // genérico del servidor en vez de saber que la verificación no está disponible.
 const recaptchaUnavailable = computed(() => recaptcha.failed.value)
-
-/**
- * Los errores del resumen, en el orden VISUAL del formulario. Se construyen con
- * `err()`, la misma función que pinta el error en línea, para que el texto del
- * resumen sea LITERALMENTE el de abajo: reformularlo es el defecto clásico de
- * este patrón, porque quien llega al campo desde el enlace ya no reconoce el
- * mensaje que le trajo hasta ahí.
- */
-const summaryItems = computed(() => {
-  const errores: Record<string, string | undefined> = {}
-  for (const k of REGISTER_FIELD_DOM_ORDER) errores[k] = err(k)
-  const items = toSummaryItems(errores, REGISTER_FIELD_IDS, [...REGISTER_FIELD_DOM_ORDER])
-  if (recaptchaMissing.value) {
-    items.push({ id: REGISTER_RECAPTCHA_ID, text: 'Completa la verificación para continuar.' })
-  }
-  return items
-})
-
-async function focusSummary() {
-  showSummary.value = true
-  await nextTick()
-  summaryRef.value?.focus()
-}
 
 // El fallo de carga de un catálogo geográfico se pinta en el banner de arriba,
 // igual que antes de extraer la cascada.
@@ -186,7 +147,6 @@ async function submit() {
   globalError.value = null
   globalTraceId.value = undefined
   serverErrors.value = {}
-  showSummary.value = false
   emailTaken.value = false
   recaptchaTouched.value = true
   markAllTouched()
@@ -196,13 +156,18 @@ async function submit() {
   const captchaMissing = recaptcha.ready.value && !captchaToken
 
   if (errores || captchaMissing || recaptchaUnavailable.value) {
-    // «La verificación no está disponible» no es un campo que el usuario pueda
-    // corregir, así que no entra en el resumen: es un banner y se queda arriba.
+    // «Verificación no disponible» no es un campo corregible: banner y scroll
+    // arriba, sin buscar un candidato a `scrollToFirstError`.
     if (recaptchaUnavailable.value)
       globalError.value =
         'No se puede crear la cuenta: la verificación anti-bots no está disponible.'
-    if (errores || captchaMissing) await focusSummary()
-    else cardRef.value?.scrollTo({ top: 0, behavior: 'smooth' })
+    if (errores || captchaMissing) {
+      if (!(await scrollToFirstError(cardRef.value ?? undefined))) {
+        cardRef.value?.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    } else {
+      cardRef.value?.scrollTo({ top: 0, behavior: 'smooth' })
+    }
     return
   }
 
@@ -238,11 +203,11 @@ async function submit() {
     globalError.value = getProblemDetailMessage(e, 'No se pudo crear la cuenta')
     globalTraceId.value = getTraceId(e)
     recaptcha.reset()
-    // El fallo del servidor puede venir con errores POR CAMPO (`ProblemDetail`
-    // los trae en `errors`): si los hay, el resumen los lista igual que los
-    // locales. Si no, solo queda el banner de arriba.
-    if (summaryItems.value.length > 0) await focusSummary()
-    else cardRef.value?.scrollTo({ top: 0, behavior: 'smooth' })
+    // `ProblemDetail` puede traer errores por campo (`errors`): si los hay, se
+    // centra el primero igual que en la validación local.
+    if (!(await scrollToFirstError(cardRef.value ?? undefined))) {
+      cardRef.value?.scrollTo({ top: 0, behavior: 'smooth' })
+    }
   } finally {
     submitting.value = false
   }
@@ -275,15 +240,11 @@ async function submit() {
       <h1 class="reg-title">Crear cuenta</h1>
       <p class="reg-sub">Registra tu empresa y tu primer usuario administrador.</p>
 
-      <div v-if="globalError" class="reg-banner-wrap">
+      <div v-if="globalError" class="reg-banner-wrap" data-error-anchor>
         <AuthBanner tone="error" @close="globalError = null"
           >{{ globalError }}
           <span v-if="globalTraceId" class="reg-trace">{{ globalTraceId }}</span>
         </AuthBanner>
-      </div>
-
-      <div v-if="showSummary" class="reg-banner-wrap">
-        <ErrorSummary ref="summaryRef" :items="summaryItems" />
       </div>
 
       <RegisterCompanySection
@@ -315,10 +276,16 @@ async function submit() {
         :mark-touched="markTouched"
       />
 
-      <!-- reCAPTCHA. `tabindex="-1"` porque es el destino de una fila del
-           resumen: el widget lo pinta un `<iframe>` de un tercero y no hay
-           control propio al que llevar el foco. -->
-      <div :id="REGISTER_RECAPTCHA_ID" class="reg-recaptcha" tabindex="-1">
+      <!-- reCAPTCHA. `tabindex="-1"` porque el widget lo pinta un `<iframe>` de
+           un tercero y no hay control propio al que llevar el foco: cuando
+           falta la verificación, `data-error-anchor` hace que `scrollToFirstError`
+           centre y enfoque este contenedor. -->
+      <div
+        :id="REGISTER_RECAPTCHA_ID"
+        class="reg-recaptcha"
+        tabindex="-1"
+        :data-error-anchor="recaptchaMissing || undefined"
+      >
         <div ref="recaptchaEl" class="reg-recaptcha-widget"></div>
         <p v-if="recaptchaMissing" class="reg-recaptcha-err">
           <CircleAlert :size="12" aria-hidden="true" />

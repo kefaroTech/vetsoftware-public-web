@@ -19,8 +19,8 @@ import { Building2, FileText, MapPin, Phone, ReceiptText } from 'lucide-vue-next
  * así que escribir en estos `v-model` escribe en el borrador original — el mismo
  * trato que `AppointmentWhenFields` da al suyo.
  *
- * `fieldIds` baja desde el padre porque los enlaces de `ErrorSummary` tienen que
- * conocer el id del control ANTES de que este componente renderice.
+ * `fieldIds` baja desde el padre porque `<label for>` necesita el id del
+ * control ANTES de que este componente renderice.
  */
 const props = defineProps<{
   form: ToRefs<RegisterFormState>
