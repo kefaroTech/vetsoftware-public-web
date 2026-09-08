@@ -24,11 +24,15 @@ import { irAAncla } from '../composables/anclaConFoco'
     </RouterLink>
 
     <nav class="land-nav" aria-label="Principal">
-      <a href="#planes" class="land-nav-link" @click="irAAncla('planes', $event)">Paquetes</a>
+      <a href="#planes" class="land-nav-link" @click="irAAncla('planes', $event)">Combinaciones</a>
+      <RouterLink :to="{ name: 'planes' }" class="land-nav-link">Planes y precios</RouterLink>
       <a href="#preguntas" class="land-nav-link" @click="irAAncla('preguntas', $event)">
         Preguntas
       </a>
       <RouterLink :to="{ name: 'login' }" class="land-nav-link">Iniciar sesión</RouterLink>
+      <RouterLink :to="{ name: 'signup' }" class="ds-btn ds-btn--primary land-topbar-cta">
+        Crea tu cuenta gratis
+      </RouterLink>
     </nav>
   </header>
 </template>
@@ -93,9 +97,18 @@ import { irAAncla } from '../composables/anclaConFoco'
   color: var(--pub-ame-700);
 }
 
+.land-topbar-cta {
+  flex-shrink: 0;
+}
+
 @media (width <= 600px) {
   .land-topbar {
     padding: 18px 16px;
+  }
+
+  .land-topbar-cta {
+    padding: var(--space-7) var(--space-12);
+    border-radius: var(--radius-field);
   }
 }
 </style>

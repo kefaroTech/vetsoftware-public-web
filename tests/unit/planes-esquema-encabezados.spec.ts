@@ -26,8 +26,10 @@ import { http } from '@/services/http/http.client'
  * revisión de teclado.
  */
 
+const ruta = vi.hoisted(() => ({ query: {} as Record<string, string> }))
+
 vi.mock('vue-router', () => ({
-  useRoute: () => ({ name: 'planes', query: {} }),
+  useRoute: () => ({ name: 'planes', query: ruta.query }),
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   RouterLink: { props: ['to'], template: '<a><slot /></a>' },
 }))
@@ -55,13 +57,24 @@ describe('El contenido principal de /planes existe en el esquema de la página',
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    localStorage.clear()
+    ruta.query = {}
     vi.mocked(http.get).mockResolvedValue({ data: { currency: 'COP', plans: [] } } as never)
   })
 
-  it('la vista conserva un único `h1` y le da nombre al camino a medida', () => {
+  it('la vista conserva un único `h1`', () => {
     const wrapper = montarVista()
-    const h1 = wrapper.findAll('h1')
-    expect(h1).toHaveLength(1)
+    expect(wrapper.findAll('h1')).toHaveLength(1)
+  })
+
+  it('sin nada sembrado, el `h1` invita a armar el paquete', () => {
+    const wrapper = montarVista()
+    expect(wrapper.get('h1').text()).toBe('Arma tu paquete')
+  })
+
+  it('con una selección sembrada desde la query, el `h1` deja de invitar a armar', () => {
+    ruta.query = { plan: 'PACK_CLINIC' }
+    const wrapper = montarVista()
     expect(wrapper.get('h1').text()).toBe('Tu plan, con el precio exacto')
   })
 

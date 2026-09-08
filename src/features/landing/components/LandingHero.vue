@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
+
 /**
  * §A — el hero, a dos columnas: la marca a la izquierda, la promesa a la derecha.
  *
@@ -50,6 +52,19 @@
         Agenda, historia clínica, hospitalización, inventario y facturación DIAN son módulos
         separados, cada uno con su precio. Si dejas de usar uno, lo apagas.
       </p>
+
+      <div class="land-hero-actions">
+        <RouterLink
+          :to="{ name: 'signup' }"
+          class="ds-btn ds-btn--primary ds-btn--lg land-hero-cta"
+        >
+          Crea tu cuenta gratis
+        </RouterLink>
+        <span class="land-hero-nota">Sin tarjeta</span>
+        <RouterLink :to="{ name: 'planes' }" class="land-hero-secundario"
+          >Planes y precios</RouterLink
+        >
+      </div>
     </div>
   </section>
 </template>
@@ -117,6 +132,35 @@
   margin: 22px 0 0;
   color: var(--pub-ink-600);
   text-wrap: pretty;
+}
+
+.land-hero-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 28px 0 0;
+}
+
+.land-hero-cta {
+  white-space: nowrap;
+}
+
+.land-hero-nota {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pub-ink-500);
+}
+
+.land-hero-secundario {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--pub-ame-700);
+  text-decoration: none;
+}
+
+.land-hero-secundario:hover {
+  text-decoration: underline;
 }
 
 @media (width <= 900px) {

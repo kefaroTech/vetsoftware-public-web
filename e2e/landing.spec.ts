@@ -47,9 +47,10 @@ const TITULO_LANDING = 'Lumbre — Software para clínicas veterinarias en Colom
 const TITULO_PLANES = 'Planes y precios — Lumbre'
 
 /**
- * El `<h1>` de `/planes`, que NO es su `<title>`: son dos textos distintos y los
- * dos correctos, y confundirlos es lo que hace que un caso afirme el de la
- * pestaña creyendo que afirma el de la pantalla.
+ * El `<h1>` de `/planes` cuando algo llega sembrado (paquete recién pulsado,
+ * selección de la portada o intención guardada), que NO es su `<title>`: son
+ * dos textos distintos y los dos correctos, y confundirlos es lo que hace que
+ * un caso afirme el de la pestaña creyendo que afirma el de la pantalla.
  */
 const H1_PLANES = 'Tu plan, con el precio exacto'
 
@@ -227,11 +228,13 @@ test.describe('Landing comercial', () => {
     await page.goto('/')
     await expect(page).toHaveTitle(TITULO_LANDING)
 
-    // `/planes` se comprueba entrando por la URL y no pulsando: desde la portada
-    // no hay ningún enlace que navegue allí sin llevar consulta —los dos primeros
-    // de la barra superior son anclas de esta misma página— y los tres que sí
-    // navegan aterrizan en `/planes?plan=…`, que es otra URL.
-    await page.goto('/planes')
+    // «Planes y precios» de la barra es el único enlace que navega a `/planes`
+    // sin llevar consulta: los otros tres que sí navegan aterrizan en
+    // `/planes?plan=…`, que es otra URL.
+    await page
+      .getByRole('navigation', { name: 'Principal' })
+      .getByRole('link', { name: 'Planes y precios' })
+      .click()
     await expect(page).toHaveTitle(TITULO_PLANES)
   })
 
@@ -245,7 +248,7 @@ test.describe('Landing comercial', () => {
     // estos en un `RouterLink`, lo que se lee es «el href dejó de ser #planes» y
     // no «no encuentro el enlace», que no señalaría a la causa.
     for (const [rotulo, ancla] of [
-      ['Paquetes', 'planes'],
+      ['Combinaciones', 'planes'],
       ['Preguntas', 'preguntas'],
     ] as const) {
       const enlace = nav.getByRole('link', { name: rotulo })

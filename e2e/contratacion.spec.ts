@@ -1414,13 +1414,23 @@ test.describe('Recorrido de solo teclado', () => {
 })
 
 /**
- * El `<h1>` de `/planes`, que es a donde salen TODAS las salidas del paso 6.
+ * El `<h1>` de `/planes` cuando algo llega sembrado —la query trae
+ * `plan`/`ciclo`/`sedes`/`usuarios`, o la intención sigue vigente—, que es
+ * el caso de todos los casos de este bloque salvo los tres del guard de
+ * sesión, que usan {@link TITULO_PLANES_SIN_SEMBRAR}.
  *
- * <p>Va en una constante y no repetido en los ocho casos que entran aquí porque
- * ocho literales es exactamente como se queda uno sin cambiar, que es el mismo
+ * <p>Va en una constante y no repetido en cada caso porque un literal
+ * repetido es exactamente como se queda uno sin cambiar, que es el mismo
  * criterio de {@link TITULO_PASO6}.
  */
 const TITULO_PLANES = 'Tu plan, con el precio exacto'
+
+/**
+ * El `<h1>` de `/planes` cuando llega una sesión SIN intención guardada y SIN
+ * query: las tres ramas del guard de sesión (`SIN_PLAN`, `DESCONOCIDO`, el alta
+ * inicial) navegan a `/planes` a secas, así que no hay nada que reconocer.
+ */
+const TITULO_PLANES_SIN_SEMBRAR = 'Arma tu paquete'
 
 /**
  * LOS CUATRO «CAMBIAR» DEL PASO VINCULANTE, PULSADOS.
@@ -1581,7 +1591,9 @@ test.describe('/planes con sesión — las tres ramas del guard', () => {
     await irAPlanes(page, 'SIN_PLAN')
 
     await expect(page).toHaveURL(/\/planes$/)
-    await expect(page.getByRole('heading', { level: 1, name: TITULO_PLANES })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { level: 1, name: TITULO_PLANES_SIN_SEMBRAR }),
+    ).toBeVisible()
 
     // Y la pantalla reconoce que quien la mira tiene sesión: ofrecerle «¿Ya
     // tienes cuenta? Inicia sesión» sería falso, y sin este enlace su única
@@ -1607,7 +1619,9 @@ test.describe('/planes con sesión — las tres ramas del guard', () => {
     await page.goto('/planes')
 
     await expect(page).toHaveURL(/\/planes$/)
-    await expect(page.getByRole('heading', { level: 1, name: TITULO_PLANES })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { level: 1, name: TITULO_PLANES_SIN_SEMBRAR }),
+    ).toBeVisible()
   })
 
   test('CON_PLAN rebota al tablero, y lo DICE', async ({ page }) => {
@@ -1635,7 +1649,9 @@ test.describe('/planes con sesión — las tres ramas del guard', () => {
     // por un dato que no podemos leer es peor que dejarle pasar. Que el caso de
     // arriba SÍ rebote es lo que demuestra que esto no es el guard sin ejecutar.
     await expect(page).toHaveURL(/\/planes$/)
-    await expect(page.getByRole('heading', { level: 1, name: TITULO_PLANES })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { level: 1, name: TITULO_PLANES_SIN_SEMBRAR }),
+    ).toBeVisible()
 
     // Y sin el aviso del caso anterior: no se afirma lo que no se sabe.
     await expect(

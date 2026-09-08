@@ -100,7 +100,8 @@ test.describe('§2.4.1 Bypass Blocks — el enlace de salto', () => {
     await expect(salto).toBeAttached()
     await expect(salto).toHaveAttribute('href', '#contenido')
 
-    const h1 = page.getByRole('heading', { level: 1, name: 'Tu plan, con el precio exacto' })
+    // Sin query ni intención guardada: es el caso frío, no el sembrado.
+    const h1 = page.getByRole('heading', { level: 1, name: 'Arma tu paquete' })
     await expect(h1).toBeFocused()
     expect(
       await h1.evaluate((el) => el.closest('#contenido') !== null),
