@@ -103,7 +103,7 @@ onMounted(refresh)
 
     <ModuloDegradadoBanner :banner="banner" />
 
-    <div class="search-bar ds-flex-row">
+    <div class="search-bar ds-flex-row ds-focus-ring">
       <Search :size="16" :stroke-width="1.7" />
       <input
         v-model="q"
@@ -196,6 +196,10 @@ onMounted(refresh)
   font-size: 14px;
   color: var(--warm-900);
   outline: none;
+}
+
+.search-bar input:focus-visible {
+  box-shadow: none;
 }
 
 /* La tabla y su cabecera/celda viven en `ComprasTable.vue`, compartida por las

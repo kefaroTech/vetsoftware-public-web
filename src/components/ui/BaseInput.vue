@@ -176,6 +176,14 @@ input {
   color: var(--warm-900);
 }
 
+/* El `<input>` de dentro también recibe la regla global de `base.css`
+   (`input:focus-visible { box-shadow: var(--ring) }`), que se sumaría al anillo
+   del envoltorio y dejaría un doble anillo. El envoltorio YA es el anillo
+   visible de este patrón. */
+input:focus-visible {
+  box-shadow: none;
+}
+
 input::placeholder {
   color: var(--warm-500);
 }

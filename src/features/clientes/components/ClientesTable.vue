@@ -25,7 +25,7 @@ const emit = defineEmits<{
 <template>
   <div>
     <div class="toolbar">
-      <div class="search ds-flex-row">
+      <div class="search ds-flex-row ds-focus-ring">
         <Search :size="15" :stroke-width="1.7" class="ic" />
         <input
           class="ds-flex-fill"
@@ -119,6 +119,10 @@ const emit = defineEmits<{
   font-size: 13.5px;
   color: var(--warm-900);
   font-family: inherit;
+}
+
+.search input:focus-visible {
+  box-shadow: none;
 }
 
 .search input::placeholder {

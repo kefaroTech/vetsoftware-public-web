@@ -191,6 +191,10 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocMouseDown))
   min-width: 0;
 }
 
+.combo-input input:focus-visible {
+  box-shadow: none;
+}
+
 .combo-list {
   position: absolute;
   top: calc(100% + 4px);

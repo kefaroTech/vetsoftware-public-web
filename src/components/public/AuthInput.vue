@@ -147,8 +147,13 @@ function onBlur() {
   font-size: 14px;
   color: var(--pub-ink-900);
   min-width: 0;
-  outline: none;
   padding-block: 10px;
+
+  /* El anillo de foco lo dibuja la caja `.pub-input` (icono incluido); el de
+     `input:focus-visible` en `base.css` caería solo sobre el texto y se vería
+     un segundo rectángulo dentro del borde. */
+  outline: none;
+  box-shadow: none;
 }
 
 .pub-input-eye {
