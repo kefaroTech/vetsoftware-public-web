@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  anioDeVencimientoCompleto,
   luhnValido,
   validarCorreoAceptante,
   validarCvc,
@@ -78,6 +79,13 @@ describe('validarVencimiento', () => {
 
   it('un mes ya pasado está vencida', () => {
     expect(validarVencimiento('07/26', AHORA)).toBe('La tarjeta está vencida.')
+  })
+})
+
+describe('anioDeVencimientoCompleto', () => {
+  it('convierte el AA de Wompi al año de cuatro dígitos que exige el backend', () => {
+    expect(anioDeVencimientoCompleto('29')).toBe(2029)
+    expect(anioDeVencimientoCompleto('99')).toBe(2099)
   })
 })
 
