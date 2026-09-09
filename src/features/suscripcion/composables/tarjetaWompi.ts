@@ -29,6 +29,15 @@ export function validarNumeroTarjeta(v: string): string | null {
   return null
 }
 
+/**
+ * Wompi trabaja el año de vencimiento en dos dígitos (`exp_year: 'AA'`, tanto al tokenizar como
+ * en el token que devuelve) y el backend lo exige en cuatro: `CreatePaymentSourceRequest.expYear`
+ * valida `2026..2099` porque con él calcula la caducidad real de la tarjeta.
+ */
+export function anioDeVencimientoCompleto(aa: string): number {
+  return 2000 + Number(aa)
+}
+
 /** `valor` en formato `MM/AA`. `ahora` es inyectable para las pruebas. */
 export function validarVencimiento(valor: string, ahora: Date = new Date()): string | null {
   const t = valor.trim()
@@ -38,7 +47,7 @@ export function validarVencimiento(valor: string, ahora: Date = new Date()): str
   const [, mm, aa] = match
   const mes = Number(mm)
   if (mes < 1 || mes > 12) return 'El mes debe estar entre 01 y 12.'
-  const finDeMes = new Date(2000 + Number(aa), mes, 0, 23, 59, 59)
+  const finDeMes = new Date(anioDeVencimientoCompleto(aa ?? ''), mes, 0, 23, 59, 59)
   if (finDeMes.getTime() < ahora.getTime()) return 'La tarjeta está vencida.'
   return null
 }

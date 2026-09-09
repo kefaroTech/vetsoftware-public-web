@@ -431,7 +431,7 @@ describe('la casilla de términos es una puerta, no un adorno', () => {
       brand: TOKEN_TARJETA.brand,
       lastFour: TOKEN_TARJETA.last_four,
       expMonth: 8,
-      expYear: 29,
+      expYear: 2029,
     })
     expect(accept).toHaveBeenCalledWith(55, { acceptedByEmail: 'admin@clinica.com' })
     expect(push).toHaveBeenCalledWith({ name: 'contratar-exito' })
