@@ -74,6 +74,10 @@ const model = defineModel<string>({ required: true })
   font-family: inherit;
   color: var(--warm-900);
 }
+
+.search input:focus-visible {
+  box-shadow: none;
+}
 .search--md input {
   font-size: 13.5px;
 }

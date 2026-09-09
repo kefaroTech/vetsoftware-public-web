@@ -86,6 +86,10 @@ input {
   min-width: 0;
 }
 
+input:focus-visible {
+  box-shadow: none;
+}
+
 input::placeholder {
   color: var(--warm-500);
 }
