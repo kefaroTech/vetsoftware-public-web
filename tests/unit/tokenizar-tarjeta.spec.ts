@@ -1,6 +1,8 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import axios from 'axios'
+import { createPinia, setActivePinia } from 'pinia'
 import { tokenizarTarjeta } from '@/features/suscripcion/api/pago.api'
+import { useLoaderStore } from '@/stores/loader.store'
 
 /**
  * `tokenizarTarjeta` HABLA DIRECTO CON WOMPI, NUNCA CON `http`.
@@ -30,7 +32,20 @@ vi.mock('axios', () => ({
   },
 }))
 
+const TARJETA = {
+  number: '4242424242424242',
+  cvc: '123',
+  expMonth: '08',
+  expYear: '29',
+  cardHolder: 'Ana Gómez',
+}
+
 describe('tokenizarTarjeta', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    post.mockReset()
+  })
+
   it('crea una instancia de axios aparte, con la llave pública como Bearer y sin JWT', async () => {
     post.mockResolvedValue({
       data: {
@@ -104,5 +119,41 @@ describe('tokenizarTarjeta', () => {
 
     expect(resultado.id).toBe('tok_test_2')
     expect('data' in resultado).toBe(false)
+  })
+})
+
+describe('tokenizarTarjeta y el velo global', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    post.mockReset()
+  })
+
+  it('sube el contador del velo mientras Wompi responde y lo baja al terminar', async () => {
+    const loader = useLoaderStore()
+    let pendientesDuranteLaLlamada = -1
+    post.mockImplementation(async () => {
+      pendientesDuranteLaLlamada = loader.pending
+      return {
+        data: {
+          data: { id: 'tok', brand: 'VISA', last_four: '4242', exp_month: '08', exp_year: '29' },
+        },
+      }
+    })
+
+    await tokenizarTarjeta('https://sandbox.wompi.co/v1', 'pub_test_abc123', TARJETA)
+
+    expect(pendientesDuranteLaLlamada).toBe(1)
+    expect(loader.pending).toBe(0)
+  })
+
+  it('baja el contador también cuando Wompi rechaza la tarjeta', async () => {
+    const loader = useLoaderStore()
+    post.mockRejectedValue(new Error('422'))
+
+    await expect(
+      tokenizarTarjeta('https://sandbox.wompi.co/v1', 'pub_test_abc123', TARJETA),
+    ).rejects.toThrow('422')
+
+    expect(loader.pending).toBe(0)
   })
 })
