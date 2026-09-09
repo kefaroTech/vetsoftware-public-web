@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { ref } from 'vue'
 import MedioDePagoWompi from '@/features/contratacion/components/MedioDePagoWompi.vue'
+import FormularioTarjetaWompi from '@/features/suscripcion/components/FormularioTarjetaWompi.vue'
 
 /**
  * EL PRELLENADO DEL CORREO DE QUIEN ACEPTA Y PAGA.
@@ -54,6 +55,33 @@ async function montar() {
   await flushPromises()
   return wrapper
 }
+
+describe('tras guardar una tarjeta nueva', () => {
+  it('sustituye el formulario por el medio recién registrado, con el que se reintenta el pago', async () => {
+    me.value = { employeeCode: 'admin@clinica-norte.com', permissions: [], branchIds: [] }
+    checkoutConfig.mockResolvedValue(CONFIG)
+    const wrapper = await montar()
+
+    wrapper.findComponent(FormularioTarjetaWompi).vm.$emit('guardado', {
+      paymentMethodId: 9,
+      brand: 'VISA',
+      lastFour: '4242',
+      expiresOn: '2029-08-31',
+      defaultMethod: true,
+    })
+    await flushPromises()
+
+    expect(wrapper.emitted('pagar')?.[0]).toEqual([{ acceptedByEmail: 'admin@clinica-norte.com' }])
+    expect(wrapper.findComponent(FormularioTarjetaWompi).exists()).toBe(false)
+    expect(wrapper.text()).toContain('Pagaremos con la tarjeta terminada en 4242')
+
+    const pagar = wrapper
+      .findAll('button')
+      .find((b) => b.text().includes('Pagar con la tarjeta terminada en 4242'))
+    await pagar?.trigger('click')
+    expect(wrapper.emitted('pagar')).toHaveLength(2)
+  })
+})
 
 describe('el campo de correo se prellena por FORMA, no por confianza ciega', () => {
   it('con un `employeeCode` que tiene forma de correo, lo usa de valor inicial', async () => {

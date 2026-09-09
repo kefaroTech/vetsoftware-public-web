@@ -446,7 +446,7 @@ describe('la casilla de términos es una puerta, no un adorno', () => {
     expect(guardado?.pago).toBeNull()
   })
 
-  it('si `accept` falla, no navega y reabre el botón sin volver a tokenizar', async () => {
+  it('si `accept` falla, no navega y el reintento va con la tarjeta ya guardada, sin volver a tokenizar', async () => {
     accept.mockRejectedValueOnce(new Error('502'))
     const wrapper = await montar()
 
@@ -458,9 +458,19 @@ describe('la casilla de términos es una puerta, no un adorno', () => {
     expect(push).not.toHaveBeenCalled()
     expect(wrapper.text()).toContain('no pudimos confirmar el pago')
 
-    // El botón vuelve al reposo: `restablecer()` lo reabre sin que el padre haya
-    // vuelto a pedirle a `MedioDePagoWompi` que tokenice nada.
-    expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeUndefined()
+    // El formulario de tarjeta ya no está —vació el número y el CVC al tokenizar— y en su
+    // lugar queda el medio recién registrado con su botón de pagar, habilitado.
+    expect(wrapper.find('form input[placeholder="4242 4242 4242 4242"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Pagaremos con la tarjeta terminada en 4242')
+    const reintentar = wrapper
+      .findAll('button')
+      .find((b) => b.text().includes('Pagar con la tarjeta terminada en 4242'))
+    expect(reintentar?.attributes('disabled')).toBeUndefined()
+
+    await reintentar?.trigger('click')
+    await flushPromises()
+
+    expect(accept).toHaveBeenCalledTimes(2)
     expect(tokenizarTarjeta).toHaveBeenCalledTimes(1)
   })
 
