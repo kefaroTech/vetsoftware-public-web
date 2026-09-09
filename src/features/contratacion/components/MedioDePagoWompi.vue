@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, useId, useTemplateRef } from 'vue'
+import { computed, onMounted, ref, useId } from 'vue'
 import { storeToRefs } from 'pinia'
 import { CreditCard } from 'lucide-vue-next'
 import BaseField from '@/components/ui/BaseField.vue'
@@ -40,12 +40,21 @@ onMounted(async () => {
   cargandoMedios.value = false
 })
 
+/**
+ * La tarjeta recién dada de alta por `FormularioTarjetaWompi`. El formulario vacía el número y
+ * el CVC en cuanto tokeniza, así que si `accept` falla después no hay tarjeta que reenviar: el
+ * reintento tiene que ir por el medio ya registrado, igual que si existiera de antes.
+ */
+const medioRecienGuardado = ref<WompiPaymentMethodResponse | null>(null)
+
 /** El medio con el que se puede pagar sin tokenizar nada. */
-const medioPorDefecto = computed(
+const tarjetaDePago = computed(
   () =>
     mediosGuardados.value.find(
       (m) => m.gateway === 'WOMPI' && m.mandateStatus === 'ACTIVE' && m.defaultMethod,
-    ) ?? null,
+    ) ??
+    medioRecienGuardado.value ??
+    null,
 )
 
 /**
@@ -74,22 +83,14 @@ function pagarConMedioExistente() {
   emit('pagar', { acceptedByEmail: correo.value.trim() })
 }
 
-function onTarjetaGuardada(_medio: WompiPaymentMethodResponse) {
+function onTarjetaGuardada(medio: WompiPaymentMethodResponse) {
+  medioRecienGuardado.value = medio
   emit('pagar', { acceptedByEmail: correo.value.trim() })
 }
 
 /** Deshabilita el botón del atajo: el `accept` que corre después en el padre. El envío de la
  * tarjeta nueva lo gestiona `FormularioTarjetaWompi` con su propio estado. */
 const bloqueado = computed(() => !!props.procesando)
-
-const formularioRef = useTemplateRef<InstanceType<typeof FormularioTarjetaWompi>>('formularioRef')
-
-/** Llamado por el padre si `POST /quotes/{id}/accept` falla: reabre el botón para reintentar. */
-function restablecer() {
-  formularioRef.value?.restablecer()
-}
-
-defineExpose({ restablecer })
 
 const idCorreo = useId()
 </script>
@@ -104,10 +105,10 @@ const idCorreo = useId()
     <p v-if="cargandoMedios" class="ds-meta">Cargando el formulario de pago…</p>
 
     <template v-else>
-      <div v-if="medioPorDefecto" class="ds-stack ds-stack--14">
+      <div v-if="tarjetaDePago" class="ds-stack ds-stack--14">
         <p class="ds-meta mp-existente">
           <CreditCard :size="16" :stroke-width="1.8" aria-hidden="true" />
-          Pagaremos con la tarjeta terminada en <strong>{{ medioPorDefecto.lastFour }}</strong
+          Pagaremos con la tarjeta terminada en <strong>{{ tarjetaDePago.lastFour }}</strong
           >.
         </p>
 
@@ -136,14 +137,13 @@ const idCorreo = useId()
           {{
             procesando
               ? 'Confirmando pago…'
-              : `Pagar con la tarjeta terminada en ${medioPorDefecto.lastFour}`
+              : `Pagar con la tarjeta terminada en ${tarjetaDePago.lastFour}`
           }}
         </button>
       </div>
 
       <FormularioTarjetaWompi
         v-else
-        ref="formularioRef"
         v-model:correo="correo"
         modo-contratacion
         :procesando="procesando"

@@ -112,10 +112,16 @@ const enviando = ref(false)
 const errorPago = ref<string | null>(null)
 const traceId = ref<string | undefined>()
 
-/** Limpia lo sensible en cuanto deja de hacer falta. Nunca sobrevive al `try`. */
+/**
+ * Limpia lo sensible en cuanto deja de hacer falta. Nunca sobrevive al `try`. Los dos campos
+ * vuelven a «sin tocar»: quedan vacíos a propósito, no porque el usuario los olvidara, y no
+ * deben pintarse como obligatorios si el formulario sigue en pantalla.
+ */
 function limpiarTarjeta() {
   tarjeta.numero = ''
   tarjeta.cvc = ''
+  touched.numero = false
+  touched.cvc = false
 }
 
 function campos(): Campo[] {
@@ -170,13 +176,6 @@ const submitLabel = computed(() => {
   if (props.procesando) return 'Confirmando pago…'
   return props.modoContratacion ? 'Guardar tarjeta y pagar' : 'Guardar tarjeta'
 })
-
-/** Llamado por el padre si el paso siguiente falla: reabre el botón para reintentar. */
-function restablecer() {
-  enviando.value = false
-}
-
-defineExpose({ restablecer })
 
 const idCorreo = useId()
 </script>

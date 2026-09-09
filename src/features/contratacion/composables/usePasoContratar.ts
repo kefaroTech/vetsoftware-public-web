@@ -481,14 +481,10 @@ export function usePasoContratar(focos: FocosPaso6) {
    * por defecto) y emitió `pagar`. Aquí se acepta la oferta —lo único que le falta para dejar de
    * ser un borrador— y solo entonces se guarda el resultado y se navega.
    *
-   * <p>Devuelve si aceptó o no: la vista usa el `false` para reabrir el botón de
-   * `MedioDePagoWompi` (`restablecer()`) sin volver a tokenizar nada — el medio de pago ya quedó
-   * registrado, lo único que falló fue `accept`.
+   * <p>Si `accept` falla, `MedioDePagoWompi` ya muestra el medio recién registrado y el botón
+   * para reintentar con él: no hay nada que reabrir ni que volver a tokenizar.
    */
-  async function confirmarPago(
-    payload: { acceptedByEmail: string },
-    alFallar?: () => void,
-  ): Promise<boolean> {
+  async function confirmarPago(payload: { acceptedByEmail: string }): Promise<boolean> {
     const pendiente = oferta.value
     if (!pendiente) return false
     pagando.value = true
@@ -520,7 +516,6 @@ export function usePasoContratar(focos: FocosPaso6) {
         'Guardamos tu tarjeta, pero no pudimos confirmar el pago. Vuelve a intentarlo; si sigue fallando, escríbenos con este código:'
       await nextTick()
       focos.errorEnvio.value?.focus()
-      alFallar?.()
       return false
     } finally {
       pagando.value = false

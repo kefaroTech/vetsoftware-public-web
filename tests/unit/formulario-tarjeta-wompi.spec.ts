@@ -88,6 +88,21 @@ describe('alta correcta', () => {
     })
     expect(wrapper.emitted('guardado')?.[0]).toEqual([MEDIO])
   })
+
+  it('vacía el número y el CVC sin marcarlos como obligatorios', async () => {
+    const wrapper = await montar()
+    await llenarTarjeta(wrapper)
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    const numero = wrapper.find('input[placeholder="4242 4242 4242 4242"]')
+      .element as HTMLInputElement
+    const cvc = wrapper.find('input[placeholder="123"]').element as HTMLInputElement
+    expect(numero.value).toBe('')
+    expect(cvc.value).toBe('')
+    expect(wrapper.text()).not.toContain('El número de tarjeta es obligatorio')
+    expect(wrapper.text()).not.toContain('El CVC es obligatorio')
+  })
 })
 
 describe('tokenización fallida', () => {

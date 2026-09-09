@@ -54,7 +54,6 @@ const h1 = useTemplateRef<HTMLElement>('h1')
 const driftRef = useTemplateRef<Enfocable>('driftRef')
 const errorRef = useTemplateRef<Enfocable>('errorRef')
 const errorEnvioRef = useTemplateRef<HTMLElement>('errorEnvioRef')
-const medioPagoRef = useTemplateRef<InstanceType<typeof MedioDePagoWompi>>('medioPagoRef')
 
 const {
   plans,
@@ -339,10 +338,9 @@ onMounted(entrar)
 
       <MedioDePagoWompi
         v-if="oferta"
-        ref="medioPagoRef"
         :total="oferta.total"
         :procesando="pagando"
-        @pagar="(p) => confirmarPago(p, () => medioPagoRef?.restablecer())"
+        @pagar="confirmarPago"
       />
       <div v-else class="ds-stack ds-stack--10">
         <!-- Sin `quote.request` no hay nada que aceptar: la casilla de términos existe para
