@@ -84,7 +84,7 @@ describe('alta correcta', () => {
       brand: 'VISA',
       lastFour: '4242',
       expMonth: 8,
-      expYear: 29,
+      expYear: 2029,
     })
     expect(wrapper.emitted('guardado')?.[0]).toEqual([MEDIO])
   })

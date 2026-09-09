@@ -8,6 +8,7 @@ import PawLoader from '@/components/feedback/PawLoader.vue'
 import { getProblemDetailMessage, getTraceId } from '@/services/http/http.client'
 import { tokenizarTarjeta, wompiApi } from '../api/pago.api'
 import {
+  anioDeVencimientoCompleto,
   validarCorreoAceptante,
   validarCvc,
   validarNumeroTarjeta,
@@ -149,7 +150,7 @@ async function guardarTarjeta() {
       brand: token.brand,
       lastFour: token.last_four,
       expMonth: Number(token.exp_month),
-      expYear: Number(token.exp_year),
+      expYear: anioDeVencimientoCompleto(token.exp_year),
     })
     limpiarTarjeta()
     emit('guardado', medio)
